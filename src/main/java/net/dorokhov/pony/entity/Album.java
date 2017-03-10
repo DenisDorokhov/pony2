@@ -1,0 +1,118 @@
+package net.dorokhov.pony.entity;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
+import net.dorokhov.pony.search.SearchAnalyzer;
+import net.dorokhov.pony.util.OptionalComparator;
+import org.hibernate.search.annotations.Analyzer;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
+
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Entity
+@Table(name = "album")
+@Indexed
+public class Album extends BaseEntity<Long> implements Comparable<Album> {
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "year")
+    private Integer year;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "artwork_stored_file_id")
+    private StoredFile artwork;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "album")
+    private List<Song> songs;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "artist_id", nullable = false)
+    private Artist artist;
+
+    private Album() {
+    }
+
+    public Album(Artist artist) {
+        setArtist(artist);
+    }
+
+    public Optional<String> getName() {
+        return Optional.ofNullable(name);
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Optional<Integer> getYear() {
+        return Optional.ofNullable(year);
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    public Optional<StoredFile> getArtwork() {
+        return Optional.ofNullable(artwork);
+    }
+
+    public void setArtwork(StoredFile artwork) {
+        this.artwork = artwork;
+    }
+
+    public List<Song> getSongs() {
+        if (songs == null) {
+            songs = new ArrayList<>();
+        }
+        return songs;
+    }
+
+    public void setSongs(List<Song> songs) {
+        this.songs = songs;
+    }
+
+    public Artist getArtist() {
+        return artist;
+    }
+
+    public void setArtist(Artist artist) {
+        this.artist = Preconditions.checkNotNull(artist);
+    }
+
+    @Transient
+    @Field(analyzer = @Analyzer(impl = SearchAnalyzer.class))
+    public String getSearchTerms() {
+        return getName().orElse("") + " " +
+                getArtist().getName().orElse("");
+    }
+
+    @Override
+    public int compareTo(Album album) {
+        return ComparisonChain.start()
+                .compare(getArtist(), album.getArtist())
+                .compare(getYear(), album.getYear(), OptionalComparator.nullLast())
+                .compare(getName(), album.getName(), OptionalComparator.nullLast())
+                .result();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
+                .add("name", name)
+                .add("year", year)
+                .add("artwork", artwork)
+                .add("songs", songs)
+                .add("artist", artist)
+                .toString();
+    }
+}
