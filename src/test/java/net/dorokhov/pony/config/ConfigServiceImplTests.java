@@ -117,12 +117,12 @@ public class ConfigServiceImplTests {
                 .thenReturn(new Config(
                         ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, 
                         "foo" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "bar"));
-        configService.saveLibraryFolders(ImmutableList.of(new File("foobar")));
+        configService.saveLibraryFolders(ImmutableList.of(new File("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo")));
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.of("foobar"));
+        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.of("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo"));
     }
 
     @Test
