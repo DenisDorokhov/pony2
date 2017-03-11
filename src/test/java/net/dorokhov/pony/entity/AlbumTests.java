@@ -5,7 +5,6 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AlbumTests {
 
@@ -54,15 +53,6 @@ public class AlbumTests {
 
         assertThat(album1.getSearchTerms()).isEqualTo("al1 ar1");
         assertThat(albumNull.getSearchTerms()).isEqualTo(" ");
-    }
-
-    @Test
-    public void shouldFailOnNotNullViolation() throws Exception {
-        
-        assertThatThrownBy(() -> new Album(null)).isInstanceOf(NullPointerException.class);
-        
-        final Album album = new Album(new Artist());
-        assertThatThrownBy(() -> album.setArtist(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test

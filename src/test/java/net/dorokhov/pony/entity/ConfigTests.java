@@ -11,7 +11,7 @@ public class ConfigTests {
 
     @Test
     public void shouldSupportNullValue() throws Exception {
-        Config config = new Config("foo", null);
+        Config config = new Config("foo");
         assertThat(config.getValue()).isEqualTo(Optional.empty());
         assertThat(config.getInteger()).isEqualTo(Optional.empty());
         assertThat(config.getLong()).isEqualTo(Optional.empty());
@@ -70,20 +70,11 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldFailOnNotNullViolation() throws Exception {
-        
-        assertThatThrownBy(() -> new Config(null, "foo")).isInstanceOf(NullPointerException.class);
-        
-        final Config config = new Config("foo", true);
-        assertThatThrownBy(() -> config.setId(null)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
     public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        Config eqConfig1 = new Config("1", null);
-        Config eqConfig2 = new Config("1", null);
-        Config diffConfig = new Config("2", null);
+        Config eqConfig1 = new Config("1");
+        Config eqConfig2 = new Config("1");
+        Config diffConfig = new Config("2");
 
         assertThat(eqConfig1.hashCode()).isEqualTo(eqConfig2.hashCode());
         assertThat(eqConfig1.hashCode()).isNotEqualTo(diffConfig.hashCode());

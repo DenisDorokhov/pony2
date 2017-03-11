@@ -3,21 +3,8 @@ package net.dorokhov.pony.entity;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class LogMessageTests {
-
-    @Test
-    public void shouldFailOnNotNullViolation() throws Exception {
-        
-        assertThatThrownBy(() -> new LogMessage(LogMessage.Type.DEBUG, null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new LogMessage(null, null)).isInstanceOf(NullPointerException.class);
-        
-        final LogMessage logMessage = new LogMessage(LogMessage.Type.DEBUG, "");
-        assertThatThrownBy(() -> logMessage.setType(null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> logMessage.setCode(null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> logMessage.setArguments(null)).isInstanceOf(NullPointerException.class);
-    }
 
     @Test
     public void shouldSupportEqualityAndHashCode() throws Exception {

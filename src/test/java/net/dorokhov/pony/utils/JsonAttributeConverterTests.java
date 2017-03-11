@@ -51,8 +51,16 @@ public class JsonAttributeConverterTests {
     }
     
     @Test
-    public void jsonConvertersShouldFailOnInvalidJson() throws Exception {
+    public void shouldFailOnInvalidJson() throws Exception {
         assertThatThrownBy(() -> listConverter.convertToEntityAttribute("foo, bar")).isInstanceOf(RuntimeException.class);
         assertThatThrownBy(() -> mapConverter.convertToEntityAttribute("foo, bar")).isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void shouldHandleNulls() throws Exception {
+        assertThat(listConverter.convertToDatabaseColumn(null)).isNull();
+        assertThat(mapConverter.convertToDatabaseColumn(null)).isNull();
+        assertThat(listConverter.convertToEntityAttribute(null)).isNull();
+        assertThat(mapConverter.convertToEntityAttribute(null)).isNull();
     }
 }

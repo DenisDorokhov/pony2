@@ -1,10 +1,10 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import net.dorokhov.pony.util.JsonAttributeConverter;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +20,20 @@ public class LogMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", nullable = false, insertable = false, updatable = false)
+    @NotNull
     private Long id;
 
-    @Column(name = "date", nullable = false)
+    @Column(name = "date", nullable = false, updatable = false)
+    @NotNull
     private LocalDateTime date;
 
     @Column(name = "type", nullable = false)
+    @NotNull
     private Type type;
-
+    
     @Column(name = "code", nullable = false)
+    @NotNull
     private String code;
 
     @Column(name = "text")
@@ -40,26 +44,27 @@ public class LogMessage {
 
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.ListConverter.class)
-    private List<Object> arguments = new ArrayList<>();
-
-    private LogMessage() {
-    }
+    private List<Object> arguments;
 
     public LogMessage(Type type, String code) {
         setType(type);
         setCode(code);
     }
 
-    public Optional<Long> getId() {
-        return Optional.ofNullable(id);
+    public Long getId() {
+        return id;
     }
 
-    public void setId(Long id) {
+    void setId(Long id) {
         this.id = id;
     }
 
-    public Optional<LocalDateTime> getDate() {
-        return Optional.ofNullable(date);
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    void setDate(LocalDateTime date) {
+        this.date = date;
     }
 
     public Type getType() {
@@ -67,7 +72,7 @@ public class LogMessage {
     }
 
     public void setType(Type type) {
-        this.type = Preconditions.checkNotNull(type);
+        this.type = type;
     }
 
     public String getCode() {
@@ -75,7 +80,7 @@ public class LogMessage {
     }
 
     public void setCode(String code) {
-        this.code = Preconditions.checkNotNull(code);
+        this.code = code;
     }
 
     public Optional<String> getText() {
@@ -95,16 +100,19 @@ public class LogMessage {
     }
 
     public List<Object> getArguments() {
+        if (arguments == null) {
+            arguments = new ArrayList<>();
+        }
         return arguments;
     }
 
     public void setArguments(List<Object> arguments) {
-        this.arguments = Preconditions.checkNotNull(arguments);
+        this.arguments = arguments;
     }
 
     @PrePersist
     public void prePersist() {
-        date = LocalDateTime.now();
+        setDate(LocalDateTime.now());
     }
 
     @Override
@@ -128,12 +136,8 @@ public class LogMessage {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("date", date)
                 .add("type", type)
                 .add("code", code)
-                .add("text", text)
-                .add("details", details)
-                .add("arguments", arguments)
                 .toString();
     }
 }

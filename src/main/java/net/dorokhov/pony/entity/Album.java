@@ -1,15 +1,13 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import net.dorokhov.pony.search.SearchAnalyzer;
 import net.dorokhov.pony.util.OptionalComparator;
-import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,13 +32,14 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id", nullable = false)
+    @NotNull
     private Artist artist;
 
-    private Album() {
+    public Album() {
     }
 
     public Album(Artist artist) {
-        setArtist(artist);
+        this.artist = artist;
     }
 
     public Optional<String> getName() {
@@ -83,11 +82,11 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
     }
 
     public void setArtist(Artist artist) {
-        this.artist = Preconditions.checkNotNull(artist);
+        this.artist = artist;
     }
 
     @Transient
-    @Field(analyzer = @Analyzer(impl = SearchAnalyzer.class))
+    @Field
     public String getSearchTerms() {
         return getName().orElse("") + " " +
                 getArtist().getName().orElse("");
@@ -106,12 +105,9 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("creationDate", creationDate)
-                .add("updateDate", updateDate)
                 .add("name", name)
                 .add("year", year)
                 .add("artwork", artwork)
-                .add("songs", songs)
                 .add("artist", artist)
                 .toString();
     }

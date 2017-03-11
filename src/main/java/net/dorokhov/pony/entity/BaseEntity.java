@@ -1,6 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -10,28 +11,29 @@ public abstract class BaseEntity<T extends Serializable> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", nullable = false, insertable = false, updatable = false)
     protected T id;
 
-    @Column(name = "creation_date")
+    @Column(name = "creation_date", nullable = false, updatable = false)
+    @NotNull
     protected LocalDateTime creationDate;
 
-    @Column(name = "update_date")
+    @Column(name = "update_date", insertable = false)
     protected LocalDateTime updateDate;
 
-    public Optional<T> getId() {
-        return Optional.ofNullable(id);
+    public T getId() {
+        return id;
     }
 
-    public void setId(T id) {
+    void setId(T id) {
         this.id = id;
     }
 
-    public Optional<LocalDateTime> getCreationDate() {
-        return Optional.ofNullable(creationDate);
+    public LocalDateTime getCreationDate() {
+        return creationDate;
     }
 
-    protected void setCreationDate(LocalDateTime creationDate) {
+    void setCreationDate(LocalDateTime creationDate) {
         this.creationDate = creationDate;
     }
 
@@ -39,18 +41,18 @@ public abstract class BaseEntity<T extends Serializable> {
         return Optional.ofNullable(updateDate);
     }
 
-    protected void setUpdateDate(LocalDateTime updateDate) {
+    void setUpdateDate(LocalDateTime updateDate) {
         this.updateDate = updateDate;
     }
 
     @PrePersist
     public void prePersist() {
-        setCreationDate(LocalDateTime.now());
+        creationDate = LocalDateTime.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-        setUpdateDate(LocalDateTime.now());
+        updateDate = LocalDateTime.now();
     }
 
     @Override

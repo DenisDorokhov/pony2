@@ -1,9 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
-import net.dorokhov.pony.search.SearchAnalyzer;
 import net.dorokhov.pony.util.OptionalComparator;
-import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -16,7 +14,7 @@ import java.util.Optional;
 public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
 
     @Column(name = "name")
-    @Field(analyzer = @Analyzer(impl = SearchAnalyzer.class))
+    @Field
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,8 +46,6 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("creationDate", creationDate)
-                .add("updateDate", updateDate)
                 .add("name", name)
                 .add("artwork", artwork)
                 .toString();

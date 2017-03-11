@@ -1,9 +1,9 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -12,19 +12,21 @@ import java.util.Optional;
 public class Config {
 
     @Id
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", nullable = false, updatable = false)
+    @NotNull
     private String id;
 
-    @Column(name = "creation_date", nullable = false)
+    @Column(name = "creation_date", nullable = false, updatable = false)
+    @NotNull
     private LocalDateTime creationDate;
 
-    @Column(name = "update_date")
+    @Column(name = "update_date", insertable = false)
     private LocalDateTime updateDate;
 
     @Column(name = "value")
     private String value;
 
-    private Config() {
+    public Config() {
     }
 
     public Config(String id) {
@@ -32,10 +34,10 @@ public class Config {
     }
 
     public Config(String id, String value) {
-        setId(id);
+        this.id = id;
         this.value = value;
     }
-    
+
     public Config(String id, int value) {
         this(id, String.valueOf(value));
     }
@@ -52,20 +54,28 @@ public class Config {
         this(id, String.valueOf(value));
     }
 
-    public Optional<String> getId() {
-        return Optional.ofNullable(id);
+    public String getId() {
+        return id;
     }
 
     public void setId(String id) {
-        this.id = Preconditions.checkNotNull(id);
+        this.id = id;
     }
 
     public Optional<LocalDateTime> getCreationDate() {
         return Optional.ofNullable(creationDate);
     }
 
+    void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
     public Optional<LocalDateTime> getUpdateDate() {
         return Optional.ofNullable(updateDate);
+    }
+
+    void setUpdateDate(LocalDateTime updateDate) {
+        this.updateDate = updateDate;
     }
 
     public Optional<String> getValue() {
@@ -116,7 +126,7 @@ public class Config {
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return id != null ? id.hashCode() : super.hashCode();
     }
 
     @Override
@@ -135,8 +145,6 @@ public class Config {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("creationDate", creationDate)
-                .add("updateDate", updateDate)
                 .add("value", value)
                 .toString();
     }
