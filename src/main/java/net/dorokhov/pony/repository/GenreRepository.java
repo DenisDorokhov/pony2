@@ -7,15 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public interface GenreRepository extends PagingAndSortingRepository<Genre, Long> {
 
     long countByArtworkId(Long aStoredFileId);
 
-    long countByCreationDateGreaterThan(Date aDate);
+    long countByCreationDateGreaterThan(LocalDateTime aDate);
 
-    long countByCreationDateLessThanAndUpdateDateGreaterThan(Date aCreationDate, Date aUpdateDate);
+    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime aCreationDate, LocalDateTime aUpdateDate);
 
     Genre findByName(String aName);
 

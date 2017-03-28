@@ -20,7 +20,6 @@ public class StoredFile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
-    @NotNull
     private Long id;
 
     @Column(name = "date", nullable = false, updatable = false)

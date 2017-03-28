@@ -6,14 +6,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StoredFileRepository extends PagingAndSortingRepository<StoredFile, Long> {
 
     long countByTag(String aTag);
 
-    long countByTagAndDateGreaterThan(String aTag, Date aDate);
+    long countByTagAndDateGreaterThan(String aTag, LocalDateTime aDate);
 
     @Query("SELECT SUM(f.size) FROM StoredFile f WHERE f.tag = ?1")
     Long sumSizeByTag(String aTag);

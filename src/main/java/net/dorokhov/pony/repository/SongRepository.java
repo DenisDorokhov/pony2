@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
@@ -21,9 +21,9 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     long countByArtworkId(Long aStoredFileId);
 
-    long countByCreationDateGreaterThan(Date aDate);
+    long countByCreationDateGreaterThan(LocalDateTime aDate);
 
-    long countByCreationDateLessThanAndUpdateDateGreaterThan(Date aCreationDate, Date aUpdateDate);
+    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime aCreationDate, LocalDateTime aUpdateDate);
 
     long countByGenreIdAndArtworkNotNull(Long aGenreId);
 
