@@ -11,17 +11,17 @@ import java.time.LocalDateTime;
 
 public interface GenreRepository extends PagingAndSortingRepository<Genre, Long> {
 
-    long countByArtworkId(Long aStoredFileId);
+    long countByArtworkId(Long storedFileId);
 
-    long countByCreationDateGreaterThan(LocalDateTime aDate);
+    long countByCreationDateGreaterThan(LocalDateTime date);
 
-    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime aCreationDate, LocalDateTime aUpdateDate);
+    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime creationDate, LocalDateTime updateDate);
 
-    Genre findByName(String aName);
+    Genre findByName(String name);
 
-    Page<Genre> findByArtworkId(Long aStoredFileId, Pageable aPageable);
+    Page<Genre> findByArtworkId(Long storedFileId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Genre g SET g.artwork = NULL WHERE g.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long aStoredFileId);
+    void clearArtworkByArtworkId(Long storedFileId);
 }

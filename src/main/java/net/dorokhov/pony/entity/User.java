@@ -10,6 +10,10 @@ import java.util.Set;
 @Entity
 @Table(name = "user")
 public class User extends BaseEntity<Long> {
+    
+    public enum Role {
+        USER, ADMIN
+    }
 
     @Column(name = "name", nullable = false)
     @NotNull
@@ -26,41 +30,42 @@ public class User extends BaseEntity<Long> {
     @Column(name = "value")
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
-    private Set<String> roles;
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
 
     public String getName() {
         return name;
     }
 
-    public void setName(String aName) {
-        name = aName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String aLogin) {
-        email = aLogin;
+    public void setEmail(String login) {
+        email = login;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String aPassword) {
-        password = aPassword;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
-    public Set<String> getRoles() {
+    public Set<Role> getRoles() {
         if (roles == null) {
             roles = new HashSet<>();
         }
         return roles;
     }
 
-    public void setRoles(Set<String> aRoles) {
-        roles = aRoles;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
     @Override

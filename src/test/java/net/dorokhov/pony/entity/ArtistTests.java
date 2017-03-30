@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ArtistTests {
 
     @Test
-    public void shouldBeSorted() throws Exception {
+    public void sort() throws Exception {
         
         Artist artist1 = new Artist();
         artist1.setName("1");
@@ -25,7 +25,7 @@ public class ArtistTests {
     }
 
     @Test
-    public void shouldBuildSearchTerms() throws Exception {
+    public void buildSearchTerms() throws Exception {
         Artist artist = new Artist();
         artist.setName("Foo");
         assertThat(artist.getSearchTerms()).isEqualTo("Foo");
@@ -34,7 +34,7 @@ public class ArtistTests {
     }
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void supportEqualityAndHashCode() throws Exception {
         
         Artist eqArtist1 = new Artist();
         eqArtist1.setId(1L);

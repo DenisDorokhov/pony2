@@ -11,23 +11,23 @@ import java.time.LocalDateTime;
 
 public interface AlbumRepository extends PagingAndSortingRepository<Album, Long> {
 
-    long countByArtworkId(Long aStoredFileId);
+    long countByArtworkId(Long storedFileId);
 
-    long countByArtistId(Long aArtistId);
+    long countByArtistId(Long artistId);
 
-    long countByCreationDateGreaterThan(LocalDateTime aDate);
+    long countByCreationDateGreaterThan(LocalDateTime date);
 
-    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime aCreationDate, LocalDateTime aUpdateDate);
+    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime creationDate, LocalDateTime updateDate);
 
-    long countByArtistIdAndArtworkNotNull(Long aArtistId);
+    long countByArtistIdAndArtworkNotNull(Long artistId);
 
-    Album findByArtistIdAndName(Long aArtistId, String aName);
+    Album findByArtistIdAndName(Long artistId, String name);
 
-    Page<Album> findByArtistIdAndArtworkNotNull(Long aArtistId, Pageable aPageable);
+    Page<Album> findByArtistIdAndArtworkNotNull(Long artistId, Pageable pageable);
 
-    Page<Album> findByArtworkId(Long aStoredFileId, Pageable aPageable);
+    Page<Album> findByArtworkId(Long storedFileId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Album al SET al.artwork = NULL WHERE al.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long aStoredFileId);
+    void clearArtworkByArtworkId(Long storedFileId);
 }

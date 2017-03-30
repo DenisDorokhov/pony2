@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LogMessageTests {
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void supportEqualityAndHashCode() throws Exception {
 
         LogMessage eqLogMessage1 = new LogMessage(LogMessage.Type.DEBUG, "");
         eqLogMessage1.setId(1L);

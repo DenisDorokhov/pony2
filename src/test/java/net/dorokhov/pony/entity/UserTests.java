@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserTests {
     
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void supportEqualityAndHashCode() throws Exception {
 
         User eqUser1 = new User();
         eqUser1.setId(1L);

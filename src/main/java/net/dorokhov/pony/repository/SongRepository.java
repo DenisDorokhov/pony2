@@ -13,38 +13,38 @@ import java.util.List;
 
 public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
-    long countByGenreId(Long aGenreId);
+    long countByGenreId(Long genreId);
 
-    long countByAlbumId(Long aAlbumId);
+    long countByAlbumId(Long albumId);
 
-    long countByAlbumArtistId(Long aArtistId);
+    long countByAlbumArtistId(Long artistId);
 
-    long countByArtworkId(Long aStoredFileId);
+    long countByArtworkId(Long storedFileId);
 
-    long countByCreationDateGreaterThan(LocalDateTime aDate);
+    long countByCreationDateGreaterThan(LocalDateTime date);
 
-    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime aCreationDate, LocalDateTime aUpdateDate);
+    long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime creationDate, LocalDateTime updateDate);
 
-    long countByGenreIdAndArtworkNotNull(Long aGenreId);
+    long countByGenreIdAndArtworkNotNull(Long genreId);
 
-    long countByAlbumIdAndArtworkNotNull(Long aGenreId);
+    long countByAlbumIdAndArtworkNotNull(Long genreId);
 
     @Query("SELECT SUM(s.size) FROM Song s")
     Long sumSize();
 
-    Song findByPath(String aPath);
+    Song findByPath(String path);
 
-    List<Song> findByAlbumId(Long aAlbumId, Sort aSort);
+    List<Song> findByAlbumId(Long albumId, Sort sort);
 
-    List<Song> findByAlbumArtistId(Long aArtistId, Sort aSort);
+    List<Song> findByAlbumArtistId(Long artistId, Sort sort);
 
-    Page<Song> findByAlbumArtistId(Long aArtistId, Pageable aPageable);
+    Page<Song> findByAlbumArtistId(Long artistId, Pageable pageable);
 
-    Page<Song> findByGenreIdAndArtworkNotNull(Long aGenreId, Pageable aPageable);
+    Page<Song> findByGenreIdAndArtworkNotNull(Long genreId, Pageable pageable);
 
-    Page<Song> findByAlbumIdAndArtworkNotNull(Long aGenreId, Pageable aPageable);
+    Page<Song> findByAlbumIdAndArtworkNotNull(Long genreId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Song s SET s.artwork = NULL WHERE s.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long aStoredFileId);
+    void clearArtworkByArtworkId(Long storedFileId);
 }

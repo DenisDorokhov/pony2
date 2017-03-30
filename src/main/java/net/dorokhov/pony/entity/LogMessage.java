@@ -12,16 +12,15 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "log_message")
-public class LogMessage {
+public class LogMessage implements Identifiable<Long> {
 
-    public static enum Type {
+    public enum Type {
         DEBUG, INFO, WARN, ERROR
     }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
-    @NotNull
     private Long id;
 
     @Column(name = "date", nullable = false, updatable = false)
@@ -29,6 +28,7 @@ public class LogMessage {
     private LocalDateTime date;
 
     @Column(name = "type", nullable = false)
+    @Enumerated(EnumType.STRING)
     @NotNull
     private Type type;
     
@@ -46,11 +46,15 @@ public class LogMessage {
     @Convert(converter = JsonAttributeConverter.ListConverter.class)
     private List<Object> arguments;
 
+    public LogMessage() {
+    }
+
     public LogMessage(Type type, String code) {
         setType(type);
         setCode(code);
     }
 
+    @Override
     public Long getId() {
         return id;
     }

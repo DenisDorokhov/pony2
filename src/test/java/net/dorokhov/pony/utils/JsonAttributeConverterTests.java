@@ -25,39 +25,39 @@ public class JsonAttributeConverterTests {
     }
 
     @Test
-    public void listConverterShouldConvertFromJson() throws Exception {
+    public void convertFromJsonUsingListConverter() throws Exception {
         List<Object> list = listConverter.convertToEntityAttribute("[\"foo\",\"bar\"]");
         assertThat(list).containsExactly("foo", "bar");
     }
     
     @Test
-    public void listConverterShouldConvertToJson() throws Exception {
+    public void convertToJsonUsingListConverter() throws Exception {
         List<Object> list = Arrays.asList("foo", "bar");
         String json = listConverter.convertToDatabaseColumn(list);
         assertThat(json).isEqualTo("[\"foo\",\"bar\"]");
     }
 
     @Test
-    public void mapConverterShouldConvertFromJson() throws Exception {
+    public void convertFromJsonUsingMapConverter() throws Exception {
         Map<String, Object> map = mapConverter.convertToEntityAttribute("{\"k1\":\"string\",\"k2\":2.1}");
         assertThat(map).containsOnly(entry("k1", "string"), entry("k2", 2.1));
     }
     
     @Test
-    public void mapConverterShouldConvertToJson() throws Exception {
+    public void convertToJsonUsingMapConverter() throws Exception {
         Map<String, Object> map = ImmutableMap.of("k1", "string", "k2", 2.1);
         String json = mapConverter.convertToDatabaseColumn(map);
         assertThat(json).isEqualTo("{\"k1\":\"string\",\"k2\":2.1}");
     }
     
     @Test
-    public void shouldFailOnInvalidJson() throws Exception {
+    public void failOnInvalidJson() throws Exception {
         assertThatThrownBy(() -> listConverter.convertToEntityAttribute("foo, bar")).isInstanceOf(RuntimeException.class);
         assertThatThrownBy(() -> mapConverter.convertToEntityAttribute("foo, bar")).isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void shouldHandleNulls() throws Exception {
+    public void handleNulls() throws Exception {
         assertThat(listConverter.convertToDatabaseColumn(null)).isNull();
         assertThat(mapConverter.convertToDatabaseColumn(null)).isNull();
         assertThat(listConverter.convertToEntityAttribute(null)).isNull();

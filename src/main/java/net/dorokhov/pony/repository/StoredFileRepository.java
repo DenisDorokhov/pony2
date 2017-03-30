@@ -11,16 +11,16 @@ import java.util.List;
 
 public interface StoredFileRepository extends PagingAndSortingRepository<StoredFile, Long> {
 
-    long countByTag(String aTag);
+    long countByTag(String tag);
 
-    long countByTagAndDateGreaterThan(String aTag, LocalDateTime aDate);
+    long countByTagAndDateGreaterThan(String tag, LocalDateTime date);
 
     @Query("SELECT SUM(f.size) FROM StoredFile f WHERE f.tag = ?1")
-    Long sumSizeByTag(String aTag);
+    Long sumSizeByTag(String tag);
 
-    Page<StoredFile> findByTag(String aTag, Pageable aPageable);
+    Page<StoredFile> findByTag(String tag, Pageable pageable);
 
-    List<StoredFile> findByChecksum(String aChecksum);
+    List<StoredFile> findByChecksum(String checksum);
 
-    StoredFile findByTagAndChecksum(String aTag, String aChecksum);
+    StoredFile findByTagAndChecksum(String tag, String checksum);
 }

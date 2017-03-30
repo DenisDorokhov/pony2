@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GenreTests {
 
     @Test
-    public void shouldBeSorted() throws Exception {
+    public void sort() throws Exception {
 
         Genre genre1 = new Genre();
         genre1.setName("1");
@@ -24,7 +24,7 @@ public class GenreTests {
         assertThat(list).containsExactly(genre1, genre2, genre2, genreNull);
     }
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void supportEqualityAndHashCode() throws Exception {
         
         Genre eqGenre1 = new Genre();
         eqGenre1.setId(1L);

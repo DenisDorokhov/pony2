@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class ConfigTests {
 
     @Test
-    public void shouldSupportNullValue() throws Exception {
+    public void supportNullValue() throws Exception {
         Config config = new Config("foo");
         assertThat(config.getValue()).isEqualTo(Optional.empty());
         assertThat(config.getInteger()).isEqualTo(Optional.empty());
@@ -20,7 +20,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldSupportStringValue() throws Exception {
+    public void supportStringValue() throws Exception {
         Config config = new Config("foo", "bar");
         assertThat(config.getValue()).isEqualTo(Optional.of("bar"));
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
@@ -30,7 +30,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldSupportIntegerValue() throws Exception {
+    public void supportIntegerValue() throws Exception {
         Config config = new Config("foo", 1);
         assertThat(config.getValue()).isEqualTo(Optional.of("1"));
         assertThat(config.getInteger()).isEqualTo(Optional.of(1));
@@ -40,7 +40,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldSupportLongValue() throws Exception {
+    public void supportLongValue() throws Exception {
         Config config = new Config("foo", 1L);
         assertThat(config.getValue()).isEqualTo(Optional.of("1"));
         assertThat(config.getInteger()).isEqualTo(Optional.of(1));
@@ -50,7 +50,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldSupportDoubleValue() throws Exception {
+    public void supportDoubleValue() throws Exception {
         Config config = new Config("foo", 1.2);
         assertThat(config.getValue()).isEqualTo(Optional.of("1.2"));
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
@@ -60,7 +60,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldSupportBooleanValue() throws Exception {
+    public void supportBooleanValue() throws Exception {
         Config config = new Config("foo", true);
         assertThat(config.getValue()).isEqualTo(Optional.of("true"));
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
@@ -70,7 +70,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void supportEqualityAndHashCode() throws Exception {
 
         Config eqConfig1 = new Config("1");
         Config eqConfig2 = new Config("1");

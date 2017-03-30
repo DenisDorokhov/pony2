@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "stored_file", uniqueConstraints = @UniqueConstraint(columnNames = {"tag", "checksum"}))
-public class StoredFile {
+public class StoredFile implements Identifiable<Long> {
 
     public static final String TAG_ARTWORK_EMBEDDED = "artworkEmbedded";
     public static final String TAG_ARTWORK_FILE = "artworkFile";
@@ -53,6 +53,7 @@ public class StoredFile {
     @Convert(converter = JsonAttributeConverter.MapConverter.class)
     private Map<String, Object> metaData;
 
+    @Override
     public Long getId() {
         return id;
     }

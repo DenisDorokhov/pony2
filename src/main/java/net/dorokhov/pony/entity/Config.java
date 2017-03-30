@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "config")
-public class Config {
+public class Config implements Identifiable<String> {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -54,6 +54,7 @@ public class Config {
         this(id, String.valueOf(value));
     }
 
+    @Override
     public String getId() {
         return id;
     }

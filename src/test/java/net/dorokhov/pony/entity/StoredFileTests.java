@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class StoredFileTests {
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void supportEqualityAndHashCode() throws Exception {
 
         StoredFile eqStoredFile1 = new StoredFile();
         eqStoredFile1.setId(1L);

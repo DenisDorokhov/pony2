@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @MappedSuperclass
-public abstract class BaseEntity<T extends Serializable> {
+public abstract class BaseEntity<T extends Serializable> implements Identifiable<T> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +21,7 @@ public abstract class BaseEntity<T extends Serializable> {
     @Column(name = "update_date", insertable = false)
     protected LocalDateTime updateDate;
 
+    @Override
     public T getId() {
         return id;
     }

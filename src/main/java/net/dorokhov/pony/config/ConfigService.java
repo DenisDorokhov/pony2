@@ -8,9 +8,9 @@ public interface ConfigService {
 
     Optional<Integer> getAutoScanInterval();
 
-    void saveAutoScanInterval(Integer aValue);
+    void saveAutoScanInterval(Integer value);
 
     List<File> fetchLibraryFolders();
 
-    void saveLibraryFolders(List<File> aValue);
+    void saveLibraryFolders(List<File> libraryFolders);
 }

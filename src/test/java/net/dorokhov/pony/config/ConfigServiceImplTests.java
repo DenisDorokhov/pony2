@@ -27,14 +27,14 @@ public class ConfigServiceImplTests {
     private ConfigServiceImpl configService;
 
     @Test
-    public void shouldGetEnabledScanInterval() throws Exception {
+    public void getEnabledScanInterval() throws Exception {
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
         assertThat(configService.getAutoScanInterval()).isEqualTo(Optional.of(1000));
     }
     
     @Test
-    public void shouldGetDisabledAutoScanInterval() throws Exception {
+    public void getDisabledAutoScanInterval() throws Exception {
         
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(null);
@@ -46,7 +46,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldSaveEnabledAutoScanInterval() throws Exception {
+    public void saveEnabledAutoScanInterval() throws Exception {
         
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
@@ -59,7 +59,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldSaveDisabledAutoScanInterval() throws Exception {
+    public void saveDisabledAutoScanInterval() throws Exception {
         
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
@@ -72,7 +72,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldSaveAutoScanIntervalWhichDidNotExist() throws Exception {
+    public void saveAutoScanIntervalWhichDidNotExist() throws Exception {
 
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(null);
@@ -85,7 +85,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldFetchExistingLibraryFolders() throws Exception {
+    public void fetchExistingLibraryFolders() throws Exception {
         
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(new Config(
@@ -99,7 +99,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldFetchNotExistingLibraryFolders() throws Exception {
+    public void fetchNotExistingLibraryFolders() throws Exception {
 
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS));
@@ -111,7 +111,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldSaveExistingLibraryFolders() throws Exception {
+    public void saveExistingLibraryFolders() throws Exception {
 
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(new Config(
@@ -126,7 +126,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldSaveNotExistingLibraryFolders() throws Exception {
+    public void saveNotExistingLibraryFolders() throws Exception {
 
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(new Config(
@@ -141,7 +141,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void shouldSaveLibraryFoldersWhichDidNotExist() throws Exception {
+    public void saveLibraryFoldersWhichDidNotExist() throws Exception {
 
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(null);

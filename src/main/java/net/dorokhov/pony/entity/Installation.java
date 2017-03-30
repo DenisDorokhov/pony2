@@ -15,6 +15,13 @@ public class Installation extends BaseEntity<Long> {
     @NotNull
     private String version;
 
+    public Installation() {
+    }
+
+    public Installation(String version) {
+        this.version = version;
+    }
+
     public String getVersion() {
         return version;
     }
