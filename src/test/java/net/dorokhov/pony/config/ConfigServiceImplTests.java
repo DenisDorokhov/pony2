@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -30,7 +29,7 @@ public class ConfigServiceImplTests {
     public void getEnabledScanInterval() throws Exception {
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
-        assertThat(configService.getAutoScanInterval()).isEqualTo(Optional.of(1000));
+        assertThat(configService.getAutoScanInterval()).hasValue(1000);
     }
     
     @Test
@@ -38,11 +37,11 @@ public class ConfigServiceImplTests {
         
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(null);
-        assertThat(configService.getAutoScanInterval()).isEqualTo(Optional.empty());
+        assertThat(configService.getAutoScanInterval()).isEmpty();
         
         when(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .thenReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL));
-        assertThat(configService.getAutoScanInterval()).isEqualTo(Optional.empty());
+        assertThat(configService.getAutoScanInterval()).isEmpty();
     }
 
     @Test
@@ -55,7 +54,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
         
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.of("2000"));
+        assertThat(savedConfig.getValue().getValue()).hasValue("2000");
     }
 
     @Test
@@ -68,7 +67,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
         
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.empty());
+        assertThat(savedConfig.getValue().getValue()).isEmpty();
     }
 
     @Test
@@ -81,7 +80,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.of("2000"));
+        assertThat(savedConfig.getValue().getValue()).hasValue("2000");
     }
 
     @Test
@@ -122,7 +121,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.of("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo"));
+        assertThat(savedConfig.getValue().getValue()).hasValue("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo");
     }
 
     @Test
@@ -137,7 +136,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.empty());
+        assertThat(savedConfig.getValue().getValue()).isEmpty();
     }
 
     @Test
@@ -150,6 +149,6 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo(Optional.of("foobar"));
+        assertThat(savedConfig.getValue().getValue()).hasValue("foobar");
     }
 }

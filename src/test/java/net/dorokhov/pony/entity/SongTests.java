@@ -55,7 +55,7 @@ public class SongTests {
     }
 
     @Test
-    public void shouldBuildSearchTerms() throws Exception {
+    public void buildSearchTerms() throws Exception {
 
         Song song1 = new Song();
         song1.setName("s1");

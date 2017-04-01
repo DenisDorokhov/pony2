@@ -2,8 +2,6 @@ package net.dorokhov.pony.entity;
 
 import org.junit.Test;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -12,61 +10,61 @@ public class ConfigTests {
     @Test
     public void supportNullValue() throws Exception {
         Config config = new Config("foo");
-        assertThat(config.getValue()).isEqualTo(Optional.empty());
-        assertThat(config.getInteger()).isEqualTo(Optional.empty());
-        assertThat(config.getLong()).isEqualTo(Optional.empty());
-        assertThat(config.getDouble()).isEqualTo(Optional.empty());
-        assertThat(config.getBoolean()).isEqualTo(Optional.empty());
+        assertThat(config.getValue()).isEmpty();
+        assertThat(config.getInteger()).isEmpty();
+        assertThat(config.getLong()).isEmpty();
+        assertThat(config.getDouble()).isEmpty();
+        assertThat(config.getBoolean()).isEmpty();
     }
 
     @Test
     public void supportStringValue() throws Exception {
         Config config = new Config("foo", "bar");
-        assertThat(config.getValue()).isEqualTo(Optional.of("bar"));
+        assertThat(config.getValue()).hasValue("bar");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getDouble).isInstanceOf(NumberFormatException.class);
-        assertThat(config.getBoolean()).isEqualTo(Optional.of(false));
+        assertThat(config.getBoolean()).hasValue(false);
     }
 
     @Test
     public void supportIntegerValue() throws Exception {
         Config config = new Config("foo", 1);
-        assertThat(config.getValue()).isEqualTo(Optional.of("1"));
-        assertThat(config.getInteger()).isEqualTo(Optional.of(1));
-        assertThat(config.getLong()).isEqualTo(Optional.of(1L));
-        assertThat(config.getDouble()).isEqualTo(Optional.of(1.0));
-        assertThat(config.getBoolean()).isEqualTo(Optional.of(false));
+        assertThat(config.getValue()).hasValue("1");
+        assertThat(config.getInteger()).hasValue(1);
+        assertThat(config.getLong()).hasValue(1L);
+        assertThat(config.getDouble()).hasValue(1.0);
+        assertThat(config.getBoolean()).hasValue(false);
     }
 
     @Test
     public void supportLongValue() throws Exception {
         Config config = new Config("foo", 1L);
-        assertThat(config.getValue()).isEqualTo(Optional.of("1"));
-        assertThat(config.getInteger()).isEqualTo(Optional.of(1));
-        assertThat(config.getLong()).isEqualTo(Optional.of(1L));
-        assertThat(config.getDouble()).isEqualTo(Optional.of(1.0));
-        assertThat(config.getBoolean()).isEqualTo(Optional.of(false));
+        assertThat(config.getValue()).hasValue("1");
+        assertThat(config.getInteger()).hasValue(1);
+        assertThat(config.getLong()).hasValue(1L);
+        assertThat(config.getDouble()).hasValue(1.0);
+        assertThat(config.getBoolean()).hasValue(false);
     }
 
     @Test
     public void supportDoubleValue() throws Exception {
         Config config = new Config("foo", 1.2);
-        assertThat(config.getValue()).isEqualTo(Optional.of("1.2"));
+        assertThat(config.getValue()).hasValue("1.2");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
-        assertThat(config.getDouble()).isEqualTo(Optional.of(1.2));
-        assertThat(config.getBoolean()).isEqualTo(Optional.of(false));
+        assertThat(config.getDouble()).hasValue(1.2);
+        assertThat(config.getBoolean()).hasValue(false);
     }
 
     @Test
     public void supportBooleanValue() throws Exception {
         Config config = new Config("foo", true);
-        assertThat(config.getValue()).isEqualTo(Optional.of("true"));
+        assertThat(config.getValue()).hasValue("true");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getDouble).isInstanceOf(NumberFormatException.class);
-        assertThat(config.getBoolean()).isEqualTo(Optional.of(true));
+        assertThat(config.getBoolean()).hasValue(true);
     }
 
     @Test

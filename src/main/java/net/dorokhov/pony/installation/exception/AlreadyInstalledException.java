@@ -1,4 +1,4 @@
-package net.dorokhov.pony.installation;
+package net.dorokhov.pony.installation.exception;
 
 public class AlreadyInstalledException extends RuntimeException {
 
