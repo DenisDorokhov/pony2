@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 public interface ArtistRepository extends PagingAndSortingRepository<Artist, Long> {
 
-    long countByArtworkId(Long storedFileId);
+    long countByArtworkId(Long artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
 
@@ -19,9 +19,9 @@ public interface ArtistRepository extends PagingAndSortingRepository<Artist, Lon
 
     Artist findByName(String name);
 
-    Page<Artist> findByArtworkId(Long storedFileId, Pageable pageable);
+    Page<Artist> findByArtworkId(Long artworkId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Artist ar SET ar.artwork = NULL WHERE ar.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long storedFileId);
+    void clearArtworkByArtworkId(Long artworkId);
 }

@@ -18,8 +18,8 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "artwork_stored_file_id")
-    private StoredFile artwork;
+    @JoinColumn(name = "artwork_id")
+    private Artwork artwork;
 
     public Optional<String> getName() {
         return Optional.ofNullable(name);
@@ -29,11 +29,11 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
         this.name = name;
     }
 
-    public Optional<StoredFile> getArtwork() {
+    public Optional<Artwork> getArtwork() {
         return Optional.ofNullable(artwork);
     }
 
-    public void setArtwork(StoredFile artwork) {
+    public void setArtwork(Artwork artwork) {
         this.artwork = artwork;
     }
 

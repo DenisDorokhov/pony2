@@ -35,7 +35,7 @@ public class RepositoryTests extends IntegrationTest {
     private SongRepository songRepository;
 
     @Autowired
-    private StoredFileRepository storedFileRepository;
+    private ArtworkRepository artworkRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -84,8 +84,8 @@ public class RepositoryTests extends IntegrationTest {
     }
 
     @Test
-    public void saveStoredFile() {
-        doTestSave(buildStoredFile(), storedFileRepository);
+    public void saveArtwork() {
+        doTestSave(buildArtwork(), artworkRepository);
     }
 
     @Test
@@ -122,20 +122,22 @@ public class RepositoryTests extends IntegrationTest {
         return user;
     }
 
-    private StoredFile buildStoredFile() {
+    private Artwork buildArtwork() {
 
-        StoredFile storedFile = new StoredFile();
+        Artwork artwork = new Artwork();
 
-        storedFile.setName("foobar");
-        storedFile.setMimeType("text/plain");
-        storedFile.setChecksum("123");
-        storedFile.setSize(123L);
-        storedFile.setPath("/somePath");
-        storedFile.setTag("someTag");
-        storedFile.getMetaData().put("k1", "v1");
-        storedFile.getMetaData().put("k2", "v2");
+        artwork.setName("foobar");
+        artwork.setMimeType("text/plain");
+        artwork.setChecksum("123");
+        artwork.setLargeImageSize(123L);
+        artwork.setLargeImagePath("/largePath");
+        artwork.setSmallImageSize(12L);
+        artwork.setSmallImagePath("/smallPath");
+        artwork.setTag("someTag");
+        artwork.getMetaData().put("k1", "v1");
+        artwork.getMetaData().put("k2", "v2");
 
-        return storedFile;
+        return artwork;
     }
 
     private Genre buildGenre() {

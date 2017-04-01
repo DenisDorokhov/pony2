@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @Entity
-@Table(name = "stored_file", uniqueConstraints = @UniqueConstraint(columnNames = {"tag", "checksum"}))
-public class StoredFile implements Identifiable<Long> {
+@Table(name = "artwork", uniqueConstraints = @UniqueConstraint(columnNames = {"tag", "checksum"}))
+public class Artwork implements Identifiable<Long> {
 
     public static final String TAG_ARTWORK_EMBEDDED = "artworkEmbedded";
     public static final String TAG_ARTWORK_FILE = "artworkFile";
@@ -38,13 +38,21 @@ public class StoredFile implements Identifiable<Long> {
     @NotNull
     private String checksum;
 
-    @Column(name = "size", nullable = false)
+    @Column(name = "large_image_size", nullable = false)
     @NotNull
-    private Long size;
+    private Long largeImageSize;
 
-    @Column(name = "path", nullable = false, unique = true)
+    @Column(name = "large_image_path", nullable = false, unique = true)
     @NotNull
-    private String path;
+    private String largeImagePath;
+
+    @Column(name = "small_image_size", nullable = false)
+    @NotNull
+    private Long smallImageSize;
+
+    @Column(name = "small_image_path", nullable = false, unique = true)
+    @NotNull
+    private String smallImagePath;
 
     @Column(name = "tag")
     private String tag;
@@ -94,20 +102,36 @@ public class StoredFile implements Identifiable<Long> {
         this.checksum = checksum;
     }
 
-    public Long getSize() {
-        return size;
+    public Long getLargeImageSize() {
+        return largeImageSize;
     }
 
-    public void setSize(Long size) {
-        this.size = size;
+    public void setLargeImageSize(Long size) {
+        this.largeImageSize = size;
     }
 
-    public String getPath() {
-        return path;
+    public String getLargeImagePath() {
+        return largeImagePath;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setLargeImagePath(String path) {
+        this.largeImagePath = path;
+    }
+
+    public Long getSmallImageSize() {
+        return smallImageSize;
+    }
+
+    public void setSmallImageSize(Long smallImageSize) {
+        this.smallImageSize = smallImageSize;
+    }
+
+    public String getSmallImagePath() {
+        return smallImagePath;
+    }
+
+    public void setSmallImagePath(String smallImagePath) {
+        this.smallImagePath = smallImagePath;
     }
 
     public Optional<String> getTag() {
@@ -145,7 +169,7 @@ public class StoredFile implements Identifiable<Long> {
             return true;
         }
         if (obj != null && id != null && getClass().equals(obj.getClass())) {
-            StoredFile that = (StoredFile) obj;
+            Artwork that = (Artwork) obj;
             return id.equals(that.id);
         }
         return false;
@@ -156,7 +180,7 @@ public class StoredFile implements Identifiable<Long> {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
                 .add("name", name)
-                .add("path", path)
+                .add("path", largeImagePath)
                 .add("tag", tag)
                 .add("metaData", metaData)
                 .toString();

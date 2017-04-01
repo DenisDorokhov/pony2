@@ -24,8 +24,8 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
     private Integer year;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "artwork_stored_file_id")
-    private StoredFile artwork;
+    @JoinColumn(name = "artwork_id")
+    private Artwork artwork;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "album")
     private List<Song> songs;
@@ -58,11 +58,11 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
         this.year = year;
     }
 
-    public Optional<StoredFile> getArtwork() {
+    public Optional<Artwork> getArtwork() {
         return Optional.ofNullable(artwork);
     }
 
-    public void setArtwork(StoredFile artwork) {
+    public void setArtwork(Artwork artwork) {
         this.artwork = artwork;
     }
 

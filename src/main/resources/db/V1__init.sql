@@ -71,7 +71,7 @@ CREATE TABLE config (
   PRIMARY KEY (id)
 );
 
-CREATE TABLE stored_file (
+CREATE TABLE artwork (
 
   id BIGINT IDENTITY,
 
@@ -80,17 +80,19 @@ CREATE TABLE stored_file (
   name VARCHAR (255) NOT NULL,
   mime_type VARCHAR (255) NOT NULL,
   checksum VARCHAR (255) NOT NULL,
-  size BIGINT NOT NULL,
+  large_image_size BIGINT NOT NULL,
+  large_image_path VARCHAR (255) NOT NULL,
+  small_image_size BIGINT NOT NULL,
+  small_image_path VARCHAR (255) NOT NULL,
   tag VARCHAR (255),
-  path VARCHAR (255) NOT NULL,
   meta_data LONGVARCHAR,
 
-  UNIQUE (path),
+  UNIQUE (large_image_path),
+  UNIQUE (small_image_path),
   UNIQUE (tag, checksum)
 );
 
-CREATE INDEX index_stored_file_checksum ON stored_file (checksum);
-CREATE INDEX index_stored_file_tag ON stored_file (tag);
+CREATE INDEX index_artwork_tag ON artwork (tag);
 
 CREATE TABLE genre (
 
@@ -101,9 +103,9 @@ CREATE TABLE genre (
 
   name VARCHAR_IGNORECASE (255),
 
-  artwork_stored_file_id BIGINT,
+  artwork_id BIGINT,
 
-  FOREIGN KEY (artwork_stored_file_id) REFERENCES stored_file (id)
+  FOREIGN KEY (artwork_id) REFERENCES artwork (id)
 );
 
 CREATE INDEX index_genre_name ON genre(name);
@@ -117,9 +119,9 @@ CREATE TABLE artist (
 
   name VARCHAR_IGNORECASE (255),
 
-  artwork_stored_file_id BIGINT,
+  artwork_id BIGINT,
 
-  FOREIGN KEY (artwork_stored_file_id) REFERENCES stored_file (id)
+  FOREIGN KEY (artwork_id) REFERENCES artwork (id)
 );
 
 CREATE INDEX index_artist_name ON artist(name);
@@ -134,12 +136,12 @@ CREATE TABLE album (
   name VARCHAR_IGNORECASE (255),
   year INT,
 
-  artwork_stored_file_id BIGINT,
+  artwork_id BIGINT,
 
   artist_id BIGINT NOT NULL,
 
   FOREIGN KEY (artist_id) REFERENCES artist (id),
-  FOREIGN KEY (artwork_stored_file_id) REFERENCES stored_file (id)
+  FOREIGN KEY (artwork_id) REFERENCES artwork (id)
 );
 
 CREATE INDEX index_album_name_artist_id ON album (name, artist_id);
@@ -175,14 +177,14 @@ CREATE TABLE song (
 
   year INT,
 
-  artwork_stored_file_id BIGINT,
+  artwork_id BIGINT,
 
   album_id BIGINT NOT NULL,
   genre_id BIGINT NOT NULL,
 
   FOREIGN KEY (album_id) REFERENCES album (id),
   FOREIGN KEY (genre_id) REFERENCES genre (id),
-  FOREIGN KEY (artwork_stored_file_id) REFERENCES stored_file (id),
+  FOREIGN KEY (artwork_id) REFERENCES artwork (id),
 
   UNIQUE (path)
 );

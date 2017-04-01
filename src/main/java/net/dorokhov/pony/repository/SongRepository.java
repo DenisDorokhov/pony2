@@ -19,7 +19,7 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     long countByAlbumArtistId(Long artistId);
 
-    long countByArtworkId(Long storedFileId);
+    long countByArtworkId(Long artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
 
@@ -46,5 +46,5 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     @Modifying
     @Query("UPDATE Song s SET s.artwork = NULL WHERE s.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long storedFileId);
+    void clearArtworkByArtworkId(Long artworkId);
 }

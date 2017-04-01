@@ -1,6 +1,6 @@
 package net.dorokhov.pony.repository;
 
-import net.dorokhov.pony.entity.StoredFile;
+import net.dorokhov.pony.entity.Artwork;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -9,18 +9,18 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface StoredFileRepository extends PagingAndSortingRepository<StoredFile, Long> {
+public interface ArtworkRepository extends PagingAndSortingRepository<Artwork, Long> {
 
     long countByTag(String tag);
 
     long countByTagAndDateGreaterThan(String tag, LocalDateTime date);
 
-    @Query("SELECT SUM(f.size) FROM StoredFile f WHERE f.tag = ?1")
+    @Query("SELECT SUM(f.largeImageSize) FROM Artwork f WHERE f.tag = ?1")
     Long sumSizeByTag(String tag);
 
-    Page<StoredFile> findByTag(String tag, Pageable pageable);
+    Page<Artwork> findByTag(String tag, Pageable pageable);
 
-    List<StoredFile> findByChecksum(String checksum);
+    List<Artwork> findByChecksum(String checksum);
 
-    StoredFile findByTagAndChecksum(String tag, String checksum);
+    Artwork findByTagAndChecksum(String tag, String checksum);
 }
