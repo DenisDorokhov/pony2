@@ -13,6 +13,8 @@ public class ChecksumCalculator {
     }
     
     public String calculate(File file) throws IOException {
-        return calculate(new FileInputStream(file));
+        try (InputStream stream = new FileInputStream(file)) {
+            return calculate(stream);
+        }
     }
 }

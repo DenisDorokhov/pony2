@@ -22,18 +22,19 @@ public class FileTypeResolver {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public Optional<FileType> resolve(File file) throws IOException {
+        try (InputStream stream = new BufferedInputStream(new FileInputStream(file))) {
+            
+            TikaConfig config = TikaConfig.getDefaultConfig();
+            MediaType mediaType = config.getMimeRepository().detect(stream, new Metadata());
 
-        TikaConfig config = TikaConfig.getDefaultConfig();
-        InputStream stream = new BufferedInputStream(new FileInputStream(file));
-        MediaType mediaType = config.getMimeRepository().detect(stream, new Metadata());
-        
-        try {
-            MimeType mimeType = config.getMimeRepository().forName(mediaType.toString());
-            String extension = correctExtension(mimeType.getExtension());
-            return Optional.of(new FileType(mimeType.toString(), extension));
-        } catch (MimeTypeException e) {
-            log.debug("Could not resolve mime type for file '{}'.", file.getAbsolutePath(), e);
-            return Optional.empty();
+            try {
+                MimeType mimeType = config.getMimeRepository().forName(mediaType.toString());
+                String extension = correctExtension(mimeType.getExtension());
+                return Optional.of(new FileType(mimeType.toString(), extension));
+            } catch (MimeTypeException e) {
+                log.debug("Could not resolve mime type for file '{}'.", file.getAbsolutePath(), e);
+                return Optional.empty();
+            }
         }
     }
     

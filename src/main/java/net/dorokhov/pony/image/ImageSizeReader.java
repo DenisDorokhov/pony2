@@ -34,6 +34,8 @@ public class ImageSizeReader {
     }
 
     public ImageSize read(File file) throws IOException {
-        return read(new FileInputStream(file));
+        try (InputStream stream = new FileInputStream(file)) {
+            return read(stream);
+        }
     }
 }

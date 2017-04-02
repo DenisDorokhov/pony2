@@ -20,19 +20,16 @@ public class ChecksumCalculatorTests {
 
     @Test
     public void calculateStreamChecksum() throws Exception {
-
-        InputStream stream = new ClassPathResource("test.txt").getInputStream();
-        String checksum = checksumCalculator.calculate(stream);
-        
-        assertThat(checksum).isEqualTo("d8e8fca2dc0f896fd7cb4cb0031ba249");
+        try (InputStream stream = new ClassPathResource("test.txt").getInputStream()) {
+            String checksum = checksumCalculator.calculate(stream);
+            assertThat(checksum).isEqualTo("d8e8fca2dc0f896fd7cb4cb0031ba249");
+        }
     }
 
     @Test
     public void calculateFileChecksum() throws Exception {
-
         File file = new ClassPathResource("test.txt").getFile();
         String checksum = checksumCalculator.calculate(file);
-        
         assertThat(checksum).isEqualTo("d8e8fca2dc0f896fd7cb4cb0031ba249");
     }
 }
