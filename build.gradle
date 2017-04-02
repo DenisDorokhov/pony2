@@ -31,7 +31,6 @@ dependencies {
     runtime 'com.h2database:h2'
 
     compile 'com.google.guava:guava:21.0'
-    compile 'org.apache.commons:commons-lang3:3.5'
 
     apt 'org.mapstruct:mapstruct-processor:1.1.0.Final'
     compile 'org.mapstruct:mapstruct-jdk8:1.1.0.Final'

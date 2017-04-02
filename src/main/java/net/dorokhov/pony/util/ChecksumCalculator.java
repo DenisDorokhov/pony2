@@ -1,4 +1,4 @@
-package net.dorokhov.pony.file;
+package net.dorokhov.pony.util;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;

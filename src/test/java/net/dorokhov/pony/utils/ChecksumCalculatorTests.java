@@ -1,5 +1,6 @@
-package net.dorokhov.pony.file;
+package net.dorokhov.pony.utils;
 
+import net.dorokhov.pony.util.ChecksumCalculator;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;

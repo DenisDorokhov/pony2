@@ -1,4 +1,4 @@
-package net.dorokhov.pony.file;
+package net.dorokhov.pony.util;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.tika.config.TikaConfig;

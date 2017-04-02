@@ -1,6 +1,7 @@
-package net.dorokhov.pony.file;
+package net.dorokhov.pony.utils;
 
-import net.dorokhov.pony.file.FileTypeResolver.FileType;
+import net.dorokhov.pony.util.FileTypeResolver;
+import net.dorokhov.pony.util.FileTypeResolver.FileType;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
