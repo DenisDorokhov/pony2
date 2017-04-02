@@ -1,5 +1,7 @@
 package net.dorokhov.pony.image;
 
+import com.google.common.base.Objects;
+
 public class ImageSize {
     
     private final int width;
@@ -16,5 +18,23 @@ public class ImageSize {
 
     public int getHeight() {
         return height;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        ImageSize that = (ImageSize) obj;
+        return Objects.equal(this.width, that.width) &&
+                Objects.equal(this.height, that.height);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(width, height);
     }
 }

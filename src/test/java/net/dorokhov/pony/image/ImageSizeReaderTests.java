@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.io.InputStream;
@@ -11,6 +12,9 @@ import java.io.InputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ImageSizeReaderTests {
+    
+    private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
+    private static final ImageSize IMAGE_SIZE = new ImageSize(90, 100);
     
     private ImageSizeReader imageSizeReader;
 
@@ -21,27 +25,24 @@ public class ImageSizeReaderTests {
 
     @Test
     public void readFromInputStream() throws Exception {
-        try (InputStream stream = new ClassPathResource("image.png").getInputStream()) {
+        try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             ImageSize size = imageSizeReader.read(stream);
-            assertThat(size.getWidth()).isEqualTo(90);
-            assertThat(size.getHeight()).isEqualTo(100);
+            assertThat(size).isEqualTo(IMAGE_SIZE);
         }
     }
 
     @Test
     public void readFromBytes() throws Exception {
-        try (InputStream stream = new ClassPathResource("image.png").getInputStream()) {
+        try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             ImageSize size = imageSizeReader.read(ByteStreams.toByteArray(stream));
-            assertThat(size.getWidth()).isEqualTo(90);
-            assertThat(size.getHeight()).isEqualTo(100);
+            assertThat(size).isEqualTo(IMAGE_SIZE);
         }
     }
 
     @Test
     public void readFromFile() throws Exception {
-        File file = new ClassPathResource("image.png").getFile();
+        File file = IMAGE_RESOURCE.getFile();
         ImageSize size = imageSizeReader.read(file);
-        assertThat(size.getWidth()).isEqualTo(90);
-        assertThat(size.getHeight()).isEqualTo(100);
+        assertThat(size).isEqualTo(IMAGE_SIZE);
     }
 }
