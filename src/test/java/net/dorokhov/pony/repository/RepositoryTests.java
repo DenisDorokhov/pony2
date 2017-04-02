@@ -41,39 +41,39 @@ public class RepositoryTests extends IntegrationTest {
     private UserRepository userRepository;
 
     @Test
-    public void saveAlbum() {
+    public void saveAlbum() throws Exception {
         Artist artist = buildArtist();
         artistRepository.save(artist);
         doTestSave(buildAlbum(artist), albumRepository);
     }
 
     @Test
-    public void saveArtist() {
+    public void saveArtist() throws Exception {
         doTestSave(buildArtist(), artistRepository);
     }
 
     @Test
-    public void saveConfig() {
+    public void saveConfig() throws Exception {
         doTestSave(buildConfig(), configRepository);
     }
 
     @Test
-    public void saveGenre() {
+    public void saveGenre() throws Exception {
         doTestSave(buildGenre(), genreRepository);
     }
 
     @Test
-    public void saveInstallation() {
+    public void saveInstallation() throws Exception {
         doTestSave(buildInstallation(), installationRepository);
     }
 
     @Test
-    public void saveLogMessage() {
+    public void saveLogMessage() throws Exception {
         doTestSave(buildLogMessage(), logMessageRepository);
     }
 
     @Test
-    public void saveSong() {
+    public void saveSong() throws Exception {
         Artist artist = buildArtist();
         artistRepository.save(artist);
         Album album = buildAlbum(artist);
@@ -84,12 +84,12 @@ public class RepositoryTests extends IntegrationTest {
     }
 
     @Test
-    public void saveArtwork() {
+    public void saveArtwork() throws Exception {
         doTestSave(buildArtwork(), artworkRepository);
     }
 
     @Test
-    public void saveUser() {
+    public void saveUser() throws Exception {
         doTestSave(buildUser(), userRepository);
     }
 

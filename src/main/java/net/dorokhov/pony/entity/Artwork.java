@@ -59,7 +59,7 @@ public class Artwork implements Identifiable<Long> {
 
     @Column(name = "user_data")
     @Convert(converter = JsonAttributeConverter.MapConverter.class)
-    private Map<String, Object> metaData;
+    private Map<String, String> metaData;
 
     @Override
     public Long getId() {
@@ -142,14 +142,14 @@ public class Artwork implements Identifiable<Long> {
         this.tag = tag;
     }
 
-    public Map<String, Object> getMetaData() {
+    public Map<String, String> getMetaData() {
         if (metaData == null) {
             metaData = new HashMap<>();
         }
         return metaData;
     }
 
-    public void setMetaData(Map<String, Object> metaData) {
+    public void setMetaData(Map<String, String> metaData) {
         this.metaData = metaData;
     }
 

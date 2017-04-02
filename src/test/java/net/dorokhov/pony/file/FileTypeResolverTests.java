@@ -15,7 +15,7 @@ public class FileTypeResolverTests {
     private FileTypeResolver fileTypeResolver;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         fileTypeResolver = new FileTypeResolver();
     }
 

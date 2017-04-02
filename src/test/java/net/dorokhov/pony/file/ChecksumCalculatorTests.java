@@ -14,7 +14,7 @@ public class ChecksumCalculatorTests {
     private ChecksumCalculator checksumCalculator;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         checksumCalculator = new ChecksumCalculator();
     }
 
