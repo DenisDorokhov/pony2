@@ -1,5 +1,6 @@
 package net.dorokhov.pony.image;
 
+import com.google.common.io.ByteStreams;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -22,6 +23,15 @@ public class ImageSizeReaderTests {
     public void readFromInputStream() throws Exception {
         try (InputStream stream = new ClassPathResource("image.png").getInputStream()) {
             ImageSize size = imageSizeReader.read(stream);
+            assertThat(size.getWidth()).isEqualTo(90);
+            assertThat(size.getHeight()).isEqualTo(100);
+        }
+    }
+
+    @Test
+    public void readFromBytes() throws Exception {
+        try (InputStream stream = new ClassPathResource("image.png").getInputStream()) {
+            ImageSize size = imageSizeReader.read(ByteStreams.toByteArray(stream));
             assertThat(size.getWidth()).isEqualTo(90);
             assertThat(size.getHeight()).isEqualTo(100);
         }

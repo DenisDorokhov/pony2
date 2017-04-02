@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Iterator;
 
 @Component
@@ -30,6 +27,12 @@ public class ImageSizeReader {
             }
         } catch (Exception e) {
             throw new IOException("Could not read image size.", e);
+        }
+    }
+
+    public ImageSize read(byte[] content) throws IOException {
+        try (InputStream stream = new ByteArrayInputStream(content)) {
+            return read(stream);
         }
     }
 
