@@ -1,4 +1,4 @@
-package net.dorokhov.pony.util;
+package net.dorokhov.pony.file;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.tika.config.TikaConfig;
@@ -21,20 +21,34 @@ public class FileTypeResolver {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    public Optional<FileType> resolve(File file) throws IOException {
-        try (InputStream stream = new BufferedInputStream(new FileInputStream(file))) {
-            
+    public FileType resolve(InputStream stream) throws IOException {
+        try (InputStream bufferedStream = new BufferedInputStream(stream)) {
+
             TikaConfig config = TikaConfig.getDefaultConfig();
-            MediaType mediaType = config.getMimeRepository().detect(stream, new Metadata());
+            MediaType mediaType = config.getMimeRepository().detect(bufferedStream, new Metadata());
 
             try {
                 MimeType mimeType = config.getMimeRepository().forName(mediaType.toString());
                 String extension = correctExtension(mimeType.getExtension());
-                return Optional.of(new FileType(mimeType.toString(), extension));
+                return new FileType(mimeType.toString(), extension);
             } catch (MimeTypeException e) {
-                log.debug("Could not resolve mime type for file '{}'.", file.getAbsolutePath(), e);
-                return Optional.empty();
+                log.debug("Could not resolve mime type.", e);
+                return new FileType("application/octet-stream", "bin");
             }
+        }
+    }
+    
+    public FileType resolve(File file) throws IOException {
+        try (InputStream stream = new FileInputStream(file)) {
+            return resolve(stream);
+        }
+    }
+    
+    public FileType resolve(byte[] content) {
+        try (InputStream stream = new ByteArrayInputStream(content)) {
+            return resolve(stream);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
     }
     
@@ -44,26 +58,6 @@ public class FileTypeResolver {
             return correctedExtension.substring(1);
         } else {
             return correctedExtension;
-        }
-    }
-
-    public static class FileType {
-
-        private final String mimeType;
-
-        private final String fileExtension;
-
-        public FileType(String mimeType, String fileExtension) {
-            this.mimeType = mimeType;
-            this.fileExtension = fileExtension;
-        }
-
-        public String getMimeType() {
-            return mimeType;
-        }
-
-        public String getFileExtension() {
-            return fileExtension;
         }
     }
 }

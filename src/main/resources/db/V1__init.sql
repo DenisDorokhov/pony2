@@ -156,12 +156,12 @@ CREATE TABLE song (
 
   path VARCHAR_IGNORECASE (255) NOT NULL,
 
-  format VARCHAR (255) NOT NULL,
   mime_type VARCHAR (255) NOT NULL,
   size BIGINT NOT NULL,
 
-  duration INT NOT NULL,
+  duration BIGINT NOT NULL,
   bit_rate BIGINT NOT NULL,
+  bit_rate_variable BOOL NOT NULL,
 
   disc_number INT,
   disc_count INT,

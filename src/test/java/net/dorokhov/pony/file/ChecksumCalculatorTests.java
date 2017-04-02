@@ -1,6 +1,6 @@
-package net.dorokhov.pony.utils;
+package net.dorokhov.pony.file;
 
-import net.dorokhov.pony.util.ChecksumCalculator;
+import com.google.common.io.ByteStreams;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -27,6 +27,14 @@ public class ChecksumCalculatorTests {
     public void calculateStreamChecksum() throws Exception {
         try (InputStream stream = TEST_RESOURCE.getInputStream()) {
             String checksum = checksumCalculator.calculate(stream);
+            assertThat(checksum).isEqualTo(CHECKSUM);
+        }
+    }
+
+    @Test
+    public void calculateBytesChecksum() throws Exception {
+        try (InputStream stream = TEST_RESOURCE.getInputStream()) {
+            String checksum = checksumCalculator.calculate(ByteStreams.toByteArray(stream));
             assertThat(checksum).isEqualTo(CHECKSUM);
         }
     }

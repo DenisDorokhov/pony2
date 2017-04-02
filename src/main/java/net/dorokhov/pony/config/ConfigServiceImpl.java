@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,13 +47,12 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(readOnly = true)
     public List<File> fetchLibraryFolders() {
-        
-        String[] paths = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
+        List<String> paths = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
                 .flatMap(Config::getValue)
                 .map(s -> s.split(CONFIG_LIBRARY_FOLDERS_SEPARATOR))
-                .orElse(new String[]{});
-        
-        return Arrays.stream(paths)
+                .map(Arrays::asList)
+                .orElse(Collections.emptyList());
+        return paths.stream()
                 .map(String::trim)
                 .filter(s -> s.length() > 0)
                 .map(File::new)

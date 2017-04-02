@@ -19,10 +19,6 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
     @NotNull
     private String path;
 
-    @Column(name = "format", nullable = false)
-    @NotNull
-    private String format;
-
     @Column(name = "mime_type", nullable = false)
     @NotNull
     private String mimeType;
@@ -33,11 +29,15 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
 
     @Column(name = "duration", nullable = false)
     @NotNull
-    private Integer duration;
+    private Long duration;
 
     @Column(name = "bit_rate", nullable = false)
     @NotNull
     private Long bitRate;
+
+    @Column(name = "bit_rate_variable", nullable = false)
+    @NotNull
+    private Boolean bitRateVariable;
 
     @Column(name = "disc_number")
     private Integer discNumber;
@@ -97,14 +97,6 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
         this.path = path;
     }
 
-    public String getFormat() {
-        return format;
-    }
-
-    public void setFormat(String type) {
-        format = type;
-    }
-
     public String getMimeType() {
         return mimeType;
     }
@@ -121,11 +113,11 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
         this.size = size;
     }
 
-    public Integer getDuration() {
+    public Long getDuration() {
         return duration;
     }
 
-    public void setDuration(Integer duration) {
+    public void setDuration(Long duration) {
         this.duration = duration;
     }
 
@@ -135,6 +127,14 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
 
     public void setBitRate(Long bitRate) {
         this.bitRate = bitRate;
+    }
+
+    public Boolean getBitRateVariable() {
+        return bitRateVariable;
+    }
+
+    public void setBitRateVariable(Boolean bitRateVariable) {
+        this.bitRateVariable = bitRateVariable;
     }
 
     public Optional<Integer> getDiscNumber() {

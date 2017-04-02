@@ -157,10 +157,10 @@ public class RepositoryTests extends IntegrationTest {
         Song song = new Song(album, genre);
         
         song.setMimeType("text/plain");
-        song.setDuration(100);
+        song.setDuration(100L);
         song.setSize(10L);
         song.setBitRate(256L);
-        song.setFormat("MPEG");
+        song.setBitRateVariable(false);
         song.setPath("/dev/null");
         
         return song;

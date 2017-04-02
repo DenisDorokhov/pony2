@@ -1,4 +1,4 @@
-package net.dorokhov.pony.util;
+package net.dorokhov.pony.file;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
@@ -16,5 +16,9 @@ public class ChecksumCalculator {
         try (InputStream stream = new FileInputStream(file)) {
             return calculate(stream);
         }
+    }
+    
+    public String calculate(byte[] content) {
+        return DigestUtils.md5DigestAsHex(content);
     }
 }

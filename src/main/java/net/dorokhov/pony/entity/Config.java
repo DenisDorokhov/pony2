@@ -88,11 +88,11 @@ public class Config implements Identifiable<String> {
     }
 
     public void setValue(Number value) {
-        setValue(Optional.ofNullable(value).map(String::valueOf).orElse(null));
+        setValue(value != null ? String.valueOf(value) : null);
     }
 
     public void setValue(Boolean value) {
-        setValue(Optional.ofNullable(value).map(String::valueOf).orElse(null));
+        setValue(value != null ? String.valueOf(value) : null);
     }
 
     @Transient
