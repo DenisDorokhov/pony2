@@ -158,14 +158,6 @@ public class FileTreeScanner {
             }
         }
 
-        private void doGetChildFiles(Set<FileNode> result, boolean recursive) {
-            result.addAll(childImages);
-            result.addAll(childAudios);
-            if (recursive) {
-                childFolders.forEach(folder -> folder.doGetChildFiles(result, true));
-            }
-        }
-
         private void doGetChildFolders(Set<FolderNode> result, boolean recursive) {
             result.addAll(childFolders);
             if (recursive) {
@@ -246,7 +238,7 @@ public class FileTreeScanner {
     
     private class Visitor extends SimpleFileVisitor<Path> {
         
-        private final Map<Path, FolderNodeImpl> pathToFolder = new HashMap<>();
+        private final Stack<FolderNodeImpl> folderStack = new Stack<>();
         
         private FolderNode root;
 
@@ -256,12 +248,12 @@ public class FileTreeScanner {
 
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-            FolderNodeImpl parentFolder = pathToFolder.get(dir.getParent());
+            FolderNodeImpl parentFolder = root != null ? folderStack.peek() : null;
             FolderNodeImpl folderNode = new FolderNodeImpl(dir.toFile(), parentFolder);
             if (parentFolder != null) {
                 parentFolder.getChildFoldersMutable().add(folderNode);
             }
-            pathToFolder.put(dir, folderNode);
+            folderStack.push(folderNode);
             if (root == null) {
                 root = folderNode;
             }
@@ -270,7 +262,7 @@ public class FileTreeScanner {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            FolderNodeImpl parentFolder = pathToFolder.get(file.getParent());
+            FolderNodeImpl parentFolder = folderStack.peek();
             scanFile(file.toFile()).ifPresent(fileNode -> {
                 if (fileNode instanceof ImageNode) {
                     parentFolder.getChildImagesMutable().add((ImageNode) fileNode);
@@ -280,6 +272,12 @@ public class FileTreeScanner {
                     throw new IllegalStateException(String.format("Unknown file type '%s'.", fileNode.getClass().getSimpleName()));
                 }
             });
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            folderStack.pop();
             return FileVisitResult.CONTINUE;
         }
     }
