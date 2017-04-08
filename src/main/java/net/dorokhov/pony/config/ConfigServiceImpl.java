@@ -1,7 +1,6 @@
 package net.dorokhov.pony.config;
 
 import com.google.common.base.Strings;
-import com.sun.istack.internal.Nullable;
 import net.dorokhov.pony.entity.Config;
 import net.dorokhov.pony.repository.ConfigRepository;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     @Transactional
-    public void saveAutoScanInterval(@Nullable Integer value) {
+    public void saveAutoScanInterval(Integer value) {
         Config config = Optional.ofNullable(configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL))
                 .orElse(new Config(CONFIG_AUTO_SCAN_INTERVAL));
         config.setValue(value);
