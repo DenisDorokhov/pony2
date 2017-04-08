@@ -31,7 +31,7 @@ public class AudioTaggerTests {
     
     private AudioTagger audioTagger;
     
-    private File tempFile;
+    private File writeToFile;
 
     @Before
     public void setUp() throws Exception {
@@ -40,10 +40,12 @@ public class AudioTaggerTests {
 
     @After
     public void tearDown() throws Exception {
-        if (tempFile != null) {
-            tempFile.delete();
+        if (writeToFile != null) {
+            if (!writeToFile.delete()) {
+                throw new RuntimeException("Could not delete temporary file.");
+            }
+            writeToFile = null;
         }
-        tempFile = null;
     }
 
     @Test
@@ -123,8 +125,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setDiscNumber(1)
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(1);
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -144,8 +146,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setDiscCount(1)
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).hasValue(1);
         assertThat(data.getTrackNumber()).isEmpty();
@@ -165,8 +167,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setTrackNumber(1)
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).hasValue(1);
@@ -186,8 +188,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setTrackCount(1)
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -207,8 +209,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setTitle("значение")
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -228,8 +230,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setArtist("значение")
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -249,8 +251,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setAlbumArtist("значение")
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -270,8 +272,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setAlbum("значение")
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -291,8 +293,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setYear(1986)
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -312,8 +314,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setGenre("значение")
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -333,8 +335,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .setArtworkFile(FILE_ARTWORK.getFile())
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).isEmpty();
@@ -364,8 +366,8 @@ public class AudioTaggerTests {
                 .setGenre("Heavy Metal")
                 .setArtworkFile(FILE_ARTWORK.getFile())
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkId3V2Mp3(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkId3V2Mp3(writeToFile, data);
     }
 
     @Test
@@ -374,8 +376,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetDiscNumber()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEmpty();
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -396,8 +398,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetDiscCount()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).isEmpty();
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -418,8 +420,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetTrackNumber()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).isEmpty();
@@ -440,8 +442,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetTrackCount()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -462,8 +464,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetTitle()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -484,8 +486,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetArtist()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -506,8 +508,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetAlbumArtist()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -528,8 +530,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetAlbum()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -550,8 +552,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetYear()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -572,8 +574,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetGenre()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -594,8 +596,8 @@ public class AudioTaggerTests {
         WritableAudioData dataWritable = new WritableAudioData.Builder()
                 .unsetArtworkFile()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkMp3File(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).hasValue(2);
         assertThat(data.getDiscCount()).hasValue(3);
         assertThat(data.getTrackNumber()).hasValue(3);
@@ -625,13 +627,13 @@ public class AudioTaggerTests {
                 .unsetGenre()
                 .unsetArtworkFile()
                 .build();
-        ReadableAudioData data = audioTagger.write(tempFile, dataWritable);
-        checkEmptyMp3(tempFile, data);
+        ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+        checkEmptyMp3(writeToFile, data);
     }
     
     private void createTempFile(Resource resource) throws IOException {
-        tempFile = File.createTempFile(getClass().getSimpleName(), ".mp3");
-        Files.copy(resource.getFile(), tempFile);
+        writeToFile = File.createTempFile(getClass().getSimpleName(), ".mp3");
+        Files.copy(resource.getFile(), writeToFile);
     }
 
     private void checkEmptyMp3(File file, ReadableAudioData data) {

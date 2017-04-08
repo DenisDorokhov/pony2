@@ -22,7 +22,7 @@ public class ThumbnailGeneratorTests {
     
     private ThumbnailGenerator thumbnailGenerator;
     
-    private File targetFile;
+    private File writeToFile;
 
     @Before
     public void setUp() throws Exception {
@@ -31,34 +31,36 @@ public class ThumbnailGeneratorTests {
 
     @After
     public void tearDown() throws Exception {
-        if (targetFile != null) {
-            targetFile.delete();
-            targetFile = null;
+        if (writeToFile != null) {
+            if (!writeToFile.delete()) {
+                throw new RuntimeException("Could not delete temporary file.");
+            }
+            writeToFile = null;
         }
     }
 
     @Test
     public void generateFromInputStream() throws Exception {
-        targetFile = createTempFile();
+        writeToFile = createTempFile();
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, targetFile);
+            thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, writeToFile);
         }
         checkTargetFile();
     }
 
     @Test
     public void generateFromBytes() throws Exception {
-        targetFile = createTempFile();
+        writeToFile = createTempFile();
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, targetFile);
+            thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, writeToFile);
         }
         checkTargetFile();
     }
 
     @Test
     public void generateFromFile() throws Exception {
-        targetFile = createTempFile();
-        thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, targetFile);
+        writeToFile = createTempFile();
+        thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, writeToFile);
         checkTargetFile();
     }
     
@@ -67,7 +69,7 @@ public class ThumbnailGeneratorTests {
     }
     
     private void checkTargetFile() throws IOException {
-        BufferedImage targetImage = ImageIO.read(targetFile);
+        BufferedImage targetImage = ImageIO.read(writeToFile);
         assertThat(targetImage.getWidth()).isEqualTo(45);
         assertThat(targetImage.getHeight()).isEqualTo(50);
     }
