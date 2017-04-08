@@ -1,5 +1,6 @@
 package net.dorokhov.pony.file;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class FileType {
@@ -45,5 +46,13 @@ public class FileType {
     @Override
     public int hashCode() {
         return Objects.hashCode(mimeType, fileExtension);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("mimeType", mimeType)
+                .add("fileExtension", fileExtension)
+                .toString();
     }
 }

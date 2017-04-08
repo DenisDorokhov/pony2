@@ -25,27 +25,20 @@ public class AudioDataWritable extends AudioDataAbstract {
     private final boolean writeArtwork;
     private final File artworkFile;
 
-    private AudioDataWritable(Integer discNumber, Integer discCount, 
-                             Integer trackNumber, Integer trackCount, 
-                             String title, String artist, String albumArtist, String album, Integer year, String genre, 
-                             boolean writeDiscNumber, boolean writeDiscCount, 
-                             boolean writeTrackNumber, boolean writeTrackCount, 
-                             boolean writeTitle, boolean writeArtist, boolean writeAlbumArtist, boolean writeAlbum, 
-                             boolean writeYear, boolean writeGenre, 
-                             boolean writeArtwork, File artworkFile) {
-        super(discNumber, discCount, trackNumber, trackCount, title, artist, albumArtist, album, year, genre);
-        this.writeDiscNumber = writeDiscNumber;
-        this.writeDiscCount = writeDiscCount;
-        this.writeTrackNumber = writeTrackNumber;
-        this.writeTrackCount = writeTrackCount;
-        this.writeTitle = writeTitle;
-        this.writeArtist = writeArtist;
-        this.writeAlbumArtist = writeAlbumArtist;
-        this.writeAlbum = writeAlbum;
-        this.writeYear = writeYear;
-        this.writeGenre = writeGenre;
-        this.writeArtwork = writeArtwork;
-        this.artworkFile = artworkFile;
+    private AudioDataWritable(Builder builder) {
+        super(builder);
+        this.writeDiscNumber = builder.writeDiscNumber;
+        this.writeDiscCount = builder.writeDiscCount;
+        this.writeTrackNumber = builder.writeTrackNumber;
+        this.writeTrackCount = builder.writeTrackCount;
+        this.writeTitle = builder.writeTitle;
+        this.writeArtist = builder.writeArtist;
+        this.writeAlbumArtist = builder.writeAlbumArtist;
+        this.writeAlbum = builder.writeAlbum;
+        this.writeYear = builder.writeYear;
+        this.writeGenre = builder.writeGenre;
+        this.writeArtwork = builder.writeArtwork;
+        this.artworkFile = builder.artworkFile;
     }
 
     public boolean isWriteDiscNumber() {
@@ -124,20 +117,7 @@ public class AudioDataWritable extends AudioDataAbstract {
                 .toString();
     }
 
-    public static class Builder {
-
-        private Integer discNumber;
-        private Integer discCount;
-        
-        private Integer trackNumber;
-        private Integer trackCount;
-        
-        private String title;
-        private String artist;
-        private String albumArtist;
-        private String album;
-        private Integer year;
-        private String genre;
+    public static class Builder extends BuilderAbstract {
         
         private boolean writeDiscNumber;
         private boolean writeDiscCount;
@@ -155,62 +135,72 @@ public class AudioDataWritable extends AudioDataAbstract {
         private boolean writeArtwork;
         private File artworkFile;
 
+        @Override
         public Builder setDiscNumber(Integer discNumber) {
-            this.discNumber = discNumber;
+            super.setDiscNumber(discNumber);
             this.writeDiscNumber = true;
             return this;
         }
 
+        @Override
         public Builder setDiscCount(Integer discCount) {
-            this.discCount = discCount;
+            super.setDiscCount(discCount);
             this.writeDiscCount = true;
             return this;
         }
 
+        @Override
         public Builder setTrackNumber(Integer trackNumber) {
-            this.trackNumber = trackNumber;
+            super.setTrackNumber(trackNumber);
             this.writeTrackNumber = true;
             return this;
         }
 
+        @Override
         public Builder setTrackCount(Integer trackCount) {
-            this.trackCount = trackCount;
+            super.setTrackCount(trackCount);
             this.writeTrackCount = true;
             return this;
         }
 
+        @Override
         public Builder setTitle(String title) {
-            this.title = title;
+            super.setTitle(title);
             this.writeTitle = true;
             return this;
         }
 
+        @Override
         public Builder setArtist(String artist) {
-            this.artist = artist;
+            super.setArtist(artist);
             this.writeArtist = true;
             return this;
         }
 
+        @Override
         public Builder setAlbumArtist(String albumArtist) {
-            this.albumArtist = albumArtist;
+            super.setAlbumArtist(albumArtist);
             this.writeAlbumArtist = true;
             return this;
         }
 
+        @Override
         public Builder setAlbum(String album) {
-            this.album = album;
+            super.setAlbum(album);
             this.writeAlbum = true;
             return this;
         }
 
+        @Override
         public Builder setYear(Integer year) {
-            this.year = year;
+            super.setYear(year);
             this.writeYear = true;
             return this;
         }
 
+        @Override
         public Builder setGenre(String genre) {
-            this.genre = genre;
+            super.setGenre(genre);
             this.writeGenre = true;
             return this;
         }
@@ -221,8 +211,9 @@ public class AudioDataWritable extends AudioDataAbstract {
             return this;
         }
 
+        @Override
         public AudioDataWritable build() {
-            return new AudioDataWritable(discNumber, discCount, trackNumber, trackCount, title, artist, albumArtist, album, year, genre, writeDiscNumber, writeDiscCount, writeTrackNumber, writeTrackCount, writeTitle, writeArtist, writeAlbumArtist, writeAlbum, writeYear, writeGenre, writeArtwork, artworkFile);
+            return new AudioDataWritable(this);
         }
     }
 }

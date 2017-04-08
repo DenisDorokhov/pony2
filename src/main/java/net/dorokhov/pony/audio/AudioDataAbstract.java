@@ -15,17 +15,17 @@ public abstract class AudioDataAbstract {
     protected final Integer year;
     protected final String genre;
 
-    protected AudioDataAbstract(Integer discNumber, Integer discCount, Integer trackNumber, Integer trackCount, String title, String artist, String albumArtist, String album, Integer year, String genre) {
-        this.discNumber = discNumber;
-        this.discCount = discCount;
-        this.trackNumber = trackNumber;
-        this.trackCount = trackCount;
-        this.title = title;
-        this.artist = artist;
-        this.albumArtist = albumArtist;
-        this.album = album;
-        this.year = year;
-        this.genre = genre;
+    protected AudioDataAbstract(BuilderAbstract builder) {
+        this.discNumber = builder.discNumber;
+        this.discCount = builder.discCount;
+        this.trackNumber = builder.trackNumber;
+        this.trackCount = builder.trackCount;
+        this.title = builder.title;
+        this.artist = builder.artist;
+        this.albumArtist = builder.albumArtist;
+        this.album = builder.album;
+        this.year = builder.year;
+        this.genre = builder.genre;
     }
 
     public Optional<Integer> getDiscNumber() {
@@ -66,5 +66,71 @@ public abstract class AudioDataAbstract {
 
     public Optional<String> getGenre() {
         return Optional.ofNullable(genre);
+    }
+    
+    protected abstract static class BuilderAbstract {
+
+        protected Integer discNumber;
+        protected Integer discCount;
+        protected Integer trackNumber;
+        protected Integer trackCount;
+        protected String title;
+        protected String artist;
+        protected String albumArtist;
+        protected String album;
+        protected Integer year;
+        protected String genre;
+
+        public BuilderAbstract setDiscNumber(final Integer discNumber) {
+            this.discNumber = discNumber;
+            return this;
+        }
+
+        public BuilderAbstract setDiscCount(final Integer discCount) {
+            this.discCount = discCount;
+            return this;
+        }
+
+        public BuilderAbstract setTrackNumber(final Integer trackNumber) {
+            this.trackNumber = trackNumber;
+            return this;
+        }
+
+        public BuilderAbstract setTrackCount(final Integer trackCount) {
+            this.trackCount = trackCount;
+            return this;
+        }
+
+        public BuilderAbstract setTitle(final String title) {
+            this.title = title;
+            return this;
+        }
+
+        public BuilderAbstract setArtist(final String artist) {
+            this.artist = artist;
+            return this;
+        }
+
+        public BuilderAbstract setAlbumArtist(final String albumArtist) {
+            this.albumArtist = albumArtist;
+            return this;
+        }
+
+        public BuilderAbstract setAlbum(final String album) {
+            this.album = album;
+            return this;
+        }
+
+        public BuilderAbstract setYear(final Integer year) {
+            this.year = year;
+            return this;
+        }
+
+        public BuilderAbstract setGenre(final String genre) {
+            this.genre = genre;
+            return this;
+        }
+
+        abstract public AudioDataAbstract build();
     }
 }

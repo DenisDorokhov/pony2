@@ -16,19 +16,15 @@ public class AudioDataReadable extends AudioDataAbstract {
     private final boolean bitRateVariable;
     private final EmbeddedArtwork embeddedArtwork;
 
-    private AudioDataReadable(Integer discNumber, Integer discCount,
-                              Integer trackNumber, Integer trackCount,
-                              String title, String artist, String albumArtist, String album, Integer year, String genre,
-                              String path, FileType fileType, long size, long duration, long bitRate, boolean bitRateVariable,
-                              EmbeddedArtwork embeddedArtwork) {
-        super(discNumber, discCount, trackNumber, trackCount, title, artist, albumArtist, album, year, genre);
-        this.path = path;
-        this.fileType = fileType;
-        this.size = size;
-        this.duration = duration;
-        this.bitRate = bitRate;
-        this.bitRateVariable = bitRateVariable;
-        this.embeddedArtwork = embeddedArtwork;
+    private AudioDataReadable(Builder builder) {
+        super(builder);
+        this.path = builder.path;
+        this.fileType = builder.fileType;
+        this.size = builder.size;
+        this.duration = builder.duration;
+        this.bitRate = builder.bitRate;
+        this.bitRateVariable = builder.bitRateVariable;
+        this.embeddedArtwork = builder.embeddedArtwork;
     }
 
     public String getPath() {
@@ -117,76 +113,15 @@ public class AudioDataReadable extends AudioDataAbstract {
         }
     }
     
-    public static class Builder {
+    public static class Builder extends BuilderAbstract {
 
-        private Integer discNumber;
-        private Integer discCount;
-        private Integer trackNumber;
-        private Integer trackCount;
-        private String title;
-        private String artist;
-        private String albumArtist;
-        private String album;
-        private Integer year;
-        private String genre;
         private String path;
-        
         private FileType fileType;
         private long size;
         private long duration;
         private long bitRate;
         private boolean bitRateVariable;
         private EmbeddedArtwork embeddedArtwork;
-
-        public Builder setDiscNumber(Integer discNumber) {
-            this.discNumber = discNumber;
-            return this;
-        }
-
-        public Builder setDiscCount(Integer discCount) {
-            this.discCount = discCount;
-            return this;
-        }
-
-        public Builder setTrackNumber(Integer trackNumber) {
-            this.trackNumber = trackNumber;
-            return this;
-        }
-
-        public Builder setTrackCount(Integer trackCount) {
-            this.trackCount = trackCount;
-            return this;
-        }
-
-        public Builder setTitle(String title) {
-            this.title = title;
-            return this;
-        }
-
-        public Builder setArtist(String artist) {
-            this.artist = artist;
-            return this;
-        }
-
-        public Builder setAlbumArtist(String albumArtist) {
-            this.albumArtist = albumArtist;
-            return this;
-        }
-
-        public Builder setAlbum(String album) {
-            this.album = album;
-            return this;
-        }
-
-        public Builder setYear(Integer year) {
-            this.year = year;
-            return this;
-        }
-
-        public Builder setGenre(String genre) {
-            this.genre = genre;
-            return this;
-        }
 
         public Builder setPath(String path) {
             this.path = path;
@@ -223,12 +158,9 @@ public class AudioDataReadable extends AudioDataAbstract {
             return this;
         }
 
+        @Override
         public AudioDataReadable build() {
-            return new AudioDataReadable(discNumber, discCount, 
-                    trackNumber, trackCount, 
-                    title, artist, albumArtist, album, year, genre, 
-                    path, fileType, size, duration, bitRate, bitRateVariable,
-                    embeddedArtwork);
+            return new AudioDataReadable(this);
         }
     }
 }

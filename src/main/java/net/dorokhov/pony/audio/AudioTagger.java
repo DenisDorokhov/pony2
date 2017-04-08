@@ -13,6 +13,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.images.StandardArtwork;
+import org.jaudiotagger.tag.reference.GenreTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -87,14 +88,14 @@ public class AudioTagger {
                 .setDuration(audioHeader.getTrackLength())
                 .setBitRate(audioHeader.getBitRateAsNumber())
                 .setBitRateVariable(audioHeader.isVariableBitRate())
-                .setDiscNumber(parseIntegerTag(tag, FieldKey.DISC_NO)).setDiscCount(parseIntegerTag(tag, FieldKey.DISC_TOTAL))
-                .setTrackNumber(parseIntegerTag(tag, FieldKey.TRACK)).setTrackCount(parseIntegerTag(tag, FieldKey.TRACK_TOTAL))
-                .setTitle(parseStringTag(tag, FieldKey.TITLE))
-                .setArtist(parseStringTag(tag, FieldKey.ARTIST))
-                .setAlbumArtist(parseStringTag(tag, FieldKey.ALBUM_ARTIST))
-                .setAlbum(parseStringTag(tag, FieldKey.ALBUM))
-                .setYear(parseIntegerTag(tag, FieldKey.YEAR))
-                .setGenre(parseStringTag(tag, FieldKey.GENRE));
+                .setDiscNumber(parseInteger(tag, FieldKey.DISC_NO)).setDiscCount(parseInteger(tag, FieldKey.DISC_TOTAL))
+                .setTrackNumber(parseInteger(tag, FieldKey.TRACK)).setTrackCount(parseInteger(tag, FieldKey.TRACK_TOTAL))
+                .setTitle(parseString(tag, FieldKey.TITLE))
+                .setArtist(parseString(tag, FieldKey.ARTIST))
+                .setAlbumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
+                .setAlbum(parseString(tag, FieldKey.ALBUM))
+                .setYear(parseInteger(tag, FieldKey.YEAR))
+                .setGenre(parseGenre(tag));
 
         parseArtwork(tag).ifPresent(builder::setEmbeddedArtwork);
 
@@ -104,38 +105,49 @@ public class AudioTagger {
     private AudioDataReadable writeMp3(File file, FileType fileType, AudioDataWritable data) throws Exception {
 
         AudioFile audioFile = AudioFileIO.read(file);
-        Tag tag = audioFile.getTag();
-
+        Tag tag = audioFile.getTagOrCreateDefault();
+        audioFile.setTag(tag);
+        
         if (data.isWriteDiscNumber()) {
+            log.debug("Writing disc number '{}' to file '{}'.", data.getDiscNumber(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.DISC_NO, data.getDiscNumber());
         }
         if (data.isWriteDiscCount()) {
+            log.debug("Writing disc count '{}' to file '{}'.", data.getDiscCount(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.DISC_TOTAL, data.getDiscCount());
         }
 
         if (data.isWriteTrackNumber()) {
+            log.debug("Writing track number '{}' to file '{}'.", data.getTrackNumber(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.TRACK, data.getTrackNumber());
         }
         if (data.isWriteTrackCount()) {
+            log.debug("Writing track count '{}' to file '{}'.", data.getTrackCount(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.TRACK_TOTAL, data.getTrackCount());
         }
 
         if (data.isWriteTitle()) {
+            log.debug("Writing title '{}' to file '{}'.", data.getTitle(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.TITLE, data.getTitle());
         }
         if (data.isWriteArtist()) {
+            log.debug("Writing artist '{}' to file '{}'.", data.getArtist(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.ARTIST, data.getArtist());
         }
         if (data.isWriteAlbumArtist()) {
+            log.debug("Writing album artist '{}' to file '{}'.", data.getAlbumArtist(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.ALBUM_ARTIST, data.getAlbumArtist());
         }
         if (data.isWriteAlbum()) {
+            log.debug("Writing album '{}' to file '{}'.", data.getAlbum(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.ALBUM, data.getAlbum());
         }
         if (data.isWriteYear()) {
+            log.debug("Writing year '{}' to file '{}'.", data.getYear(), file.getAbsolutePath());
             setOrDeleteTagField(tag, FieldKey.YEAR, data.getYear());
         }
         if (data.isWriteGenre()) {
+            log.debug("Writing genre '{}' to file '{}'.", data.getGenre(), file.getAbsolutePath()); 
             setOrDeleteTagField(tag, FieldKey.GENRE, data.getGenre());
         }
 
@@ -143,7 +155,8 @@ public class AudioTagger {
             tag.deleteArtworkField();
             data.getArtworkFile().ifPresent(artworkFile -> {
                 try {
-                    StandardArtwork.createArtworkFromFile(artworkFile);
+                    log.debug("Writing artwork to file '{}'.", file.getAbsolutePath());
+                    tag.setField(StandardArtwork.createArtworkFromFile(artworkFile));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -155,32 +168,54 @@ public class AudioTagger {
         return readMp3(audioFile, fileType);
     }
 
-    private String parseStringTag(Tag tag, FieldKey key) {
-        return Strings.emptyToNull(tag.getFirst(key).trim());
+    private String parseString(Tag tag, FieldKey key) {
+        return tag != null ? Strings.emptyToNull(tag.getFirst(key).trim()) : null;
     }
 
-    private Integer parseIntegerTag(Tag tag, FieldKey key) {
-        return Ints.tryParse(tag.getFirst(key).trim());
+    private Integer parseInteger(Tag tag, FieldKey key) {
+        if (tag != null) {
+            Integer value = Ints.tryParse(tag.getFirst(key).trim());
+            if (value != null && value > 0) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private String parseGenre(Tag tag) {
+        if (tag != null) {
+            Integer type = parseInteger(tag, FieldKey.GENRE);
+            if (type != null) {
+                String value = GenreTypes.getInstanceOf().getValueForId(type);
+                return value != null ? value : parseString(tag, FieldKey.GENRE);
+            } else {
+                return parseString(tag, FieldKey.GENRE);
+            }
+        }
+        return null;
     }
     
     private Optional<AudioDataReadable.EmbeddedArtwork> parseArtwork(Tag tag) {
-        Artwork artwork = tag.getFirstArtwork();
-        if (artwork != null && artwork.getBinaryData() != null) {
-            FileType type = fileTypeResolver.resolve(artwork.getBinaryData());
-            if (type.isImage()) {
-                return Optional.of(new AudioDataReadable.EmbeddedArtwork(
-                        ByteSource.wrap(artwork.getBinaryData()),
-                        type, checksumCalculator.calculate(artwork.getBinaryData())));
-            } else {
-                log.info("Artwork is not an image.");
+        if (tag != null) {
+            Artwork artwork = tag.getFirstArtwork();
+            if (artwork != null && artwork.getBinaryData() != null) {
+                FileType type = fileTypeResolver.resolve(artwork.getBinaryData());
+                if (type.isImage()) {
+                    return Optional.of(new AudioDataReadable.EmbeddedArtwork(
+                            ByteSource.wrap(artwork.getBinaryData()),
+                            type, checksumCalculator.calculate(artwork.getBinaryData())));
+                } else {
+                    log.debug("Artwork is not an image: '{}'.", type);
+                }
             }
         }
         return Optional.empty();
     }
 
-    private void setOrDeleteTagField(Tag tag, FieldKey key, Object value) throws Exception {
-        if (value != null) {
-            tag.setField(key, value.toString());
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private void setOrDeleteTagField(Tag tag, FieldKey key, Optional<?> value) throws Exception {
+        if (value.isPresent()) {
+            tag.setField(key, value.get().toString());
         } else {
             tag.deleteField(key);
         }
