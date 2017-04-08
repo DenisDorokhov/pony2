@@ -45,7 +45,7 @@ public class FileTypeResolverTests {
     @Test
     public void resolveMp3() throws Exception {
 
-        File file = new ClassPathResource("empty.mp3").getFile();
+        File file = new ClassPathResource("audio/empty.mp3").getFile();
         FileType fileType = fileTypeResolver.resolve(file);
 
         assertThat(fileType.getMimeType()).isEqualTo("audio/mpeg");

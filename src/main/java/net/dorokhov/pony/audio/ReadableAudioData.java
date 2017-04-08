@@ -6,7 +6,7 @@ import net.dorokhov.pony.file.FileType;
 
 import java.util.Optional;
 
-public class AudioDataReadable extends AudioDataAbstract {
+public class ReadableAudioData extends AudioData {
 
     private final String path;
     private final FileType fileType;
@@ -16,7 +16,7 @@ public class AudioDataReadable extends AudioDataAbstract {
     private final boolean bitRateVariable;
     private final EmbeddedArtwork embeddedArtwork;
 
-    private AudioDataReadable(Builder builder) {
+    private ReadableAudioData(Builder builder) {
         super(builder);
         this.path = builder.path;
         this.fileType = builder.fileType;
@@ -159,8 +159,8 @@ public class AudioDataReadable extends AudioDataAbstract {
         }
 
         @Override
-        public AudioDataReadable build() {
-            return new AudioDataReadable(this);
+        public ReadableAudioData build() {
+            return new ReadableAudioData(this);
         }
     }
 }

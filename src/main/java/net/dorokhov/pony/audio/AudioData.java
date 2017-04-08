@@ -2,7 +2,7 @@ package net.dorokhov.pony.audio;
 
 import java.util.Optional;
 
-public abstract class AudioDataAbstract {
+public abstract class AudioData {
 
     protected final Integer discNumber;
     protected final Integer discCount;
@@ -15,7 +15,7 @@ public abstract class AudioDataAbstract {
     protected final Integer year;
     protected final String genre;
 
-    protected AudioDataAbstract(BuilderAbstract builder) {
+    protected AudioData(BuilderAbstract builder) {
         this.discNumber = builder.discNumber;
         this.discCount = builder.discCount;
         this.trackNumber = builder.trackNumber;
@@ -131,6 +131,6 @@ public abstract class AudioDataAbstract {
             return this;
         }
 
-        abstract public AudioDataAbstract build();
+        abstract public AudioData build();
     }
 }

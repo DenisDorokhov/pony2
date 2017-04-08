@@ -39,7 +39,7 @@ public class AudioTagger {
         this.checksumCalculator = checksumCalculator;
     }
 
-    public AudioDataReadable read(File file) throws IOException {
+    public ReadableAudioData read(File file) throws IOException {
         try {
             return doRead(file);
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class AudioTagger {
         }
     }
 
-    public AudioDataReadable write(File file, AudioDataWritable data) throws IOException {
+    public ReadableAudioData write(File file, WritableAudioData data) throws IOException {
         try {
             return doWrite(file, data);
         } catch (Exception e) {
@@ -55,7 +55,7 @@ public class AudioTagger {
         }
     }
 
-    private AudioDataReadable doRead(File file) throws Exception {
+    private ReadableAudioData doRead(File file) throws Exception {
         FileType fileType = fileTypeResolver.resolve(file);
         if (MP3_MIME_TYPE.equals(fileType.getMimeType())) {
             return readMp3(file, fileType);
@@ -64,7 +64,7 @@ public class AudioTagger {
         }
     }
     
-    private AudioDataReadable doWrite(File file, AudioDataWritable data) throws Exception {
+    private ReadableAudioData doWrite(File file, WritableAudioData data) throws Exception {
         FileType fileType = fileTypeResolver.resolve(file);
         if (MP3_MIME_TYPE.equals(fileType.getMimeType())) {
             return writeMp3(file, fileType, data);
@@ -73,16 +73,16 @@ public class AudioTagger {
         }
     }
 
-    private AudioDataReadable readMp3(File file, FileType fileType) throws Exception {
+    private ReadableAudioData readMp3(File file, FileType fileType) throws Exception {
         return readMp3(AudioFileIO.read(file), fileType);
     }
     
-    private AudioDataReadable readMp3(AudioFile audioFile, FileType fileType) throws Exception {
+    private ReadableAudioData readMp3(AudioFile audioFile, FileType fileType) throws Exception {
 
         AudioHeader audioHeader = audioFile.getAudioHeader();
         Tag tag = audioFile.getTag();
 
-        AudioDataReadable.Builder builder = new AudioDataReadable.Builder();
+        ReadableAudioData.Builder builder = new ReadableAudioData.Builder();
 
         builder.setPath(audioFile.getFile().getAbsolutePath())
                 .setFileType(fileType)
@@ -104,7 +104,7 @@ public class AudioTagger {
         return builder.build();
     }
     
-    private AudioDataReadable writeMp3(File file, FileType fileType, AudioDataWritable data) throws Exception {
+    private ReadableAudioData writeMp3(File file, FileType fileType, WritableAudioData data) throws Exception {
 
         AudioFile audioFile = AudioFileIO.read(file);
         Tag tag = audioFile.getTagOrCreateDefault();
@@ -242,13 +242,13 @@ public class AudioTagger {
         return null;
     }
     
-    private Optional<AudioDataReadable.EmbeddedArtwork> parseArtwork(Tag tag) {
+    private Optional<ReadableAudioData.EmbeddedArtwork> parseArtwork(Tag tag) {
         if (tag != null) {
             Artwork artwork = tag.getFirstArtwork();
             if (artwork != null && artwork.getBinaryData() != null) {
                 FileType type = fileTypeResolver.resolve(artwork.getBinaryData());
                 if (type.isImage()) {
-                    return Optional.of(new AudioDataReadable.EmbeddedArtwork(
+                    return Optional.of(new ReadableAudioData.EmbeddedArtwork(
                             ByteSource.wrap(artwork.getBinaryData()),
                             type, checksumCalculator.calculate(artwork.getBinaryData())));
                 } else {

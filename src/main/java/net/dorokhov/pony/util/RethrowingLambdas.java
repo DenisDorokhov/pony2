@@ -1,9 +1,6 @@
 package net.dorokhov.pony.util;
 
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * Based on http://stackoverflow.com/questions/27644361/how-can-i-throw-checked-exceptions-from-inside-java-8-streams.
@@ -31,6 +28,11 @@ public final class RethrowingLambdas {
     @FunctionalInterface
     public interface ThrowingSupplier<T> {
         T get() throws Exception;
+    }
+    
+    @FunctionalInterface
+    public interface ThrowingUnaryOperator<T> {
+        T apply(T t) throws Exception;
     }
 
     @FunctionalInterface
@@ -72,6 +74,16 @@ public final class RethrowingLambdas {
         return () -> {
             try {
                 return function.get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    public static <T> UnaryOperator<T> rethrow(ThrowingUnaryOperator<T> function) {
+        return t -> {
+            try {
+                return function.apply(t);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

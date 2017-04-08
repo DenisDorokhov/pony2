@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class AudioDataWritable extends AudioDataAbstract {
+public class WritableAudioData extends AudioData {
 
     private final boolean writeDiscNumber;
     private final boolean writeDiscCount;
@@ -26,7 +26,7 @@ public class AudioDataWritable extends AudioDataAbstract {
     private final boolean writeArtwork;
     private final File artworkFile;
 
-    private AudioDataWritable(Builder builder) {
+    private WritableAudioData(Builder builder) {
         super(builder);
         this.writeDiscNumber = builder.writeDiscNumber;
         this.writeDiscCount = builder.writeDiscCount;
@@ -389,8 +389,8 @@ public class AudioDataWritable extends AudioDataAbstract {
         }
 
         @Override
-        public AudioDataWritable build() {
-            return new AudioDataWritable(this);
+        public WritableAudioData build() {
+            return new WritableAudioData(this);
         }
     }
 }
