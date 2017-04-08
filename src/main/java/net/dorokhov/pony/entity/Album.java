@@ -1,6 +1,5 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ComparisonChain;
 import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Field;
@@ -103,12 +102,12 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("name", name)
-                .add("year", year)
-                .add("artwork", artwork)
-                .add("artist", artist)
-                .toString();
+        return "Album{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", year=" + year +
+                ", artwork=" + artwork +
+                ", artist=" + artist +
+                '}';
     }
 }

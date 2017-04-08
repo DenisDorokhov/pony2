@@ -1,7 +1,5 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.base.MoreObjects;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -144,9 +142,9 @@ public class Config implements Identifiable<String> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("value", value)
-                .toString();
+        return "Config{" +
+                "id='" + id + '\'' +
+                ", value='" + value + '\'' +
+                '}';
     }
 }

@@ -51,7 +51,12 @@ public class FileTypeResolverTests {
         assertThat(fileType.getMimeType()).isEqualTo("audio/mpeg");
         assertThat(fileType.getFileExtension()).isEqualTo("mp3");
     }
-    
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new FileType("text/plain", "txt").toString()).startsWith("FileType{");
+    }
+
     private void checkImageFileType(FileType fileType) {
         assertThat(fileType.getMimeType()).isEqualTo("image/png");
         assertThat(fileType.getFileExtension()).isEqualTo("png");

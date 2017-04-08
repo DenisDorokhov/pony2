@@ -17,8 +17,8 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
-apply plugin: 'jacoco'
 apply plugin: 'findbugs'
+apply plugin: 'jacoco'
 
 jar {
     baseName = 'pony'
@@ -70,3 +70,5 @@ tasks.withType(FindBugs) {
         xml.enabled = false
     }
 }
+
+check.dependsOn jacocoTestReport

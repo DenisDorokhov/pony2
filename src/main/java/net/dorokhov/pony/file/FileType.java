@@ -1,7 +1,7 @@
 package net.dorokhov.pony.file;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public class FileType {
 
@@ -10,6 +10,8 @@ public class FileType {
     private final String fileExtension;
 
     public FileType(String mimeType, String fileExtension) {
+        Preconditions.checkNotNull(mimeType);
+        Preconditions.checkNotNull(fileExtension);
         this.mimeType = mimeType;
         this.fileExtension = fileExtension;
     }
@@ -50,9 +52,9 @@ public class FileType {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("mimeType", mimeType)
-                .add("fileExtension", fileExtension)
-                .toString();
+        return "FileType{" +
+                "mimeType='" + mimeType + '\'' +
+                ", fileExtension='" + fileExtension + '\'' +
+                '}';
     }
 }

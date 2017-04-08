@@ -1,6 +1,5 @@
 package net.dorokhov.pony.audio;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.io.ByteSource;
 import net.dorokhov.pony.file.FileType;
 
@@ -57,25 +56,25 @@ public class ReadableAudioData extends AudioData {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("path", path)
-                .add("fileType", fileType)
-                .add("size", size)
-                .add("duration", duration)
-                .add("bitRate", bitRate)
-                .add("bitRateVariable", bitRateVariable)
-                .add("embeddedArtwork", embeddedArtwork)
-                .add("discNumber", discNumber)
-                .add("discCount", discCount)
-                .add("trackNumber", trackNumber)
-                .add("trackCount", trackCount)
-                .add("title", title)
-                .add("artist", artist)
-                .add("albumArtist", albumArtist)
-                .add("album", album)
-                .add("year", year)
-                .add("genre", genre)
-                .toString();
+        return "ReadableAudioData{" +
+                "path='" + path + '\'' +
+                ", fileType=" + fileType +
+                ", size=" + size +
+                ", duration=" + duration +
+                ", bitRate=" + bitRate +
+                ", bitRateVariable=" + bitRateVariable +
+                ", embeddedArtwork=" + embeddedArtwork +
+                ", discNumber=" + discNumber +
+                ", discCount=" + discCount +
+                ", trackNumber=" + trackNumber +
+                ", trackCount=" + trackCount +
+                ", title='" + title + '\'' +
+                ", artist='" + artist + '\'' +
+                ", albumArtist='" + albumArtist + '\'' +
+                ", album='" + album + '\'' +
+                ", year=" + year +
+                ", genre='" + genre + '\'' +
+                '}';
     }
 
     public static class EmbeddedArtwork {
@@ -106,10 +105,10 @@ public class ReadableAudioData extends AudioData {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("fileType", fileType)
-                    .add("checksum", checksum)
-                    .toString();
+            return "EmbeddedArtwork{" +
+                    "fileType=" + fileType +
+                    ", checksum='" + checksum + '\'' +
+                    '}';
         }
     }
     

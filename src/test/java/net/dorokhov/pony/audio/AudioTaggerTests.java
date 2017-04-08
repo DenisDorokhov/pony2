@@ -49,6 +49,12 @@ public class AudioTaggerTests {
     }
 
     @Test
+    public void stringify() throws Exception {
+        assertThat(new ReadableAudioData.Builder().build().toString()).startsWith("ReadableAudioData{");
+        assertThat(new WritableAudioData.Builder().build().toString()).startsWith("WritableAudioData{");
+    }
+
+    @Test
     public void readEmptyMp3() throws Exception {
         File file = FILE_EMPTY.getFile();
         ReadableAudioData data = audioTagger.read(file);

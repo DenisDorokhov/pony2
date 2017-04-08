@@ -77,4 +77,9 @@ public class AlbumTests {
         assertThat(eqAlbum1).isNotEqualTo("foo1");
         assertThat(eqAlbum1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat( new Album().toString()).startsWith("Album{");
+    }
 }

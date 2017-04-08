@@ -1,7 +1,5 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.base.MoreObjects;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
@@ -70,14 +68,11 @@ public class User extends BaseEntity<Long> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("creationDate", creationDate)
-                .add("updateDate", updateDate)
-                .add("name", name)
-                .add("email", email)
-                .add("password", password)
-                .add("roles", roles)
-                .toString();
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", roles=" + roles +
+                '}';
     }
 }

@@ -1,6 +1,5 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.base.MoreObjects;
 import net.dorokhov.pony.util.JsonAttributeConverter;
 
 import javax.persistence.*;
@@ -177,12 +176,15 @@ public class Artwork implements Identifiable<Long> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("name", name)
-                .add("path", largeImagePath)
-                .add("tag", tag)
-                .add("metaData", metaData)
-                .toString();
+        return "Artwork{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", mimeType='" + mimeType + '\'' +
+                ", checksum='" + checksum + '\'' +
+                ", largeImagePath='" + largeImagePath + '\'' +
+                ", smallImagePath='" + smallImagePath + '\'' +
+                ", tag='" + tag + '\'' +
+                ", metaData=" + metaData +
+                '}';
     }
 }

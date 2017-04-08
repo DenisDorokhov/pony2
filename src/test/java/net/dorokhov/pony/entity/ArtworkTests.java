@@ -26,4 +26,9 @@ public class ArtworkTests {
         assertThat(eqArtwork1).isNotEqualTo("foo1");
         assertThat(eqArtwork1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new Artwork().toString()).startsWith("Artwork{");
+    }
 }

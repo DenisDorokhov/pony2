@@ -84,4 +84,9 @@ public class ConfigTests {
         assertThat(eqConfig1).isNotEqualTo("foo1");
         assertThat(eqConfig1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new Config().toString()).startsWith("Config{");
+    }
 }

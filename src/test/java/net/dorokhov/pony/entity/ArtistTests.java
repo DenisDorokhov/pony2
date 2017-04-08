@@ -53,4 +53,9 @@ public class ArtistTests {
         assertThat(eqArtist1).isNotEqualTo("foo1");
         assertThat(eqArtist1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new Artist().toString()).startsWith("Artist{");
+    }
 }

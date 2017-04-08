@@ -1,6 +1,5 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.base.MoreObjects;
 import net.dorokhov.pony.util.JsonAttributeConverter;
 
 import javax.persistence.*;
@@ -138,10 +137,10 @@ public class LogMessage implements Identifiable<Long> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("type", type)
-                .add("code", code)
-                .toString();
+        return "LogMessage{" +
+                "id=" + id +
+                ", type=" + type +
+                ", code='" + code + '\'' +
+                '}';
     }
 }

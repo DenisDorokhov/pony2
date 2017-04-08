@@ -1,6 +1,5 @@
 package net.dorokhov.pony.filetree;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import net.dorokhov.pony.file.ChecksumCalculator;
 import net.dorokhov.pony.file.FileType;
@@ -17,7 +16,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static net.dorokhov.pony.util.RethrowingLambdas.rethrow;
@@ -95,9 +97,9 @@ public class FileTreeScanner {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("file", file.getAbsolutePath())
-                    .toString();
+            return "NodeImpl{" +
+                    "file=" + file.getAbsolutePath() +
+                    '}';
         }
     }
 

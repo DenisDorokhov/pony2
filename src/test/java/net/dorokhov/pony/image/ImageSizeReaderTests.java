@@ -45,4 +45,9 @@ public class ImageSizeReaderTests {
         ImageSize size = imageSizeReader.read(file);
         assertThat(size).isEqualTo(IMAGE_SIZE);
     }
+
+    @Test
+    public void strongify() throws Exception {
+        assertThat(new ImageSize(100, 100).toString()).startsWith("ImageSize{");
+    }
 }

@@ -43,4 +43,9 @@ public class GenreTests {
         assertThat(eqGenre1).isNotEqualTo("foo1");
         assertThat(eqGenre1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new Genre().toString()).startsWith("Genre{");
+    }
 }

@@ -1,7 +1,5 @@
 package net.dorokhov.pony.audio;
 
-import com.google.common.base.MoreObjects;
-
 import java.io.File;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -224,30 +222,30 @@ public class WritableAudioData extends AudioData {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("writeDiscNumber", writeDiscNumber)
-                .add("writeDiscCount", writeDiscCount)
-                .add("writeTrackNumber", writeTrackNumber)
-                .add("writeTrackCount", writeTrackCount)
-                .add("writeTitle", writeTitle)
-                .add("writeArtist", writeArtist)
-                .add("writeAlbumArtist", writeAlbumArtist)
-                .add("writeAlbum", writeAlbum)
-                .add("writeYear", writeYear)
-                .add("writeGenre", writeGenre)
-                .add("writeArtwork", writeArtwork)
-                .add("artworkFile", artworkFile)
-                .add("discNumber", discNumber)
-                .add("discCount", discCount)
-                .add("trackNumber", trackNumber)
-                .add("trackCount", trackCount)
-                .add("title", title)
-                .add("artist", artist)
-                .add("albumArtist", albumArtist)
-                .add("album", album)
-                .add("year", year)
-                .add("genre", genre)
-                .toString();
+        return "WritableAudioData{" +
+                "writeDiscNumber=" + writeDiscNumber +
+                ", writeDiscCount=" + writeDiscCount +
+                ", writeTrackNumber=" + writeTrackNumber +
+                ", writeTrackCount=" + writeTrackCount +
+                ", writeTitle=" + writeTitle +
+                ", writeArtist=" + writeArtist +
+                ", writeAlbumArtist=" + writeAlbumArtist +
+                ", writeAlbum=" + writeAlbum +
+                ", writeYear=" + writeYear +
+                ", writeGenre=" + writeGenre +
+                ", writeArtwork=" + writeArtwork +
+                ", artworkFile=" + artworkFile +
+                ", discNumber=" + discNumber +
+                ", discCount=" + discCount +
+                ", trackNumber=" + trackNumber +
+                ", trackCount=" + trackCount +
+                ", title='" + title + '\'' +
+                ", artist='" + artist + '\'' +
+                ", albumArtist='" + albumArtist + '\'' +
+                ", album='" + album + '\'' +
+                ", year=" + year +
+                ", genre='" + genre + '\'' +
+                '}';
     }
 
     public static class Builder extends BuilderAbstract {

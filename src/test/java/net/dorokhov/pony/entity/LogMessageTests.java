@@ -26,4 +26,9 @@ public class LogMessageTests {
         assertThat(eqLogMessage1).isNotEqualTo("foo1");
         assertThat(eqLogMessage1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new LogMessage().toString()).startsWith("LogMessage{");
+    }
 }

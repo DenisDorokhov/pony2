@@ -26,4 +26,9 @@ public class UserTests {
         assertThat(eqUser1).isNotEqualTo("foo1");
         assertThat(eqUser1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new User().toString()).startsWith("User{");
+    }
 }

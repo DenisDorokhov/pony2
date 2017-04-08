@@ -1,7 +1,5 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.base.MoreObjects;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -32,9 +30,9 @@ public class Installation extends BaseEntity<Long> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("version", version)
-                .toString();
+        return "Installation{" +
+                "id=" + id +
+                ", version='" + version + '\'' +
+                '}';
     }
 }

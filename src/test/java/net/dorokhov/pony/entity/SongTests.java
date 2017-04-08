@@ -88,4 +88,9 @@ public class SongTests {
         assertThat(eqSong1).isNotEqualTo("foo1");
         assertThat(eqSong1).isNotEqualTo(null);
     }
+
+    @Test
+    public void stringify() throws Exception {
+        assertThat(new Song().toString()).startsWith("Song{");
+    }
 }
