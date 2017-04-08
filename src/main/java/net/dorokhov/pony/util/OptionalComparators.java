@@ -4,11 +4,12 @@ import java.util.Comparator;
 import java.util.Optional;
 
 /**
- * Taken from https://gist.github.com/mkrueske/aa0d4502c45cbc15a316.
+ * Based on https://gist.github.com/mkrueske/aa0d4502c45cbc15a316.
  */
-public final class OptionalComparator {
+public final class OptionalComparators {
 
-    private OptionalComparator() {}
+    private OptionalComparators() {
+    }
 
     public static <T extends Comparable<T>> Comparator<Optional<T>> nullFirst() {
         return nullFirst(Comparator.<T>naturalOrder());

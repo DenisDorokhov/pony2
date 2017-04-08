@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
+import static net.dorokhov.pony.util.RethrowingLambdas.rethrow;
+
 @Component
 public class AudioTagger {
 
@@ -108,60 +110,105 @@ public class AudioTagger {
         Tag tag = audioFile.getTagOrCreateDefault();
         audioFile.setTag(tag);
         
-        if (data.isWriteDiscNumber()) {
-            log.debug("Writing disc number '{}' to file '{}'.", data.getDiscNumber(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.DISC_NO, data.getDiscNumber());
-        }
-        if (data.isWriteDiscCount()) {
-            log.debug("Writing disc count '{}' to file '{}'.", data.getDiscCount(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.DISC_TOTAL, data.getDiscCount());
-        }
+        data.ifShouldUpdateDiscNumber(rethrow(value -> {
+            log.debug("Updating disc number '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.DISC_NO, value.toString());
+        }));
+        data.ifShouldDeleteDiscNumber(rethrow(() -> {
+            log.debug("Deleting disc number in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.DISC_NO);
+        }));
 
-        if (data.isWriteTrackNumber()) {
-            log.debug("Writing track number '{}' to file '{}'.", data.getTrackNumber(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.TRACK, data.getTrackNumber());
-        }
-        if (data.isWriteTrackCount()) {
-            log.debug("Writing track count '{}' to file '{}'.", data.getTrackCount(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.TRACK_TOTAL, data.getTrackCount());
-        }
+        data.ifShouldUpdateDiscCount(rethrow(value -> {
+            log.debug("Updating disc count '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.DISC_TOTAL, value.toString());
+        }));
+        data.ifShouldDeleteDiscCount(rethrow(() -> {
+            log.debug("Deleting disc count in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.DISC_TOTAL);
+        }));
 
-        if (data.isWriteTitle()) {
-            log.debug("Writing title '{}' to file '{}'.", data.getTitle(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.TITLE, data.getTitle());
-        }
-        if (data.isWriteArtist()) {
-            log.debug("Writing artist '{}' to file '{}'.", data.getArtist(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.ARTIST, data.getArtist());
-        }
-        if (data.isWriteAlbumArtist()) {
-            log.debug("Writing album artist '{}' to file '{}'.", data.getAlbumArtist(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.ALBUM_ARTIST, data.getAlbumArtist());
-        }
-        if (data.isWriteAlbum()) {
-            log.debug("Writing album '{}' to file '{}'.", data.getAlbum(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.ALBUM, data.getAlbum());
-        }
-        if (data.isWriteYear()) {
-            log.debug("Writing year '{}' to file '{}'.", data.getYear(), file.getAbsolutePath());
-            setOrDeleteTagField(tag, FieldKey.YEAR, data.getYear());
-        }
-        if (data.isWriteGenre()) {
-            log.debug("Writing genre '{}' to file '{}'.", data.getGenre(), file.getAbsolutePath()); 
-            setOrDeleteTagField(tag, FieldKey.GENRE, data.getGenre());
-        }
+        data.ifShouldUpdateTrackNumber(rethrow(value -> {
+            log.debug("Updating track number '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.TRACK, value.toString());
+        }));
+        data.ifShouldDeleteTrackNumber(rethrow(() -> {
+            log.debug("Deleting track number in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.TRACK);
+        }));
 
-        if (data.isWriteArtwork()) {
+        data.ifShouldUpdateTrackCount(rethrow(value -> {
+            log.debug("Updating track count '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.TRACK_TOTAL, value.toString());
+        }));
+        data.ifShouldDeleteTrackCount(rethrow(() -> {
+            log.debug("Deleting track count in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.TRACK_TOTAL);
+        }));
+
+        data.ifShouldUpdateTitle(rethrow(value -> {
+            log.debug("Updating title '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.TITLE, value);
+        }));
+        data.ifShouldDeleteTitle(rethrow(() -> {
+            log.debug("Deleting title in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.TITLE);
+        }));
+
+        data.ifShouldUpdateArtist(rethrow(value -> {
+            log.debug("Updating artist '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.ARTIST, value);
+        }));
+        data.ifShouldDeleteArtist(rethrow(() -> {
+            log.debug("Deleting artist in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.ARTIST);
+        }));
+
+        data.ifShouldUpdateAlbumArtist(rethrow(value -> {
+            log.debug("Updating album artist '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.ALBUM_ARTIST, value);
+        }));
+        data.ifShouldDeleteAlbumArtist(rethrow(() -> {
+            log.debug("Delete album artist in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.ALBUM_ARTIST);
+        }));
+
+        data.ifShouldUpdateAlbum(rethrow(value -> {
+            log.debug("Updating album '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.ALBUM, value);
+        }));
+        data.ifShouldDeleteAlbum(rethrow(() -> {
+            log.debug("Deleting album in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.ALBUM);
+        }));
+
+        data.ifShouldUpdateYear(rethrow(value -> {
+            log.debug("Updating year '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.YEAR, value.toString());
+        }));
+        data.ifShouldDeleteYear(rethrow(() -> {
+            log.debug("Deleting year in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.YEAR);
+        }));
+
+        data.ifShouldUpdateGenre(rethrow(value -> {
+            log.debug("Updating genre '{}' in file '{}'.", value, file.getAbsolutePath());
+            tag.setField(FieldKey.GENRE, value);
+        }));
+        data.ifShouldDeleteGenre(rethrow(() -> {
+            log.debug("Deleting genre in file '{}'.", file.getAbsolutePath());
+            tag.deleteField(FieldKey.GENRE);
+        }));
+
+        data.ifShouldUpdateArtwork(rethrow(value -> {
+            log.debug("Updating artwork in file '{}'.", file.getAbsolutePath());
             tag.deleteArtworkField();
-            data.getArtworkFile().ifPresent(artworkFile -> {
-                try {
-                    log.debug("Writing artwork to file '{}'.", file.getAbsolutePath());
-                    tag.setField(StandardArtwork.createArtworkFromFile(artworkFile));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+            tag.setField(StandardArtwork.createArtworkFromFile(value));
+        }));
+        data.ifShouldDeleteArtwork(rethrow(() -> {
+            log.debug("Deleting artwork in file '{}'.", file.getAbsolutePath());
+            tag.deleteArtworkField();
+        }));
 
         AudioFileIO.write(audioFile);
         
@@ -210,14 +257,5 @@ public class AudioTagger {
             }
         }
         return Optional.empty();
-    }
-
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private void setOrDeleteTagField(Tag tag, FieldKey key, Optional<?> value) throws Exception {
-        if (value.isPresent()) {
-            tag.setField(key, value.get().toString());
-        } else {
-            tag.deleteField(key);
-        }
     }
 }

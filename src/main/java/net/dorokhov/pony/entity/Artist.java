@@ -1,7 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
-import net.dorokhov.pony.util.OptionalComparator;
+import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -61,7 +61,7 @@ public class Artist extends BaseEntity<Long> implements Comparable<Artist> {
     @Override
     public int compareTo(Artist artist) {
         String regex = "^the\\s+";
-        return OptionalComparator.<String>nullLast().compare(
+        return OptionalComparators.<String>nullLast().compare(
                 getName().map(String::toLowerCase).map(s -> s.replaceAll(regex, "")),
                 artist.getName().map(String::toLowerCase).map(s -> s.replaceAll(regex, "")));
     }

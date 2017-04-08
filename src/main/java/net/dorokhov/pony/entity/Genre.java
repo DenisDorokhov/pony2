@@ -1,7 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
-import net.dorokhov.pony.util.OptionalComparator;
+import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -39,7 +39,7 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
 
     @Override
     public int compareTo(Genre genre) {
-        return OptionalComparator.<String>nullLast().compare(getName(), Optional.ofNullable(genre).flatMap(Genre::getName));
+        return OptionalComparators.<String>nullLast().compare(getName(), Optional.ofNullable(genre).flatMap(Genre::getName));
     }
 
     @Override

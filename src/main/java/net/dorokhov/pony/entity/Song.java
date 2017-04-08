@@ -2,7 +2,7 @@ package net.dorokhov.pony.entity;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ComparisonChain;
-import net.dorokhov.pony.util.OptionalComparator;
+import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -255,9 +255,9 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
         return ComparisonChain.start()
                 .compare(getAlbum().getArtist(), song.getAlbum().getArtist())
                 .compare(getAlbum(), song.getAlbum())
-                .compare(getDiscNumber(), song.getDiscNumber(), OptionalComparator.nullLast())
-                .compare(getTrackNumber(), song.getTrackNumber(), OptionalComparator.nullLast())
-                .compare(getName(), song.getName(), OptionalComparator.nullLast())
+                .compare(getDiscNumber(), song.getDiscNumber(), OptionalComparators.nullLast())
+                .compare(getTrackNumber(), song.getTrackNumber(), OptionalComparators.nullLast())
+                .compare(getName(), song.getName(), OptionalComparators.nullLast())
                 .result();
     }
 
