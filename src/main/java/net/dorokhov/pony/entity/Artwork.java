@@ -56,7 +56,7 @@ public class Artwork implements Identifiable<Long> {
     @Column(name = "tag")
     private String tag;
 
-    @Column(name = "user_data")
+    @Column(name = "meta_data")
     @Convert(converter = JsonAttributeConverter.MapConverter.class)
     private Map<String, String> metaData;
 

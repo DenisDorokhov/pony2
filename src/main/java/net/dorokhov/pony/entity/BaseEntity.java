@@ -1,13 +1,30 @@
 package net.dorokhov.pony.entity;
 
+import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
+import org.apache.lucene.analysis.standard.StandardFilterFactory;
+import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
+import org.hibernate.search.annotations.AnalyzerDef;
+import org.hibernate.search.annotations.TokenFilterDef;
+import org.hibernate.search.annotations.TokenizerDef;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static net.dorokhov.pony.entity.BaseEntity.ANALYZER;
+
 @MappedSuperclass
+@AnalyzerDef(name = ANALYZER,
+        tokenizer = @TokenizerDef(factory = StandardTokenizerFactory.class),
+        filters = {
+                @TokenFilterDef(factory = LowerCaseFilterFactory.class),
+                @TokenFilterDef(factory = StandardFilterFactory.class)
+        })
 public abstract class BaseEntity<T extends Serializable> implements Identifiable<T> {
+    
+    static final String ANALYZER = "noStopWordsAnalyzer";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

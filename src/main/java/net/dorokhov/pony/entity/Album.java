@@ -2,6 +2,7 @@ package net.dorokhov.pony.entity;
 
 import com.google.common.collect.ComparisonChain;
 import net.dorokhov.pony.util.OptionalComparators;
+import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -85,7 +86,7 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
     }
 
     @Transient
-    @Field
+    @Field(analyzer = @Analyzer(definition = ANALYZER))
     public String getSearchTerms() {
         return getName().orElse("") + " " +
                 getArtist().getName().orElse("");

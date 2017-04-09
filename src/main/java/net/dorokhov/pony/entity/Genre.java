@@ -1,6 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import net.dorokhov.pony.util.OptionalComparators;
+import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -13,7 +14,7 @@ import java.util.Optional;
 public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
 
     @Column(name = "name")
-    @Field
+    @Field(analyzer = @Analyzer(definition = ANALYZER))
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -25,15 +25,6 @@ public class ArtistTests {
     }
 
     @Test
-    public void buildSearchTerms() throws Exception {
-        Artist artist = new Artist();
-        artist.setName("Foo");
-        assertThat(artist.getSearchTerms()).isEqualTo("Foo");
-        artist.setName(null);
-        assertThat(artist.getSearchTerms()).isEqualTo("");
-    }
-
-    @Test
     public void supportEqualityAndHashCode() throws Exception {
         
         Artist eqArtist1 = new Artist();

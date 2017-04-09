@@ -21,8 +21,6 @@ CREATE TABLE user (
 
   password VARCHAR (255) NOT NULL,
 
-  roles LONGVARCHAR NOT NULL,
-
   UNIQUE (email)
 );
 

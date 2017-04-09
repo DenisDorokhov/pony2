@@ -1,6 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import net.dorokhov.pony.util.OptionalComparators;
+import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class Artist extends BaseEntity<Long> implements Comparable<Artist> {
 
     @Column(name = "name")
+    @Field(analyzer = @Analyzer(definition = ANALYZER))
     private String name;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "artist")
@@ -49,12 +51,6 @@ public class Artist extends BaseEntity<Long> implements Comparable<Artist> {
 
     public void setArtwork(Artwork artwork) {
         this.artwork = artwork;
-    }
-
-    @Transient
-    @Field
-    public String getSearchTerms() {
-        return getName().orElse("");
     }
 
     @Override

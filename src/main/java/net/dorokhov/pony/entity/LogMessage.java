@@ -27,7 +27,6 @@ public class LogMessage implements Identifiable<Long> {
     private LocalDateTime date;
 
     @Column(name = "type", nullable = false)
-    @Enumerated(EnumType.STRING)
     @NotNull
     private Type type;
     
@@ -43,7 +42,7 @@ public class LogMessage implements Identifiable<Long> {
 
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.ListConverter.class)
-    private List<Object> arguments;
+    private List<Object> arguments = new ArrayList<>();
 
     public LogMessage() {
     }
