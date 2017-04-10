@@ -34,27 +34,6 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    @Transactional
-    public void purgeIndex() {
-        
-        log.info("Purging index...");
-        
-        FullTextEntityManager fullTextSession = Search.getFullTextEntityManager(entityManager);
-
-        fullTextSession.purgeAll(Genre.class);
-        fullTextSession.purgeAll(Artist.class);
-        fullTextSession.purgeAll(Album.class);
-        fullTextSession.purgeAll(Song.class);
-        
-        fullTextSession.getSearchFactory().optimize(Genre.class);
-        fullTextSession.getSearchFactory().optimize(Artist.class);
-        fullTextSession.getSearchFactory().optimize(Album.class);
-        fullTextSession.getSearchFactory().optimize(Song.class);
-
-        log.info("Index purging finished.");
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<Genre> searchGenres(String query, int maxResults) {
         return search(query, maxResults, Genre.class, "name");

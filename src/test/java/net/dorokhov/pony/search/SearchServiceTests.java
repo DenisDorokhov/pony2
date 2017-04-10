@@ -31,8 +31,8 @@ public class SearchServiceTests extends IntegrationTest {
     @Test
     public void searchGenres() throws Exception {
 
-        Genre genre1 = transactionTemplate.execute(status -> genreRepository.save(buildGenre("the foobar entity1")));
-        Genre genre2 = transactionTemplate.execute(status -> genreRepository.save(buildGenre("the foobar entity2")));
+        Genre genre1 = genreRepository.save(buildGenre("the foobar entity1"));
+        Genre genre2 = genreRepository.save(buildGenre("the foobar entity2"));
         
         assertThat(searchService.searchGenres("foo", 10)).containsOnly(genre1, genre2);
         assertThat(searchService.searchGenres("foo", 1)).hasSize(1);
@@ -44,8 +44,8 @@ public class SearchServiceTests extends IntegrationTest {
     @Test
     public void searchArtists() throws Exception {
 
-        Artist artist1 = transactionTemplate.execute(status -> artistRepository.save(buildArtist("the foobar entity1")));
-        Artist artist2 = transactionTemplate.execute(status -> artistRepository.save(buildArtist("the foobar entity2")));
+        Artist artist1 = artistRepository.save(buildArtist("the foobar entity1"));
+        Artist artist2 = artistRepository.save(buildArtist("the foobar entity2"));
 
         assertThat(searchService.searchArtists("foo", 10)).containsOnly(artist1, artist2);
         assertThat(searchService.searchArtists("foo", 1)).hasSize(1);
@@ -57,10 +57,10 @@ public class SearchServiceTests extends IntegrationTest {
     @Test
     public void searchAlbums() throws Exception {
 
-        Artist artist = transactionTemplate.execute(status -> artistRepository.save(new Artist()));
+        Artist artist = artistRepository.save(new Artist());
         
-        Album album1 = transactionTemplate.execute(status -> albumRepository.save(buildAlbum(artist, "the foobar entity1")));
-        Album album2 = transactionTemplate.execute(status -> albumRepository.save(buildAlbum(artist, "the foobar entity2")));
+        Album album1 = albumRepository.save(buildAlbum(artist, "the foobar entity1"));
+        Album album2 = albumRepository.save(buildAlbum(artist, "the foobar entity2"));
 
         assertThat(searchService.searchAlbums("foo", 10)).containsOnly(album1, album2);
         assertThat(searchService.searchAlbums("foo", 1)).hasSize(1);
@@ -72,38 +72,18 @@ public class SearchServiceTests extends IntegrationTest {
     @Test
     public void searchSongs() throws Exception {
 
-        Genre genre = transactionTemplate.execute(status -> genreRepository.save(new Genre()));
-        Artist artist = transactionTemplate.execute(status -> artistRepository.save(new Artist()));
-        Album album = transactionTemplate.execute(status -> albumRepository.save(new Album(artist)));
+        Genre genre = genreRepository.save(new Genre());
+        Artist artist = artistRepository.save(new Artist());
+        Album album = albumRepository.save(new Album(artist));
 
-        Song song1 = transactionTemplate.execute(status -> songRepository.save(buildSong("the foobar entity1", genre, album)));
-        Song song2 = transactionTemplate.execute(status -> songRepository.save(buildSong("the foobar entity2", genre, album)));
+        Song song1 = songRepository.save(buildSong("the foobar entity1", genre, album));
+        Song song2 = songRepository.save(buildSong("the foobar entity2", genre, album));
 
         assertThat(searchService.searchSongs("foo", 10)).containsOnly(song1, song2);
         assertThat(searchService.searchSongs("foo", 1)).hasSize(1);
         assertThat(searchService.searchSongs("ent th foo", 10)).containsOnly(song1, song2);
         assertThat(searchService.searchSongs("entity1 the foobar", 10)).containsExactly(song1);
         assertThat(searchService.searchSongs("other", 10)).isEmpty();
-    }
-
-    @Test
-    public void purgeIndex() throws Exception {
-
-        Genre genre = transactionTemplate.execute(status -> genreRepository.save(buildGenre("entity")));
-        Artist artist = transactionTemplate.execute(status -> artistRepository.save(buildArtist("entity")));
-        Album album = transactionTemplate.execute(status -> albumRepository.save(buildAlbum(artist, "entity")));
-        
-        transactionTemplate.execute(status -> songRepository.save(buildSong("entity", genre, album)));
-        
-        transactionTemplate.execute(status -> {
-            searchService.purgeIndex();
-            return null;
-        });
-        
-        assertThat(searchService.searchGenres("entity", 10)).isEmpty();
-        assertThat(searchService.searchArtists("entity", 10)).isEmpty();
-        assertThat(searchService.searchAlbums("entity", 10)).isEmpty();
-        assertThat(searchService.searchSongs("entity", 10)).isEmpty();
     }
 
     private Genre buildGenre(String name) {
