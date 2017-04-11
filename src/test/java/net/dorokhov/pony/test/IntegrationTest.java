@@ -47,7 +47,8 @@ abstract public class IntegrationTest {
         purgeIndexes();
         flyway.clean();
     }
-    
+
+    @SuppressWarnings("unchecked")
     private void purgeIndexes() throws Exception {
         if (indexedClasses == null) {
             indexedClasses = fetchIndexedClasses();
