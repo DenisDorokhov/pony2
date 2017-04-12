@@ -1,6 +1,7 @@
 package net.dorokhov.pony.filetree;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.file.ChecksumCalculator;
 import net.dorokhov.pony.file.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
@@ -16,10 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static net.dorokhov.pony.util.RethrowingLambdas.rethrow;
@@ -105,62 +103,62 @@ public class FileTreeScanner {
 
     private class FolderNodeImpl extends NodeImpl implements FolderNode {
 
-        private final Set<ImageNode> childImages = new HashSet<>();
-        private final Set<AudioNode> childAudios = new HashSet<>();
-        private final Set<FolderNodeImpl> childFolders = new HashSet<>();
+        private final List<ImageNode> childImages = new ArrayList<>();
+        private final List<AudioNode> childAudios = new ArrayList<>();
+        private final List<FolderNodeImpl> childFolders = new ArrayList<>();
 
         public FolderNodeImpl(File file, FolderNode parentFolder) {
             super(file, parentFolder);
         }
 
         @Override
-        public Set<ImageNode> getChildImages(boolean recursive) {
-            Set<ImageNode> result = new HashSet<>();
-            doGetChildImages(result, recursive);
-            return result;
+        public List<ImageNode> getChildImages(boolean recursive) {
+            ImmutableList.Builder<ImageNode> builder = ImmutableList.builder();
+            doGetChildImages(builder, recursive);
+            return builder.build();
         }
 
         @Override
-        public Set<AudioNode> getChildAudios(boolean recursive) {
-            Set<AudioNode> result = new HashSet<>();
-            doGetChildAudios(result, recursive);
-            return result;
+        public List<AudioNode> getChildAudios(boolean recursive) {
+            ImmutableList.Builder<AudioNode> builder = ImmutableList.builder();
+            doGetChildAudios(builder, recursive);
+            return builder.build();
         }
 
         @Override
-        public Set<FolderNode> getChildFolders(boolean recursive) {
-            Set<FolderNode> result = new HashSet<>();
-            doGetChildFolders(result, recursive);
-            return result;
+        public List<FolderNode> getChildFolders(boolean recursive) {
+            ImmutableList.Builder<FolderNode> builder = ImmutableList.builder();
+            doGetChildFolders(builder, recursive);
+            return builder.build();
         }
 
-        private Set<ImageNode> getChildImagesMutable() {
+        private List<ImageNode> getChildImagesMutable() {
             return childImages;
         }
 
-        private Set<AudioNode> getChildAudiosMutable() {
+        private List<AudioNode> getChildAudiosMutable() {
             return childAudios;
         }
 
-        private Set<FolderNodeImpl> getChildFoldersMutable() {
+        private List<FolderNodeImpl> getChildFoldersMutable() {
             return childFolders;
         }
 
-        private void doGetChildImages(Set<ImageNode> result, boolean recursive) {
+        private void doGetChildImages(ImmutableList.Builder<ImageNode> result, boolean recursive) {
             result.addAll(childImages);
             if (recursive) {
                 childFolders.forEach(folder -> folder.doGetChildImages(result, true));
             }
         }
 
-        private void doGetChildAudios(Set<AudioNode> result, boolean recursive) {
+        private void doGetChildAudios(ImmutableList.Builder<AudioNode> result, boolean recursive) {
             result.addAll(childAudios);
             if (recursive) {
                 childFolders.forEach(folder -> folder.doGetChildAudios(result, true));
             }
         }
 
-        private void doGetChildFolders(Set<FolderNode> result, boolean recursive) {
+        private void doGetChildFolders(ImmutableList.Builder<FolderNode> result, boolean recursive) {
             result.addAll(childFolders);
             if (recursive) {
                 childFolders.forEach(folder -> folder.doGetChildFolders(result, true));

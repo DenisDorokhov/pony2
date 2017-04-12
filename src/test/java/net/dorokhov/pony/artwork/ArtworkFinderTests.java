@@ -1,6 +1,6 @@
 package net.dorokhov.pony.artwork;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.filetree.AudioNode;
 import net.dorokhov.pony.filetree.FolderNode;
 import net.dorokhov.pony.filetree.ImageNode;
@@ -10,8 +10,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +48,7 @@ public class ArtworkFinderTests {
         ImageNode image = mockImage(new File("root/image.png"), rootFolder);
 
         given(image.getImageSize()).willReturn(new ImageSize(100, 100));
-        given(rootFolder.getChildImages(false)).willReturn(ImmutableSet.of(image));
+        given(rootFolder.getChildImages(false)).willReturn(ImmutableList.of(image));
 
         Optional<ImageNode> artwork = artworkFinder.findArtwork(audio);
         assertThat(artwork).hasValue(image);
@@ -65,8 +63,8 @@ public class ArtworkFinderTests {
         AudioNode audio = mockAudio(new File("root/child/song.mp3"), childFolder);
 
         given(image.getImageSize()).willReturn(new ImageSize(100, 100));
-        given(rootFolder.getChildImages(false)).willReturn(ImmutableSet.of(image));
-        given(rootFolder.getChildFolders(false)).willReturn(ImmutableSet.of(childFolder));
+        given(rootFolder.getChildImages(false)).willReturn(ImmutableList.of(image));
+        given(rootFolder.getChildFolders(false)).willReturn(ImmutableList.of(childFolder));
 
         Optional<ImageNode> artwork = artworkFinder.findArtwork(audio);
         assertThat(artwork).hasValue(image);
@@ -81,8 +79,8 @@ public class ArtworkFinderTests {
         ImageNode image = mockImage(new File("root/child/image.png"), childFolder);
 
         given(image.getImageSize()).willReturn(new ImageSize(100, 100));
-        given(childFolder.getChildImages(false)).willReturn(ImmutableSet.of(image));
-        given(rootFolder.getChildFolders(false)).willReturn(ImmutableSet.of(childFolder));
+        given(childFolder.getChildImages(false)).willReturn(ImmutableList.of(image));
+        given(rootFolder.getChildFolders(false)).willReturn(ImmutableList.of(childFolder));
 
         Optional<ImageNode> artwork = artworkFinder.findArtwork(audio);
         assertThat(artwork).hasValue(image);
@@ -96,7 +94,7 @@ public class ArtworkFinderTests {
         ImageNode image = mockImage(new File("root/image.png"), rootFolder);
 
         given(image.getImageSize()).willThrow(new IOException());
-        given(rootFolder.getChildImages(false)).willReturn(ImmutableSet.of(image));
+        given(rootFolder.getChildImages(false)).willReturn(ImmutableList.of(image));
 
         Optional<ImageNode> artwork = artworkFinder.findArtwork(audio);
         assertThat(artwork).isEmpty();
@@ -109,7 +107,7 @@ public class ArtworkFinderTests {
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
         ImageNode image = mockImage(new File("root/image.png"), rootFolder);
 
-        given(rootFolder.getChildImages(false)).willReturn(ImmutableSet.of(image));
+        given(rootFolder.getChildImages(false)).willReturn(ImmutableList.of(image));
 
         Optional<ImageNode> artwork;
 
@@ -132,7 +130,7 @@ public class ArtworkFinderTests {
 
         given(otherImage.getImageSize()).willReturn(new ImageSize(100, 100));
         given(namedImage.getImageSize()).willReturn(new ImageSize(100, 100));
-        given(rootFolder.getChildImages(false)).willReturn(ImmutableSet.of(otherImage, namedImage));
+        given(rootFolder.getChildImages(false)).willReturn(ImmutableList.of(otherImage, namedImage));
 
         Optional<ImageNode> artwork;
         
@@ -156,9 +154,9 @@ public class ArtworkFinderTests {
 
         given(otherFolderImage.getImageSize()).willReturn(new ImageSize(100, 100));
         given(namedFolderImage.getImageSize()).willReturn(new ImageSize(100, 100));
-        given(otherFolder.getChildImages(false)).willReturn(ImmutableSet.of(otherFolderImage));
-        given(namedFolder.getChildImages(false)).willReturn(ImmutableSet.of(namedFolderImage));
-        given(rootFolder.getChildFolders(false)).willReturn(new LinkedHashSet<>(Arrays.asList(otherFolder, namedFolder)));
+        given(otherFolder.getChildImages(false)).willReturn(ImmutableList.of(otherFolderImage));
+        given(namedFolder.getChildImages(false)).willReturn(ImmutableList.of(namedFolderImage));
+        given(rootFolder.getChildFolders(false)).willReturn(ImmutableList.of(otherFolder, namedFolder));
 
         Optional<ImageNode> artwork = artworkFinder.findArtwork(audio);
         assertThat(artwork).hasValue(namedFolderImage);

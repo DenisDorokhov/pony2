@@ -42,7 +42,7 @@ public class LogMessage implements Identifiable<Long> {
 
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.ListConverter.class)
-    private List<Object> arguments = new ArrayList<>();
+    private List<String> arguments = new ArrayList<>();
 
     public LogMessage() {
     }
@@ -101,14 +101,14 @@ public class LogMessage implements Identifiable<Long> {
         this.details = details;
     }
 
-    public List<Object> getArguments() {
+    public List<String> getArguments() {
         if (arguments == null) {
             arguments = new ArrayList<>();
         }
         return arguments;
     }
 
-    public void setArguments(List<Object> arguments) {
+    public void setArguments(List<String> arguments) {
         this.arguments = arguments;
     }
 

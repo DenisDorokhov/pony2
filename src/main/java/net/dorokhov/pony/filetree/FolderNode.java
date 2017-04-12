@@ -1,12 +1,12 @@
 package net.dorokhov.pony.filetree;
 
-import java.util.Set;
+import java.util.List;
 
 public interface FolderNode extends Node {
 
-    Set<ImageNode> getChildImages(boolean recursive);
+    List<ImageNode> getChildImages(boolean recursive);
 
-    Set<AudioNode> getChildAudios(boolean recursive);
+    List<AudioNode> getChildAudios(boolean recursive);
 
-    Set<FolderNode> getChildFolders(boolean recursive);
+    List<FolderNode> getChildFolders(boolean recursive);
 }

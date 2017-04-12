@@ -16,6 +16,7 @@ import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -166,7 +167,7 @@ public class FileTreeScannerTests {
         assertThat(nodesToNames(folder.getChildAudios(false))).containsOnly("song2-1.mp3");
     }
     
-    private <T extends Node> Set<String> nodesToNames(Set<T> nodes) {
+    private <T extends Node> Set<String> nodesToNames(List<T> nodes) {
         return nodes.stream().map(n -> n.getFile().getName()).collect(Collectors.toSet());
     }
 }

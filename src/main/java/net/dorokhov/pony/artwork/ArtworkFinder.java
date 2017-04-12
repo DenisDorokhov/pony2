@@ -53,7 +53,7 @@ public class ArtworkFinder {
         if (artwork.isPresent()) {
             return artwork;
         } else {
-            Set<FolderNode> childFolders = folderNode.getChildFolders(false);
+            List<FolderNode> childFolders = folderNode.getChildFolders(false);
             artwork = childFolders.stream()
                     .filter(this::isFolderArtwork)
                     .map(this::fetchArtworkFromFolder)
