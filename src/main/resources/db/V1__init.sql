@@ -47,10 +47,10 @@ CREATE TABLE log_message (
   type TINYINT NOT NULL,
 
   code VARCHAR (255) NOT NULL,
-  text LONGVARCHAR,
+  text LONGVARCHAR NOT NULL,
   details LONGVARCHAR,
 
-  arguments LONGVARCHAR NOT NULL
+  arguments LONGVARCHAR
 );
 
 CREATE INDEX index_log_message_date ON log_message (date);

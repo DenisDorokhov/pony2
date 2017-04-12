@@ -107,7 +107,7 @@ public class RepositoryIntegrationTests extends IntegrationTest {
     }
 
     private LogMessage buildLogMessage() {
-        return new LogMessage(LogMessage.Type.DEBUG, "someCode");
+        return new LogMessage(LogMessage.Type.DEBUG, "someCode", "someText");
     }
 
     private User buildUser() {

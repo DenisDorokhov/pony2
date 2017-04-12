@@ -35,6 +35,7 @@ public class LogMessage implements Identifiable<Long> {
     private String code;
 
     @Column(name = "text")
+    @NotNull
     private String text;
 
     @Column(name = "details")
@@ -47,9 +48,10 @@ public class LogMessage implements Identifiable<Long> {
     public LogMessage() {
     }
 
-    public LogMessage(Type type, String code) {
+    public LogMessage(Type type, String code, String text) {
         setType(type);
         setCode(code);
+        setText(text);
     }
 
     @Override
@@ -85,8 +87,8 @@ public class LogMessage implements Identifiable<Long> {
         this.code = code;
     }
 
-    public Optional<String> getText() {
-        return Optional.ofNullable(text);
+    public String getText() {
+        return text;
     }
 
     public void setText(String text) {
