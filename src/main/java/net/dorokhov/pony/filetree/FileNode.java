@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public interface FileNode extends Node {
 
-	FileType getType() throws IOException;
+	FileType getFileType() throws IOException;
 
 	String getChecksum() throws IOException;
 }

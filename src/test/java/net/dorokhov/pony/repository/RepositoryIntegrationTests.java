@@ -11,7 +11,7 @@ import java.io.Serializable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RepositoryTests extends IntegrationTest {
+public class RepositoryIntegrationTests extends IntegrationTest {
 
     @Autowired
     private AlbumRepository albumRepository;

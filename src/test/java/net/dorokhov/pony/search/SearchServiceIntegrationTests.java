@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SearchServiceTests extends IntegrationTest {
+public class SearchServiceIntegrationTests extends IntegrationTest {
     
     @Autowired
     private SearchService searchService;

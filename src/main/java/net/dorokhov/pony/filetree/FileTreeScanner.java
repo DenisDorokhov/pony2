@@ -2,6 +2,8 @@ package net.dorokhov.pony.filetree;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import net.dorokhov.pony.audio.AudioTagger;
+import net.dorokhov.pony.audio.ReadableAudioData;
 import net.dorokhov.pony.file.ChecksumCalculator;
 import net.dorokhov.pony.file.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
@@ -28,11 +30,16 @@ public class FileTreeScanner {
     private final FileTypeResolver fileTypeResolver;
     private final ImageSizeReader imageSizeReader;
     private final ChecksumCalculator checksumCalculator;
+    private final AudioTagger audioTagger;
 
-    public FileTreeScanner(FileTypeResolver fileTypeResolver, ImageSizeReader imageSizeReader, ChecksumCalculator checksumCalculator) {
+    public FileTreeScanner(FileTypeResolver fileTypeResolver,
+                           ImageSizeReader imageSizeReader,
+                           ChecksumCalculator checksumCalculator, 
+                           AudioTagger audioTagger) {
         this.fileTypeResolver = fileTypeResolver;
         this.imageSizeReader = imageSizeReader;
         this.checksumCalculator = checksumCalculator;
+        this.audioTagger = audioTagger;
     }
 
     public Optional<FileNode> scanFile(File file) throws IOException {
@@ -168,7 +175,7 @@ public class FileTreeScanner {
 
     private abstract class FileNodeImpl extends NodeImpl implements FileNode {
 
-        private final AtomicReference<FileType> mimeType = new AtomicReference<>();
+        private final AtomicReference<FileType> fileType = new AtomicReference<>();
         private final AtomicReference<String> checksum = new AtomicReference<>();
 
         protected FileNodeImpl(File file, FolderNode parentFolder) {
@@ -176,9 +183,9 @@ public class FileTreeScanner {
         }
 
         @Override
-        public FileType getType() throws IOException {
+        public FileType getFileType() throws IOException {
             try {
-                return mimeType.updateAndGet(rethrow((ThrowingUnaryOperator<FileType>) type -> {
+                return fileType.updateAndGet(rethrow((ThrowingUnaryOperator<FileType>) type -> {
                     if (type == null) {
                         return fileTypeResolver.resolve(file);
                     } else {
@@ -231,8 +238,26 @@ public class FileTreeScanner {
     }
 
     private class AudioNodeImpl extends FileNodeImpl implements AudioNode {
+        
+        private AtomicReference<ReadableAudioData> audioData = new AtomicReference<>();
+        
         private AudioNodeImpl(File file, FolderNode parentFolder) {
             super(file, parentFolder);
+        }
+
+        @Override
+        public ReadableAudioData getAudioData() throws IOException {
+            try {
+                return audioData.updateAndGet(rethrow((ThrowingUnaryOperator<ReadableAudioData>) audioData -> {
+                    if (audioData == null) {
+                        return audioTagger.read(file);
+                    } else {
+                        return audioData;
+                    }
+                }));
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
         }
     }
     
@@ -268,8 +293,6 @@ public class FileTreeScanner {
                     parentFolder.getChildImagesMutable().add((ImageNode) fileNode);
                 } else if (fileNode instanceof AudioNode) {
                     parentFolder.getChildAudiosMutable().add((AudioNode) fileNode);
-                } else {
-                    throw new IllegalStateException(String.format("Unknown file type '%s'.", fileNode.getClass().getSimpleName()));
                 }
             });
             return FileVisitResult.CONTINUE;
