@@ -34,7 +34,7 @@ public class ArtworkFinder {
         this.artworkFolderNames = ImmutableSet.copyOf(artworkFolderNames);
     }
 
-    public Optional<ImageNode> discoverArtwork(AudioNode audioNode) {
+    public Optional<ImageNode> findArtwork(AudioNode audioNode) {
         Optional<FolderNode> nextFolderNode = audioNode.getParentFolder();
         while (nextFolderNode.isPresent()) {
             FolderNode folderNode = nextFolderNode.get();
@@ -53,12 +53,22 @@ public class ArtworkFinder {
         if (artwork.isPresent()) {
             return artwork;
         } else {
-            return folderNode.getChildFolders(false).stream()
+            Set<FolderNode> childFolders = folderNode.getChildFolders(false);
+            artwork = childFolders.stream()
                     .filter(this::isFolderArtwork)
                     .map(this::fetchArtworkFromFolder)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
+            if (artwork.isPresent()) {
+                return artwork;
+            } else {
+                return childFolders.stream()
+                        .map(this::fetchArtworkFromFolder)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .findFirst();
+            }
         }
     }
 
