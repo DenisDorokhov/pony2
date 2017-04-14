@@ -16,7 +16,10 @@ public interface ArtworkRepository extends PagingAndSortingRepository<Artwork, L
     long countByTagAndDateGreaterThan(String tag, LocalDateTime date);
 
     @Query("SELECT SUM(f.largeImageSize) FROM Artwork f WHERE f.tag = ?1")
-    Long sumSizeByTag(String tag);
+    Long sumLargeImageSizeByTag(String tag);
+    
+    @Query("SELECT SUM(f.smallImageSize) FROM Artwork f WHERE f.tag = ?1")
+    Long sumSmallImageSizeByTag(String tag);
 
     Page<Artwork> findByTag(String tag, Pageable pageable);
 

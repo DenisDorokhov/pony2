@@ -126,7 +126,6 @@ public class RepositoryIntegrationTests extends IntegrationTest {
 
         Artwork artwork = new Artwork();
 
-        artwork.setName("foobar");
         artwork.setMimeType("text/plain");
         artwork.setChecksum("123");
         artwork.setLargeImageSize(123L);

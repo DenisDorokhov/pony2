@@ -75,7 +75,6 @@ CREATE TABLE artwork (
 
   date TIMESTAMP NOT NULL,
 
-  name VARCHAR (255) NOT NULL,
   mime_type VARCHAR (255) NOT NULL,
   checksum VARCHAR (255) NOT NULL,
   large_image_size BIGINT NOT NULL,

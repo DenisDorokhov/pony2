@@ -25,10 +25,6 @@ public class Artwork implements Identifiable<Long> {
     @NotNull
     private LocalDateTime date;
 
-    @Column(name = "name", nullable = false)
-    @NotNull
-    private String name;
-
     @Column(name = "mime_type", nullable = false)
     @NotNull
     private String mimeType;
@@ -75,14 +71,6 @@ public class Artwork implements Identifiable<Long> {
 
     void setDate(LocalDateTime date) {
         this.date = date;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getMimeType() {
@@ -178,7 +166,6 @@ public class Artwork implements Identifiable<Long> {
     public String toString() {
         return "Artwork{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
                 ", mimeType='" + mimeType + '\'' +
                 ", checksum='" + checksum + '\'' +
                 ", largeImagePath='" + largeImagePath + '\'' +
