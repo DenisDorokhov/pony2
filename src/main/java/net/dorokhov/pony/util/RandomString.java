@@ -1,5 +1,6 @@
 package net.dorokhov.pony.util;
 
+import java.security.SecureRandom;
 import java.util.Random;
 
 /**
@@ -8,7 +9,7 @@ import java.util.Random;
 public class RandomString {
     
     private static final String ALPHABET = "0123456789ABCDEF";
-    private static final Random RANDOM = new Random();
+    private static final Random RANDOM = new SecureRandom();
 
     public static String generate(int count) {
         StringBuilder builder = new StringBuilder();

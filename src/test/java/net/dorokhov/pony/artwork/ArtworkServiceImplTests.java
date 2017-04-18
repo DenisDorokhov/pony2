@@ -71,16 +71,27 @@ public class ArtworkServiceImplTests {
 
     @Before
     public void setUp() throws Exception {
+        
         artworkFolder = Files.createTempDir();
-        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
-        given(fileTypeResolver.resolve((byte[]) any())).willReturn(FILE_TYPE);
-        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
-        given(checksumCalculator.calculate((byte[]) any())).willReturn(CHECKSUM);
         artworkService = new ArtworkServiceImpl(artworkRepository, 
                 fileTypeResolver, checksumCalculator, 
                 thumbnailGenerator, 
                 artworkFolder, 
                 new int[]{20, 20}, new int[]{50, 50});
+        
+        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
+        given(fileTypeResolver.resolve((byte[]) any())).willReturn(FILE_TYPE);
+        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
+        given(checksumCalculator.calculate((byte[]) any())).willReturn(CHECKSUM);
+        
+        given(artworkRepository.save((Artwork) any())).willAnswer(invocation -> {
+            Artwork artwork =  (Artwork) invocation.getArguments()[0];
+            Field idField = artwork.getClass().getDeclaredField("id");
+            idField.setAccessible(true);
+            ReflectionUtils.setField(idField, artwork, 1L);
+            return artwork;
+        });
+        
         TransactionSynchronizationManager.initSynchronization();
     }
 
@@ -115,7 +126,6 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getById() throws Exception {
-        assertThat(artworkService.getById(2L)).isEmpty();
         Artwork artwork = new Artwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         assertThat(artworkService.getById(2L)).hasValueSatisfying(fetchedArtwork -> 
@@ -194,8 +204,6 @@ public class ArtworkServiceImplTests {
 
         SaveFileArtworkCommand command = new SaveFileArtworkCommand(file, "tag");
 
-        given(artworkRepository.save((Artwork) any())).willAnswer(invocation -> invocation.getArguments()[0]);
-
         Artwork artwork = artworkService.getOrSave(command);
         
         File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
@@ -249,13 +257,6 @@ public class ArtworkServiceImplTests {
 
     private void checkGetAndSaveArtwork(Supplier<Artwork> doGetAndSave) throws Exception {
 
-        given(artworkRepository.save((Artwork) any())).willAnswer(invocation -> {
-            Artwork artwork =  (Artwork) invocation.getArguments()[0];
-            Field idField = artwork.getClass().getDeclaredField("id");
-            idField.setAccessible(true);
-            ReflectionUtils.setField(idField, artwork, 1L);
-            return artwork;
-        });
         ArgumentCaptor<Artwork> savedArtwork = ArgumentCaptor.forClass(Artwork.class);
 
         Artwork artwork = doGetAndSave.get();
