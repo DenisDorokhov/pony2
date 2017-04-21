@@ -9,12 +9,9 @@ public class ArtworkTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        Artwork eqArtwork1 = new Artwork();
-        eqArtwork1.setId(1L);
-        Artwork eqArtwork2 = new Artwork();
-        eqArtwork2.setId(1L);
-        Artwork diffArtwork = new Artwork();
-        diffArtwork.setId(2L);
+        Artwork eqArtwork1 = Artwork.builder().id(1L).build();
+        Artwork eqArtwork2 = Artwork.builder().id(1L).build();
+        Artwork diffArtwork = Artwork.builder().id(2L).build();
 
         assertThat(eqArtwork1.hashCode()).isEqualTo(eqArtwork2.hashCode());
         assertThat(eqArtwork1.hashCode()).isNotEqualTo(diffArtwork.hashCode());

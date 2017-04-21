@@ -6,6 +6,7 @@ import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
@@ -21,25 +22,29 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
     @JoinColumn(name = "artwork_id")
     private Artwork artwork;
 
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
+    public Genre() {
     }
 
-    public void setName(String name) {
-        this.name = name;
+    private Genre(Builder builder) {
+        name = builder.name;
+        artwork = builder.artwork;
+        id = builder.id;
+        creationDate = builder.creationDate;
+        updateDate = builder.updateDate;
+    }
+
+    public Optional<String> getName() {
+        return Optional.ofNullable(name);
     }
 
     public Optional<Artwork> getArtwork() {
         return Optional.ofNullable(artwork);
     }
 
-    public void setArtwork(Artwork artwork) {
-        this.artwork = artwork;
-    }
-
     @Override
     public int compareTo(Genre genre) {
-        return OptionalComparators.<String>nullLast().compare(getName(), Optional.ofNullable(genre).flatMap(Genre::getName));
+        return OptionalComparators.<String>nullLast()
+                .compare(getName(), Optional.ofNullable(genre).flatMap(Genre::getName));
     }
 
     @Override
@@ -49,5 +54,62 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
                 ", name='" + name + '\'' +
                 ", artwork=" + artwork +
                 '}';
+    }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static Builder builder(Genre genre) {
+        return new Builder(genre);
+    }
+
+    public static class Builder {
+        
+        private Long id;
+        private LocalDateTime creationDate;
+        private LocalDateTime updateDate;
+        private String name;
+        private Artwork artwork;
+
+        public Builder() {
+        }
+        
+        public Builder(Genre genre) {
+            name = genre.name;
+            artwork = genre.artwork;
+            id = genre.id;
+            creationDate = genre.creationDate;
+            updateDate = genre.updateDate;
+        }
+
+        Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        Builder creationDate(LocalDateTime creationDate) {
+            this.creationDate = creationDate;
+            return this;
+        }
+
+        Builder updateDate(LocalDateTime updateDate) {
+            this.updateDate = updateDate;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder artwork(Artwork artwork) {
+            this.artwork = artwork;
+            return this;
+        }
+
+        public Genre build() {
+            return new Genre(this);
+        }
     }
 }

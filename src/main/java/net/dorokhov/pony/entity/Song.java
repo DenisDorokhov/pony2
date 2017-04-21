@@ -8,6 +8,7 @@ import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
@@ -84,161 +85,105 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
     public Song() {
     }
 
-    public Song(Album album, Genre genre) {
-        setAlbum(album);
-        setGenre(genre);
+    private Song(Builder builder) {
+        path = builder.path;
+        mimeType = builder.mimeType;
+        size = builder.size;
+        duration = builder.duration;
+        bitRate = builder.bitRate;
+        bitRateVariable = builder.bitRateVariable;
+        discNumber = builder.discNumber;
+        discCount = builder.discCount;
+        id = builder.id;
+        trackNumber = builder.trackNumber;
+        trackCount = builder.trackCount;
+        creationDate = builder.creationDate;
+        name = builder.name;
+        genreName = builder.genreName;
+        updateDate = builder.updateDate;
+        artistName = builder.artistName;
+        albumArtistName = builder.albumArtistName;
+        albumName = builder.albumName;
+        year = builder.year;
+        artwork = builder.artwork;
+        album = builder.album;
+        genre = builder.genre;
     }
 
     public String getPath() {
         return path;
     }
 
-    public void setPath(String path) {
-        this.path = path;
-    }
-
     public String getMimeType() {
         return mimeType;
-    }
-
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
     }
 
     public Long getSize() {
         return size;
     }
 
-    public void setSize(Long size) {
-        this.size = size;
-    }
-
     public Long getDuration() {
         return duration;
-    }
-
-    public void setDuration(Long duration) {
-        this.duration = duration;
     }
 
     public Long getBitRate() {
         return bitRate;
     }
 
-    public void setBitRate(Long bitRate) {
-        this.bitRate = bitRate;
-    }
-
     public Boolean getBitRateVariable() {
         return bitRateVariable;
-    }
-
-    public void setBitRateVariable(Boolean bitRateVariable) {
-        this.bitRateVariable = bitRateVariable;
     }
 
     public Optional<Integer> getDiscNumber() {
         return Optional.ofNullable(discNumber);
     }
 
-    public void setDiscNumber(Integer discNumber) {
-        this.discNumber = discNumber;
-    }
-
     public Optional<Integer> getDiscCount() {
         return Optional.ofNullable(discCount);
-    }
-
-    public void setDiscCount(Integer discCount) {
-        this.discCount = discCount;
     }
 
     public Optional<Integer> getTrackNumber() {
         return Optional.ofNullable(trackNumber);
     }
 
-    public void setTrackNumber(Integer trackNumber) {
-        this.trackNumber = trackNumber;
-    }
-
     public Optional<Integer> getTrackCount() {
         return Optional.ofNullable(trackCount);
-    }
-
-    public void setTrackCount(Integer trackCount) {
-        this.trackCount = trackCount;
     }
 
     public Optional<String> getName() {
         return Optional.ofNullable(name);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public Optional<String> getGenreName() {
         return Optional.ofNullable(genreName);
-    }
-
-    public void setGenreName(String genreName) {
-        this.genreName = genreName;
     }
 
     public Optional<String> getArtistName() {
         return Optional.ofNullable(artistName);
     }
 
-    public void setArtistName(String artist) {
-        artistName = artist;
-    }
-
     public Optional<String> getAlbumArtistName() {
         return Optional.ofNullable(albumArtistName);
-    }
-
-    public void setAlbumArtistName(String albumArtist) {
-        albumArtistName = albumArtist;
     }
 
     public Optional<String> getAlbumName() {
         return Optional.ofNullable(albumName);
     }
 
-    public void setAlbumName(String album) {
-        albumName = album;
-    }
-
     public Optional<Integer> getYear() {
         return Optional.ofNullable(year);
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
     }
 
     public Optional<Artwork> getArtwork() {
         return Optional.ofNullable(artwork);
     }
 
-    public void setArtwork(Artwork artwork) {
-        this.artwork = artwork;
-    }
-
     public Album getAlbum() {
         return album;
     }
 
-    public void setAlbum(Album album) {
-        this.album = album;
-    }
-
     public Genre getGenre() {
         return genre;
-    }
-
-    public void setGenre(Genre genre) {
-        this.genre = genre;
     }
 
     @Transient
@@ -271,5 +216,181 @@ public class Song extends BaseEntity<Long> implements Comparable<Song> {
                 ", album=" + album +
                 ", genre=" + genre +
                 '}';
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(Song song) {
+        return new Builder(song);
+    }
+
+    public static class Builder {
+        
+        private Long id;
+        private LocalDateTime creationDate;
+        private LocalDateTime updateDate;
+        private String path;
+        private String mimeType;
+        private Long size;
+        private Long duration;
+        private Long bitRate;
+        private Boolean bitRateVariable;
+        private Integer discNumber;
+        private Integer discCount;
+        private Integer trackNumber;
+        private Integer trackCount;
+        private String name;
+        private String genreName;
+        private String artistName;
+        private String albumArtistName;
+        private String albumName;
+        private Integer year;
+        private Artwork artwork;
+        private Album album;
+        private Genre genre;
+
+        public Builder() {
+        }
+        
+        public Builder(Song song) {
+            path = song.path;
+            mimeType = song.mimeType;
+            size = song.size;
+            duration = song.duration;
+            bitRate = song.bitRate;
+            bitRateVariable = song.bitRateVariable;
+            discNumber = song.discNumber;
+            discCount = song.discCount;
+            id = song.id;
+            trackNumber = song.trackNumber;
+            trackCount = song.trackCount;
+            creationDate = song.creationDate;
+            name = song.name;
+            genreName = song.genreName;
+            updateDate = song.updateDate;
+            artistName = song.artistName;
+            albumArtistName = song.albumArtistName;
+            albumName = song.albumName;
+            year = song.year;
+            artwork = song.artwork;
+            album = song.album;
+            genre = song.genre;
+        }
+
+        Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        Builder creationDate(LocalDateTime creationDate) {
+            this.creationDate = creationDate;
+            return this;
+        }
+
+        Builder updateDate(LocalDateTime updateDate) {
+            this.updateDate = updateDate;
+            return this;
+        }
+
+        public Builder path(String path) {
+            this.path = path;
+            return this;
+        }
+
+        public Builder mimeType(String mimeType) {
+            this.mimeType = mimeType;
+            return this;
+        }
+
+        public Builder size(Long size) {
+            this.size = size;
+            return this;
+        }
+
+        public Builder duration(Long duration) {
+            this.duration = duration;
+            return this;
+        }
+
+        public Builder bitRate(Long bitRate) {
+            this.bitRate = bitRate;
+            return this;
+        }
+
+        public Builder bitRateVariable(Boolean bitRateVariable) {
+            this.bitRateVariable = bitRateVariable;
+            return this;
+        }
+
+        public Builder discNumber(Integer discNumber) {
+            this.discNumber = discNumber;
+            return this;
+        }
+
+        public Builder discCount(Integer discCount) {
+            this.discCount = discCount;
+            return this;
+        }
+
+        public Builder trackNumber(Integer trackNumber) {
+            this.trackNumber = trackNumber;
+            return this;
+        }
+
+        public Builder trackCount(Integer trackCount) {
+            this.trackCount = trackCount;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder genreName(String genreName) {
+            this.genreName = genreName;
+            return this;
+        }
+
+        public Builder artistName(String artistName) {
+            this.artistName = artistName;
+            return this;
+        }
+
+        public Builder albumArtistName(String albumArtistName) {
+            this.albumArtistName = albumArtistName;
+            return this;
+        }
+
+        public Builder albumName(String albumName) {
+            this.albumName = albumName;
+            return this;
+        }
+
+        public Builder year(Integer year) {
+            this.year = year;
+            return this;
+        }
+
+        public Builder artwork(Artwork artwork) {
+            this.artwork = artwork;
+            return this;
+        }
+
+        public Builder album(Album album) {
+            this.album = album;
+            return this;
+        }
+
+        public Builder genre(Genre genre) {
+            this.genre = genre;
+            return this;
+        }
+
+        public Song build() {
+            return new Song(this);
+        }
     }
 }

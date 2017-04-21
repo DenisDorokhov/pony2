@@ -9,12 +9,9 @@ public class UserTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        User eqUser1 = new User();
-        eqUser1.setId(1L);
-        User eqUser2 = new User();
-        eqUser2.setId(1L);
-        User diffUser = new User();
-        diffUser.setId(2L);
+        User eqUser1 = User.builder().id(1L).build();
+        User eqUser2 = User.builder().id(1L).build();
+        User diffUser = User.builder().id(2L).build();
 
         assertThat(eqUser1.hashCode()).isEqualTo(eqUser2.hashCode());
         assertThat(eqUser1.hashCode()).isNotEqualTo(diffUser.hashCode());

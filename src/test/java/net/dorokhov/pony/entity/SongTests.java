@@ -11,42 +11,52 @@ public class SongTests {
     @Test
     public void sort() throws Exception {
 
-        Artist artist1 = new Artist();
-        artist1.setName("1");
-        Artist artist2 = new Artist();
-        artist2.setName("2");
+        Artist artist1 = Artist.builder().name("1").build();
+        Artist artist2 = Artist.builder().name("2").build();
 
-        Album album1_1 = new Album(artist1);
-        album1_1.setName("1");
-        Album album1_2 = new Album(artist2);
-        album1_2.setName("2");
+        Album album1_1 = Album.builder().artist(artist1).name("1").build();
+        Album album1_2 = Album.builder().artist(artist2).name("2").build();
         
         Genre genre = new Genre();
 
-        Song song1_1_1 = new Song(album1_1, genre);
-        song1_1_1.setDiscNumber(1);
-        song1_1_1.setTrackNumber(1);
-        song1_1_1.setName("1");
+        Song song1_1_1 = Song.builder()
+                .album(album1_1)
+                .genre(genre)
+                .discNumber(1)
+                .trackNumber(1)
+                .name("1")
+                .build();
 
-        Song song1_1_2 = new Song(album1_1, genre);
-        song1_1_2.setDiscNumber(1);
-        song1_1_2.setTrackNumber(2);
-        song1_1_2.setName("2");
+        Song song1_1_2 = Song.builder()
+                .album(album1_1)
+                .genre(genre)
+                .discNumber(1)
+                .trackNumber(2)
+                .name("2")
+                .build();
 
-        Song song1_2_1 = new Song(album1_2, genre);
-        song1_2_1.setDiscNumber(1);
-        song1_2_1.setTrackNumber(1);
-        song1_2_1.setName("1");
+        Song song1_2_1 = Song.builder()
+                .album(album1_2)
+                .genre(genre)
+                .discNumber(1)
+                .trackNumber(1)
+                .name("1")
+                .build();
 
-        Song song1_2_2 = new Song(album1_2, genre);
-        song1_2_2.setDiscNumber(2);
-        song1_2_2.setTrackNumber(1);
-        song1_2_2.setName("2");
+        Song song1_2_2 = Song.builder()
+                .album(album1_2)
+                .genre(genre)
+                .discNumber(2)
+                .trackNumber(1)
+                .name("2")
+                .build();
 
-        Song song1_2_3 = new Song(album1_2, genre);
-        song1_2_3.setDiscNumber(2);
-        song1_2_3.setTrackNumber(null);
-        song1_2_3.setName("2");
+        Song song1_2_3 = Song.builder()
+                .album(album1_2)
+                .genre(genre)
+                .discNumber(2)
+                .name("2")
+                .build();
 
         Song[] list = {song1_2_3, song1_2_2, song1_2_1, song1_1_2, song1_1_1};
         Arrays.sort(list);
@@ -57,11 +67,12 @@ public class SongTests {
     @Test
     public void buildSearchTerms() throws Exception {
 
-        Song song1 = new Song();
-        song1.setName("s1");
-        song1.setArtistName("ar1");
-        song1.setAlbumArtistName("ar2");
-        song1.setAlbumName("al1");
+        Song song1 = Song.builder()
+                .name("s1")
+                .artistName("ar1")
+                .albumArtistName("ar2")
+                .albumName("al1")
+                .build();
         assertThat(song1.getSearchTerms()).isEqualTo("s1 ar1 ar2 al1");
 
         Song song2 = new Song();
@@ -71,12 +82,9 @@ public class SongTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        Song eqSong1 = new Song();
-        eqSong1.setId(1L);
-        Song eqSong2 = new Song();
-        eqSong2.setId(1L);
-        Song diffSong = new Song();
-        diffSong.setId(2L);
+        Song eqSong1 = Song.builder().id(1L).build();
+        Song eqSong2 = Song.builder().id(1L).build();
+        Song diffSong = Song.builder().id(2L).build();
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());

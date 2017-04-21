@@ -13,8 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Service
 public class LogServiceImpl implements LogService {
 
@@ -57,7 +55,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage debug(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        checkNotNull(throwable);
         return debug(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
     }
 
@@ -70,7 +67,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage debug(Logger logger, String code, List<String> arguments, String text, String details) {
-        checkNotNull(code);
         return doLogMessage(logger, LogMessage.Type.DEBUG, code, text, arguments, details);
     }
 
@@ -95,7 +91,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage info(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        checkNotNull(throwable);
         return info(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
     }
 
@@ -108,7 +103,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage info(Logger logger, String code, List<String> arguments, String text, String details) {
-        checkNotNull(code);
         return doLogMessage(logger, LogMessage.Type.INFO, code, text, arguments, details);
     }
     
@@ -133,7 +127,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage warn(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        checkNotNull(throwable);
         return warn(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
     }
 
@@ -146,7 +139,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage warn(Logger logger, String code, List<String> arguments, String text, String details) {
-        checkNotNull(code);
         return doLogMessage(logger, LogMessage.Type.WARN, code, text, arguments, details);
     }
     
@@ -171,7 +163,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage error(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        checkNotNull(throwable);
         return error(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
     }
 
@@ -184,7 +175,6 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public LogMessage error(Logger logger, String code, List<String> arguments, String text, String details) {
-        checkNotNull(code);
         return doLogMessage(logger, LogMessage.Type.ERROR, code, text, arguments, details);
     }
 
@@ -210,13 +200,13 @@ public class LogServiceImpl implements LogService {
                     break;
             }
         }
-
-        LogMessage message = new LogMessage();
-        message.setType(type);
-        message.setCode(code);
-        message.setText(text);
-        message.setDetails(details);
-        message.setArguments(arguments);
-        return logMessageRepository.save(message);
+        
+        return logMessageRepository.save(LogMessage.builder()
+                .type(type)
+                .code(code)
+                .text(text)
+                .details(details)
+                .arguments(arguments)
+                .build());
     }
 }

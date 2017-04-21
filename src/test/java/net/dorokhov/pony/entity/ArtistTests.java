@@ -11,12 +11,9 @@ public class ArtistTests {
     @Test
     public void sort() throws Exception {
         
-        Artist artist1 = new Artist();
-        artist1.setName("1");
-        Artist artist2 = new Artist();
-        artist2.setName("2");
+        Artist artist1 = Artist.builder().name("1").build();
+        Artist artist2 = Artist.builder().name("2").build();
         Artist artistNull = new Artist();
-        artistNull.setName(null);
         
         Artist[] list = {artistNull, artist2, artist1, artist2};
         Arrays.sort(list);
@@ -27,12 +24,9 @@ public class ArtistTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
         
-        Artist eqArtist1 = new Artist();
-        eqArtist1.setId(1L);
-        Artist eqArtist2 = new Artist();
-        eqArtist2.setId(1L);
-        Artist diffArtist = new Artist();
-        diffArtist.setId(2L);
+        Artist eqArtist1 = Artist.builder().id(1L).build();
+        Artist eqArtist2 = Artist.builder().id(1L).build();
+        Artist diffArtist = Artist.builder().id(2L).build();
         
         assertThat(eqArtist1.hashCode()).isEqualTo(eqArtist2.hashCode());
         assertThat(eqArtist1.hashCode()).isNotEqualTo(diffArtist.hashCode());

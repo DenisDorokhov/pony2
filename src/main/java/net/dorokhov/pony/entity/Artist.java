@@ -1,12 +1,13 @@
 package net.dorokhov.pony.entity;
 
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,38 +20,35 @@ public class Artist extends BaseEntity<Long> implements Comparable<Artist> {
     @Field(analyzer = @Analyzer(definition = ANALYZER))
     private String name;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "artist")
-    private List<Album> albums;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "artwork_id")
     private Artwork artwork;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "artist")
+    private List<Album> albums = ImmutableList.of();
+
+    public Artist() {
+    }
+
+    private Artist(Builder builder) {
+        id = builder.id;
+        creationDate = builder.creationDate;
+        updateDate = builder.updateDate;
+        name = builder.name;
+        artwork = builder.artwork;
+        albums = builder.albums.build();
+    }
+
     public Optional<String> getName() {
         return Optional.ofNullable(name);
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Album> getAlbums() {
-        if (albums == null) {
-            albums = new ArrayList<>();
-        }
-        return albums;
-    }
-
-    public void setAlbums(List<Album> albums) {
-        this.albums = albums;
     }
 
     public Optional<Artwork> getArtwork() {
         return Optional.ofNullable(artwork);
     }
 
-    public void setArtwork(Artwork artwork) {
-        this.artwork = artwork;
+    public List<Album> getAlbums() {
+        return albums != null ? albums : ImmutableList.of();
     }
 
     @Override
@@ -68,5 +66,73 @@ public class Artist extends BaseEntity<Long> implements Comparable<Artist> {
                 ", name='" + name + '\'' +
                 ", artwork=" + artwork +
                 '}';
+    }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static Builder builder(Artist artist) {
+        return new Builder(artist);
+    }
+
+    public static class Builder {
+        
+        private Long id;
+        private LocalDateTime creationDate;
+        private LocalDateTime updateDate;
+        private String name;
+        private ImmutableList.Builder<Album> albums = ImmutableList.builder();
+        private Artwork artwork;
+
+        public Builder() {
+        }
+        
+        public Builder(Artist artist) {
+            id = artist.id;
+            creationDate = artist.creationDate;
+            updateDate = artist.updateDate;
+            name = artist.name;
+            albums = ImmutableList.<Album>builder().addAll(artist.albums);
+            artwork = artist.artwork;
+        }
+
+        Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        Builder creationDate(LocalDateTime creationDate) {
+            this.creationDate = creationDate;
+            return this;
+        }
+
+        Builder updateDate(LocalDateTime updateDate) {
+            this.updateDate = updateDate;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder artwork(Artwork artwork) {
+            this.artwork = artwork;
+            return this;
+        }
+
+        public Builder albums(List<Album> albums) {
+            if (albums != null) {
+                this.albums = ImmutableList.<Album>builder().addAll(albums);
+            } else {
+                this.albums = ImmutableList.builder();
+            }
+            return this;
+        }
+
+        public Artist build() {
+            return new Artist(this);
+        }
     }
 }

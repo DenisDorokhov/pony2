@@ -35,8 +35,7 @@ public class LogServiceImplTests {
     private static final Throwable THROWABLE = new Exception();
     private static final List<String> ARGUMENTS = ImmutableList.of("arg1", "arg2");
     
-    private static final List<LogMessage> LOG_MESSAGES = ImmutableList.of(
-            new LogMessage(DEBUG, "", ""), new LogMessage(DEBUG, "", ""));
+    private static final List<LogMessage> LOG_MESSAGES = ImmutableList.of();
     private static final Page<LogMessage> LOG_PAGE = new PageImpl<>(LOG_MESSAGES);
     
     @Mock

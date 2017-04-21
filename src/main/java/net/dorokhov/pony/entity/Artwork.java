@@ -1,5 +1,6 @@
 package net.dorokhov.pony.entity;
 
+import com.google.common.collect.ImmutableMap;
 import net.dorokhov.pony.util.JsonAttributeConverter;
 
 import javax.persistence.*;
@@ -11,10 +12,7 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "artwork", uniqueConstraints = @UniqueConstraint(columnNames = {"tag", "checksum"}))
-public class Artwork implements Identifiable<Long> {
-
-    public static final String TAG_ARTWORK_EMBEDDED = "artworkEmbedded";
-    public static final String TAG_ARTWORK_FILE = "artworkFile";
+public class Artwork implements Identity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,79 +52,59 @@ public class Artwork implements Identifiable<Long> {
 
     @Column(name = "meta_data")
     @Convert(converter = JsonAttributeConverter.MapConverter.class)
-    private Map<String, String> metaData;
+    private Map<String, String> metaData = ImmutableMap.of();
+
+    public Artwork() {
+    }
+
+    private Artwork(Builder builder) {
+        id = builder.id;
+        date = builder.date;
+        mimeType = builder.mimeType;
+        checksum = builder.checksum;
+        largeImageSize = builder.largeImageSize;
+        largeImagePath = builder.largeImagePath;
+        smallImageSize = builder.smallImageSize;
+        smallImagePath = builder.smallImagePath;
+        tag = builder.tag;
+        metaData = builder.metaData.build();
+    }
 
     @Override
     public Long getId() {
         return id;
     }
 
-    void setId(Long id) {
-        this.id = id;
-    }
-
     public LocalDateTime getDate() {
         return date;
-    }
-
-    void setDate(LocalDateTime date) {
-        this.date = date;
     }
 
     public String getMimeType() {
         return mimeType;
     }
 
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
-    }
-
     public String getChecksum() {
         return checksum;
-    }
-
-    public void setChecksum(String checksum) {
-        this.checksum = checksum;
     }
 
     public Long getLargeImageSize() {
         return largeImageSize;
     }
 
-    public void setLargeImageSize(Long size) {
-        this.largeImageSize = size;
-    }
-
     public String getLargeImagePath() {
         return largeImagePath;
-    }
-
-    public void setLargeImagePath(String path) {
-        this.largeImagePath = path;
     }
 
     public Long getSmallImageSize() {
         return smallImageSize;
     }
 
-    public void setSmallImageSize(Long smallImageSize) {
-        this.smallImageSize = smallImageSize;
-    }
-
     public String getSmallImagePath() {
         return smallImagePath;
     }
 
-    public void setSmallImagePath(String smallImagePath) {
-        this.smallImagePath = smallImagePath;
-    }
-
     public Optional<String> getTag() {
         return Optional.ofNullable(tag);
-    }
-
-    public void setTag(String tag) {
-        this.tag = tag;
     }
 
     public Map<String, String> getMetaData() {
@@ -134,10 +112,6 @@ public class Artwork implements Identifiable<Long> {
             metaData = new HashMap<>();
         }
         return metaData;
-    }
-
-    public void setMetaData(Map<String, String> metaData) {
-        this.metaData = metaData;
     }
 
     @PrePersist
@@ -173,5 +147,106 @@ public class Artwork implements Identifiable<Long> {
                 ", tag='" + tag + '\'' +
                 ", metaData=" + metaData +
                 '}';
+    }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static Builder builder(Artwork artwork) {
+        return new Builder(artwork);
+    }
+
+    public static class Builder {
+        
+        private Long id;
+        private LocalDateTime date;
+        private String mimeType;
+        private String checksum;
+        private Long largeImageSize;
+        private String largeImagePath;
+        private Long smallImageSize;
+        private String smallImagePath;
+        private String tag;
+        private ImmutableMap.Builder<String, String> metaData = ImmutableMap.builder();
+
+        public Builder() {
+        }
+        
+        public Builder(Artwork artwork) {
+            id = artwork.id;
+            date = artwork.date;
+            mimeType = artwork.mimeType;
+            checksum = artwork.checksum;
+            largeImageSize = artwork.largeImageSize;
+            largeImagePath = artwork.largeImagePath;
+            smallImageSize = artwork.smallImageSize;
+            smallImagePath = artwork.smallImagePath;
+            tag = artwork.tag;
+            metaData = ImmutableMap.<String, String>builder().putAll(artwork.metaData);
+        }
+
+        Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder date(LocalDateTime date) {
+            this.date = date;
+            return this;
+        }
+
+        public Builder mimeType(String mimeType) {
+            this.mimeType = mimeType;
+            return this;
+        }
+
+        public Builder checksum(String checksum) {
+            this.checksum = checksum;
+            return this;
+        }
+
+        public Builder largeImageSize(Long val) {
+            largeImageSize = val;
+            return this;
+        }
+
+        public Builder largeImagePath(String largeImagePath) {
+            this.largeImagePath = largeImagePath;
+            return this;
+        }
+
+        public Builder smallImageSize(Long smallImageSize) {
+            this.smallImageSize = smallImageSize;
+            return this;
+        }
+
+        public Builder smallImagePath(String smallImagePath) {
+            this.smallImagePath = smallImagePath;
+            return this;
+        }
+
+        public Builder tag(String tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public Builder metaData(Map<String, String> metaData) {
+            if (metaData != null) {
+                this.metaData = ImmutableMap.<String, String>builder().putAll(metaData);
+            } else {
+                this.metaData = ImmutableMap.builder();
+            }
+            return this;
+        }
+
+        public Builder putMetaData(String key, String value) {
+            metaData.put(key, value);
+            return this;
+        }
+
+        public Artwork build() {
+            return new Artwork(this);
+        }
     }
 }

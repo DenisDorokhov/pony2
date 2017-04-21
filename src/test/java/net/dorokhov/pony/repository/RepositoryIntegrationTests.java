@@ -1,6 +1,5 @@
 package net.dorokhov.pony.repository;
 
-import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.entity.*;
 import net.dorokhov.pony.test.IntegrationTest;
 import org.junit.Test;
@@ -93,75 +92,78 @@ public class RepositoryIntegrationTests extends IntegrationTest {
         doTestSave(buildUser(), userRepository);
     }
 
-    private <T extends Identifiable<K>, K extends Serializable> void doTestSave(T entity, CrudRepository<T, K> repository) {
+    private <T extends Identity<K>, K extends Serializable> void doTestSave(T entity, CrudRepository<T, K> repository) {
         repository.save(entity);
         assertThat(repository.findOne(entity.getId())).isNotNull();
     }
 
     private Installation buildInstallation() {
-        return new Installation("1.0");
+        return Installation.builder()
+                .version("1.0")
+                .encryptionKey("someKey")
+                .build();
     }
 
     private Config buildConfig() {
-        return new Config("someConfig", "someValue");
+        return Config.builder()
+                .id("someConfig")
+                .value("someValue")
+                .build();
     }
 
     private LogMessage buildLogMessage() {
-        return new LogMessage(LogMessage.Type.DEBUG, "someCode", "someText");
+        return LogMessage.builder()
+                .type(LogMessage.Type.DEBUG)
+                .code("someCode")
+                .text("someText")
+                .build();
     }
 
     private User buildUser() {
-        
-        User user = new User();
-        
-        user.setName("someName");
-        user.setEmail("someEmail");
-        user.setPassword("somePassword");
-        user.setRoles(ImmutableSet.of(User.Role.USER, User.Role.ADMIN));
-        
-        return user;
+        return User.builder()
+                .name("someName")
+                .email("someEmail")
+                .password("somePassword")
+                .addRoles(User.Role.USER, User.Role.ADMIN)
+                .build();
     }
 
     private Artwork buildArtwork() {
-
-        Artwork artwork = new Artwork();
-
-        artwork.setMimeType("text/plain");
-        artwork.setChecksum("123");
-        artwork.setLargeImageSize(123L);
-        artwork.setLargeImagePath("/largePath");
-        artwork.setSmallImageSize(12L);
-        artwork.setSmallImagePath("/smallPath");
-        artwork.setTag("someTag");
-        artwork.getMetaData().put("k1", "v1");
-        artwork.getMetaData().put("k2", "v2");
-
-        return artwork;
+        return Artwork.builder()
+                .mimeType("text/plain")
+                .checksum("123")
+                .largeImageSize(123L)
+                .largeImagePath("/largePath")
+                .smallImageSize(12L)
+                .smallImagePath("/smallPath")
+                .tag("someTag")
+                .putMetaData("k1", "v1")
+                .putMetaData("k2", "v2")
+                .build();
     }
 
     private Genre buildGenre() {
-        return new Genre();
+        return Genre.builder().build();
     }
 
     private Artist buildArtist() {
-        return new Artist();
+        return Artist.builder().build();
     }
 
     private Album buildAlbum(Artist artist) {
-        return new Album(artist);
+        return Album.builder().artist(artist).build();
     }
 
     private Song buildSong(Album album, Genre genre) {
-        
-        Song song = new Song(album, genre);
-        
-        song.setMimeType("text/plain");
-        song.setDuration(100L);
-        song.setSize(10L);
-        song.setBitRate(256L);
-        song.setBitRateVariable(false);
-        song.setPath("/dev/null");
-        
-        return song;
+        return Song.builder()
+                .album(album)
+                .genre(genre)
+                .mimeType("text/plain")
+                .duration(100L)
+                .size(10L)
+                .bitRate(256L)
+                .bitRateVariable(false)
+                .path("/dev/null")
+                .build();
     }
 }

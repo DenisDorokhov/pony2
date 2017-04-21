@@ -141,8 +141,7 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getLargeImageFile() throws Exception {
-        Artwork artwork = new Artwork();
-        artwork.setLargeImagePath(PATH_LARGE);
+        Artwork artwork = Artwork.builder().largeImagePath(PATH_LARGE).build();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         assertThat(artworkService.getLargeImageFile(3L)).hasValueSatisfying(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_LARGE).getAbsolutePath()));
@@ -150,8 +149,7 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getSmallImageFile() throws Exception {
-        Artwork artwork = new Artwork();
-        artwork.setSmallImagePath(PATH_SMALL);
+        Artwork artwork = Artwork.builder().smallImagePath(PATH_SMALL).build();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         assertThat(artworkService.getSmallImageFile(4L)).hasValueSatisfying(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_SMALL).getAbsolutePath()));
@@ -228,9 +226,10 @@ public class ArtworkServiceImplTests {
         Files.touch(largeImageFile);
         Files.touch(smallImageFile);
 
-        Artwork artwork = new Artwork();
-        artwork.setLargeImagePath(PATH_LARGE);
-        artwork.setSmallImagePath(PATH_SMALL);
+        Artwork artwork = Artwork.builder()
+                .largeImagePath(PATH_LARGE)
+                .smallImagePath(PATH_SMALL)
+                .build();
 
         given(artworkRepository.findOne(any())).willReturn(artwork);
         artworkService.delete(5L);
@@ -245,9 +244,10 @@ public class ArtworkServiceImplTests {
     @Test
     public void whenDeletingIgnoreNotExistingFiles() throws Exception {
         
-        Artwork artwork = new Artwork();
-        artwork.setLargeImagePath(PATH_LARGE);
-        artwork.setSmallImagePath(PATH_SMALL);
+        Artwork artwork = Artwork.builder()
+                .largeImagePath(PATH_LARGE)
+                .smallImagePath(PATH_SMALL)
+                .build();
         
         given(artworkRepository.findOne(any())).willReturn(artwork);
         artworkService.delete(5L);
@@ -263,7 +263,7 @@ public class ArtworkServiceImplTests {
         
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
-        verify(artworkRepository).save(savedArtwork.capture());
+        verify(artworkRepository, times(2)).save(savedArtwork.capture());
         verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(SMALL_IMAGE_SIZE), eq(new File(artworkFolder, artwork.getSmallImagePath())));
         verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(LARGE_IMAGE_SIZE), eq(new File(artworkFolder, artwork.getLargeImagePath())));
 
@@ -272,7 +272,7 @@ public class ArtworkServiceImplTests {
 
         given(artworkRepository.findByTagAndChecksum(any(), any())).willReturn(artwork);
         doGetAndSave.get();
-        verify(artworkRepository, times(1)).save(savedArtwork.capture());
+        verify(artworkRepository, times(2)).save(savedArtwork.capture());
     }
     
     private void checkSavedArtwork(Artwork savedArtwork) {

@@ -37,10 +37,10 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional
     public void saveAutoScanInterval(Integer value) {
-        Config config = Optional.ofNullable(configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL))
-                .orElse(new Config(CONFIG_AUTO_SCAN_INTERVAL));
-        config.setValue(value);
-        configRepository.save(config);
+        Config.Builder builder = Optional.ofNullable(configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL))
+                .map(Config::builder).orElse(Config.builder().id(CONFIG_AUTO_SCAN_INTERVAL));
+        builder.value(value);
+        configRepository.save(builder.build());
     }
 
     @Override
@@ -66,9 +66,9 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(File::getPath)
                 .collect(Collectors.joining(CONFIG_LIBRARY_FOLDERS_SEPARATOR));
 
-        Config config = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
-                .orElse(new Config(CONFIG_LIBRARY_FOLDERS));
-        config.setValue(Strings.emptyToNull(value));
-        configRepository.save(config);
+        Config.Builder builder = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
+                .map(Config::builder).orElse(Config.builder().id(CONFIG_LIBRARY_FOLDERS));
+        builder.value(Strings.emptyToNull(value));
+        configRepository.save(builder.build());
     }
 }

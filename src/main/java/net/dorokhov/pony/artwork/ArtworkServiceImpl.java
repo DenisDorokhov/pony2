@@ -168,26 +168,27 @@ public class ArtworkServiceImpl implements ArtworkService {
 
         FileType fileType = fileTypeSupplier.get();
 
-        artwork = new Artwork();
-        artwork.setMimeType(fileType.getMimeType());
-        artwork.setChecksum(checksum);
-        command.getTag().ifPresent(artwork::setTag);
-        artwork.setMetaData(command.getMetaData());
-
-        artwork = artworkRepository.save(artwork);
+        artwork = artworkRepository.save(Artwork.builder()
+                .mimeType(fileType.getMimeType())
+                .checksum(checksum)
+                .tag(command.getTag().orElse(null))
+                .metaData(command.getMetaData())
+                .build());
 
         String smallImagePath = buildSmallImagePath(fileType.getFileExtension(), artwork);
         String largeImagePath = buildLargeImagePath(fileType.getFileExtension(), artwork);
-        artwork.setSmallImagePath(smallImagePath);
-        artwork.setLargeImagePath(largeImagePath);
 
         File smallImageFile = new File(artworkFolder, smallImagePath);
         File largeImageFile = new File(artworkFolder, largeImagePath);
         thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeSmall, smallImageFile);
         thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeLarge, largeImageFile);
         
-        artwork.setSmallImageSize(smallImageFile.length());
-        artwork.setLargeImageSize(largeImageFile.length());
+        artwork = artworkRepository.save(Artwork.builder(artwork)
+                .smallImagePath(smallImagePath)
+                .largeImagePath(largeImagePath)
+                .smallImageSize(smallImageFile.length())
+                .largeImageSize(largeImageFile.length())
+                .build());
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override

@@ -9,7 +9,7 @@ public class ConfigTests {
 
     @Test
     public void supportNullValue() throws Exception {
-        Config config = new Config("foo");
+        Config config = new Config("foo", null);
         assertThat(config.getValue()).isEmpty();
         assertThat(config.getInteger()).isEmpty();
         assertThat(config.getLong()).isEmpty();
@@ -70,9 +70,9 @@ public class ConfigTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        Config eqConfig1 = new Config("1");
-        Config eqConfig2 = new Config("1");
-        Config diffConfig = new Config("2");
+        Config eqConfig1 = new Config("1", null);
+        Config eqConfig2 = new Config("1", null);
+        Config diffConfig = new Config("2", null);
 
         assertThat(eqConfig1.hashCode()).isEqualTo(eqConfig2.hashCode());
         assertThat(eqConfig1.hashCode()).isNotEqualTo(diffConfig.hashCode());

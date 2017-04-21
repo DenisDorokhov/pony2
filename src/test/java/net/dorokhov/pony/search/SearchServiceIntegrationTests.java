@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SearchServiceIntegrationTests extends IntegrationTest {
-    
+
     @Autowired
     private SearchService searchService;
 
@@ -33,7 +33,7 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
 
         Genre genre1 = genreRepository.save(buildGenre("the foobar entity1"));
         Genre genre2 = genreRepository.save(buildGenre("the foobar entity2"));
-        
+
         assertThat(searchService.searchGenres("foo", 10)).containsOnly(genre1, genre2);
         assertThat(searchService.searchGenres("foo", 1)).hasSize(1);
         assertThat(searchService.searchGenres("ent th foo", 10)).containsOnly(genre1, genre2);
@@ -53,12 +53,12 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
         assertThat(searchService.searchArtists("entity1 the foobar", 10)).containsExactly(artist1);
         assertThat(searchService.searchArtists("other", 10)).isEmpty();
     }
-    
+
     @Test
     public void searchAlbums() throws Exception {
 
         Artist artist = artistRepository.save(new Artist());
-        
+
         Album album1 = albumRepository.save(buildAlbum(artist, "the foobar entity1"));
         Album album2 = albumRepository.save(buildAlbum(artist, "the foobar entity2"));
 
@@ -74,7 +74,7 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
 
         Genre genre = genreRepository.save(new Genre());
         Artist artist = artistRepository.save(new Artist());
-        Album album = albumRepository.save(new Album(artist));
+        Album album = albumRepository.save(Album.builder().artist(artist).build());
 
         Song song1 = songRepository.save(buildSong("the foobar entity1", genre, album));
         Song song2 = songRepository.save(buildSong("the foobar entity2", genre, album));
@@ -87,32 +87,28 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
     }
 
     private Genre buildGenre(String name) {
-        Genre genre = new Genre();
-        genre.setName(name);
-        return genre;
+        return Genre.builder().name(name).build();
     }
 
     private Artist buildArtist(String name) {
-        Artist artist = new Artist();
-        artist.setName(name);
-        return artist;
+        return Artist.builder().name(name).build();
     }
 
     private Album buildAlbum(Artist artist, String name) {
-        Album album = new Album(artist);
-        album.setName(name);
-        return album;
+        return Album.builder().artist(artist).name(name).build();
     }
 
     private Song buildSong(String name, Genre genre, Album album) {
-        Song song = new Song(album, genre);
-        song.setBitRate(128L);
-        song.setBitRateVariable(false);
-        song.setPath(name);
-        song.setMimeType("text/plain");
-        song.setDuration(666L);
-        song.setSize(256L);
-        song.setName(name);
-        return song;
+        return Song.builder()
+                .album(album)
+                .genre(genre)
+                .bitRate(128L)
+                .bitRateVariable(false)
+                .path(name)
+                .mimeType("text/plain")
+                .duration(666L)
+                .size(256L)
+                .name(name)
+                .build();
     }
 }

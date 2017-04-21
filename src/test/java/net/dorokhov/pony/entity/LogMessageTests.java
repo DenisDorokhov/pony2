@@ -9,12 +9,9 @@ public class LogMessageTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        LogMessage eqLogMessage1 = new LogMessage(LogMessage.Type.DEBUG, "", "");
-        eqLogMessage1.setId(1L);
-        LogMessage eqLogMessage2 = new LogMessage(LogMessage.Type.DEBUG, "", "");
-        eqLogMessage2.setId(1L);
-        LogMessage diffLogMessage = new LogMessage(LogMessage.Type.DEBUG, "", "");
-        diffLogMessage.setId(2L);
+        LogMessage eqLogMessage1 = LogMessage.builder().id(1L).build();
+        LogMessage eqLogMessage2 = LogMessage.builder().id(1L).build();
+        LogMessage diffLogMessage = LogMessage.builder().id(2L).build();
 
         assertThat(eqLogMessage1.hashCode()).isEqualTo(eqLogMessage2.hashCode());
         assertThat(eqLogMessage1.hashCode()).isNotEqualTo(diffLogMessage.hashCode());

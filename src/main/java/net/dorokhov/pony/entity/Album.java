@@ -1,6 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
@@ -8,7 +9,7 @@ import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +29,7 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
     private Artwork artwork;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "album")
-    private List<Song> songs;
+    private List<Song> songs = ImmutableList.of();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id", nullable = false)
@@ -38,51 +39,35 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
     public Album() {
     }
 
-    public Album(Artist artist) {
-        this.artist = artist;
+    private Album(Builder builder) {
+        id = builder.id;
+        creationDate = builder.creationDate;
+        updateDate = builder.updateDate;
+        name = builder.name;
+        year = builder.year;
+        artwork = builder.artwork;
+        songs = builder.songs.build();
+        artist = builder.artist;
     }
 
     public Optional<String> getName() {
         return Optional.ofNullable(name);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public Optional<Integer> getYear() {
         return Optional.ofNullable(year);
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
     }
 
     public Optional<Artwork> getArtwork() {
         return Optional.ofNullable(artwork);
     }
 
-    public void setArtwork(Artwork artwork) {
-        this.artwork = artwork;
-    }
-
     public List<Song> getSongs() {
-        if (songs == null) {
-            songs = new ArrayList<>();
-        }
-        return songs;
-    }
-
-    public void setSongs(List<Song> songs) {
-        this.songs = songs;
+        return songs != null ? songs : ImmutableList.of();
     }
 
     public Artist getArtist() {
         return artist;
-    }
-
-    public void setArtist(Artist artist) {
-        this.artist = artist;
     }
 
     @Transient
@@ -110,5 +95,87 @@ public class Album extends BaseEntity<Long> implements Comparable<Album> {
                 ", artwork=" + artwork +
                 ", artist=" + artist +
                 '}';
+    }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static Builder builder(Album album) {
+        return new Builder(album);
+    }
+
+    public static class Builder {
+        
+        private Long id;
+        private LocalDateTime creationDate;
+        private LocalDateTime updateDate;
+        private String name;
+        private Integer year;
+        private Artwork artwork;
+        private ImmutableList.Builder<Song> songs = ImmutableList.builder();
+        private Artist artist;
+
+        public Builder() {
+        }
+
+        private Builder(Album builder) {
+            id = builder.id;
+            creationDate = builder.creationDate;
+            updateDate = builder.updateDate;
+            name = builder.name;
+            year = builder.year;
+            artwork = builder.artwork;
+            songs = ImmutableList.<Song>builder().addAll(builder.songs);
+            artist = builder.artist;
+        }
+
+        Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        Builder creationDate(LocalDateTime creationDate) {
+            this.creationDate = creationDate;
+            return this;
+        }
+
+        Builder updateDate(LocalDateTime updateDate) {
+            this.updateDate = updateDate;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder year(Integer year) {
+            this.year = year;
+            return this;
+        }
+
+        public Builder artwork(Artwork artwork) {
+            this.artwork = artwork;
+            return this;
+        }
+
+        public Builder songs(List<Song> songs) {
+            if (songs != null) {
+                this.songs = ImmutableList.<Song>builder().addAll(songs);
+            } else {
+                this.songs = ImmutableList.builder();
+            }
+            return this;
+        }
+
+        public Builder artist(Artist artist) {
+            this.artist = artist;
+            return this;
+        }
+
+        public Album build() {
+            return new Album(this);
+        }
     }
 }

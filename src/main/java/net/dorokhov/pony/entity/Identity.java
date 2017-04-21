@@ -2,6 +2,6 @@ package net.dorokhov.pony.entity;
 
 import java.io.Serializable;
 
-public interface Identifiable<T extends Serializable> {
+public interface Identity<T extends Serializable> {
     T getId();
 }

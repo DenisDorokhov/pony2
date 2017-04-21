@@ -1,17 +1,18 @@
 package net.dorokhov.pony.entity;
 
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.util.JsonAttributeConverter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 @Entity
 @Table(name = "log_message")
-public class LogMessage implements Identifiable<Long> {
+public class LogMessage implements Identity<Long> {
 
     public enum Type {
         DEBUG, INFO, WARN, ERROR
@@ -43,15 +44,19 @@ public class LogMessage implements Identifiable<Long> {
 
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.ListConverter.class)
-    private List<String> arguments = new ArrayList<>();
+    private List<String> arguments = ImmutableList.of();
 
     public LogMessage() {
     }
 
-    public LogMessage(Type type, String code, String text) {
-        setType(type);
-        setCode(code);
-        setText(text);
+    private LogMessage(Builder builder) {
+        id = builder.id;
+        date = builder.date;
+        type = builder.type;
+        code = builder.code;
+        text = builder.text;
+        details = builder.details;
+        arguments = builder.arguments.build();
     }
 
     @Override
@@ -59,64 +64,33 @@ public class LogMessage implements Identifiable<Long> {
         return id;
     }
 
-    void setId(Long id) {
-        this.id = id;
-    }
-
     public LocalDateTime getDate() {
         return date;
-    }
-
-    void setDate(LocalDateTime date) {
-        this.date = date;
     }
 
     public Type getType() {
         return type;
     }
 
-    public void setType(Type type) {
-        this.type = type;
-    }
-
     public String getCode() {
         return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
     }
 
     public String getText() {
         return text;
     }
 
-    public void setText(String text) {
-        this.text = text;
-    }
-
     public Optional<String> getDetails() {
         return Optional.ofNullable(details);
     }
 
-    public void setDetails(String details) {
-        this.details = details;
-    }
-
     public List<String> getArguments() {
-        if (arguments == null) {
-            arguments = new ArrayList<>();
-        }
-        return arguments;
-    }
-
-    public void setArguments(List<String> arguments) {
-        this.arguments = arguments;
+        return arguments != null ? arguments : ImmutableList.of();
     }
 
     @PrePersist
     public void prePersist() {
-        setDate(LocalDateTime.now());
+        date = LocalDateTime.now();
     }
 
     @Override
@@ -143,5 +117,85 @@ public class LogMessage implements Identifiable<Long> {
                 ", type=" + type +
                 ", code='" + code + '\'' +
                 '}';
+    }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static Builder builder(LogMessage logMessage) {
+        return new Builder(logMessage);
+    }
+
+    public static class Builder {
+        
+        private Long id;
+        private LocalDateTime date;
+        private Type type;
+        private String code;
+        private String text;
+        private String details;
+        private ImmutableList.Builder<String> arguments = ImmutableList.builder();
+
+        public Builder() {
+        }
+        
+        public Builder(LogMessage logMessage) {
+            id = logMessage.id;
+            date = logMessage.date;
+            type = logMessage.type;
+            code = logMessage.code;
+            text = logMessage.text;
+            details = logMessage.details;
+            arguments = ImmutableList.<String>builder().addAll(logMessage.arguments);
+        }
+
+        Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        Builder date(LocalDateTime date) {
+            this.date = date;
+            return this;
+        }
+
+        public Builder type(Type type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder code(String code) {
+            this.code = code;
+            return this;
+        }
+
+        public Builder text(String text) {
+            this.text = text;
+            return this;
+        }
+
+        public Builder details(String details) {
+            this.details = details;
+            return this;
+        }
+
+        public Builder arguments(List<String> arguments) {
+            if (arguments != null) {
+                this.arguments = ImmutableList.<String>builder().addAll(arguments);
+            } else {
+                this.arguments = ImmutableList.builder();
+            }
+            return this;
+        }
+
+        public Builder addArguments(String... arguments) {
+            this.arguments.addAll(Arrays.asList(arguments));
+            return this;
+        }
+
+        public LogMessage build() {
+            return new LogMessage(this);
+        }
     }
 }

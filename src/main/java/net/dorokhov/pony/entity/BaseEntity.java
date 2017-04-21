@@ -22,7 +22,7 @@ import static net.dorokhov.pony.entity.BaseEntity.ANALYZER;
                 @TokenFilterDef(factory = LowerCaseFilterFactory.class),
                 @TokenFilterDef(factory = StandardFilterFactory.class)
         })
-public abstract class BaseEntity<T extends Serializable> implements Identifiable<T> {
+abstract class BaseEntity<T extends Serializable> implements Identity<T> {
     
     static final String ANALYZER = "noStopWordsAnalyzer";
 
@@ -43,24 +43,12 @@ public abstract class BaseEntity<T extends Serializable> implements Identifiable
         return id;
     }
 
-    void setId(T id) {
-        this.id = id;
-    }
-
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
 
-    void setCreationDate(LocalDateTime creationDate) {
-        this.creationDate = creationDate;
-    }
-
     public Optional<LocalDateTime> getUpdateDate() {
         return Optional.ofNullable(updateDate);
-    }
-
-    void setUpdateDate(LocalDateTime updateDate) {
-        this.updateDate = updateDate;
     }
 
     @PrePersist

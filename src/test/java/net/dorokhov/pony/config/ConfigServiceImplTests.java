@@ -40,7 +40,7 @@ public class ConfigServiceImplTests {
         assertThat(configService.getAutoScanInterval()).isEmpty();
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL));
+                .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, null));
         assertThat(configService.getAutoScanInterval()).isEmpty();
     }
 
@@ -93,7 +93,7 @@ public class ConfigServiceImplTests {
         assertThat(configService.fetchLibraryFolders()).containsExactly(new File("foo"), new File("bar"));
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS));
+                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
         assertThat(configService.fetchLibraryFolders()).isEmpty();
     }
 
@@ -101,7 +101,7 @@ public class ConfigServiceImplTests {
     public void fetchNotExistingLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS));
+                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
         assertThat(configService.fetchLibraryFolders()).isEmpty();
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
