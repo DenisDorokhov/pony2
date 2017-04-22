@@ -131,7 +131,7 @@ public abstract class AudioData {
             return self();
         }
         
-        abstract public T self();
+        abstract protected T self();
 
         abstract public AudioData build();
     }

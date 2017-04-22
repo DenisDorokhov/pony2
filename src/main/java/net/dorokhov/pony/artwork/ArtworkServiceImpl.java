@@ -1,5 +1,9 @@
 package net.dorokhov.pony.artwork;
 
+import net.dorokhov.pony.artwork.draft.ArtworkDraft;
+import net.dorokhov.pony.artwork.draft.ByteSourceArtworkDraft;
+import net.dorokhov.pony.artwork.draft.FileArtworkDraft;
+import net.dorokhov.pony.artwork.draft.ImageNodeArtworkDraft;
 import net.dorokhov.pony.entity.Artwork;
 import net.dorokhov.pony.file.ChecksumCalculator;
 import net.dorokhov.pony.file.FileType;
@@ -168,8 +172,9 @@ public class ArtworkServiceImpl implements ArtworkService {
 
         FileType fileType = fileTypeSupplier.get();
 
-        String smallImagePath = buildSmallImagePath(fileType.getFileExtension());
-        String largeImagePath = buildLargeImagePath(fileType.getFileExtension());
+        String uuid = UUID.randomUUID().toString();
+        String smallImagePath = buildImagePath(uuid, "small", fileType.getFileExtension());
+        String largeImagePath = buildImagePath(uuid, "large", fileType.getFileExtension());
 
         File smallImageFile = new File(artworkFolder, smallImagePath);
         File largeImageFile = new File(artworkFolder, largeImagePath);
@@ -204,20 +209,11 @@ public class ArtworkServiceImpl implements ArtworkService {
         return artwork;
     }
     
-    private String buildLargeImagePath(String extension) {
-        return buildImagePath("large", extension);
-    }
-    
-    private String buildSmallImagePath(String extension) {
-        return buildImagePath("small", extension);
-    }
-    
-    private String buildImagePath(String suffix, String extension) {
-        String uuid = UUID.randomUUID().toString();
+    private String buildImagePath(String name, String suffix, String extension) {
         StringBuilder builder = new StringBuilder();
-        builder.append(uuid.substring(0, 2)).append("/");
-        builder.append(uuid.substring(2, 4)).append("/");
-        builder.append(uuid).append(".").append(suffix).append(".").append(extension);
+        builder.append(name.substring(0, 2)).append("/");
+        builder.append(name.substring(2, 4)).append("/");
+        builder.append(name).append(".").append(suffix).append(".").append(extension);
         return builder.toString();
     }
 }

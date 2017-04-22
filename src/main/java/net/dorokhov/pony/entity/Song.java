@@ -8,13 +8,14 @@ import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
 @Table(name = "song")
 @Indexed
-public class Song extends BaseEntity<Long> implements Comparable<Song> {
+public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializable {
 
     @Column(name = "path", nullable = false, unique = true)
     @NotNull

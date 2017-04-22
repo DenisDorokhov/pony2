@@ -2,12 +2,13 @@ package net.dorokhov.pony.entity;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
 @Table(name = "config")
-public class Config implements Identity<String> {
+public class Config implements Identity<String>, Serializable {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)

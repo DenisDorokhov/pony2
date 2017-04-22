@@ -1,4 +1,4 @@
-package net.dorokhov.pony.artwork;
+package net.dorokhov.pony.artwork.draft;
 
 import java.io.File;
 import java.util.Map;

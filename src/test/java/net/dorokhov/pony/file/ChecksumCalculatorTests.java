@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ChecksumCalculatorTests {
     
     private static final Resource RESOURCE = new ClassPathResource("test.txt");
-    private static final byte[] BYTES = {0x74, 0x65, 0x73, 0x74, 0x0A};
-    private static final String CHECKSUM = "d8e8fca2dc0f896fd7cb4cb0031ba249";
+    private static final byte[] BYTES = {0x74, 0x65, 0x73, 0x74};
+    private static final String CHECKSUM = "098f6bcd4621d373cade4e832627b4f6";
     
     private ChecksumCalculator checksumCalculator;
 

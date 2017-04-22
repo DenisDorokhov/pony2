@@ -5,6 +5,7 @@ import net.dorokhov.pony.util.JsonAttributeConverter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "log_message")
-public class LogMessage implements Identity<Long> {
+public class LogMessage implements Identity<Long>, Serializable {
 
     public enum Type {
         DEBUG, INFO, WARN, ERROR

@@ -9,6 +9,7 @@ import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +17,7 @@ import java.util.Optional;
 @Entity
 @Table(name = "album")
 @Indexed
-public class Album extends BaseEntity<Long> implements Comparable<Album> {
+public class Album extends BaseEntity<Long> implements Comparable<Album>, Serializable {
 
     @Column(name = "name")
     private String name;

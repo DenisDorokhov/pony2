@@ -6,13 +6,14 @@ import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
 @Table(name = "genre")
 @Indexed
-public class Genre extends BaseEntity<Long> implements Comparable<Genre> {
+public class Genre extends BaseEntity<Long> implements Comparable<Genre>, Serializable {
 
     @Column(name = "name")
     @Field(analyzer = @Analyzer(definition = ANALYZER))

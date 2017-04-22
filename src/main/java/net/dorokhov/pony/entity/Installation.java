@@ -4,11 +4,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "installation")
-public class Installation extends BaseEntity<Long> {
+public class Installation extends BaseEntity<Long> implements Serializable {
 
     @Column(name = "version", nullable = false)
     @NotNull

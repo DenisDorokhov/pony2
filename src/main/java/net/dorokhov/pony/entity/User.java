@@ -4,13 +4,14 @@ import com.google.common.collect.ImmutableSet;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Set;
 
 @Entity
 @Table(name = "user")
-public class User extends BaseEntity<Long> {
+public class User extends BaseEntity<Long> implements Serializable {
 
     public enum Role {
         USER, ADMIN
