@@ -1,4 +1,4 @@
-package net.dorokhov.pony.user;
+package net.dorokhov.pony.user.domain;
 
 import net.dorokhov.pony.entity.User;
 

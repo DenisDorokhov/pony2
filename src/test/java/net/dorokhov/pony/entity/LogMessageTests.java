@@ -9,9 +9,9 @@ public class LogMessageTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        LogMessage eqLogMessage1 = LogMessage.builder().id(1L).build();
-        LogMessage eqLogMessage2 = LogMessage.builder().id(1L).build();
-        LogMessage diffLogMessage = LogMessage.builder().id(2L).build();
+        LogMessage eqLogMessage1 = buildLogMessage().id(1L).build();
+        LogMessage eqLogMessage2 = buildLogMessage().id(1L).build();
+        LogMessage diffLogMessage = buildLogMessage().id(2L).build();
 
         assertThat(eqLogMessage1.hashCode()).isEqualTo(eqLogMessage2.hashCode());
         assertThat(eqLogMessage1.hashCode()).isNotEqualTo(diffLogMessage.hashCode());
@@ -27,5 +27,12 @@ public class LogMessageTests {
     @Test
     public void stringify() throws Exception {
         assertThat(new LogMessage().toString()).startsWith("LogMessage{");
+    }
+    
+    private LogMessage.Builder buildLogMessage() {
+        return LogMessage.builder()
+                .type(LogMessage.Type.DEBUG)
+                .code("someCode")
+                .text("someText");
     }
 }

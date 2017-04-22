@@ -9,9 +9,9 @@ public class UserTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        User eqUser1 = User.builder().id(1L).build();
-        User eqUser2 = User.builder().id(1L).build();
-        User diffUser = User.builder().id(2L).build();
+        User eqUser1 = buildUser().id(1L).build();
+        User eqUser2 = buildUser().id(1L).build();
+        User diffUser = buildUser().id(2L).build();
 
         assertThat(eqUser1.hashCode()).isEqualTo(eqUser2.hashCode());
         assertThat(eqUser1.hashCode()).isNotEqualTo(diffUser.hashCode());
@@ -27,5 +27,12 @@ public class UserTests {
     @Test
     public void stringify() throws Exception {
         assertThat(new User().toString()).startsWith("User{");
+    }
+
+    private User.Builder buildUser() {
+        return User.builder()
+                .name("someName")
+                .email("someEmail")
+                .password("somePassword");
     }
 }

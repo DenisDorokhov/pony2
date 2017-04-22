@@ -12,6 +12,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Entity
 @Table(name = "song")
 @Indexed
@@ -83,32 +85,32 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
     @JoinColumn(name = "genre_id", nullable = false)
     private Genre genre;
 
-    public Song() {
+    protected Song() {
     }
 
     private Song(Builder builder) {
-        path = builder.path;
-        mimeType = builder.mimeType;
-        size = builder.size;
-        duration = builder.duration;
-        bitRate = builder.bitRate;
-        bitRateVariable = builder.bitRateVariable;
+        id = builder.id;
+        creationDate = builder.creationDate;
+        updateDate = builder.updateDate;
+        path = checkNotNull(builder.path);
+        mimeType = checkNotNull(builder.mimeType);
+        size = checkNotNull(builder.size);
+        duration = checkNotNull(builder.duration);
+        bitRate = checkNotNull(builder.bitRate);
+        bitRateVariable = checkNotNull(builder.bitRateVariable);
         discNumber = builder.discNumber;
         discCount = builder.discCount;
-        id = builder.id;
         trackNumber = builder.trackNumber;
         trackCount = builder.trackCount;
-        creationDate = builder.creationDate;
         name = builder.name;
         genreName = builder.genreName;
-        updateDate = builder.updateDate;
         artistName = builder.artistName;
         albumArtistName = builder.albumArtistName;
         albumName = builder.albumName;
         year = builder.year;
         artwork = builder.artwork;
-        album = builder.album;
-        genre = builder.genre;
+        album = checkNotNull(builder.album);
+        genre = checkNotNull(builder.genre);
     }
 
     public String getPath() {
@@ -119,19 +121,19 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
         return mimeType;
     }
 
-    public Long getSize() {
+    public long getSize() {
         return size;
     }
 
-    public Long getDuration() {
+    public long getDuration() {
         return duration;
     }
 
-    public Long getBitRate() {
+    public long getBitRate() {
         return bitRate;
     }
 
-    public Boolean getBitRateVariable() {
+    public boolean getBitRateVariable() {
         return bitRateVariable;
     }
 

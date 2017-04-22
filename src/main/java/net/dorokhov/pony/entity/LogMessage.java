@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Entity
 @Table(name = "log_message")
 public class LogMessage implements Identity<Long>, Serializable {
@@ -47,15 +49,15 @@ public class LogMessage implements Identity<Long>, Serializable {
     @Convert(converter = JsonAttributeConverter.ListConverter.class)
     private List<String> arguments = ImmutableList.of();
 
-    public LogMessage() {
+    protected LogMessage() {
     }
 
     private LogMessage(Builder builder) {
         id = builder.id;
         date = builder.date;
-        type = builder.type;
-        code = builder.code;
-        text = builder.text;
+        type = checkNotNull(builder.type);
+        code = checkNotNull(builder.code);
+        text = checkNotNull(builder.text);
         details = builder.details;
         arguments = builder.arguments.build();
     }

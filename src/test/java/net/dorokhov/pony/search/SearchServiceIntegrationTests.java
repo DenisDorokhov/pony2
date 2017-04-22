@@ -57,7 +57,7 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
     @Test
     public void searchAlbums() throws Exception {
 
-        Artist artist = artistRepository.save(new Artist());
+        Artist artist = artistRepository.save(Artist.builder().build());
 
         Album album1 = albumRepository.save(buildAlbum(artist, "the foobar entity1"));
         Album album2 = albumRepository.save(buildAlbum(artist, "the foobar entity2"));
@@ -72,8 +72,8 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
     @Test
     public void searchSongs() throws Exception {
 
-        Genre genre = genreRepository.save(new Genre());
-        Artist artist = artistRepository.save(new Artist());
+        Genre genre = genreRepository.save(Genre.builder().build());
+        Artist artist = artistRepository.save(Artist.builder().build());
         Album album = albumRepository.save(Album.builder().artist(artist).build());
 
         Song song1 = songRepository.save(buildSong("the foobar entity1", genre, album));

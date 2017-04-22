@@ -1,7 +1,8 @@
-package net.dorokhov.pony.file;
+package net.dorokhov.pony.file.domain;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class FileType {
 
@@ -10,10 +11,8 @@ public class FileType {
     private final String fileExtension;
 
     public FileType(String mimeType, String fileExtension) {
-        Preconditions.checkNotNull(mimeType);
-        Preconditions.checkNotNull(fileExtension);
-        this.mimeType = mimeType;
-        this.fileExtension = fileExtension;
+        this.mimeType = checkNotNull(mimeType);
+        this.fileExtension = checkNotNull(fileExtension);
     }
 
     public String getMimeType() {

@@ -2,10 +2,10 @@ package net.dorokhov.pony.artwork;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import net.dorokhov.pony.filetree.AudioNode;
-import net.dorokhov.pony.filetree.FolderNode;
-import net.dorokhov.pony.filetree.ImageNode;
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.filetree.domain.AudioNode;
+import net.dorokhov.pony.filetree.domain.FolderNode;
+import net.dorokhov.pony.filetree.domain.ImageNode;
+import net.dorokhov.pony.image.domain.ImageSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,6 +1,6 @@
-package net.dorokhov.pony.artwork.draft;
+package net.dorokhov.pony.artwork.domain;
 
-import net.dorokhov.pony.filetree.ImageNode;
+import net.dorokhov.pony.filetree.domain.ImageNode;
 
 import java.util.Map;
 
@@ -16,8 +16,7 @@ public class ImageNodeArtworkDraft extends ArtworkDraft {
 
     public ImageNodeArtworkDraft(ImageNode imageNode, String tag, Map<String, String> metaData) {
         super(tag, metaData);
-        checkNotNull(imageNode);
-        this.imageNode = imageNode;
+        this.imageNode = checkNotNull(imageNode);
     }
 
     public ImageNode getImageNode() {

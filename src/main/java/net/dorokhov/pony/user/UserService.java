@@ -1,9 +1,10 @@
 package net.dorokhov.pony.user;
 
 import net.dorokhov.pony.entity.User;
-import net.dorokhov.pony.user.draft.CurrentUserUpdateDraft;
-import net.dorokhov.pony.user.draft.UserCreationDraft;
-import net.dorokhov.pony.user.draft.UserUpdateDraft;
+import net.dorokhov.pony.user.domain.CurrentUserUpdateDraft;
+import net.dorokhov.pony.user.domain.UserCreationDraft;
+import net.dorokhov.pony.user.domain.UserToken;
+import net.dorokhov.pony.user.domain.UserUpdateDraft;
 import net.dorokhov.pony.user.exception.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,4 @@
-package net.dorokhov.pony.audio;
+package net.dorokhov.pony.audio.domain;
 
 import java.util.Optional;
 

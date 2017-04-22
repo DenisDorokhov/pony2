@@ -100,7 +100,6 @@ public class RepositoryIntegrationTests extends IntegrationTest {
     private Installation buildInstallation() {
         return Installation.builder()
                 .version("1.0")
-                .encryptionKey("someKey")
                 .build();
     }
 

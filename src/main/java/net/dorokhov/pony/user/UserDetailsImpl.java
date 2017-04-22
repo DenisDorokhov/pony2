@@ -15,8 +15,7 @@ public class UserDetailsImpl implements UserDetails {
     private final User user;
 
     public UserDetailsImpl(User user) {
-        checkNotNull(user);
-        this.user = user;
+        this.user = checkNotNull(user);
     }
 
     public User getUser() {

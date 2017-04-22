@@ -1,4 +1,4 @@
-package net.dorokhov.pony.user.draft;
+package net.dorokhov.pony.user.domain;
 
 import java.util.Optional;
 
@@ -12,12 +12,9 @@ public class CurrentUserUpdateDraft {
     private final String newPassword;
 
     private CurrentUserUpdateDraft(Builder builder) {
-        checkNotNull(builder.name);
-        checkNotNull(builder.email);
-        checkNotNull(builder.oldPassword);
-        name = builder.name;
-        email = builder.email;
-        oldPassword = builder.oldPassword;
+        name = checkNotNull(builder.name);
+        email = checkNotNull(builder.email);
+        oldPassword = checkNotNull(builder.oldPassword);
         newPassword = builder.newPassword;
     }
 

@@ -7,6 +7,8 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Entity
 @Table(name = "installation")
 public class Installation extends BaseEntity<Long> implements Serializable {
@@ -14,28 +16,19 @@ public class Installation extends BaseEntity<Long> implements Serializable {
     @Column(name = "version", nullable = false)
     @NotNull
     private String version;
-    
-    @Column(name = "encryption_key", nullable = false)
-    @NotNull
-    private String encryptionKey;
 
-    public Installation() {
+    protected Installation() {
     }
 
     private Installation(Builder builder) {
-        version = builder.version;
-        encryptionKey = builder.encryptionKey;
         id = builder.id;
         creationDate = builder.creationDate;
         updateDate = builder.updateDate;
+        version = checkNotNull(builder.version);
     }
 
     public String getVersion() {
         return version;
-    }
-
-    public String getEncryptionKey() {
-        return encryptionKey;
     }
 
     @Override
@@ -60,14 +53,12 @@ public class Installation extends BaseEntity<Long> implements Serializable {
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String version;
-        private String encryptionKey;
 
         public Builder() {
         }
         
         public Builder(Installation installation) {
             version = installation.version;
-            encryptionKey = installation.encryptionKey;
             id = installation.id;
             creationDate = installation.creationDate;
             updateDate = installation.updateDate;
@@ -90,11 +81,6 @@ public class Installation extends BaseEntity<Long> implements Serializable {
 
         public Builder version(String version) {
             this.version = version;
-            return this;
-        }
-
-        public Builder encryptionKey(String encryptionKey) {
-            this.encryptionKey = encryptionKey;
             return this;
         }
 

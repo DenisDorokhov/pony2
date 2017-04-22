@@ -32,6 +32,7 @@ public class UserDetailsServiceImplTests {
     public void loadUser() throws Exception {
         
         User user = User.builder()
+                .name("someName")
                 .email("someEmail")
                 .password("somePassword")
                 .addRoles(User.Role.USER, User.Role.ADMIN)

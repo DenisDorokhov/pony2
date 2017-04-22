@@ -1,6 +1,6 @@
-package net.dorokhov.pony.filetree;
+package net.dorokhov.pony.filetree.domain;
 
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.image.domain.ImageSize;
 
 import java.io.IOException;
 

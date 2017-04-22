@@ -1,8 +1,10 @@
 package net.dorokhov.pony.audio;
 
 import com.google.common.io.Files;
+import net.dorokhov.pony.audio.domain.ReadableAudioData;
+import net.dorokhov.pony.audio.domain.WritableAudioData;
 import net.dorokhov.pony.file.ChecksumCalculator;
-import net.dorokhov.pony.file.FileType;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
 import org.junit.After;
 import org.junit.Before;

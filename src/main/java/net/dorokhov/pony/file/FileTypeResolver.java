@@ -1,6 +1,7 @@
 package net.dorokhov.pony.file;
 
 import com.google.common.collect.ImmutableMap;
+import net.dorokhov.pony.file.domain.FileType;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;

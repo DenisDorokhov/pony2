@@ -28,7 +28,7 @@ public class Artist extends BaseEntity<Long> implements Comparable<Artist>, Seri
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "artist")
     private List<Album> albums = ImmutableList.of();
 
-    public Artist() {
+    protected Artist() {
     }
 
     private Artist(Builder builder) {

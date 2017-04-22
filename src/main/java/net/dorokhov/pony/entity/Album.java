@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Entity
 @Table(name = "album")
 @Indexed
@@ -37,7 +39,7 @@ public class Album extends BaseEntity<Long> implements Comparable<Album>, Serial
     @NotNull
     private Artist artist;
 
-    public Album() {
+    protected Album() {
     }
 
     private Album(Builder builder) {
@@ -48,7 +50,7 @@ public class Album extends BaseEntity<Long> implements Comparable<Album>, Serial
         year = builder.year;
         artwork = builder.artwork;
         songs = builder.songs.build();
-        artist = builder.artist;
+        artist = checkNotNull(builder.artist);
     }
 
     public Optional<String> getName() {

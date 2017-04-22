@@ -1,6 +1,7 @@
 package net.dorokhov.pony.image;
 
 import com.google.common.io.ByteStreams;
+import net.dorokhov.pony.image.domain.ImageSize;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;

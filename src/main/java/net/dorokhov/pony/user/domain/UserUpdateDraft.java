@@ -1,29 +1,33 @@
-package net.dorokhov.pony.user.draft;
+package net.dorokhov.pony.user.domain;
 
 import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.entity.User;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class UserCreationDraft {
+public class UserUpdateDraft {
     
+    private final long id;
     private final String name;
     private final String email;
-    private final String password;
+    private final String newPassword;
     private final Set<User.Role> roles;
 
-    private UserCreationDraft(Builder builder) {
-        checkNotNull(builder.name);
-        checkNotNull(builder.email);
-        checkNotNull(builder.password);
-        name = builder.name;
-        email = builder.email;
-        password = builder.password;
+    private UserUpdateDraft(Builder builder) {
+        id = builder.id;
+        name = checkNotNull(builder.name);
+        email = checkNotNull(builder.email);
+        newPassword = builder.newPassword;
         roles = builder.roles.build();
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getName() {
@@ -34,8 +38,8 @@ public class UserCreationDraft {
         return email;
     }
 
-    public String getPassword() {
-        return password;
+    public Optional<String> getNewPassword() {
+        return Optional.ofNullable(newPassword);
     }
 
     public Set<User.Role> getRoles() {
@@ -48,10 +52,16 @@ public class UserCreationDraft {
 
     public static class Builder {
         
+        private long id;
         private String name;
         private String email;
-        private String password;
+        private String newPassword;
         private ImmutableSet.Builder<User.Role> roles = ImmutableSet.builder();
+
+        public Builder id(long id) {
+            this.id = id;
+            return this;
+        }
 
         public Builder name(String name) {
             this.name = name;
@@ -63,11 +73,11 @@ public class UserCreationDraft {
             return this;
         }
 
-        public Builder password(String password) {
-            this.password = password;
+        public Builder newPassword(String newPassword) {
+            this.newPassword = newPassword;
             return this;
         }
-
+        
         public Builder roles(Collection<User.Role> roles) {
             this.roles = ImmutableSet.<User.Role>builder().addAll(roles);
             return this;
@@ -76,14 +86,14 @@ public class UserCreationDraft {
         public Builder roles(User.Role... roles) {
             return roles(Arrays.asList(roles));
         }
-
+        
         public Builder addRole(User.Role role) {
-            roles.add(role);
+            this.roles.add(role);
             return this;
         }
 
-        public UserCreationDraft build() {
-            return new UserCreationDraft(this);
+        public UserUpdateDraft build() {
+            return new UserUpdateDraft(this);
         }
     }
 }

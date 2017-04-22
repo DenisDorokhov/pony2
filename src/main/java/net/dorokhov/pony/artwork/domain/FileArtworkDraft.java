@@ -1,4 +1,4 @@
-package net.dorokhov.pony.artwork.draft;
+package net.dorokhov.pony.artwork.domain;
 
 import java.io.File;
 import java.util.Map;
@@ -15,8 +15,7 @@ public class FileArtworkDraft extends ArtworkDraft {
 
     public FileArtworkDraft(File file, String tag, Map<String, String> metaData) {
         super(tag, metaData);
-        checkNotNull(file);
-        this.file = file;
+        this.file = checkNotNull(file);
     }
 
     public File getFile() {

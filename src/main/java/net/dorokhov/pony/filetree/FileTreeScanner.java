@@ -1,14 +1,14 @@
 package net.dorokhov.pony.filetree;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.audio.AudioTagger;
-import net.dorokhov.pony.audio.ReadableAudioData;
+import net.dorokhov.pony.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.file.ChecksumCalculator;
-import net.dorokhov.pony.file.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.file.domain.FileType;
+import net.dorokhov.pony.filetree.domain.*;
 import net.dorokhov.pony.image.ImageSizeReader;
+import net.dorokhov.pony.image.domain.ImageSize;
 import net.dorokhov.pony.util.RethrowingLambdas.ThrowingUnaryOperator;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +19,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static net.dorokhov.pony.util.RethrowingLambdas.rethrow;
 
 @Component
@@ -43,8 +48,8 @@ public class FileTreeScanner {
     }
 
     public Optional<FileNode> scanFile(File file) throws IOException {
-        Preconditions.checkArgument(file.exists(), "Existing file expected.");
-        Preconditions.checkArgument(file.isFile(), "Normal file expected.");
+        checkArgument(file.exists(), "Existing file expected.");
+        checkArgument(file.isFile(), "Normal file expected.");
         FileType fileType = fileTypeResolver.resolve(file);
         if (fileType.isImage()) {
             return Optional.of(new ImageNodeImpl(file, null));
@@ -55,8 +60,8 @@ public class FileTreeScanner {
     }
 
     public FolderNode scanFolder(File folder) throws IOException {
-        Preconditions.checkArgument(folder.exists(), "Existing file expected.");
-        Preconditions.checkArgument(folder.isDirectory(), "Directory expected.");
+        checkArgument(folder.exists(), "Existing file expected.");
+        checkArgument(folder.isDirectory(), "Directory expected.");
         Visitor visitor = new Visitor();
         Files.walkFileTree(folder.toPath(), visitor);
         return visitor.getRoot();
@@ -68,8 +73,7 @@ public class FileTreeScanner {
         protected final FolderNode parentFolder;
 
         public NodeImpl(File file, FolderNode parentFolder) {
-            Preconditions.checkNotNull(file);
-            this.file = file;
+            this.file = checkNotNull(file);
             this.parentFolder = parentFolder;
         }
 

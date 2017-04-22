@@ -5,8 +5,7 @@ CREATE TABLE installation (
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
 
-  version VARCHAR (255) NOT NULL,
-  encryption_key TEXT NOT NULL
+  version VARCHAR (255) NOT NULL
 );
 
 CREATE TABLE user (

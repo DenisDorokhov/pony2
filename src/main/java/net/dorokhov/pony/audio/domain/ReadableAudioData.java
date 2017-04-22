@@ -1,7 +1,7 @@
-package net.dorokhov.pony.audio;
+package net.dorokhov.pony.audio.domain;
 
 import com.google.common.io.ByteSource;
-import net.dorokhov.pony.file.FileType;
+import net.dorokhov.pony.file.domain.FileType;
 
 import java.util.Optional;
 
@@ -19,10 +19,8 @@ public class ReadableAudioData extends AudioData {
 
     private ReadableAudioData(Builder builder) {
         super(builder);
-        checkNotNull(builder.path);
-        checkNotNull(builder.fileType);
-        this.path = builder.path;
-        this.fileType = builder.fileType;
+        this.path = checkNotNull(builder.path);
+        this.fileType = checkNotNull(builder.fileType);
         this.size = builder.size;
         this.duration = builder.duration;
         this.bitRate = builder.bitRate;
@@ -94,12 +92,9 @@ public class ReadableAudioData extends AudioData {
         private final String checksum;
 
         public EmbeddedArtwork(ByteSource binaryData, FileType fileType, String checksum) {
-            checkNotNull(binaryData);
-            checkNotNull(fileType);
-            checkNotNull(checksum);
-            this.binaryData = binaryData;
-            this.fileType = fileType;
-            this.checksum = checksum;
+            this.binaryData = checkNotNull(binaryData);
+            this.fileType = checkNotNull(fileType);
+            this.checksum = checkNotNull(checksum);
         }
 
         public ByteSource getBinaryData() {

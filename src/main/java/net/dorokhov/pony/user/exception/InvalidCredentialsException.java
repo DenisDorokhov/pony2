@@ -8,8 +8,7 @@ public class InvalidCredentialsException extends RuntimeException {
 
     public InvalidCredentialsException(String email) {
         super(String.format("Invalid credentials for user '%s'.", email));
-        checkNotNull(email);
-        this.email = email;
+        this.email = checkNotNull(email);
     }
 
     public String getEmail() {

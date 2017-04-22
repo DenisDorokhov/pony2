@@ -7,9 +7,10 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity
 @Table(name = "artwork", uniqueConstraints = @UniqueConstraint(columnNames = {"tag", "checksum"}))
@@ -34,7 +35,7 @@ public class Artwork implements Identity<Long>, Serializable {
 
     @Column(name = "large_image_size", nullable = false)
     @NotNull
-    private Long largeImageSize;
+    private long largeImageSize;
 
     @Column(name = "large_image_path", nullable = false, unique = true)
     @NotNull
@@ -42,7 +43,7 @@ public class Artwork implements Identity<Long>, Serializable {
 
     @Column(name = "small_image_size", nullable = false)
     @NotNull
-    private Long smallImageSize;
+    private long smallImageSize;
 
     @Column(name = "small_image_path", nullable = false, unique = true)
     @NotNull
@@ -55,18 +56,18 @@ public class Artwork implements Identity<Long>, Serializable {
     @Convert(converter = JsonAttributeConverter.MapConverter.class)
     private Map<String, String> metaData = ImmutableMap.of();
 
-    public Artwork() {
+    protected Artwork() {
     }
 
     private Artwork(Builder builder) {
         id = builder.id;
         date = builder.date;
-        mimeType = builder.mimeType;
-        checksum = builder.checksum;
-        largeImageSize = builder.largeImageSize;
-        largeImagePath = builder.largeImagePath;
-        smallImageSize = builder.smallImageSize;
-        smallImagePath = builder.smallImagePath;
+        mimeType = checkNotNull(builder.mimeType);
+        checksum = checkNotNull(builder.checksum);
+        largeImageSize = checkNotNull(builder.largeImageSize);
+        largeImagePath = checkNotNull(builder.largeImagePath);
+        smallImageSize = checkNotNull(builder.smallImageSize);
+        smallImagePath = checkNotNull(builder.smallImagePath);
         tag = builder.tag;
         metaData = builder.metaData.build();
     }
@@ -88,7 +89,7 @@ public class Artwork implements Identity<Long>, Serializable {
         return checksum;
     }
 
-    public Long getLargeImageSize() {
+    public long getLargeImageSize() {
         return largeImageSize;
     }
 
@@ -96,7 +97,7 @@ public class Artwork implements Identity<Long>, Serializable {
         return largeImagePath;
     }
 
-    public Long getSmallImageSize() {
+    public long getSmallImageSize() {
         return smallImageSize;
     }
 
@@ -109,10 +110,7 @@ public class Artwork implements Identity<Long>, Serializable {
     }
 
     public Map<String, String> getMetaData() {
-        if (metaData == null) {
-            metaData = new HashMap<>();
-        }
-        return metaData;
+        return metaData != null ? metaData : ImmutableMap.of();
     }
 
     @PrePersist

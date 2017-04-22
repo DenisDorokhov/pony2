@@ -19,7 +19,7 @@ public class SongTests {
         
         Genre genre = new Genre();
 
-        Song song1_1_1 = Song.builder()
+        Song song1_1_1 = buildSong()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -27,7 +27,7 @@ public class SongTests {
                 .name("1")
                 .build();
 
-        Song song1_1_2 = Song.builder()
+        Song song1_1_2 = buildSong()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -35,7 +35,7 @@ public class SongTests {
                 .name("2")
                 .build();
 
-        Song song1_2_1 = Song.builder()
+        Song song1_2_1 = buildSong()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(1)
@@ -43,7 +43,7 @@ public class SongTests {
                 .name("1")
                 .build();
 
-        Song song1_2_2 = Song.builder()
+        Song song1_2_2 = buildSong()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -51,7 +51,7 @@ public class SongTests {
                 .name("2")
                 .build();
 
-        Song song1_2_3 = Song.builder()
+        Song song1_2_3 = buildSong()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -67,7 +67,7 @@ public class SongTests {
     @Test
     public void buildSearchTerms() throws Exception {
 
-        Song song1 = Song.builder()
+        Song song1 = buildSong()
                 .name("s1")
                 .artistName("ar1")
                 .albumArtistName("ar2")
@@ -82,9 +82,9 @@ public class SongTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        Song eqSong1 = Song.builder().id(1L).build();
-        Song eqSong2 = Song.builder().id(1L).build();
-        Song diffSong = Song.builder().id(2L).build();
+        Song eqSong1 = buildSong().id(1L).build();
+        Song eqSong2 = buildSong().id(1L).build();
+        Song diffSong = buildSong().id(2L).build();
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
@@ -100,5 +100,20 @@ public class SongTests {
     @Test
     public void stringify() throws Exception {
         assertThat(new Song().toString()).startsWith("Song{");
+    }
+    
+    private Song.Builder buildSong() {
+        Artist artist = Artist.builder().build();
+        Album album = Album.builder().artist(artist).build();
+        Genre genre = Genre.builder().build();
+        return Song.builder()
+                .path("somePath")
+                .mimeType("text/plain")
+                .size(123L)
+                .duration(234L)
+                .bitRate(345L)
+                .bitRateVariable(true)
+                .album(album)
+                .genre(genre);
     }
 }

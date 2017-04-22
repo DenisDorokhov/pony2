@@ -1,4 +1,4 @@
-package net.dorokhov.pony.filetree;
+package net.dorokhov.pony.filetree.domain;
 
 import java.io.File;
 import java.util.Optional;

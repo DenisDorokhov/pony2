@@ -1,6 +1,6 @@
-package net.dorokhov.pony.filetree;
+package net.dorokhov.pony.filetree.domain;
 
-import net.dorokhov.pony.file.FileType;
+import net.dorokhov.pony.file.domain.FileType;
 
 import java.io.IOException;
 

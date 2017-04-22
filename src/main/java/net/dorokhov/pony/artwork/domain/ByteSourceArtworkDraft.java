@@ -1,4 +1,4 @@
-package net.dorokhov.pony.artwork.draft;
+package net.dorokhov.pony.artwork.domain;
 
 import com.google.common.io.ByteSource;
 
@@ -16,8 +16,7 @@ public class ByteSourceArtworkDraft extends ArtworkDraft {
 
     public ByteSourceArtworkDraft(ByteSource byteSource, String tag, Map<String, String> metaData) {
         super(tag, metaData);
-        checkNotNull(byteSource);
-        this.byteSource = byteSource;
+        this.byteSource = checkNotNull(byteSource);
     }
 
     public ByteSource getByteSource() {

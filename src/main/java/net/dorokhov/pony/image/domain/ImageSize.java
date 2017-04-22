@@ -1,4 +1,4 @@
-package net.dorokhov.pony.image;
+package net.dorokhov.pony.image.domain;
 
 import com.google.common.base.Objects;
 

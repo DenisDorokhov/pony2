@@ -8,8 +8,7 @@ public class UserExistsException extends RuntimeException {
     
     public UserExistsException(String email) {
         super(String.format("User with email '%s' already exists.", email));
-        checkNotNull(email);
-        this.email = email;
+        this.email = checkNotNull(email);
     }
 
     public String getEmail() {

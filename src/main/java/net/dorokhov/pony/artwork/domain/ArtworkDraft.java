@@ -1,4 +1,4 @@
-package net.dorokhov.pony.artwork.draft;
+package net.dorokhov.pony.artwork.domain;
 
 import com.google.common.collect.ImmutableMap;
 

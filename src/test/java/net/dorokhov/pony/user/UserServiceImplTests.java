@@ -5,9 +5,10 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.entity.User;
 import net.dorokhov.pony.repository.UserRepository;
-import net.dorokhov.pony.user.draft.CurrentUserUpdateDraft;
-import net.dorokhov.pony.user.draft.UserCreationDraft;
-import net.dorokhov.pony.user.draft.UserUpdateDraft;
+import net.dorokhov.pony.user.domain.CurrentUserUpdateDraft;
+import net.dorokhov.pony.user.domain.UserCreationDraft;
+import net.dorokhov.pony.user.domain.UserToken;
+import net.dorokhov.pony.user.domain.UserUpdateDraft;
 import net.dorokhov.pony.user.exception.*;
 import org.junit.After;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class UserServiceImplTests {
     public void getById() throws Exception {
         given(userRepository.findOne(1L)).willReturn(null);
         assertThat(userService.getById(1L)).isEmpty();
-        User user = new User();
+        User user = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(user);
         assertThat(userService.getById(1L)).hasValue(user);
     }
@@ -65,7 +66,7 @@ public class UserServiceImplTests {
     public void getByEmail() throws Exception {
         given(userRepository.findByEmail("someEmail")).willReturn(null);
         assertThat(userService.getByEmail("someEmail")).isEmpty();
-        User user = new User();
+        User user = buildUser().build();
         given(userRepository.findByEmail("someEmail")).willReturn(user);
         assertThat(userService.getByEmail("someEmail")).hasValue(user);
     }
@@ -80,7 +81,7 @@ public class UserServiceImplTests {
     @Test
     public void createUser() throws Exception {
         
-        User createdUser = User.builder().id(1L).build();
+        User createdUser = buildUser().build();
         given(passwordEncoder.encode("somePassword")).willReturn("encodedPassword");
         given(userRepository.save((User) any())).willReturn(createdUser);
 
@@ -102,7 +103,7 @@ public class UserServiceImplTests {
 
     @Test
     public void createExistingUser() throws Exception {
-        User existingUser = User.builder().email("someEmail").build();
+        User existingUser = buildUser().build();
         given(userRepository.findByEmail("someEmail")).willReturn(existingUser);
         assertThatThrownBy(() -> userService.create(UserCreationDraft.builder()
                 .name("someName")
@@ -114,7 +115,7 @@ public class UserServiceImplTests {
     @Test
     public void updateUser() throws Exception {
 
-        User existingUser = User.builder().id(1L).password("somePassword").build();
+        User existingUser = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(existingUser);
         given(userRepository.save((User) any())).willReturn(existingUser);
 
@@ -138,7 +139,7 @@ public class UserServiceImplTests {
     @Test
     public void updateUserPassword() throws Exception {
 
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(existingUser);
         given(passwordEncoder.encode("somePassword")).willReturn("encodedPassword");
 
@@ -169,9 +170,9 @@ public class UserServiceImplTests {
 
     @Test
     public void updateExistingUser() throws Exception {
-        User userToUpdate = User.builder().id(1L).email("otherEmail").build();
+        User userToUpdate = buildUser().email("otherEmail").build();
         given(userRepository.findOne(1L)).willReturn(userToUpdate);
-        User existingUser = User.builder().id(2L).email("someEmail").build();
+        User existingUser = buildUser().id(2L).build();
         given(userRepository.findByEmail("someEmail")).willReturn(existingUser);
         UserUpdateDraft draft = UserUpdateDraft.builder()
                 .id(1L)
@@ -184,7 +185,7 @@ public class UserServiceImplTests {
 
     @Test
     public void deleteUser() throws Exception {
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(existingUser);
         userService.delete(1L);
         verify(userRepository).delete(1L);
@@ -198,7 +199,7 @@ public class UserServiceImplTests {
 
     @Test
     public void deleteCurrentUser() throws Exception {
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(existingUser);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         assertThatThrownBy(() -> userService.delete(1L)).isInstanceOf(DeletingCurrentUserException.class);
@@ -206,7 +207,7 @@ public class UserServiceImplTests {
 
     @Test
     public void authenticateValidCredentials() throws Exception {
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         given(authenticationManager.authenticate(any())).willReturn(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         given(tokenSecretManager.getTokenSecret()).willReturn("someSecret");
         UserToken userToken = userService.authenticate("someEmail", "somePassword");
@@ -224,7 +225,7 @@ public class UserServiceImplTests {
 
     @Test
     public void authenticateValidToken() throws Exception {
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(existingUser);
         given(tokenSecretManager.getTokenSecret()).willReturn("someSecret");
         String token = JWT.create()
@@ -252,7 +253,7 @@ public class UserServiceImplTests {
 
     @Test
     public void logout() throws Exception {
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         assertThat(userService.logout()).hasValue(existingUser);
     }
@@ -315,7 +316,7 @@ public class UserServiceImplTests {
     @Test
     public void updateCurrentUserWithInvalidOldPassword() throws Exception {
         given(passwordEncoder.matches(any(), any())).willReturn(false);
-        User existingUser = User.builder().id(1L).build();
+        User existingUser = buildUser().build();
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         CurrentUserUpdateDraft draft = CurrentUserUpdateDraft.builder()
                 .name("someName")
@@ -323,5 +324,13 @@ public class UserServiceImplTests {
                 .oldPassword("invalidPassword")
                 .build();
         assertThatThrownBy(() -> userService.updateCurrentUser(draft)).isInstanceOf(InvalidPasswordException.class);
+    }
+    
+    private User.Builder buildUser() {
+        return User.builder()
+                .id(1L)
+                .name("someName")
+                .email("someEmail")
+                .password("somePassword");
     }
 }

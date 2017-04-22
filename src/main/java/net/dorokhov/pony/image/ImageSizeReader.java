@@ -1,5 +1,6 @@
 package net.dorokhov.pony.image;
 
+import net.dorokhov.pony.image.domain.ImageSize;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;

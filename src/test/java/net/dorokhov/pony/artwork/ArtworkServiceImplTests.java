@@ -4,15 +4,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
-import net.dorokhov.pony.artwork.draft.ByteSourceArtworkDraft;
-import net.dorokhov.pony.artwork.draft.FileArtworkDraft;
-import net.dorokhov.pony.artwork.draft.ImageNodeArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ByteSourceArtworkDraft;
+import net.dorokhov.pony.artwork.domain.FileArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ImageNodeArtworkDraft;
 import net.dorokhov.pony.entity.Artwork;
 import net.dorokhov.pony.file.ChecksumCalculator;
-import net.dorokhov.pony.file.FileType;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
-import net.dorokhov.pony.filetree.ImageNode;
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.filetree.domain.ImageNode;
+import net.dorokhov.pony.image.domain.ImageSize;
 import net.dorokhov.pony.image.ThumbnailGenerator;
 import net.dorokhov.pony.repository.ArtworkRepository;
 import org.junit.After;
@@ -129,7 +129,7 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getById() throws Exception {
-        Artwork artwork = new Artwork();
+        Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         assertThat(artworkService.getById(2L)).hasValueSatisfying(fetchedArtwork -> 
                 assertThat(fetchedArtwork).isSameAs(artwork));
@@ -137,14 +137,14 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getByTag() throws Exception {
-        Page<Artwork> page = new PageImpl<>(ImmutableList.of(new Artwork(), new Artwork()));
+        Page<Artwork> page = new PageImpl<>(ImmutableList.of());
         given(artworkRepository.findByTag(any(), any())).willReturn(page);
         assertThat(artworkService.getByTag("tag", new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
     public void getLargeImageFile() throws Exception {
-        Artwork artwork = Artwork.builder().largeImagePath(PATH_LARGE).build();
+        Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         assertThat(artworkService.getLargeImageFile(3L)).hasValueSatisfying(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_LARGE).getAbsolutePath()));
@@ -152,7 +152,7 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getSmallImageFile() throws Exception {
-        Artwork artwork = Artwork.builder().smallImagePath(PATH_SMALL).build();
+        Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         assertThat(artworkService.getSmallImageFile(4L)).hasValueSatisfying(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_SMALL).getAbsolutePath()));
@@ -229,10 +229,7 @@ public class ArtworkServiceImplTests {
         Files.touch(largeImageFile);
         Files.touch(smallImageFile);
 
-        Artwork artwork = Artwork.builder()
-                .largeImagePath(PATH_LARGE)
-                .smallImagePath(PATH_SMALL)
-                .build();
+        Artwork artwork = buildArtwork();
 
         given(artworkRepository.findOne(any())).willReturn(artwork);
         artworkService.delete(5L);
@@ -246,15 +243,9 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void whenDeletingIgnoreNotExistingFiles() throws Exception {
-        
-        Artwork artwork = Artwork.builder()
-                .largeImagePath(PATH_LARGE)
-                .smallImagePath(PATH_SMALL)
-                .build();
-        
+        Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         artworkService.delete(5L);
-        
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
 
@@ -276,6 +267,17 @@ public class ArtworkServiceImplTests {
         given(artworkRepository.findByTagAndChecksum(any(), any())).willReturn(artwork);
         doGetAndSave.get();
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
+    }
+    
+    private Artwork buildArtwork() {
+        return Artwork.builder()
+                .mimeType("image/png")
+                .checksum("someChecksum")
+                .largeImageSize(0L)
+                .largeImagePath(PATH_LARGE)
+                .smallImageSize(0L)
+                .smallImagePath(PATH_SMALL)
+                .build();
     }
     
     private void checkSavedArtwork(Artwork savedArtwork) {

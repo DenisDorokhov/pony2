@@ -1,8 +1,8 @@
 package net.dorokhov.pony.artwork;
 
-import net.dorokhov.pony.artwork.draft.ByteSourceArtworkDraft;
-import net.dorokhov.pony.artwork.draft.FileArtworkDraft;
-import net.dorokhov.pony.artwork.draft.ImageNodeArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ByteSourceArtworkDraft;
+import net.dorokhov.pony.artwork.domain.FileArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ImageNodeArtworkDraft;
 import net.dorokhov.pony.entity.Artwork;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

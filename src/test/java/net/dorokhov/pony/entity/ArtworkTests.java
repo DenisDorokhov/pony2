@@ -9,9 +9,9 @@ public class ArtworkTests {
     @Test
     public void supportEqualityAndHashCode() throws Exception {
 
-        Artwork eqArtwork1 = Artwork.builder().id(1L).build();
-        Artwork eqArtwork2 = Artwork.builder().id(1L).build();
-        Artwork diffArtwork = Artwork.builder().id(2L).build();
+        Artwork eqArtwork1 = buildArtwork().id(1L).build();
+        Artwork eqArtwork2 = buildArtwork().id(1L).build();
+        Artwork diffArtwork = buildArtwork().id(2L).build();
 
         assertThat(eqArtwork1.hashCode()).isEqualTo(eqArtwork2.hashCode());
         assertThat(eqArtwork1.hashCode()).isNotEqualTo(diffArtwork.hashCode());
@@ -27,5 +27,15 @@ public class ArtworkTests {
     @Test
     public void stringify() throws Exception {
         assertThat(new Artwork().toString()).startsWith("Artwork{");
+    }
+    
+    private Artwork.Builder buildArtwork() {
+        return Artwork.builder()
+                .mimeType("image/png")
+                .checksum("someChecksum")
+                .largeImageSize(0L)
+                .largeImagePath("someLargePath")
+                .smallImageSize(0L)
+                .smallImagePath("someSmallPath");
     }
 }

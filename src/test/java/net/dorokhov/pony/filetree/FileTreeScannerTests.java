@@ -1,11 +1,12 @@
 package net.dorokhov.pony.filetree;
 
 import net.dorokhov.pony.audio.AudioTagger;
-import net.dorokhov.pony.audio.ReadableAudioData;
+import net.dorokhov.pony.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.file.ChecksumCalculator;
-import net.dorokhov.pony.file.FileType;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.filetree.domain.*;
+import net.dorokhov.pony.image.domain.ImageSize;
 import net.dorokhov.pony.image.ImageSizeReader;
 import org.junit.Before;
 import org.junit.Test;

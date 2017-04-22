@@ -23,15 +23,15 @@ public class Genre extends BaseEntity<Long> implements Comparable<Genre>, Serial
     @JoinColumn(name = "artwork_id")
     private Artwork artwork;
 
-    public Genre() {
+    protected Genre() {
     }
 
     private Genre(Builder builder) {
-        name = builder.name;
-        artwork = builder.artwork;
         id = builder.id;
         creationDate = builder.creationDate;
         updateDate = builder.updateDate;
+        name = builder.name;
+        artwork = builder.artwork;
     }
 
     public Optional<String> getName() {

@@ -1,10 +1,10 @@
 package net.dorokhov.pony.artwork;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.filetree.AudioNode;
-import net.dorokhov.pony.filetree.FolderNode;
-import net.dorokhov.pony.filetree.ImageNode;
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.filetree.domain.AudioNode;
+import net.dorokhov.pony.filetree.domain.FolderNode;
+import net.dorokhov.pony.filetree.domain.ImageNode;
+import net.dorokhov.pony.image.domain.ImageSize;
 import org.junit.Before;
 import org.junit.Test;
 

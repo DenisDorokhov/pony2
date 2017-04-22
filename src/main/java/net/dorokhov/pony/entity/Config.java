@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Entity
 @Table(name = "config")
 public class Config implements Identity<String>, Serializable {
@@ -25,11 +27,11 @@ public class Config implements Identity<String>, Serializable {
     @Column(name = "value")
     private String value;
 
-    public Config() {
+    protected Config() {
     }
 
     public Config(String id, String value) {
-        this.id = id;
+        this.id = checkNotNull(id);
         this.value = value;
     }
 
@@ -50,10 +52,9 @@ public class Config implements Identity<String>, Serializable {
     }
 
     private Config(Builder builder) {
-        id = builder.id;
+        this(builder.id, builder.value);
         creationDate = builder.creationDate;
         updateDate = builder.updateDate;
-        value = builder.value;
     }
 
     @Override

@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Entity
 @Table(name = "user")
 public class User extends BaseEntity<Long> implements Serializable {
@@ -35,16 +37,16 @@ public class User extends BaseEntity<Long> implements Serializable {
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = ImmutableSet.of();
 
-    public User() {
+    protected User() {
     }
 
     private User(Builder builder) {
         id = builder.id;
         creationDate = builder.creationDate;
         updateDate = builder.updateDate;
-        name = builder.name;
-        email = builder.email;
-        password = builder.password;
+        name = checkNotNull(builder.name);
+        email = checkNotNull(builder.email);
+        password = checkNotNull(builder.password);
         roles = builder.roles.build();
     }
 

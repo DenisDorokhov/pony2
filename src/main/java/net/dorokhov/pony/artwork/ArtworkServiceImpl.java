@@ -1,14 +1,14 @@
 package net.dorokhov.pony.artwork;
 
-import net.dorokhov.pony.artwork.draft.ArtworkDraft;
-import net.dorokhov.pony.artwork.draft.ByteSourceArtworkDraft;
-import net.dorokhov.pony.artwork.draft.FileArtworkDraft;
-import net.dorokhov.pony.artwork.draft.ImageNodeArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ByteSourceArtworkDraft;
+import net.dorokhov.pony.artwork.domain.FileArtworkDraft;
+import net.dorokhov.pony.artwork.domain.ImageNodeArtworkDraft;
 import net.dorokhov.pony.entity.Artwork;
 import net.dorokhov.pony.file.ChecksumCalculator;
-import net.dorokhov.pony.file.FileType;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
-import net.dorokhov.pony.image.ImageSize;
+import net.dorokhov.pony.image.domain.ImageSize;
 import net.dorokhov.pony.image.ThumbnailGenerator;
 import net.dorokhov.pony.repository.ArtworkRepository;
 import org.slf4j.Logger;
