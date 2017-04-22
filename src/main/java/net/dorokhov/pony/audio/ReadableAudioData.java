@@ -112,7 +112,7 @@ public class ReadableAudioData extends AudioData {
         }
     }
     
-    public static class Builder extends BuilderAbstract {
+    public static class Builder extends BuilderAbstract<Builder> {
 
         private String path;
         private FileType fileType;
@@ -154,6 +154,11 @@ public class ReadableAudioData extends AudioData {
 
         public Builder setEmbeddedArtwork(EmbeddedArtwork embeddedArtwork) {
             this.embeddedArtwork = embeddedArtwork;
+            return this;
+        }
+
+        @Override
+        public Builder self() {
             return this;
         }
 

@@ -8,7 +8,7 @@ public interface InstallationService {
 
     Installation getInstallation();
 
-    Installation install(InstallCommand command) throws AlreadyInstalledException;
+    Installation install(InstallationDraft draft) throws AlreadyInstalledException;
 
     void uninstall() throws NotInstalledException;
 }

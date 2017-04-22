@@ -68,7 +68,7 @@ public abstract class AudioData {
         return Optional.ofNullable(genre);
     }
     
-    protected abstract static class BuilderAbstract {
+    protected abstract static class BuilderAbstract<T extends BuilderAbstract> {
 
         protected Integer discNumber;
         protected Integer discCount;
@@ -81,55 +81,57 @@ public abstract class AudioData {
         protected Integer year;
         protected String genre;
 
-        public BuilderAbstract setDiscNumber(final Integer discNumber) {
+        public T setDiscNumber(final Integer discNumber) {
             this.discNumber = discNumber;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setDiscCount(final Integer discCount) {
+        public T setDiscCount(final Integer discCount) {
             this.discCount = discCount;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setTrackNumber(final Integer trackNumber) {
+        public T setTrackNumber(final Integer trackNumber) {
             this.trackNumber = trackNumber;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setTrackCount(final Integer trackCount) {
+        public T setTrackCount(final Integer trackCount) {
             this.trackCount = trackCount;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setTitle(final String title) {
+        public T setTitle(final String title) {
             this.title = title;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setArtist(final String artist) {
+        public T setArtist(final String artist) {
             this.artist = artist;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setAlbumArtist(final String albumArtist) {
+        public T setAlbumArtist(final String albumArtist) {
             this.albumArtist = albumArtist;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setAlbum(final String album) {
+        public T setAlbum(final String album) {
             this.album = album;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setYear(final Integer year) {
+        public T setYear(final Integer year) {
             this.year = year;
-            return this;
+            return self();
         }
 
-        public BuilderAbstract setGenre(final String genre) {
+        public T setGenre(final String genre) {
             this.genre = genre;
-            return this;
+            return self();
         }
+        
+        abstract public T self();
 
         abstract public AudioData build();
     }

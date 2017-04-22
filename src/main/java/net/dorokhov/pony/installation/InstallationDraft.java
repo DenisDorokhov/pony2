@@ -5,7 +5,7 @@ import net.dorokhov.pony.entity.User;
 import java.io.File;
 import java.util.List;
 
-public class InstallCommand {
+public class InstallationDraft {
 
     private Integer autoScanInterval;
 
@@ -13,7 +13,7 @@ public class InstallCommand {
 
     private List<User> users;
 
-    public InstallCommand(Integer autoScanInterval, List<File> libraryFolders, List<User> users) {
+    public InstallationDraft(Integer autoScanInterval, List<File> libraryFolders, List<User> users) {
         this.autoScanInterval = autoScanInterval;
         this.libraryFolders = libraryFolders;
         this.users = users;

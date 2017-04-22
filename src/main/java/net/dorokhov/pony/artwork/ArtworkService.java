@@ -23,9 +23,9 @@ public interface ArtworkService {
     Optional<File> getLargeImageFile(Long id);
     Optional<File> getSmallImageFile(Long id);
     
-    Artwork getOrSave(SaveByteSourceArtworkCommand command) throws IOException;
-    Artwork getOrSave(SaveFileArtworkCommand command) throws IOException;
-    Artwork getOrSave(SaveImageNodeArtworkCommand command) throws IOException;
+    Artwork getOrSave(ByteSourceArtworkDraft draft) throws IOException;
+    Artwork getOrSave(FileArtworkDraft draft) throws IOException;
+    Artwork getOrSave(ImageNodeArtworkDraft draft) throws IOException;
 
     void delete(Long id);
 }

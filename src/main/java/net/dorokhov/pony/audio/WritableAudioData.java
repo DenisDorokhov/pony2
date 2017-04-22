@@ -248,7 +248,7 @@ public class WritableAudioData extends AudioData {
                 '}';
     }
 
-    public static class Builder extends BuilderAbstract {
+    public static class Builder extends BuilderAbstract<Builder> {
 
         private boolean writeDiscNumber;
         private boolean writeDiscCount;
@@ -384,6 +384,11 @@ public class WritableAudioData extends AudioData {
 
         public Builder unsetArtworkFile() {
             return setArtworkFile(null);
+        }
+
+        @Override
+        public Builder self() {
+            return this;
         }
 
         @Override

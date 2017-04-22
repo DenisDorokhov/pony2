@@ -7,7 +7,6 @@ import net.dorokhov.pony.file.FileTypeResolver;
 import net.dorokhov.pony.image.ImageSize;
 import net.dorokhov.pony.image.ThumbnailGenerator;
 import net.dorokhov.pony.repository.ArtworkRepository;
-import net.dorokhov.pony.util.RandomString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +20,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import static net.dorokhov.pony.util.RethrowingLambdas.rethrow;
@@ -102,10 +102,10 @@ public class ArtworkServiceImpl implements ArtworkService {
 
     @Override
     @Transactional
-    public Artwork getOrSave(SaveByteSourceArtworkCommand command) throws IOException {
+    public Artwork getOrSave(ByteSourceArtworkDraft draft) throws IOException {
         synchronized (modificationLock) {
-            byte[] content = command.getByteSource().read();
-            return doGetOrSave(command, 
+            byte[] content = draft.getByteSource().read();
+            return doGetOrSave(draft, 
                     () -> checksumCalculator.calculate(content), 
                     () -> fileTypeResolver.resolve(content),
                     () -> new ByteArrayInputStream(content));
@@ -114,10 +114,10 @@ public class ArtworkServiceImpl implements ArtworkService {
 
     @Override
     @Transactional
-    public Artwork getOrSave(SaveFileArtworkCommand command) throws IOException {
+    public Artwork getOrSave(FileArtworkDraft draft) throws IOException {
         synchronized (modificationLock) {
-            File file = command.getFile();
-            return doGetOrSave(command,
+            File file = draft.getFile();
+            return doGetOrSave(draft,
                     rethrow(() -> checksumCalculator.calculate(file)),
                     rethrow(() -> fileTypeResolver.resolve(file)),
                     rethrow(() -> new FileInputStream(file)));
@@ -126,12 +126,12 @@ public class ArtworkServiceImpl implements ArtworkService {
 
     @Override
     @Transactional
-    public Artwork getOrSave(SaveImageNodeArtworkCommand command) throws IOException {
+    public Artwork getOrSave(ImageNodeArtworkDraft draft) throws IOException {
         synchronized (modificationLock) {
-            return doGetOrSave(command,
-                    rethrow(() -> command.getImageNode().getChecksum()),
-                    rethrow(() -> command.getImageNode().getFileType()),
-                    rethrow(() -> new FileInputStream(command.getImageNode().getFile())));
+            return doGetOrSave(draft,
+                    rethrow(() -> draft.getImageNode().getChecksum()),
+                    rethrow(() -> draft.getImageNode().getFileType()),
+                    rethrow(() -> new FileInputStream(draft.getImageNode().getFile())));
         }
     }
 
@@ -156,34 +156,31 @@ public class ArtworkServiceImpl implements ArtworkService {
         });
     }
     
-    private Artwork doGetOrSave(SaveArtworkCommand command,
+    private Artwork doGetOrSave(ArtworkDraft draft,
                                 Supplier<String> checksumSupplier, Supplier<FileType> fileTypeSupplier,
                                 Supplier<InputStream> streamSupplier) throws IOException {
 
         String checksum = checksumSupplier.get();
-        Artwork artwork = artworkRepository.findByTagAndChecksum(command.getTag().orElse(null), checksum);
+        Artwork artwork = artworkRepository.findByTagAndChecksum(draft.getTag().orElse(null), checksum);
         if (artwork != null) {
             return artwork;
         }
 
         FileType fileType = fileTypeSupplier.get();
 
-        artwork = artworkRepository.save(Artwork.builder()
-                .mimeType(fileType.getMimeType())
-                .checksum(checksum)
-                .tag(command.getTag().orElse(null))
-                .metaData(command.getMetaData())
-                .build());
-
-        String smallImagePath = buildSmallImagePath(fileType.getFileExtension(), artwork);
-        String largeImagePath = buildLargeImagePath(fileType.getFileExtension(), artwork);
+        String smallImagePath = buildSmallImagePath(fileType.getFileExtension());
+        String largeImagePath = buildLargeImagePath(fileType.getFileExtension());
 
         File smallImageFile = new File(artworkFolder, smallImagePath);
         File largeImageFile = new File(artworkFolder, largeImagePath);
         thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeSmall, smallImageFile);
         thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeLarge, largeImageFile);
-        
-        artwork = artworkRepository.save(Artwork.builder(artwork)
+
+        artwork = artworkRepository.save(Artwork.builder()
+                .mimeType(fileType.getMimeType())
+                .checksum(checksum)
+                .tag(draft.getTag().orElse(null))
+                .metaData(draft.getMetaData())
                 .smallImagePath(smallImagePath)
                 .largeImagePath(largeImagePath)
                 .smallImageSize(smallImageFile.length())
@@ -207,19 +204,20 @@ public class ArtworkServiceImpl implements ArtworkService {
         return artwork;
     }
     
-    private String buildLargeImagePath(String extension, Artwork artwork) {
-        return buildImagePath("large", extension, artwork);
+    private String buildLargeImagePath(String extension) {
+        return buildImagePath("large", extension);
     }
     
-    private String buildSmallImagePath(String extension, Artwork artwork) {
-        return buildImagePath("small", extension, artwork);
+    private String buildSmallImagePath(String extension) {
+        return buildImagePath("small", extension);
     }
     
-    private String buildImagePath(String suffix, String extension, Artwork artwork) {
+    private String buildImagePath(String suffix, String extension) {
+        String uuid = UUID.randomUUID().toString();
         StringBuilder builder = new StringBuilder();
-        builder.append(RandomString.generate(2)).append("/");
-        builder.append(RandomString.generate(2)).append("/");
-        builder.append(artwork.getId()).append(".").append(suffix).append(".").append(extension);
+        builder.append(uuid.substring(0, 2)).append("/");
+        builder.append(uuid.substring(2, 4)).append("/");
+        builder.append(uuid).append(".").append(suffix).append(".").append(extension);
         return builder.toString();
     }
 }

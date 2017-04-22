@@ -160,11 +160,11 @@ public class ArtworkServiceImplTests {
         
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
         
-        SaveByteSourceArtworkCommand command = new SaveByteSourceArtworkCommand(
+        ByteSourceArtworkDraft draft = new ByteSourceArtworkDraft(
                 ByteSource.wrap(bytes), "tag",
                 ImmutableMap.of("k1", "v1", "k2", "v2"));
 
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
+        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
     }
 
     @Test
@@ -172,11 +172,11 @@ public class ArtworkServiceImplTests {
         
         File file = RESOURCE.getFile();
 
-        SaveFileArtworkCommand command = new SaveFileArtworkCommand(
+        FileArtworkDraft draft = new FileArtworkDraft(
                 file, "tag",
                 ImmutableMap.of("k1", "v1", "k2", "v2"));
 
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
+        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
     }
 
     @Test
@@ -188,11 +188,11 @@ public class ArtworkServiceImplTests {
         given(imageNode.getFileType()).willReturn(new FileType("image/png", "png"));
         given(imageNode.getChecksum()).willReturn(CHECKSUM);
 
-        SaveImageNodeArtworkCommand command = new SaveImageNodeArtworkCommand(
+        ImageNodeArtworkDraft draft = new ImageNodeArtworkDraft(
                 imageNode, "tag",
                 ImmutableMap.of("k1", "v1", "k2", "v2"));
 
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
+        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
     }
 
     @Test
@@ -200,9 +200,9 @@ public class ArtworkServiceImplTests {
 
         File file = RESOURCE.getFile();
 
-        SaveFileArtworkCommand command = new SaveFileArtworkCommand(file, "tag");
+        FileArtworkDraft draft = new FileArtworkDraft(file, "tag");
 
-        Artwork artwork = artworkService.getOrSave(command);
+        Artwork artwork = artworkService.getOrSave(draft);
         
         File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
         File smallFile = new File(artworkFolder, artwork.getSmallImagePath());
@@ -263,7 +263,7 @@ public class ArtworkServiceImplTests {
         
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
-        verify(artworkRepository, times(2)).save(savedArtwork.capture());
+        verify(artworkRepository).save(savedArtwork.capture());
         verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(SMALL_IMAGE_SIZE), eq(new File(artworkFolder, artwork.getSmallImagePath())));
         verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(LARGE_IMAGE_SIZE), eq(new File(artworkFolder, artwork.getLargeImagePath())));
 
@@ -272,14 +272,14 @@ public class ArtworkServiceImplTests {
 
         given(artworkRepository.findByTagAndChecksum(any(), any())).willReturn(artwork);
         doGetAndSave.get();
-        verify(artworkRepository, times(2)).save(savedArtwork.capture());
+        verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }
     
     private void checkSavedArtwork(Artwork savedArtwork) {
         assertThat(savedArtwork.getMimeType()).isEqualTo(FILE_TYPE.getMimeType());
         assertThat(savedArtwork.getChecksum()).isEqualTo(CHECKSUM);
-        assertThat(savedArtwork.getLargeImagePath()).endsWith("/1.large.png");
-        assertThat(savedArtwork.getSmallImagePath()).endsWith("/1.small.png");
+        assertThat(savedArtwork.getLargeImagePath()).endsWith(".large.png");
+        assertThat(savedArtwork.getSmallImagePath()).endsWith(".small.png");
         assertThat(savedArtwork.getLargeImageSize()).isEqualTo(0L);
         assertThat(savedArtwork.getSmallImageSize()).isEqualTo(0L);
         assertThat(savedArtwork.getTag()).hasValue("tag");
