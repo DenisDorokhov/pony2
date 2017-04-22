@@ -40,7 +40,10 @@ public class FileTreeScannerTests {
     
     private static final ImageSize IMAGE_SIZE = new ImageSize(100, 100);
     private static final String CHECKSUM = "someChecksum";
-    private static final ReadableAudioData AUDIO_DATA = new ReadableAudioData.Builder().build();
+    private static final ReadableAudioData AUDIO_DATA = ReadableAudioData.builder()
+            .path("somePath")
+            .fileType(new FileType("text/plain", "txt"))
+            .build();
 
     @InjectMocks
     private FileTreeScanner fileTreeScanner;

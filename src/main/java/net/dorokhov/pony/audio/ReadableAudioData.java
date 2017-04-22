@@ -5,6 +5,8 @@ import net.dorokhov.pony.file.FileType;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class ReadableAudioData extends AudioData {
 
     private final String path;
@@ -17,6 +19,8 @@ public class ReadableAudioData extends AudioData {
 
     private ReadableAudioData(Builder builder) {
         super(builder);
+        checkNotNull(builder.path);
+        checkNotNull(builder.fileType);
         this.path = builder.path;
         this.fileType = builder.fileType;
         this.size = builder.size;
@@ -76,6 +80,10 @@ public class ReadableAudioData extends AudioData {
                 ", genre='" + genre + '\'' +
                 '}';
     }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class EmbeddedArtwork {
 
@@ -86,6 +94,9 @@ public class ReadableAudioData extends AudioData {
         private final String checksum;
 
         public EmbeddedArtwork(ByteSource binaryData, FileType fileType, String checksum) {
+            checkNotNull(binaryData);
+            checkNotNull(fileType);
+            checkNotNull(checksum);
             this.binaryData = binaryData;
             this.fileType = fileType;
             this.checksum = checksum;
@@ -122,37 +133,37 @@ public class ReadableAudioData extends AudioData {
         private boolean bitRateVariable;
         private EmbeddedArtwork embeddedArtwork;
 
-        public Builder setPath(String path) {
+        public Builder path(String path) {
             this.path = path;
             return this;
         }
 
-        public Builder setFileType(FileType fileType) {
+        public Builder fileType(FileType fileType) {
             this.fileType = fileType;
             return this;
         }
 
-        public Builder setSize(long size) {
+        public Builder size(long size) {
             this.size = size;
             return this;
         }
 
-        public Builder setDuration(long duration) {
+        public Builder duration(long duration) {
             this.duration = duration;
             return this;
         }
 
-        public Builder setBitRate(long bitRate) {
+        public Builder bitRate(long bitRate) {
             this.bitRate = bitRate;
             return this;
         }
 
-        public Builder setBitRateVariable(boolean bitRateVariable) {
+        public Builder bitRateVariable(boolean bitRateVariable) {
             this.bitRateVariable = bitRateVariable;
             return this;
         }
 
-        public Builder setEmbeddedArtwork(EmbeddedArtwork embeddedArtwork) {
+        public Builder embeddedArtwork(EmbeddedArtwork embeddedArtwork) {
             this.embeddedArtwork = embeddedArtwork;
             return this;
         }

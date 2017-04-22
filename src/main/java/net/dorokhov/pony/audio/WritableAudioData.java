@@ -247,6 +247,10 @@ public class WritableAudioData extends AudioData {
                 ", genre='" + genre + '\'' +
                 '}';
     }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder extends BuilderAbstract<Builder> {
 
@@ -267,123 +271,123 @@ public class WritableAudioData extends AudioData {
         private File artworkFile;
 
         @Override
-        public Builder setDiscNumber(Integer discNumber) {
-            super.setDiscNumber(discNumber);
+        public Builder discNumber(Integer discNumber) {
+            super.discNumber(discNumber);
             this.writeDiscNumber = true;
             return this;
         }
         
-        public Builder unsetDiscNumber() {
-            return setDiscNumber(null);
+        public Builder clearDiscNumber() {
+            return discNumber(null);
         }
 
         @Override
-        public Builder setDiscCount(Integer discCount) {
-            super.setDiscCount(discCount);
+        public Builder discCount(Integer discCount) {
+            super.discCount(discCount);
             this.writeDiscCount = true;
             return this;
         }
         
-        public Builder unsetDiscCount() {
-            return setDiscCount(null);
+        public Builder clearDiscCount() {
+            return discCount(null);
         }
 
         @Override
-        public Builder setTrackNumber(Integer trackNumber) {
-            super.setTrackNumber(trackNumber);
+        public Builder trackNumber(Integer trackNumber) {
+            super.trackNumber(trackNumber);
             this.writeTrackNumber = true;
             return this;
         }
         
-        public Builder unsetTrackNumber() {
-            return setTrackNumber(null);
+        public Builder clearTrackNumber() {
+            return trackNumber(null);
         }
 
         @Override
-        public Builder setTrackCount(Integer trackCount) {
-            super.setTrackCount(trackCount);
+        public Builder trackCount(Integer trackCount) {
+            super.trackCount(trackCount);
             this.writeTrackCount = true;
             return this;
         }
         
-        public Builder unsetTrackCount() {
-            return setTrackCount(null);
+        public Builder clearTrackCount() {
+            return trackCount(null);
         }
 
         @Override
-        public Builder setTitle(String title) {
-            super.setTitle(title);
+        public Builder title(String title) {
+            super.title(title);
             this.writeTitle = true;
             return this;
         }
         
-        public Builder unsetTitle() {
-            return setTitle(null);
+        public Builder clearTitle() {
+            return title(null);
         }
 
         @Override
-        public Builder setArtist(String artist) {
-            super.setArtist(artist);
+        public Builder artist(String artist) {
+            super.artist(artist);
             this.writeArtist = true;
             return this;
         }
         
-        public Builder unsetArtist() {
-            return setArtist(null);
+        public Builder clearArtist() {
+            return artist(null);
         }
 
         @Override
-        public Builder setAlbumArtist(String albumArtist) {
-            super.setAlbumArtist(albumArtist);
+        public Builder albumArtist(String albumArtist) {
+            super.albumArtist(albumArtist);
             this.writeAlbumArtist = true;
             return this;
         }
         
-        public Builder unsetAlbumArtist() {
-            return setAlbumArtist(null);
+        public Builder clearAlbumArtist() {
+            return albumArtist(null);
         }
 
         @Override
-        public Builder setAlbum(String album) {
-            super.setAlbum(album);
+        public Builder album(String album) {
+            super.album(album);
             this.writeAlbum = true;
             return this;
         }
         
-        public Builder unsetAlbum() {
-            return setAlbum(null);
+        public Builder clearAlbum() {
+            return album(null);
         }
 
         @Override
-        public Builder setYear(Integer year) {
-            super.setYear(year);
+        public Builder year(Integer year) {
+            super.year(year);
             this.writeYear = true;
             return this;
         }
         
-        public Builder unsetYear() {
-            return setYear(null);
+        public Builder clearYear() {
+            return year(null);
         }
 
         @Override
-        public Builder setGenre(String genre) {
-            super.setGenre(genre);
+        public Builder genre(String genre) {
+            super.genre(genre);
             this.writeGenre = true;
             return this;
         }
         
-        public Builder unsetGenre() {
-            return setGenre(null);
+        public Builder clearGenre() {
+            return genre(null);
         }
 
-        public Builder setArtworkFile(File artworkFile) {
+        public Builder artworkFile(File artworkFile) {
             this.artworkFile = artworkFile;
             this.writeArtwork = true;
             return this;
         }
 
-        public Builder unsetArtworkFile() {
-            return setArtworkFile(null);
+        public Builder clearArtworkFile() {
+            return artworkFile(null);
         }
 
         @Override

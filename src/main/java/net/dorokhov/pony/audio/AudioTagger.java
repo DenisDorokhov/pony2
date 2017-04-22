@@ -82,24 +82,24 @@ public class AudioTagger {
         AudioHeader audioHeader = audioFile.getAudioHeader();
         Tag tag = audioFile.getTag();
 
-        ReadableAudioData.Builder builder = new ReadableAudioData.Builder();
+        ReadableAudioData.Builder builder = ReadableAudioData.builder();
 
-        builder.setPath(audioFile.getFile().getAbsolutePath())
-                .setFileType(fileType)
-                .setSize(audioFile.getFile().length())
-                .setDuration(audioHeader.getTrackLength())
-                .setBitRate(audioHeader.getBitRateAsNumber())
-                .setBitRateVariable(audioHeader.isVariableBitRate())
-                .setDiscNumber(parseInteger(tag, FieldKey.DISC_NO)).setDiscCount(parseInteger(tag, FieldKey.DISC_TOTAL))
-                .setTrackNumber(parseInteger(tag, FieldKey.TRACK)).setTrackCount(parseInteger(tag, FieldKey.TRACK_TOTAL))
-                .setTitle(parseString(tag, FieldKey.TITLE))
-                .setArtist(parseString(tag, FieldKey.ARTIST))
-                .setAlbumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
-                .setAlbum(parseString(tag, FieldKey.ALBUM))
-                .setYear(parseInteger(tag, FieldKey.YEAR))
-                .setGenre(parseGenre(tag));
+        builder.path(audioFile.getFile().getAbsolutePath())
+                .fileType(fileType)
+                .size(audioFile.getFile().length())
+                .duration(audioHeader.getTrackLength())
+                .bitRate(audioHeader.getBitRateAsNumber())
+                .bitRateVariable(audioHeader.isVariableBitRate())
+                .discNumber(parseInteger(tag, FieldKey.DISC_NO)).discCount(parseInteger(tag, FieldKey.DISC_TOTAL))
+                .trackNumber(parseInteger(tag, FieldKey.TRACK)).trackCount(parseInteger(tag, FieldKey.TRACK_TOTAL))
+                .title(parseString(tag, FieldKey.TITLE))
+                .artist(parseString(tag, FieldKey.ARTIST))
+                .albumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
+                .album(parseString(tag, FieldKey.ALBUM))
+                .year(parseInteger(tag, FieldKey.YEAR))
+                .genre(parseGenre(tag));
 
-        parseArtwork(tag).ifPresent(builder::setEmbeddedArtwork);
+        parseArtwork(tag).ifPresent(builder::embeddedArtwork);
 
         return builder.build();
     }

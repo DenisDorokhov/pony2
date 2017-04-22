@@ -50,8 +50,12 @@ public class AudioTaggerTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat(new ReadableAudioData.Builder().build().toString()).startsWith("ReadableAudioData{");
-        assertThat(new WritableAudioData.Builder().build().toString()).startsWith("WritableAudioData{");
+        assertThat(ReadableAudioData.builder()
+                .path("somePath")
+                .fileType(new FileType("text/plain", "txt"))
+                .build().toString()).startsWith("ReadableAudioData{");
+        assertThat(WritableAudioData.builder()
+                .build().toString()).startsWith("WritableAudioData{");
     }
 
     @Test
@@ -128,8 +132,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3DiscNumber() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setDiscNumber(1)
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .discNumber(1)
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -149,8 +153,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3DiscCount() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setDiscCount(1)
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .discCount(1)
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -170,8 +174,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3TrackNumber() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setTrackNumber(1)
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .trackNumber(1)
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -191,8 +195,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3TrackCount() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setTrackCount(1)
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .trackCount(1)
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -212,8 +216,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3Title() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setTitle("значение")
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .title("значение")
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -233,8 +237,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3Artist() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setArtist("значение")
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .artist("значение")
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -254,8 +258,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3AlbumArtist() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setAlbumArtist("значение")
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .albumArtist("значение")
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -275,8 +279,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3Album() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setAlbum("значение")
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .album("значение")
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -296,8 +300,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3Year() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setYear(1986)
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .year(1986)
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -317,8 +321,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3Genre() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setGenre("значение")
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .genre("значение")
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -338,8 +342,8 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3Artwork() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setArtworkFile(FILE_ARTWORK.getFile())
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .artworkFile(FILE_ARTWORK.getFile())
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -359,18 +363,18 @@ public class AudioTaggerTests {
     @Test
     public void writeMp3All() throws Exception {
         createTempFile(FILE_EMPTY);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .setDiscNumber(2)
-                .setDiscCount(3)
-                .setTrackNumber(3)
-                .setTrackCount(10)
-                .setTitle("someTitle")
-                .setArtist("someArtist")
-                .setAlbumArtist("someAlbumArtist")
-                .setAlbum("someAlbum")
-                .setYear(1986)
-                .setGenre("Heavy Metal")
-                .setArtworkFile(FILE_ARTWORK.getFile())
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .discNumber(2)
+                .discCount(3)
+                .trackNumber(3)
+                .trackCount(10)
+                .title("someTitle")
+                .artist("someArtist")
+                .albumArtist("someAlbumArtist")
+                .album("someAlbum")
+                .year(1986)
+                .genre("Heavy Metal")
+                .artworkFile(FILE_ARTWORK.getFile())
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkId3V2Mp3(writeToFile, data);
@@ -379,8 +383,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3DiscNumber() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetDiscNumber()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearDiscNumber()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -401,8 +405,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3DiscCount() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetDiscCount()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearDiscCount()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -423,8 +427,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3TrackNumber() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetTrackNumber()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearTrackNumber()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -445,8 +449,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3TrackCount() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetTrackCount()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearTrackCount()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -467,8 +471,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3Title() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetTitle()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearTitle()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -489,8 +493,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3Artist() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetArtist()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearArtist()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -511,8 +515,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3AlbumArtist() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetAlbumArtist()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearAlbumArtist()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -533,8 +537,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3Album() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetAlbum()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearAlbum()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -555,8 +559,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3Year() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetYear()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearYear()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -577,8 +581,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3Genre() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetGenre()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearGenre()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -599,8 +603,8 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3Artwork() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetArtworkFile()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearArtworkFile()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
@@ -620,18 +624,18 @@ public class AudioTaggerTests {
     @Test
     public void deleteMp3All() throws Exception {
         createTempFile(FILE_ID3V2);
-        WritableAudioData dataWritable = new WritableAudioData.Builder()
-                .unsetDiscNumber()
-                .unsetDiscCount()
-                .unsetTrackNumber()
-                .unsetTrackCount()
-                .unsetTitle()
-                .unsetArtist()
-                .unsetAlbumArtist()
-                .unsetAlbum()
-                .unsetYear()
-                .unsetGenre()
-                .unsetArtworkFile()
+        WritableAudioData dataWritable = WritableAudioData.builder()
+                .clearDiscNumber()
+                .clearDiscCount()
+                .clearTrackNumber()
+                .clearTrackCount()
+                .clearTitle()
+                .clearArtist()
+                .clearAlbumArtist()
+                .clearAlbum()
+                .clearYear()
+                .clearGenre()
+                .clearArtworkFile()
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkEmptyMp3(writeToFile, data);

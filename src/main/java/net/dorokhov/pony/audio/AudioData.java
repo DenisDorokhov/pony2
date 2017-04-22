@@ -81,52 +81,52 @@ public abstract class AudioData {
         protected Integer year;
         protected String genre;
 
-        public T setDiscNumber(final Integer discNumber) {
+        public T discNumber(final Integer discNumber) {
             this.discNumber = discNumber;
             return self();
         }
 
-        public T setDiscCount(final Integer discCount) {
+        public T discCount(final Integer discCount) {
             this.discCount = discCount;
             return self();
         }
 
-        public T setTrackNumber(final Integer trackNumber) {
+        public T trackNumber(final Integer trackNumber) {
             this.trackNumber = trackNumber;
             return self();
         }
 
-        public T setTrackCount(final Integer trackCount) {
+        public T trackCount(final Integer trackCount) {
             this.trackCount = trackCount;
             return self();
         }
 
-        public T setTitle(final String title) {
+        public T title(final String title) {
             this.title = title;
             return self();
         }
 
-        public T setArtist(final String artist) {
+        public T artist(final String artist) {
             this.artist = artist;
             return self();
         }
 
-        public T setAlbumArtist(final String albumArtist) {
+        public T albumArtist(final String albumArtist) {
             this.albumArtist = albumArtist;
             return self();
         }
 
-        public T setAlbum(final String album) {
+        public T album(final String album) {
             this.album = album;
             return self();
         }
 
-        public T setYear(final Integer year) {
+        public T year(final Integer year) {
             this.year = year;
             return self();
         }
 
-        public T setGenre(final String genre) {
+        public T genre(final String genre) {
             this.genre = genre;
             return self();
         }
