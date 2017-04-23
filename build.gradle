@@ -20,9 +20,10 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 
+group 'net.dorokhov.pony'
+
 jar {
-    baseName = 'pony'
-    version = '2.0-SNAPSHOT'
+    baseName = 'pony2'
 }
 
 repositories {
@@ -33,6 +34,7 @@ repositories {
 }
 
 dependencies {
+
     runtime 'com.h2database:h2'
 
     compile 'com.google.guava:guava:21.0'
@@ -64,6 +66,10 @@ dependencies {
     testCompile 'org.mockito:mockito-core:2.7.14'
     testCompile 'org.assertj:assertj-core:3.6.2'
     testCompile 'info.solidsoft.mockito:mockito-java8:2.0.1'
+}
+
+springBoot {
+    buildInfo()
 }
 
 tasks.withType(FindBugs) {

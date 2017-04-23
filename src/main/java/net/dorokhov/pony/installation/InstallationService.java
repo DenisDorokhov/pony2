@@ -5,11 +5,13 @@ import net.dorokhov.pony.installation.domain.InstallationDraft;
 import net.dorokhov.pony.installation.exception.AlreadyInstalledException;
 import net.dorokhov.pony.installation.exception.NotInstalledException;
 
+import java.util.Optional;
+
 public interface InstallationService {
 
-    Installation getInstallation();
+    Optional<Installation> getInstallation();
 
     Installation install(InstallationDraft draft) throws AlreadyInstalledException;
-
-    void uninstall() throws NotInstalledException;
+    
+    Installation upgrade() throws NotInstalledException;
 }
