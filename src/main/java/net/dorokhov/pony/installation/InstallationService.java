@@ -13,5 +13,5 @@ public interface InstallationService {
 
     Installation install(InstallationDraft draft) throws AlreadyInstalledException;
     
-    Installation upgrade() throws NotInstalledException;
+    Optional<Installation> upgradeIfNeeded() throws NotInstalledException;
 }

@@ -1,7 +1,7 @@
 package net.dorokhov.pony.repository;
 
 import net.dorokhov.pony.entity.Installation;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface InstallationRepository extends CrudRepository<Installation, Long> {
+public interface InstallationRepository extends PagingAndSortingRepository<Installation, Long> {
 }
