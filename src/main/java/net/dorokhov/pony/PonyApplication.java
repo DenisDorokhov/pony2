@@ -17,7 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @EntityScan(basePackageClasses = {PonyApplication.class, Jsr310JpaConverters.class})
 @SpringBootApplication
-@PropertySource(value = "classpath:META-INF/build-info.properties", ignoreResourceNotFound = true)
+@PropertySource("classpath:META-INF/build-info.properties")
 public class PonyApplication {
 
     public static void main(String[] args) {
