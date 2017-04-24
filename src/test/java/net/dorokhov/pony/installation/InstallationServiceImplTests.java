@@ -13,6 +13,8 @@ import net.dorokhov.pony.repository.InstallationRepository;
 import net.dorokhov.pony.user.TokenSecretManager;
 import net.dorokhov.pony.user.UserService;
 import net.dorokhov.pony.user.domain.UserCreationDraft;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -21,13 +23,15 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -49,10 +53,16 @@ public class InstallationServiceImplTests {
     private UserService userService;
     @Mock
     private LogService logService;
-    
-    @Mock
-    @SuppressWarnings("unused")
-    private PlatformTransactionManager transactionManager;
+
+    @Before
+    public void setUp() throws Exception {
+        TransactionSynchronizationManager.initSynchronization();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        TransactionSynchronizationManager.clearSynchronization();
+    }
 
     @Test
     public void getInstallation() throws Exception {
@@ -84,6 +94,7 @@ public class InstallationServiceImplTests {
         
         InstallationDraft draft = buildInstallationDraft();
         assertThat(installationService.install(draft)).isSameAs(installation);
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
         verify(tokenSecretManager).generateAndStoreTokenSecret();
         verify(configService).saveAutoScanInterval(draft.getAutoScanInterval().orElse(null));
@@ -102,28 +113,31 @@ public class InstallationServiceImplTests {
 
     @Test
     public void failWhenCouldNotInstall() throws Exception {
+        
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
         Exception e = new RuntimeException();
         given(installationRepository.save((Installation) any())).willThrow(e);
+        
         InstallationDraft draft = new InstallationDraft(null, ImmutableList.of(), buildUserDraft());
-        assertThatThrownBy(() -> installationService.install(draft)).hasCause(e);
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        assertThatThrownBy(() -> installationService.install(draft)).isSameAs(e);
     }
 
     @Test
     public void upgrade() throws Exception {
 
-        Installation installation = buildInstallation().build();
+        Installation installation = buildInstallation().version("2.0").build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("3.0"));
         given(installationRepository.save((Installation) any())).willReturn(installation);
 
         assertThat(installationService.upgradeIfNeeded()).hasValue(installation);
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<Installation> savedInstallation = ArgumentCaptor.forClass(Installation.class);
         verify(installationRepository).save(savedInstallation.capture());
         assertThat(savedInstallation.getValue().getVersion()).isEqualTo("3.0");
+        verify(logService).info(any(), any(), eq(ImmutableList.of("2.0", "3.0")), any());
     }
 
     @Test

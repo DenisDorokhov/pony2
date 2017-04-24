@@ -18,8 +18,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
@@ -72,69 +75,59 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     synchronized public Installation install(InstallationDraft draft) throws AlreadyInstalledException {
         getInstallation().ifPresent(installation -> {
             throw new AlreadyInstalledException();
         });
 
-        Installation installation;
         try {
-            installation = doInstall(draft);
-        } catch (Exception e) {
-            logService.error(log, "installationService.installationFailed", "Could not install the application.", e);
+            tokenSecretManager.generateAndStoreTokenSecret();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        logService.info(log, "installationService.installed", "The application has been installed.");
+
+        configService.saveAutoScanInterval(draft.getAutoScanInterval().orElse(null));
+        configService.saveLibraryFolders(draft.getLibraryFolders());
+
+        userService.create(draft.getUserCreationDraft());
+
+        Installation installation = installationRepository.save(Installation.builder()
+                .version(buildVersionProvider.getBuildVersion().getVersion())
+                .build());
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override
+            public void afterCommit() {
+                logService.info(log, "installationService.installed", "The application has been installed.");
+            }
+        });
         
         return installation;
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     synchronized public Optional<Installation> upgradeIfNeeded() throws NotInstalledException {
-        Installation installation = getInstallation().orElseThrow(NotInstalledException::new);
+        
+        final Installation currentInstallation = getInstallation().orElseThrow(NotInstalledException::new);
         String buildVersion = buildVersionProvider.getBuildVersion().getVersion();
-        if (installation.getVersion().equals(buildVersion)) {
+        if (currentInstallation.getVersion().equals(buildVersion)) {
             return Optional.empty();
-        } else {
-            try {
-                installation = doUpgrade(installation, buildVersion);
-            } catch (Exception e) {
-                logService.error(log, "installationService.upgradeFailed", ImmutableList.of(installation.getVersion(), buildVersion),
-                        String.format("Could not upgrade the application from '%s' to '%s'.", installation.getVersion(), buildVersion), e);
-                throw new RuntimeException(e);
-            }
-            logService.info(log, "installationService.upgraded", ImmutableList.of(installation.getVersion(), buildVersion),
-                    String.format("The application has been upgraded from '%s' to '%s'.", installation.getVersion(), buildVersion));
-            return Optional.of(installation);
         }
-    }
-    
-    private Installation doInstall(InstallationDraft draft) {
-        return transactionTemplate.execute(status -> {
+            
+        Installation upgradedInstallation = installationRepository.save(Installation.builder(currentInstallation)
+                .version(buildVersion)
+                .build());
 
-            try {
-                tokenSecretManager.generateAndStoreTokenSecret();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override
+            public void afterCommit() {
+                logService.info(log, "installationService.upgraded", ImmutableList.of(currentInstallation.getVersion(), buildVersion),
+                        String.format("The application has been upgraded from '%s' to '%s'.", currentInstallation.getVersion(), buildVersion));
             }
-
-            configService.saveAutoScanInterval(draft.getAutoScanInterval().orElse(null));
-            configService.saveLibraryFolders(draft.getLibraryFolders());
-
-            userService.create(draft.getUserCreationDraft());
-
-            return installationRepository.save(Installation.builder()
-                    .version(buildVersionProvider.getBuildVersion().getVersion())
-                    .build());
         });
-    }
-    
-    private Installation doUpgrade(Installation existingInstallation, String newVersion) {
-        return transactionTemplate.execute(status ->
-                installationRepository.save(Installation.builder(existingInstallation)
-                        .version(newVersion)
-                        .build()));
+        
+        return Optional.of(upgradedInstallation);
     }
 }
