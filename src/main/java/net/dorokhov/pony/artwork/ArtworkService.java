@@ -14,14 +14,14 @@ import java.util.Optional;
 
 public interface ArtworkService {
 
-    long getCountByTag(String tag);
-    long getCountByTagAndMinimalDate(String tag, LocalDateTime minimalDate);
+    long getCount();
+    long getCountByMinimalDate(LocalDateTime minimalDate);
 
-    long getSizeByTag(String tag);
+    long getTotalSize();
 
     Optional<Artwork> getById(Long id);
 
-    Page<Artwork> getByTag(String tag, Pageable pageable);
+    Page<Artwork> getAll(Pageable pageable);
 
     Optional<File> getLargeImageFile(Long id);
     Optional<File> getSmallImageFile(Long id);

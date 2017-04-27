@@ -31,10 +31,10 @@ public class FileTypeResolver {
             try {
                 MimeType mimeType = config.getMimeRepository().forName(mediaType.toString());
                 String extension = correctExtension(mimeType.getExtension());
-                return new FileType(mimeType.toString(), extension);
+                return FileType.of(mimeType.toString(), extension);
             } catch (MimeTypeException e) {
                 log.debug("Could not resolve mime type.", e);
-                return new FileType("application/octet-stream", "bin");
+                return FileType.of("application/octet-stream", "bin");
             }
         }
     }

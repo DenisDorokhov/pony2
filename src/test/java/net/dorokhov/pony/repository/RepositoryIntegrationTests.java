@@ -1,6 +1,7 @@
 package net.dorokhov.pony.repository;
 
 import net.dorokhov.pony.entity.*;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.test.IntegrationTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,9 +136,7 @@ public class RepositoryIntegrationTests extends IntegrationTest {
                 .largeImagePath("/largePath")
                 .smallImageSize(12L)
                 .smallImagePath("/smallPath")
-                .tag("someTag")
-                .putMetaData("k1", "v1")
-                .putMetaData("k2", "v2")
+                .sourceUri("sourceUri")
                 .build();
     }
 
@@ -157,7 +156,7 @@ public class RepositoryIntegrationTests extends IntegrationTest {
         return Song.builder()
                 .album(album)
                 .genre(genre)
-                .mimeType("text/plain")
+                .fileType(FileType.of("text/plain", "txt"))
                 .duration(100L)
                 .size(10L)
                 .bitRate(256L)

@@ -56,26 +56,26 @@ public class ArtworkServiceImpl implements ArtworkService {
         this.checksumCalculator = checksumCalculator;
         this.thumbnailGenerator = thumbnailGenerator;
         this.artworkFolder = artworkFolder;
-        this.artworkSizeSmall = new ImageSize(artworkSizeSmall[0], artworkSizeSmall[1]);
-        this.artworkSizeLarge = new ImageSize(artworkSizeLarge[0], artworkSizeLarge[1]);
+        this.artworkSizeSmall = ImageSize.of(artworkSizeSmall[0], artworkSizeSmall[1]);
+        this.artworkSizeLarge = ImageSize.of(artworkSizeLarge[0], artworkSizeLarge[1]);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long getCountByTag(String tag) {
-        return artworkRepository.countByTag(tag);
+    public long getCount() {
+        return artworkRepository.count();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long getCountByTagAndMinimalDate(String tag, LocalDateTime minimalDate) {
-        return artworkRepository.countByTagAndDateGreaterThan(tag, minimalDate);
+    public long getCountByMinimalDate(LocalDateTime minimalDate) {
+        return artworkRepository.countByDateGreaterThan(minimalDate);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long getSizeByTag(String tag) {
-        return artworkRepository.sumLargeImageSizeByTag(tag) + artworkRepository.sumSmallImageSizeByTag(tag);
+    public long getTotalSize() {
+        return artworkRepository.sumLargeImageSize() + artworkRepository.sumSmallImageSize();
     }
 
     @Override
@@ -86,8 +86,8 @@ public class ArtworkServiceImpl implements ArtworkService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Artwork> getByTag(String tag, Pageable pageable) {
-        return artworkRepository.findByTag(tag, pageable);
+    public Page<Artwork> getAll(Pageable pageable) {
+        return artworkRepository.findAll(pageable);
     }
 
     @Override
@@ -165,7 +165,7 @@ public class ArtworkServiceImpl implements ArtworkService {
                                 Supplier<InputStream> streamSupplier) throws IOException {
 
         String checksum = checksumSupplier.get();
-        Artwork artwork = artworkRepository.findByTagAndChecksum(draft.getTag().orElse(null), checksum);
+        Artwork artwork = artworkRepository.findByChecksum(checksum);
         if (artwork != null) {
             return artwork;
         }
@@ -184,8 +184,7 @@ public class ArtworkServiceImpl implements ArtworkService {
         artwork = artworkRepository.save(Artwork.builder()
                 .mimeType(fileType.getMimeType())
                 .checksum(checksum)
-                .tag(draft.getTag().orElse(null))
-                .metaData(draft.getMetaData())
+                .sourceUri(draft.getSourceUri())
                 .smallImagePath(smallImagePath)
                 .largeImagePath(largeImagePath)
                 .smallImageSize(smallImageFile.length())

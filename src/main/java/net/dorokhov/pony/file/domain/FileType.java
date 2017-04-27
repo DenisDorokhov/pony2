@@ -2,9 +2,11 @@ package net.dorokhov.pony.file.domain;
 
 import com.google.common.base.Objects;
 
+import java.io.Serializable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class FileType {
+public class FileType implements Serializable {
 
     private final String mimeType;
 
@@ -55,5 +57,9 @@ public class FileType {
                 "mimeType='" + mimeType + '\'' +
                 ", fileExtension='" + fileExtension + '\'' +
                 '}';
+    }
+    
+    public static FileType of(String mimeType, String fileExtension) {
+        return new FileType(mimeType, fileExtension);
     }
 }

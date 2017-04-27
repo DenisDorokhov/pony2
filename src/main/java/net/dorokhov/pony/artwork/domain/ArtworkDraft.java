@@ -1,25 +1,14 @@
 package net.dorokhov.pony.artwork.domain;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.util.Map;
-import java.util.Optional;
-
 public abstract class ArtworkDraft {
     
-    protected final String tag;
-    protected final Map<String, String> metaData;
+    protected final String sourceUri;
 
-    public ArtworkDraft(String tag, Map<String, String> metaData) {
-        this.tag = tag;
-        this.metaData = metaData != null ? ImmutableMap.copyOf(metaData) : ImmutableMap.of();
+    public ArtworkDraft(String sourceUri) {
+        this.sourceUri = sourceUri;
     }
 
-    public Optional<String> getTag() {
-        return Optional.ofNullable(tag);
-    }
-
-    public Map<String, String> getMetaData() {
-        return metaData;
+    public String getSourceUri() {
+        return sourceUri;
     }
 }

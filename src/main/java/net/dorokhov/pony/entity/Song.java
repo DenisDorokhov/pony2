@@ -1,6 +1,7 @@
 package net.dorokhov.pony.entity;
 
 import com.google.common.collect.ComparisonChain;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.util.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
@@ -26,6 +27,13 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
     @Column(name = "mime_type", nullable = false)
     @NotNull
     private String mimeType;
+
+    @Column(name = "file_extension", nullable = false)
+    @NotNull
+    private String fileExtension;
+
+    @Transient
+    private FileType fileType;
 
     @Column(name = "size", nullable = false)
     @NotNull
@@ -93,7 +101,9 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
         creationDate = builder.creationDate;
         updateDate = builder.updateDate;
         path = checkNotNull(builder.path);
-        mimeType = checkNotNull(builder.mimeType);
+        mimeType = builder.fileType.getMimeType();
+        fileExtension = builder.fileType.getFileExtension();
+        fileType = FileType.of(mimeType, fileExtension);
         size = checkNotNull(builder.size);
         duration = checkNotNull(builder.duration);
         bitRate = checkNotNull(builder.bitRate);
@@ -117,8 +127,8 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
         return path;
     }
 
-    public String getMimeType() {
-        return mimeType;
+    public FileType getFileType() {
+        return fileType;
     }
 
     public long getSize() {
@@ -214,7 +224,7 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
         return "Song{" +
                 "id=" + id +
                 ", path='" + path + '\'' +
-                ", mimeType='" + mimeType + '\'' +
+                ", fileType='" + fileType + '\'' +
                 ", name='" + name + '\'' +
                 ", album=" + album +
                 ", genre=" + genre +
@@ -235,7 +245,7 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String path;
-        private String mimeType;
+        private FileType fileType;
         private Long size;
         private Long duration;
         private Long bitRate;
@@ -259,7 +269,7 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
         
         public Builder(Song song) {
             path = song.path;
-            mimeType = song.mimeType;
+            fileType = song.fileType;
             size = song.size;
             duration = song.duration;
             bitRate = song.bitRate;
@@ -302,8 +312,8 @@ public class Song extends BaseEntity<Long> implements Comparable<Song>, Serializ
             return this;
         }
 
-        public Builder mimeType(String mimeType) {
-            this.mimeType = mimeType;
+        public Builder fileType(FileType fileType) {
+            this.fileType = fileType;
             return this;
         }
 

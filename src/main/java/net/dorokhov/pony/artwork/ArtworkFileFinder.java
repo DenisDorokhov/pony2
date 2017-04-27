@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
-public class ArtworkFinder {
+public class ArtworkFileFinder {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -24,10 +24,10 @@ public class ArtworkFinder {
     private final Set<String> artworkFileNames;
     private final Set<String> artworkFolderNames;
 
-    public ArtworkFinder(@Value("${pony.artwork.size-ratio.min}") double artworkSizeRatioMin, 
-                         @Value("${pony.artwork.size-ratio.max}") double artworkSizeRatioMax,
-                         @Value("${pony.artwork.file-names}") String[] artworkFileNames, 
-                         @Value("${pony.artwork.folder-names}") String[] artworkFolderNames) {
+    public ArtworkFileFinder(@Value("${pony.artwork.size-ratio.min}") double artworkSizeRatioMin,
+                             @Value("${pony.artwork.size-ratio.max}") double artworkSizeRatioMax,
+                             @Value("${pony.artwork.file-names}") String[] artworkFileNames,
+                             @Value("${pony.artwork.folder-names}") String[] artworkFolderNames) {
         this.artworkSizeRatioMin = artworkSizeRatioMin;
         this.artworkSizeRatioMax = artworkSizeRatioMax;
         this.artworkFileNames = ImmutableSet.copyOf(artworkFileNames);

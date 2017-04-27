@@ -1,5 +1,6 @@
 package net.dorokhov.pony.entity;
 
+import net.dorokhov.pony.file.domain.FileType;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -108,7 +109,7 @@ public class SongTests {
         Genre genre = Genre.builder().build();
         return Song.builder()
                 .path("somePath")
-                .mimeType("text/plain")
+                .fileType(FileType.of("text/plain", "txt"))
                 .size(123L)
                 .duration(234L)
                 .bitRate(345L)

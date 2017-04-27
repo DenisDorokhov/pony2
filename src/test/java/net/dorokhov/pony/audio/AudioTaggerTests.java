@@ -28,8 +28,8 @@ public class AudioTaggerTests {
     private static final Resource FILE_ID3V2_UNICODE = new ClassPathResource("audio/id3v2-unicode.mp3");
     private static final Resource FILE_ARTWORK = new ClassPathResource("image.png");
     
-    private static final FileType FILE_TYPE_MP3 = new FileType("audio/mpeg", "mp3");
-    private static final FileType FILE_TYPE_PNG = new FileType("image/png", "png");
+    private static final FileType FILE_TYPE_MP3 = FileType.of("audio/mpeg", "mp3");
+    private static final FileType FILE_TYPE_PNG = FileType.of("image/png", "png");
     
     private AudioTagger audioTagger;
     
@@ -54,7 +54,7 @@ public class AudioTaggerTests {
     public void stringify() throws Exception {
         assertThat(ReadableAudioData.builder()
                 .path("somePath")
-                .fileType(new FileType("text/plain", "txt"))
+                .fileType(FileType.of("text/plain", "txt"))
                 .build().toString()).startsWith("ReadableAudioData{");
         assertThat(WritableAudioData.builder()
                 .build().toString()).startsWith("WritableAudioData{");

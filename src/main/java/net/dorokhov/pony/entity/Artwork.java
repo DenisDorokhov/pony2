@@ -1,19 +1,14 @@
 package net.dorokhov.pony.entity;
 
-import com.google.common.collect.ImmutableMap;
-import net.dorokhov.pony.util.JsonAttributeConverter;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity
-@Table(name = "artwork", uniqueConstraints = @UniqueConstraint(columnNames = {"tag", "checksum"}))
+@Table(name = "artwork")
 public class Artwork implements Identity<Long>, Serializable {
 
     @Id
@@ -29,7 +24,7 @@ public class Artwork implements Identity<Long>, Serializable {
     @NotNull
     private String mimeType;
 
-    @Column(name = "checksum", nullable = false)
+    @Column(name = "checksum", nullable = false, unique = true)
     @NotNull
     private String checksum;
 
@@ -49,12 +44,8 @@ public class Artwork implements Identity<Long>, Serializable {
     @NotNull
     private String smallImagePath;
 
-    @Column(name = "tag")
-    private String tag;
-
-    @Column(name = "meta_data")
-    @Convert(converter = JsonAttributeConverter.MapConverter.class)
-    private Map<String, String> metaData = ImmutableMap.of();
+    @Column(name = "source_uri")
+    private String sourceUri;
 
     protected Artwork() {
     }
@@ -68,8 +59,7 @@ public class Artwork implements Identity<Long>, Serializable {
         largeImagePath = checkNotNull(builder.largeImagePath);
         smallImageSize = checkNotNull(builder.smallImageSize);
         smallImagePath = checkNotNull(builder.smallImagePath);
-        tag = builder.tag;
-        metaData = builder.metaData.build();
+        sourceUri = checkNotNull(builder.sourceUri);
     }
 
     @Override
@@ -105,12 +95,8 @@ public class Artwork implements Identity<Long>, Serializable {
         return smallImagePath;
     }
 
-    public Optional<String> getTag() {
-        return Optional.ofNullable(tag);
-    }
-
-    public Map<String, String> getMetaData() {
-        return metaData != null ? metaData : ImmutableMap.of();
+    public String getSourceUri() {
+        return sourceUri;
     }
 
     @PrePersist
@@ -143,8 +129,7 @@ public class Artwork implements Identity<Long>, Serializable {
                 ", checksum='" + checksum + '\'' +
                 ", largeImagePath='" + largeImagePath + '\'' +
                 ", smallImagePath='" + smallImagePath + '\'' +
-                ", tag='" + tag + '\'' +
-                ", metaData=" + metaData +
+                ", sourceUri=" + sourceUri +
                 '}';
     }
     
@@ -166,8 +151,7 @@ public class Artwork implements Identity<Long>, Serializable {
         private String largeImagePath;
         private Long smallImageSize;
         private String smallImagePath;
-        private String tag;
-        private ImmutableMap.Builder<String, String> metaData = ImmutableMap.builder();
+        private String sourceUri;
 
         public Builder() {
         }
@@ -181,8 +165,7 @@ public class Artwork implements Identity<Long>, Serializable {
             largeImagePath = artwork.largeImagePath;
             smallImageSize = artwork.smallImageSize;
             smallImagePath = artwork.smallImagePath;
-            tag = artwork.tag;
-            metaData = ImmutableMap.<String, String>builder().putAll(artwork.metaData);
+            sourceUri = artwork.sourceUri;
         }
 
         Builder id(Long id) {
@@ -225,22 +208,8 @@ public class Artwork implements Identity<Long>, Serializable {
             return this;
         }
 
-        public Builder tag(String tag) {
-            this.tag = tag;
-            return this;
-        }
-
-        public Builder metaData(Map<String, String> metaData) {
-            if (metaData != null) {
-                this.metaData = ImmutableMap.<String, String>builder().putAll(metaData);
-            } else {
-                this.metaData = ImmutableMap.builder();
-            }
-            return this;
-        }
-
-        public Builder putMetaData(String key, String value) {
-            metaData.put(key, value);
+        public Builder sourceUri(String sourceFilePath) {
+            this.sourceUri = sourceFilePath;
             return this;
         }
 

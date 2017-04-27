@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ThumbnailGeneratorTests {
     
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
-    private static final ImageSize THUMBNAIL_SIZE = new ImageSize(50, 50);
+    private static final ImageSize THUMBNAIL_SIZE = ImageSize.of(50, 50);
     
     private ThumbnailGenerator thumbnailGenerator;
     

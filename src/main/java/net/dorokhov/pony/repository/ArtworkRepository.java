@@ -1,29 +1,20 @@
 package net.dorokhov.pony.repository;
 
 import net.dorokhov.pony.entity.Artwork;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface ArtworkRepository extends PagingAndSortingRepository<Artwork, Long> {
 
-    long countByTag(String tag);
+    long countByDateGreaterThan(LocalDateTime date);
 
-    long countByTagAndDateGreaterThan(String tag, LocalDateTime date);
-
-    @Query("SELECT SUM(f.largeImageSize) FROM Artwork f WHERE f.tag = ?1")
-    Long sumLargeImageSizeByTag(String tag);
+    @Query("SELECT SUM(f.largeImageSize) FROM Artwork f")
+    Long sumLargeImageSize();
     
-    @Query("SELECT SUM(f.smallImageSize) FROM Artwork f WHERE f.tag = ?1")
-    Long sumSmallImageSizeByTag(String tag);
+    @Query("SELECT SUM(f.smallImageSize) FROM Artwork f")
+    Long sumSmallImageSize();
 
-    Page<Artwork> findByTag(String tag, Pageable pageable);
-
-    List<Artwork> findByChecksum(String checksum);
-
-    Artwork findByTagAndChecksum(String tag, String checksum);
+    Artwork findByChecksum(String checksum);
 }

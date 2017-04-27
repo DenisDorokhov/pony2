@@ -36,6 +36,7 @@ public class ArtworkTests {
                 .largeImageSize(0L)
                 .largeImagePath("someLargePath")
                 .smallImageSize(0L)
-                .smallImagePath("someSmallPath");
+                .smallImagePath("someSmallPath")
+                .sourceUri("sourceUri");
     }
 }

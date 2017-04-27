@@ -19,7 +19,7 @@ public class ImageSizeReader {
                 ImageReader reader = readers.next();
                 try {
                     reader.setInput(imageStream);
-                    return new ImageSize(reader.getWidth(0), reader.getHeight(0));
+                    return ImageSize.of(reader.getWidth(0), reader.getHeight(0));
                 } finally {
                     reader.dispose();
                 }

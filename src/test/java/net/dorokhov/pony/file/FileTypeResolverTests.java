@@ -55,7 +55,7 @@ public class FileTypeResolverTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat(new FileType("text/plain", "txt").toString()).startsWith("FileType{");
+        assertThat(FileType.of("text/plain", "txt").toString()).startsWith("FileType{");
     }
 
     private void checkImageFileType(FileType fileType) {

@@ -81,15 +81,14 @@ CREATE TABLE artwork (
   large_image_path VARCHAR (255) NOT NULL,
   small_image_size BIGINT NOT NULL,
   small_image_path VARCHAR (255) NOT NULL,
-  tag VARCHAR (255),
-  meta_data LONGVARCHAR,
+  source_uri VARCHAR (1000) NOT NULL,
 
   UNIQUE (large_image_path),
   UNIQUE (small_image_path),
-  UNIQUE (tag, checksum)
+  UNIQUE (source_uri)
 );
 
-CREATE INDEX index_artwork_tag ON artwork (tag);
+CREATE INDEX index_artwork_source_uri ON artwork (source_uri);
 
 CREATE TABLE genre (
 
@@ -151,9 +150,10 @@ CREATE TABLE song (
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
 
-  path VARCHAR_IGNORECASE (255) NOT NULL,
+  path VARCHAR_IGNORECASE (1000) NOT NULL,
 
   mime_type VARCHAR (255) NOT NULL,
+  file_extension VARCHAR (255) NOT NULL,
   size BIGINT NOT NULL,
 
   duration BIGINT NOT NULL,

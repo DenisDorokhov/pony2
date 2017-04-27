@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ImageSizeReaderTests {
     
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
-    private static final ImageSize IMAGE_SIZE = new ImageSize(90, 100);
+    private static final ImageSize IMAGE_SIZE = ImageSize.of(90, 100);
     
     private ImageSizeReader imageSizeReader;
 
@@ -49,6 +49,6 @@ public class ImageSizeReaderTests {
 
     @Test
     public void strongify() throws Exception {
-        assertThat(new ImageSize(100, 100).toString()).startsWith("ImageSize{");
+        assertThat(ImageSize.of(100, 100).toString()).startsWith("ImageSize{");
     }
 }

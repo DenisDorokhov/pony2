@@ -39,11 +39,11 @@ public class FileTreeScannerTests {
     private static final Resource FILE_IMAGE = new ClassPathResource("filetree/artist1/album1-1/cover1-1-1.png");
     private static final Resource FILE_AUDIO = new ClassPathResource("filetree/artist1/album1-1/song1-1-1.mp3");
     
-    private static final ImageSize IMAGE_SIZE = new ImageSize(100, 100);
+    private static final ImageSize IMAGE_SIZE = ImageSize.of(100, 100);
     private static final String CHECKSUM = "someChecksum";
     private static final ReadableAudioData AUDIO_DATA = ReadableAudioData.builder()
             .path("somePath")
-            .fileType(new FileType("text/plain", "txt"))
+            .fileType(FileType.of("text/plain", "txt"))
             .build();
 
     @InjectMocks

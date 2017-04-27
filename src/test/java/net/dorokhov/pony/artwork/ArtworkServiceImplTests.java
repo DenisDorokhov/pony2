@@ -1,7 +1,6 @@
 package net.dorokhov.pony.artwork;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import net.dorokhov.pony.artwork.domain.ByteSourceArtworkDraft;
@@ -9,11 +8,11 @@ import net.dorokhov.pony.artwork.domain.FileArtworkDraft;
 import net.dorokhov.pony.artwork.domain.ImageNodeArtworkDraft;
 import net.dorokhov.pony.entity.Artwork;
 import net.dorokhov.pony.file.ChecksumCalculator;
-import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.file.FileTypeResolver;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.filetree.domain.ImageNode;
-import net.dorokhov.pony.image.domain.ImageSize;
 import net.dorokhov.pony.image.ThumbnailGenerator;
+import net.dorokhov.pony.image.domain.ImageSize;
 import net.dorokhov.pony.repository.ArtworkRepository;
 import org.junit.After;
 import org.junit.Before;
@@ -27,6 +26,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.FileSystemUtils;
@@ -40,7 +40,6 @@ import java.util.function.Supplier;
 
 import static net.dorokhov.pony.util.RethrowingLambdas.rethrow;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -54,10 +53,10 @@ public class ArtworkServiceImplTests {
 
     private static final Resource RESOURCE = new ClassPathResource("image.png");
     private static final String CHECKSUM = "fc3adeae14ecc5f77d6dde58d40b1559";
-    private static final FileType FILE_TYPE = new FileType("image/png", "png");
+    private static final FileType FILE_TYPE = FileType.of("image/png", "png");
     
-    private static final ImageSize LARGE_IMAGE_SIZE = new ImageSize(50, 50);
-    private static final ImageSize SMALL_IMAGE_SIZE = new ImageSize(20, 20);
+    private static final ImageSize LARGE_IMAGE_SIZE = ImageSize.of(50, 50);
+    private static final ImageSize SMALL_IMAGE_SIZE = ImageSize.of(20, 20);
     
     @Mock
     private ArtworkRepository artworkRepository;
@@ -110,21 +109,21 @@ public class ArtworkServiceImplTests {
     }
 
     @Test
-    public void getCountByTag() throws Exception {
-        given(artworkRepository.countByTag(any())).willReturn(10L);
-        assertThat(artworkService.getCountByTag("tag")).isEqualTo(10L);
+    public void getCount() throws Exception {
+        given(artworkRepository.count()).willReturn(10L);
+        assertThat(artworkService.getCount()).isEqualTo(10L);
     }
 
     @Test
-    public void getCountByTagAndMinimalData() throws Exception {
-        given(artworkRepository.countByTagAndDateGreaterThan(any(), any())).willReturn(100L);
-        assertThat(artworkService.getCountByTagAndMinimalDate("tag", LocalDateTime.now())).isEqualTo(100L);
+    public void getCountByMinimalData() throws Exception {
+        given(artworkRepository.countByDateGreaterThan(any())).willReturn(100L);
+        assertThat(artworkService.getCountByMinimalDate(LocalDateTime.now())).isEqualTo(100L);
     }
 
     @Test
-    public void getSizeByTag() throws Exception {
-        given(artworkRepository.sumLargeImageSizeByTag(any())).willReturn(1000L);
-        assertThat(artworkService.getSizeByTag("tag")).isEqualTo(1000L);
+    public void getTotalSize() throws Exception {
+        given(artworkRepository.sumLargeImageSize()).willReturn(1000L);
+        assertThat(artworkService.getTotalSize()).isEqualTo(1000L);
     }
 
     @Test
@@ -136,10 +135,10 @@ public class ArtworkServiceImplTests {
     }
 
     @Test
-    public void getByTag() throws Exception {
+    public void getAll() throws Exception {
         Page<Artwork> page = new PageImpl<>(ImmutableList.of());
-        given(artworkRepository.findByTag(any(), any())).willReturn(page);
-        assertThat(artworkService.getByTag("tag", new PageRequest(0, 10))).isSameAs(page);
+        given(artworkRepository.findAll((Pageable) any())).willReturn(page);
+        assertThat(artworkService.getAll(new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
@@ -160,41 +159,25 @@ public class ArtworkServiceImplTests {
 
     @Test
     public void getOrSaveByteSourceArtwork() throws Exception {
-        
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
-        
-        ByteSourceArtworkDraft draft = new ByteSourceArtworkDraft(
-                ByteSource.wrap(bytes), "tag",
-                ImmutableMap.of("k1", "v1", "k2", "v2"));
-
+        ByteSourceArtworkDraft draft = new ByteSourceArtworkDraft(ByteSource.wrap(bytes), "sourceUri");
         checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
     }
 
     @Test
     public void getOrSaveFileArtwork() throws Exception {
-        
         File file = RESOURCE.getFile();
-
-        FileArtworkDraft draft = new FileArtworkDraft(
-                file, "tag",
-                ImmutableMap.of("k1", "v1", "k2", "v2"));
-
+        FileArtworkDraft draft = new FileArtworkDraft(file, "sourceUri");
         checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
     }
 
     @Test
     public void getOrSaveImageNodeArtwork() throws Exception {
-        
         ImageNode imageNode = mock(ImageNode.class);
-        
         given(imageNode.getFile()).willReturn(RESOURCE.getFile());
-        given(imageNode.getFileType()).willReturn(new FileType("image/png", "png"));
+        given(imageNode.getFileType()).willReturn(FileType.of("image/png", "png"));
         given(imageNode.getChecksum()).willReturn(CHECKSUM);
-
-        ImageNodeArtworkDraft draft = new ImageNodeArtworkDraft(
-                imageNode, "tag",
-                ImmutableMap.of("k1", "v1", "k2", "v2"));
-
+        ImageNodeArtworkDraft draft = new ImageNodeArtworkDraft(imageNode, "sourceUri");
         checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
     }
 
@@ -203,7 +186,7 @@ public class ArtworkServiceImplTests {
 
         File file = RESOURCE.getFile();
 
-        FileArtworkDraft draft = new FileArtworkDraft(file, "tag");
+        FileArtworkDraft draft = new FileArtworkDraft(file, "sourceUri");
 
         Artwork artwork = artworkService.getOrSave(draft);
         
@@ -264,7 +247,7 @@ public class ArtworkServiceImplTests {
         assertThat(savedArtwork.getValue()).isSameAs(artwork);
         checkSavedArtwork(savedArtwork.getValue());
 
-        given(artworkRepository.findByTagAndChecksum(any(), any())).willReturn(artwork);
+        given(artworkRepository.findByChecksum(any())).willReturn(artwork);
         doGetAndSave.get();
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }
@@ -277,6 +260,7 @@ public class ArtworkServiceImplTests {
                 .largeImagePath(PATH_LARGE)
                 .smallImageSize(0L)
                 .smallImagePath(PATH_SMALL)
+                .sourceUri("sourceUri")
                 .build();
     }
     
@@ -287,7 +271,6 @@ public class ArtworkServiceImplTests {
         assertThat(savedArtwork.getSmallImagePath()).endsWith(".small.png");
         assertThat(savedArtwork.getLargeImageSize()).isEqualTo(0L);
         assertThat(savedArtwork.getSmallImageSize()).isEqualTo(0L);
-        assertThat(savedArtwork.getTag()).hasValue("tag");
-        assertThat(savedArtwork.getMetaData()).containsExactly(entry("k1", "v1"), entry("k2", "v2"));
+        assertThat(savedArtwork.getSourceUri()).isEqualTo("sourceUri");
     }
 }

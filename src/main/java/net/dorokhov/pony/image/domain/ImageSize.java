@@ -2,7 +2,9 @@ package net.dorokhov.pony.image.domain;
 
 import com.google.common.base.Objects;
 
-public class ImageSize {
+import java.io.Serializable;
+
+public class ImageSize implements Serializable {
     
     private final int width;
     private final int height;
@@ -44,5 +46,9 @@ public class ImageSize {
                 "width=" + width +
                 ", height=" + height +
                 '}';
+    }
+    
+    public static ImageSize of(int width, int height) {
+        return new ImageSize(width, height);
     }
 }

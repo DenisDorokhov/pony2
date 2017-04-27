@@ -4,6 +4,7 @@ import net.dorokhov.pony.entity.Album;
 import net.dorokhov.pony.entity.Artist;
 import net.dorokhov.pony.entity.Genre;
 import net.dorokhov.pony.entity.Song;
+import net.dorokhov.pony.file.domain.FileType;
 import net.dorokhov.pony.repository.AlbumRepository;
 import net.dorokhov.pony.repository.ArtistRepository;
 import net.dorokhov.pony.repository.GenreRepository;
@@ -105,7 +106,7 @@ public class SearchServiceIntegrationTests extends IntegrationTest {
                 .bitRate(128L)
                 .bitRateVariable(false)
                 .path(name)
-                .mimeType("text/plain")
+                .fileType(FileType.of("text/plain", "txt"))
                 .duration(666L)
                 .size(256L)
                 .name(name)
