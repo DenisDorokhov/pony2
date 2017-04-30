@@ -1,7 +1,5 @@
 package net.dorokhov.pony.user.domain;
 
-import net.dorokhov.pony.entity.User;
-
 public class UserToken {
     
     private final User user;

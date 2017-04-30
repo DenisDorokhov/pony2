@@ -1,11 +1,11 @@
 package net.dorokhov.pony.user;
 
-import net.dorokhov.pony.entity.User;
-import net.dorokhov.pony.user.domain.CurrentUserUpdateDraft;
-import net.dorokhov.pony.user.domain.UserCreationDraft;
+import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.user.service.command.CurrentUserUpdateDraft;
+import net.dorokhov.pony.user.service.command.UserCreationDraft;
 import net.dorokhov.pony.user.domain.UserToken;
-import net.dorokhov.pony.user.domain.UserUpdateDraft;
-import net.dorokhov.pony.user.exception.*;
+import net.dorokhov.pony.user.service.command.UserUpdateDraft;
+import net.dorokhov.pony.user.service.exception.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -30,7 +30,7 @@ public interface UserService {
     Optional<User> logout();
 
     Optional<User> getCurrentUser();
-    User updateCurrentUser(CurrentUserUpdateDraft draft) throws 
+    User updateCurrentUser(CurrentUserUpdateDraft draft) throws
             NotAuthenticatedException, InvalidPasswordException, 
             UserNotFoundException, UserExistsException;
 }
