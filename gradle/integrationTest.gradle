@@ -1,0 +1,57 @@
+/**
+ * This script adds a dedicated integration testing source set (src/integrationTest) and task
+ * (integrationTest) when applied to any Java project.
+ *
+ * Configuration:
+ *     apply from: path/to/integrationTest.gradle
+ *
+ * Usage:
+ *     gradle integrationTest
+ *      - or -
+ *     gradle check
+ */
+
+sourceSets {
+    integrationTest {
+        java.srcDir 'src/integrationTest/java'
+        resources.srcDir 'src/integrationTest/resources'
+    }
+}
+
+task integrationTest(type: Test) {
+    description = "Runs integration tests."
+
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+
+    maxHeapSize = '1024m'
+
+    // ensure we don't overwrite default report directories used by 'test' task
+    reports.html.destination = "${project.buildDir}/reports/integrationTest"
+    reports.junitXml.destination = "${project.buildDir}/integrationTest-results"
+    binResultsDir = file("${project.buildDir}/integrationTest-results/binary/integrationTest")
+
+    // always run integration tests after unit tests in order to fail fast
+    mustRunAfter test
+}
+
+dependencies {
+    integrationTestCompile sourceSets.main.output
+    integrationTestCompile sourceSets.test.output
+    integrationTestCompile configurations.compile
+    integrationTestCompile configurations.testCompile
+    integrationTestRuntime configurations.runtime
+    integrationTestRuntime configurations.testRuntime
+}
+
+// Ensure unit test tasks (named 'test') always run before integration tests in
+// order to fail as fast as possible
+gradle.projectsEvaluated {
+    def unitTestTasks = []
+    gradle.rootProject.allprojects { project ->
+        unitTestTasks.addAll(project.tasks.findAll { it.name == 'test' })
+    }
+    unitTestTasks.each { unitTestTask ->
+        project.integrationTest.mustRunAfter unitTestTask
+    }
+}

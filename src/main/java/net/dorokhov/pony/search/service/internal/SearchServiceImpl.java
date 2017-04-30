@@ -12,8 +12,6 @@ import org.hibernate.search.jpa.FullTextEntityManager;
 import org.hibernate.search.jpa.FullTextQuery;
 import org.hibernate.search.jpa.Search;
 import org.hibernate.search.query.dsl.QueryBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +24,6 @@ import static org.apache.lucene.search.BooleanClause.Occur.SHOULD;
 @Service
 public class SearchServiceImpl implements SearchService {
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final EntityManager entityManager;
 
     public SearchServiceImpl(EntityManager entityManager) {

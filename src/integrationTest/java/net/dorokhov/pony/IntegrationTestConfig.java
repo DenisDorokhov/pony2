@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("test")
-public class TestConfiguration {
+public class IntegrationTestConfig {
 
     @Bean
     public FlywayMigrationStrategy migrationStrategy() {
