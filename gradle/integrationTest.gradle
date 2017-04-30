@@ -1,5 +1,7 @@
 /**
- * This script adds a dedicated integration testing source set (src/integrationTest) and task
+ * Based on https://github.com/spring-io/sagan/blob/master/gradle/integTest.gradle.
+ * 
+ * This script adds a dedicated integration testing source set (src/test-integration) and task
  * (integrationTest) when applied to any Java project.
  *
  * Configuration:
@@ -13,8 +15,8 @@
 
 sourceSets {
     integrationTest {
-        java.srcDir 'src/integrationTest/java'
-        resources.srcDir 'src/integrationTest/resources'
+        java.srcDir 'src/testIntegration/java'
+        resources.srcDir 'src/testIntegration/resources'
     }
 }
 
@@ -27,9 +29,9 @@ task integrationTest(type: Test) {
     maxHeapSize = '1024m'
 
     // ensure we don't overwrite default report directories used by 'test' task
-    reports.html.destination = "${project.buildDir}/reports/integrationTest"
-    reports.junitXml.destination = "${project.buildDir}/integrationTest-results"
-    binResultsDir = file("${project.buildDir}/integrationTest-results/binary/integrationTest")
+    reports.html.destination = "${project.buildDir}/reports/testIntegration"
+    reports.junitXml.destination = "${project.buildDir}/testIntegration-results"
+    binResultsDir = file("${project.buildDir}/testIntegration-results/binary")
 
     // always run integration tests after unit tests in order to fail fast
     mustRunAfter test
