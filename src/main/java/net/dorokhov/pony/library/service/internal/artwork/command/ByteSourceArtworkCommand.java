@@ -4,11 +4,11 @@ import com.google.common.io.ByteSource;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ByteSourceArtworkDraft extends ArtworkDraft {
+public class ByteSourceArtworkCommand extends ArtworkCommand {
     
     private final ByteSource byteSource;
 
-    public ByteSourceArtworkDraft(ByteSource byteSource, String sourceUri) {
+    public ByteSourceArtworkCommand(ByteSource byteSource, String sourceUri) {
         super(sourceUri);
         this.byteSource = checkNotNull(byteSource);
     }

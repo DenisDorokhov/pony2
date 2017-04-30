@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class UserUpdateDraft {
+public class UserUpdateCommand {
     
     private final long id;
     private final String name;
@@ -18,7 +18,7 @@ public class UserUpdateDraft {
     private final String newPassword;
     private final Set<User.Role> roles;
 
-    private UserUpdateDraft(Builder builder) {
+    private UserUpdateCommand(Builder builder) {
         id = builder.id;
         name = checkNotNull(builder.name);
         email = checkNotNull(builder.email);
@@ -92,8 +92,8 @@ public class UserUpdateDraft {
             return this;
         }
 
-        public UserUpdateDraft build() {
-            return new UserUpdateDraft(this);
+        public UserUpdateCommand build() {
+            return new UserUpdateCommand(this);
         }
     }
 }

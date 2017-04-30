@@ -6,9 +6,9 @@ import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
-import net.dorokhov.pony.user.service.command.CurrentUserUpdateDraft;
-import net.dorokhov.pony.user.service.command.UserCreationDraft;
-import net.dorokhov.pony.user.service.command.UserUpdateDraft;
+import net.dorokhov.pony.user.service.command.CurrentUserUpdateCommand;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.user.service.command.UserUpdateCommand;
 import net.dorokhov.pony.user.service.exception.*;
 import org.junit.After;
 import org.junit.Test;
@@ -101,13 +101,13 @@ public class UserServiceImplTests {
         given(passwordEncoder.encode("somePassword")).willReturn("encodedPassword");
         given(userRepository.save((User) any())).willReturn(createdUser);
 
-        UserCreationDraft draft = UserCreationDraft.builder()
+        UserCreationCommand command = UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword")
                 .roles(User.Role.USER, User.Role.ADMIN)
                 .build();
-        assertThat(userService.create(draft)).isSameAs(createdUser);
+        assertThat(userService.create(command)).isSameAs(createdUser);
         
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -121,7 +121,7 @@ public class UserServiceImplTests {
     public void createExistingUser() throws Exception {
         User existingUser = buildUser().build();
         given(userRepository.findByEmail("someEmail")).willReturn(existingUser);
-        assertThatThrownBy(() -> userService.create(UserCreationDraft.builder()
+        assertThatThrownBy(() -> userService.create(UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword")
@@ -135,13 +135,13 @@ public class UserServiceImplTests {
         given(userRepository.findOne(1L)).willReturn(existingUser);
         given(userRepository.save((User) any())).willReturn(existingUser);
 
-        UserUpdateDraft draft = UserUpdateDraft.builder()
+        UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .roles(User.Role.USER, User.Role.ADMIN)
                 .build();
-        assertThat(userService.update(draft)).isSameAs(existingUser);
+        assertThat(userService.update(command)).isSameAs(existingUser);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -159,13 +159,13 @@ public class UserServiceImplTests {
         given(userRepository.findOne(1L)).willReturn(existingUser);
         given(passwordEncoder.encode("somePassword")).willReturn("encodedPassword");
 
-        UserUpdateDraft draft = UserUpdateDraft.builder()
+        UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .newPassword("somePassword")
                 .build();
-        userService.update(draft);
+        userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -175,13 +175,13 @@ public class UserServiceImplTests {
     @Test
     public void updateNotFoundUser() throws Exception {
         given(userRepository.findOne(1L)).willReturn(null);
-        UserUpdateDraft draft = UserUpdateDraft.builder()
+        UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .newPassword("somePassword")
                 .build();
-        assertThatThrownBy(() -> userService.update(draft)).isInstanceOf(UserNotFoundException.class);
+        assertThatThrownBy(() -> userService.update(command)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
@@ -190,13 +190,13 @@ public class UserServiceImplTests {
         given(userRepository.findOne(1L)).willReturn(userToUpdate);
         User existingUser = buildUser().id(2L).build();
         given(userRepository.findByEmail("someEmail")).willReturn(existingUser);
-        UserUpdateDraft draft = UserUpdateDraft.builder()
+        UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .newPassword("somePassword")
                 .build();
-        assertThatThrownBy(() -> userService.update(draft)).isInstanceOf(UserExistsException.class);
+        assertThatThrownBy(() -> userService.update(command)).isInstanceOf(UserExistsException.class);
     }
 
     @Test
@@ -302,13 +302,13 @@ public class UserServiceImplTests {
         given(userRepository.findOne(1L)).willReturn(existingUser);
         given(userRepository.save((User) any())).willReturn(existingUser);
 
-        CurrentUserUpdateDraft draft = CurrentUserUpdateDraft.builder()
+        CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .oldPassword("oldPassword")
                 .newPassword("newPassword")
                 .build();
-        assertThat(userService.updateCurrentUser(draft)).isSameAs(existingUser);
+        assertThat(userService.updateCurrentUser(command)).isSameAs(existingUser);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -321,12 +321,12 @@ public class UserServiceImplTests {
 
     @Test
     public void updateWhenNotAuthenticated() throws Exception {
-        CurrentUserUpdateDraft draft = CurrentUserUpdateDraft.builder()
+        CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .oldPassword("oldPassword")
                 .build();
-        assertThatThrownBy(() -> userService.updateCurrentUser(draft)).isInstanceOf(NotAuthenticatedException.class);
+        assertThatThrownBy(() -> userService.updateCurrentUser(command)).isInstanceOf(NotAuthenticatedException.class);
     }
 
     @Test
@@ -334,12 +334,12 @@ public class UserServiceImplTests {
         given(passwordEncoder.matches(any(), any())).willReturn(false);
         User existingUser = buildUser().build();
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        CurrentUserUpdateDraft draft = CurrentUserUpdateDraft.builder()
+        CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .oldPassword("invalidPassword")
                 .build();
-        assertThatThrownBy(() -> userService.updateCurrentUser(draft)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> userService.updateCurrentUser(command)).isInstanceOf(InvalidPasswordException.class);
     }
     
     private User.Builder buildUser() {

@@ -8,10 +8,10 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.repository.UserRepository;
 import net.dorokhov.pony.user.UserService;
-import net.dorokhov.pony.user.service.command.CurrentUserUpdateDraft;
-import net.dorokhov.pony.user.service.command.UserCreationDraft;
+import net.dorokhov.pony.user.service.command.CurrentUserUpdateCommand;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.domain.UserToken;
-import net.dorokhov.pony.user.service.command.UserUpdateDraft;
+import net.dorokhov.pony.user.service.command.UserUpdateCommand;
 import net.dorokhov.pony.user.service.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,16 +78,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User create(UserCreationDraft draft) throws UserExistsException {
-        String email = draft.getEmail().trim();
+    public User create(UserCreationCommand command) throws UserExistsException {
+        String email = command.getEmail().trim();
         if (getByEmail(email).isPresent()) {
             throw new UserExistsException(email);
         }
         User createdUser = userRepository.save(User.builder()
-                .name(draft.getName())
-                .email(draft.getEmail())
-                .password(passwordEncoder.encode(draft.getPassword()))
-                .roles(draft.getRoles())
+                .name(command.getName())
+                .email(command.getEmail())
+                .password(passwordEncoder.encode(command.getPassword()))
+                .roles(command.getRoles())
                 .build());
         log.info("Creating user '{}'.", createdUser.getId());
         return createdUser;
@@ -95,24 +95,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User update(UserUpdateDraft draft) throws UserNotFoundException, UserExistsException {
+    public User update(UserUpdateCommand command) throws UserNotFoundException, UserExistsException {
 
-        User userToUpdate = getById(draft.getId())
-                .orElseThrow(() -> new UserNotFoundException(draft.getId()));
-        boolean userExists = getByEmail(draft.getEmail())
-                .map(user -> !user.getId().equals(draft.getId()))
+        User userToUpdate = getById(command.getId())
+                .orElseThrow(() -> new UserNotFoundException(command.getId()));
+        boolean userExists = getByEmail(command.getEmail())
+                .map(user -> !user.getId().equals(command.getId()))
                 .orElse(false);
         if (userExists) {
-            throw new UserExistsException(draft.getEmail());
+            throw new UserExistsException(command.getEmail());
         }
-        String password = draft.getNewPassword().map(passwordEncoder::encode).orElse(userToUpdate.getPassword());
+        String password = command.getNewPassword().map(passwordEncoder::encode).orElse(userToUpdate.getPassword());
 
-        log.info("Updating user '{}'.", draft.getId());
+        log.info("Updating user '{}'.", command.getId());
         User updatedUser = userRepository.save(User.builder(userToUpdate)
-                .name(draft.getName())
-                .email(draft.getEmail())
+                .name(command.getName())
+                .email(command.getEmail())
                 .password(password)
-                .roles(draft.getRoles())
+                .roles(command.getRoles())
                 .build());
 
         getCurrentUser().ifPresent(currentUser -> {
@@ -198,18 +198,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User updateCurrentUser(CurrentUserUpdateDraft draft) throws
+    public User updateCurrentUser(CurrentUserUpdateCommand command) throws
             NotAuthenticatedException, InvalidPasswordException,
             UserNotFoundException, UserExistsException {
         User currentUser = getCurrentUser().orElseThrow(NotAuthenticatedException::new);
-        if (!passwordEncoder.matches(draft.getOldPassword(), currentUser.getPassword())) {
+        if (!passwordEncoder.matches(command.getOldPassword(), currentUser.getPassword())) {
             throw new InvalidPasswordException();
         }
-        return update(UserUpdateDraft.builder()
+        return update(UserUpdateCommand.builder()
                 .id(currentUser.getId())
-                .name(draft.getName())
-                .email(draft.getEmail())
-                .newPassword(draft.getNewPassword().orElse(null))
+                .name(command.getName())
+                .email(command.getEmail())
+                .newPassword(command.getNewPassword().orElse(null))
                 .roles(currentUser.getRoles())
                 .build());
     }

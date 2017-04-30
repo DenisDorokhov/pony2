@@ -9,14 +9,14 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class UserCreationDraft {
+public class UserCreationCommand {
     
     private final String name;
     private final String email;
     private final String password;
     private final Set<User.Role> roles;
 
-    private UserCreationDraft(Builder builder) {
+    private UserCreationCommand(Builder builder) {
         name = checkNotNull(builder.name);
         email = checkNotNull(builder.email);
         password = checkNotNull(builder.password);
@@ -79,8 +79,8 @@ public class UserCreationDraft {
             return this;
         }
 
-        public UserCreationDraft build() {
-            return new UserCreationDraft(this);
+        public UserCreationCommand build() {
+            return new UserCreationCommand(this);
         }
     }
 }

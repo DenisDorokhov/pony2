@@ -5,7 +5,7 @@ import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.installation.domain.Installation;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
 import net.dorokhov.pony.installation.service.InstallationService;
-import net.dorokhov.pony.installation.service.command.InstallationDraft;
+import net.dorokhov.pony.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.logging.service.LogService;
@@ -63,15 +63,15 @@ public class InstallationServiceImpl implements InstallationService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    synchronized public Installation install(InstallationDraft draft) throws AlreadyInstalledException {
+    synchronized public Installation install(InstallationCommand command) throws AlreadyInstalledException {
         getInstallation().ifPresent(installation -> {
             throw new AlreadyInstalledException();
         });
 
-        configService.saveAutoScanInterval(draft.getAutoScanInterval().orElse(null));
-        configService.saveLibraryFolders(draft.getLibraryFolders());
+        configService.saveAutoScanInterval(command.getAutoScanInterval().orElse(null));
+        configService.saveLibraryFolders(command.getLibraryFolders());
 
-        userService.create(draft.getUserCreationDraft());
+        userService.create(command.getUserCreationCommand());
 
         Installation installation = installationRepository.save(Installation.builder()
                 .version(buildVersionProvider.getBuildVersion().getVersion())

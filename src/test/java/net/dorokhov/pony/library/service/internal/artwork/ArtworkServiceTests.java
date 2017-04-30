@@ -6,9 +6,9 @@ import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.Artwork;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
-import net.dorokhov.pony.library.service.internal.artwork.command.ByteSourceArtworkDraft;
-import net.dorokhov.pony.library.service.internal.artwork.command.FileArtworkDraft;
-import net.dorokhov.pony.library.service.internal.artwork.command.ImageNodeArtworkDraft;
+import net.dorokhov.pony.library.service.internal.artwork.command.ByteSourceArtworkCommand;
+import net.dorokhov.pony.library.service.internal.artwork.command.FileArtworkCommand;
+import net.dorokhov.pony.library.service.internal.artwork.command.ImageNodeArtworkCommand;
 import net.dorokhov.pony.library.service.internal.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.internal.file.FileTypeResolver;
 import net.dorokhov.pony.library.service.internal.filetree.domain.ImageNode;
@@ -160,15 +160,15 @@ public class ArtworkServiceTests {
     @Test
     public void getOrSaveByteSourceArtwork() throws Exception {
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
-        ByteSourceArtworkDraft draft = new ByteSourceArtworkDraft(ByteSource.wrap(bytes), "sourceUri");
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
+        ByteSourceArtworkCommand command = new ByteSourceArtworkCommand(ByteSource.wrap(bytes), "sourceUri");
+        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
     }
 
     @Test
     public void getOrSaveFileArtwork() throws Exception {
         File file = RESOURCE.getFile();
-        FileArtworkDraft draft = new FileArtworkDraft(file, "sourceUri");
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
+        FileArtworkCommand command = new FileArtworkCommand(file, "sourceUri");
+        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
     }
 
     @Test
@@ -177,8 +177,8 @@ public class ArtworkServiceTests {
         given(imageNode.getFile()).willReturn(RESOURCE.getFile());
         given(imageNode.getFileType()).willReturn(FileType.of("image/png", "png"));
         given(imageNode.getChecksum()).willReturn(CHECKSUM);
-        ImageNodeArtworkDraft draft = new ImageNodeArtworkDraft(imageNode, "sourceUri");
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(draft)));
+        ImageNodeArtworkCommand command = new ImageNodeArtworkCommand(imageNode, "sourceUri");
+        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
     }
 
     @Test
@@ -186,9 +186,9 @@ public class ArtworkServiceTests {
 
         File file = RESOURCE.getFile();
 
-        FileArtworkDraft draft = new FileArtworkDraft(file, "sourceUri");
+        FileArtworkCommand command = new FileArtworkCommand(file, "sourceUri");
 
-        Artwork artwork = artworkService.getOrSave(draft);
+        Artwork artwork = artworkService.getOrSave(command);
         
         File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
         File smallFile = new File(artworkFolder, artwork.getSmallImagePath());

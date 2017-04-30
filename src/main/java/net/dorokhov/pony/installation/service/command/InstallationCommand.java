@@ -1,7 +1,7 @@
 package net.dorokhov.pony.installation.service.command;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.user.service.command.UserCreationDraft;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
 
 import java.io.File;
 import java.util.List;
@@ -9,16 +9,16 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class InstallationDraft {
+public class InstallationCommand {
 
     private Integer autoScanInterval;
     private List<File> libraryFolders;
-    private UserCreationDraft userCreationDraft;
+    private UserCreationCommand userCreationCommand;
 
-    public InstallationDraft(Integer autoScanInterval, List<File> libraryFolders, UserCreationDraft userCreationDraft) {
+    public InstallationCommand(Integer autoScanInterval, List<File> libraryFolders, UserCreationCommand userCreationCommand) {
         this.autoScanInterval = autoScanInterval;
         this.libraryFolders = ImmutableList.copyOf(checkNotNull(libraryFolders));
-        this.userCreationDraft = checkNotNull(userCreationDraft);
+        this.userCreationCommand = checkNotNull(userCreationCommand);
     }
 
     public Optional<Integer> getAutoScanInterval() {
@@ -29,7 +29,7 @@ public class InstallationDraft {
         return libraryFolders;
     }
 
-    public UserCreationDraft getUserCreationDraft() {
-        return userCreationDraft;
+    public UserCreationCommand getUserCreationCommand() {
+        return userCreationCommand;
     }
 }

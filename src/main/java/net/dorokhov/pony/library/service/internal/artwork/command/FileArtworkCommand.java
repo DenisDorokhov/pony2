@@ -4,11 +4,11 @@ import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class FileArtworkDraft extends ArtworkDraft {
+public class FileArtworkCommand extends ArtworkCommand {
 
     private final File file;
 
-    public FileArtworkDraft(File file, String sourceUri) {
+    public FileArtworkCommand(File file, String sourceUri) {
         super(sourceUri);
         this.file = checkNotNull(file);
     }

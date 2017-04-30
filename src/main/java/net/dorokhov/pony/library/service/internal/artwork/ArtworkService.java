@@ -1,9 +1,9 @@
 package net.dorokhov.pony.library.service.internal.artwork;
 
-import net.dorokhov.pony.library.service.internal.artwork.command.ArtworkDraft;
-import net.dorokhov.pony.library.service.internal.artwork.command.ByteSourceArtworkDraft;
-import net.dorokhov.pony.library.service.internal.artwork.command.FileArtworkDraft;
-import net.dorokhov.pony.library.service.internal.artwork.command.ImageNodeArtworkDraft;
+import net.dorokhov.pony.library.service.internal.artwork.command.ArtworkCommand;
+import net.dorokhov.pony.library.service.internal.artwork.command.ByteSourceArtworkCommand;
+import net.dorokhov.pony.library.service.internal.artwork.command.FileArtworkCommand;
+import net.dorokhov.pony.library.service.internal.artwork.command.ImageNodeArtworkCommand;
 import net.dorokhov.pony.library.service.internal.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.internal.file.FileTypeResolver;
 import net.dorokhov.pony.library.domain.FileType;
@@ -98,10 +98,10 @@ public class ArtworkService {
     }
 
     @Transactional
-    public Artwork getOrSave(ByteSourceArtworkDraft draft) throws IOException {
+    public Artwork getOrSave(ByteSourceArtworkCommand command) throws IOException {
         synchronized (modificationLock) {
-            byte[] content = draft.getByteSource().read();
-            return doGetOrSave(draft, 
+            byte[] content = command.getByteSource().read();
+            return doGetOrSave(command, 
                     () -> checksumCalculator.calculate(content), 
                     () -> fileTypeResolver.resolve(content),
                     () -> new ByteArrayInputStream(content));
@@ -109,10 +109,10 @@ public class ArtworkService {
     }
 
     @Transactional
-    public Artwork getOrSave(FileArtworkDraft draft) throws IOException {
+    public Artwork getOrSave(FileArtworkCommand command) throws IOException {
         synchronized (modificationLock) {
-            File file = draft.getFile();
-            return doGetOrSave(draft,
+            File file = command.getFile();
+            return doGetOrSave(command,
                     rethrow(() -> checksumCalculator.calculate(file)),
                     rethrow(() -> fileTypeResolver.resolve(file)),
                     rethrow(() -> new FileInputStream(file)));
@@ -120,12 +120,12 @@ public class ArtworkService {
     }
 
     @Transactional
-    public Artwork getOrSave(ImageNodeArtworkDraft draft) throws IOException {
+    public Artwork getOrSave(ImageNodeArtworkCommand command) throws IOException {
         synchronized (modificationLock) {
-            return doGetOrSave(draft,
-                    rethrow(() -> draft.getImageNode().getChecksum()),
-                    rethrow(() -> draft.getImageNode().getFileType()),
-                    rethrow(() -> new FileInputStream(draft.getImageNode().getFile())));
+            return doGetOrSave(command,
+                    rethrow(() -> command.getImageNode().getChecksum()),
+                    rethrow(() -> command.getImageNode().getFileType()),
+                    rethrow(() -> new FileInputStream(command.getImageNode().getFile())));
         }
     }
 
@@ -149,8 +149,9 @@ public class ArtworkService {
         });
     }
     
-    private Artwork doGetOrSave(ArtworkDraft draft,
-                                Supplier<String> checksumSupplier, Supplier<FileType> fileTypeSupplier,
+    private Artwork doGetOrSave(ArtworkCommand command,
+                                Supplier<String> checksumSupplier, 
+                                Supplier<FileType> fileTypeSupplier,
                                 Supplier<InputStream> streamSupplier) throws IOException {
 
         String checksum = checksumSupplier.get();
@@ -173,7 +174,7 @@ public class ArtworkService {
         artwork = artworkRepository.save(Artwork.builder()
                 .mimeType(fileType.getMimeType())
                 .checksum(checksum)
-                .sourceUri(draft.getSourceUri())
+                .sourceUri(command.getSourceUri())
                 .smallImagePath(smallImagePath)
                 .largeImagePath(largeImagePath)
                 .smallImageSize(smallImageFile.length())

@@ -4,11 +4,11 @@ import net.dorokhov.pony.library.service.internal.filetree.domain.ImageNode;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ImageNodeArtworkDraft extends ArtworkDraft {
+public class ImageNodeArtworkCommand extends ArtworkCommand {
 
     private final ImageNode imageNode;
 
-    public ImageNodeArtworkDraft(ImageNode imageNode, String sourceUri) {
+    public ImageNodeArtworkCommand(ImageNode imageNode, String sourceUri) {
         super(sourceUri);
         this.imageNode = checkNotNull(imageNode);
     }

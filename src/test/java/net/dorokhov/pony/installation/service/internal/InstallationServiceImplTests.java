@@ -4,13 +4,13 @@ import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.installation.domain.Installation;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
-import net.dorokhov.pony.installation.service.command.InstallationDraft;
+import net.dorokhov.pony.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.installation.service.internal.BuildVersionProvider.BuildVersion;
 import net.dorokhov.pony.logging.service.LogService;
 import net.dorokhov.pony.user.UserService;
-import net.dorokhov.pony.user.service.command.UserCreationDraft;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,13 +88,13 @@ public class InstallationServiceImplTests {
         Installation installation = buildInstallation().build();
         given(installationRepository.save((Installation) any())).willReturn(installation);
         
-        InstallationDraft draft = buildInstallationDraft();
-        assertThat(installationService.install(draft)).isSameAs(installation);
+        InstallationCommand command = buildInstallationCommand();
+        assertThat(installationService.install(command)).isSameAs(installation);
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
-        verify(configService).saveAutoScanInterval(draft.getAutoScanInterval().orElse(null));
-        verify(configService).saveLibraryFolders(draft.getLibraryFolders());
-        verify(userService).create(draft.getUserCreationDraft());
+        verify(configService).saveAutoScanInterval(command.getAutoScanInterval().orElse(null));
+        verify(configService).saveLibraryFolders(command.getLibraryFolders());
+        verify(userService).create(command.getUserCreationCommand());
         verify(installationRepository).save((Installation) any());
         verify(logService).info(any(), any(), any());
     }
@@ -103,7 +103,7 @@ public class InstallationServiceImplTests {
     public void failWhenAlreadyInstalled() throws Exception {
         Installation installation = buildInstallation().build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
-        assertThatThrownBy(() -> installationService.install(buildInstallationDraft())).isInstanceOf(AlreadyInstalledException.class);
+        assertThatThrownBy(() -> installationService.install(buildInstallationCommand())).isInstanceOf(AlreadyInstalledException.class);
     }
 
     @Test
@@ -114,8 +114,8 @@ public class InstallationServiceImplTests {
         Exception e = new RuntimeException();
         given(installationRepository.save((Installation) any())).willThrow(e);
         
-        InstallationDraft draft = new InstallationDraft(null, ImmutableList.of(), buildUserDraft());
-        assertThatThrownBy(() -> installationService.install(draft)).isSameAs(e);
+        InstallationCommand command = new InstallationCommand(null, ImmutableList.of(), buildUserCreationCommand());
+        assertThatThrownBy(() -> installationService.install(command)).isSameAs(e);
     }
 
     @Test
@@ -162,12 +162,12 @@ public class InstallationServiceImplTests {
         return new BuildVersion(version, LocalDateTime.now());
     }
     
-    private InstallationDraft buildInstallationDraft() {
-        return new InstallationDraft(null, ImmutableList.of(), buildUserDraft());
+    private InstallationCommand buildInstallationCommand() {
+        return new InstallationCommand(null, ImmutableList.of(), buildUserCreationCommand());
     }
     
-    private UserCreationDraft buildUserDraft() {
-        return UserCreationDraft.builder()
+    private UserCreationCommand buildUserCreationCommand() {
+        return UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword")

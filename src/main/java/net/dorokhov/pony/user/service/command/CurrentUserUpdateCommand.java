@@ -4,14 +4,14 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CurrentUserUpdateDraft {
+public class CurrentUserUpdateCommand {
 
     private final String name;
     private final String email;
     private final String oldPassword;
     private final String newPassword;
 
-    private CurrentUserUpdateDraft(Builder builder) {
+    private CurrentUserUpdateCommand(Builder builder) {
         name = checkNotNull(builder.name);
         email = checkNotNull(builder.email);
         oldPassword = checkNotNull(builder.oldPassword);
@@ -65,8 +65,8 @@ public class CurrentUserUpdateDraft {
             return this;
         }
 
-        public CurrentUserUpdateDraft build() {
-            return new CurrentUserUpdateDraft(this);
+        public CurrentUserUpdateCommand build() {
+            return new CurrentUserUpdateCommand(this);
         }
     }
 }
