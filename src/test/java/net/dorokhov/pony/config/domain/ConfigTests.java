@@ -1,6 +1,5 @@
 package net.dorokhov.pony.config.domain;
 
-import net.dorokhov.pony.config.domain.Config;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

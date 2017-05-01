@@ -2,7 +2,6 @@ package net.dorokhov.pony.config.service.internal;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.config.domain.Config;
-import net.dorokhov.pony.config.service.internal.ConfigServiceImpl;
 import net.dorokhov.pony.config.repository.ConfigRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
