@@ -20,5 +20,4 @@ public class ConfigRepositoryTests extends IntegrationTest {
                 .build());
         assertThat(configRepository.findOne(config.getId())).isNotNull();
     }
-
 }

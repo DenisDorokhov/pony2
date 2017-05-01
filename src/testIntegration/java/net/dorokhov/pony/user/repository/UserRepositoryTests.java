@@ -22,5 +22,4 @@ public class UserRepositoryTests extends IntegrationTest {
                 .build());
         assertThat(userRepository.findOne(user.getId())).isNotNull();
     }
-
 }

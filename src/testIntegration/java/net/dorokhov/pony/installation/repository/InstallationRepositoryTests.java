@@ -19,5 +19,4 @@ public class InstallationRepositoryTests extends IntegrationTest {
                 .build());
         assertThat(installationRepository.findOne(installation.getId())).isNotNull();
     }
-
 }

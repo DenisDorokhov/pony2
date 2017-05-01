@@ -1,0 +1,176 @@
+package net.dorokhov.pony.installation.service.impl;
+
+import com.google.common.collect.ImmutableList;
+import net.dorokhov.pony.config.service.ConfigService;
+import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.installation.repository.InstallationRepository;
+import net.dorokhov.pony.installation.service.command.InstallationCommand;
+import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
+import net.dorokhov.pony.installation.service.exception.NotInstalledException;
+import net.dorokhov.pony.installation.service.impl.BuildVersionProvider.BuildVersion;
+import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.time.LocalDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+@RunWith(MockitoJUnitRunner.class)
+public class InstallationServiceImplTests {
+    
+    @InjectMocks
+    private InstallationServiceImpl installationService;
+
+    @Mock
+    private InstallationRepository installationRepository;
+    @Mock
+    private BuildVersionProvider buildVersionProvider;
+    @Mock
+    private ConfigService configService;
+    @Mock
+    private UserService userService;
+    @Mock
+    private LogService logService;
+
+    @Before
+    public void setUp() throws Exception {
+        TransactionSynchronizationManager.initSynchronization();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        TransactionSynchronizationManager.clearSynchronization();
+    }
+
+    @Test
+    public void getInstallation() throws Exception {
+        Installation installation = buildInstallation().build();
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
+        assertThat(installationService.getInstallation()).hasValue(installation);
+    }
+
+    @Test
+    public void getNoInstallation() throws Exception {
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        assertThat(installationService.getInstallation()).isEmpty();
+    }
+
+    @Test
+    public void failWhenMultipleInstallationsDetected() throws Exception {
+        Installation installation = buildInstallation().build();
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation, installation)));
+        assertThatThrownBy(installationService::getInstallation).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void install() throws Exception {
+        
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
+        Installation installation = buildInstallation().build();
+        given(installationRepository.save((Installation) any())).willReturn(installation);
+        
+        InstallationCommand command = buildInstallationCommand();
+        assertThat(installationService.install(command)).isSameAs(installation);
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        
+        verify(configService).saveAutoScanInterval(command.getAutoScanInterval().orElse(null));
+        verify(configService).saveLibraryFolders(command.getLibraryFolders());
+        verify(userService).create(command.getUserCreationCommand());
+        verify(installationRepository).save((Installation) any());
+        verify(logService).info(any(), any(), any());
+    }
+
+    @Test
+    public void failWhenAlreadyInstalled() throws Exception {
+        Installation installation = buildInstallation().build();
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
+        assertThatThrownBy(() -> installationService.install(buildInstallationCommand())).isInstanceOf(AlreadyInstalledException.class);
+    }
+
+    @Test
+    public void failWhenCouldNotInstall() throws Exception {
+        
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
+        Exception e = new RuntimeException();
+        given(installationRepository.save((Installation) any())).willThrow(e);
+        
+        InstallationCommand command = new InstallationCommand(null, ImmutableList.of(), buildUserCreationCommand());
+        assertThatThrownBy(() -> installationService.install(command)).isSameAs(e);
+    }
+
+    @Test
+    public void upgrade() throws Exception {
+
+        Installation installation = buildInstallation().version("2.0").build();
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
+        given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("3.0"));
+        given(installationRepository.save((Installation) any())).willReturn(installation);
+
+        assertThat(installationService.upgradeIfNeeded()).hasValue(installation);
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+
+        ArgumentCaptor<Installation> savedInstallation = ArgumentCaptor.forClass(Installation.class);
+        verify(installationRepository).save(savedInstallation.capture());
+        assertThat(savedInstallation.getValue().getVersion()).isEqualTo("3.0");
+        verify(logService).info(any(), any(), eq(ImmutableList.of("2.0", "3.0")), any());
+    }
+
+    @Test
+    public void doNotUpgradeWhenNotNeeded() throws Exception {
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(buildInstallation()
+                .version("2.0")
+                .build())));
+        given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("2.0"));
+        assertThat(installationService.upgradeIfNeeded()).isEmpty();
+    }
+
+    @Test
+    public void failUpgradeWhenNotInstalled() throws Exception {
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        assertThatThrownBy(installationService::upgradeIfNeeded).isInstanceOf(NotInstalledException.class);
+    }
+
+    private Installation.Builder buildInstallation() {
+        return Installation.builder().version("2.0");
+    }
+    
+    private BuildVersion buildVersion() {
+        return buildVersion("2.0");
+    }
+    
+    private BuildVersion buildVersion(String version) {
+        return new BuildVersion(version, LocalDateTime.now());
+    }
+    
+    private InstallationCommand buildInstallationCommand() {
+        return new InstallationCommand(null, ImmutableList.of(), buildUserCreationCommand());
+    }
+    
+    private UserCreationCommand buildUserCreationCommand() {
+        return UserCreationCommand.builder()
+                .name("someName")
+                .email("someEmail")
+                .password("somePassword")
+                .build();
+    }
+}

@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.domain;
 
-import net.dorokhov.pony.common.persistence.SearchableEntity;
+import net.dorokhov.pony.common.SearchableEntity;
 import net.dorokhov.pony.common.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;

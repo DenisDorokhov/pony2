@@ -1,6 +1,6 @@
 package net.dorokhov.pony.installation.domain;
 
-import net.dorokhov.pony.common.persistence.BaseEntity;
+import net.dorokhov.pony.common.BaseEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

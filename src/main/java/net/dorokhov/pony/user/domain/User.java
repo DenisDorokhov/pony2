@@ -1,7 +1,7 @@
 package net.dorokhov.pony.user.domain;
 
 import com.google.common.collect.ImmutableSet;
-import net.dorokhov.pony.common.persistence.BaseEntity;
+import net.dorokhov.pony.common.BaseEntity;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
