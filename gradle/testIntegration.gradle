@@ -2,29 +2,29 @@
  * Based on https://github.com/spring-io/sagan/blob/master/gradle/integTest.gradle.
  * 
  * This script adds a dedicated integration testing source set (src/test-integration) and task
- * (integrationTest) when applied to any Java project.
+ * (testIntegration) when applied to any Java project.
  *
  * Configuration:
- *     apply from: path/to/integrationTest.gradle
+ *     apply from: path/to/testIntegration.gradle
  *
  * Usage:
- *     gradle integrationTest
+ *     gradle testIntegration
  *      - or -
  *     gradle check
  */
 
 sourceSets {
-    integrationTest {
+    testIntegration {
         java.srcDir 'src/testIntegration/java'
         resources.srcDir 'src/testIntegration/resources'
     }
 }
 
-task integrationTest(type: Test) {
+task testIntegration(type: Test) {
     description = "Runs integration tests."
 
-    testClassesDir = sourceSets.integrationTest.output.classesDir
-    classpath = sourceSets.integrationTest.runtimeClasspath
+    testClassesDir = sourceSets.testIntegration.output.classesDir
+    classpath = sourceSets.testIntegration.runtimeClasspath
 
     maxHeapSize = '1024m'
 
@@ -38,12 +38,12 @@ task integrationTest(type: Test) {
 }
 
 dependencies {
-    integrationTestCompile sourceSets.main.output
-    integrationTestCompile sourceSets.test.output
-    integrationTestCompile configurations.compile
-    integrationTestCompile configurations.testCompile
-    integrationTestRuntime configurations.runtime
-    integrationTestRuntime configurations.testRuntime
+    testIntegrationCompile sourceSets.main.output
+    testIntegrationCompile sourceSets.test.output
+    testIntegrationCompile configurations.compile
+    testIntegrationCompile configurations.testCompile
+    testIntegrationRuntime configurations.runtime
+    testIntegrationRuntime configurations.testRuntime
 }
 
 // Ensure unit test tasks (named 'test') always run before integration tests in
@@ -54,6 +54,6 @@ gradle.projectsEvaluated {
         unitTestTasks.addAll(project.tasks.findAll { it.name == 'test' })
     }
     unitTestTasks.each { unitTestTask ->
-        project.integrationTest.mustRunAfter unitTestTask
+        project.testIntegration.mustRunAfter unitTestTask
     }
 }

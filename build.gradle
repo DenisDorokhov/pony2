@@ -20,7 +20,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 
-apply from: "$rootDir/gradle/integrationTest.gradle"
+apply from: "$rootDir/gradle/testIntegration.gradle"
 
 group 'net.dorokhov.pony'
 
@@ -82,12 +82,12 @@ tasks.withType(FindBugs) {
 }
 
 task codeCoverageAggregate(type: JacocoMerge) {
-    executionData test, integrationTest
+    executionData test, testIntegration
 }
 
 task codeCoverageReport(dependsOn: codeCoverageAggregate, type: JacocoReport) {
     group = 'verification'
-    description = 'Generates code coverage report for test and integrationTest tasks.'
+    description = 'Generates code coverage report for test and testIntegration tasks.'
     executionData codeCoverageAggregate.destinationFile
     sourceDirectories = files(sourceSets.main.allSource.srcDirs)
     classDirectories = files(sourceSets.main.output)
@@ -99,5 +99,5 @@ task codeCoverageReport(dependsOn: codeCoverageAggregate, type: JacocoReport) {
     }
 }
 
-check.dependsOn integrationTest
+check.dependsOn testIntegration
 check.dependsOn codeCoverageReport
