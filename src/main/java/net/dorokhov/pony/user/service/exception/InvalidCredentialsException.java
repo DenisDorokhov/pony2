@@ -2,7 +2,7 @@ package net.dorokhov.pony.user.service.exception;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class InvalidCredentialsException extends RuntimeException {
+public final class InvalidCredentialsException extends RuntimeException {
     
     private final String email;
 

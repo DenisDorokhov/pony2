@@ -4,7 +4,7 @@ import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class FileArtworkCommand {
+public final class FileArtworkCommand {
     
     private final String sourceUri;
 

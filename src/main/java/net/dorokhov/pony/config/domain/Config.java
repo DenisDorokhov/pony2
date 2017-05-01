@@ -1,10 +1,12 @@
 package net.dorokhov.pony.config.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -61,36 +63,42 @@ public class Config implements Serializable {
         return id;
     }
 
-    public Optional<LocalDateTime> getCreationDate() {
-        return Optional.ofNullable(creationDate);
+    public LocalDateTime getCreationDate() {
+        return creationDate;
     }
 
-    public Optional<LocalDateTime> getUpdateDate() {
-        return Optional.ofNullable(updateDate);
+    @Nullable
+    public LocalDateTime getUpdateDate() {
+        return updateDate;
     }
 
-    public Optional<String> getValue() {
-        return Optional.ofNullable(value);
-    }
-
-    @Transient
-    public Optional<Integer> getInteger() {
-        return getValue().map(Integer::valueOf);
+    @Nullable
+    public String getValue() {
+        return value;
     }
 
     @Transient
-    public Optional<Long> getLong() {
-        return getValue().map(Long::valueOf);
+    @Nullable
+    public Integer getInteger() {
+        return value != null ? Integer.valueOf(value) : null;
     }
 
     @Transient
-    public Optional<Double> getDouble() {
-        return getValue().map(Double::valueOf);
+    @Nullable
+    public Long getLong() {
+        return value != null ? Long.valueOf(value) : null;
     }
 
     @Transient
-    public Optional<Boolean> getBoolean() {
-        return getValue().map(Boolean::valueOf);
+    @Nullable
+    public Double getDouble() {
+        return value != null ? Double.valueOf(value) : null;
+    }
+
+    @Transient
+    @Nullable
+    public Boolean getBoolean() {
+        return value != null ? Boolean.valueOf(value) : null;
     }
 
     @PrePersist
@@ -109,7 +117,8 @@ public class Config implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -158,27 +167,27 @@ public class Config implements Serializable {
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }
 
-        public Builder value(String value) {
+        public Builder value(@Nullable String value) {
             this.value = value;
             return this;
         }
 
-        public Builder value(Number value) {
+        public Builder value(@Nullable Number value) {
             value(value != null ? String.valueOf(value) : null);
             return this;
         }
 
-        public Builder value(Boolean value) {
+        public Builder value(@Nullable Boolean value) {
             value(value != null ? String.valueOf(value) : null);
             return this;
         }

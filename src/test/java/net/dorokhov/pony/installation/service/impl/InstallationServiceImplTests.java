@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -64,13 +65,13 @@ public class InstallationServiceImplTests {
     public void getInstallation() throws Exception {
         Installation installation = buildInstallation().build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
-        assertThat(installationService.getInstallation()).hasValue(installation);
+        assertThat(installationService.getInstallation()).isSameAs(installation);
     }
 
     @Test
     public void getNoInstallation() throws Exception {
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
-        assertThat(installationService.getInstallation()).isEmpty();
+        assertThat(installationService.getInstallation()).isNull();
     }
 
     @Test
@@ -92,7 +93,7 @@ public class InstallationServiceImplTests {
         assertThat(installationService.install(command)).isSameAs(installation);
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
-        verify(configService).saveAutoScanInterval(command.getAutoScanInterval().orElse(null));
+        verify(configService).saveAutoScanInterval(command.getAutoScanInterval());
         verify(configService).saveLibraryFolders(command.getLibraryFolders());
         verify(userService).create(command.getUserCreationCommand());
         verify(installationRepository).save((Installation) any());
@@ -126,7 +127,7 @@ public class InstallationServiceImplTests {
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("3.0"));
         given(installationRepository.save((Installation) any())).willReturn(installation);
 
-        assertThat(installationService.upgradeIfNeeded()).hasValue(installation);
+        assertThat(installationService.upgradeIfNeeded()).isSameAs(installation);
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<Installation> savedInstallation = ArgumentCaptor.forClass(Installation.class);
@@ -137,11 +138,14 @@ public class InstallationServiceImplTests {
 
     @Test
     public void doNotUpgradeWhenNotNeeded() throws Exception {
-        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(buildInstallation()
-                .version("2.0")
-                .build())));
+
+        Installation installation = buildInstallation().version("2.0").build();
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("2.0"));
-        assertThat(installationService.upgradeIfNeeded()).isEmpty();
+        
+        assertThat(installationService.upgradeIfNeeded()).isSameAs(installation);
+
+        verify(installationRepository, never()).save((Installation) any());
     }
 
     @Test

@@ -3,10 +3,10 @@ package net.dorokhov.pony.library.service.impl.audio;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Ints;
+import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
-import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -22,9 +22,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
-
-import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 
 @Component
 public class AudioTagger {
@@ -99,9 +96,8 @@ public class AudioTagger {
                 .albumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
                 .album(parseString(tag, FieldKey.ALBUM))
                 .year(parseInteger(tag, FieldKey.YEAR))
-                .genre(parseGenre(tag));
-
-        parseArtwork(tag).ifPresent(builder::embeddedArtwork);
+                .genre(parseGenre(tag))
+                .embeddedArtwork(parseArtwork(tag));
 
         return builder.build();
     }
@@ -112,105 +108,127 @@ public class AudioTagger {
         Tag tag = audioFile.getTagOrCreateDefault();
         audioFile.setTag(tag);
         
-        data.ifShouldUpdateDiscNumber(rethrow(value -> {
-            log.debug("Updating disc number '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.DISC_NO, value.toString());
-        }));
-        data.ifShouldDeleteDiscNumber(rethrow(() -> {
-            log.debug("Deleting disc number in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.DISC_NO);
-        }));
+        if (data.shouldWriteDiscNumber()) {
+            Integer value = data.getDiscNumber();
+            if (value != null) {
+                log.debug("Updating disc number '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.DISC_NO, value.toString());
+            } else {
+                log.debug("Deleting disc number in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.DISC_NO);
+            }
+        }
 
-        data.ifShouldUpdateDiscCount(rethrow(value -> {
-            log.debug("Updating disc count '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.DISC_TOTAL, value.toString());
-        }));
-        data.ifShouldDeleteDiscCount(rethrow(() -> {
-            log.debug("Deleting disc count in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.DISC_TOTAL);
-        }));
+        if (data.shouldWriteDiscCount()) {
+            Integer value = data.getDiscCount();
+            if (value != null) {
+                log.debug("Updating disc count '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.DISC_TOTAL, value.toString());
+            } else {
+                log.debug("Deleting disc count in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.DISC_TOTAL);
+            }
+        }
 
-        data.ifShouldUpdateTrackNumber(rethrow(value -> {
-            log.debug("Updating track number '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.TRACK, value.toString());
-        }));
-        data.ifShouldDeleteTrackNumber(rethrow(() -> {
-            log.debug("Deleting track number in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.TRACK);
-        }));
+        if (data.shouldWriteTrackNumber()) {
+            Integer value = data.getTrackNumber();
+            if (value != null) {
+                log.debug("Updating track number '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.TRACK, value.toString());
+            } else {
+                log.debug("Deleting track number in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.TRACK);
+            }
+        }
 
-        data.ifShouldUpdateTrackCount(rethrow(value -> {
-            log.debug("Updating track count '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.TRACK_TOTAL, value.toString());
-        }));
-        data.ifShouldDeleteTrackCount(rethrow(() -> {
-            log.debug("Deleting track count in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.TRACK_TOTAL);
-        }));
+        if (data.shouldWriteTrackCount()) {
+            Integer value = data.getTrackCount();
+            if (value != null) {
+                log.debug("Updating track count '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.TRACK_TOTAL, value.toString());
+            } else {
+                log.debug("Deleting track count in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.TRACK_TOTAL);
+            }
+        }
 
-        data.ifShouldUpdateTitle(rethrow(value -> {
-            log.debug("Updating title '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.TITLE, value);
-        }));
-        data.ifShouldDeleteTitle(rethrow(() -> {
-            log.debug("Deleting title in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.TITLE);
-        }));
+        if (data.shouldWriteTitle()) {
+            String value = data.getTitle();
+            if (value != null) {
+                log.debug("Updating title '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.TITLE, value);
+            } else {
+                log.debug("Deleting title in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.TITLE);
+            }
+        }
 
-        data.ifShouldUpdateArtist(rethrow(value -> {
-            log.debug("Updating artist '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.ARTIST, value);
-        }));
-        data.ifShouldDeleteArtist(rethrow(() -> {
-            log.debug("Deleting artist in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.ARTIST);
-        }));
+        if (data.shouldWriteArtist()) {
+            String value = data.getArtist();
+            if (value != null) {
+                log.debug("Updating artist '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.ARTIST, value);
+            } else {
+                log.debug("Deleting artist in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.ARTIST);
+            }
+        }
 
-        data.ifShouldUpdateAlbumArtist(rethrow(value -> {
-            log.debug("Updating album artist '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.ALBUM_ARTIST, value);
-        }));
-        data.ifShouldDeleteAlbumArtist(rethrow(() -> {
-            log.debug("Delete album artist in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.ALBUM_ARTIST);
-        }));
+        if (data.shouldWriteAlbumArtist()) {
+            String value = data.getAlbumArtist();
+            if (value != null) {
+                log.debug("Updating album artist '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.ALBUM_ARTIST, value);
+            } else {
+                log.debug("Delete album artist in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.ALBUM_ARTIST);
+            }
+        }
 
-        data.ifShouldUpdateAlbum(rethrow(value -> {
-            log.debug("Updating album '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.ALBUM, value);
-        }));
-        data.ifShouldDeleteAlbum(rethrow(() -> {
-            log.debug("Deleting album in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.ALBUM);
-        }));
+        if (data.shouldWriteAlbum()) {
+            String value = data.getAlbum();
+            if (value != null) {
+                log.debug("Updating album '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.ALBUM, value);
+            } else {
+                log.debug("Deleting album in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.ALBUM);
+            }
+        }
 
-        data.ifShouldUpdateYear(rethrow(value -> {
-            log.debug("Updating year '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.YEAR, value.toString());
-        }));
-        data.ifShouldDeleteYear(rethrow(() -> {
-            log.debug("Deleting year in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.YEAR);
-        }));
+        if (data.shouldWriteYear()) {
+            Integer value = data.getYear();
+            if (value != null) {
+                log.debug("Updating year '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.YEAR, value.toString());
+            } else {
+                log.debug("Deleting year in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.YEAR);
+            }
+        }
 
-        data.ifShouldUpdateGenre(rethrow(value -> {
-            log.debug("Updating genre '{}' in file '{}'.", value, file.getAbsolutePath());
-            tag.setField(FieldKey.GENRE, value);
-        }));
-        data.ifShouldDeleteGenre(rethrow(() -> {
-            log.debug("Deleting genre in file '{}'.", file.getAbsolutePath());
-            tag.deleteField(FieldKey.GENRE);
-        }));
+        if (data.shouldWriteGenre()) {
+            String value = data.getGenre();
+            if (value != null) {
+                log.debug("Updating genre '{}' in file '{}'.", value, file.getAbsolutePath());
+                tag.setField(FieldKey.GENRE, value);
+            } else {
+                log.debug("Deleting genre in file '{}'.", file.getAbsolutePath());
+                tag.deleteField(FieldKey.GENRE);
+            }
+        }
 
-        data.ifShouldUpdateArtwork(rethrow(value -> {
-            log.debug("Updating artwork in file '{}'.", file.getAbsolutePath());
-            tag.deleteArtworkField();
-            tag.setField(StandardArtwork.createArtworkFromFile(value));
-        }));
-        data.ifShouldDeleteArtwork(rethrow(() -> {
-            log.debug("Deleting artwork in file '{}'.", file.getAbsolutePath());
-            tag.deleteArtworkField();
-        }));
+        if (data.shouldWriteArtwork()) {
+            File value = data.getArtworkFile();
+            if (value != null) {
+                log.debug("Updating artwork in file '{}'.", file.getAbsolutePath());
+                tag.deleteArtworkField();
+                tag.setField(StandardArtwork.createArtworkFromFile(value));
+            } else {
+                log.debug("Deleting artwork in file '{}'.", file.getAbsolutePath());
+                tag.deleteArtworkField();
+            }
+        }
 
         AudioFileIO.write(audioFile);
         
@@ -244,20 +262,20 @@ public class AudioTagger {
         return null;
     }
     
-    private Optional<ReadableAudioData.EmbeddedArtwork> parseArtwork(Tag tag) {
+    private ReadableAudioData.EmbeddedArtwork parseArtwork(Tag tag) {
         if (tag != null) {
             Artwork artwork = tag.getFirstArtwork();
             if (artwork != null && artwork.getBinaryData() != null) {
                 FileType type = fileTypeResolver.resolve(artwork.getBinaryData());
                 if (type.isImage()) {
-                    return Optional.of(new ReadableAudioData.EmbeddedArtwork(
+                    return new ReadableAudioData.EmbeddedArtwork(
                             ByteSource.wrap(artwork.getBinaryData()),
-                            type, checksumCalculator.calculate(artwork.getBinaryData())));
+                            type, checksumCalculator.calculate(artwork.getBinaryData()));
                 } else {
                     log.debug("Artwork is not an image: '{}'.", type);
                 }
             }
         }
-        return Optional.empty();
+        return null;
     }
 }

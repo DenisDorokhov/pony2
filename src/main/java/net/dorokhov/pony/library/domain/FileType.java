@@ -1,12 +1,14 @@
 package net.dorokhov.pony.library.domain;
 
 import com.google.common.base.Objects;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class FileType implements Serializable {
+public final class FileType implements Serializable {
 
     private final String mimeType;
 
@@ -34,7 +36,8 @@ public class FileType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }

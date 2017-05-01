@@ -3,11 +3,11 @@ package net.dorokhov.pony.library.service.impl.audio.domain;
 import com.google.common.io.ByteSource;
 import net.dorokhov.pony.library.domain.FileType;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ReadableAudioData extends AudioData {
+public final class ReadableAudioData extends AudioData {
 
     private final String path;
     private final FileType fileType;
@@ -52,8 +52,9 @@ public class ReadableAudioData extends AudioData {
         return bitRateVariable;
     }
 
-    public Optional<EmbeddedArtwork> getEmbeddedArtwork() {
-        return Optional.ofNullable(embeddedArtwork);
+    @Nullable
+    public EmbeddedArtwork getEmbeddedArtwork() {
+        return embeddedArtwork;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class ReadableAudioData extends AudioData {
         return new Builder();
     }
 
-    public static class EmbeddedArtwork {
+    public static final class EmbeddedArtwork {
 
         private final ByteSource binaryData;
 
@@ -158,7 +159,7 @@ public class ReadableAudioData extends AudioData {
             return this;
         }
 
-        public Builder embeddedArtwork(EmbeddedArtwork embeddedArtwork) {
+        public Builder embeddedArtwork(@Nullable EmbeddedArtwork embeddedArtwork) {
             this.embeddedArtwork = embeddedArtwork;
             return this;
         }

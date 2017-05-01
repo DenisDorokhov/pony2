@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 @Component
@@ -34,57 +35,54 @@ public class ArtworkFileFinder {
         this.artworkFolderNames = ImmutableSet.copyOf(artworkFolderNames);
     }
 
-    public Optional<ImageNode> findArtwork(AudioNode audioNode) {
-        Optional<FolderNode> nextFolderNode = audioNode.getParentFolder();
-        while (nextFolderNode.isPresent()) {
-            FolderNode folderNode = nextFolderNode.get();
-            Optional<ImageNode> artwork = doFetchArtwork(folderNode);
-            if (artwork.isPresent()) {
+    @Nullable
+    public ImageNode findArtwork(AudioNode audioNode) {
+        FolderNode folderNode = audioNode.getParentFolder();
+        while (folderNode != null) {
+            ImageNode artwork = doFetchArtwork(folderNode);
+            if (artwork != null) {
                 return artwork;
             } else {
-                nextFolderNode = folderNode.getParentFolder();
+                folderNode = folderNode.getParentFolder();
             }
         }
-        return Optional.empty();
+        return null;
     }
 
-    private Optional<ImageNode> doFetchArtwork(FolderNode folderNode) {
-        Optional<ImageNode> artwork = fetchArtworkFromFolder(folderNode);
-        if (artwork.isPresent()) {
+    @Nullable
+    private ImageNode doFetchArtwork(FolderNode folderNode) {
+        ImageNode artwork = fetchArtworkFromFolder(folderNode);
+        if (artwork != null) {
             return artwork;
         } else {
             List<FolderNode> childFolders = folderNode.getChildFolders(false);
-            artwork = childFolders.stream()
+            return childFolders.stream()
                     .filter(this::isFolderArtwork)
                     .map(this::fetchArtworkFromFolder)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .findFirst();
-            if (artwork.isPresent()) {
-                return artwork;
-            } else {
-                return childFolders.stream()
-                        .map(this::fetchArtworkFromFolder)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .findFirst();
-            }
+                    .findFirst()
+                    .orElseGet(() ->
+                            childFolders.stream()
+                                    .map(this::fetchArtworkFromFolder)
+                                    .findFirst()
+                                    .orElse(null)
+                    );
         }
     }
 
-    private Optional<ImageNode> fetchArtworkFromFolder(FolderNode folderNode) {
+    @Nullable
+    private ImageNode fetchArtworkFromFolder(FolderNode folderNode) {
         List<ImageNode> candidatesBySize = new ArrayList<>();
-        Optional<ImageNode> artwork = folderNode.getChildImages(false).stream()
+        return folderNode.getChildImages(false).stream()
                 .filter(this::isImageArtworkBySize)
                 .sorted(Comparator.comparing(image -> image.getFile().getName()))
                 .peek(candidatesBySize::add)
                 .filter(this::isImageArtworkByName)
-                .findFirst();
-        if (artwork.isPresent()) {
-            return artwork;
-        } else {
-            return candidatesBySize.stream().findFirst();
-        }
+                .findFirst()
+                .orElseGet(() ->
+                        candidatesBySize.stream()
+                                .findFirst()
+                                .orElse(null)
+                );
     }
 
     private boolean isImageArtworkBySize(ImageNode imageNode) {

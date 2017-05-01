@@ -10,61 +10,64 @@ public class ConfigTests {
     @Test
     public void supportNullValue() throws Exception {
         Config config = new Config("foo", null);
-        assertThat(config.getValue()).isEmpty();
-        assertThat(config.getInteger()).isEmpty();
-        assertThat(config.getLong()).isEmpty();
-        assertThat(config.getDouble()).isEmpty();
-        assertThat(config.getBoolean()).isEmpty();
+        assertThat(config.getValue()).isNull();
+        assertThat(config.getInteger()).isNull();
+        assertThat(config.getLong()).isNull();
+        assertThat(config.getDouble()).isNull();
+        assertThat(config.getBoolean()).isNull();
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void supportStringValue() throws Exception {
         Config config = new Config("foo", "bar");
-        assertThat(config.getValue()).hasValue("bar");
+        assertThat(config.getValue()).isEqualTo("bar");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getDouble).isInstanceOf(NumberFormatException.class);
-        assertThat(config.getBoolean()).hasValue(false);
+        assertThat(config.getBoolean()).isFalse();
     }
 
     @Test
     public void supportIntegerValue() throws Exception {
         Config config = new Config("foo", 1);
-        assertThat(config.getValue()).hasValue("1");
-        assertThat(config.getInteger()).hasValue(1);
-        assertThat(config.getLong()).hasValue(1L);
-        assertThat(config.getDouble()).hasValue(1.0);
-        assertThat(config.getBoolean()).hasValue(false);
+        assertThat(config.getValue()).isEqualTo("1");
+        assertThat(config.getInteger()).isEqualTo(1);
+        assertThat(config.getLong()).isEqualTo(1L);
+        assertThat(config.getDouble()).isEqualTo(1.0);
+        assertThat(config.getBoolean()).isFalse();
     }
 
     @Test
     public void supportLongValue() throws Exception {
         Config config = new Config("foo", 1L);
-        assertThat(config.getValue()).hasValue("1");
-        assertThat(config.getInteger()).hasValue(1);
-        assertThat(config.getLong()).hasValue(1L);
-        assertThat(config.getDouble()).hasValue(1.0);
-        assertThat(config.getBoolean()).hasValue(false);
+        assertThat(config.getValue()).isEqualTo("1");
+        assertThat(config.getInteger()).isEqualTo(1);
+        assertThat(config.getLong()).isEqualTo(1L);
+        assertThat(config.getDouble()).isEqualTo(1.0);
+        assertThat(config.getBoolean()).isFalse();
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void supportDoubleValue() throws Exception {
         Config config = new Config("foo", 1.2);
-        assertThat(config.getValue()).hasValue("1.2");
+        assertThat(config.getValue()).isEqualTo("1.2");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
-        assertThat(config.getDouble()).hasValue(1.2);
-        assertThat(config.getBoolean()).hasValue(false);
+        assertThat(config.getDouble()).isEqualTo(1.2);
+        assertThat(config.getBoolean()).isFalse();
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void supportBooleanValue() throws Exception {
         Config config = new Config("foo", true);
-        assertThat(config.getValue()).hasValue("true");
+        assertThat(config.getValue()).isEqualTo("true");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getDouble).isInstanceOf(NumberFormatException.class);
-        assertThat(config.getBoolean()).hasValue(true);
+        assertThat(config.getBoolean()).isTrue();
     }
 
     @Test

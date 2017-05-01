@@ -18,6 +18,8 @@ public class InstallationUpgradeRunner implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) throws Exception {
-        installationService.getInstallation().ifPresent(installation -> installationService.upgradeIfNeeded());
+        if (installationService.getInstallation() != null) {
+            installationService.upgradeIfNeeded();
+        }
     }
 }

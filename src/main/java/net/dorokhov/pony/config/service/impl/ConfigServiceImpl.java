@@ -7,6 +7,7 @@ import net.dorokhov.pony.config.repository.ConfigRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,14 +31,15 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Integer> getAutoScanInterval() {
-        return Optional.ofNullable(configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL))
-                .flatMap(Config::getInteger);
+    @Nullable
+    public Integer getAutoScanInterval() {
+        Config config = configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL);
+        return config != null ? config.getInteger() : null;
     }
 
     @Override
     @Transactional
-    public void saveAutoScanInterval(Integer value) {
+    public void saveAutoScanInterval(@Nullable Integer value) {
         Config.Builder builder = Optional.ofNullable(configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL))
                 .map(Config::builder).orElse(Config.builder().id(CONFIG_AUTO_SCAN_INTERVAL));
         builder.value(value);
@@ -48,7 +50,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional(readOnly = true)
     public List<File> fetchLibraryFolders() {
         List<String> paths = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
-                .flatMap(Config::getValue)
+                .map(Config::getValue)
                 .map(s -> s.split(CONFIG_LIBRARY_FOLDERS_SEPARATOR))
                 .map(Arrays::asList)
                 .orElse(Collections.emptyList());

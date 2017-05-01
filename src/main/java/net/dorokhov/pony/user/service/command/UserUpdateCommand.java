@@ -3,9 +3,9 @@ package net.dorokhov.pony.user.service.command;
 import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.user.domain.User;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -38,8 +38,9 @@ public class UserUpdateCommand {
         return email;
     }
 
-    public Optional<String> getNewPassword() {
-        return Optional.ofNullable(newPassword);
+    @Nullable
+    public String getNewPassword() {
+        return newPassword;
     }
 
     public Set<User.Role> getRoles() {
@@ -73,7 +74,7 @@ public class UserUpdateCommand {
             return this;
         }
 
-        public Builder newPassword(String newPassword) {
+        public Builder newPassword(@Nullable String newPassword) {
             this.newPassword = newPassword;
             return this;
         }

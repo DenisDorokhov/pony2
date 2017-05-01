@@ -72,19 +72,19 @@ public class UserServiceImplTests {
     @Test
     public void getById() throws Exception {
         given(userRepository.findOne(1L)).willReturn(null);
-        assertThat(userService.getById(1L)).isEmpty();
+        assertThat(userService.getById(1L)).isNull();
         User user = buildUser().build();
         given(userRepository.findOne(1L)).willReturn(user);
-        assertThat(userService.getById(1L)).hasValue(user);
+        assertThat(userService.getById(1L)).isSameAs(user);
     }
 
     @Test
     public void getByEmail() throws Exception {
         given(userRepository.findByEmail("someEmail")).willReturn(null);
-        assertThat(userService.getByEmail("someEmail")).isEmpty();
+        assertThat(userService.getByEmail("someEmail")).isNull();
         User user = buildUser().build();
         given(userRepository.findByEmail("someEmail")).willReturn(user);
-        assertThat(userService.getByEmail("someEmail")).hasValue(user);
+        assertThat(userService.getByEmail("someEmail")).isSameAs(user);
     }
 
     @Test
@@ -229,7 +229,7 @@ public class UserServiceImplTests {
         UserToken userToken = userService.authenticate("someEmail", "somePassword");
         assertThat(userToken.getUser()).isSameAs(existingUser);
         assertThat(userToken.getToken()).isNotNull();
-        assertThat(userService.getCurrentUser()).hasValue(existingUser);
+        assertThat(userService.getCurrentUser()).isSameAs(existingUser);
     }
 
     @Test
@@ -248,7 +248,7 @@ public class UserServiceImplTests {
                 .withSubject("1")
                 .sign(Algorithm.HMAC256("someSecret"));
         assertThat(userService.authenticate(token)).isSameAs(existingUser);
-        assertThat(userService.getCurrentUser()).hasValue(existingUser);
+        assertThat(userService.getCurrentUser()).isSameAs(existingUser);
     }
 
     @Test
@@ -271,17 +271,17 @@ public class UserServiceImplTests {
     public void logout() throws Exception {
         User existingUser = buildUser().build();
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        assertThat(userService.logout()).hasValue(existingUser);
+        assertThat(userService.logout()).isSameAs(existingUser);
     }
 
     @Test
     public void logoutNotAuthenticatedUser() throws Exception {
-        assertThat(userService.logout()).isEmpty();
+        assertThat(userService.logout()).isNull();
     }
 
     @Test
     public void getCurrentUserWhenNotAuthenticated() throws Exception {
-        assertThat(userService.getCurrentUser()).isEmpty();
+        assertThat(userService.getCurrentUser()).isNull();
     }
 
     @Test
@@ -308,7 +308,7 @@ public class UserServiceImplTests {
                 .oldPassword("oldPassword")
                 .newPassword("newPassword")
                 .build();
-        assertThat(userService.updateCurrentUser(command)).isSameAs(existingUser);
+        assertThat(userService.updateCurrentUser(command)).isEqualTo(existingUser);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());

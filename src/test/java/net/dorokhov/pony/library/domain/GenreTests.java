@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.domain;
 
-import net.dorokhov.pony.library.domain.Genre;
 import org.junit.Test;
 
 import java.util.Arrays;

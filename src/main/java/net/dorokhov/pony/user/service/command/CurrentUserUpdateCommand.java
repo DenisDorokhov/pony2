@@ -1,10 +1,10 @@
 package net.dorokhov.pony.user.service.command;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CurrentUserUpdateCommand {
+public final class CurrentUserUpdateCommand {
 
     private final String name;
     private final String email;
@@ -30,8 +30,9 @@ public class CurrentUserUpdateCommand {
         return oldPassword;
     }
 
-    public Optional<String> getNewPassword() {
-        return Optional.ofNullable(newPassword);
+    @Nullable
+    public String getNewPassword() {
+        return newPassword;
     }
     
     public static Builder builder() {
@@ -60,7 +61,7 @@ public class CurrentUserUpdateCommand {
             return this;
         }
 
-        public Builder newPassword(String newPassword) {
+        public Builder newPassword(@Nullable String newPassword) {
             this.newPassword = newPassword;
             return this;
         }

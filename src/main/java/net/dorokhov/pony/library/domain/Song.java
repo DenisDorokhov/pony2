@@ -1,17 +1,19 @@
 package net.dorokhov.pony.library.domain;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import net.dorokhov.pony.common.SearchableEntity;
-import net.dorokhov.pony.common.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -147,48 +149,59 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
         return bitRateVariable;
     }
 
-    public Optional<Integer> getDiscNumber() {
-        return Optional.ofNullable(discNumber);
+    @Nullable
+    public Integer getDiscNumber() {
+        return discNumber;
     }
 
-    public Optional<Integer> getDiscCount() {
-        return Optional.ofNullable(discCount);
+    @Nullable
+    public Integer getDiscCount() {
+        return discCount;
     }
 
-    public Optional<Integer> getTrackNumber() {
-        return Optional.ofNullable(trackNumber);
+    @Nullable
+    public Integer getTrackNumber() {
+        return trackNumber;
     }
 
-    public Optional<Integer> getTrackCount() {
-        return Optional.ofNullable(trackCount);
+    @Nullable
+    public Integer getTrackCount() {
+        return trackCount;
     }
 
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
+    @Nullable
+    public String getName() {
+        return name;
     }
 
-    public Optional<String> getGenreName() {
-        return Optional.ofNullable(genreName);
+    @Nullable
+    public String getGenreName() {
+        return genreName;
     }
 
-    public Optional<String> getArtistName() {
-        return Optional.ofNullable(artistName);
+    @Nullable
+    public String getArtistName() {
+        return artistName;
     }
 
-    public Optional<String> getAlbumArtistName() {
-        return Optional.ofNullable(albumArtistName);
+    @Nullable
+    public String getAlbumArtistName() {
+        return albumArtistName;
     }
 
-    public Optional<String> getAlbumName() {
-        return Optional.ofNullable(albumName);
+    @Nullable
+    public String getAlbumName() {
+        return albumName;
     }
 
-    public Optional<Integer> getYear() {
-        return Optional.ofNullable(year);
+    @Nullable
+    public Integer getYear() {
+        return year;
     }
 
-    public Optional<Artwork> getArtwork() {
-        return Optional.ofNullable(artwork);
+    @Nullable
+    public Artwork getArtwork() {
+        return artwork;
     }
 
     public Album getAlbum() {
@@ -202,20 +215,20 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
     @Transient
     @Field(analyzer = @Analyzer(definition = ANALYZER))
     public String getSearchTerms() {
-        return getName().orElse("") + " " +
-                getArtistName().orElse("") + " " +
-                getAlbumArtistName().orElse("") + " " +
-                getAlbumName().orElse("");
+        return Strings.nullToEmpty(name) + " " +
+                Strings.nullToEmpty(artistName) + " " +
+                Strings.nullToEmpty(albumArtistName) + " " +
+                Strings.nullToEmpty(albumName);
     }
 
     @Override
-    public int compareTo(Song song) {
+    public int compareTo(@Nonnull Song song) {
         return ComparisonChain.start()
-                .compare(getAlbum().getArtist(), song.getAlbum().getArtist())
-                .compare(getAlbum(), song.getAlbum())
-                .compare(getDiscNumber(), song.getDiscNumber(), OptionalComparators.nullLast())
-                .compare(getTrackNumber(), song.getTrackNumber(), OptionalComparators.nullLast())
-                .compare(getName(), song.getName(), OptionalComparators.nullLast())
+                .compare(album.getArtist(), song.album.getArtist())
+                .compare(album, song.album)
+                .compare(discNumber, song.discNumber, Ordering.natural().nullsLast())
+                .compare(trackNumber, song.trackNumber, Ordering.natural().nullsLast())
+                .compare(name, song.name, Ordering.natural().nullsLast())
                 .result();
     }
 
@@ -292,17 +305,17 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
             genre = song.genre;
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }
@@ -337,57 +350,57 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
             return this;
         }
 
-        public Builder discNumber(Integer discNumber) {
+        public Builder discNumber(@Nullable Integer discNumber) {
             this.discNumber = discNumber;
             return this;
         }
 
-        public Builder discCount(Integer discCount) {
+        public Builder discCount(@Nullable Integer discCount) {
             this.discCount = discCount;
             return this;
         }
 
-        public Builder trackNumber(Integer trackNumber) {
+        public Builder trackNumber(@Nullable Integer trackNumber) {
             this.trackNumber = trackNumber;
             return this;
         }
 
-        public Builder trackCount(Integer trackCount) {
+        public Builder trackCount(@Nullable Integer trackCount) {
             this.trackCount = trackCount;
             return this;
         }
 
-        public Builder name(String name) {
+        public Builder name(@Nullable String name) {
             this.name = name;
             return this;
         }
 
-        public Builder genreName(String genreName) {
+        public Builder genreName(@Nullable String genreName) {
             this.genreName = genreName;
             return this;
         }
 
-        public Builder artistName(String artistName) {
+        public Builder artistName(@Nullable String artistName) {
             this.artistName = artistName;
             return this;
         }
 
-        public Builder albumArtistName(String albumArtistName) {
+        public Builder albumArtistName(@Nullable String albumArtistName) {
             this.albumArtistName = albumArtistName;
             return this;
         }
 
-        public Builder albumName(String albumName) {
+        public Builder albumName(@Nullable String albumName) {
             this.albumName = albumName;
             return this;
         }
 
-        public Builder year(Integer year) {
+        public Builder year(@Nullable Integer year) {
             this.year = year;
             return this;
         }
 
-        public Builder artwork(Artwork artwork) {
+        public Builder artwork(@Nullable Artwork artwork) {
             this.artwork = artwork;
             return this;
         }

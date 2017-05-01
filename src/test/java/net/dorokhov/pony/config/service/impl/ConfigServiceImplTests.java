@@ -29,7 +29,7 @@ public class ConfigServiceImplTests {
     public void getEnabledScanInterval() throws Exception {
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
-        assertThat(configService.getAutoScanInterval()).hasValue(1000);
+        assertThat(configService.getAutoScanInterval()).isEqualTo(1000);
     }
     
     @Test
@@ -37,11 +37,11 @@ public class ConfigServiceImplTests {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(null);
-        assertThat(configService.getAutoScanInterval()).isEmpty();
+        assertThat(configService.getAutoScanInterval()).isNull();
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, null));
-        assertThat(configService.getAutoScanInterval()).isEmpty();
+        assertThat(configService.getAutoScanInterval()).isNull();
     }
 
     @Test
@@ -54,7 +54,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
         
-        assertThat(savedConfig.getValue().getValue()).hasValue("2000");
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("2000");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
         
-        assertThat(savedConfig.getValue().getValue()).isEmpty();
+        assertThat(savedConfig.getValue().getValue()).isNull();
     }
 
     @Test
@@ -80,7 +80,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).hasValue("2000");
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("2000");
     }
 
     @Test
@@ -121,7 +121,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).hasValue("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo");
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo");
     }
 
     @Test
@@ -136,7 +136,7 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEmpty();
+        assertThat(savedConfig.getValue().getValue()).isNull();
     }
 
     @Test
@@ -149,6 +149,6 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).hasValue("foobar");
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("foobar");
     }
 }

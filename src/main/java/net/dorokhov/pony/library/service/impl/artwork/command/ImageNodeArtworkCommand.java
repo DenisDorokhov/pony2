@@ -4,7 +4,7 @@ import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ImageNodeArtworkCommand {
+public final class ImageNodeArtworkCommand {
     
     private final String sourceUri;
 

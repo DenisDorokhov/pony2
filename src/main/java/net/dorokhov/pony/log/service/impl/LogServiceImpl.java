@@ -2,8 +2,8 @@ package net.dorokhov.pony.log.service.impl;
 
 import com.google.common.base.Throwables;
 import net.dorokhov.pony.log.domain.LogMessage;
-import net.dorokhov.pony.log.service.LogService;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
+import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -49,25 +50,25 @@ public class LogServiceImpl implements LogService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, String text, Throwable throwable) {
+    public LogMessage debug(Logger logger, String code, String text, @Nullable Throwable throwable) {
         return debug(logger, code, null, text, throwable);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        return debug(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
+    public LogMessage debug(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
+        return debug(logger, code, arguments, text, getStackTrace(throwable));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, String text, String details) {
+    public LogMessage debug(Logger logger, String code, String text, @Nullable String details) {
         return debug(logger, code, null, text, details);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, List<String> arguments, String text, String details) {
+    public LogMessage debug(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
         return doLogMessage(logger, LogMessage.Type.DEBUG, code, text, arguments, details);
     }
 
@@ -85,25 +86,25 @@ public class LogServiceImpl implements LogService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, String text, Throwable throwable) {
+    public LogMessage info(Logger logger, String code, String text, @Nullable Throwable throwable) {
         return info(logger, code, null, text, throwable);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        return info(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
+    public LogMessage info(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
+        return info(logger, code, arguments, text, getStackTrace(throwable));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, String text, String details) {
+    public LogMessage info(Logger logger, String code, String text, @Nullable String details) {
         return info(logger, code, null, text, details);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, List<String> arguments, String text, String details) {
+    public LogMessage info(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
         return doLogMessage(logger, LogMessage.Type.INFO, code, text, arguments, details);
     }
     
@@ -121,25 +122,25 @@ public class LogServiceImpl implements LogService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, String text, Throwable throwable) {
+    public LogMessage warn(Logger logger, String code, String text, @Nullable Throwable throwable) {
         return warn(logger, code, null, text, throwable);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        return warn(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
+    public LogMessage warn(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
+        return warn(logger, code, arguments, text, getStackTrace(throwable));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, String text, String details) {
+    public LogMessage warn(Logger logger, String code, String text, @Nullable String details) {
         return warn(logger, code, null, text, details);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, List<String> arguments, String text, String details) {
+    public LogMessage warn(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
         return doLogMessage(logger, LogMessage.Type.WARN, code, text, arguments, details);
     }
     
@@ -157,29 +158,29 @@ public class LogServiceImpl implements LogService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, String text, Throwable throwable) {
+    public LogMessage error(Logger logger, String code, String text, @Nullable Throwable throwable) {
         return error(logger, code, null, text, throwable);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, List<String> arguments, String text, Throwable throwable) {
-        return error(logger, code, arguments, text, Throwables.getStackTraceAsString(throwable));
+    public LogMessage error(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
+        return error(logger, code, arguments, text, getStackTrace(throwable));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, String text, String details) {
+    public LogMessage error(Logger logger, String code, String text, @Nullable String details) {
         return error(logger, code, null, text, details);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, List<String> arguments, String text, String details) {
+    public LogMessage error(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
         return doLogMessage(logger, LogMessage.Type.ERROR, code, text, arguments, details);
     }
 
-    private LogMessage doLogMessage(Logger logger, LogMessage.Type type, String code, String text, List<String> arguments, String details) {
+    private LogMessage doLogMessage(Logger logger, LogMessage.Type type, String code, String text, List<String> arguments, @Nullable String details) {
 
         if (logger != null) {
             String message = text;
@@ -209,5 +210,9 @@ public class LogServiceImpl implements LogService {
                 .details(details)
                 .arguments(arguments)
                 .build());
+    }
+    
+    private String getStackTrace(Throwable throwable) {
+        return throwable != null ? Throwables.getStackTraceAsString(throwable) : null;
     }
 }

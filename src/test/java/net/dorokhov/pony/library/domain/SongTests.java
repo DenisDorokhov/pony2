@@ -1,10 +1,5 @@
 package net.dorokhov.pony.library.domain;
 
-import net.dorokhov.pony.library.domain.FileType;
-import net.dorokhov.pony.library.domain.Album;
-import net.dorokhov.pony.library.domain.Artist;
-import net.dorokhov.pony.library.domain.Genre;
-import net.dorokhov.pony.library.domain.Song;
 import org.junit.Test;
 
 import java.util.Arrays;

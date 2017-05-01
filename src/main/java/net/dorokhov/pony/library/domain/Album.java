@@ -1,19 +1,21 @@
 package net.dorokhov.pony.library.domain;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 import net.dorokhov.pony.common.SearchableEntity;
-import net.dorokhov.pony.common.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -54,20 +56,23 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
         artist = checkNotNull(builder.artist);
     }
 
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
+    @Nullable
+    public String getName() {
+        return name;
     }
 
-    public Optional<Integer> getYear() {
-        return Optional.ofNullable(year);
+    @Nullable
+    public Integer getYear() {
+        return year;
     }
 
-    public Optional<Artwork> getArtwork() {
-        return Optional.ofNullable(artwork);
+    @Nullable
+    public Artwork getArtwork() {
+        return artwork;
     }
 
     public List<Song> getSongs() {
-        return songs != null ? songs : ImmutableList.of();
+        return songs != null ? ImmutableList.copyOf(songs) : ImmutableList.of();
     }
 
     public Artist getArtist() {
@@ -77,16 +82,16 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
     @Transient
     @Field(analyzer = @Analyzer(definition = ANALYZER))
     public String getSearchTerms() {
-        return getName().orElse("") + " " +
-                getArtist().getName().orElse("");
+        return Strings.nullToEmpty(name) + " " +
+                Strings.nullToEmpty(artist.getName());
     }
 
     @Override
-    public int compareTo(Album album) {
+    public int compareTo(@Nonnull Album album) {
         return ComparisonChain.start()
-                .compare(getArtist(), album.getArtist())
-                .compare(getYear(), album.getYear(), OptionalComparators.nullLast())
-                .compare(getName(), album.getName(), OptionalComparators.nullLast())
+                .compare(artist, album.artist)
+                .compare(year, album.year, Ordering.natural().nullsLast())
+                .compare(name, album.name, Ordering.natural().nullsLast())
                 .result();
     }
 
@@ -134,37 +139,37 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
             artist = builder.artist;
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }
 
-        public Builder name(String name) {
+        public Builder name(@Nullable String name) {
             this.name = name;
             return this;
         }
 
-        public Builder year(Integer year) {
+        public Builder year(@Nullable Integer year) {
             this.year = year;
             return this;
         }
 
-        public Builder artwork(Artwork artwork) {
+        public Builder artwork(@Nullable Artwork artwork) {
             this.artwork = artwork;
             return this;
         }
 
-        public Builder songs(List<Song> songs) {
+        public Builder songs(@Nullable List<Song> songs) {
             if (songs != null) {
                 this.songs = ImmutableList.<Song>builder().addAll(songs);
             } else {

@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.Optional;
-
 @Service
 public class InstallationServiceImpl implements InstallationService {
 
@@ -50,25 +48,26 @@ public class InstallationServiceImpl implements InstallationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Installation> getInstallation() {
+    public Installation getInstallation() {
         Page<Installation> page = installationRepository.findAll(new PageRequest(0, 2));
         if (page.getTotalElements() > 1) {
             throw new IllegalStateException("More than one installations detected.");
         } else if (page.getTotalElements() == 0) {
-            return Optional.empty();
+            return null;
         } else {
-            return Optional.ofNullable(page.getContent().get(0));
+            return page.getContent().get(0);
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     synchronized public Installation install(InstallationCommand command) throws AlreadyInstalledException {
-        getInstallation().ifPresent(installation -> {
+        
+        if (getInstallation() != null) {
             throw new AlreadyInstalledException();
-        });
+        }
 
-        configService.saveAutoScanInterval(command.getAutoScanInterval().orElse(null));
+        configService.saveAutoScanInterval(command.getAutoScanInterval());
         configService.saveLibraryFolders(command.getLibraryFolders());
 
         userService.create(command.getUserCreationCommand());
@@ -89,12 +88,16 @@ public class InstallationServiceImpl implements InstallationService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    synchronized public Optional<Installation> upgradeIfNeeded() throws NotInstalledException {
+    synchronized public Installation upgradeIfNeeded() throws NotInstalledException {
         
-        final Installation currentInstallation = getInstallation().orElseThrow(NotInstalledException::new);
+        final Installation currentInstallation = getInstallation();
+        if (currentInstallation == null) {
+            throw new NotInstalledException();
+        }
+        
         String buildVersion = buildVersionProvider.getBuildVersion().getVersion();
         if (currentInstallation.getVersion().equals(buildVersion)) {
-            return Optional.empty();
+            return currentInstallation;
         }
             
         Installation upgradedInstallation = installationRepository.save(Installation.builder(currentInstallation)
@@ -109,6 +112,6 @@ public class InstallationServiceImpl implements InstallationService {
             }
         });
         
-        return Optional.of(upgradedInstallation);
+        return upgradedInstallation;
     }
 }

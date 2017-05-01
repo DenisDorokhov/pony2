@@ -1,10 +1,11 @@
 package net.dorokhov.pony.library.service.impl.image.domain;
 
 import com.google.common.base.Objects;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
 
-public class ImageSize implements Serializable {
+public final class ImageSize {
     
     private final int width;
     private final int height;
@@ -23,7 +24,8 @@ public class ImageSize implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }

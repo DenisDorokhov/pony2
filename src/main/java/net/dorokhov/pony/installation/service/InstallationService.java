@@ -5,13 +5,14 @@ import net.dorokhov.pony.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 public interface InstallationService {
 
-    Optional<Installation> getInstallation();
+    @Nullable
+    Installation getInstallation();
 
     Installation install(InstallationCommand command) throws AlreadyInstalledException;
     
-    Optional<Installation> upgradeIfNeeded() throws NotInstalledException;
+    Installation upgradeIfNeeded() throws NotInstalledException;
 }

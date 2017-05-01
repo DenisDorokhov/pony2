@@ -7,6 +7,8 @@ import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -41,24 +43,26 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
         albums = builder.albums.build();
     }
 
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
+    @Nullable
+    public String getName() {
+        return name;
     }
 
-    public Optional<Artwork> getArtwork() {
-        return Optional.ofNullable(artwork);
+    @Nullable
+    public Artwork getArtwork() {
+        return artwork;
     }
 
     public List<Album> getAlbums() {
-        return albums != null ? albums : ImmutableList.of();
+        return albums != null ? ImmutableList.copyOf(albums) : ImmutableList.of();
     }
 
     @Override
-    public int compareTo(Artist artist) {
+    public int compareTo(@Nonnull Artist artist) {
         String regex = "^the\\s+";
         return OptionalComparators.<String>nullLast().compare(
-                getName().map(String::toLowerCase).map(s -> s.replaceAll(regex, "")),
-                artist.getName().map(String::toLowerCase).map(s -> s.replaceAll(regex, "")));
+                Optional.ofNullable(name).map(String::toLowerCase).map(s -> s.replaceAll(regex, "")),
+                Optional.ofNullable(artist.name).map(String::toLowerCase).map(s -> s.replaceAll(regex, "")));
     }
 
     @Override
@@ -99,32 +103,32 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
             artwork = artist.artwork;
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }
 
-        public Builder name(String name) {
+        public Builder name(@Nullable String name) {
             this.name = name;
             return this;
         }
 
-        public Builder artwork(Artwork artwork) {
+        public Builder artwork(@Nullable Artwork artwork) {
             this.artwork = artwork;
             return this;
         }
 
-        public Builder albums(List<Album> albums) {
+        public Builder albums(@Nullable List<Album> albums) {
             if (albums != null) {
                 this.albums = ImmutableList.<Album>builder().addAll(albums);
             } else {

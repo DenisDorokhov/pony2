@@ -1,11 +1,12 @@
 package net.dorokhov.pony.library.service.impl.filetree.domain;
 
+import javax.annotation.Nullable;
 import java.io.File;
-import java.util.Optional;
 
 public interface Node {
 
-	File getFile();
+    File getFile();
 
-	Optional<FolderNode> getParentFolder();
+    @Nullable
+    FolderNode getParentFolder();
 }

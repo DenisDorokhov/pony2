@@ -2,6 +2,7 @@ package net.dorokhov.pony.installation.domain;
 
 import net.dorokhov.pony.common.BaseEntity;
 
+import javax.annotation.Nullable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -66,17 +67,17 @@ public class Installation extends BaseEntity<Long> implements Serializable {
             updateDate = installation.updateDate;
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }

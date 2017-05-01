@@ -4,7 +4,7 @@ import com.google.common.io.ByteSource;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ByteSourceArtworkCommand {
+public final class ByteSourceArtworkCommand {
 
     private final String sourceUri;
     

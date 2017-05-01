@@ -1,5 +1,8 @@
 package net.dorokhov.pony.library.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -109,7 +112,8 @@ public class Artwork implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -167,12 +171,12 @@ public class Artwork implements Serializable {
             sourceUri = artwork.sourceUri;
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder date(LocalDateTime date) {
+        public Builder date(@Nullable LocalDateTime date) {
             this.date = date;
             return this;
         }

@@ -72,17 +72,17 @@ public class AudioTaggerTests {
         File file = FILE_ID3V1.getFile();
         ReadableAudioData data = audioTagger.read(file);
         checkMp3File(file, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -118,17 +118,17 @@ public class AudioTaggerTests {
         File file = FILE_ID3V2_UNICODE.getFile();
         ReadableAudioData data = audioTagger.read(file);
         checkMp3File(file, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).hasValue("песня");
-        assertThat(data.getArtist()).hasValue("артист");
-        assertThat(data.getAlbumArtist()).hasValue("артист альбома");
-        assertThat(data.getAlbum()).hasValue("альбом");
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).hasValue("хэви метал");
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isEqualTo("песня");
+        assertThat(data.getArtist()).isEqualTo("артист");
+        assertThat(data.getAlbumArtist()).isEqualTo("артист альбома");
+        assertThat(data.getAlbum()).isEqualTo("альбом");
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isEqualTo("хэви метал");
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -139,17 +139,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(1);
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(1);
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
     
     @Test
@@ -160,17 +160,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).hasValue(1);
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isEqualTo(1);
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -181,17 +181,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).hasValue(1);
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isEqualTo(1);
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -202,17 +202,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).hasValue(1);
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isEqualTo(1);
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -223,17 +223,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).hasValue("значение");
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isEqualTo("значение");
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -244,17 +244,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).hasValue("значение");
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isEqualTo("значение");
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -265,17 +265,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).hasValue("значение");
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isEqualTo("значение");
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
     
     @Test
@@ -286,17 +286,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).hasValue("значение");
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isEqualTo("значение");
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -307,17 +307,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -328,17 +328,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).hasValue("значение");
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isEqualTo("значение");
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -349,16 +349,16 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
         checkArtwork(data);
     }
 
@@ -390,17 +390,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -412,17 +412,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -434,17 +434,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -456,17 +456,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -478,17 +478,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -500,17 +500,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -522,17 +522,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -544,17 +544,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -566,17 +566,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -588,17 +588,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
 
@@ -610,17 +610,17 @@ public class AudioTaggerTests {
                 .build();
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
         checkMp3File(writeToFile, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
 
     @Test
@@ -650,32 +650,32 @@ public class AudioTaggerTests {
 
     private void checkEmptyMp3(File file, ReadableAudioData data) {
         checkMp3File(file, data);
-        assertThat(data.getDiscNumber()).isEmpty();
-        assertThat(data.getDiscCount()).isEmpty();
-        assertThat(data.getTrackNumber()).isEmpty();
-        assertThat(data.getTrackCount()).isEmpty();
-        assertThat(data.getTitle()).isEmpty();
-        assertThat(data.getArtist()).isEmpty();
-        assertThat(data.getAlbumArtist()).isEmpty();
-        assertThat(data.getAlbum()).isEmpty();
-        assertThat(data.getYear()).isEmpty();
-        assertThat(data.getGenre()).isEmpty();
-        assertThat(data.getEmbeddedArtwork()).isEmpty();
+        assertThat(data.getDiscNumber()).isNull();
+        assertThat(data.getDiscCount()).isNull();
+        assertThat(data.getTrackNumber()).isNull();
+        assertThat(data.getTrackCount()).isNull();
+        assertThat(data.getTitle()).isNull();
+        assertThat(data.getArtist()).isNull();
+        assertThat(data.getAlbumArtist()).isNull();
+        assertThat(data.getAlbum()).isNull();
+        assertThat(data.getYear()).isNull();
+        assertThat(data.getGenre()).isNull();
+        assertThat(data.getEmbeddedArtwork()).isNull();
     }
     
     private void checkId3V2Mp3(File file, ReadableAudioData data) {
         checkMp3File(file, data);
-        assertThat(data.getDiscNumber()).hasValue(2);
-        assertThat(data.getDiscCount()).hasValue(3);
-        assertThat(data.getTrackNumber()).hasValue(3);
-        assertThat(data.getTrackCount()).hasValue(10);
-        assertThat(data.getTitle()).hasValue("someTitle");
-        assertThat(data.getArtist()).hasValue("someArtist");
-        assertThat(data.getAlbumArtist()).hasValue("someAlbumArtist");
-        assertThat(data.getAlbum()).hasValue("someAlbum");
-        assertThat(data.getYear()).hasValue(1986);
-        assertThat(data.getGenre()).hasValue("Heavy Metal");
-        assertThat(data.getEmbeddedArtwork()).isNotEmpty();
+        assertThat(data.getDiscNumber()).isEqualTo(2);
+        assertThat(data.getDiscCount()).isEqualTo(3);
+        assertThat(data.getTrackNumber()).isEqualTo(3);
+        assertThat(data.getTrackCount()).isEqualTo(10);
+        assertThat(data.getTitle()).isEqualTo("someTitle");
+        assertThat(data.getArtist()).isEqualTo("someArtist");
+        assertThat(data.getAlbumArtist()).isEqualTo("someAlbumArtist");
+        assertThat(data.getAlbum()).isEqualTo("someAlbum");
+        assertThat(data.getYear()).isEqualTo(1986);
+        assertThat(data.getGenre()).isEqualTo("Heavy Metal");
+        assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
     
@@ -689,7 +689,8 @@ public class AudioTaggerTests {
     }
     
     private void checkArtwork(ReadableAudioData data) {
-        data.getEmbeddedArtwork().ifPresent(embeddedArtwork -> {
+        ReadableAudioData.EmbeddedArtwork embeddedArtwork = data.getEmbeddedArtwork();
+        if (embeddedArtwork != null) {
             try {
                 assertThat(embeddedArtwork.getBinaryData().size()).isEqualTo(3002);
             } catch (IOException e) {
@@ -697,6 +698,6 @@ public class AudioTaggerTests {
             }
             assertThat(embeddedArtwork.getFileType()).isEqualTo(FILE_TYPE_PNG);
             assertThat(embeddedArtwork.getChecksum()).isEqualTo("fc3adeae14ecc5f77d6dde58d40b1559");
-        });
+        }
     }
 }

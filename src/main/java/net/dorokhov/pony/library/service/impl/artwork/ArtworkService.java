@@ -1,15 +1,15 @@
 package net.dorokhov.pony.library.service.impl.artwork;
 
+import net.dorokhov.pony.library.domain.Artwork;
+import net.dorokhov.pony.library.domain.FileType;
+import net.dorokhov.pony.library.repository.ArtworkRepository;
 import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkCommand;
 import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkCommand;
 import net.dorokhov.pony.library.service.impl.artwork.command.ImageNodeArtworkCommand;
 import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
-import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.image.ThumbnailGenerator;
 import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.repository.ArtworkRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -45,7 +45,8 @@ public class ArtworkService {
     private final Object modificationLock = new Object();
 
     public ArtworkService(ArtworkRepository artworkRepository,
-                          FileTypeResolver fileTypeResolver, ChecksumCalculator checksumCalculator,
+                          FileTypeResolver fileTypeResolver, 
+                          ChecksumCalculator checksumCalculator,
                           ThumbnailGenerator thumbnailGenerator,
                           @Value("${pony.artwork.path}") File artworkFolder,
                           @Value("${pony.artwork.size.small}") int[] artworkSizeSmall,
@@ -75,8 +76,9 @@ public class ArtworkService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Artwork> getById(Long id) {
-        return Optional.ofNullable(artworkRepository.findOne(id));
+    @Nullable
+    public Artwork getById(Long id) {
+        return artworkRepository.findOne(id);
     }
 
     @Transactional(readOnly = true)
@@ -85,15 +87,23 @@ public class ArtworkService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<File> getLargeImageFile(Long artworkId) {
-        Optional<Artwork> artwork = getById(artworkId);
-        return artwork.map(a -> new File(artworkFolder, a.getLargeImagePath()));
+    @Nullable
+    public File getLargeImageFile(Long artworkId) {
+        Artwork artwork = getById(artworkId);
+        if (artwork == null) {
+            return null;
+        }
+        return new File(artworkFolder, artwork.getLargeImagePath());
     }
 
     @Transactional(readOnly = true)
-    public Optional<File> getSmallImageFile(Long artworkId) {
-        Optional<Artwork> artwork = getById(artworkId);
-        return artwork.map(a -> new File(artworkFolder, a.getSmallImagePath()));
+    @Nullable
+    public File getSmallImageFile(Long artworkId) {
+        Artwork artwork = getById(artworkId);
+        if (artwork == null) {
+            return null;
+        }
+        return new File(artworkFolder, artwork.getSmallImagePath());
     }
 
     @Transactional
@@ -130,7 +140,8 @@ public class ArtworkService {
 
     @Transactional
     public void delete(Long id) {
-        getById(id).ifPresent(artwork -> {
+        Artwork artwork = getById(id);
+        if (artwork != null) {
             File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
             File smallFile = new File(artworkFolder, artwork.getSmallImagePath());
             artworkRepository.delete(artwork);
@@ -145,7 +156,7 @@ public class ArtworkService {
                     }
                 }
             });
-        });
+        }
     }
     
     private Artwork doGetOrSave(String sourceUri,

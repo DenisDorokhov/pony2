@@ -16,7 +16,6 @@ import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static java.util.Collections.EMPTY_LIST;
 import static net.dorokhov.pony.log.domain.LogMessage.Type.*;
@@ -208,9 +207,9 @@ public class LogServiceImplTests {
         assertThat(logMessage.getCode()).isEqualTo(CODE);
         assertThat(logMessage.getText()).isEqualTo(TEXT);
         if (detailsPresent) {
-            assertThat(logMessage.getDetails()).isPresent();
+            assertThat(logMessage.getDetails()).isNotNull();
         } else {
-            assertThat(logMessage.getDetails()).isEmpty();
+            assertThat(logMessage.getDetails()).isNull();
         }
         assertThat(logMessage.getArguments()).isEqualTo(arguments != null ? arguments : EMPTY_LIST);
     }
@@ -219,7 +218,7 @@ public class LogServiceImplTests {
         assertThat(logMessage.getType()).isEqualTo(type);
         assertThat(logMessage.getCode()).isEqualTo(CODE);
         assertThat(logMessage.getText()).isEqualTo(TEXT);
-        assertThat(logMessage.getDetails()).isEqualTo(Optional.ofNullable(details));
+        assertThat(logMessage.getDetails()).isEqualTo(details);
         assertThat(logMessage.getArguments()).isEqualTo(arguments != null ? arguments : EMPTY_LIST);
     }
 }

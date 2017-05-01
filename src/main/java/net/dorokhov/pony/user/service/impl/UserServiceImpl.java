@@ -26,9 +26,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -60,14 +62,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getById(Long id) {
-        return Optional.ofNullable(userRepository.findOne(id));
+    @Nullable
+    public User getById(Long id) {
+        return userRepository.findOne(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getByEmail(String email) {
-        return Optional.ofNullable(userRepository.findByEmail(email));
+    @Nullable
+    public User getByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     @Override
@@ -80,7 +84,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User create(UserCreationCommand command) throws UserExistsException {
         String email = command.getEmail().trim();
-        if (getByEmail(email).isPresent()) {
+        if (getByEmail(email) != null) {
             throw new UserExistsException(email);
         }
         User createdUser = userRepository.save(User.builder()
@@ -97,15 +101,18 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User update(UserUpdateCommand command) throws UserNotFoundException, UserExistsException {
 
-        User userToUpdate = getById(command.getId())
-                .orElseThrow(() -> new UserNotFoundException(command.getId()));
-        boolean userExists = getByEmail(command.getEmail())
-                .map(user -> !user.getId().equals(command.getId()))
-                .orElse(false);
-        if (userExists) {
+        User userToUpdate = getById(command.getId());
+        if (userToUpdate == null) {
+            throw new UserNotFoundException(command.getId());
+        }
+        User sameEmailUser = getByEmail(command.getEmail());
+        if (sameEmailUser != null && !Objects.equals(sameEmailUser.getId(), command.getId())) {
             throw new UserExistsException(command.getEmail());
         }
-        String password = command.getNewPassword().map(passwordEncoder::encode).orElse(userToUpdate.getPassword());
+        
+        String password = Optional.ofNullable(command.getNewPassword())
+                .map(passwordEncoder::encode)
+                .orElse(userToUpdate.getPassword());
 
         log.info("Updating user '{}'.", command.getId());
         User updatedUser = userRepository.save(User.builder(userToUpdate)
@@ -115,13 +122,12 @@ public class UserServiceImpl implements UserService {
                 .roles(command.getRoles())
                 .build());
 
-        getCurrentUser().ifPresent(currentUser -> {
-            if (updatedUser.getId().equals(currentUser.getId())) {
-                UserDetailsImpl userDetails = new UserDetailsImpl(updatedUser);
-                SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()));
-            }
-        });
+        User currentUser = getCurrentUser();
+        if (currentUser != null && currentUser.equals(updatedUser)) {
+            UserDetailsImpl userDetails = new UserDetailsImpl(updatedUser);
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()));
+        }
 
         return updatedUser;
     }
@@ -129,15 +135,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(Long id) throws UserNotFoundException, DeletingCurrentUserException {
+        
         User userToDelete = userRepository.findOne(id);
         if (userToDelete == null) {
             throw new UserNotFoundException(id);
         }
-        getCurrentUser().ifPresent(currentUser -> {
-            if (userToDelete.getId().equals(currentUser.getId())) {
-                throw new DeletingCurrentUserException(id);
-            }
-        });
+        User currentUser = getCurrentUser();
+        if (currentUser != null && currentUser.equals(userToDelete)) {
+            throw new DeletingCurrentUserException(id);
+        }
+        
         log.info("Deleting user '{}'.", userToDelete.getId());
         userRepository.delete(id);
     }
@@ -180,20 +187,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> logout() {
-        return getCurrentUser().map(user -> {
+    @Nullable
+    public User logout() {
+        User user = getCurrentUser();
+        if (user != null) {
             log.info("Logging out user '{}'.", user.getId());
             SecurityContextHolder.clearContext();
             return user;
-        });
+        } else {
+            return null;
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getCurrentUser() {
+    @Nullable
+    public User getCurrentUser() {
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .map(authentication -> (UserDetailsImpl) authentication.getPrincipal())
-                .map(UserDetailsImpl::getUser);
+                .map(UserDetailsImpl::getUser)
+                .orElse(null);
     }
 
     @Override
@@ -201,15 +214,20 @@ public class UserServiceImpl implements UserService {
     public User updateCurrentUser(CurrentUserUpdateCommand command) throws
             NotAuthenticatedException, InvalidPasswordException,
             UserNotFoundException, UserExistsException {
-        User currentUser = getCurrentUser().orElseThrow(NotAuthenticatedException::new);
+        
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new NotAuthenticatedException();
+        }
         if (!passwordEncoder.matches(command.getOldPassword(), currentUser.getPassword())) {
             throw new InvalidPasswordException();
         }
+        
         return update(UserUpdateCommand.builder()
                 .id(currentUser.getId())
                 .name(command.getName())
                 .email(command.getEmail())
-                .newPassword(command.getNewPassword().orElse(null))
+                .newPassword(command.getNewPassword())
                 .roles(currentUser.getRoles())
                 .build());
     }

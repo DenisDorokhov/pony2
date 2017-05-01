@@ -1,10 +1,12 @@
 package net.dorokhov.pony.common;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @MappedSuperclass
 abstract public class BaseEntity<T extends Serializable> {
@@ -29,8 +31,9 @@ abstract public class BaseEntity<T extends Serializable> {
         return creationDate;
     }
 
-    public Optional<LocalDateTime> getUpdateDate() {
-        return Optional.ofNullable(updateDate);
+    @Nullable
+    public LocalDateTime getUpdateDate() {
+        return updateDate;
     }
 
     @PrePersist
@@ -49,7 +52,8 @@ abstract public class BaseEntity<T extends Serializable> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }

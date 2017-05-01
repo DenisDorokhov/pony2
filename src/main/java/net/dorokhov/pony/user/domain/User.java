@@ -3,6 +3,7 @@ package net.dorokhov.pony.user.domain;
 import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.common.BaseEntity;
 
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -108,17 +109,17 @@ public class User extends BaseEntity<Long> implements Serializable {
             roles = ImmutableSet.<Role>builder().addAll(user.roles);
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }
@@ -138,7 +139,7 @@ public class User extends BaseEntity<Long> implements Serializable {
             return this;
         }
 
-        public Builder roles(Set<Role> roles) {
+        public Builder roles(@Nullable Set<Role> roles) {
             if (roles != null) {
                 this.roles = ImmutableSet.<Role>builder().addAll(roles);
             } else {

@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.domain;
 
-import net.dorokhov.pony.library.domain.Artwork;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,10 +1,9 @@
 package net.dorokhov.pony.library.service.impl.audio.domain;
 
+import javax.annotation.Nullable;
 import java.io.File;
-import java.util.Optional;
-import java.util.function.Consumer;
 
-public class WritableAudioData extends AudioData {
+public final class WritableAudioData extends AudioData {
 
     private final boolean writeDiscNumber;
     private final boolean writeDiscCount;
@@ -44,180 +43,49 @@ public class WritableAudioData extends AudioData {
         return writeDiscNumber;
     }
 
-    public void ifShouldUpdateDiscNumber(Consumer<Integer> handler) {
-        if (writeDiscNumber) {
-            getDiscNumber().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteDiscNumber(Runnable handler) {
-        if (writeDiscNumber && discNumber == null) {
-            handler.run();
-        }
-    }
-
     public boolean shouldWriteDiscCount() {
         return writeDiscCount;
-    }
-
-    public void ifShouldUpdateDiscCount(Consumer<Integer> handler) {
-        if (writeDiscCount) {
-            getDiscCount().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteDiscCount(Runnable handler) {
-        if (writeDiscCount && discCount == null) {
-            handler.run();
-        }
     }
 
     public boolean shouldWriteTrackNumber() {
         return writeTrackNumber;
     }
 
-    public void ifShouldUpdateTrackNumber(Consumer<Integer> handler) {
-        if (writeTrackNumber) {
-            getTrackNumber().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteTrackNumber(Runnable handler) {
-        if (writeTrackNumber && trackNumber == null) {
-            handler.run();
-        }
-    }
-
     public boolean shouldWriteTrackCount() {
         return writeTrackCount;
-    }
-
-    public void ifShouldUpdateTrackCount(Consumer<Integer> handler) {
-        if (writeTrackCount) {
-            getTrackCount().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteTrackCount(Runnable handler) {
-        if (writeTrackCount && trackCount == null) {
-            handler.run();
-        }
     }
 
     public boolean shouldWriteTitle() {
         return writeTitle;
     }
 
-    public void ifShouldUpdateTitle(Consumer<String> handler) {
-        if (writeTitle) {
-            getTitle().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteTitle(Runnable handler) {
-        if (writeTitle && title == null) {
-            handler.run();
-        }
-    }
-
     public boolean shouldWriteArtist() {
         return writeArtist;
-    }
-
-    public void ifShouldUpdateArtist(Consumer<String> handler) {
-        if (writeArtist) {
-            getArtist().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteArtist(Runnable handler) {
-        if (writeArtist && artist == null) {
-            handler.run();
-        }
     }
 
     public boolean shouldWriteAlbumArtist() {
         return writeAlbumArtist;
     }
 
-    public void ifShouldUpdateAlbumArtist(Consumer<String> handler) {
-        if (writeAlbumArtist) {
-            getAlbumArtist().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteAlbumArtist(Runnable handler) {
-        if (writeAlbumArtist && albumArtist == null) {
-            handler.run();
-        }
-    }
-
     public boolean shouldWriteAlbum() {
         return writeAlbum;
-    }
-
-    public void ifShouldUpdateAlbum(Consumer<String> handler) {
-        if (writeAlbum) {
-            getAlbum().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteAlbum(Runnable handler) {
-        if (writeAlbum && album == null) {
-            handler.run();
-        }
     }
 
     public boolean shouldWriteYear() {
         return writeYear;
     }
 
-    public void ifShouldUpdateYear(Consumer<Integer> handler) {
-        if (writeYear) {
-            getYear().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteYear(Runnable handler) {
-        if (writeYear && year == null) {
-            handler.run();
-        }
-    }
-
     public boolean shouldWriteGenre() {
         return writeGenre;
-    }
-
-    public void ifShouldUpdateGenre(Consumer<String> handler) {
-        if (writeGenre) {
-            getGenre().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteGenre(Runnable handler) {
-        if (writeGenre && genre == null) {
-            handler.run();
-        }
     }
 
     public boolean shouldWriteArtwork() {
         return writeArtwork;
     }
 
-    public void ifShouldUpdateArtwork(Consumer<File> handler) {
-        if (writeArtwork) {
-            getArtworkFile().ifPresent(handler);
-        }
-    }
-
-    public void ifShouldDeleteArtwork(Runnable handler) {
-        if (writeArtwork && artworkFile == null) {
-            handler.run();
-        }
-    }
-
-    public Optional<File> getArtworkFile() {
-        return Optional.ofNullable(artworkFile);
+    @Nullable
+    public File getArtworkFile() {
+        return artworkFile;
     }
 
     @Override
@@ -252,7 +120,7 @@ public class WritableAudioData extends AudioData {
         return new Builder();
     }
 
-    public static class Builder extends BuilderAbstract<Builder> {
+    public static final class Builder extends BuilderAbstract<Builder> {
 
         private boolean writeDiscNumber;
         private boolean writeDiscCount;
@@ -271,7 +139,7 @@ public class WritableAudioData extends AudioData {
         private File artworkFile;
 
         @Override
-        public Builder discNumber(Integer discNumber) {
+        public Builder discNumber(@Nullable Integer discNumber) {
             super.discNumber(discNumber);
             this.writeDiscNumber = true;
             return this;
@@ -282,7 +150,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder discCount(Integer discCount) {
+        public Builder discCount(@Nullable Integer discCount) {
             super.discCount(discCount);
             this.writeDiscCount = true;
             return this;
@@ -293,7 +161,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder trackNumber(Integer trackNumber) {
+        public Builder trackNumber(@Nullable Integer trackNumber) {
             super.trackNumber(trackNumber);
             this.writeTrackNumber = true;
             return this;
@@ -304,7 +172,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder trackCount(Integer trackCount) {
+        public Builder trackCount(@Nullable Integer trackCount) {
             super.trackCount(trackCount);
             this.writeTrackCount = true;
             return this;
@@ -315,7 +183,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder title(String title) {
+        public Builder title(@Nullable String title) {
             super.title(title);
             this.writeTitle = true;
             return this;
@@ -326,7 +194,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder artist(String artist) {
+        public Builder artist(@Nullable String artist) {
             super.artist(artist);
             this.writeArtist = true;
             return this;
@@ -337,7 +205,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder albumArtist(String albumArtist) {
+        public Builder albumArtist(@Nullable String albumArtist) {
             super.albumArtist(albumArtist);
             this.writeAlbumArtist = true;
             return this;
@@ -348,7 +216,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder album(String album) {
+        public Builder album(@Nullable String album) {
             super.album(album);
             this.writeAlbum = true;
             return this;
@@ -359,7 +227,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder year(Integer year) {
+        public Builder year(@Nullable Integer year) {
             super.year(year);
             this.writeYear = true;
             return this;
@@ -370,7 +238,7 @@ public class WritableAudioData extends AudioData {
         }
 
         @Override
-        public Builder genre(String genre) {
+        public Builder genre(@Nullable String genre) {
             super.genre(genre);
             this.writeGenre = true;
             return this;
@@ -380,7 +248,7 @@ public class WritableAudioData extends AudioData {
             return genre(null);
         }
 
-        public Builder artworkFile(File artworkFile) {
+        public Builder artworkFile(@Nullable File artworkFile) {
             this.artworkFile = artworkFile;
             this.writeArtwork = true;
             return this;

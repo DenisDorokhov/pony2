@@ -1,15 +1,16 @@
 package net.dorokhov.pony.log.domain;
 
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.common.JsonAttributeConverter;
 
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,7 +47,7 @@ public class LogMessage implements Serializable {
     private String details;
 
     @Column(name = "arguments")
-    @Convert(converter = JsonAttributeConverter.ListConverter.class)
+    @Convert(converter = JsonAttributeConverter.class)
     private List<String> arguments = ImmutableList.of();
 
     protected LogMessage() {
@@ -62,10 +63,12 @@ public class LogMessage implements Serializable {
         arguments = builder.arguments.build();
     }
 
+    @Nullable
     public Long getId() {
         return id;
     }
 
+    @Nullable
     public LocalDateTime getDate() {
         return date;
     }
@@ -82,8 +85,9 @@ public class LogMessage implements Serializable {
         return text;
     }
 
-    public Optional<String> getDetails() {
-        return Optional.ofNullable(details);
+    @Nullable
+    public String getDetails() {
+        return details;
     }
 
     public List<String> getArguments() {
@@ -101,7 +105,8 @@ public class LogMessage implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -152,12 +157,12 @@ public class LogMessage implements Serializable {
             arguments = ImmutableList.<String>builder().addAll(logMessage.arguments);
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder date(LocalDateTime date) {
+        public Builder date(@Nullable LocalDateTime date) {
             this.date = date;
             return this;
         }
@@ -177,12 +182,12 @@ public class LogMessage implements Serializable {
             return this;
         }
 
-        public Builder details(String details) {
+        public Builder details(@Nullable String details) {
             this.details = details;
             return this;
         }
 
-        public Builder arguments(List<String> arguments) {
+        public Builder arguments(@Nullable List<String> arguments) {
             if (arguments != null) {
                 this.arguments = ImmutableList.<String>builder().addAll(arguments);
             } else {

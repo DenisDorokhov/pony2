@@ -1,14 +1,15 @@
 package net.dorokhov.pony.config.service;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 public interface ConfigService {
 
-    Optional<Integer> getAutoScanInterval();
+    @Nullable
+    Integer getAutoScanInterval();
 
-    void saveAutoScanInterval(Integer value);
+    void saveAutoScanInterval(@Nullable Integer value);
 
     List<File> fetchLibraryFolders();
 

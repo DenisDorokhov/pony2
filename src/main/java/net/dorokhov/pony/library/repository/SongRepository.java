@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     long countByAlbumArtistId(Long artistId);
 
-    long countByArtworkId(Long artworkId);
+    long countByArtworkId(@Nullable Long artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
 

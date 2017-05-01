@@ -1,17 +1,19 @@
 package net.dorokhov.pony.library.service.impl.filetree;
 
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import net.dorokhov.pony.common.RethrowingLambdas.ThrowingUnaryOperator;
+import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.audio.AudioTagger;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
-import net.dorokhov.pony.library.domain.FileType;
+import net.dorokhov.pony.library.service.impl.filetree.domain.*;
 import net.dorokhov.pony.library.service.impl.image.ImageSizeReader;
 import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
-import net.dorokhov.pony.common.RethrowingLambdas.ThrowingUnaryOperator;
-import net.dorokhov.pony.library.service.impl.filetree.domain.*;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -21,7 +23,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,16 +48,17 @@ public class FileTreeScanner {
         this.audioTagger = audioTagger;
     }
 
-    public Optional<FileNode> scanFile(File file) throws IOException {
+    @Nullable
+    public FileNode scanFile(File file) throws IOException {
         checkArgument(file.exists(), "Existing file expected.");
         checkArgument(file.isFile(), "Normal file expected.");
         FileType fileType = fileTypeResolver.resolve(file);
         if (fileType.isImage()) {
-            return Optional.of(new ImageNodeImpl(file, null));
+            return new ImageNodeImpl(file, null);
         } else if (fileType.isAudio()) {
-            return Optional.of(new AudioNodeImpl(file, null)); 
+            return new AudioNodeImpl(file, null); 
         }
-        return Optional.empty();
+        return null;
     }
 
     public FolderNode scanFolder(File folder) throws IOException {
@@ -83,8 +85,9 @@ public class FileTreeScanner {
         }
 
         @Override
-        public Optional<FolderNode> getParentFolder() {
-            return Optional.ofNullable(parentFolder);
+        @Nullable
+        public FolderNode getParentFolder() {
+            return parentFolder;
         }
 
         @Override
@@ -93,7 +96,8 @@ public class FileTreeScanner {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             }
@@ -292,13 +296,12 @@ public class FileTreeScanner {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
             FolderNodeImpl parentFolder = folderStack.peek();
-            scanFile(file.toFile()).ifPresent(fileNode -> {
-                if (fileNode instanceof ImageNode) {
-                    parentFolder.getChildImagesMutable().add((ImageNode) fileNode);
-                } else if (fileNode instanceof AudioNode) {
-                    parentFolder.getChildAudiosMutable().add((AudioNode) fileNode);
-                }
-            });
+            FileNode fileNode = scanFile(file.toFile());
+            if (fileNode instanceof ImageNode) {
+                parentFolder.getChildImagesMutable().add((ImageNode) fileNode);
+            } else if (fileNode instanceof AudioNode) {
+                parentFolder.getChildAudiosMutable().add((AudioNode) fileNode);
+            }
             return FileVisitResult.CONTINUE;
         }
 

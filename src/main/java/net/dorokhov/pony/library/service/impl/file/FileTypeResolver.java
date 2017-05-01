@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.Map;
-import java.util.Optional;
 
 @Component
 public class FileTypeResolver {
@@ -54,7 +53,10 @@ public class FileTypeResolver {
     }
     
     private String correctExtension(String extension) {
-        String correctedExtension = Optional.ofNullable(EXTENSION_TO_CORRECTION.get(extension)).orElse(extension);
+        String correctedExtension = EXTENSION_TO_CORRECTION.get(extension);
+        if (correctedExtension == null) {
+            correctedExtension = extension;
+        }
         if (correctedExtension.length() >= 1) {
             return correctedExtension.substring(1);
         } else {

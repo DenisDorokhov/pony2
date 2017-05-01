@@ -1,15 +1,17 @@
 package net.dorokhov.pony.library.domain;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import net.dorokhov.pony.common.SearchableEntity;
-import net.dorokhov.pony.common.OptionalComparators;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Entity
 @Table(name = "genre")
@@ -35,18 +37,21 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
         artwork = builder.artwork;
     }
 
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
+    @Nullable
+    public String getName() {
+        return name;
     }
 
-    public Optional<Artwork> getArtwork() {
-        return Optional.ofNullable(artwork);
+    @Nullable
+    public Artwork getArtwork() {
+        return artwork;
     }
 
     @Override
-    public int compareTo(Genre genre) {
-        return OptionalComparators.<String>nullLast()
-                .compare(getName(), Optional.ofNullable(genre).flatMap(Genre::getName));
+    public int compareTo(@Nonnull Genre genre) {
+        return ComparisonChain.start()
+                .compare(name, genre.getName(), Ordering.natural().nullsLast())
+                .result();
     }
 
     @Override
@@ -85,27 +90,27 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
             updateDate = genre.updateDate;
         }
 
-        public Builder id(Long id) {
+        public Builder id(@Nullable Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder creationDate(LocalDateTime creationDate) {
+        public Builder creationDate(@Nullable LocalDateTime creationDate) {
             this.creationDate = creationDate;
             return this;
         }
 
-        public Builder updateDate(LocalDateTime updateDate) {
+        public Builder updateDate(@Nullable LocalDateTime updateDate) {
             this.updateDate = updateDate;
             return this;
         }
 
-        public Builder name(String name) {
+        public Builder name(@Nullable String name) {
             this.name = name;
             return this;
         }
 
-        public Builder artwork(Artwork artwork) {
+        public Builder artwork(@Nullable Artwork artwork) {
             this.artwork = artwork;
             return this;
         }

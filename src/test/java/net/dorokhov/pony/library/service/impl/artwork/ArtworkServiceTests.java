@@ -130,8 +130,7 @@ public class ArtworkServiceTests {
     public void getById() throws Exception {
         Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkService.getById(2L)).hasValueSatisfying(fetchedArtwork -> 
-                assertThat(fetchedArtwork).isSameAs(artwork));
+        assertThat(artworkService.getById(2L)).isSameAs(artwork);
     }
 
     @Test
@@ -145,7 +144,7 @@ public class ArtworkServiceTests {
     public void getLargeImageFile() throws Exception {
         Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkService.getLargeImageFile(3L)).hasValueSatisfying(file -> 
+        assertThat(artworkService.getLargeImageFile(3L)).satisfies(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_LARGE).getAbsolutePath()));
     }
 
@@ -153,7 +152,7 @@ public class ArtworkServiceTests {
     public void getSmallImageFile() throws Exception {
         Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkService.getSmallImageFile(4L)).hasValueSatisfying(file -> 
+        assertThat(artworkService.getSmallImageFile(4L)).satisfies(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_SMALL).getAbsolutePath()));
     }
 

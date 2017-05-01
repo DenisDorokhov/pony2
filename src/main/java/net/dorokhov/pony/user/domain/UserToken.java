@@ -1,6 +1,6 @@
 package net.dorokhov.pony.user.domain;
 
-public class UserToken {
+public final class UserToken {
     
     private final User user;
     private final String token;

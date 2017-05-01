@@ -1,8 +1,8 @@
 package net.dorokhov.pony.library.service.impl.audio.domain;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
-public abstract class AudioData {
+abstract class AudioData {
 
     protected final Integer discNumber;
     protected final Integer discCount;
@@ -28,44 +28,54 @@ public abstract class AudioData {
         this.genre = builder.genre;
     }
 
-    public Optional<Integer> getDiscNumber() {
-        return Optional.ofNullable(discNumber);
+    @Nullable
+    public Integer getDiscNumber() {
+        return discNumber;
     }
 
-    public Optional<Integer> getDiscCount() {
-        return Optional.ofNullable(discCount);
+    @Nullable
+    public Integer getDiscCount() {
+        return discCount;
     }
 
-    public Optional<Integer> getTrackNumber() {
-        return Optional.ofNullable(trackNumber);
+    @Nullable
+    public Integer getTrackNumber() {
+        return trackNumber;
     }
 
-    public Optional<Integer> getTrackCount() {
-        return Optional.ofNullable(trackCount);
+    @Nullable
+    public Integer getTrackCount() {
+        return trackCount;
     }
 
-    public Optional<String> getTitle() {
-        return Optional.ofNullable(title);
+    @Nullable
+    public String getTitle() {
+        return title;
+    }
+    
+    @Nullable
+    public String getArtist() {
+        return artist;
     }
 
-    public Optional<String> getArtist() {
-        return Optional.ofNullable(artist);
+    @Nullable
+    public String getAlbumArtist() {
+        return albumArtist;
     }
 
-    public Optional<String> getAlbumArtist() {
-        return Optional.ofNullable(albumArtist);
+    @Nullable
+    public String getAlbum() {
+        return album;
     }
 
-    public Optional<String> getAlbum() {
-        return Optional.ofNullable(album);
+    @Nullable
+    public Integer getYear() {
+        return year;
     }
 
-    public Optional<Integer> getYear() {
-        return Optional.ofNullable(year);
-    }
-
-    public Optional<String> getGenre() {
-        return Optional.ofNullable(genre);
+    @Nullable
+    public String getGenre() {
+        return genre;
     }
     
     protected abstract static class BuilderAbstract<T extends BuilderAbstract> {
@@ -81,52 +91,52 @@ public abstract class AudioData {
         protected Integer year;
         protected String genre;
 
-        public T discNumber(final Integer discNumber) {
+        public T discNumber(@Nullable Integer discNumber) {
             this.discNumber = discNumber;
             return self();
         }
 
-        public T discCount(final Integer discCount) {
+        public T discCount(@Nullable Integer discCount) {
             this.discCount = discCount;
             return self();
         }
 
-        public T trackNumber(final Integer trackNumber) {
+        public T trackNumber(@Nullable Integer trackNumber) {
             this.trackNumber = trackNumber;
             return self();
         }
 
-        public T trackCount(final Integer trackCount) {
+        public T trackCount(@Nullable Integer trackCount) {
             this.trackCount = trackCount;
             return self();
         }
 
-        public T title(final String title) {
+        public T title(@Nullable String title) {
             this.title = title;
             return self();
         }
 
-        public T artist(final String artist) {
+        public T artist(@Nullable String artist) {
             this.artist = artist;
             return self();
         }
 
-        public T albumArtist(final String albumArtist) {
+        public T albumArtist(@Nullable String albumArtist) {
             this.albumArtist = albumArtist;
             return self();
         }
 
-        public T album(final String album) {
+        public T album(@Nullable String album) {
             this.album = album;
             return self();
         }
 
-        public T year(final Integer year) {
+        public T year(@Nullable Integer year) {
             this.year = year;
             return self();
         }
 
-        public T genre(final String genre) {
+        public T genre(@Nullable String genre) {
             this.genre = genre;
             return self();
         }

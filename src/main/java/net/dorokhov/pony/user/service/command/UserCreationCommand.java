@@ -9,7 +9,7 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class UserCreationCommand {
+public final class UserCreationCommand {
     
     private final String name;
     private final String email;
@@ -43,7 +43,7 @@ public class UserCreationCommand {
         return new Builder();
     }
 
-    public static class Builder {
+    public static final class Builder {
         
         private String name;
         private String email;
