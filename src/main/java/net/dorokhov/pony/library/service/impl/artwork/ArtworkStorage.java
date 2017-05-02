@@ -13,23 +13,21 @@ import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.annotation.Nullable;
 import java.io.*;
-import java.time.LocalDateTime;
+import java.net.URI;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 
-@Service
-public class ArtworkService {
+@Component
+public class ArtworkStorage {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -44,8 +42,8 @@ public class ArtworkService {
     
     private final Object modificationLock = new Object();
 
-    public ArtworkService(ArtworkRepository artworkRepository,
-                          FileTypeResolver fileTypeResolver, 
+    public ArtworkStorage(ArtworkRepository artworkRepository,
+                          FileTypeResolver fileTypeResolver,
                           ChecksumCalculator checksumCalculator,
                           ThumbnailGenerator thumbnailGenerator,
                           @Value("${pony.artwork.path}") File artworkFolder,
@@ -61,35 +59,9 @@ public class ArtworkService {
     }
 
     @Transactional(readOnly = true)
-    public long getCount() {
-        return artworkRepository.count();
-    }
-
-    @Transactional(readOnly = true)
-    public long getCountByMinimalDate(LocalDateTime minimalDate) {
-        return artworkRepository.countByDateGreaterThan(minimalDate);
-    }
-
-    @Transactional(readOnly = true)
-    public long getTotalSize() {
-        return artworkRepository.sumLargeImageSize() + artworkRepository.sumSmallImageSize();
-    }
-
-    @Transactional(readOnly = true)
-    @Nullable
-    public Artwork getById(Long id) {
-        return artworkRepository.findOne(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Artwork> getAll(Pageable pageable) {
-        return artworkRepository.findAll(pageable);
-    }
-
-    @Transactional(readOnly = true)
     @Nullable
     public File getLargeImageFile(Long artworkId) {
-        Artwork artwork = getById(artworkId);
+        Artwork artwork = artworkRepository.findOne(artworkId);
         if (artwork == null) {
             return null;
         }
@@ -99,7 +71,7 @@ public class ArtworkService {
     @Transactional(readOnly = true)
     @Nullable
     public File getSmallImageFile(Long artworkId) {
-        Artwork artwork = getById(artworkId);
+        Artwork artwork = artworkRepository.findOne(artworkId);
         if (artwork == null) {
             return null;
         }
@@ -140,7 +112,7 @@ public class ArtworkService {
 
     @Transactional
     public void delete(Long id) {
-        Artwork artwork = getById(id);
+        Artwork artwork = artworkRepository.findOne(id);
         if (artwork != null) {
             File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
             File smallFile = new File(artworkFolder, artwork.getSmallImagePath());
@@ -159,7 +131,7 @@ public class ArtworkService {
         }
     }
     
-    private Artwork doGetOrSave(String sourceUri,
+    private Artwork doGetOrSave(URI sourceUri,
                                 Supplier<String> checksumSupplier, 
                                 Supplier<FileType> fileTypeSupplier,
                                 Supplier<InputStream> streamSupplier) throws IOException {

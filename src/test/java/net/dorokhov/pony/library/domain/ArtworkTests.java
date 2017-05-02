@@ -1,6 +1,7 @@
 package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,6 +38,8 @@ public class ArtworkTests {
                 .largeImagePath("someLargePath")
                 .smallImageSize(0L)
                 .smallImagePath("someSmallPath")
-                .sourceUri("sourceUri");
+                .sourceUri(UriComponentsBuilder
+                        .fromUriString("sourceUri")
+                        .build().toUri());
     }
 }

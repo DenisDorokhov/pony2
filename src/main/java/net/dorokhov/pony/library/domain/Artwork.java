@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.net.URI;
 import java.time.LocalDateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -48,7 +49,7 @@ public class Artwork implements Serializable {
     private String smallImagePath;
 
     @Column(name = "source_uri")
-    private String sourceUri;
+    private URI sourceUri;
 
     protected Artwork() {
     }
@@ -97,7 +98,7 @@ public class Artwork implements Serializable {
         return smallImagePath;
     }
 
-    public String getSourceUri() {
+    public URI getSourceUri() {
         return sourceUri;
     }
 
@@ -154,7 +155,7 @@ public class Artwork implements Serializable {
         private String largeImagePath;
         private Long smallImageSize;
         private String smallImagePath;
-        private String sourceUri;
+        private URI sourceUri;
 
         public Builder() {
         }
@@ -211,7 +212,7 @@ public class Artwork implements Serializable {
             return this;
         }
 
-        public Builder sourceUri(String sourceFilePath) {
+        public Builder sourceUri(URI sourceFilePath) {
             this.sourceUri = sourceFilePath;
             return this;
         }

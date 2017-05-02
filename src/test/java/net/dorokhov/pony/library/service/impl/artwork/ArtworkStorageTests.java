@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.service.impl.artwork;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.Artwork;
@@ -23,19 +22,16 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
+import java.net.URI;
 import java.util.function.Supplier;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
@@ -46,7 +42,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ArtworkServiceTests {
+public class ArtworkStorageTests {
     
     private static final String PATH_LARGE = "foo.png";
     private static final String PATH_SMALL = "bar.png";
@@ -67,7 +63,7 @@ public class ArtworkServiceTests {
     @Mock
     private ThumbnailGenerator thumbnailGenerator;
 
-    private ArtworkService artworkService;
+    private ArtworkStorage artworkStorage;
     
     private File artworkFolder;
 
@@ -75,7 +71,7 @@ public class ArtworkServiceTests {
     public void setUp() throws Exception {
         
         artworkFolder = Files.createTempDir();
-        artworkService = new ArtworkService(artworkRepository, 
+        artworkStorage = new ArtworkStorage(artworkRepository, 
                 fileTypeResolver, checksumCalculator, 
                 thumbnailGenerator, 
                 artworkFolder, 
@@ -109,42 +105,10 @@ public class ArtworkServiceTests {
     }
 
     @Test
-    public void getCount() throws Exception {
-        given(artworkRepository.count()).willReturn(10L);
-        assertThat(artworkService.getCount()).isEqualTo(10L);
-    }
-
-    @Test
-    public void getCountByMinimalData() throws Exception {
-        given(artworkRepository.countByDateGreaterThan(any())).willReturn(100L);
-        assertThat(artworkService.getCountByMinimalDate(LocalDateTime.now())).isEqualTo(100L);
-    }
-
-    @Test
-    public void getTotalSize() throws Exception {
-        given(artworkRepository.sumLargeImageSize()).willReturn(1000L);
-        assertThat(artworkService.getTotalSize()).isEqualTo(1000L);
-    }
-
-    @Test
-    public void getById() throws Exception {
-        Artwork artwork = buildArtwork();
-        given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkService.getById(2L)).isSameAs(artwork);
-    }
-
-    @Test
-    public void getAll() throws Exception {
-        Page<Artwork> page = new PageImpl<>(ImmutableList.of());
-        given(artworkRepository.findAll((Pageable) any())).willReturn(page);
-        assertThat(artworkService.getAll(new PageRequest(0, 10))).isSameAs(page);
-    }
-
-    @Test
     public void getLargeImageFile() throws Exception {
         Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkService.getLargeImageFile(3L)).satisfies(file -> 
+        assertThat(artworkStorage.getLargeImageFile(3L)).satisfies(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_LARGE).getAbsolutePath()));
     }
 
@@ -152,22 +116,22 @@ public class ArtworkServiceTests {
     public void getSmallImageFile() throws Exception {
         Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkService.getSmallImageFile(4L)).satisfies(file -> 
+        assertThat(artworkStorage.getSmallImageFile(4L)).satisfies(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_SMALL).getAbsolutePath()));
     }
 
     @Test
     public void getOrSaveByteSourceArtwork() throws Exception {
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
-        ByteSourceArtworkCommand command = new ByteSourceArtworkCommand("sourceUri", ByteSource.wrap(bytes));
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
+        ByteSourceArtworkCommand command = new ByteSourceArtworkCommand(buildUri(), ByteSource.wrap(bytes));
+        checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
     public void getOrSaveFileArtwork() throws Exception {
         File file = RESOURCE.getFile();
-        FileArtworkCommand command = new FileArtworkCommand("sourceUri", file);
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
+        FileArtworkCommand command = new FileArtworkCommand(buildUri(), file);
+        checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
@@ -176,8 +140,8 @@ public class ArtworkServiceTests {
         given(imageNode.getFile()).willReturn(RESOURCE.getFile());
         given(imageNode.getFileType()).willReturn(FileType.of("image/png", "png"));
         given(imageNode.getChecksum()).willReturn(CHECKSUM);
-        ImageNodeArtworkCommand command = new ImageNodeArtworkCommand("sourceUri", imageNode);
-        checkGetAndSaveArtwork(rethrow(() -> artworkService.getOrSave(command)));
+        ImageNodeArtworkCommand command = new ImageNodeArtworkCommand(buildUri(), imageNode);
+        checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
@@ -185,9 +149,9 @@ public class ArtworkServiceTests {
 
         File file = RESOURCE.getFile();
 
-        FileArtworkCommand command = new FileArtworkCommand("sourceUri", file);
+        FileArtworkCommand command = new FileArtworkCommand(buildUri(), file);
 
-        Artwork artwork = artworkService.getOrSave(command);
+        Artwork artwork = artworkStorage.getOrSave(command);
         
         File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
         File smallFile = new File(artworkFolder, artwork.getSmallImagePath());
@@ -214,7 +178,7 @@ public class ArtworkServiceTests {
         Artwork artwork = buildArtwork();
 
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        artworkService.delete(5L);
+        artworkStorage.delete(5L);
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         verify(artworkRepository).delete(artwork);
         
@@ -227,7 +191,7 @@ public class ArtworkServiceTests {
     public void whenDeletingIgnoreNotExistingFiles() throws Exception {
         Artwork artwork = buildArtwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        artworkService.delete(5L);
+        artworkStorage.delete(5L);
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
 
@@ -259,7 +223,7 @@ public class ArtworkServiceTests {
                 .largeImagePath(PATH_LARGE)
                 .smallImageSize(0L)
                 .smallImagePath(PATH_SMALL)
-                .sourceUri("sourceUri")
+                .sourceUri(buildUri())
                 .build();
     }
     
@@ -270,6 +234,12 @@ public class ArtworkServiceTests {
         assertThat(savedArtwork.getSmallImagePath()).endsWith(".small.png");
         assertThat(savedArtwork.getLargeImageSize()).isEqualTo(0L);
         assertThat(savedArtwork.getSmallImageSize()).isEqualTo(0L);
-        assertThat(savedArtwork.getSourceUri()).isEqualTo("sourceUri");
+        assertThat(savedArtwork.getSourceUri()).isEqualTo(buildUri());
+    }
+    
+    private URI buildUri() {
+        return UriComponentsBuilder
+                .fromUriString("sourceUri")
+                .build().toUri();
     }
 }

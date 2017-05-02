@@ -3,14 +3,14 @@ package net.dorokhov.pony.installation.service.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Service
+@Component
 public class BuildVersionProvider {
 
     private static final String DATE_PATTERN = "u-M-d'T'H:m:sZ";

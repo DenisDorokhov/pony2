@@ -4,6 +4,7 @@ import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.library.domain.Artwork;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,7 +22,9 @@ public class ArtworkRepositoryTests extends IntegrationTest {
                 .largeImagePath("/largePath")
                 .smallImageSize(12L)
                 .smallImagePath("/smallPath")
-                .sourceUri("sourceUri")
+                .sourceUri(UriComponentsBuilder
+                        .fromUriString("sourceUri")
+                        .build().toUri())
                 .build());
         assertThat(artworkRepository.findOne(artwork.getId())).isNotNull();
     }
