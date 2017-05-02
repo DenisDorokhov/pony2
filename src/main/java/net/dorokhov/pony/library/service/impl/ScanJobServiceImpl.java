@@ -9,7 +9,6 @@ import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
-import net.dorokhov.pony.library.service.ScanService;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
@@ -49,18 +48,18 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
 
     private final ScanJobRepository scanJobRepository;
     private final ConfigService configService;
-    private final ScanService scanService;
+    private final Scanner scanner;
     private final LogService logService;
     private final TaskExecutor taskExecutor;
     
     public ScanJobServiceImpl(ScanJobRepository scanJobRepository,
                               ConfigService configService,
-                              ScanService scanService,
+                              Scanner scanner,
                               LogService logService,
                               TaskExecutor taskExecutor) {
         this.scanJobRepository = scanJobRepository;
         this.configService = configService;
-        this.scanService = scanService;
+        this.scanner = scanner;
         this.logService = logService;
         this.taskExecutor = taskExecutor;
     }
@@ -68,7 +67,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
     @Transactional(propagation = REQUIRES_NEW)
     public void markCurrentJobsAsInterrupted() throws ConcurrentScanException {
         
-        if (scanService.getStatus() != null) {
+        if (scanner.getStatus() != null) {
             throw new ConcurrentScanException();
         }
 
@@ -158,7 +157,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
 
         List<File> libraryFolders = configService.getLibraryFolders();
         if (libraryFolders.size() > 0) {
-            if (scanService.getStatus() == null) {
+            if (scanner.getStatus() == null) {
                 Integer autoScanInterval = configService.getAutoScanInterval();
                 if (autoScanInterval != null) {
                     shouldScan = shouldAutoScanByInterval(autoScanInterval);
@@ -235,7 +234,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         ScanResult result = null;
         LogMessage logMessage;
         try {
-            result = scanService.scan(targetFolders);
+            result = scanner.scan(targetFolders);
             logMessage = logService.info(log, "scanJobService.scanJobComplete", ImmutableList.of(targetPaths.toString()),
                     String.format("Scan job complete for '%s'.", targetPaths));
         } catch (IOException e) {
@@ -268,7 +267,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         ScanResult result = null;
         LogMessage logMessage;
         try {
-            result = scanService.edit(commands);
+            result = scanner.edit(commands);
             logMessage = logService.info(log, "scanJobService.editJobComplete", ImmutableList.of(String.valueOf(commands.size())),
                     String.format("Edit job complete for %d songs.", commands.size()));
         } catch (SongNotFoundException e) {

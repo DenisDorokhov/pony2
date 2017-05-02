@@ -1,13 +1,13 @@
 package net.dorokhov.pony.library.service.impl;
 
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanStatus;
 import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
-import net.dorokhov.pony.library.service.ScanService;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
@@ -56,11 +56,13 @@ public class ScanJobServiceImplTests {
     @Mock
     private ConfigService configService;
     @Mock
-    private ScanService scanService;
+    private Scanner scanner;
     @Mock
     private LogService logService;
     
     @Spy
+    @SuppressFBWarnings("URF_UNREAD_FIELD")
+    @SuppressWarnings("unused")
     private TaskExecutor taskExecutor = new SyncTaskExecutor();
 
     @Before
@@ -98,7 +100,7 @@ public class ScanJobServiceImplTests {
 
     @Test
     public void failMarkingCurrentHobsAsInterruptedWhenScanIsRunning() throws Exception {
-        given(scanService.getStatus()).willReturn(buildScanStatus());
+        given(scanner.getStatus()).willReturn(buildScanStatus());
         assertThatThrownBy(() -> scanJobService.markCurrentJobsAsInterrupted()).isInstanceOf(ConcurrentScanException.class);
     }
 
@@ -131,7 +133,7 @@ public class ScanJobServiceImplTests {
         given(logService.info(any(), any(), anyList(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         ScanResult scanResult = buildScanResult();
-        given(scanService.scan(any())).willReturn(scanResult);
+        given(scanner.scan(any())).willReturn(scanResult);
         
         ScanJob scanJobStarting = scanJobService.startScanJob();
         assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.FULL);
@@ -166,7 +168,7 @@ public class ScanJobServiceImplTests {
         given(logService.info(any(), any(), anyList(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         ScanResult scanResult = buildScanResult();
-        given(scanService.edit(any())).willReturn(scanResult);
+        given(scanner.edit(any())).willReturn(scanResult);
 
         ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, buildWritableAudioData())));
         assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.EDIT);
@@ -227,7 +229,7 @@ public class ScanJobServiceImplTests {
     @Test
     public void skipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws Exception {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(scanService.getStatus()).willReturn(buildScanStatus());
+        given(scanner.getStatus()).willReturn(buildScanStatus());
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository, never()).save((ScanJob) any());
     }
@@ -356,7 +358,7 @@ public class ScanJobServiceImplTests {
         given(logService.error(any(), any(), any(), (Throwable) any())).willReturn(buildLogMessage());
         given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
-        given(scanService.scan(any())).willThrow(e);
+        given(scanner.scan(any())).willThrow(e);
 
         scanJobService.startScanJob();
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -378,7 +380,7 @@ public class ScanJobServiceImplTests {
         given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
         given(logService.error(any(), any(), anyList(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
-        given(scanService.edit(any())).willThrow(e);
+        given(scanner.edit(any())).willThrow(e);
 
         scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, buildWritableAudioData())));
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
