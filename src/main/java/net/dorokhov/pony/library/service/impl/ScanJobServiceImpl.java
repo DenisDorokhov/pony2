@@ -6,6 +6,7 @@ import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanJob.Status;
 import net.dorokhov.pony.library.domain.ScanResult;
+import net.dorokhov.pony.library.domain.ScanStatus;
 import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
@@ -101,6 +102,12 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
     @Transactional(readOnly = true)
     public ScanJob getById(Long id) {
         return scanJobRepository.findOne(id);
+    }
+
+    @Override
+    @Nullable
+    public ScanStatus getScanStatus() {
+        return scanner.getStatus();
     }
 
     @Override

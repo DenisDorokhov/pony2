@@ -1,6 +1,7 @@
 package net.dorokhov.pony.library.service;
 
 import net.dorokhov.pony.library.domain.ScanJob;
+import net.dorokhov.pony.library.domain.ScanStatus;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
 import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
@@ -15,6 +16,9 @@ public interface ScanJobService {
     Page<ScanJob> getAll(Pageable pageable);
 
     ScanJob getById(Long id);
+    
+    @Nullable
+    ScanStatus getScanStatus();
 
     ScanJob startScanJob() throws LibraryNotDefinedException;
     ScanJob startEditJob(List<EditCommand> commands) throws NoScanEditCommandException;

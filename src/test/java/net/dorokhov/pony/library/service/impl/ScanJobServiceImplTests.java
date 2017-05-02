@@ -127,6 +127,13 @@ public class ScanJobServiceImplTests {
     }
 
     @Test
+    public void getScanStatus() throws Exception {
+        ScanStatus scanStatus = buildScanStatus();
+        given(scanner.getStatus()).willReturn(scanStatus);
+        assertThat(scanJobService.getScanStatus()).isSameAs(scanStatus);
+    }
+
+    @Test
     public void executeScanJob() throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
