@@ -3,6 +3,8 @@ package net.dorokhov.pony.library.domain;
 import org.junit.Test;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ArtworkTests {
@@ -32,6 +34,8 @@ public class ArtworkTests {
     
     private Artwork.Builder buildArtwork() {
         return Artwork.builder()
+                .id(1L)
+                .date(LocalDateTime.now())
                 .mimeType("image/png")
                 .checksum("someChecksum")
                 .largeImageSize(0L)

@@ -87,14 +87,12 @@ public class ConfigServiceImplTests {
     public void fetchExistingLibraryFolders() throws Exception {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(
-                        ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, 
-                        "foo" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "bar"));
-        assertThat(configService.fetchLibraryFolders()).containsExactly(new File("foo"), new File("bar"));
+                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
+        assertThat(configService.getLibraryFolders()).containsExactly(new File("foo"), new File("bar"));
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
-        assertThat(configService.fetchLibraryFolders()).isEmpty();
+        assertThat(configService.getLibraryFolders()).isEmpty();
     }
 
     @Test
@@ -102,41 +100,37 @@ public class ConfigServiceImplTests {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
-        assertThat(configService.fetchLibraryFolders()).isEmpty();
+        assertThat(configService.getLibraryFolders()).isEmpty();
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(null);
-        assertThat(configService.fetchLibraryFolders()).isEmpty();
+        assertThat(configService.getLibraryFolders()).isEmpty();
     }
 
     @Test
     public void saveExistingLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(
-                        ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, 
-                        "foo" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "bar"));
-        configService.saveLibraryFolders(ImmutableList.of(new File("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo")));
+                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
+        configService.saveLibraryFolders(ImmutableList.of(new File("foobar")));
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo("foobar" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "barfoo");
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("[\"foobar\"]");
     }
 
     @Test
-    public void saveNotExistingLibraryFolders() throws Exception {
+    public void saveEmptyLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(
-                        ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, 
-                        "foo" + ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS_SEPARATOR + "bar"));
+                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
         configService.saveLibraryFolders(ImmutableList.of());
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isNull();
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("[]");
     }
 
     @Test
@@ -149,6 +143,6 @@ public class ConfigServiceImplTests {
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
 
-        assertThat(savedConfig.getValue().getValue()).isEqualTo("foobar");
+        assertThat(savedConfig.getValue().getValue()).isEqualTo("[\"foobar\"]");
     }
 }

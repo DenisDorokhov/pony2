@@ -2,6 +2,7 @@ package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,7 +100,7 @@ public class SongTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat(new Song().toString()).startsWith("Song{");
+        assertThat(buildSong().build().toString()).startsWith("Song{");
     }
     
     private Song.Builder buildSong() {
@@ -107,12 +108,26 @@ public class SongTests {
         Album album = Album.builder().artist(artist).build();
         Genre genre = Genre.builder().build();
         return Song.builder()
+                .id(1L)
+                .creationDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
                 .path("somePath")
                 .fileType(FileType.of("text/plain", "txt"))
                 .size(123L)
                 .duration(234L)
                 .bitRate(345L)
                 .bitRateVariable(true)
+                .discNumber(1)
+                .discCount(2)
+                .trackNumber(3)
+                .trackCount(10)
+                .name("someSong")
+                .genreName("someGenre")
+                .artistName("someArtist")
+                .albumArtistName("someAlbumArtist")
+                .albumName("someAlbum")
+                .year(1986)
+                .artwork(null)
                 .album(album)
                 .genre(genre);
     }

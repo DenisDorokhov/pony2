@@ -82,7 +82,7 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
         return new Builder(artist);
     }
 
-    public static class Builder {
+    public static final class Builder {
         
         private Long id;
         private LocalDateTime creationDate;

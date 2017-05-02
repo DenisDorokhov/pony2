@@ -160,7 +160,8 @@ public class ArtworkStorageTests {
         Files.touch(largeFile);
         Files.touch(smallFile);
         
-        TransactionSynchronizationManager.getSynchronizations().forEach(transactionSynchronization -> transactionSynchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
+        TransactionSynchronizationManager.getSynchronizations().forEach(transactionSynchronization -> 
+                transactionSynchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
         
         assertThat(largeFile).doesNotExist();
         assertThat(smallFile).doesNotExist();

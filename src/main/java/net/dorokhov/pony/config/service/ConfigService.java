@@ -11,7 +11,7 @@ public interface ConfigService {
 
     void saveAutoScanInterval(@Nullable Integer value);
 
-    List<File> fetchLibraryFolders();
+    List<File> getLibraryFolders();
 
     void saveLibraryFolders(List<File> libraryFolders);
 }

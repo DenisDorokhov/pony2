@@ -114,7 +114,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
         return new Builder(album);
     }
 
-    public static class Builder {
+    public static final class Builder {
         
         private Long id;
         private LocalDateTime creationDate;

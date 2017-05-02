@@ -2,6 +2,8 @@ package net.dorokhov.pony.config.domain;
 
 import org.junit.Test;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -90,6 +92,11 @@ public class ConfigTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat(new Config().toString()).startsWith("Config{");
+        assertThat(Config.builder()
+                .id("foo")
+                .creationDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .value(false)
+                .build().toString()).startsWith("Config{");
     }
 }

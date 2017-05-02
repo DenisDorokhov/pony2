@@ -119,7 +119,7 @@ public final class ReadableAudioData extends AudioData {
         }
     }
     
-    public static class Builder extends BuilderAbstract<Builder> {
+    public static final class Builder extends BuilderAbstract<Builder> {
 
         private String path;
         private FileType fileType;

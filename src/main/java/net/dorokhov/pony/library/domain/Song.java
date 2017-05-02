@@ -252,7 +252,7 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
         return new Builder(song);
     }
 
-    public static class Builder {
+    public static final class Builder {
         
         private Long id;
         private LocalDateTime creationDate;

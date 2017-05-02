@@ -2,6 +2,7 @@ package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,6 +63,15 @@ public class AlbumTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat( new Album().toString()).startsWith("Album{");
+        assertThat(Album.builder()
+                .id(1L)
+                .creationDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .name("someName")
+                .year(1986)
+                .artwork(null)
+                .songs(null)
+                .artist(new Artist())
+                .build().toString()).startsWith("Album{");
     }
 }

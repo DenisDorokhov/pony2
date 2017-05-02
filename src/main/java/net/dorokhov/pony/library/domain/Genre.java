@@ -71,7 +71,7 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
         return new Builder(genre);
     }
 
-    public static class Builder {
+    public static final class Builder {
         
         private Long id;
         private LocalDateTime creationDate;

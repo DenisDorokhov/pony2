@@ -140,12 +140,8 @@ public class Artwork implements Serializable {
     public static Builder builder() {
         return new Builder();
     }
-    
-    public static Builder builder(Artwork artwork) {
-        return new Builder(artwork);
-    }
 
-    public static class Builder {
+    public static final class Builder {
         
         private Long id;
         private LocalDateTime date;
@@ -158,18 +154,6 @@ public class Artwork implements Serializable {
         private URI sourceUri;
 
         public Builder() {
-        }
-        
-        public Builder(Artwork artwork) {
-            id = artwork.id;
-            date = artwork.date;
-            mimeType = artwork.mimeType;
-            checksum = artwork.checksum;
-            largeImageSize = artwork.largeImageSize;
-            largeImagePath = artwork.largeImagePath;
-            smallImageSize = artwork.smallImageSize;
-            smallImagePath = artwork.smallImagePath;
-            sourceUri = artwork.sourceUri;
         }
 
         public Builder id(@Nullable Long id) {

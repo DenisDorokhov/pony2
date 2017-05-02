@@ -69,6 +69,71 @@ CREATE TABLE config (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE scan_result (
+
+  id BIGINT IDENTITY,
+
+  date TIMESTAMP NOT NULL,
+
+  scan_type VARCHAR (255) NOT NULL,
+  
+  target_paths TEXT NOT NULL,
+  failed_paths TEXT NOT NULL,
+
+  duration BIGINT NOT NULL,
+
+  song_size BIGINT NOT NULL,
+  artwork_size BIGINT NOT NULL,
+
+  genre_count BIGINT NOT NULL,
+  artist_count BIGINT NOT NULL,
+  album_count BIGINT NOT NULL,
+  song_count BIGINT NOT NULL,
+  artwork_count BIGINT NOT NULL,
+
+  processed_song_count BIGINT NOT NULL,
+
+  created_artist_count BIGINT NOT NULL,
+  updated_artist_count BIGINT NOT NULL,
+  deleted_artist_count BIGINT NOT NULL,
+
+  created_album_count BIGINT NOT NULL,
+  updated_album_count BIGINT NOT NULL,
+  deleted_album_count BIGINT NOT NULL,
+
+  created_genre_count BIGINT NOT NULL,
+  updated_genre_count BIGINT NOT NULL,
+  deleted_genre_count BIGINT NOT NULL,
+
+  created_song_count BIGINT NOT NULL,
+  updated_song_count BIGINT NOT NULL,
+  deleted_song_count BIGINT NOT NULL,
+
+  created_artwork_count BIGINT NOT NULL,
+  deleted_artwork_count BIGINT NOT NULL
+);
+
+CREATE INDEX index_scan_result_date ON scan_result (date);
+
+CREATE TABLE scan_job (
+
+  id BIGINT IDENTITY,
+
+  creation_date TIMESTAMP NOT NULL,
+  update_date TIMESTAMP,
+
+  scan_type VARCHAR (255) NOT NULL,
+  status VARCHAR (255) NOT NULL,
+
+  log_message_id BIGINT,
+  scan_result_id BIGINT,
+
+  FOREIGN KEY (log_message_id) REFERENCES log_message (id),
+  FOREIGN KEY (scan_result_id) REFERENCES scan_result (id)
+);
+
+CREATE INDEX index_scan_job_status ON scan_job (status);
+
 CREATE TABLE artwork (
 
   id BIGINT IDENTITY,

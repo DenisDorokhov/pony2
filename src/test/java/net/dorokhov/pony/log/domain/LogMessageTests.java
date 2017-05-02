@@ -2,6 +2,8 @@ package net.dorokhov.pony.log.domain;
 
 import org.junit.Test;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LogMessageTests {
@@ -26,13 +28,16 @@ public class LogMessageTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat(new LogMessage().toString()).startsWith("LogMessage{");
+        assertThat(buildLogMessage().build().toString()).startsWith("LogMessage{");
     }
     
     private LogMessage.Builder buildLogMessage() {
         return LogMessage.builder()
+                .id(1L)
+                .date(LocalDateTime.now())
                 .type(LogMessage.Type.DEBUG)
                 .code("someCode")
-                .text("someText");
+                .text("someText")
+                .addArguments("foo", "bar");
     }
 }

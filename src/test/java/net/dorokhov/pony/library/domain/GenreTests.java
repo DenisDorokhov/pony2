@@ -2,6 +2,7 @@ package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,12 @@ public class GenreTests {
 
     @Test
     public void stringify() throws Exception {
-        assertThat(new Genre().toString()).startsWith("Genre{");
+        assertThat(Genre.builder()
+                .id(1L)
+                .creationDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .name("someName")
+                .artwork(null)
+                .build().toString()).startsWith("Genre{");
     }
 }

@@ -48,6 +48,7 @@ public class LogMessage implements Serializable {
 
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.class)
+    @NotNull
     private List<String> arguments = ImmutableList.of();
 
     protected LogMessage() {
@@ -129,12 +130,8 @@ public class LogMessage implements Serializable {
     public static Builder builder() {
         return new Builder();
     }
-    
-    public static Builder builder(LogMessage logMessage) {
-        return new Builder(logMessage);
-    }
 
-    public static class Builder {
+    public static final class Builder {
         
         private Long id;
         private LocalDateTime date;
@@ -145,16 +142,6 @@ public class LogMessage implements Serializable {
         private ImmutableList.Builder<String> arguments = ImmutableList.builder();
 
         public Builder() {
-        }
-        
-        public Builder(LogMessage logMessage) {
-            id = logMessage.id;
-            date = logMessage.date;
-            type = logMessage.type;
-            code = logMessage.code;
-            text = logMessage.text;
-            details = logMessage.details;
-            arguments = ImmutableList.<String>builder().addAll(logMessage.arguments);
         }
 
         public Builder id(@Nullable Long id) {
