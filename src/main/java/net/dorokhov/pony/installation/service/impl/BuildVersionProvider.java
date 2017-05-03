@@ -15,14 +15,14 @@ public class BuildVersionProvider {
 
     private static final String DATE_PATTERN = "u-M-d'T'H:m:sZ";
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final BuildVersion buildVersion;
 
     public BuildVersionProvider(@Value("${build.version}") String version,
                                 @Value("${build.time}") String date) {
         buildVersion = new BuildVersion(version, dateFromString(date));
-        log.info("Build '{}', '{}'.", buildVersion.getVersion(), buildVersion.getDate());
+        logger.info("Build '{}', '{}'.", buildVersion.getVersion(), buildVersion.getDate());
     }
 
     public BuildVersion getBuildVersion() {

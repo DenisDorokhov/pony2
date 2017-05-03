@@ -23,7 +23,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Service
 public class InstallationServiceImpl implements InstallationService {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final InstallationRepository installationRepository;
     private final BuildVersionProvider buildVersionProvider;
@@ -78,7 +78,7 @@ public class InstallationServiceImpl implements InstallationService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                logService.info("The application has been installed.");
+                logService.info(logger,"The application has been installed.");
             }
         });
         
@@ -106,7 +106,7 @@ public class InstallationServiceImpl implements InstallationService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                logService.info("The application has been upgraded from '{}' to '{}'.", currentInstallation.getVersion(), buildVersion);
+                logService.info(logger, "The application has been upgraded from '{}' to '{}'.", currentInstallation.getVersion(), buildVersion);
             }
         });
         

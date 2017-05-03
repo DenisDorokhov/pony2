@@ -19,7 +19,7 @@ public class FileTypeResolver {
     
     private static final Map<String, String> EXTENSION_TO_CORRECTION = ImmutableMap.of(".mpga", ".mp3");
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public FileType resolve(InputStream stream) throws IOException {
         try (InputStream bufferedStream = new BufferedInputStream(stream)) {
@@ -32,7 +32,7 @@ public class FileTypeResolver {
                 String extension = correctExtension(mimeType.getExtension());
                 return FileType.of(mimeType.toString(), extension);
             } catch (MimeTypeException e) {
-                log.debug("Could not resolve mime type.", e);
+                logger.debug("Could not resolve mime type.", e);
                 return FileType.of("application/octet-stream", "bin");
             }
         }

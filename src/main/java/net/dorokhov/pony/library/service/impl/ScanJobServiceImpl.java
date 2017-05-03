@@ -47,7 +47,7 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
 @Service
 public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ScanJobRepository scanJobRepository;
     private final ConfigService configService;
@@ -83,7 +83,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         }, pageable -> scanJobRepository.findByStatusIn(ImmutableList.of(Status.STARTING, Status.STARTED), pageable));
 
         if (interruptedJobsCount.get() > 0) {
-            logService.warn("Interrupted {} scan job(s).", interruptedJobsCount.get());
+            logService.warn(logger, "Interrupted {} scan job(s).", interruptedJobsCount.get());
         }
     }
 
@@ -125,7 +125,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
             throw new NoScanEditCommandException();
         }
         
-        LogMessage logStarting = logService.info("Starting edit job for {} songs...", commands.size());
+        LogMessage logStarting = logService.info(logger, "Starting edit job for {} songs...", commands.size());
         ScanJob startingJob = scanJobRepository.save(ScanJob.builder()
                 .scanType(ScanType.EDIT)
                 .status(Status.STARTING)
@@ -139,7 +139,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                     try {
                         doEditJob(startingJob, commands);
                     } catch (Exception e) {
-                        LogMessage logFailed = logService.error("Unexpected error occurred when performing edit job.", e);
+                        LogMessage logFailed = logService.error(logger, "Unexpected error occurred when performing edit job.", e);
                         ScanJob failedJob = scanJobRepository.findOne(startingJob.getId());
                         scanJobRepository.save(ScanJob.builder(failedJob)
                                 .status(Status.FAILED)
@@ -159,7 +159,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
     @Nullable
     public ScanJob startAutoScanJobIfNeeded() {
         
-        log.debug("Checking if automatic scan needed...");
+        logger.debug("Checking if automatic scan needed...");
         boolean shouldScan = false;
 
         List<File> libraryFolders = configService.getLibraryFolders();
@@ -169,17 +169,17 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                 if (autoScanInterval != null) {
                     shouldScan = shouldAutoScanByInterval(autoScanInterval);
                 } else {
-                    log.debug("Automatic scan is off.");
+                    logger.debug("Automatic scan is off.");
                 }
             } else {
-                log.debug("Library is already being scanned.");
+                logger.debug("Library is already being scanned.");
             }
         } else {
-            log.debug("No library folders defined.");
+            logger.debug("No library folders defined.");
         }
 
         if (shouldScan) {
-            log.info("Starting automatic scan...");
+            logger.info("Starting automatic scan...");
             return doStartScanJob(libraryFolders);
         }
         return null;
@@ -195,7 +195,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         List<String> targetPaths = targetFolders.stream()
                 .map(File::getAbsolutePath)
                 .collect(Collectors.toList());
-        LogMessage logStarting = logService.info("Starting scan job for '{}'...", targetPaths);
+        LogMessage logStarting = logService.info(logger, "Starting scan job for '{}'...", targetPaths);
         ScanJob startingJob = scanJobRepository.save(ScanJob.builder()
                 .scanType(ScanType.FULL)
                 .status(Status.STARTING)
@@ -209,7 +209,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                     try {
                         doScanJob(startingJob, targetFolders);
                     } catch (Exception e) {
-                        LogMessage logFailed = logService.error("Unexpected error occurred when performing scan job.", e);
+                        LogMessage logFailed = logService.error(logger, "Unexpected error occurred when performing scan job.", e);
                         ScanJob failedJob = scanJobRepository.findOne(startingJob.getId());
                         scanJobRepository.save(ScanJob.builder(failedJob)
                                 .status(Status.FAILED)
@@ -229,7 +229,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                 .map(File::getAbsolutePath)
                 .collect(Collectors.toList());
 
-        LogMessage logStarted = logService.info("Started scan job for '{}'.", targetPaths);
+        LogMessage logStarted = logService.info(logger, "Started scan job for '{}'.", targetPaths);
         scanJob = scanJobRepository.save(ScanJob.builder(scanJob)
                 .status(Status.STARTED)
                 .logMessage(logStarted)
@@ -239,13 +239,13 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         LogMessage logMessage;
         try {
             result = scanner.scan(targetFolders);
-            logMessage = logService.info("Scan job complete for '{}'.", targetPaths);
+            logMessage = logService.info(logger, "Scan job complete for '{}'.", targetPaths);
         } catch (IOException e) {
-            logMessage = logService.error("Scan job failed due to I/O error.", e);
+            logMessage = logService.error(logger, "Scan job failed due to I/O error.", e);
         } catch (ConcurrentScanException e) {
-            logMessage = logService.error("Library is already being scanned.");
+            logMessage = logService.error(logger, "Library is already being scanned.");
         } catch (Exception e) {
-            logMessage = logService.error("Unexpected error occurred when performing scan job.", e);
+            logMessage = logService.error(logger, "Unexpected error occurred when performing scan job.", e);
         }
         
         scanJobRepository.save(ScanJob.builder(scanJob)
@@ -257,7 +257,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
 
     private void doEditJob(ScanJob scanJob, List<EditCommand> commands) {
 
-        LogMessage logStarted = logService.info("Started edit job for {} songs...", commands.size());
+        LogMessage logStarted = logService.info(logger, "Started edit job for {} songs...", commands.size());
         scanJobRepository.save(ScanJob.builder(scanJob)
                 .status(Status.STARTED)
                 .logMessage(logStarted)
@@ -267,15 +267,15 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         LogMessage logMessage;
         try {
             result = scanner.edit(commands);
-            logMessage = logService.info("Edit job complete for {} songs.", commands.size());
+            logMessage = logService.info(logger, "Edit job complete for {} songs.", commands.size());
         } catch (SongNotFoundException e) {
-            logMessage = logService.error("Song '{}' not found.", e.getId());
+            logMessage = logService.error(logger, "Song '{}' not found.", e.getId());
         } catch (IOException e) {
-            logMessage = logService.error("Edit job failed due to I/O error.", e);
+            logMessage = logService.error(logger, "Edit job failed due to I/O error.", e);
         } catch (ConcurrentScanException e) {
-            logMessage = logService.error("Library is already scanning.");
+            logMessage = logService.error(logger, "Library is already scanning.");
         } catch (Exception e) {
-            logMessage = logService.error("Unexpected error occurred when performing edit job.", e);
+            logMessage = logService.error(logger, "Unexpected error occurred when performing edit job.", e);
         }
 
         scanJobRepository.save(ScanJob.builder(scanJob)
@@ -297,10 +297,10 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
             if (secondsSinceLastScan >= autoScanInterval) {
                 return true;
             } else {
-                log.trace("Too early for automatic scan.");
+                logger.trace("Too early for automatic scan.");
             }
         } else {
-            log.trace("Library was never scanned before.");
+            logger.trace("Library was never scanned before.");
             return true;
         }
         return false;

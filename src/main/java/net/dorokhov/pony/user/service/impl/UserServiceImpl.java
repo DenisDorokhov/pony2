@@ -36,7 +36,7 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final UserRepository userRepository;
     private final TokenSecretManager tokenSecretManager;
@@ -93,7 +93,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(command.getPassword()))
                 .roles(command.getRoles())
                 .build());
-        log.info("Creating user '{}'.", createdUser.getId());
+        logger.info("Creating user '{}'.", createdUser.getId());
         return createdUser;
     }
 
@@ -114,7 +114,7 @@ public class UserServiceImpl implements UserService {
                 .map(passwordEncoder::encode)
                 .orElse(userToUpdate.getPassword());
 
-        log.info("Updating user '{}'.", command.getId());
+        logger.info("Updating user '{}'.", command.getId());
         User updatedUser = userRepository.save(User.builder(userToUpdate)
                 .name(command.getName())
                 .email(command.getEmail())
@@ -145,7 +145,7 @@ public class UserServiceImpl implements UserService {
             throw new DeletingCurrentUserException(id);
         }
         
-        log.info("Deleting user '{}'.", userToDelete.getId());
+        logger.info("Deleting user '{}'.", userToDelete.getId());
         userRepository.delete(id);
     }
 
@@ -191,7 +191,7 @@ public class UserServiceImpl implements UserService {
     public User logout() {
         User user = getCurrentUser();
         if (user != null) {
-            log.info("Logging out user '{}'.", user.getId());
+            logger.info("Logging out user '{}'.", user.getId());
             SecurityContextHolder.clearContext();
             return user;
         } else {

@@ -17,7 +17,7 @@ import java.util.*;
 @Component
 public class ArtworkFileFinder {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final double artworkSizeRatioMin;
     private final double artworkSizeRatioMax;
@@ -90,7 +90,7 @@ public class ArtworkFileFinder {
         try {
             size = imageNode.getImageSize();
         } catch (Exception e) {
-            log.warn("Could not get size of image '{}'.", imageNode.getFile().getName(), e);
+            logger.warn("Could not get size of image '{}'.", imageNode.getFile().getName(), e);
             return false;
         }
         double sizeRatio = size.getWidth() / (double) size.getHeight();

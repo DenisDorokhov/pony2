@@ -5,9 +5,8 @@ import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.domain.LogMessage.Level;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
 import net.dorokhov.pony.log.service.LogService;
-import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.slf4j.helpers.MessageFormatter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,15 +23,8 @@ public class LogServiceImpl implements LogService {
 
     private final LogMessageRepository logMessageRepository;
 
-    private LogService self;
-
     public LogServiceImpl(LogMessageRepository logMessageRepository) {
         this.logMessageRepository = logMessageRepository;
-    }
-
-    @Autowired
-    void setSelf(LogService self) {
-        this.self = self;
     }
 
     @Override
@@ -49,29 +41,29 @@ public class LogServiceImpl implements LogService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(String message, Object... arguments) {
-        LoggerFactory.getLogger(fetchCallerClassName()).debug(message, arguments);
+    public LogMessage debug(Logger logger, String message, Object... arguments) {
+        logger.debug(message, arguments);
         return doLog(Level.DEBUG, message, arguments);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(String message, Object... arguments) {
-        LoggerFactory.getLogger(fetchCallerClassName()).info(message, arguments);
+    public LogMessage info(Logger logger, String message, Object... arguments) {
+        logger.info(message, arguments);
         return doLog(Level.INFO, message, arguments);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(String message, Object... arguments) {
-        LoggerFactory.getLogger(fetchCallerClassName()).warn(message, arguments);
+    public LogMessage warn(Logger logger, String message, Object... arguments) {
+        logger.warn(message, arguments);
         return doLog(Level.WARN, message, arguments);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(String message, Object... arguments) {
-        LoggerFactory.getLogger(fetchCallerClassName()).error(message, arguments);
+    public LogMessage error(Logger logger, String message, Object... arguments) {
+        logger.error(message, arguments);
         return doLog(Level.ERROR, message, arguments);
     }
 
@@ -91,20 +83,5 @@ public class LogServiceImpl implements LogService {
                 .arguments(stringArguments)
                 .text(MessageFormatter.arrayFormat(pattern, arguments).getMessage())
                 .build());
-    }
-
-    private String fetchCallerClassName() {
-        boolean selfFound = false;
-        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
-            boolean isSelf = element.getClassName().equals(self.getClass().getName());
-            if (selfFound) {
-                if (!isSelf) {
-                    return element.getClassName();
-                }
-            } else {
-                selfFound = isSelf;
-            }
-        }
-        return getClass().getName();
     }
 }

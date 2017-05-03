@@ -28,7 +28,7 @@ public class AudioTagger {
 
     private static final String MP3_MIME_TYPE = "audio/mpeg";
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final FileTypeResolver fileTypeResolver;
     private final ChecksumCalculator checksumCalculator;
@@ -111,10 +111,10 @@ public class AudioTagger {
         if (data.shouldWriteDiscNumber()) {
             Integer value = data.getDiscNumber();
             if (value != null) {
-                log.debug("Updating disc number '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating disc number '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.DISC_NO, value.toString());
             } else {
-                log.debug("Deleting disc number in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting disc number in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.DISC_NO);
             }
         }
@@ -122,10 +122,10 @@ public class AudioTagger {
         if (data.shouldWriteDiscCount()) {
             Integer value = data.getDiscCount();
             if (value != null) {
-                log.debug("Updating disc count '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating disc count '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.DISC_TOTAL, value.toString());
             } else {
-                log.debug("Deleting disc count in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting disc count in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.DISC_TOTAL);
             }
         }
@@ -133,10 +133,10 @@ public class AudioTagger {
         if (data.shouldWriteTrackNumber()) {
             Integer value = data.getTrackNumber();
             if (value != null) {
-                log.debug("Updating track number '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating track number '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.TRACK, value.toString());
             } else {
-                log.debug("Deleting track number in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting track number in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.TRACK);
             }
         }
@@ -144,10 +144,10 @@ public class AudioTagger {
         if (data.shouldWriteTrackCount()) {
             Integer value = data.getTrackCount();
             if (value != null) {
-                log.debug("Updating track count '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating track count '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.TRACK_TOTAL, value.toString());
             } else {
-                log.debug("Deleting track count in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting track count in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.TRACK_TOTAL);
             }
         }
@@ -155,10 +155,10 @@ public class AudioTagger {
         if (data.shouldWriteTitle()) {
             String value = data.getTitle();
             if (value != null) {
-                log.debug("Updating title '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating title '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.TITLE, value);
             } else {
-                log.debug("Deleting title in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting title in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.TITLE);
             }
         }
@@ -166,10 +166,10 @@ public class AudioTagger {
         if (data.shouldWriteArtist()) {
             String value = data.getArtist();
             if (value != null) {
-                log.debug("Updating artist '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating artist '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.ARTIST, value);
             } else {
-                log.debug("Deleting artist in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting artist in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.ARTIST);
             }
         }
@@ -177,10 +177,10 @@ public class AudioTagger {
         if (data.shouldWriteAlbumArtist()) {
             String value = data.getAlbumArtist();
             if (value != null) {
-                log.debug("Updating album artist '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating album artist '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.ALBUM_ARTIST, value);
             } else {
-                log.debug("Delete album artist in file '{}'.", file.getAbsolutePath());
+                logger.debug("Delete album artist in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.ALBUM_ARTIST);
             }
         }
@@ -188,10 +188,10 @@ public class AudioTagger {
         if (data.shouldWriteAlbum()) {
             String value = data.getAlbum();
             if (value != null) {
-                log.debug("Updating album '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating album '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.ALBUM, value);
             } else {
-                log.debug("Deleting album in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting album in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.ALBUM);
             }
         }
@@ -199,10 +199,10 @@ public class AudioTagger {
         if (data.shouldWriteYear()) {
             Integer value = data.getYear();
             if (value != null) {
-                log.debug("Updating year '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating year '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.YEAR, value.toString());
             } else {
-                log.debug("Deleting year in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting year in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.YEAR);
             }
         }
@@ -210,10 +210,10 @@ public class AudioTagger {
         if (data.shouldWriteGenre()) {
             String value = data.getGenre();
             if (value != null) {
-                log.debug("Updating genre '{}' in file '{}'.", value, file.getAbsolutePath());
+                logger.debug("Updating genre '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.GENRE, value);
             } else {
-                log.debug("Deleting genre in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting genre in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.GENRE);
             }
         }
@@ -221,11 +221,11 @@ public class AudioTagger {
         if (data.shouldWriteArtwork()) {
             File value = data.getArtworkFile();
             if (value != null) {
-                log.debug("Updating artwork in file '{}'.", file.getAbsolutePath());
+                logger.debug("Updating artwork in file '{}'.", file.getAbsolutePath());
                 tag.deleteArtworkField();
                 tag.setField(StandardArtwork.createArtworkFromFile(value));
             } else {
-                log.debug("Deleting artwork in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting artwork in file '{}'.", file.getAbsolutePath());
                 tag.deleteArtworkField();
             }
         }
@@ -272,7 +272,7 @@ public class AudioTagger {
                             ByteSource.wrap(artwork.getBinaryData()),
                             type, checksumCalculator.calculate(artwork.getBinaryData()));
                 } else {
-                    log.debug("Artwork is not an image: '{}'.", type);
+                    logger.debug("Artwork is not an image: '{}'.", type);
                 }
             }
         }

@@ -29,7 +29,7 @@ import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 @Component
 public class ArtworkStorage {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private final ArtworkRepository artworkRepository;
     private final FileTypeResolver fileTypeResolver;
@@ -121,10 +121,10 @@ public class ArtworkStorage {
                 @Override
                 public void afterCommit() {
                     if (!largeFile.delete()) {
-                        log.warn("Could not delete artwork large image file: '{}'.", largeFile.getAbsolutePath());
+                        logger.warn("Could not delete artwork large image file: '{}'.", largeFile.getAbsolutePath());
                     }
                     if (!smallFile.delete()) {
-                        log.warn("Could not delete artwork small image file: '{}'.", smallFile.getAbsolutePath());
+                        logger.warn("Could not delete artwork small image file: '{}'.", smallFile.getAbsolutePath());
                     }
                 }
             });
@@ -168,10 +168,10 @@ public class ArtworkStorage {
             public void afterCompletion(int status) {
                 if (status != STATUS_COMMITTED) {
                     if (!smallImageFile.delete()) {
-                        log.error("Could not delete small image file after rollback: '{}'.", smallImageFile.getAbsolutePath());
+                        logger.error("Could not delete small image file after rollback: '{}'.", smallImageFile.getAbsolutePath());
                     }
                     if (!largeImageFile.delete()) {
-                        log.error("Could not delete large image file after rollback: '{}'.", largeImageFile.getAbsolutePath());
+                        logger.error("Could not delete large image file after rollback: '{}'.", largeImageFile.getAbsolutePath());
                     }
                 }
             }

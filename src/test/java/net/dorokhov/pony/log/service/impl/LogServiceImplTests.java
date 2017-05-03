@@ -3,14 +3,12 @@ package net.dorokhov.pony.log.service.impl;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.test.rule.OutputCapture;
+import org.slf4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +19,7 @@ import static net.dorokhov.pony.log.domain.LogMessage.Level.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LogServiceImplTests {
@@ -35,14 +34,9 @@ public class LogServiceImplTests {
     
     @Mock
     private LogMessageRepository logMessageRepository;
-
-    @Rule
-    public OutputCapture outputCapture = new OutputCapture();
-
-    @Before
-    public void setUp() throws Exception {
-        logService.setSelf(logService);
-    }
+    
+    @Mock
+    private Logger logger;
 
     @Test
     public void getByType() throws Exception {
@@ -61,29 +55,29 @@ public class LogServiceImplTests {
     @Test
     public void debugLog() throws Exception {
         given(logMessageRepository.save((LogMessage) any())).willAnswer(invocation -> invocation.getArgument(0));
-        checkLogMessage(logService.debug(PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), DEBUG);
-        assertThat(outputCapture.toString()).contains(" DEBUG " + getClass().getName() + " ");
+        checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), DEBUG);
+        verify(logger).debug(any(), (Object[]) any());
     }
     
     @Test
     public void infoLog() throws Exception {
         given(logMessageRepository.save((LogMessage) any())).willAnswer(invocation -> invocation.getArgument(0));
-        checkLogMessage(logService.info(PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), INFO);
-        assertThat(outputCapture.toString()).contains(" INFO " + getClass().getName() + " ");
+        checkLogMessage(logService.info(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), INFO);
+        verify(logger).info(any(), (Object[]) any());
     }
     
     @Test
     public void warnLog() throws Exception {
         given(logMessageRepository.save((LogMessage) any())).willAnswer(invocation -> invocation.getArgument(0));
-        checkLogMessage(logService.warn(PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), WARN);
-        assertThat(outputCapture.toString()).contains(" WARN " + getClass().getName() + " ");
+        checkLogMessage(logService.warn(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), WARN);
+        verify(logger).warn(any(), (Object[]) any());
     }
     
     @Test
     public void errorLog() throws Exception {
         given(logMessageRepository.save((LogMessage) any())).willAnswer(invocation -> invocation.getArgument(0));
-        checkLogMessage(logService.error(PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), ERROR);
-        assertThat(outputCapture.toString()).contains(" ERROR " + getClass().getName() + " ");
+        checkLogMessage(logService.error(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), ERROR);
+        verify(logger).error(any(), (Object[]) any());
     }
     
     private void checkLogMessage(LogMessage logMessage, LogMessage.Level level) {

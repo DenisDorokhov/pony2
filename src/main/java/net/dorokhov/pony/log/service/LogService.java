@@ -2,6 +2,7 @@ package net.dorokhov.pony.log.service;
 
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.domain.LogMessage.Level;
+import org.slf4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,8 +13,8 @@ public interface LogService {
     Page<LogMessage> getByType(Level minimalLevel, Pageable pageable);
     Page<LogMessage> getByTypeAndDate(Level minimalLevel, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);
 
-    LogMessage debug(String message, Object... arguments);
-    LogMessage info(String message, Object... arguments);
-    LogMessage warn(String message, Object... arguments);
-    LogMessage error(String message, Object... arguments);
+    LogMessage debug(Logger logger, String message, Object... arguments);
+    LogMessage info(Logger logger, String message, Object... arguments);
+    LogMessage warn(Logger logger, String message, Object... arguments);
+    LogMessage error(Logger logger, String message, Object... arguments);
 }

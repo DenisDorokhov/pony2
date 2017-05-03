@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 public class TokenSecretManager {
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private final File tokenSecretFile;
     
@@ -32,12 +32,12 @@ public class TokenSecretManager {
         try {
             getTokenSecret();
         } catch (TokenSecretNotFoundException e) {
-            log.debug("Token secret not found.");
+            logger.debug("Token secret not found.");
         }
     }
 
     public String generateAndStoreTokenSecret() throws IOException {
-        log.info("Generating new token secret.");
+        logger.info("Generating new token secret.");
         String uuid = UUID.randomUUID().toString();
         Files.write(uuid, tokenSecretFile, Charsets.UTF_8);
         tokenSecret.set(uuid);
