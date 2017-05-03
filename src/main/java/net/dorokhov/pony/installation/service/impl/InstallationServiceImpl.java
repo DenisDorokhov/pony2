@@ -1,6 +1,5 @@
 package net.dorokhov.pony.installation.service.impl;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.installation.domain.Installation;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
@@ -79,7 +78,7 @@ public class InstallationServiceImpl implements InstallationService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                logService.info(log, "installationService.installed", "The application has been installed.");
+                logService.info("The application has been installed.");
             }
         });
         
@@ -107,8 +106,7 @@ public class InstallationServiceImpl implements InstallationService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                logService.info(log, "installationService.upgraded", ImmutableList.of(currentInstallation.getVersion(), buildVersion),
-                        String.format("The application has been upgraded from '%s' to '%s'.", currentInstallation.getVersion(), buildVersion));
+                logService.info("The application has been upgraded from '{}' to '{}'.", currentInstallation.getVersion(), buildVersion);
             }
         });
         

@@ -97,7 +97,7 @@ public class InstallationServiceImplTests {
         verify(configService).saveLibraryFolders(command.getLibraryFolders());
         verify(userService).create(command.getUserCreationCommand());
         verify(installationRepository).save((Installation) any());
-        verify(logService).info(any(), any(), any());
+        verify(logService).info(any());
     }
 
     @Test
@@ -133,7 +133,7 @@ public class InstallationServiceImplTests {
         ArgumentCaptor<Installation> savedInstallation = ArgumentCaptor.forClass(Installation.class);
         verify(installationRepository).save(savedInstallation.capture());
         assertThat(savedInstallation.getValue().getVersion()).isEqualTo("3.0");
-        verify(logService).info(any(), any(), eq(ImmutableList.of("2.0", "3.0")), any());
+        verify(logService).info(any(), eq("2.0"), eq("3.0"));
     }
 
     @Test

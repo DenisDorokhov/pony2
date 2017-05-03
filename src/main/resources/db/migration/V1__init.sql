@@ -44,18 +44,17 @@ CREATE TABLE log_message (
 
   date TIMESTAMP NOT NULL,
 
-  type TINYINT NOT NULL,
+  level TINYINT NOT NULL,
 
-  code VARCHAR (255) NOT NULL,
-  text LONGVARCHAR NOT NULL,
-  details LONGVARCHAR,
+  pattern LONGVARCHAR NOT NULL,
+  arguments LONGVARCHAR,
 
-  arguments LONGVARCHAR
+  text LONGVARCHAR NOT NULL
 );
 
 CREATE INDEX index_log_message_date ON log_message (date);
-CREATE INDEX index_log_message_type ON log_message (type);
-CREATE INDEX index_log_message_date_type ON log_message (date, type);
+CREATE INDEX index_log_message_type ON log_message (level);
+CREATE INDEX index_log_message_date_type ON log_message (date, level);
 
 CREATE TABLE config (
 

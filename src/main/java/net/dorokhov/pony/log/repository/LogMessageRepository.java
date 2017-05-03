@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 public interface LogMessageRepository extends PagingAndSortingRepository<LogMessage, Long> {
 
-    Page<LogMessage> findByTypeGreaterThanEqual(LogMessage.Type type, Pageable pageable);
-
-    Page<LogMessage> findByTypeGreaterThanEqualAndDateBetween(LogMessage.Type type, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);
+    Page<LogMessage> findByLevelGreaterThanEqual(LogMessage.Level level, Pageable pageable);
+    Page<LogMessage> findByLevelGreaterThanEqualAndDateBetween(LogMessage.Level level, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);
 }

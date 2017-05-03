@@ -35,9 +35,9 @@ public class LogMessageTests {
         return LogMessage.builder()
                 .id(1L)
                 .date(LocalDateTime.now())
-                .type(LogMessage.Type.DEBUG)
-                .code("someCode")
+                .type(LogMessage.Level.DEBUG)
+                .pattern("someCode")
                 .text("someText")
-                .addArguments("foo", "bar");
+                .arguments("foo", "bar");
     }
 }

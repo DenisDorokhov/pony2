@@ -2,217 +2,109 @@ package net.dorokhov.pony.log.service.impl;
 
 import com.google.common.base.Throwables;
 import net.dorokhov.pony.log.domain.LogMessage;
+import net.dorokhov.pony.log.domain.LogMessage.Level;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
 import net.dorokhov.pony.log.service.LogService;
-import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LogServiceImpl implements LogService {
 
     private final LogMessageRepository logMessageRepository;
 
+    private LogService self;
+
     public LogServiceImpl(LogMessageRepository logMessageRepository) {
         this.logMessageRepository = logMessageRepository;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<LogMessage> getByType(LogMessage.Type minimalType, Pageable pageable) {
-        return logMessageRepository.findByTypeGreaterThanEqual(minimalType, pageable);
+    @Autowired
+    void setSelf(LogService self) {
+        this.self = self;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LogMessage> getByTypeAndDate(LogMessage.Type minimalType, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable) {
-        return logMessageRepository.findByTypeGreaterThanEqualAndDateBetween(minimalType, minDate, maxDate, pageable);
+    public Page<LogMessage> getByType(Level minimalLevel, Pageable pageable) {
+        return logMessageRepository.findByLevelGreaterThanEqual(minimalLevel, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LogMessage> getByTypeAndDate(Level minimalLevel, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable) {
+        return logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(minimalLevel, minDate, maxDate, pageable);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, String text) {
-        return debug(logger, code, text, (String)null);
+    public LogMessage debug(String message, Object... arguments) {
+        LoggerFactory.getLogger(fetchCallerClassName()).debug(message, arguments);
+        return doLog(Level.DEBUG, message, arguments);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, List<String> arguments, String text) {
-        return debug(logger, code, arguments, text, (String)null);
+    public LogMessage info(String message, Object... arguments) {
+        LoggerFactory.getLogger(fetchCallerClassName()).info(message, arguments);
+        return doLog(Level.INFO, message, arguments);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, String text, @Nullable Throwable throwable) {
-        return debug(logger, code, null, text, throwable);
+    public LogMessage warn(String message, Object... arguments) {
+        LoggerFactory.getLogger(fetchCallerClassName()).warn(message, arguments);
+        return doLog(Level.WARN, message, arguments);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
-        return debug(logger, code, arguments, text, getStackTrace(throwable));
+    public LogMessage error(String message, Object... arguments) {
+        LoggerFactory.getLogger(fetchCallerClassName()).error(message, arguments);
+        return doLog(Level.ERROR, message, arguments);
     }
 
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, String text, @Nullable String details) {
-        return debug(logger, code, null, text, details);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage debug(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
-        return doLogMessage(logger, LogMessage.Type.DEBUG, code, text, arguments, details);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, String text) {
-        return info(logger, code, text, (String)null);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, List<String> arguments, String text) {
-        return info(logger, code, arguments, text, (String)null);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, String text, @Nullable Throwable throwable) {
-        return info(logger, code, null, text, throwable);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
-        return info(logger, code, arguments, text, getStackTrace(throwable));
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, String text, @Nullable String details) {
-        return info(logger, code, null, text, details);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage info(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
-        return doLogMessage(logger, LogMessage.Type.INFO, code, text, arguments, details);
-    }
-    
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, String text) {
-        return warn(logger, code, text, (String)null);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, List<String> arguments, String text) {
-        return warn(logger, code, arguments, text, (String)null);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, String text, @Nullable Throwable throwable) {
-        return warn(logger, code, null, text, throwable);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
-        return warn(logger, code, arguments, text, getStackTrace(throwable));
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, String text, @Nullable String details) {
-        return warn(logger, code, null, text, details);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage warn(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
-        return doLogMessage(logger, LogMessage.Type.WARN, code, text, arguments, details);
-    }
-    
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, String text) {
-        return error(logger, code, text, (String)null);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, List<String> arguments, String text) {
-        return error(logger, code, arguments, text, (String)null);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, String text, @Nullable Throwable throwable) {
-        return error(logger, code, null, text, throwable);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, List<String> arguments, String text, @Nullable Throwable throwable) {
-        return error(logger, code, arguments, text, getStackTrace(throwable));
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, String text, @Nullable String details) {
-        return error(logger, code, null, text, details);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public LogMessage error(Logger logger, String code, List<String> arguments, String text, @Nullable String details) {
-        return doLogMessage(logger, LogMessage.Type.ERROR, code, text, arguments, details);
-    }
-
-    private LogMessage doLogMessage(Logger logger, LogMessage.Type type, String code, String text, List<String> arguments, @Nullable String details) {
-
-        if (logger != null) {
-            String message = text;
-            if (details != null) {
-                message += "\n" + details;
-            }
-            switch (type) {
-                case DEBUG:
-                    logger.debug(message);
-                    break;
-                case INFO:
-                    logger.info(message);
-                    break;
-                case WARN:
-                    logger.warn(message);
-                    break;
-                case ERROR:
-                    logger.error(message);
-                    break;
-            }
-        }
-        
+    private LogMessage doLog(Level level, String pattern, Object... arguments) {
+        List<String> stringArguments = Arrays.stream(arguments)
+                .map(o -> {
+                    if (o instanceof Throwable) {
+                        return Throwables.getStackTraceAsString((Throwable) o);
+                    } else {
+                        return o.toString();
+                    }
+                })
+                .collect(Collectors.toList());
         return logMessageRepository.save(LogMessage.builder()
-                .type(type)
-                .code(code)
-                .text(text)
-                .details(details)
-                .arguments(arguments)
+                .type(level)
+                .pattern(pattern)
+                .arguments(stringArguments)
+                .text(MessageFormatter.arrayFormat(pattern, arguments).getMessage())
                 .build());
     }
-    
-    private String getStackTrace(Throwable throwable) {
-        return throwable != null ? Throwables.getStackTraceAsString(throwable) : null;
+
+    private String fetchCallerClassName() {
+        boolean selfFound = false;
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            boolean isSelf = element.getClassName().equals(self.getClass().getName());
+            if (selfFound) {
+                if (!isSelf) {
+                    return element.getClassName();
+                }
+            } else {
+                selfFound = isSelf;
+            }
+        }
+        return getClass().getName();
     }
 }

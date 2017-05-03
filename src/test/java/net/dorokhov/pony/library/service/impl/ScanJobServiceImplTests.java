@@ -42,7 +42,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -138,7 +137,7 @@ public class ScanJobServiceImplTests {
     public void executeScanJob() throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(logService.info(any(), any(), anyList(), any())).willReturn(buildLogMessage());
+        given(logService.info(any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         ScanResult scanResult = buildScanResult();
         given(scanner.scan(any())).willReturn(scanResult);
@@ -148,13 +147,13 @@ public class ScanJobServiceImplTests {
         assertThat(scanJobStarting.getStatus()).isEqualTo(ScanJob.Status.STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
         assertThat(scanJobStarting.getScanResult()).isNull();
-        verify(logService).info(any(), any(), anyList(), any());
+        verify(logService).info(any(), any());
 
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
-        verify(logService, times(3)).info(any(), any(), anyList(), any());
+        verify(logService, times(3)).info(any(), any());
 
         ScanJob scanJobStarted = savedScanJob.getAllValues().get(1);
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
@@ -173,7 +172,7 @@ public class ScanJobServiceImplTests {
     @Test
     public void executeEditJob() throws Exception {
 
-        given(logService.info(any(), any(), anyList(), any())).willReturn(buildLogMessage());
+        given(logService.info(any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         ScanResult scanResult = buildScanResult();
         given(scanner.edit(any())).willReturn(scanResult);
@@ -183,13 +182,13 @@ public class ScanJobServiceImplTests {
         assertThat(scanJobStarting.getStatus()).isEqualTo(ScanJob.Status.STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
         assertThat(scanJobStarting.getScanResult()).isNull();
-        verify(logService).info(any(), any(), anyList(), any());
+        verify(logService).info(any(), any());
 
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
-        verify(logService, times(3)).info(any(), any(), anyList(), any());
+        verify(logService, times(3)).info(any(), any());
 
         ScanJob scanJobStarted = savedScanJob.getAllValues().get(1);
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
@@ -267,38 +266,38 @@ public class ScanJobServiceImplTests {
     @Test
     public void failScanJobOnIOException() throws Exception {
         doTestFailScanJobOnExceptionDuringScan(new IOException());
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failScanJobOnConcurrentScanException() throws Exception {
         doTestFailScanJobOnExceptionDuringScan(new ConcurrentScanException());
-        verify(logService).error(any(), any(), any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failScanJobOnUnexpectedExceptionDuringScan() throws Exception {
         doTestFailScanJobOnExceptionDuringScan(new RuntimeException());
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failScanJobOnUnexpectedExceptionBeforeScan() throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(logService.error(any(), any(), any(), (Throwable) any())).willReturn(buildLogMessage());
+        given(logService.error(any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         given(scanJobRepository.findOne(any())).willReturn(buildScanJob().build());
         
         scanJobService.startScanJob();
         
-        given(logService.info(any(), any(), anyList(), any())).willThrow(new RuntimeException());
+        given(logService.info(any(), any())).willThrow(new RuntimeException());
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(2)).save(savedScanJob.capture());
-        verify(logService, times(2)).info(any(), any(), anyList(), any());
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        verify(logService, times(2)).info(any(), any());
+        verify(logService).error(any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
         assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.FULL);
@@ -315,43 +314,43 @@ public class ScanJobServiceImplTests {
     @Test
     public void failEditJobOnSongNotFoundException() throws Exception {
         doTestFailEditJobOnExceptionDuringScan(new SongNotFoundException(1L));
-        verify(logService).error(any(), any(), anyList(), any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failEditJobOnIOException() throws Exception {
         doTestFailEditJobOnExceptionDuringScan(new IOException());
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failEditJobOnConcurrentScanException() throws Exception {
         doTestFailEditJobOnExceptionDuringScan(new ConcurrentScanException());
-        verify(logService).error(any(), any(), any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failEditJobOnUnexpectedException() throws Exception {
         doTestFailEditJobOnExceptionDuringScan(new RuntimeException());
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        verify(logService).error(any(), any());
     }
 
     @Test
     public void failEditJobOnUnexpectedExceptionBeforeScan() throws Exception {
 
-        given(logService.error(any(), any(), any(), (Throwable) any())).willReturn(buildLogMessage());
+        given(logService.error(any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         given(scanJobRepository.findOne(any())).willReturn(buildEditJob().build());
 
         scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, buildWritableAudioData())));
 
-        given(logService.info(any(), any(), anyList(), any())).willThrow(new RuntimeException());
+        given(logService.info(any(), any())).willThrow(new RuntimeException());
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(2)).save(savedScanJob.capture());
-        verify(logService, times(2)).info(any(), any(), anyList(), any());
-        verify(logService).error(any(), any(), any(), (Throwable) any());
+        verify(logService, times(2)).info(any(), any());
+        verify(logService).error(any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
         assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.EDIT);
@@ -363,8 +362,7 @@ public class ScanJobServiceImplTests {
     private void doTestFailScanJobOnExceptionDuringScan(Exception e) throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(logService.error(any(), any(), any(), (Throwable) any())).willReturn(buildLogMessage());
-        given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
+        given(logService.error(any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         given(scanner.scan(any())).willThrow(e);
 
@@ -373,7 +371,7 @@ public class ScanJobServiceImplTests {
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
-        verify(logService, times(2)).info(any(), any(), anyList(), any());
+        verify(logService, times(2)).info(any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
         assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.FULL);
@@ -384,9 +382,7 @@ public class ScanJobServiceImplTests {
     
     private void doTestFailEditJobOnExceptionDuringScan(Exception e) throws Exception {
         
-        given(logService.error(any(), any(), any(), (Throwable) any())).willReturn(buildLogMessage());
-        given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
-        given(logService.error(any(), any(), anyList(), any())).willReturn(buildLogMessage());
+        given(logService.error(any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
         given(scanner.edit(any())).willThrow(e);
 
@@ -395,7 +391,7 @@ public class ScanJobServiceImplTests {
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
-        verify(logService, times(2)).info(any(), any(), anyList(), any());
+        verify(logService, times(2)).info(any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
         assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.EDIT);
@@ -427,8 +423,8 @@ public class ScanJobServiceImplTests {
     
     private LogMessage buildLogMessage() {
         return LogMessage.builder()
-                .type(LogMessage.Type.DEBUG)
-                .code("someCode")
+                .type(LogMessage.Level.DEBUG)
+                .pattern("someCode")
                 .text("someText")
                 .build();
     }

@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Table(name = "log_message")
 public class LogMessage implements Serializable {
 
-    public enum Type {
+    public enum Level {
         DEBUG, INFO, WARN, ERROR
     }
 
@@ -31,25 +31,22 @@ public class LogMessage implements Serializable {
     @NotNull
     private LocalDateTime date;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "level", nullable = false)
     @NotNull
-    private Type type;
+    private Level level;
     
-    @Column(name = "code", nullable = false)
+    @Column(name = "pattern", nullable = false)
     @NotNull
-    private String code;
-
-    @Column(name = "text")
-    @NotNull
-    private String text;
-
-    @Column(name = "details")
-    private String details;
+    private String pattern;
 
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.class)
     @NotNull
     private List<String> arguments = ImmutableList.of();
+
+    @Column(name = "text")
+    @NotNull
+    private String text;
 
     protected LogMessage() {
     }
@@ -57,11 +54,10 @@ public class LogMessage implements Serializable {
     private LogMessage(Builder builder) {
         id = builder.id;
         date = builder.date;
-        type = checkNotNull(builder.type);
-        code = checkNotNull(builder.code);
-        text = checkNotNull(builder.text);
-        details = builder.details;
+        level = checkNotNull(builder.level);
+        pattern = checkNotNull(builder.pattern);
         arguments = builder.arguments.build();
+        text = checkNotNull(builder.text);
     }
 
     @Nullable
@@ -74,25 +70,20 @@ public class LogMessage implements Serializable {
         return date;
     }
 
-    public Type getType() {
-        return type;
+    public Level getLevel() {
+        return level;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    @Nullable
-    public String getDetails() {
-        return details;
+    public String getPattern() {
+        return pattern;
     }
 
     public List<String> getArguments() {
         return arguments != null ? arguments : ImmutableList.of();
+    }
+
+    public String getText() {
+        return text;
     }
 
     @PrePersist
@@ -122,8 +113,8 @@ public class LogMessage implements Serializable {
     public String toString() {
         return "LogMessage{" +
                 "id=" + id +
-                ", type=" + type +
-                ", code='" + code + '\'' +
+                ", level=" + level +
+                ", text='" + text + '\'' +
                 '}';
     }
     
@@ -135,11 +126,10 @@ public class LogMessage implements Serializable {
         
         private Long id;
         private LocalDateTime date;
-        private Type type;
-        private String code;
-        private String text;
-        private String details;
+        private Level level;
+        private String pattern;
         private ImmutableList.Builder<String> arguments = ImmutableList.builder();
+        private String text;
 
         public Builder() {
         }
@@ -154,23 +144,13 @@ public class LogMessage implements Serializable {
             return this;
         }
 
-        public Builder type(Type type) {
-            this.type = type;
+        public Builder type(Level level) {
+            this.level = level;
             return this;
         }
 
-        public Builder code(String code) {
-            this.code = code;
-            return this;
-        }
-
-        public Builder text(String text) {
-            this.text = text;
-            return this;
-        }
-
-        public Builder details(@Nullable String details) {
-            this.details = details;
+        public Builder pattern(String pattern) {
+            this.pattern = pattern;
             return this;
         }
 
@@ -183,8 +163,12 @@ public class LogMessage implements Serializable {
             return this;
         }
 
-        public Builder addArguments(String... arguments) {
-            this.arguments.addAll(Arrays.asList(arguments));
+        public Builder arguments(String... arguments) {
+            return arguments(Arrays.asList(arguments));
+        }
+
+        public Builder text(String text) {
+            this.text = text;
             return this;
         }
 
