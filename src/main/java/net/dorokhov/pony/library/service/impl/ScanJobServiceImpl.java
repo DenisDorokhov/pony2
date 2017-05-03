@@ -15,6 +15,7 @@ import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
 import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
+import net.dorokhov.pony.library.service.impl.scan.Scanner;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
@@ -155,6 +157,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
     }
 
     @Override
+    @Scheduled(fixedDelay = 5 * 60 * 1000, initialDelay = 5 * 60 * 1000)
     @Transactional(propagation = REQUIRES_NEW)
     @Nullable
     public ScanJob startAutoScanJobIfNeeded() {
@@ -169,7 +172,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                 if (autoScanInterval != null) {
                     shouldScan = shouldAutoScanByInterval(autoScanInterval);
                 } else {
-                    log.trace("Automatic scan is off.");
+                    log.debug("Automatic scan is off.");
                 }
             } else {
                 log.debug("Library is already being scanned.");

@@ -14,6 +14,7 @@ import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
 import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
+import net.dorokhov.pony.library.service.impl.scan.Scanner;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.junit.After;
