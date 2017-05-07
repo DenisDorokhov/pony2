@@ -12,6 +12,8 @@ import net.dorokhov.pony.user.UserService;
 import net.dorokhov.pony.user.service.exception.UserExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,9 @@ import static org.springframework.transaction.support.TransactionSynchronization
 
 @Service
 public class InstallationServiceImpl implements InstallationService {
+    
+    private static final String CACHE_NAME = "pony.installation";
+    private static final String CACHE_KEY = "'currentInstallation'";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -44,6 +49,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
+    @Cacheable(cacheNames = CACHE_NAME, key = CACHE_KEY)
     @Transactional(readOnly = true)
     public Installation getInstallation() {
         Page<Installation> page = installationRepository.findAll(new PageRequest(0, 2));
@@ -57,6 +63,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
+    @CachePut(cacheNames = CACHE_NAME, key = CACHE_KEY)
     @Transactional
     synchronized public Installation install(InstallationCommand command) throws AlreadyInstalledException {
         
@@ -88,6 +95,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
+    @CachePut(cacheNames = CACHE_NAME, key = CACHE_KEY)
     @Transactional
     synchronized public Installation upgradeIfNeeded() throws NotInstalledException {
         

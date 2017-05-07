@@ -5,6 +5,7 @@ import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -38,6 +39,7 @@ public class PonyApplication {
     @PropertySource("classpath:META-INF/build-info.properties")
     @EnableAsync
     @EnableScheduling
+    @EnableCaching
     static class CommonConfig implements AsyncConfigurer {
 
         @Override

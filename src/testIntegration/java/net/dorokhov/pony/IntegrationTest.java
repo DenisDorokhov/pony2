@@ -29,10 +29,10 @@ import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 abstract public class IntegrationTest {
     
     @Autowired
-    private Flyway flyway;
+    protected Flyway flyway;
 
     @Autowired
-    private EntityManager entityManager;
+    protected EntityManager entityManager;
     
     private List<Class> indexedClasses;
     

@@ -5,12 +5,12 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.repository.UserRepository;
 import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.user.domain.UserToken;
+import net.dorokhov.pony.user.repository.UserRepository;
 import net.dorokhov.pony.user.service.command.CurrentUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.service.command.UserUpdateCommand;
 import net.dorokhov.pony.user.service.exception.*;
 import org.slf4j.Logger;
@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -235,10 +234,8 @@ public class UserServiceImpl implements UserService {
     private Algorithm buildSignatureAlgorithm() {
         try {
             return Algorithm.HMAC256(tokenSecretManager.getTokenSecret());
-        } catch (TokenSecretNotFoundException e) {
-            throw new RuntimeException("Token secret not found. Not started properly?", e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Unsupported encoding. Incorrect servlet container settings?", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not initialize signature algorithm.", e);
         }
     }
 }
