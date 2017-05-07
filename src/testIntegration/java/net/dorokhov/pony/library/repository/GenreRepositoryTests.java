@@ -13,7 +13,7 @@ public class GenreRepositoryTests extends IntegrationTest {
     private GenreRepository genreRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Genre genre = genreRepository.save(Genre.builder().build());
         assertThat(genreRepository.findOne(genre.getId())).isNotNull();
     }

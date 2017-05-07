@@ -31,7 +31,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Nullable;
@@ -42,6 +41,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
 public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
@@ -134,7 +135,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                 .logMessage(logStarting)
                 .build());
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
                 transactionalTaskExecutor.execute(() -> {
@@ -212,7 +213,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
                 .logMessage(logStarting)
                 .build());
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
                 transactionalTaskExecutor.execute(() -> {

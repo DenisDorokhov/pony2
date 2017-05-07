@@ -29,7 +29,7 @@ public class UserDetailsServiceImplTests {
     private UserRepository userRepository;
 
     @Test
-    public void loadUser() throws Exception {
+    public void shouldLoadUser() throws Exception {
         
         User user = User.builder()
                 .name("someName")
@@ -58,7 +58,7 @@ public class UserDetailsServiceImplTests {
     }
 
     @Test
-    public void supportUserNotFound() throws Exception {
+    public void shouldSupportUserNotFound() throws Exception {
         given(userRepository.findByEmail(any())).willReturn(null);
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("someEmail")).isInstanceOf(UsernameNotFoundException.class);
     }

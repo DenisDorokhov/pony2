@@ -19,7 +19,7 @@ public class SongRepositoryTests extends IntegrationTest {
     private SongRepository songRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Genre genre = genreRepository.save(Genre.builder().build());
         Artist artist = artistRepository.save(Artist.builder().build());
         Album album = albumRepository.save(Album.builder()

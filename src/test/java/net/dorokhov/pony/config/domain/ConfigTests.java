@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class ConfigTests {
 
     @Test
-    public void supportNullValue() throws Exception {
+    public void shouldSupportNullValue() throws Exception {
         Config config = new Config("foo", null);
         assertThat(config.getValue()).isNull();
         assertThat(config.getInteger()).isNull();
@@ -21,7 +21,7 @@ public class ConfigTests {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void supportStringValue() throws Exception {
+    public void shouldSupportStringValue() throws Exception {
         Config config = new Config("foo", "bar");
         assertThat(config.getValue()).isEqualTo("bar");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
@@ -31,7 +31,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void supportIntegerValue() throws Exception {
+    public void shouldSupportIntegerValue() throws Exception {
         Config config = new Config("foo", 1);
         assertThat(config.getValue()).isEqualTo("1");
         assertThat(config.getInteger()).isEqualTo(1);
@@ -41,7 +41,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void supportLongValue() throws Exception {
+    public void shouldSupportLongValue() throws Exception {
         Config config = new Config("foo", 1L);
         assertThat(config.getValue()).isEqualTo("1");
         assertThat(config.getInteger()).isEqualTo(1);
@@ -52,7 +52,7 @@ public class ConfigTests {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void supportDoubleValue() throws Exception {
+    public void shouldSupportDoubleValue() throws Exception {
         Config config = new Config("foo", 1.2);
         assertThat(config.getValue()).isEqualTo("1.2");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
@@ -63,7 +63,7 @@ public class ConfigTests {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void supportBooleanValue() throws Exception {
+    public void shouldSupportBooleanValue() throws Exception {
         Config config = new Config("foo", true);
         assertThat(config.getValue()).isEqualTo("true");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
@@ -73,7 +73,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void supportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() throws Exception {
 
         Config eqConfig1 = new Config("1", null);
         Config eqConfig2 = new Config("1", null);
@@ -91,7 +91,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(Config.builder()
                 .id("foo")
                 .creationDate(LocalDateTime.now())

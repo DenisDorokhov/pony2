@@ -19,21 +19,21 @@ import static org.mockito.Mockito.verify;
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigServiceImplTests {
     
-    @Mock
-    private ConfigRepository configRepository;
-    
     @InjectMocks
     private ConfigServiceImpl configService;
+    
+    @Mock
+    private ConfigRepository configRepository;
 
     @Test
-    public void getEnabledScanInterval() throws Exception {
+    public void shouldGetEnabledScanInterval() throws Exception {
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
         assertThat(configService.getAutoScanInterval()).isEqualTo(1000);
     }
     
     @Test
-    public void getDisabledAutoScanInterval() throws Exception {
+    public void shouldGetDisabledAutoScanInterval() throws Exception {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(null);
@@ -45,7 +45,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void saveEnabledAutoScanInterval() throws Exception {
+    public void shouldSaveEnabledAutoScanInterval() throws Exception {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
@@ -53,12 +53,11 @@ public class ConfigServiceImplTests {
         
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
-        
         assertThat(savedConfig.getValue().getValue()).isEqualTo("2000");
     }
 
     @Test
-    public void saveDisabledAutoScanInterval() throws Exception {
+    public void shouldSaveDisabledAutoScanInterval() throws Exception {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
@@ -66,12 +65,11 @@ public class ConfigServiceImplTests {
         
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
-        
         assertThat(savedConfig.getValue().getValue()).isNull();
     }
 
     @Test
-    public void saveAutoScanIntervalWhichDidNotExist() throws Exception {
+    public void shouldSaveAutoScanIntervalWhichDidNotExist() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
                 .willReturn(null);
@@ -79,24 +77,18 @@ public class ConfigServiceImplTests {
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
-
         assertThat(savedConfig.getValue().getValue()).isEqualTo("2000");
     }
 
     @Test
-    public void fetchExistingLibraryFolders() throws Exception {
-        
+    public void shouldFetchExistingLibraryFolders() throws Exception {
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
         assertThat(configService.getLibraryFolders()).containsExactly(new File("foo"), new File("bar"));
-
-        given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
-        assertThat(configService.getLibraryFolders()).isEmpty();
     }
 
     @Test
-    public void fetchNotExistingLibraryFolders() throws Exception {
+    public void shouldFetchNotExistingLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
@@ -108,7 +100,7 @@ public class ConfigServiceImplTests {
     }
 
     @Test
-    public void saveExistingLibraryFolders() throws Exception {
+    public void shouldSaveExistingLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
@@ -116,12 +108,11 @@ public class ConfigServiceImplTests {
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
-
         assertThat(savedConfig.getValue().getValue()).isEqualTo("[\"foobar\"]");
     }
 
     @Test
-    public void saveEmptyLibraryFolders() throws Exception {
+    public void shouldSaveEmptyLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
@@ -129,12 +120,11 @@ public class ConfigServiceImplTests {
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
-
         assertThat(savedConfig.getValue().getValue()).isEqualTo("[]");
     }
 
     @Test
-    public void saveLibraryFoldersWhichDidNotExist() throws Exception {
+    public void shouldSaveLibraryFoldersWhichDidNotExist() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(null);
@@ -142,7 +132,6 @@ public class ConfigServiceImplTests {
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());
-
         assertThat(savedConfig.getValue().getValue()).isEqualTo("[\"foobar\"]");
     }
 }

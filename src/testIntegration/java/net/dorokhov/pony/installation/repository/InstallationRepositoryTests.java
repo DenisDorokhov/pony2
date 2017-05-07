@@ -13,7 +13,7 @@ public class InstallationRepositoryTests extends IntegrationTest {
     private InstallationRepository installationRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Installation installation = installationRepository.save(Installation.builder()
                 .version("1.0")
                 .build());

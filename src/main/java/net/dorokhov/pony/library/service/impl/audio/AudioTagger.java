@@ -6,7 +6,6 @@ import com.google.common.primitives.Ints;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
-import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -31,11 +30,9 @@ public class AudioTagger {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final FileTypeResolver fileTypeResolver;
-    private final ChecksumCalculator checksumCalculator;
 
-    public AudioTagger(FileTypeResolver fileTypeResolver, ChecksumCalculator checksumCalculator) {
+    public AudioTagger(FileTypeResolver fileTypeResolver) {
         this.fileTypeResolver = fileTypeResolver;
-        this.checksumCalculator = checksumCalculator;
     }
 
     public ReadableAudioData read(File file) throws IOException {
@@ -268,9 +265,7 @@ public class AudioTagger {
             if (artwork != null && artwork.getBinaryData() != null) {
                 FileType type = fileTypeResolver.resolve(artwork.getBinaryData());
                 if (type.isImage()) {
-                    return new ReadableAudioData.EmbeddedArtwork(
-                            ByteSource.wrap(artwork.getBinaryData()),
-                            type, checksumCalculator.calculate(artwork.getBinaryData()));
+                    return new ReadableAudioData.EmbeddedArtwork(ByteSource.wrap(artwork.getBinaryData()), type);
                 } else {
                     logger.debug("Artwork is not an image: '{}'.", type);
                 }

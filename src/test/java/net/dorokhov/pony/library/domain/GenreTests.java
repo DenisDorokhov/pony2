@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GenreTests {
 
     @Test
-    public void sort() throws Exception {
+    public void shouldSort() throws Exception {
 
         Genre genre1 = Genre.builder().name("1").build();
         Genre genre2 = Genre.builder().name("2").build();
@@ -22,7 +22,7 @@ public class GenreTests {
         assertThat(list).containsExactly(genre1, genre2, genre2, genreNull);
     }
     @Test
-    public void supportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() throws Exception {
         
         Genre eqGenre1 = Genre.builder().id(1L).build();
         Genre eqGenre2 = Genre.builder().id(1L).build();
@@ -40,7 +40,7 @@ public class GenreTests {
     }
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(Genre.builder()
                 .id(1L)
                 .creationDate(LocalDateTime.now())

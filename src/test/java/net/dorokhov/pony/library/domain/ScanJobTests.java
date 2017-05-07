@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ScanJobTests {
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(ScanJob.builder()
                 .id(123L)
                 .creationDate(LocalDateTime.now())

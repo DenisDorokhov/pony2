@@ -56,16 +56,12 @@ public class FileTreeScannerTests {
     @Mock
     private AudioTagger audioTagger;
 
-    private FileType fileTypeAudio;
-    private FileType fileTypeImage;
-    private FileType fileTypeOther;
+    private final FileType fileTypeAudio = FileType.of("audio/mpeg", "mp3");
+    private final FileType fileTypeImage = FileType.of("image/png", "png");
+    private final FileType fileTypeOther = FileType.of("text/plain", "txt");
 
     @Before
     public void setUp() throws Exception {
-
-        fileTypeAudio = FileType.of("audio/mpeg", "mp3");
-        fileTypeImage = FileType.of("image/png", "png");
-        fileTypeOther = FileType.of("text/plain", "txt");
 
         given(fileTypeResolver.resolve((File) any())).willAnswer(invocation -> {
             File file = (File) invocation.getArguments()[0];
@@ -83,12 +79,12 @@ public class FileTreeScannerTests {
     }
 
     @Test
-    public void scanFolder() throws Exception {
+    public void shouldScanFolder() throws Exception {
         checkRoot(fileTreeScanner.scanFolder(FOLDER.getFile()));
     }
 
     @Test
-    public void scanImageFile() throws Exception {
+    public void shouldScanImageFile() throws Exception {
         FileNode image = fileTreeScanner.scanFile(FILE_IMAGE.getFile());
         assertThat(image).isNotNull();
         assertThat(image.getFile().getAbsolutePath()).isEqualTo(FILE_IMAGE.getFile().getAbsolutePath());
@@ -100,7 +96,7 @@ public class FileTreeScannerTests {
     }
 
     @Test
-    public void scanAudioFile() throws Exception {
+    public void shouldScanAudioFile() throws Exception {
         FileNode audio = fileTreeScanner.scanFile(FILE_AUDIO.getFile());
         assertThat(audio).isNotNull();
         assertThat(audio.getFile().getAbsolutePath()).isEqualTo(FILE_AUDIO.getFile().getAbsolutePath());
@@ -111,7 +107,7 @@ public class FileTreeScannerTests {
     }
 
     @Test
-    public void cacheFileType() throws Exception {
+    public void shouldCacheFileType() throws Exception {
         FileNode image = fileTreeScanner.scanFile(FILE_IMAGE.getFile());
         assertThat(image).isNotNull();
         assertThat(image.getFileType()).isSameAs(fileTypeImage);
@@ -121,7 +117,7 @@ public class FileTreeScannerTests {
     }
 
     @Test
-    public void cacheChecksum() throws Exception {
+    public void shouldCacheChecksum() throws Exception {
         FileNode image = fileTreeScanner.scanFile(FILE_IMAGE.getFile());
         assertThat(image).isNotNull();
         assertThat(image.getChecksum()).isSameAs(CHECKSUM);
@@ -131,7 +127,7 @@ public class FileTreeScannerTests {
     }
 
     @Test
-    public void cacheAudioData() throws Exception {
+    public void shouldCacheAudioData() throws Exception {
         FileNode audio = fileTreeScanner.scanFile(FILE_AUDIO.getFile());
         assertThat(audio).isNotNull();
         assertThat(((AudioNode) audio).getAudioData()).isSameAs(AUDIO_DATA);

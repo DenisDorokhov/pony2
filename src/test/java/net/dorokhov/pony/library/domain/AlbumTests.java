@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AlbumTests {
 
     @Test
-    public void sort() throws Exception {
+    public void shouldSort() throws Exception {
 
         Artist artist1 = Artist.builder().name("1").build();
         Artist artist2 = Artist.builder().name("2").build();
@@ -29,7 +29,7 @@ public class AlbumTests {
     }
 
     @Test
-    public void buildSearchTerms() throws Exception {
+    public void shouldBuildSearchTerms() throws Exception {
 
         Artist artist1 = Artist.builder().name("ar1").build();
         Artist artistNull = Artist.builder().name(null).build();
@@ -42,7 +42,7 @@ public class AlbumTests {
     }
 
     @Test
-    public void supportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() throws Exception {
 
         Artist artist = new Artist();
 
@@ -62,7 +62,7 @@ public class AlbumTests {
     }
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(Album.builder()
                 .id(1L)
                 .creationDate(LocalDateTime.now())

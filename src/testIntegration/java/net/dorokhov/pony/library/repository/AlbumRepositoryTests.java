@@ -16,7 +16,7 @@ public class AlbumRepositoryTests extends IntegrationTest {
     private AlbumRepository albumRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Artist artist = artistRepository.save(Artist.builder().build());
         Album album = albumRepository.save(Album.builder()
                 .artist(artist)

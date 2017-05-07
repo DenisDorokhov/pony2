@@ -17,7 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
 public class InstallationServiceImpl implements InstallationService {
@@ -76,7 +77,7 @@ public class InstallationServiceImpl implements InstallationService {
                 .version(buildVersionProvider.getBuildVersion().getVersion())
                 .build());
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
                 logService.info(logger,"The application has been installed.");
@@ -104,7 +105,7 @@ public class InstallationServiceImpl implements InstallationService {
                 .version(buildVersion)
                 .build());
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
                 logService.info(logger, "The application has been upgraded from '{}' to '{}'.", currentInstallation.getVersion(), buildVersion);

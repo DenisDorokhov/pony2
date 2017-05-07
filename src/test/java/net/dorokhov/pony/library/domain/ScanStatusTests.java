@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ScanStatusTests {
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(new ScanStatus(ScanStatus.Step.FULL_PREPARING, ImmutableList.of(), 0.0).toString()).startsWith("ScanStatus{");
     }
 }

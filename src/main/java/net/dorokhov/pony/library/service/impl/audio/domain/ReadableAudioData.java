@@ -90,12 +90,9 @@ public final class ReadableAudioData extends AudioData {
 
         private final FileType fileType;
 
-        private final String checksum;
-
-        public EmbeddedArtwork(ByteSource binaryData, FileType fileType, String checksum) {
+        public EmbeddedArtwork(ByteSource binaryData, FileType fileType) {
             this.binaryData = checkNotNull(binaryData);
             this.fileType = checkNotNull(fileType);
-            this.checksum = checkNotNull(checksum);
         }
 
         public ByteSource getBinaryData() {
@@ -106,15 +103,10 @@ public final class ReadableAudioData extends AudioData {
             return fileType;
         }
 
-        public String getChecksum() {
-            return checksum;
-        }
-
         @Override
         public String toString() {
             return "EmbeddedArtwork{" +
                     "fileType=" + fileType +
-                    ", checksum='" + checksum + '\'' +
                     '}';
         }
     }

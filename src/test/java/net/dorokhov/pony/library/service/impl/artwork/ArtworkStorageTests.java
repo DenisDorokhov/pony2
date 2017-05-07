@@ -15,7 +15,9 @@ import net.dorokhov.pony.library.service.impl.image.ThumbnailGenerator;
 import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -23,23 +25,21 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.util.FileSystemUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.function.Supplier;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArtworkStorageTests {
@@ -53,6 +53,9 @@ public class ArtworkStorageTests {
     
     private static final ImageSize LARGE_IMAGE_SIZE = ImageSize.of(50, 50);
     private static final ImageSize SMALL_IMAGE_SIZE = ImageSize.of(20, 20);
+
+    @Rule
+    public final TemporaryFolder artworkFolder = new TemporaryFolder();
     
     @Mock
     private ArtworkRepository artworkRepository;
@@ -64,103 +67,95 @@ public class ArtworkStorageTests {
     private ThumbnailGenerator thumbnailGenerator;
 
     private ArtworkStorage artworkStorage;
-    
-    private File artworkFolder;
 
     @Before
     public void setUp() throws Exception {
-        
-        artworkFolder = Files.createTempDir();
         artworkStorage = new ArtworkStorage(artworkRepository, 
                 fileTypeResolver, checksumCalculator, 
                 thumbnailGenerator, 
-                artworkFolder, 
-                new int[]{20, 20}, new int[]{50, 50});
-        
-        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
-        given(fileTypeResolver.resolve((byte[]) any())).willReturn(FILE_TYPE);
-        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
-        given(checksumCalculator.calculate((byte[]) any())).willReturn(CHECKSUM);
-        
-        given(artworkRepository.save((Artwork) any())).willAnswer(invocation -> {
-            Artwork artwork =  (Artwork) invocation.getArguments()[0];
-            Field idField = artwork.getClass().getDeclaredField("id");
-            idField.setAccessible(true);
-            ReflectionUtils.setField(idField, artwork, 1L);
-            return artwork;
-        });
-        
-        TransactionSynchronizationManager.initSynchronization();
+                artworkFolder.getRoot(), 
+                new int[]{SMALL_IMAGE_SIZE.getWidth(), SMALL_IMAGE_SIZE.getHeight()}, 
+                new int[]{LARGE_IMAGE_SIZE.getWidth(), LARGE_IMAGE_SIZE.getHeight()});
+        initSynchronization();
     }
 
     @After
     public void tearDown() throws Exception {
-        TransactionSynchronizationManager.clearSynchronization();
-        if (artworkFolder != null) {
-            if (!FileSystemUtils.deleteRecursively(artworkFolder)) {
-                throw new RuntimeException("Could not delete artwork folder.");
-            }
-            artworkFolder = null;
-        }
+        clearSynchronization();
     }
 
     @Test
-    public void getLargeImageFile() throws Exception {
-        Artwork artwork = buildArtwork();
+    public void shouldGetLargeImageFile() throws Exception {
+        Artwork artwork = artwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkStorage.getLargeImageFile(3L)).satisfies(file -> 
-                assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_LARGE).getAbsolutePath()));
+        assertThat(artworkStorage.getLargeImageFile(1L)).satisfies(file -> 
+                assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder.getRoot(), PATH_LARGE).getAbsolutePath()));
     }
 
     @Test
-    public void getSmallImageFile() throws Exception {
-        Artwork artwork = buildArtwork();
+    public void shouldGetSmallImageFile() throws Exception {
+        Artwork artwork = artwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
-        assertThat(artworkStorage.getSmallImageFile(4L)).satisfies(file -> 
-                assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder, PATH_SMALL).getAbsolutePath()));
+        assertThat(artworkStorage.getSmallImageFile(1L)).satisfies(file -> 
+                assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder.getRoot(), PATH_SMALL).getAbsolutePath()));
     }
 
     @Test
-    public void getOrSaveByteSourceArtwork() throws Exception {
+    public void shouldGetOrSaveByteSourceArtwork() throws Exception {
+
+        given(checksumCalculator.calculate((byte[]) any())).willReturn(CHECKSUM);
+        given(fileTypeResolver.resolve((byte[]) any())).willReturn(FILE_TYPE);
+        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
-        ByteSourceArtworkCommand command = new ByteSourceArtworkCommand(buildUri(), ByteSource.wrap(bytes));
+        ByteSourceArtworkCommand command = new ByteSourceArtworkCommand(sourceUri(), ByteSource.wrap(bytes));
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
-    public void getOrSaveFileArtwork() throws Exception {
+    public void shouldGetOrSaveFileArtwork() throws Exception {
+
+        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
+        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
+        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        
         File file = RESOURCE.getFile();
-        FileArtworkCommand command = new FileArtworkCommand(buildUri(), file);
+        FileArtworkCommand command = new FileArtworkCommand(sourceUri(), file);
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
-    public void getOrSaveImageNodeArtwork() throws Exception {
+    public void shouldGetOrSaveImageNodeArtwork() throws Exception {
+
+        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        
         ImageNode imageNode = mock(ImageNode.class);
         given(imageNode.getFile()).willReturn(RESOURCE.getFile());
         given(imageNode.getFileType()).willReturn(FileType.of("image/png", "png"));
         given(imageNode.getChecksum()).willReturn(CHECKSUM);
-        ImageNodeArtworkCommand command = new ImageNodeArtworkCommand(buildUri(), imageNode);
+        ImageNodeArtworkCommand command = new ImageNodeArtworkCommand(sourceUri(), imageNode);
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
-    public void deleteCreatedFilesOnRollback() throws Exception {
+    public void shouldDeleteCreatedFilesOnRollback() throws Exception {
 
-        File file = RESOURCE.getFile();
+        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
+        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
+        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
 
-        FileArtworkCommand command = new FileArtworkCommand(buildUri(), file);
+        FileArtworkCommand command = new FileArtworkCommand(sourceUri(), RESOURCE.getFile());
 
         Artwork artwork = artworkStorage.getOrSave(command);
         
-        File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
-        File smallFile = new File(artworkFolder, artwork.getSmallImagePath());
+        File largeFile = new File(artworkFolder.getRoot(), artwork.getLargeImagePath());
+        File smallFile = new File(artworkFolder.getRoot(), artwork.getSmallImagePath());
         Files.createParentDirs(largeFile);
         Files.createParentDirs(smallFile);
         Files.touch(largeFile);
         Files.touch(smallFile);
         
-        TransactionSynchronizationManager.getSynchronizations().forEach(transactionSynchronization -> 
+        getSynchronizations().forEach(transactionSynchronization -> 
                 transactionSynchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
         
         assertThat(largeFile).doesNotExist();
@@ -168,32 +163,31 @@ public class ArtworkStorageTests {
     }
 
     @Test
-    public void delete() throws Exception {
+    public void shouldDelete() throws Exception {
         
-        File largeImageFile = new File(artworkFolder, PATH_LARGE);
-        File smallImageFile = new File(artworkFolder, PATH_SMALL);
+        File largeImageFile = new File(artworkFolder.getRoot(), PATH_LARGE);
+        File smallImageFile = new File(artworkFolder.getRoot(), PATH_SMALL);
         
         Files.touch(largeImageFile);
         Files.touch(smallImageFile);
 
-        Artwork artwork = buildArtwork();
+        Artwork artwork = artwork();
 
         given(artworkRepository.findOne(any())).willReturn(artwork);
         artworkStorage.delete(5L);
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         verify(artworkRepository).delete(artwork);
         
         assertThat(largeImageFile).doesNotExist();
         assertThat(smallImageFile).doesNotExist();
-        assertThat(artworkFolder).exists();
     }
 
     @Test
-    public void whenDeletingIgnoreNotExistingFiles() throws Exception {
-        Artwork artwork = buildArtwork();
+    public void shouldIgnoreNotExistingFilesWhenDeleting() throws Exception {
+        Artwork artwork = artwork();
         given(artworkRepository.findOne(any())).willReturn(artwork);
         artworkStorage.delete(5L);
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
 
     private void checkGetAndSaveArtwork(Supplier<Artwork> doGetAndSave) throws Exception {
@@ -202,11 +196,11 @@ public class ArtworkStorageTests {
 
         Artwork artwork = doGetAndSave.get();
         
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         verify(artworkRepository).save(savedArtwork.capture());
-        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(SMALL_IMAGE_SIZE), eq(new File(artworkFolder, artwork.getSmallImagePath())));
-        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(LARGE_IMAGE_SIZE), eq(new File(artworkFolder, artwork.getLargeImagePath())));
+        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(SMALL_IMAGE_SIZE), eq(new File(artworkFolder.getRoot(), artwork.getSmallImagePath())));
+        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(LARGE_IMAGE_SIZE), eq(new File(artworkFolder.getRoot(), artwork.getLargeImagePath())));
 
         assertThat(savedArtwork.getValue()).isSameAs(artwork);
         checkSavedArtwork(savedArtwork.getValue());
@@ -216,18 +210,6 @@ public class ArtworkStorageTests {
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }
     
-    private Artwork buildArtwork() {
-        return Artwork.builder()
-                .mimeType("image/png")
-                .checksum("someChecksum")
-                .largeImageSize(0L)
-                .largeImagePath(PATH_LARGE)
-                .smallImageSize(0L)
-                .smallImagePath(PATH_SMALL)
-                .sourceUri(buildUri())
-                .build();
-    }
-    
     private void checkSavedArtwork(Artwork savedArtwork) {
         assertThat(savedArtwork.getMimeType()).isEqualTo(FILE_TYPE.getMimeType());
         assertThat(savedArtwork.getChecksum()).isEqualTo(CHECKSUM);
@@ -235,10 +217,22 @@ public class ArtworkStorageTests {
         assertThat(savedArtwork.getSmallImagePath()).endsWith(".small.png");
         assertThat(savedArtwork.getLargeImageSize()).isEqualTo(0L);
         assertThat(savedArtwork.getSmallImageSize()).isEqualTo(0L);
-        assertThat(savedArtwork.getSourceUri()).isEqualTo(buildUri());
+        assertThat(savedArtwork.getSourceUri()).isEqualTo(sourceUri());
     }
     
-    private URI buildUri() {
+    private Artwork artwork() {
+        return Artwork.builder()
+                .mimeType("image/png")
+                .checksum("someChecksum")
+                .largeImageSize(0L)
+                .largeImagePath(PATH_LARGE)
+                .smallImageSize(0L)
+                .smallImagePath(PATH_SMALL)
+                .sourceUri(sourceUri())
+                .build();
+    }
+    
+    private URI sourceUri() {
         return UriComponentsBuilder
                 .fromUriString("sourceUri")
                 .build().toUri();

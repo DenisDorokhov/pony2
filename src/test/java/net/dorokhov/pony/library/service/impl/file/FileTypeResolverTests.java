@@ -2,7 +2,6 @@ package net.dorokhov.pony.library.service.impl.file;
 
 import com.google.common.io.ByteStreams;
 import net.dorokhov.pony.library.domain.FileType;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -16,35 +15,30 @@ public class FileTypeResolverTests {
     
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
     
-    private FileTypeResolver fileTypeResolver;
-
-    @Before
-    public void setUp() throws Exception {
-        fileTypeResolver = new FileTypeResolver();
-    }
+    private FileTypeResolver fileTypeResolver = new FileTypeResolver();
 
     @Test
-    public void resolveImageInputStream() throws Exception {
+    public void shouldResolveImageInputStream() throws Exception {
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             checkImageFileType(fileTypeResolver.resolve(stream));
         }
     }
 
     @Test
-    public void resolveImageFile() throws Exception {
+    public void shouldResolveImageFile() throws Exception {
         File file = IMAGE_RESOURCE.getFile();
         checkImageFileType(fileTypeResolver.resolve(file));
     }
 
     @Test
-    public void resolveImageContent() throws Exception {
+    public void shouldResolveImageContent() throws Exception {
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             checkImageFileType(fileTypeResolver.resolve(ByteStreams.toByteArray(stream)));
         }
     }
     
     @Test
-    public void resolveMp3() throws Exception {
+    public void shouldResolveMp3() throws Exception {
 
         File file = new ClassPathResource("audio/empty.mp3").getFile();
         FileType fileType = fileTypeResolver.resolve(file);
@@ -54,7 +48,7 @@ public class FileTypeResolverTests {
     }
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(FileType.of("text/plain", "txt").toString()).startsWith("FileType{");
     }
 

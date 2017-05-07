@@ -13,7 +13,7 @@ public class LogMessageRepositoryTests extends IntegrationTest {
     private LogMessageRepository logMessageRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         LogMessage logMessage = logMessageRepository.save(LogMessage.builder()
                 .type(LogMessage.Level.DEBUG)
                 .pattern("someCode")

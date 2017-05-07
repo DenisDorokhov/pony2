@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ScanResultTests {
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(ScanResult.builder()
                 .id(123L)
                 .date(LocalDateTime.now())

@@ -13,7 +13,7 @@ public class ArtistRepositoryTests extends IntegrationTest {
     private ArtistRepository artistRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Artist artist = artistRepository.save(Artist.builder().build());
         assertThat(artistRepository.findOne(artist.getId())).isNotNull();
     }

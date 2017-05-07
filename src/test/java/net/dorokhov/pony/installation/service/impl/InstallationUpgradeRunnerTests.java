@@ -23,7 +23,7 @@ public class InstallationUpgradeRunnerTests {
     private InstallationService installationService;
 
     @Test
-    public void upgradeIfInstalled() throws Exception {
+    public void shouldUpgradeIfInstalled() throws Exception {
         given(installationService.getInstallation()).willReturn(Installation.builder()
                 .version("2.0")
                 .build());
@@ -33,7 +33,7 @@ public class InstallationUpgradeRunnerTests {
     }
 
     @Test
-    public void doNotUpgradeWhenNotInstalled() throws Exception {
+    public void shouldNotUpgradeWhenNotInstalled() throws Exception {
         given(installationService.getInstallation()).willReturn(null);
         installationUpgradeRunner.run(new DefaultApplicationArguments(new String[]{}));
         verify(installationService).getInstallation();

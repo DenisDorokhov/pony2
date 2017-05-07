@@ -10,19 +10,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OptionalComparatorsTests {
 
     @Test
-    public void respectNullFirst() throws Exception {
+    public void shouldRespectNullFirst() throws Exception {
         int result = OptionalComparators.<String>nullFirst().compare(Optional.of("foo"), Optional.empty());
         assertThat(result).isEqualTo(1);
     }
     
     @Test
-    public void respectNullLast() throws Exception {
+    public void shouldRespectNullLast() throws Exception {
         int result = OptionalComparators.<String>nullLast().compare(Optional.of("foo"), Optional.empty());
         assertThat(result).isEqualTo(-1);
     }
     
     @Test
-    public void compareNotNulls() throws Exception {
+    public void shouldCompareNotNulls() throws Exception {
         int result;
         
         result = OptionalComparators.<String>nullFirst().compare(Optional.of("2"), Optional.of("1"));
@@ -37,7 +37,7 @@ public class OptionalComparatorsTests {
     }
     
     @Test
-    public void compareNulls() throws Exception {
+    public void shouldCompareNulls() throws Exception {
         int result;
         result = OptionalComparators.<String>nullFirst().compare(Optional.empty(), Optional.empty());
         assertThat(result).isEqualTo(0);

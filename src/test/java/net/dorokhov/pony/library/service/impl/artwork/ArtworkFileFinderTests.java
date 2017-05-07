@@ -5,7 +5,6 @@ import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
 import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -22,15 +21,10 @@ public class ArtworkFileFinderTests {
     private static final String[] FILE_NAMES = {"cover"};
     private static final String[] FOLDER_NAMES = {"artwork"};
 
-    private ArtworkFileFinder artworkFileFinder;
-
-    @Before
-    public void setUp() throws Exception {
-        artworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, FILE_NAMES, FOLDER_NAMES);
-    }
+    private final ArtworkFileFinder artworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, FILE_NAMES, FOLDER_NAMES);
 
     @Test
-    public void notExistingArtwork() throws Exception {
+    public void shouldNotFindNotExistingArtwork() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -39,7 +33,7 @@ public class ArtworkFileFinderTests {
     }
 
     @Test
-    public void findInCurrentFolder() throws Exception {
+    public void shouldFindArtworkInCurrentFolder() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -52,7 +46,7 @@ public class ArtworkFileFinderTests {
     }
 
     @Test
-    public void findInParentFolder() throws Exception {
+    public void shouldFindArtworkInParentFolder() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         ImageNode image = mockImage(new File("root/image.png"), rootFolder);
@@ -67,7 +61,7 @@ public class ArtworkFileFinderTests {
     }
 
     @Test
-    public void findInChildFolder() throws Exception {
+    public void shouldFindArtworkInChildFolder() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -82,7 +76,7 @@ public class ArtworkFileFinderTests {
     }
 
     @Test
-    public void returnNothingWhenFailing() throws Exception {
+    public void shouldReturnNothingWhenFailing() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -95,7 +89,7 @@ public class ArtworkFileFinderTests {
     }
 
     @Test
-    public void respectRatio() throws Exception {
+    public void shouldRespectRatio() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -111,7 +105,7 @@ public class ArtworkFileFinderTests {
     }
 
     @Test
-    public void lookForGivenImageNamesFirst() throws Exception {
+    public void shouldLookForGivenImageNamesFirst() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -124,12 +118,12 @@ public class ArtworkFileFinderTests {
 
         assertThat(artworkFileFinder.findArtwork(audio)).isSameAs(namedImage);
 
-        artworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, new String[]{"other"}, FOLDER_NAMES);
-        assertThat(artworkFileFinder.findArtwork(audio)).isSameAs(otherImage);
+        ArtworkFileFinder otherArtworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, new String[]{"other"}, FOLDER_NAMES);
+        assertThat(otherArtworkFileFinder.findArtwork(audio)).isSameAs(otherImage);
     }
 
     @Test
-    public void lookForGivenFolderNamesFirst() throws Exception {
+    public void shouldLookForGivenFolderNamesFirst() throws Exception {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -146,8 +140,8 @@ public class ArtworkFileFinderTests {
 
         assertThat(artworkFileFinder.findArtwork(audio)).isSameAs(namedFolderImage);
 
-        artworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, FILE_NAMES, new String[]{"other"});
-        assertThat(artworkFileFinder.findArtwork(audio)).isSameAs(otherFolderImage);
+        ArtworkFileFinder otherArtworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, FILE_NAMES, new String[]{"other"});
+        assertThat(otherArtworkFileFinder.findArtwork(audio)).isSameAs(otherFolderImage);
     }
 
     private FolderNode mockFolder(File file, FolderNode parentFolder) {

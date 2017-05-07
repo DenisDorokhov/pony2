@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SongTests {
 
     @Test
-    public void sort() throws Exception {
+    public void shouldSort() throws Exception {
 
         Artist artist1 = Artist.builder().name("1").build();
         Artist artist2 = Artist.builder().name("2").build();
@@ -20,7 +20,7 @@ public class SongTests {
         
         Genre genre = new Genre();
 
-        Song song1_1_1 = buildSong()
+        Song song1_1_1 = songBuilder()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -28,7 +28,7 @@ public class SongTests {
                 .name("1")
                 .build();
 
-        Song song1_1_2 = buildSong()
+        Song song1_1_2 = songBuilder()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -36,7 +36,7 @@ public class SongTests {
                 .name("2")
                 .build();
 
-        Song song1_2_1 = buildSong()
+        Song song1_2_1 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(1)
@@ -44,7 +44,7 @@ public class SongTests {
                 .name("1")
                 .build();
 
-        Song song1_2_2 = buildSong()
+        Song song1_2_2 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -52,7 +52,7 @@ public class SongTests {
                 .name("2")
                 .build();
 
-        Song song1_2_3 = buildSong()
+        Song song1_2_3 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -66,9 +66,9 @@ public class SongTests {
     }
 
     @Test
-    public void buildSearchTerms() throws Exception {
+    public void shouldBuildSearchTerms() throws Exception {
 
-        Song song1 = buildSong()
+        Song song1 = songBuilder()
                 .name("s1")
                 .artistName("ar1")
                 .albumArtistName("ar2")
@@ -81,11 +81,11 @@ public class SongTests {
     }
 
     @Test
-    public void supportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        Song eqSong1 = buildSong().id(1L).build();
-        Song eqSong2 = buildSong().id(1L).build();
-        Song diffSong = buildSong().id(2L).build();
+        Song eqSong1 = songBuilder().id(1L).build();
+        Song eqSong2 = songBuilder().id(1L).build();
+        Song diffSong = songBuilder().id(2L).build();
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
@@ -99,11 +99,11 @@ public class SongTests {
     }
 
     @Test
-    public void stringify() throws Exception {
-        assertThat(buildSong().build().toString()).startsWith("Song{");
+    public void shouldImplementToString() throws Exception {
+        assertThat(songBuilder().build().toString()).startsWith("Song{");
     }
     
-    private Song.Builder buildSong() {
+    private Song.Builder songBuilder() {
         Artist artist = Artist.builder().build();
         Album album = Album.builder().artist(artist).build();
         Genre genre = Genre.builder().build();

@@ -14,7 +14,7 @@ public class ArtworkRepositoryTests extends IntegrationTest {
     private ArtworkRepository artworkRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Artwork artwork = artworkRepository.save(Artwork.builder()
                 .mimeType("text/plain")
                 .checksum("123")

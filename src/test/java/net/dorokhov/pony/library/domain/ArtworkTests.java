@@ -10,11 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ArtworkTests {
 
     @Test
-    public void supportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        Artwork eqArtwork1 = buildArtwork().id(1L).build();
-        Artwork eqArtwork2 = buildArtwork().id(1L).build();
-        Artwork diffArtwork = buildArtwork().id(2L).build();
+        Artwork eqArtwork1 = artworkBuilder().id(1L).build();
+        Artwork eqArtwork2 = artworkBuilder().id(1L).build();
+        Artwork diffArtwork = artworkBuilder().id(2L).build();
 
         assertThat(eqArtwork1.hashCode()).isEqualTo(eqArtwork2.hashCode());
         assertThat(eqArtwork1.hashCode()).isNotEqualTo(diffArtwork.hashCode());
@@ -28,11 +28,11 @@ public class ArtworkTests {
     }
 
     @Test
-    public void stringify() throws Exception {
+    public void shouldImplementToString() throws Exception {
         assertThat(new Artwork().toString()).startsWith("Artwork{");
     }
     
-    private Artwork.Builder buildArtwork() {
+    private Artwork.Builder artworkBuilder() {
         return Artwork.builder()
                 .id(1L)
                 .date(LocalDateTime.now())

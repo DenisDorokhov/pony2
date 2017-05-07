@@ -22,7 +22,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 
@@ -33,6 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InstallationServiceImplTests {
@@ -53,45 +53,45 @@ public class InstallationServiceImplTests {
 
     @Before
     public void setUp() throws Exception {
-        TransactionSynchronizationManager.initSynchronization();
+        initSynchronization();
     }
 
     @After
     public void tearDown() throws Exception {
-        TransactionSynchronizationManager.clearSynchronization();
+        clearSynchronization();
     }
 
     @Test
-    public void getInstallation() throws Exception {
-        Installation installation = buildInstallation().build();
+    public void shouldGetInstallation() throws Exception {
+        Installation installation = installationBuilder().build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         assertThat(installationService.getInstallation()).isSameAs(installation);
     }
 
     @Test
-    public void getNoInstallation() throws Exception {
+    public void shouldGetNoInstallation() throws Exception {
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         assertThat(installationService.getInstallation()).isNull();
     }
 
     @Test
-    public void failWhenMultipleInstallationsDetected() throws Exception {
-        Installation installation = buildInstallation().build();
+    public void shouldFailWhenMultipleInstallationsDetected() throws Exception {
+        Installation installation = installationBuilder().build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation, installation)));
         assertThatThrownBy(installationService::getInstallation).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void install() throws Exception {
+    public void shouldInstall() throws Exception {
         
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
-        Installation installation = buildInstallation().build();
+        Installation installation = installationBuilder().build();
         given(installationRepository.save((Installation) any())).willReturn(installation);
         
-        InstallationCommand command = buildInstallationCommand();
+        InstallationCommand command = installationCommand();
         assertThat(installationService.install(command)).isSameAs(installation);
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
         verify(configService).saveAutoScanInterval(command.getAutoScanInterval());
         verify(configService).saveLibraryFolders(command.getLibraryFolders());
@@ -101,34 +101,34 @@ public class InstallationServiceImplTests {
     }
 
     @Test
-    public void failWhenAlreadyInstalled() throws Exception {
-        Installation installation = buildInstallation().build();
+    public void shouldFailWhenAlreadyInstalled() throws Exception {
+        Installation installation = installationBuilder().build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
-        assertThatThrownBy(() -> installationService.install(buildInstallationCommand())).isInstanceOf(AlreadyInstalledException.class);
+        assertThatThrownBy(() -> installationService.install(installationCommand())).isInstanceOf(AlreadyInstalledException.class);
     }
 
     @Test
-    public void failWhenCouldNotInstall() throws Exception {
+    public void shouldFailWhenCouldNotInstall() throws Exception {
         
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
         Exception e = new RuntimeException();
         given(installationRepository.save((Installation) any())).willThrow(e);
         
-        InstallationCommand command = new InstallationCommand(null, ImmutableList.of(), buildUserCreationCommand());
+        InstallationCommand command = new InstallationCommand(null, ImmutableList.of(), userCreationCommand());
         assertThatThrownBy(() -> installationService.install(command)).isSameAs(e);
     }
 
     @Test
-    public void upgrade() throws Exception {
+    public void shouldUpgrade() throws Exception {
 
-        Installation installation = buildInstallation().version("2.0").build();
+        Installation installation = installationBuilder().version("2.0").build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("3.0"));
         given(installationRepository.save((Installation) any())).willReturn(installation);
 
         assertThat(installationService.upgradeIfNeeded()).isSameAs(installation);
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<Installation> savedInstallation = ArgumentCaptor.forClass(Installation.class);
         verify(installationRepository).save(savedInstallation.capture());
@@ -137,9 +137,9 @@ public class InstallationServiceImplTests {
     }
 
     @Test
-    public void doNotUpgradeWhenNotNeeded() throws Exception {
+    public void shouldNotUpgradeWhenNotNeeded() throws Exception {
 
-        Installation installation = buildInstallation().version("2.0").build();
+        Installation installation = installationBuilder().version("2.0").build();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("2.0"));
         
@@ -149,12 +149,12 @@ public class InstallationServiceImplTests {
     }
 
     @Test
-    public void failUpgradeWhenNotInstalled() throws Exception {
+    public void shouldFailUpgradeWhenNotInstalled() throws Exception {
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         assertThatThrownBy(installationService::upgradeIfNeeded).isInstanceOf(NotInstalledException.class);
     }
 
-    private Installation.Builder buildInstallation() {
+    private Installation.Builder installationBuilder() {
         return Installation.builder().version("2.0");
     }
     
@@ -166,11 +166,11 @@ public class InstallationServiceImplTests {
         return new BuildVersion(version, LocalDateTime.now());
     }
     
-    private InstallationCommand buildInstallationCommand() {
-        return new InstallationCommand(null, ImmutableList.of(), buildUserCreationCommand());
+    private InstallationCommand installationCommand() {
+        return new InstallationCommand(null, ImmutableList.of(), userCreationCommand());
     }
     
-    private UserCreationCommand buildUserCreationCommand() {
+    private UserCreationCommand userCreationCommand() {
         return UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")

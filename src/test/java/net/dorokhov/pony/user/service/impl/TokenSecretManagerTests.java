@@ -20,37 +20,37 @@ public class TokenSecretManagerTests {
     private static final Resource FILE = new ClassPathResource("test.txt");
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
-    public void initializeTokenSecret() throws Exception {
+    public void shouldInitializeTokenSecret() throws Exception {
         TokenSecretManager tokenSecretManager = new TokenSecretManager(FILE.getFile());
         tokenSecretManager.init();
         assertThat(tokenSecretManager.tokenSecret.get()).isEqualTo("test");
     }
     
     @Test
-    public void acceptNoTokenSecretWhenInitializing() throws Exception {
+    public void shouldAcceptNoTokenSecretWhenInitializing() throws Exception {
         TokenSecretManager tokenSecretManager = new TokenSecretManager(new File("notExistingFile"));
         tokenSecretManager.init();
     }
 
     @Test
-    public void generateAndStoreTokenSecret() throws Exception {
+    public void shouldGenerateAndStoreTokenSecret() throws Exception {
         TokenSecretManager tokenSecretManager = new TokenSecretManager(tempFolder.newFile());
         tokenSecretManager.generateAndStoreTokenSecret();
         assertThat(tokenSecretManager.tokenSecret.get()).isNotNull();
     }
 
     @Test
-    public void getTokenSecret() throws Exception {
+    public void shouldGetTokenSecret() throws Exception {
         TokenSecretManager tokenSecretManager = new TokenSecretManager(FILE.getFile());
         assertThat(tokenSecretManager.getTokenSecret()).isEqualTo("test");
         assertThat(tokenSecretManager.tokenSecret.get()).isEqualTo("test");
     }
 
     @Test
-    public void getNotExistingTokenSecret() throws Exception {
+    public void shouldGetNotExistingTokenSecret() throws Exception {
         TokenSecretManager tokenSecretManager = new TokenSecretManager(new File("notExistingFile"));
         assertThatThrownBy(tokenSecretManager::getTokenSecret).isInstanceOf(TokenSecretNotFoundException.class);
     }

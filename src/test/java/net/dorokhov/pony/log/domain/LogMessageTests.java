@@ -9,11 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LogMessageTests {
 
     @Test
-    public void supportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        LogMessage eqLogMessage1 = buildLogMessage().id(1L).build();
-        LogMessage eqLogMessage2 = buildLogMessage().id(1L).build();
-        LogMessage diffLogMessage = buildLogMessage().id(2L).build();
+        LogMessage eqLogMessage1 = logMessageBuilder().id(1L).build();
+        LogMessage eqLogMessage2 = logMessageBuilder().id(1L).build();
+        LogMessage diffLogMessage = logMessageBuilder().id(2L).build();
 
         assertThat(eqLogMessage1.hashCode()).isEqualTo(eqLogMessage2.hashCode());
         assertThat(eqLogMessage1.hashCode()).isNotEqualTo(diffLogMessage.hashCode());
@@ -27,11 +27,11 @@ public class LogMessageTests {
     }
 
     @Test
-    public void stringify() throws Exception {
-        assertThat(buildLogMessage().build().toString()).startsWith("LogMessage{");
+    public void shouldImplementToString() throws Exception {
+        assertThat(logMessageBuilder().build().toString()).startsWith("LogMessage{");
     }
     
-    private LogMessage.Builder buildLogMessage() {
+    private LogMessage.Builder logMessageBuilder() {
         return LogMessage.builder()
                 .id(1L)
                 .date(LocalDateTime.now())

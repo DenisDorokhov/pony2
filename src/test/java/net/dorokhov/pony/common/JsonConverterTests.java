@@ -14,50 +14,50 @@ import static org.assertj.core.data.MapEntry.entry;
 public class JsonConverterTests {
 
     @Test
-    public void convertStringToJson() throws Exception {
+    public void shouldConvertStringToJson() throws Exception {
         String json = JsonConverter.toJson("Foobar");
         assertThat(json).isEqualTo("\"Foobar\"");
     }
 
     @Test
-    public void convertListToJson() throws Exception {
+    public void shouldConvertListToJson() throws Exception {
         String json = JsonConverter.toJson(ImmutableList.of("foo", "bar"));
         assertThat(json).isEqualTo("[\"foo\",\"bar\"]");
     }
 
     @Test
-    public void convertMapToJson() throws Exception {
+    public void shouldConvertMapToJson() throws Exception {
         String json = JsonConverter.toJson(ImmutableMap.of("k1", "string", "k2", 2.1));
         assertThat(json).isEqualTo("{\"k1\":\"string\",\"k2\":2.1}");
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void convertUnknownFromJson() throws Exception {
+    public void shouldConvertUnknownFromJson() throws Exception {
         Object result = JsonConverter.fromJson("[\"foo\",\"bar\"]");
         assertThat(result).isInstanceOfSatisfying(List.class, list -> assertThat(list).containsExactly("foo", "bar"));
     }
 
     @Test
-    public void convertStringFromJson() throws Exception {
+    public void shouldConvertStringFromJson() throws Exception {
         Object result = JsonConverter.fromJson("\"Foobar\"", String.class);
         assertThat(result).isInstanceOfSatisfying(String.class, str -> assertThat(str).isEqualTo("Foobar"));
     }
 
     @Test
-    public void convertListFromJson() throws Exception {
+    public void shouldConvertListFromJson() throws Exception {
         List<String> result = JsonConverter.listFromJson("[\"foo\",\"bar\"]", String.class);
         assertThat(result).containsExactly("foo", "bar");
     }
 
     @Test
-    public void convertMapFromJson() throws Exception {
+    public void shouldConvertMapFromJson() throws Exception {
         Map<String, Object> result = JsonConverter.mapFromJson("{\"k1\":\"string\",\"k2\":2.1}", String.class, Object.class);
         assertThat(result).containsOnly(entry("k1", "string"), entry("k2", 2.1));
     }
 
     @Test
-    public void failOnInvalidJson() throws Exception {
+    public void shouldFailOnInvalidJson() throws Exception {
         assertThatThrownBy(() -> JsonConverter.fromJson("foo, bar")).isInstanceOf(RuntimeException.class);
         assertThatThrownBy(() -> JsonConverter.fromJson("foo, bar", String.class)).isInstanceOf(RuntimeException.class);
         assertThatThrownBy(() -> JsonConverter.listFromJson("foo, bar", String.class)).isInstanceOf(RuntimeException.class);

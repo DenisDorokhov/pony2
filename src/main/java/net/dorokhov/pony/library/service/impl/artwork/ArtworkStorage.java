@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -25,6 +24,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Component
 public class ArtworkStorage {
@@ -117,7 +117,7 @@ public class ArtworkStorage {
             File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
             File smallFile = new File(artworkFolder, artwork.getSmallImagePath());
             artworkRepository.delete(artwork);
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            registerSynchronization(new TransactionSynchronizationAdapter() {
                 @Override
                 public void afterCommit() {
                     if (!largeFile.delete()) {
@@ -163,7 +163,7 @@ public class ArtworkStorage {
                 .largeImageSize(largeImageFile.length())
                 .build());
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCompletion(int status) {
                 if (status != STATUS_COMMITTED) {

@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PageWalkerTests {
 
     @Test
-    public void walk() throws Exception {
+    public void shouldWalk() throws Exception {
 
         Pageable firstPageable = new PageRequest(0, 2);
 

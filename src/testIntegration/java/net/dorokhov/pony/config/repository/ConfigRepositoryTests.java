@@ -13,7 +13,7 @@ public class ConfigRepositoryTests extends IntegrationTest {
     private ConfigRepository configRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         Config config = configRepository.save(Config.builder()
                 .id("someConfig")
                 .value("someValue")

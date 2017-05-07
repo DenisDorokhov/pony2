@@ -2,7 +2,6 @@ package net.dorokhov.pony.library.service.impl.image;
 
 import com.google.common.io.ByteStreams;
 import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -23,17 +22,12 @@ public class ThumbnailGeneratorTests {
     private static final ImageSize THUMBNAIL_SIZE = ImageSize.of(50, 50);
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
     
-    private ThumbnailGenerator thumbnailGenerator;
+    private final ThumbnailGenerator thumbnailGenerator = new ThumbnailGenerator();
     
-    @Before
-    public void setUp() throws Exception {
-        thumbnailGenerator = new ThumbnailGenerator();
-    }
-
     @Test
-    public void generateFromInputStream() throws Exception {
+    public void shouldGenerateThumbnailFromInputStream() throws Exception {
         File file = tempFolder.newFile();
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, file);
@@ -42,7 +36,7 @@ public class ThumbnailGeneratorTests {
     }
 
     @Test
-    public void generateFromBytes() throws Exception {
+    public void shouldGenerateThumbnailFromBytes() throws Exception {
         File file = tempFolder.newFile();
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, file);
@@ -51,7 +45,7 @@ public class ThumbnailGeneratorTests {
     }
 
     @Test
-    public void generateFromFile() throws Exception {
+    public void shouldGenerateThumbnailFromFile() throws Exception {
         File file = tempFolder.newFile();
         thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, file);
         checkFile(file);

@@ -13,7 +13,7 @@ public class UserRepositoryTests extends IntegrationTest {
     private UserRepository userRepository;
 
     @Test
-    public void save() throws Exception {
+    public void shouldSave() throws Exception {
         User user = userRepository.save(User.builder()
                 .name("someName")
                 .email("someEmail")
