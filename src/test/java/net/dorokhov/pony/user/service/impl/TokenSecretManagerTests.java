@@ -1,8 +1,9 @@
 package net.dorokhov.pony.user.service.impl;
 
 import net.dorokhov.pony.user.service.exception.TokenSecretNotFoundException;
-import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -18,17 +19,8 @@ public class TokenSecretManagerTests {
     
     private static final Resource FILE = new ClassPathResource("test.txt");
 
-    private File writeToFile;
-
-    @After
-    public void tearDown() throws Exception {
-        if (writeToFile != null) {
-            if (!writeToFile.delete()) {
-                throw new RuntimeException("Could not delete temporary file.");
-            }
-            writeToFile = null;
-        }
-    }
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void initializeTokenSecret() throws Exception {
@@ -45,8 +37,7 @@ public class TokenSecretManagerTests {
 
     @Test
     public void generateAndStoreTokenSecret() throws Exception {
-        writeToFile = File.createTempFile(getClass().getSimpleName(), "txt");
-        TokenSecretManager tokenSecretManager = new TokenSecretManager(writeToFile);
+        TokenSecretManager tokenSecretManager = new TokenSecretManager(tempFolder.newFile());
         tokenSecretManager.generateAndStoreTokenSecret();
         assertThat(tokenSecretManager.tokenSecret.get()).isNotNull();
     }

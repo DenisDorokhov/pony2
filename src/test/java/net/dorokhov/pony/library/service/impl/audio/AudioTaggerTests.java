@@ -1,14 +1,15 @@
 package net.dorokhov.pony.library.service.impl.audio;
 
 import com.google.common.io.Files;
+import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
-import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -30,24 +31,15 @@ public class AudioTaggerTests {
     
     private static final FileType FILE_TYPE_MP3 = FileType.of("audio/mpeg", "mp3");
     private static final FileType FILE_TYPE_PNG = FileType.of("image/png", "png");
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
     
     private AudioTagger audioTagger;
-    
-    private File writeToFile;
 
     @Before
     public void setUp() throws Exception {
         audioTagger = new AudioTagger(new FileTypeResolver(), new ChecksumCalculator());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        if (writeToFile != null) {
-            if (!writeToFile.delete()) {
-                throw new RuntimeException("Could not delete temporary file.");
-            }
-            writeToFile = null;
-        }
     }
 
     @Test
@@ -133,7 +125,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3DiscNumber() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .discNumber(1)
                 .build();
@@ -154,7 +146,7 @@ public class AudioTaggerTests {
     
     @Test
     public void writeMp3DiscCount() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .discCount(1)
                 .build();
@@ -175,7 +167,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3TrackNumber() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .trackNumber(1)
                 .build();
@@ -196,7 +188,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3TrackCount() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .trackCount(1)
                 .build();
@@ -217,7 +209,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3Title() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .title("значение")
                 .build();
@@ -238,7 +230,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3Artist() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .artist("значение")
                 .build();
@@ -259,7 +251,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3AlbumArtist() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .albumArtist("значение")
                 .build();
@@ -280,7 +272,7 @@ public class AudioTaggerTests {
     
     @Test
     public void writeMp3Album() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .album("значение")
                 .build();
@@ -301,7 +293,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3Year() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .year(1986)
                 .build();
@@ -322,7 +314,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3Genre() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .genre("значение")
                 .build();
@@ -343,7 +335,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3Artwork() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .artworkFile(FILE_ARTWORK.getFile())
                 .build();
@@ -364,7 +356,7 @@ public class AudioTaggerTests {
 
     @Test
     public void writeMp3All() throws Exception {
-        createTempFile(FILE_EMPTY);
+        File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .discNumber(2)
                 .discCount(3)
@@ -384,7 +376,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3DiscNumber() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearDiscNumber()
                 .build();
@@ -406,7 +398,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3DiscCount() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearDiscCount()
                 .build();
@@ -428,7 +420,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3TrackNumber() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearTrackNumber()
                 .build();
@@ -450,7 +442,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3TrackCount() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearTrackCount()
                 .build();
@@ -472,7 +464,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3Title() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearTitle()
                 .build();
@@ -494,7 +486,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3Artist() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearArtist()
                 .build();
@@ -516,7 +508,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3AlbumArtist() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearAlbumArtist()
                 .build();
@@ -538,7 +530,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3Album() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearAlbum()
                 .build();
@@ -560,7 +552,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3Year() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearYear()
                 .build();
@@ -582,7 +574,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3Genre() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearGenre()
                 .build();
@@ -604,7 +596,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3Artwork() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearArtworkFile()
                 .build();
@@ -625,7 +617,7 @@ public class AudioTaggerTests {
 
     @Test
     public void deleteMp3All() throws Exception {
-        createTempFile(FILE_ID3V2);
+        File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearDiscNumber()
                 .clearDiscCount()
@@ -643,9 +635,10 @@ public class AudioTaggerTests {
         checkEmptyMp3(writeToFile, data);
     }
     
-    private void createTempFile(Resource resource) throws IOException {
-        writeToFile = File.createTempFile(getClass().getSimpleName(), ".mp3");
+    private File copyToTempFile(Resource resource) throws IOException {
+        File writeToFile = tempFolder.newFile("test.mp3");
         Files.copy(resource.getFile(), writeToFile);
+        return writeToFile;
     }
 
     private void checkEmptyMp3(File file, ReadableAudioData data) {

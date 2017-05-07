@@ -1,6 +1,6 @@
 package net.dorokhov.pony.user.service.exception;
 
-public final class DeletingCurrentUserException extends RuntimeException {
+public final class DeletingCurrentUserException extends Exception {
     
     private final long id;
 

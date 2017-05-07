@@ -10,7 +10,6 @@ import org.slf4j.helpers.MessageFormatter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -40,28 +39,28 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public LogMessage debug(Logger logger, String message, Object... arguments) {
         logger.debug(message, arguments);
         return doLog(Level.DEBUG, message, arguments);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public LogMessage info(Logger logger, String message, Object... arguments) {
         logger.info(message, arguments);
         return doLog(Level.INFO, message, arguments);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public LogMessage warn(Logger logger, String message, Object... arguments) {
         logger.warn(message, arguments);
         return doLog(Level.WARN, message, arguments);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public LogMessage error(Logger logger, String message, Object... arguments) {
         logger.error(message, arguments);
         return doLog(Level.ERROR, message, arguments);

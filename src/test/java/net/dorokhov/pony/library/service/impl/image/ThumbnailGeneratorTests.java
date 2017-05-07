@@ -2,9 +2,10 @@ package net.dorokhov.pony.library.service.impl.image;
 
 import com.google.common.io.ByteStreams;
 import net.dorokhov.pony.library.service.impl.image.domain.ImageSize;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -20,57 +21,44 @@ public class ThumbnailGeneratorTests {
     
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
     private static final ImageSize THUMBNAIL_SIZE = ImageSize.of(50, 50);
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
     
     private ThumbnailGenerator thumbnailGenerator;
     
-    private File writeToFile;
-
     @Before
     public void setUp() throws Exception {
         thumbnailGenerator = new ThumbnailGenerator();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        if (writeToFile != null) {
-            if (!writeToFile.delete()) {
-                throw new RuntimeException("Could not delete temporary file.");
-            }
-            writeToFile = null;
-        }
-    }
-
     @Test
     public void generateFromInputStream() throws Exception {
-        writeToFile = createTempFile();
+        File file = tempFolder.newFile();
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, writeToFile);
+            thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, file);
         }
-        checkTargetFile();
+        checkFile(file);
     }
 
     @Test
     public void generateFromBytes() throws Exception {
-        writeToFile = createTempFile();
+        File file = tempFolder.newFile();
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, writeToFile);
+            thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, file);
         }
-        checkTargetFile();
+        checkFile(file);
     }
 
     @Test
     public void generateFromFile() throws Exception {
-        writeToFile = createTempFile();
-        thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, writeToFile);
-        checkTargetFile();
+        File file = tempFolder.newFile();
+        thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, file);
+        checkFile(file);
     }
     
-    private File createTempFile() throws IOException {
-        return File.createTempFile(getClass().getSimpleName(), ".tmp");
-    }
-    
-    private void checkTargetFile() throws IOException {
-        BufferedImage targetImage = ImageIO.read(writeToFile);
+    private void checkFile(File file) throws IOException {
+        BufferedImage targetImage = ImageIO.read(file);
         assertThat(targetImage.getWidth()).isEqualTo(45);
         assertThat(targetImage.getHeight()).isEqualTo(50);
     }

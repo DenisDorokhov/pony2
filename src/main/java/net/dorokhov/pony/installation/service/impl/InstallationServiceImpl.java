@@ -9,13 +9,12 @@ import net.dorokhov.pony.installation.service.exception.AlreadyInstalledExceptio
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.log.service.LogService;
 import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.service.exception.UserExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -35,9 +34,7 @@ public class InstallationServiceImpl implements InstallationService {
                                    BuildVersionProvider buildVersionProvider,
                                    ConfigService configService,
                                    UserService userService,
-                                   LogService logService,
-                                   PlatformTransactionManager transactionManager) {
-
+                                   LogService logService) {
         this.installationRepository = installationRepository;
         this.buildVersionProvider = buildVersionProvider;
         this.configService = configService;
@@ -59,7 +56,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     synchronized public Installation install(InstallationCommand command) throws AlreadyInstalledException {
         
         if (getInstallation() != null) {
@@ -69,7 +66,11 @@ public class InstallationServiceImpl implements InstallationService {
         configService.saveAutoScanInterval(command.getAutoScanInterval());
         configService.saveLibraryFolders(command.getLibraryFolders());
 
-        userService.create(command.getUserCreationCommand());
+        try {
+            userService.create(command.getUserCreationCommand());
+        } catch (UserExistsException e) {
+            throw new RuntimeException(String.format("User '%s' already exists. Installation inconsistency?", command.getUserCreationCommand().getEmail()), e);
+        }
 
         Installation installation = installationRepository.save(Installation.builder()
                 .version(buildVersionProvider.getBuildVersion().getVersion())
@@ -86,7 +87,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     synchronized public Installation upgradeIfNeeded() throws NotInstalledException {
         
         final Installation currentInstallation = getInstallation();

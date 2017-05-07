@@ -1,8 +1,12 @@
 package net.dorokhov.pony.library.service.impl;
 
 import com.google.common.collect.ImmutableList;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import net.dorokhov.pony.common.TransactionalTaskExecutor;
 import net.dorokhov.pony.config.service.ConfigService;
+import net.dorokhov.pony.fixture.ScanJobFixtures;
+import net.dorokhov.pony.fixture.ScanResultFixtures;
+import net.dorokhov.pony.fixture.TransactionTemplateFixtures;
+import net.dorokhov.pony.fixture.TransactionalTaskExecutorFixtures;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanStatus;
@@ -24,14 +28,13 @@ import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.DefaultApplicationArguments;
-import org.springframework.core.task.SyncTaskExecutor;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,9 +64,11 @@ public class ScanJobServiceImplTests {
     private LogService logService;
     
     @Spy
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
     @SuppressWarnings("unused")
-    private TaskExecutor taskExecutor = new SyncTaskExecutor();
+    private final TransactionalTaskExecutor transactionalTaskExecutor = TransactionalTaskExecutorFixtures.get();
+    @Spy
+    @SuppressWarnings("unused")
+    private final TransactionTemplate transactionTemplate = TransactionTemplateFixtures.get();
 
     @Before
     public void setUp() throws Exception {
@@ -81,8 +86,8 @@ public class ScanJobServiceImplTests {
         Pageable firstPageable = new PageRequest(0, 2);
         
         List<Page<ScanJob>> pages = new ArrayList<>();
-        pages.add(new PageImpl<>(ImmutableList.of(buildScanJob(1L, ScanType.FULL).build(), buildScanJob(2L, ScanType.FULL).build()), firstPageable, 3));
-        pages.add(new PageImpl<>(ImmutableList.of(buildScanJob(3L, ScanType.FULL).build()), new PageRequest(1, 2), 3));
+        pages.add(new PageImpl<>(ImmutableList.of(ScanJobFixtures.full(), ScanJobFixtures.full()), firstPageable, 3));
+        pages.add(new PageImpl<>(ImmutableList.of(ScanJobFixtures.full()), new PageRequest(1, 2), 3));
         pages.add(new PageImpl<>(ImmutableList.of()));
         
         given(scanJobRepository.findByStatusIn(any(), any())).willAnswer(invocation -> {
@@ -121,7 +126,7 @@ public class ScanJobServiceImplTests {
 
     @Test
     public void getById() throws Exception {
-        ScanJob scanJob = buildScanJob().build();
+        ScanJob scanJob = ScanJobFixtures.full();
         given(scanJobRepository.findOne(any())).willReturn(scanJob);
         assertThat(scanJobService.getById(1L)).isSameAs(scanJob);
     }
@@ -139,7 +144,7 @@ public class ScanJobServiceImplTests {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(logService.info(any(), any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
-        ScanResult scanResult = buildScanResult();
+        ScanResult scanResult = ScanResultFixtures.get(ScanType.FULL);
         given(scanner.scan(any())).willReturn(scanResult);
         
         ScanJob scanJobStarting = scanJobService.startScanJob();
@@ -174,7 +179,7 @@ public class ScanJobServiceImplTests {
 
         given(logService.info(any(), any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
-        ScanResult scanResult = buildScanResult();
+        ScanResult scanResult = ScanResultFixtures.get(ScanType.EDIT);
         given(scanner.edit(any())).willReturn(scanResult);
 
         ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, buildWritableAudioData())));
@@ -208,7 +213,7 @@ public class ScanJobServiceImplTests {
     public void startAutoScanJobByInterval() throws Exception {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(buildScanJob()
+        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(ScanJobFixtures.builder(ScanType.FULL)
                 .creationDate(LocalDateTime.now().minusDays(2))
                 .updateDate(null)
                 .build())));
@@ -252,7 +257,7 @@ public class ScanJobServiceImplTests {
     public void skipAutoScanJobByInterval() throws Exception {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(buildScanJob().build())));
+        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(ScanJobFixtures.full())));
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository, never()).save((ScanJob) any());
     }
@@ -276,34 +281,9 @@ public class ScanJobServiceImplTests {
     }
 
     @Test
-    public void failScanJobOnUnexpectedExceptionDuringScan() throws Exception {
+    public void failScanJobOnUnexpectedException() throws Exception {
         doTestFailScanJobOnExceptionDuringScan(new RuntimeException());
         verify(logService).error(any(), any(), any());
-    }
-
-    @Test
-    public void failScanJobOnUnexpectedExceptionBeforeScan() throws Exception {
-        
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
-        given(scanJobRepository.findOne(any())).willReturn(buildScanJob().build());
-        
-        scanJobService.startScanJob();
-        
-        given(logService.info(any(), any(), any())).willThrow(new RuntimeException());
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-
-        ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
-        verify(scanJobRepository, times(2)).save(savedScanJob.capture());
-        verify(logService, times(2)).info(any(), any(), any());
-        verify(logService).error(any(), any(), any());
-
-        ScanJob scanJobFailed = savedScanJob.getValue();
-        assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.FULL);
-        assertThat(scanJobFailed.getStatus()).isEqualTo(ScanJob.Status.FAILED);
-        assertThat(scanJobFailed.getLogMessage()).isNotNull();
-        assertThat(scanJobFailed.getScanResult()).isNull();
     }
 
     @Test
@@ -334,36 +314,13 @@ public class ScanJobServiceImplTests {
         doTestFailEditJobOnExceptionDuringScan(new RuntimeException());
         verify(logService).error(any(), any(), any());
     }
-
-    @Test
-    public void failEditJobOnUnexpectedExceptionBeforeScan() throws Exception {
-
-        given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
-        given(scanJobRepository.findOne(any())).willReturn(buildEditJob().build());
-
-        scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, buildWritableAudioData())));
-
-        given(logService.info(any(), any(), any())).willThrow(new RuntimeException());
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-
-        ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
-        verify(scanJobRepository, times(2)).save(savedScanJob.capture());
-        verify(logService, times(2)).info(any(), any(), any());
-        verify(logService).error(any(), any(), any());
-
-        ScanJob scanJobFailed = savedScanJob.getValue();
-        assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobFailed.getStatus()).isEqualTo(ScanJob.Status.FAILED);
-        assertThat(scanJobFailed.getLogMessage()).isNotNull();
-        assertThat(scanJobFailed.getScanResult()).isNull();
-    }
     
     private void doTestFailScanJobOnExceptionDuringScan(Exception e) throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(scanJobRepository.findOne(any())).willReturn(ScanJobFixtures.full());
         given(scanner.scan(any())).willThrow(e);
 
         scanJobService.startScanJob();
@@ -384,6 +341,7 @@ public class ScanJobServiceImplTests {
         
         given(logService.error(any(), any(), any())).willReturn(buildLogMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(scanJobRepository.findOne(any())).willReturn(ScanJobFixtures.edit());
         given(scanner.edit(any())).willThrow(e);
 
         scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, buildWritableAudioData())));
@@ -400,23 +358,6 @@ public class ScanJobServiceImplTests {
         assertThat(scanJobFailed.getScanResult()).isNull();
     }
     
-    private ScanJob.Builder buildScanJob() {
-        return buildScanJob(1L, ScanType.FULL);
-    }
-    
-    private ScanJob.Builder buildEditJob() {
-        return buildScanJob(1L, ScanType.EDIT);
-    }
-    
-    private ScanJob.Builder buildScanJob(Long id, ScanType type) {
-        return ScanJob.builder()
-                .id(id)
-                .creationDate(LocalDateTime.now())
-                .updateDate(LocalDateTime.now())
-                .status(ScanJob.Status.STARTING)
-                .scanType(type);
-    }
-    
     private ScanStatus buildScanStatus() {
         return new ScanStatus(ScanStatus.Step.FULL_PREPARING, ImmutableList.of(), 0.0);
     }
@@ -426,38 +367,6 @@ public class ScanJobServiceImplTests {
                 .type(LogMessage.Level.DEBUG)
                 .pattern("someCode")
                 .text("someText")
-                .build();
-    }
-    
-    private ScanResult buildScanResult() {
-        return ScanResult.builder()
-                .scanType(ScanType.FULL)
-                .targetPaths(ImmutableList.of())
-                .failedPaths(ImmutableList.of())
-                .duration(10L)
-                .songSize(1000L)
-                .artworkSize(5L)
-                .genreCount(1L)
-                .artistCount(2L)
-                .albumCount(3L)
-                .songCount(4L)
-                .artworkCount(5L)
-                .audioFileCount(32L)
-                .imageFileCount(64L)
-                .createdArtistCount(7L)
-                .updatedArtistCount(8L)
-                .deletedArtistCount(9L)
-                .createdAlbumCount(10L)
-                .updatedAlbumCount(11L)
-                .deletedAlbumCount(12L)
-                .createdGenreCount(13L)
-                .updatedGenreCount(14L)
-                .deletedGenreCount(15L)
-                .createdSongCount(16L)
-                .updatedSongCount(17L)
-                .deletedSongCount(18L)
-                .createdArtworkCount(19L)
-                .deletedArtworkCount(20L)
                 .build();
     }
     

@@ -235,8 +235,10 @@ public class UserServiceImpl implements UserService {
     private Algorithm buildSignatureAlgorithm() {
         try {
             return Algorithm.HMAC256(tokenSecretManager.getTokenSecret());
+        } catch (TokenSecretNotFoundException e) {
+            throw new RuntimeException("Token secret not found. Not started properly?", e);
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Unsupported encoding. Incorrect servlet container settings?", e);
         }
     }
 }

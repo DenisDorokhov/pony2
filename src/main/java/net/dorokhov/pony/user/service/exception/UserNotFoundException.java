@@ -1,6 +1,6 @@
 package net.dorokhov.pony.user.service.exception;
 
-public final class UserNotFoundException extends RuntimeException {
+public final class UserNotFoundException extends Exception {
     
     private final long id;
 
