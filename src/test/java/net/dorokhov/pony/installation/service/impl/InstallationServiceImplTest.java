@@ -10,6 +10,7 @@ import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.installation.service.impl.BuildVersionProvider.BuildVersion;
 import net.dorokhov.pony.log.service.LogService;
 import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.domain.User.Role;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import org.junit.After;
 import org.junit.Before;
@@ -95,9 +96,15 @@ public class InstallationServiceImplTest {
         
         verify(configService).saveAutoScanInterval(command.getAutoScanInterval());
         verify(configService).saveLibraryFolders(command.getLibraryFolders());
-        verify(userService).create(command.getUserCreationCommand());
         verify(installationRepository).save((Installation) any());
         verify(logService).info(any(), any(), any());
+        
+        ArgumentCaptor<UserCreationCommand> userCreationCommand = ArgumentCaptor.forClass(UserCreationCommand.class);
+        verify(userService).create(userCreationCommand.capture());
+        assertThat(userCreationCommand.getValue().getName()).isEqualTo("someName");
+        assertThat(userCreationCommand.getValue().getEmail()).isEqualTo("someEmail");
+        assertThat(userCreationCommand.getValue().getPassword()).isEqualTo("somePassword");
+        assertThat(userCreationCommand.getValue().getRoles()).containsExactly(Role.USER, Role.ADMIN);
     }
 
     @Test
@@ -115,7 +122,7 @@ public class InstallationServiceImplTest {
         Exception e = new RuntimeException();
         given(installationRepository.save((Installation) any())).willThrow(e);
         
-        InstallationCommand command = new InstallationCommand(null, ImmutableList.of(), userCreationCommand());
+        InstallationCommand command = installationCommand();
         assertThatThrownBy(() -> installationService.install(command)).isSameAs(e);
     }
 
@@ -167,14 +174,12 @@ public class InstallationServiceImplTest {
     }
     
     private InstallationCommand installationCommand() {
-        return new InstallationCommand(null, ImmutableList.of(), userCreationCommand());
-    }
-    
-    private UserCreationCommand userCreationCommand() {
-        return UserCreationCommand.builder()
-                .name("someName")
-                .email("someEmail")
-                .password("somePassword")
+        return InstallationCommand.builder()
+                .autoScanInterval(null)
+                .libraryFolders(ImmutableList.of())
+                .adminName("someName")
+                .adminEmail("someEmail")
+                .adminPassword("somePassword")
                 .build();
     }
 }

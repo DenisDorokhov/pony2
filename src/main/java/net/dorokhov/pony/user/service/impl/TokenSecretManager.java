@@ -18,7 +18,7 @@ import java.util.UUID;
 public class TokenSecretManager {
 
     private static final String CACHE_NAME = "pony.tokenSecret";
-    private static final String CACHE_KEY = "'currentTokenSecret";
+    private static final String CACHE_KEY = "'currentTokenSecret'";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 

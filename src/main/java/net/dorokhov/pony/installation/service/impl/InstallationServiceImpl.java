@@ -9,6 +9,8 @@ import net.dorokhov.pony.installation.service.exception.AlreadyInstalledExceptio
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.log.service.LogService;
 import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.domain.User.Role;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.service.exception.UserExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,9 +77,14 @@ public class InstallationServiceImpl implements InstallationService {
         configService.saveLibraryFolders(command.getLibraryFolders());
 
         try {
-            userService.create(command.getUserCreationCommand());
+            userService.create(UserCreationCommand.builder()
+                    .name(command.getAdminName())
+                    .email(command.getAdminEmail())
+                    .password(command.getAdminPassword())
+                    .roles(Role.USER, Role.ADMIN)
+                    .build());
         } catch (UserExistsException e) {
-            throw new RuntimeException(String.format("User '%s' already exists. Installation inconsistency?", command.getUserCreationCommand().getEmail()), e);
+            throw new RuntimeException(String.format("User '%s' already exists. Installation inconsistency?", command.getAdminEmail()), e);
         }
 
         Installation installation = installationRepository.save(Installation.builder()
