@@ -23,9 +23,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -36,8 +38,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -77,43 +77,6 @@ public class ScanJobServiceImplTest {
     @After
     public void tearDown() throws Exception {
         clearSynchronization();
-    }
-
-    @Test
-    public void shouldMarkCurrentJobsAsInterrupted() throws Exception {
-
-        Pageable firstPageable = new PageRequest(0, 2);
-        
-        List<Page<ScanJob>> pages = new ArrayList<>();
-        pages.add(new PageImpl<>(ImmutableList.of(scanJobFull(), scanJobFull()), firstPageable, 3));
-        pages.add(new PageImpl<>(ImmutableList.of(scanJobFull()), new PageRequest(1, 2), 3));
-        pages.add(new PageImpl<>(ImmutableList.of()));
-        
-        given(scanJobRepository.findByStatusIn(any(), any())).willAnswer(invocation -> {
-            Pageable pageable = invocation.getArgument(1);
-            return pages.get(pageable.getPageNumber());
-        });
-        
-        scanJobService.markCurrentJobsAsInterrupted();
-
-        ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
-        verify(scanJobRepository, times(3)).save(savedScanJob.capture());
-        
-        savedScanJob.getAllValues().forEach(scanJob -> assertThat(scanJob.getStatus()).isEqualTo(ScanJob.Status.INTERRUPTED));
-    }
-
-    @Test
-    public void shouldFailMarkingCurrentJobsAsInterruptedWhenScanIsRunning() throws Exception {
-        given(scanner.getStatus()).willReturn(scanStatus());
-        assertThatThrownBy(() -> scanJobService.markCurrentJobsAsInterrupted()).isInstanceOf(ConcurrentScanException.class);
-    }
-
-    @Test
-    public void shouldMarkCurrentJobsAsInterruptedOnStartup() throws Exception {
-        given(scanJobRepository.findByStatusIn(any(), any())).willReturn(new PageImpl<>(ImmutableList.of()));
-        ScanJobServiceImpl spy = Mockito.spy(scanJobService);
-        spy.run(new DefaultApplicationArguments(new String[0]));
-        verify(spy).markCurrentJobsAsInterrupted();
     }
 
     @Test

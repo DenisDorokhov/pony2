@@ -1,7 +1,5 @@
 package net.dorokhov.pony.library.service.impl;
 
-import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.common.PageWalker;
 import net.dorokhov.pony.common.TransactionalTaskExecutor;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.library.domain.ScanJob;
@@ -21,8 +19,6 @@ import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,13 +35,12 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
-public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
+public class ScanJobServiceImpl implements ScanJobService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -68,32 +63,6 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
         this.logService = logService;
         this.transactionalTaskExecutor = transactionalTaskExecutor;
         this.transactionTemplate = transactionTemplate;
-    }
-
-    @Transactional
-    public void markCurrentJobsAsInterrupted() throws ConcurrentScanException {
-
-        if (scanner.getStatus() != null) {
-            throw new ConcurrentScanException();
-        }
-
-        AtomicInteger interruptedJobsCount = new AtomicInteger();
-        PageWalker.walk(new PageRequest(0, 100), (ScanJob scanJob) -> {
-            scanJobRepository.save(ScanJob.builder(scanJob)
-                    .status(Status.INTERRUPTED)
-                    .build());
-            interruptedJobsCount.incrementAndGet();
-        }, pageable -> scanJobRepository.findByStatusIn(ImmutableList.of(Status.STARTING, Status.STARTED), pageable));
-
-        if (interruptedJobsCount.get() > 0) {
-            logService.warn(logger, "Interrupted {} scan job(s).", interruptedJobsCount.get());
-        }
-    }
-
-    @Override
-    @Transactional
-    public void run(ApplicationArguments args) throws Exception {
-        markCurrentJobsAsInterrupted();
     }
 
     @Override
