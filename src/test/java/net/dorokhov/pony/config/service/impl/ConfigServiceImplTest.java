@@ -28,7 +28,7 @@ public class ConfigServiceImplTest {
     @Test
     public void shouldGetEnabledScanInterval() throws Exception {
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
         assertThat(configService.getAutoScanInterval()).isEqualTo(1000);
     }
     
@@ -40,7 +40,7 @@ public class ConfigServiceImplTest {
         assertThat(configService.getAutoScanInterval()).isNull();
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, null));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, null));
         assertThat(configService.getAutoScanInterval()).isNull();
     }
 
@@ -48,7 +48,7 @@ public class ConfigServiceImplTest {
     public void shouldSaveEnabledAutoScanInterval() throws Exception {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
         configService.saveAutoScanInterval(2000);
         
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
@@ -60,7 +60,7 @@ public class ConfigServiceImplTest {
     public void shouldSaveDisabledAutoScanInterval() throws Exception {
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000"));
         configService.saveAutoScanInterval(null);
         
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
@@ -83,7 +83,7 @@ public class ConfigServiceImplTest {
     @Test
     public void shouldFetchExistingLibraryFolders() throws Exception {
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
         assertThat(configService.getLibraryFolders()).containsExactly(new File("foo"), new File("bar"));
     }
 
@@ -91,7 +91,7 @@ public class ConfigServiceImplTest {
     public void shouldFetchNotExistingLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, null));
         assertThat(configService.getLibraryFolders()).isEmpty();
         
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
@@ -103,7 +103,7 @@ public class ConfigServiceImplTest {
     public void shouldSaveExistingLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
         configService.saveLibraryFolders(ImmutableList.of(new File("foobar")));
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
@@ -115,7 +115,7 @@ public class ConfigServiceImplTest {
     public void shouldSaveEmptyLibraryFolders() throws Exception {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
-                .willReturn(new Config(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
+                .willReturn(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
         configService.saveLibraryFolders(ImmutableList.of());
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);

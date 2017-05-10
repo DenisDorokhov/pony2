@@ -5,6 +5,9 @@ import org.springframework.core.task.SyncTaskExecutor;
 
 public final class TransactionalTaskExecutorFixtures {
     
+    private TransactionalTaskExecutorFixtures() {
+    }
+
     public static TransactionalTaskExecutor get() {
         return new TransactionalTaskExecutor(new SyncTaskExecutor());
     }

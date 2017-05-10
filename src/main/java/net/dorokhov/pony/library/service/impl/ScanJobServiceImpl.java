@@ -190,7 +190,7 @@ public class ScanJobServiceImpl implements ScanJobService, ApplicationRunner {
             try {
                 return doStartScanJob(libraryFolders);
             } catch (LibraryNotDefinedException e) {
-                throw new RuntimeException("Library is not defined. Race condition?", e);
+                throw new IllegalStateException("Library is not defined. Race condition?", e);
             }
         }
         return null;

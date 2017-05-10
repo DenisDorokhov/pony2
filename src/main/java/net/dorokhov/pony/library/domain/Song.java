@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.File;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -219,6 +220,11 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
                 Strings.nullToEmpty(artistName) + " " +
                 Strings.nullToEmpty(albumArtistName) + " " +
                 Strings.nullToEmpty(albumName);
+    }
+    
+    @Transient
+    public File getFile() {
+        return new File(getPath());
     }
 
     @Override

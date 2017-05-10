@@ -115,18 +115,6 @@ public class InstallationServiceImplTest {
     }
 
     @Test
-    public void shouldFailWhenCouldNotInstall() throws Exception {
-        
-        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
-        given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
-        Exception e = new RuntimeException();
-        given(installationRepository.save((Installation) any())).willThrow(e);
-        
-        InstallationCommand command = installationCommand();
-        assertThatThrownBy(() -> installationService.install(command)).isSameAs(e);
-    }
-
-    @Test
     public void shouldUpgrade() throws Exception {
 
         Installation installation = installationBuilder().version("2.0").build();

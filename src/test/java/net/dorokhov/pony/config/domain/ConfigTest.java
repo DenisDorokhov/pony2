@@ -11,7 +11,7 @@ public class ConfigTest {
 
     @Test
     public void shouldSupportNullValue() throws Exception {
-        Config config = new Config("foo", null);
+        Config config = Config.of("foo", null);
         assertThat(config.getValue()).isNull();
         assertThat(config.getInteger()).isNull();
         assertThat(config.getLong()).isNull();
@@ -22,7 +22,7 @@ public class ConfigTest {
     @Test
     @SuppressWarnings("ConstantConditions")
     public void shouldSupportStringValue() throws Exception {
-        Config config = new Config("foo", "bar");
+        Config config = Config.of("foo", "bar");
         assertThat(config.getValue()).isEqualTo("bar");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
@@ -32,7 +32,7 @@ public class ConfigTest {
 
     @Test
     public void shouldSupportIntegerValue() throws Exception {
-        Config config = new Config("foo", 1);
+        Config config = Config.of("foo", 1);
         assertThat(config.getValue()).isEqualTo("1");
         assertThat(config.getInteger()).isEqualTo(1);
         assertThat(config.getLong()).isEqualTo(1L);
@@ -42,7 +42,7 @@ public class ConfigTest {
 
     @Test
     public void shouldSupportLongValue() throws Exception {
-        Config config = new Config("foo", 1L);
+        Config config = Config.of("foo", 1L);
         assertThat(config.getValue()).isEqualTo("1");
         assertThat(config.getInteger()).isEqualTo(1);
         assertThat(config.getLong()).isEqualTo(1L);
@@ -53,7 +53,7 @@ public class ConfigTest {
     @Test
     @SuppressWarnings("ConstantConditions")
     public void shouldSupportDoubleValue() throws Exception {
-        Config config = new Config("foo", 1.2);
+        Config config = Config.of("foo", 1.2);
         assertThat(config.getValue()).isEqualTo("1.2");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
@@ -64,7 +64,7 @@ public class ConfigTest {
     @Test
     @SuppressWarnings("ConstantConditions")
     public void shouldSupportBooleanValue() throws Exception {
-        Config config = new Config("foo", true);
+        Config config = Config.of("foo", true);
         assertThat(config.getValue()).isEqualTo("true");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
@@ -75,9 +75,9 @@ public class ConfigTest {
     @Test
     public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        Config eqConfig1 = new Config("1", null);
-        Config eqConfig2 = new Config("1", null);
-        Config diffConfig = new Config("2", null);
+        Config eqConfig1 = Config.of("1", null);
+        Config eqConfig2 = Config.of("1", null);
+        Config diffConfig = Config.of("2", null);
 
         assertThat(eqConfig1.hashCode()).isEqualTo(eqConfig2.hashCode());
         assertThat(eqConfig1.hashCode()).isNotEqualTo(diffConfig.hashCode());

@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class UserUpdateCommand {
+public final class UserUpdateCommand {
     
     private final long id;
     private final String name;

@@ -44,7 +44,7 @@ public class TokenSecretManager {
         try {
             return Files.toString(tokenSecretFile, Charsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Could not write token secret file.", e);
         }
     }
 }

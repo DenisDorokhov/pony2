@@ -39,11 +39,9 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     List<Song> findByAlbumArtistId(Long artistId, Sort sort);
 
-    Page<Song> findByAlbumArtistId(Long artistId, Pageable pageable);
-
     Page<Song> findByGenreIdAndArtworkNotNull(Long genreId, Pageable pageable);
 
-    Page<Song> findByAlbumIdAndArtworkNotNull(Long genreId, Pageable pageable);
+    List<Song> findByAlbumIdAndArtworkNotNull(Long genreId);
 
     @Modifying
     @Query("UPDATE Song s SET s.artwork = NULL WHERE s.artwork.id = ?1")

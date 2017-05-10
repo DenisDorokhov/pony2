@@ -32,29 +32,9 @@ public class Config implements Serializable {
     protected Config() {
     }
 
-    public Config(String id, String value) {
-        this.id = checkNotNull(id);
-        this.value = value;
-    }
-
-    public Config(String id, int value) {
-        this(id, String.valueOf(value));
-    }
-
-    public Config(String id, long value) {
-        this(id, String.valueOf(value));
-    }
-
-    public Config(String id, double value) {
-        this(id, String.valueOf(value));
-    }
-
-    public Config(String id, boolean value) {
-        this(id, String.valueOf(value));
-    }
-
     private Config(Builder builder) {
-        this(builder.id, builder.value);
+        this.id = checkNotNull(builder.id);
+        this.value = builder.value;
         creationDate = builder.creationDate;
         updateDate = builder.updateDate;
     }
@@ -135,6 +115,26 @@ public class Config implements Serializable {
                 "id='" + id + '\'' +
                 ", value='" + value + '\'' +
                 '}';
+    }
+
+    public static Config of(String id, String value) {
+        return builder().id(id).value(value).build();
+    }
+
+    public static Config of(String id, int value) {
+        return builder().id(id).value(value).build();
+    }
+
+    public static Config of(String id, long value) {
+        return builder().id(id).value(value).build();
+    }
+
+    public static Config of(String id, double value) {
+        return builder().id(id).value(value).build();
+    }
+
+    public static Config of(String id, boolean value) {
+        return builder().id(id).value(value).build();
     }
     
     public static Builder builder() {

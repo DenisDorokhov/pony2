@@ -1,8 +1,8 @@
 package net.dorokhov.pony.library.domain;
 
+import net.dorokhov.pony.fixture.SongFixtures;
 import org.junit.Test;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +20,7 @@ public class SongTest {
         
         Genre genre = new Genre();
 
-        Song song1_1_1 = songBuilder()
+        Song song1_1_1 = SongFixtures.builder()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -28,7 +28,7 @@ public class SongTest {
                 .name("1")
                 .build();
 
-        Song song1_1_2 = songBuilder()
+        Song song1_1_2 = SongFixtures.builder()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -36,7 +36,7 @@ public class SongTest {
                 .name("2")
                 .build();
 
-        Song song1_2_1 = songBuilder()
+        Song song1_2_1 = SongFixtures.builder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(1)
@@ -44,7 +44,7 @@ public class SongTest {
                 .name("1")
                 .build();
 
-        Song song1_2_2 = songBuilder()
+        Song song1_2_2 = SongFixtures.builder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -52,7 +52,7 @@ public class SongTest {
                 .name("2")
                 .build();
 
-        Song song1_2_3 = songBuilder()
+        Song song1_2_3 = SongFixtures.builder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -68,7 +68,7 @@ public class SongTest {
     @Test
     public void shouldBuildSearchTerms() throws Exception {
 
-        Song song1 = songBuilder()
+        Song song1 = SongFixtures.builder()
                 .name("s1")
                 .artistName("ar1")
                 .albumArtistName("ar2")
@@ -83,9 +83,9 @@ public class SongTest {
     @Test
     public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        Song eqSong1 = songBuilder().id(1L).build();
-        Song eqSong2 = songBuilder().id(1L).build();
-        Song diffSong = songBuilder().id(2L).build();
+        Song eqSong1 = SongFixtures.builder().id(1L).build();
+        Song eqSong2 = SongFixtures.builder().id(1L).build();
+        Song diffSong = SongFixtures.builder().id(2L).build();
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
@@ -100,35 +100,6 @@ public class SongTest {
 
     @Test
     public void shouldImplementToString() throws Exception {
-        assertThat(songBuilder().build().toString()).startsWith("Song{");
-    }
-    
-    private Song.Builder songBuilder() {
-        Artist artist = Artist.builder().build();
-        Album album = Album.builder().artist(artist).build();
-        Genre genre = Genre.builder().build();
-        return Song.builder()
-                .id(1L)
-                .creationDate(LocalDateTime.now())
-                .updateDate(LocalDateTime.now())
-                .path("somePath")
-                .fileType(FileType.of("text/plain", "txt"))
-                .size(123L)
-                .duration(234L)
-                .bitRate(345L)
-                .bitRateVariable(true)
-                .discNumber(1)
-                .discCount(2)
-                .trackNumber(3)
-                .trackCount(10)
-                .name("someSong")
-                .genreName("someGenre")
-                .artistName("someArtist")
-                .albumArtistName("someAlbumArtist")
-                .albumName("someAlbum")
-                .year(1986)
-                .artwork(null)
-                .album(album)
-                .genre(genre);
+        assertThat(SongFixtures.get().toString()).startsWith("Song{");
     }
 }

@@ -84,7 +84,7 @@ public class InstallationServiceImpl implements InstallationService {
                     .roles(Role.USER, Role.ADMIN)
                     .build());
         } catch (UserExistsException e) {
-            throw new RuntimeException(String.format("User '%s' already exists. Installation inconsistency?", command.getAdminEmail()), e);
+            throw new IllegalStateException(String.format("User '%s' already exists. Installation inconsistency?", command.getAdminEmail()), e);
         }
 
         Installation installation = installationRepository.save(Installation.builder()
