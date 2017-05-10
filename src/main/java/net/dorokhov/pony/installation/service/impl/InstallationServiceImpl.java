@@ -8,7 +8,7 @@ import net.dorokhov.pony.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.log.service.LogService;
-import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.domain.User.Role;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.service.exception.UserExistsException;

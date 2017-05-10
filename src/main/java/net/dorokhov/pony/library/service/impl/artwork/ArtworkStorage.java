@@ -3,9 +3,9 @@ package net.dorokhov.pony.library.service.impl.artwork;
 import net.dorokhov.pony.library.domain.Artwork;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
-import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkCommand;
-import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkCommand;
-import net.dorokhov.pony.library.service.impl.artwork.command.ImageNodeArtworkCommand;
+import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkStorageCommand;
+import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkStorageCommand;
+import net.dorokhov.pony.library.service.impl.artwork.command.ImageNodeArtworkStorageCommand;
 import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
 import net.dorokhov.pony.library.service.impl.image.ThumbnailGenerator;
@@ -79,7 +79,7 @@ public class ArtworkStorage {
     }
 
     @Transactional
-    public Artwork getOrSave(ByteSourceArtworkCommand command) throws IOException {
+    public Artwork getOrSave(ByteSourceArtworkStorageCommand command) throws IOException {
         synchronized (modificationLock) {
             byte[] content = command.getByteSource().read();
             return doGetOrSave(command.getSourceUri(), 
@@ -90,7 +90,7 @@ public class ArtworkStorage {
     }
 
     @Transactional
-    public Artwork getOrSave(FileArtworkCommand command) throws IOException {
+    public Artwork getOrSave(FileArtworkStorageCommand command) throws IOException {
         synchronized (modificationLock) {
             File file = command.getFile();
             return doGetOrSave(command.getSourceUri(),
@@ -101,7 +101,7 @@ public class ArtworkStorage {
     }
 
     @Transactional
-    public Artwork getOrSave(ImageNodeArtworkCommand command) throws IOException {
+    public Artwork getOrSave(ImageNodeArtworkStorageCommand command) throws IOException {
         synchronized (modificationLock) {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> command.getImageNode().getChecksum()),

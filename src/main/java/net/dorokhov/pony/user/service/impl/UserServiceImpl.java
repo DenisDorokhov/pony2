@@ -5,7 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import net.dorokhov.pony.user.UserService;
+import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -49,7 +50,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
     }
-    
+
     @PostConstruct
     public void init() throws IOException {
         try {
@@ -108,7 +109,7 @@ public class UserServiceImpl implements UserService {
         if (sameEmailUser != null && !Objects.equals(sameEmailUser.getId(), command.getId())) {
             throw new UserExistsException(command.getEmail());
         }
-        
+
         String password = Optional.ofNullable(command.getNewPassword())
                 .map(passwordEncoder::encode)
                 .orElse(userToUpdate.getPassword());
@@ -134,7 +135,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(Long id) throws UserNotFoundException, DeletingCurrentUserException {
-        
+
         User userToDelete = userRepository.findOne(id);
         if (userToDelete == null) {
             throw new UserNotFoundException(id);
@@ -143,7 +144,7 @@ public class UserServiceImpl implements UserService {
         if (currentUser != null && currentUser.equals(userToDelete)) {
             throw new DeletingCurrentUserException(id);
         }
-        
+
         logger.info("Deleting user '{}'.", userToDelete.getId());
         userRepository.delete(id);
     }
@@ -213,7 +214,7 @@ public class UserServiceImpl implements UserService {
     public User updateCurrentUser(CurrentUserUpdateCommand command) throws
             NotAuthenticatedException, InvalidPasswordException,
             UserNotFoundException, UserExistsException {
-        
+
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             throw new NotAuthenticatedException();
@@ -221,7 +222,7 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(command.getOldPassword(), currentUser.getPassword())) {
             throw new InvalidPasswordException();
         }
-        
+
         return update(UserUpdateCommand.builder()
                 .id(currentUser.getId())
                 .name(command.getName())
@@ -234,7 +235,7 @@ public class UserServiceImpl implements UserService {
     private Algorithm buildSignatureAlgorithm() {
         try {
             return Algorithm.HMAC256(tokenSecretManager.getTokenSecret());
-        } catch (Exception e) {
+        } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("Could not initialize signature algorithm.", e);
         }
     }

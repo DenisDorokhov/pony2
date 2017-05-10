@@ -5,9 +5,9 @@ import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.Artwork;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
-import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkCommand;
-import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkCommand;
-import net.dorokhov.pony.library.service.impl.artwork.command.ImageNodeArtworkCommand;
+import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkStorageCommand;
+import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkStorageCommand;
+import net.dorokhov.pony.library.service.impl.artwork.command.ImageNodeArtworkStorageCommand;
 import net.dorokhov.pony.library.service.impl.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
@@ -108,7 +108,7 @@ public class ArtworkStorageTest {
         given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
         
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
-        ByteSourceArtworkCommand command = new ByteSourceArtworkCommand(sourceUri(), ByteSource.wrap(bytes));
+        ByteSourceArtworkStorageCommand command = new ByteSourceArtworkStorageCommand(sourceUri(), ByteSource.wrap(bytes));
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
@@ -120,7 +120,7 @@ public class ArtworkStorageTest {
         given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
         
         File file = RESOURCE.getFile();
-        FileArtworkCommand command = new FileArtworkCommand(sourceUri(), file);
+        FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), file);
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
@@ -133,7 +133,7 @@ public class ArtworkStorageTest {
         given(imageNode.getFile()).willReturn(RESOURCE.getFile());
         given(imageNode.getFileType()).willReturn(FileType.of("image/png", "png"));
         given(imageNode.getChecksum()).willReturn(CHECKSUM);
-        ImageNodeArtworkCommand command = new ImageNodeArtworkCommand(sourceUri(), imageNode);
+        ImageNodeArtworkStorageCommand command = new ImageNodeArtworkStorageCommand(sourceUri(), imageNode);
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
@@ -144,7 +144,7 @@ public class ArtworkStorageTest {
         given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
         given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
 
-        FileArtworkCommand command = new FileArtworkCommand(sourceUri(), RESOURCE.getFile());
+        FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), RESOURCE.getFile());
 
         Artwork artwork = artworkStorage.getOrSave(command);
         

@@ -1,4 +1,4 @@
-package net.dorokhov.pony.user;
+package net.dorokhov.pony.user.service;
 
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.UserToken;

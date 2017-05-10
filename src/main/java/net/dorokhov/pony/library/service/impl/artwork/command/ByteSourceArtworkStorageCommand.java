@@ -6,13 +6,13 @@ import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class ByteSourceArtworkCommand {
+public final class ByteSourceArtworkStorageCommand {
 
     private final URI sourceUri;
     
     private final ByteSource byteSource;
 
-    public ByteSourceArtworkCommand(URI sourceUri, ByteSource byteSource) {
+    public ByteSourceArtworkStorageCommand(URI sourceUri, ByteSource byteSource) {
         this.sourceUri = checkNotNull(sourceUri);
         this.byteSource = checkNotNull(byteSource);
     }

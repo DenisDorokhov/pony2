@@ -6,13 +6,13 @@ import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class ImageNodeArtworkCommand {
+public final class ImageNodeArtworkStorageCommand {
     
     private final URI sourceUri;
 
     private final ImageNode imageNode;
 
-    public ImageNodeArtworkCommand(URI sourceUri, ImageNode imageNode) {
+    public ImageNodeArtworkStorageCommand(URI sourceUri, ImageNode imageNode) {
         this.sourceUri = checkNotNull(sourceUri);
         this.imageNode = checkNotNull(imageNode);
     }
