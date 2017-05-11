@@ -52,6 +52,7 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter-cache'
 
     compile 'org.flywaydb:flyway-core'
+    compile 'org.hibernate:hibernate-ehcache:5.0.12.Final'
     compile 'org.hibernate:hibernate-search-orm:5.6.1.Final'
     compile 'net.jthink:jaudiotagger:2.2.3'
     compile 'net.coobird:thumbnailator:0.4.8'

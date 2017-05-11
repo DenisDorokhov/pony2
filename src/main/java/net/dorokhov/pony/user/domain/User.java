@@ -2,6 +2,7 @@ package net.dorokhov.pony.user.domain;
 
 import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.common.BaseEntity;
+import org.hibernate.annotations.Cache;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
@@ -12,10 +13,16 @@ import java.util.Arrays;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static net.dorokhov.pony.user.domain.User.CACHE_REGION;
+import static org.hibernate.annotations.CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
 
 @Entity
 @Table(name = "user")
+@Cacheable
+@Cache(usage = NONSTRICT_READ_WRITE, region = CACHE_REGION)
 public class User extends BaseEntity<Long> implements Serializable {
+    
+    public static final String CACHE_REGION = "pony.user";
 
     public enum Role {
         USER, ADMIN
