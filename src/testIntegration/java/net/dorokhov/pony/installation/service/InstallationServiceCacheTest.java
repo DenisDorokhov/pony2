@@ -29,7 +29,7 @@ public class InstallationServiceCacheTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldCacheAfterInstallation() throws Exception {
+    public void shouldEvictCacheAfterInstallation() throws Exception {
         InstallationCommand command = InstallationCommand.builder()
                 .autoScanInterval(null)
                 .libraryFolders(ImmutableList.of())
@@ -39,16 +39,16 @@ public class InstallationServiceCacheTest extends IntegrationTest {
                 .build();
         Installation installation = installationService.install(command);
         Installation cachedInstallation = installationService.getInstallation();
-        assertThat(installation).isSameAs(cachedInstallation);
+        assertThat(installation).isNotSameAs(cachedInstallation);
     }
 
     @Test
-    public void shouldCacheAfterUpgrading() throws Exception {
+    public void shouldEvictCacheAfterUpgrading() throws Exception {
         installationRepository.save(Installation.builder()
                 .version("2.0")
                 .build());
         Installation installation = installationService.upgradeIfNeeded();
         Installation cachedInstallation = installationService.getInstallation();
-        assertThat(installation).isSameAs(cachedInstallation);
+        assertThat(installation).isNotSameAs(cachedInstallation);
     }
 }

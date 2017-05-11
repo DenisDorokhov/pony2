@@ -6,6 +6,7 @@ import net.dorokhov.pony.user.service.exception.TokenSecretNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,9 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Service
+@CacheConfig(cacheNames = "pony.tokenSecret")
 public class TokenSecretManager {
 
-    private static final String CACHE_NAME = "pony.tokenSecret";
     private static final String CACHE_KEY = "'currentTokenSecret'";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -28,7 +29,7 @@ public class TokenSecretManager {
         this.tokenSecretFile = tokenSecretFile;
     }
 
-    @CachePut(cacheNames = CACHE_NAME, key = CACHE_KEY)
+    @CachePut(key = CACHE_KEY)
     public String generateAndStoreTokenSecret() throws IOException {
         logger.info("Generating new token secret.");
         String uuid = UUID.randomUUID().toString();
@@ -36,7 +37,7 @@ public class TokenSecretManager {
         return uuid;
     }
 
-    @Cacheable(cacheNames = CACHE_NAME, key = CACHE_KEY)
+    @Cacheable(key = CACHE_KEY)
     public String getTokenSecret() throws TokenSecretNotFoundException {
         if (!tokenSecretFile.exists()) {
             throw new TokenSecretNotFoundException();

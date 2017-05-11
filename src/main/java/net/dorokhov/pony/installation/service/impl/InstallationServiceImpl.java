@@ -8,13 +8,14 @@ import net.dorokhov.pony.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.log.service.LogService;
-import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.domain.User.Role;
+import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.service.exception.UserExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,9 +26,9 @@ import org.springframework.transaction.support.TransactionSynchronizationAdapter
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
+@CacheConfig(cacheNames = "pony.installation")
 public class InstallationServiceImpl implements InstallationService {
     
-    private static final String CACHE_NAME = "pony.installation";
     private static final String CACHE_KEY = "'currentInstallation'";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -51,7 +52,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
-    @Cacheable(cacheNames = CACHE_NAME, key = CACHE_KEY)
+    @Cacheable(key = CACHE_KEY)
     @Transactional(readOnly = true)
     public Installation getInstallation() {
         Page<Installation> page = installationRepository.findAll(new PageRequest(0, 2));
@@ -65,7 +66,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
-    @CachePut(cacheNames = CACHE_NAME, key = CACHE_KEY)
+    @CacheEvict(key = CACHE_KEY)
     @Transactional
     synchronized public Installation install(InstallationCommand command) throws AlreadyInstalledException {
         
@@ -102,7 +103,7 @@ public class InstallationServiceImpl implements InstallationService {
     }
 
     @Override
-    @CachePut(cacheNames = CACHE_NAME, key = CACHE_KEY)
+    @CacheEvict(key = CACHE_KEY)
     @Transactional
     synchronized public Installation upgradeIfNeeded() throws NotInstalledException {
         
