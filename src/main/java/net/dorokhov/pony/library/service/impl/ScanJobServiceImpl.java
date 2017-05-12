@@ -78,7 +78,6 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
-    @Nullable
     public ScanStatus getScanStatus() {
         return scanner.getStatus();
     }

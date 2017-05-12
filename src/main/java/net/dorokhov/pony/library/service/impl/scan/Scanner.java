@@ -7,7 +7,6 @@ import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -15,18 +14,17 @@ import java.util.List;
 @Component
 public class Scanner {
     
-    @Nullable
     public ScanStatus getStatus() {
         // TODO: implement
         return null;
     }
 
-    public ScanResult scan(List<File> aTargetFolders) throws ConcurrentScanException, IOException {
+    public ScanResult scan(List<File> targetFolders) throws ConcurrentScanException, IOException {
         // TODO: implement
         return null;
     }
 
-    public ScanResult edit(List<EditCommand> aCommands) throws ConcurrentScanException, SongNotFoundException, IOException {
+    public ScanResult edit(List<EditCommand> commands) throws ConcurrentScanException, SongNotFoundException, IOException {
         // TODO: implement
         return null;
     }

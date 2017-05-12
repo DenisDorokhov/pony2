@@ -9,11 +9,11 @@ import java.util.List;
 @Component
 class Cleaner {
     
-    public void cleanSongs(List<AudioNode> audioNodes, Observer observer) {
+    public void cleanSongs(List<AudioNode> audioNodes, ProgressObserver progressObserver) {
         // TODO: implement
     }
     
-    public void cleanArtworks(List<ImageNode> imageNodes, Observer observer) {
+    public void cleanArtworks(List<ImageNode> imageNodes, ProgressObserver progressObserver) {
         // TODO: implement
     }
 }

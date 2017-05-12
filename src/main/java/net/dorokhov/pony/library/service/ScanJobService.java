@@ -17,7 +17,6 @@ public interface ScanJobService {
 
     ScanJob getById(Long id);
     
-    @Nullable
     ScanStatus getScanStatus();
 
     ScanJob startScanJob() throws LibraryNotDefinedException;

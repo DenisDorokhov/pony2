@@ -8,6 +8,7 @@ import net.dorokhov.pony.fixture.TransactionalTaskExecutorFixtures;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanStatus;
+import net.dorokhov.pony.library.domain.ScanStatus.Progress.Step;
 import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.command.EditCommand;
@@ -321,7 +322,7 @@ public class ScanJobServiceImplTest {
     }
     
     private ScanStatus scanStatus() {
-        return new ScanStatus(ScanStatus.Step.FULL_PREPARING, ImmutableList.of(), 0.0);
+        return new ScanStatus(true, new ScanStatus.Progress(Step.FULL_PREPARING, ImmutableList.of(), 0.0));
     }
     
     private LogMessage logMessage() {
