@@ -274,7 +274,7 @@ public class LibraryScanner {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private ScanStatus progressScan(Step step, double progressValue) {
+    synchronized private ScanStatus progressScan(Step step, double progressValue) {
         ScanStatus oldScanStatus = scanStatusReference.getAndUpdate(oldValue ->
                 new ScanStatus(true,
                         new ScanStatus.Progress(
