@@ -60,8 +60,6 @@ public class ScanJobServiceImpl implements ScanJobService {
         }
     }
     
-    private static final String SCAN_STATUS_META_DATA_KEY = "scanJobId";
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ScanJobRepository scanJobRepository;
