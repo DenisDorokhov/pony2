@@ -1,10 +1,9 @@
 package net.dorokhov.pony.library.service.impl;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.common.TransactionalTaskExecutor;
 import net.dorokhov.pony.config.service.ConfigService;
+import net.dorokhov.pony.fixture.ScanResultFixtures;
 import net.dorokhov.pony.fixture.TransactionTemplateFixtures;
-import net.dorokhov.pony.fixture.TransactionalTaskExecutorFixtures;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanStatus;
@@ -17,7 +16,7 @@ import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
 import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
-import net.dorokhov.pony.library.service.impl.scan.Scanner;
+import net.dorokhov.pony.library.service.impl.scan.LibraryScanner;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.junit.After;
@@ -29,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -59,13 +59,13 @@ public class ScanJobServiceImplTest {
     @Mock
     private ConfigService configService;
     @Mock
-    private Scanner scanner;
+    private LibraryScanner libraryScanner;
     @Mock
     private LogService logService;
     
     @Spy
     @SuppressWarnings("unused")
-    private final TransactionalTaskExecutor transactionalTaskExecutor = TransactionalTaskExecutorFixtures.get();
+    private final ScanJobServiceImpl.TransactionalExecutor transactionalExecutor = new ScanJobServiceImpl.TransactionalExecutor(new SyncTaskExecutor());
     @Spy
     @SuppressWarnings("unused")
     private final TransactionTemplate transactionTemplate = TransactionTemplateFixtures.get();
@@ -97,7 +97,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldGetScanStatus() throws Exception {
         ScanStatus scanStatus = scanStatus();
-        given(scanner.getStatus()).willReturn(scanStatus);
+        given(libraryScanner.getStatus()).willReturn(scanStatus);
         assertThat(scanJobService.getScanStatus()).isSameAs(scanStatus);
     }
 
@@ -107,8 +107,8 @@ public class ScanJobServiceImplTest {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(logService.info(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        ScanResult scanResult = scanResult(ScanType.FULL);
-        given(scanner.scan(any())).willReturn(scanResult);
+        ScanResult scanResult = ScanResultFixtures.get(ScanType.FULL);
+        given(libraryScanner.scan(any())).willReturn(scanResult);
         
         ScanJob scanJobStarting = scanJobService.startScanJob();
         assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.FULL);
@@ -142,8 +142,8 @@ public class ScanJobServiceImplTest {
 
         given(logService.info(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        ScanResult scanResult = scanResult(ScanType.EDIT);
-        given(scanner.edit(any())).willReturn(scanResult);
+        ScanResult scanResult = ScanResultFixtures.get(ScanType.EDIT);
+        given(libraryScanner.edit(any())).willReturn(scanResult);
 
         ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
         assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.EDIT);
@@ -180,6 +180,7 @@ public class ScanJobServiceImplTest {
                 .creationDate(LocalDateTime.now().minusDays(2))
                 .updateDate(null)
                 .build())));
+        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository).save((ScanJob) any());
     }
@@ -189,6 +190,7 @@ public class ScanJobServiceImplTest {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
         given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository).save((ScanJob) any());
     }
@@ -197,6 +199,7 @@ public class ScanJobServiceImplTest {
     public void shouldSkipAutoScanJobIfAutoScanIsOff() throws Exception {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(configService.getAutoScanInterval()).willReturn(null);
+        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository, never()).save((ScanJob) any());
     }
@@ -204,7 +207,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldSkipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws Exception {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(scanner.getStatus()).willReturn(scanStatus());
+        given(libraryScanner.getStatus()).willReturn(scanStatus());
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository, never()).save((ScanJob) any());
     }
@@ -221,6 +224,7 @@ public class ScanJobServiceImplTest {
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
         given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(scanJobFull())));
+        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
         assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobRepository, never()).save((ScanJob) any());
     }
@@ -284,7 +288,7 @@ public class ScanJobServiceImplTest {
         given(logService.error(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
         given(scanJobRepository.findOne(any())).willReturn(scanJobFull());
-        given(scanner.scan(any())).willThrow(e);
+        given(libraryScanner.scan(any())).willThrow(e);
 
         scanJobService.startScanJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -305,7 +309,7 @@ public class ScanJobServiceImplTest {
         given(logService.error(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
         given(scanJobRepository.findOne(any())).willReturn(scanJobEdit());
-        given(scanner.edit(any())).willThrow(e);
+        given(libraryScanner.edit(any())).willThrow(e);
 
         scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -356,37 +360,5 @@ public class ScanJobServiceImplTest {
                 .updateDate(LocalDateTime.now())
                 .status(ScanJob.Status.STARTING)
                 .scanType(scanType);
-    }
-    
-    private ScanResult scanResult(ScanType scanType) {
-        return ScanResult.builder()
-                .scanType(scanType)
-                .targetPaths(ImmutableList.of())
-                .failedPaths(ImmutableList.of())
-                .duration(10L)
-                .songSize(1000L)
-                .artworkSize(5L)
-                .genreCount(1L)
-                .artistCount(2L)
-                .albumCount(3L)
-                .songCount(4L)
-                .artworkCount(5L)
-                .audioFileCount(32L)
-                .imageFileCount(64L)
-                .createdArtistCount(7L)
-                .updatedArtistCount(8L)
-                .deletedArtistCount(9L)
-                .createdAlbumCount(10L)
-                .updatedAlbumCount(11L)
-                .deletedAlbumCount(12L)
-                .createdGenreCount(13L)
-                .updatedGenreCount(14L)
-                .deletedGenreCount(15L)
-                .createdSongCount(16L)
-                .updatedSongCount(17L)
-                .deletedSongCount(18L)
-                .createdArtworkCount(19L)
-                .deletedArtworkCount(20L)
-                .build();
     }
 }

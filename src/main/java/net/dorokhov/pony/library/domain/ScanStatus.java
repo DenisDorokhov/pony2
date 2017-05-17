@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static net.dorokhov.pony.library.domain.ScanType.EDIT;
 import static net.dorokhov.pony.library.domain.ScanType.FULL;
 
@@ -20,18 +21,18 @@ public final class ScanStatus {
             FULL_CLEANING_SONGS(FULL, 2, 6),
             FULL_CLEANING_ARTWORKS(FULL, 3, 6),
             FULL_IMPORTING(FULL, 4, 6),
-            FULL_NORMALIZING(FULL, 5, 6),
+            FULL_SEARCHING_ARTWORKS(FULL, 5, 6),
 
             EDIT_PREPARING(EDIT, 0, 3),
             EDIT_WRITING(EDIT, 1, 3),
-            EDIT_NORMALIZING(EDIT, 2, 3);
+            EDIT_SEARCHING_ARTWORKS(EDIT, 2, 3);
 
             private final ScanType scanType;
             private final int stepNumber;
             private final int totalSteps;
 
             Step(ScanType scanType, int stepNumber, int totalSteps) {
-                this.scanType = scanType;
+                this.scanType = checkNotNull(scanType);
                 this.stepNumber = stepNumber;
                 this.totalSteps = totalSteps;
             }
@@ -63,7 +64,7 @@ public final class ScanStatus {
         private final double value;
 
         public Progress(Step step, List<File> files, double value) {
-            this.step = step;
+            this.step = checkNotNull(step);
             this.files = ImmutableList.copyOf(files);
             this.value = value;
         }

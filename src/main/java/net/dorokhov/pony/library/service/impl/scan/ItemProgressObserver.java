@@ -1,5 +1,5 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
-interface ProgressObserver {
+interface ItemProgressObserver {
     void onProgress(int itemsComplete, int itemsTotal);
 }

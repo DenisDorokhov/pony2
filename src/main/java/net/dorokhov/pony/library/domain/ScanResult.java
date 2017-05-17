@@ -40,13 +40,9 @@ public class ScanResult {
     @NotNull
     private List<String> failedPaths = ImmutableList.of();
 
-    @Column(name = "audio_file_count")
+    @Column(name = "processed_audio_file_count")
     @NotNull
-    private Long audioFileCount;
-
-    @Column(name = "image_file_count")
-    @NotNull
-    private Long imageFileCount;
+    private Integer processedAudioFileCount;
 
     @Column(name = "duration")
     @NotNull
@@ -62,79 +58,79 @@ public class ScanResult {
 
     @Column(name = "genre_count")
     @NotNull
-    private Long genreCount;
+    private Integer genreCount;
 
     @Column(name = "artist_count")
     @NotNull
-    private Long artistCount;
+    private Integer artistCount;
 
     @Column(name = "album_count")
     @NotNull
-    private Long albumCount;
+    private Integer albumCount;
 
     @Column(name = "song_count")
     @NotNull
-    private Long songCount;
+    private Integer songCount;
 
     @Column(name = "artwork_count")
     @NotNull
-    private Long artworkCount;
+    private Integer artworkCount;
 
     @Column(name = "created_artist_count")
     @NotNull
-    private Long createdArtistCount;
+    private Integer createdArtistCount;
 
     @Column(name = "updated_artist_count")
     @NotNull
-    private Long updatedArtistCount;
+    private Integer updatedArtistCount;
 
     @Column(name = "deleted_artist_count")
     @NotNull
-    private Long deletedArtistCount;
+    private Integer deletedArtistCount;
 
     @Column(name = "created_album_count")
     @NotNull
-    private Long createdAlbumCount;
+    private Integer createdAlbumCount;
 
     @Column(name = "updated_album_count")
     @NotNull
-    private Long updatedAlbumCount;
+    private Integer updatedAlbumCount;
 
     @Column(name = "deleted_album_count")
     @NotNull
-    private Long deletedAlbumCount;
+    private Integer deletedAlbumCount;
 
     @Column(name = "created_genre_count")
     @NotNull
-    private Long createdGenreCount;
+    private Integer createdGenreCount;
 
     @Column(name = "updated_genre_count")
     @NotNull
-    private Long updatedGenreCount;
+    private Integer updatedGenreCount;
 
     @Column(name = "deleted_genre_count")
     @NotNull
-    private Long deletedGenreCount;
+    private Integer deletedGenreCount;
 
     @Column(name = "created_song_count")
     @NotNull
-    private Long createdSongCount;
+    private Integer createdSongCount;
 
     @Column(name = "updated_song_count")
     @NotNull
-    private Long updatedSongCount;
+    private Integer updatedSongCount;
 
     @Column(name = "deleted_song_count")
     @NotNull
-    private Long deletedSongCount;
+    private Integer deletedSongCount;
 
     @Column(name = "created_artwork_count")
     @NotNull
-    private Long createdArtworkCount;
+    private Integer createdArtworkCount;
 
     @Column(name = "deleted_artwork_count")
     @NotNull
-    private Long deletedArtworkCount;
+    private Integer deletedArtworkCount;
 
     private ScanResult(Builder builder) {
         id = builder.id;
@@ -142,8 +138,7 @@ public class ScanResult {
         scanType = checkNotNull(builder.scanType);
         targetPaths = checkNotNull(builder.targetPaths.build());
         failedPaths = checkNotNull(builder.failedPaths.build());
-        audioFileCount = checkNotNull(builder.audioFileCount);
-        imageFileCount = checkNotNull(builder.imageFileCount);
+        processedAudioFileCount = checkNotNull(builder.processedAudioFileCount);
         duration = checkNotNull(builder.duration);
         songSize = checkNotNull(builder.songSize);
         artworkSize = checkNotNull(builder.artworkSize);
@@ -188,12 +183,8 @@ public class ScanResult {
         return failedPaths != null ? ImmutableList.copyOf(failedPaths) : ImmutableList.of();
     }
 
-    public Long getAudioFileCount() {
-        return audioFileCount;
-    }
-
-    public Long getImageFileCount() {
-        return imageFileCount;
+    public Integer getProcessedAudioFileCount() {
+        return processedAudioFileCount;
     }
 
     public Long getDuration() {
@@ -208,79 +199,79 @@ public class ScanResult {
         return artworkSize;
     }
 
-    public Long getGenreCount() {
+    public Integer getGenreCount() {
         return genreCount;
     }
 
-    public Long getArtistCount() {
+    public Integer getArtistCount() {
         return artistCount;
     }
 
-    public Long getAlbumCount() {
+    public Integer getAlbumCount() {
         return albumCount;
     }
 
-    public Long getSongCount() {
+    public Integer getSongCount() {
         return songCount;
     }
 
-    public Long getArtworkCount() {
+    public Integer getArtworkCount() {
         return artworkCount;
     }
 
-    public Long getCreatedArtistCount() {
+    public Integer getCreatedArtistCount() {
         return createdArtistCount;
     }
 
-    public Long getUpdatedArtistCount() {
+    public Integer getUpdatedArtistCount() {
         return updatedArtistCount;
     }
 
-    public Long getDeletedArtistCount() {
+    public Integer getDeletedArtistCount() {
         return deletedArtistCount;
     }
 
-    public Long getCreatedAlbumCount() {
+    public Integer getCreatedAlbumCount() {
         return createdAlbumCount;
     }
 
-    public Long getUpdatedAlbumCount() {
+    public Integer getUpdatedAlbumCount() {
         return updatedAlbumCount;
     }
 
-    public Long getDeletedAlbumCount() {
+    public Integer getDeletedAlbumCount() {
         return deletedAlbumCount;
     }
 
-    public Long getCreatedGenreCount() {
+    public Integer getCreatedGenreCount() {
         return createdGenreCount;
     }
 
-    public Long getUpdatedGenreCount() {
+    public Integer getUpdatedGenreCount() {
         return updatedGenreCount;
     }
 
-    public Long getDeletedGenreCount() {
+    public Integer getDeletedGenreCount() {
         return deletedGenreCount;
     }
 
-    public Long getCreatedSongCount() {
+    public Integer getCreatedSongCount() {
         return createdSongCount;
     }
 
-    public Long getUpdatedSongCount() {
+    public Integer getUpdatedSongCount() {
         return updatedSongCount;
     }
 
-    public Long getDeletedSongCount() {
+    public Integer getDeletedSongCount() {
         return deletedSongCount;
     }
 
-    public Long getCreatedArtworkCount() {
+    public Integer getCreatedArtworkCount() {
         return createdArtworkCount;
     }
 
-    public Long getDeletedArtworkCount() {
+    public Integer getDeletedArtworkCount() {
         return deletedArtworkCount;
     }
 
@@ -323,7 +314,7 @@ public class ScanResult {
                 ", albumCount=" + albumCount +
                 ", songCount=" + songCount +
                 ", artworkCount=" + artworkCount +
-                ", audioFileCount=" + audioFileCount +
+                ", processedAudioFileCount=" + processedAudioFileCount +
                 ", createdArtistCount=" + createdArtistCount +
                 ", updatedArtistCount=" + updatedArtistCount +
                 ", deletedArtistCount=" + deletedArtistCount +
@@ -352,30 +343,29 @@ public class ScanResult {
         private ScanType scanType;
         private ImmutableList.Builder<String> targetPaths;
         private ImmutableList.Builder<String> failedPaths;
-        private Long audioFileCount;
-        private Long imageFileCount;
+        private Integer processedAudioFileCount;
         private Long duration;
         private Long songSize;
         private Long artworkSize;
-        private Long genreCount;
-        private Long artistCount;
-        private Long albumCount;
-        private Long songCount;
-        private Long artworkCount;
-        private Long createdArtistCount;
-        private Long updatedArtistCount;
-        private Long deletedArtistCount;
-        private Long createdAlbumCount;
-        private Long updatedAlbumCount;
-        private Long deletedAlbumCount;
-        private Long createdGenreCount;
-        private Long updatedGenreCount;
-        private Long deletedGenreCount;
-        private Long createdSongCount;
-        private Long updatedSongCount;
-        private Long deletedSongCount;
-        private Long createdArtworkCount;
-        private Long deletedArtworkCount;
+        private Integer genreCount;
+        private Integer artistCount;
+        private Integer albumCount;
+        private Integer songCount;
+        private Integer artworkCount;
+        private Integer createdArtistCount;
+        private Integer updatedArtistCount;
+        private Integer deletedArtistCount;
+        private Integer createdAlbumCount;
+        private Integer updatedAlbumCount;
+        private Integer deletedAlbumCount;
+        private Integer createdGenreCount;
+        private Integer updatedGenreCount;
+        private Integer deletedGenreCount;
+        private Integer createdSongCount;
+        private Integer updatedSongCount;
+        private Integer deletedSongCount;
+        private Integer createdArtworkCount;
+        private Integer deletedArtworkCount;
 
         public Builder() {
         }
@@ -413,13 +403,8 @@ public class ScanResult {
             return this;
         }
 
-        public Builder audioFileCount(Long processedSongCount) {
-            this.audioFileCount = processedSongCount;
-            return this;
-        }
-
-        public Builder imageFileCount(Long imageFileCount) {
-            this.imageFileCount = imageFileCount;
+        public Builder processedAudioFileCount(Integer processedAudioFileCount) {
+            this.processedAudioFileCount = processedAudioFileCount;
             return this;
         }
 
@@ -438,97 +423,97 @@ public class ScanResult {
             return this;
         }
 
-        public Builder genreCount(Long genreCount) {
+        public Builder genreCount(Integer genreCount) {
             this.genreCount = genreCount;
             return this;
         }
 
-        public Builder artistCount(Long artistCount) {
+        public Builder artistCount(Integer artistCount) {
             this.artistCount = artistCount;
             return this;
         }
 
-        public Builder albumCount(Long albumCount) {
+        public Builder albumCount(Integer albumCount) {
             this.albumCount = albumCount;
             return this;
         }
 
-        public Builder songCount(Long songCount) {
+        public Builder songCount(Integer songCount) {
             this.songCount = songCount;
             return this;
         }
 
-        public Builder artworkCount(Long artworkCount) {
+        public Builder artworkCount(Integer artworkCount) {
             this.artworkCount = artworkCount;
             return this;
         }
 
-        public Builder createdArtistCount(Long createdArtistCount) {
+        public Builder createdArtistCount(Integer createdArtistCount) {
             this.createdArtistCount = createdArtistCount;
             return this;
         }
 
-        public Builder updatedArtistCount(Long updatedArtistCount) {
+        public Builder updatedArtistCount(Integer updatedArtistCount) {
             this.updatedArtistCount = updatedArtistCount;
             return this;
         }
 
-        public Builder deletedArtistCount(Long deletedArtistCount) {
+        public Builder deletedArtistCount(Integer deletedArtistCount) {
             this.deletedArtistCount = deletedArtistCount;
             return this;
         }
 
-        public Builder createdAlbumCount(Long createdAlbumCount) {
+        public Builder createdAlbumCount(Integer createdAlbumCount) {
             this.createdAlbumCount = createdAlbumCount;
             return this;
         }
 
-        public Builder updatedAlbumCount(Long updatedAlbumCount) {
+        public Builder updatedAlbumCount(Integer updatedAlbumCount) {
             this.updatedAlbumCount = updatedAlbumCount;
             return this;
         }
 
-        public Builder deletedAlbumCount(Long deletedAlbumCount) {
+        public Builder deletedAlbumCount(Integer deletedAlbumCount) {
             this.deletedAlbumCount = deletedAlbumCount;
             return this;
         }
 
-        public Builder createdGenreCount(Long createdGenreCount) {
+        public Builder createdGenreCount(Integer createdGenreCount) {
             this.createdGenreCount = createdGenreCount;
             return this;
         }
 
-        public Builder updatedGenreCount(Long updatedGenreCount) {
+        public Builder updatedGenreCount(Integer updatedGenreCount) {
             this.updatedGenreCount = updatedGenreCount;
             return this;
         }
 
-        public Builder deletedGenreCount(Long deletedGenreCount) {
+        public Builder deletedGenreCount(Integer deletedGenreCount) {
             this.deletedGenreCount = deletedGenreCount;
             return this;
         }
 
-        public Builder createdSongCount(Long createdSongCount) {
+        public Builder createdSongCount(Integer createdSongCount) {
             this.createdSongCount = createdSongCount;
             return this;
         }
 
-        public Builder updatedSongCount(Long updatedSongCount) {
+        public Builder updatedSongCount(Integer updatedSongCount) {
             this.updatedSongCount = updatedSongCount;
             return this;
         }
 
-        public Builder deletedSongCount(Long deletedSongCount) {
+        public Builder deletedSongCount(Integer deletedSongCount) {
             this.deletedSongCount = deletedSongCount;
             return this;
         }
 
-        public Builder createdArtworkCount(Long createdArtworkCount) {
+        public Builder createdArtworkCount(Integer createdArtworkCount) {
             this.createdArtworkCount = createdArtworkCount;
             return this;
         }
 
-        public Builder deletedArtworkCount(Long deletedArtworkCount) {
+        public Builder deletedArtworkCount(Integer deletedArtworkCount) {
             this.deletedArtworkCount = deletedArtworkCount;
             return this;
         }

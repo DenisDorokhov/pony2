@@ -7,13 +7,15 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-class Cleaner {
+class LibraryCleaner {
     
-    public void cleanSongs(List<AudioNode> audioNodes, ProgressObserver progressObserver) {
+    public void cleanSongs(List<AudioNode> audioNodes, ItemProgressObserver itemProgressObserver) {
         // TODO: implement
+        System.out.println("not implemented");
     }
     
-    public void cleanArtworks(List<ImageNode> imageNodes, ProgressObserver progressObserver) {
+    public void cleanArtworks(List<ImageNode> imageNodes, ItemProgressObserver itemProgressObserver) {
         // TODO: implement
+        System.out.println("not implemented");
     }
 }

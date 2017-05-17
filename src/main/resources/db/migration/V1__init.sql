@@ -73,43 +73,39 @@ CREATE TABLE scan_result (
   id BIGINT IDENTITY,
 
   date TIMESTAMP NOT NULL,
-
   scan_type VARCHAR (255) NOT NULL,
-  
   target_paths TEXT NOT NULL,
   failed_paths TEXT NOT NULL,
-
+  processed_audio_file_count INT NOT NULL,
   duration BIGINT NOT NULL,
 
   song_size BIGINT NOT NULL,
   artwork_size BIGINT NOT NULL,
 
-  genre_count BIGINT NOT NULL,
-  artist_count BIGINT NOT NULL,
-  album_count BIGINT NOT NULL,
-  song_count BIGINT NOT NULL,
-  artwork_count BIGINT NOT NULL,
+  genre_count INT NOT NULL,
+  artist_count INT NOT NULL,
+  album_count INT NOT NULL,
+  song_count INT NOT NULL,
+  artwork_count INT NOT NULL,
 
-  processed_song_count BIGINT NOT NULL,
+  created_artist_count INT NOT NULL,
+  updated_artist_count INT NOT NULL,
+  deleted_artist_count INT NOT NULL,
 
-  created_artist_count BIGINT NOT NULL,
-  updated_artist_count BIGINT NOT NULL,
-  deleted_artist_count BIGINT NOT NULL,
+  created_album_count INT NOT NULL,
+  updated_album_count INT NOT NULL,
+  deleted_album_count INT NOT NULL,
 
-  created_album_count BIGINT NOT NULL,
-  updated_album_count BIGINT NOT NULL,
-  deleted_album_count BIGINT NOT NULL,
+  created_genre_count INT NOT NULL,
+  updated_genre_count INT NOT NULL,
+  deleted_genre_count INT NOT NULL,
 
-  created_genre_count BIGINT NOT NULL,
-  updated_genre_count BIGINT NOT NULL,
-  deleted_genre_count BIGINT NOT NULL,
+  created_song_count INT NOT NULL,
+  updated_song_count INT NOT NULL,
+  deleted_song_count INT NOT NULL,
 
-  created_song_count BIGINT NOT NULL,
-  updated_song_count BIGINT NOT NULL,
-  deleted_song_count BIGINT NOT NULL,
-
-  created_artwork_count BIGINT NOT NULL,
-  deleted_artwork_count BIGINT NOT NULL
+  created_artwork_count INT NOT NULL,
+  deleted_artwork_count INT NOT NULL
 );
 
 CREATE INDEX index_scan_result_date ON scan_result (date);

@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.service.impl;
 
-import net.dorokhov.pony.common.TransactionalTaskExecutor;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanJob.Status;
@@ -14,16 +13,18 @@ import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
 import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
-import net.dorokhov.pony.library.service.impl.scan.Scanner;
+import net.dorokhov.pony.library.service.impl.scan.LibraryScanner;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
@@ -35,33 +36,52 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+import static net.dorokhov.pony.library.service.impl.LibraryConfig.SCAN_JOB_EXECUTOR;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
 public class ScanJobServiceImpl implements ScanJobService {
 
+    @Component
+    static class TransactionalExecutor {
+
+        private final Executor executor;
+
+        TransactionalExecutor(@Qualifier(SCAN_JOB_EXECUTOR) Executor executor) {
+            this.executor = executor;
+        }
+
+        @Transactional
+        public void execute(Runnable task) {
+            executor.execute(task);
+        }
+    }
+    
+    private static final String SCAN_STATUS_META_DATA_KEY = "scanJobId";
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ScanJobRepository scanJobRepository;
     private final ConfigService configService;
-    private final Scanner scanner;
+    private final LibraryScanner libraryScanner;
     private final LogService logService;
-    private final TransactionalTaskExecutor transactionalTaskExecutor;
+    private final TransactionalExecutor transactionalExecutor;
     private final TransactionTemplate transactionTemplate;
 
     public ScanJobServiceImpl(ScanJobRepository scanJobRepository,
                               ConfigService configService,
-                              Scanner scanner,
+                              LibraryScanner libraryScanner,
                               LogService logService,
-                              TransactionalTaskExecutor transactionalTaskExecutor,
+                              TransactionalExecutor transactionalExecutor,
                               TransactionTemplate transactionTemplate) {
         this.scanJobRepository = scanJobRepository;
         this.configService = configService;
-        this.scanner = scanner;
+        this.libraryScanner = libraryScanner;
         this.logService = logService;
-        this.transactionalTaskExecutor = transactionalTaskExecutor;
+        this.transactionalExecutor = transactionalExecutor;
         this.transactionTemplate = transactionTemplate;
     }
 
@@ -79,7 +99,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     public ScanStatus getScanStatus() {
-        return scanner.getStatus();
+        return libraryScanner.getStatus();
     }
 
     @Override
@@ -106,7 +126,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                transactionalTaskExecutor.execute(() -> {
+                transactionalExecutor.execute(() -> {
                     try {
                         doEditJob(startingJob, commands);
                     } catch (Exception e) {
@@ -139,7 +159,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
         List<File> libraryFolders = configService.getLibraryFolders();
         if (libraryFolders.size() > 0) {
-            if (scanner.getStatus() == null) {
+            if (!libraryScanner.getStatus().isRunning()) {
                 Integer autoScanInterval = configService.getAutoScanInterval();
                 if (autoScanInterval != null) {
                     shouldScan = shouldAutoScanByInterval(autoScanInterval);
@@ -184,7 +204,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                transactionalTaskExecutor.execute(() -> {
+                transactionalExecutor.execute(() -> {
                     try {
                         doScanJob(startingJob, targetFolders);
                     } catch (Exception e) {
@@ -225,7 +245,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         ScanResult result = null;
         LogMessage logMessage;
         try {
-            result = scanner.scan(targetFolders);
+            result = libraryScanner.scan(targetFolders);
             logMessage = logService.info(logger, "Scan job complete for '{}'.", targetPaths);
         } catch (IOException e) {
             logMessage = logService.error(logger, "Scan job failed due to I/O error.", e);
@@ -255,7 +275,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         ScanResult result = null;
         LogMessage logMessage;
         try {
-            result = scanner.edit(commands);
+            result = libraryScanner.edit(commands);
             logMessage = logService.info(logger, "Edit job complete for {} songs.", commands.size());
         } catch (SongNotFoundException e) {
             logMessage = logService.error(logger, "Song '{}' not found.", e.getId());
