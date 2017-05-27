@@ -24,11 +24,6 @@ public class UserTest {
         assertThat(eqUser1).isNotEqualTo(null);
     }
 
-    @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(new User().toString()).startsWith("User{");
-    }
-
     private User.Builder userBuilder() {
         return User.builder()
                 .name("someName")

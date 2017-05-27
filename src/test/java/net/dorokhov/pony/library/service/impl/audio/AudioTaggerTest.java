@@ -54,16 +54,6 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(ReadableAudioData.builder()
-                .path("somePath")
-                .fileType(FileType.of("text/plain", "txt"))
-                .build().toString()).startsWith("ReadableAudioData{");
-        assertThat(WritableAudioData.builder()
-                .build().toString()).startsWith("WritableAudioData{");
-    }
-
-    @Test
     public void shouldReadEmptyMp3() throws Exception {
         File file = FILE_EMPTY.getFile();
         ReadableAudioData data = audioTagger.read(file);

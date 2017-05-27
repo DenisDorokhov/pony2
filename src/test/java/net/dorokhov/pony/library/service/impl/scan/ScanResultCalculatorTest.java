@@ -2,7 +2,6 @@ package net.dorokhov.pony.library.service.impl.scan;
 
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import net.dorokhov.pony.fixture.ScanResultFixtures;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.*;
@@ -10,15 +9,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
+import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResultBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +46,10 @@ public class ScanResultCalculatorTest {
     private SongRepository songRepository;
     @Mock
     private ArtworkRepository artworkRepository;
+    
+    @Spy
+    @SuppressWarnings("unused")
+    private PlatformTransactionManager transactionManager = transactionManager();
 
     @Test
     public void shouldCalculateAndSaveFirstScan() throws Exception {
@@ -54,7 +61,7 @@ public class ScanResultCalculatorTest {
     public void shouldCalculateAndSaveConsequentScan() throws Exception {
         LocalDateTime lastScanDate = LocalDateTime.now();
         given(scanResultRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(
-                ImmutableList.of(ScanResultFixtures.builder(ScanType.FULL).date(lastScanDate).build())));
+                ImmutableList.of(scanResultBuilder(ScanType.FULL).date(lastScanDate).build())));
         doTestCalculateAndSave(lastScanDate);
     }
     

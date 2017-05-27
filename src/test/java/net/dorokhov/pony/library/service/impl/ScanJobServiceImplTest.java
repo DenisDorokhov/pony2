@@ -2,18 +2,11 @@ package net.dorokhov.pony.library.service.impl;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.config.service.ConfigService;
-import net.dorokhov.pony.fixture.ScanResultFixtures;
-import net.dorokhov.pony.fixture.TransactionTemplateFixtures;
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.domain.ScanResult;
-import net.dorokhov.pony.library.domain.ScanStatus;
-import net.dorokhov.pony.library.domain.ScanStatus.Progress.Step;
-import net.dorokhov.pony.library.domain.ScanType;
+import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
+import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
-import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.impl.scan.LibraryScanner;
@@ -33,19 +26,32 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
+import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobEdit;
+import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobFull;
+import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResult;
+import static net.dorokhov.pony.library.domain.ScanJob.Status.*;
+import static net.dorokhov.pony.library.domain.ScanProgress.Step.EDIT_PREPARING;
+import static net.dorokhov.pony.library.domain.ScanProgress.Step.FULL_PREPARING;
+import static net.dorokhov.pony.library.domain.ScanType.FULL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -65,10 +71,10 @@ public class ScanJobServiceImplTest {
     
     @Spy
     @SuppressWarnings("unused")
-    private final ScanJobServiceImpl.TransactionalExecutor transactionalExecutor = new ScanJobServiceImpl.TransactionalExecutor(new SyncTaskExecutor());
+    private final Executor executor = new SyncTaskExecutor();
     @Spy
     @SuppressWarnings("unused")
-    private final TransactionTemplate transactionTemplate = TransactionTemplateFixtures.get();
+    private final PlatformTransactionManager transactionManager = transactionManager();
 
     @Before
     public void setUp() throws Exception {
@@ -95,24 +101,24 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldGetScanStatus() throws Exception {
-        ScanStatus scanStatus = scanStatus();
-        given(libraryScanner.getStatus()).willReturn(scanStatus);
-        assertThat(scanJobService.getScanStatus()).isSameAs(scanStatus);
-    }
-
-    @Test
     public void shouldExecuteScanJob() throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(logService.info(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        ScanResult scanResult = ScanResultFixtures.get(ScanType.FULL);
-        given(libraryScanner.scan(any())).willReturn(scanResult);
+        ScanResult scanResult = scanResult(FULL);
+        given(libraryScanner.scan(any(), any())).willAnswer(invocation -> {
+            Consumer<ScanProgress> observer = invocation.getArgument(1);
+            observer.accept(new ScanProgress(FULL_PREPARING, ImmutableList.of(), 0.5));
+            return scanResult;
+        });
+        
+        ScanJobServiceObserver observer = new ScanJobServiceObserver();
+        scanJobService.addObserver(observer);
         
         ScanJob scanJobStarting = scanJobService.startScanJob();
-        assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.FULL);
-        assertThat(scanJobStarting.getStatus()).isEqualTo(ScanJob.Status.STARTING);
+        assertThat(scanJobStarting.getScanType()).isEqualTo(FULL);
+        assertThat(scanJobStarting.getStatus()).isEqualTo(STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
         assertThat(scanJobStarting.getScanResult()).isNull();
         verify(logService).info(any(), any(), any());
@@ -126,15 +132,33 @@ public class ScanJobServiceImplTest {
         ScanJob scanJobStarted = savedScanJob.getAllValues().get(1);
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
         
-        assertThat(scanJobStarted.getScanType()).isEqualTo(ScanType.FULL);
-        assertThat(scanJobStarted.getStatus()).isEqualTo(ScanJob.Status.STARTED);
+        assertThat(scanJobStarted.getScanType()).isEqualTo(FULL);
+        assertThat(scanJobStarted.getStatus()).isEqualTo(STARTED);
         assertThat(scanJobStarted.getLogMessage()).isNotNull();
         assertThat(scanJobStarted.getScanResult()).isNull();
         
-        assertThat(scanJobComplete.getScanType()).isEqualTo(ScanType.FULL);
+        assertThat(scanJobComplete.getScanType()).isEqualTo(FULL);
         assertThat(scanJobComplete.getStatus()).isEqualTo(ScanJob.Status.COMPLETE);
         assertThat(scanJobComplete.getLogMessage()).isNotNull();
         assertThat(scanJobComplete.getScanResult()).isSameAs(scanResult);
+        
+        assertThat(observer.getCallCount()).isEqualTo(4);
+        observer.assertThatStartingAt(0);
+        observer.assertThatStartedAt(1);
+        observer.assertThatProgressedAt(2, scanJobProgress -> {
+            //noinspection ConstantConditions
+            assertThat(scanJobProgress.getScanProgress().getStep()).isEqualTo(FULL_PREPARING);
+            assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
+            assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(0.5);
+        });
+        observer.assertThatCompletedAt(3);
+
+        scanJobService.removeObserver(observer);
+
+        scanJobService.startScanJob();
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+
+        assertThat(observer.getCallCount()).isEqualTo(4);
     }
 
     @Test
@@ -142,12 +166,19 @@ public class ScanJobServiceImplTest {
 
         given(logService.info(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        ScanResult scanResult = ScanResultFixtures.get(ScanType.EDIT);
-        given(libraryScanner.edit(any())).willReturn(scanResult);
+        ScanResult scanResult = scanResult(ScanType.EDIT);
+        given(libraryScanner.edit(any(), any())).willAnswer(invocation -> {
+            Consumer<ScanProgress> observer = invocation.getArgument(1);
+            observer.accept(new ScanProgress(EDIT_PREPARING, ImmutableList.of(), 0.5));
+            return scanResult;
+        });
+
+        ScanJobServiceObserver observer = new ScanJobServiceObserver();
+        scanJobService.addObserver(observer);
 
         ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
         assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobStarting.getStatus()).isEqualTo(ScanJob.Status.STARTING);
+        assertThat(scanJobStarting.getStatus()).isEqualTo(STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
         assertThat(scanJobStarting.getScanResult()).isNull();
         verify(logService).info(any(), any(), any());
@@ -162,7 +193,7 @@ public class ScanJobServiceImplTest {
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
 
         assertThat(scanJobStarted.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobStarted.getStatus()).isEqualTo(ScanJob.Status.STARTED);
+        assertThat(scanJobStarted.getStatus()).isEqualTo(STARTED);
         assertThat(scanJobStarted.getLogMessage()).isNotNull();
         assertThat(scanJobStarted.getScanResult()).isNull();
 
@@ -170,126 +201,123 @@ public class ScanJobServiceImplTest {
         assertThat(scanJobComplete.getStatus()).isEqualTo(ScanJob.Status.COMPLETE);
         assertThat(scanJobComplete.getLogMessage()).isNotNull();
         assertThat(scanJobComplete.getScanResult()).isSameAs(scanResult);
-    }
 
-    @Test
-    public void shouldStartAutoScanJobByInterval() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(scanJobBuilder(ScanType.FULL)
-                .creationDate(LocalDateTime.now().minusDays(2))
-                .updateDate(null)
-                .build())));
-        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
-        assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
-        verify(scanJobRepository).save((ScanJob) any());
-    }
+        assertThat(observer.getCallCount()).isEqualTo(4);
+        observer.assertThatStartingAt(0);
+        observer.assertThatStartedAt(1);
+        observer.assertThatProgressedAt(2, scanJobProgress -> {
+            //noinspection ConstantConditions
+            assertThat(scanJobProgress.getScanProgress().getStep()).isEqualTo(EDIT_PREPARING);
+            assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
+            assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(0.5);
+        });
+        observer.assertThatCompletedAt(3);
 
-    @Test
-    public void shouldStartAutoScanJobIfRunningFirstTime() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
-        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
-        assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
-        verify(scanJobRepository).save((ScanJob) any());
-    }
+        scanJobService.removeObserver(observer);
 
-    @Test
-    public void shouldSkipAutoScanJobIfAutoScanIsOff() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(configService.getAutoScanInterval()).willReturn(null);
-        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
-        assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
-        verify(scanJobRepository, never()).save((ScanJob) any());
-    }
+        scanJobService.startScanJob();
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
-    @Test
-    public void shouldSkipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(libraryScanner.getStatus()).willReturn(scanStatus());
-        assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
-        verify(scanJobRepository, never()).save((ScanJob) any());
-    }
-
-    @Test
-    public void shouldSkipAutoScanJobIfNoLibraryFoldersDefined() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of());
-        assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
-        verify(scanJobRepository, never()).save((ScanJob) any());
-    }
-
-    @Test
-    public void shouldSkipAutoScanJobByInterval() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(scanJobFull())));
-        given(libraryScanner.getStatus()).willReturn(new ScanStatus(false, null));
-        assertThat(scanJobService.startAutoScanJobIfNeeded()).isNull();
-        verify(scanJobRepository, never()).save((ScanJob) any());
-    }
-
-    @Test
-    public void shouldFailScanJobIfLibraryNotDefined() throws Exception {
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of());
-        assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(LibraryNotDefinedException.class);
+        assertThat(observer.getCallCount()).isEqualTo(4);
     }
 
     @Test
     public void shouldFailScanJobOnIOException() throws Exception {
-        doTestFailScanJobOnExceptionDuringScan(new IOException());
+        doTestFailScanJobOnException(new IOException());
         verify(logService).error(any(), any(), any());
     }
 
     @Test
     public void shouldFailScanJobOnConcurrentScanException() throws Exception {
-        doTestFailScanJobOnExceptionDuringScan(new ConcurrentScanException());
-        verify(logService).error(any(), any(), any());
+
+        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        scanJobService.startScanJob();
+        
+        assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
+        
+        AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
+        Thread thread = new Thread(() -> {
+            try {
+                scanJobService.startScanJob();
+            } catch (ConcurrentScanException e) {
+                isConcurrentScan.set(true);
+            }
+        });
+        thread.start();
+        thread.join();
+        assertThat(isConcurrentScan.get()).isTrue();
     }
 
     @Test
     public void shouldFailScanJobOnUnexpectedException() throws Exception {
-        doTestFailScanJobOnExceptionDuringScan(new RuntimeException());
+        doTestFailScanJobOnException(new RuntimeException());
         verify(logService).error(any(), any(), any());
     }
 
     @Test
-    public void shouldFailEditJobIfNoScanEditCommand() throws Exception {
-        assertThatThrownBy(() -> scanJobService.startEditJob(ImmutableList.of())).isInstanceOf(NoScanEditCommandException.class);
-    }
-
-    @Test
     public void shouldFailEditJobOnSongNotFoundException() throws Exception {
-        doTestFailEditJobOnExceptionDuringScan(new SongNotFoundException(1L));
+        doTestFailEditJobOnException(new SongNotFoundException(1L));
         verify(logService).error(any(), any(), any());
     }
 
     @Test
     public void shouldFailEditJobOnIOException() throws Exception {
-        doTestFailEditJobOnExceptionDuringScan(new IOException());
+        doTestFailEditJobOnException(new IOException());
         verify(logService).error(any(), any(), any());
     }
 
     @Test
     public void shouldFailEditJobOnConcurrentScanException() throws Exception {
-        doTestFailEditJobOnExceptionDuringScan(new ConcurrentScanException());
-        verify(logService).error(any(), any(), any());
+
+        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        scanJobService.startEditJob(ImmutableList.of());
+        
+        assertThatThrownBy(() -> scanJobService.startEditJob(ImmutableList.of())).isInstanceOf(ConcurrentScanException.class);
+
+        AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
+        Thread thread = new Thread(() -> {
+            try {
+                scanJobService.startEditJob(ImmutableList.of());
+            } catch (ConcurrentScanException e) {
+                isConcurrentScan.set(true);
+            }
+        });
+        thread.start();
+        thread.join();
+        assertThat(isConcurrentScan.get()).isTrue();
     }
 
     @Test
     public void shouldFailEditJobOnUnexpectedException() throws Exception {
-        doTestFailEditJobOnExceptionDuringScan(new RuntimeException());
+        doTestFailEditJobOnException(new RuntimeException());
         verify(logService).error(any(), any(), any());
     }
-    
-    private void doTestFailScanJobOnExceptionDuringScan(Exception e) throws Exception {
+
+    @Test
+    public void shouldIgnoreExceptionsThrownByObservers() throws Exception {
+        
+        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        
+        ThrowingScanJobServiceObserver observer = new ThrowingScanJobServiceObserver();
+        scanJobService.addObserver(observer);
+        
+        scanJobService.startScanJob();
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        
+        assertThat(observer.getCallCount()).isEqualTo(3);
+    }
+
+    private void doTestFailScanJobOnException(Exception e) throws Exception {
         
         given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
         given(logService.error(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
         given(scanJobRepository.findOne(any())).willReturn(scanJobFull());
-        given(libraryScanner.scan(any())).willThrow(e);
+        given(libraryScanner.scan(any(), any())).willThrow(e);
 
+        ScanJobServiceObserver observer = new ScanJobServiceObserver();
+        scanJobService.addObserver(observer);
+        
         scanJobService.startScanJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
@@ -298,18 +326,26 @@ public class ScanJobServiceImplTest {
         verify(logService, times(2)).info(any(), any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
-        assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.FULL);
+        assertThat(scanJobFailed.getScanType()).isEqualTo(FULL);
         assertThat(scanJobFailed.getStatus()).isEqualTo(ScanJob.Status.FAILED);
         assertThat(scanJobFailed.getLogMessage()).isNotNull();
         assertThat(scanJobFailed.getScanResult()).isNull();
+        
+        assertThat(observer.getCallCount()).isEqualTo(3);
+        observer.assertThatStartingAt(0);
+        observer.assertThatStartedAt(1);
+        observer.assertThatFailedAt(2);
     }
     
-    private void doTestFailEditJobOnExceptionDuringScan(Exception e) throws Exception {
+    private void doTestFailEditJobOnException(Exception e) throws Exception {
         
         given(logService.error(any(), any(), any())).willReturn(logMessage());
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
         given(scanJobRepository.findOne(any())).willReturn(scanJobEdit());
-        given(libraryScanner.edit(any())).willThrow(e);
+        given(libraryScanner.edit(any(), any())).willThrow(e);
+
+        ScanJobServiceObserver observer = new ScanJobServiceObserver();
+        scanJobService.addObserver(observer);
 
         scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -323,10 +359,11 @@ public class ScanJobServiceImplTest {
         assertThat(scanJobFailed.getStatus()).isEqualTo(ScanJob.Status.FAILED);
         assertThat(scanJobFailed.getLogMessage()).isNotNull();
         assertThat(scanJobFailed.getScanResult()).isNull();
-    }
-    
-    private ScanStatus scanStatus() {
-        return new ScanStatus(true, new ScanStatus.Progress(Step.FULL_PREPARING, ImmutableList.of(), 0.0));
+
+        assertThat(observer.getCallCount()).isEqualTo(3);
+        observer.assertThatStartingAt(0);
+        observer.assertThatStartedAt(1);
+        observer.assertThatFailedAt(2);
     }
     
     private LogMessage logMessage() {
@@ -341,24 +378,123 @@ public class ScanJobServiceImplTest {
         return WritableAudioData.builder().build();
     }
 
-    private ScanJob scanJobFull() {
-        return scanJob(ScanType.FULL);
-    }
+    private static class ScanJobServiceObserver implements ScanJobService.Observer {
 
-    private ScanJob scanJobEdit() {
-        return scanJob(ScanType.EDIT);
-    }
+        private final List<ScanJobProgress> calls = new ArrayList<>();
+        
+        public int getCallCount() {
+            return calls.size();
+        }
+        
+        public void assertThatStartingAt(int index) {
+            assertThat(calls).element(index).satisfies(scanJobProgress -> {
+                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTING);
+                assertThat(scanJobProgress.getScanProgress()).isNull();
+            });
+        }
+        
+        public void assertThatStartedAt(int index) {
+            assertThat(calls).element(index).satisfies(scanJobProgress -> {
+                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTED);
+                assertThat(scanJobProgress.getScanProgress()).isNull();
+            });
+        }
+        
+        public void assertThatProgressedAt(int index, Consumer<ScanJobProgress> handler) {
+            assertThat(calls).element(index).satisfies(scanJobProgress -> {
+                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTED);
+                assertThat(scanJobProgress.getScanProgress()).isNotNull();
+                handler.accept(scanJobProgress);
+            });
+        }
 
-    private ScanJob scanJob(ScanType scanType) {
-        return scanJobBuilder(scanType).build();
-    }
+        public void assertThatCompletedAt(int index) {
+            assertThat(calls).element(index).satisfies(scanJobProgress -> {
+                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(COMPLETE);
+                assertThat(scanJobProgress.getScanProgress()).isNull();
+            });
+        }
 
-    private ScanJob.Builder scanJobBuilder(ScanType scanType) {
-        return ScanJob.builder()
-                .id(1L)
-                .creationDate(LocalDateTime.now())
-                .updateDate(LocalDateTime.now())
-                .status(ScanJob.Status.STARTING)
-                .scanType(scanType);
+        public void assertThatFailedAt(int index) {
+            assertThat(calls).element(index).satisfies(scanJobProgress -> {
+                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(FAILED);
+                assertThat(scanJobProgress.getScanProgress()).isNull();
+            });
+        }
+
+        @Override
+        public void onScanJobStarting(ScanJob scanJob) {
+            assertThat(scanJob).isNotNull();
+            assertThat(scanJob.getStatus()).isEqualTo(STARTING);
+            calls.add(new ScanJobProgress(scanJob, null));
+        }
+
+        @Override
+        public void onScanJobStarted(ScanJob scanJob) {
+            assertThat(scanJob).isNotNull();
+            assertThat(scanJob.getStatus()).isEqualTo(STARTED);
+            calls.add(new ScanJobProgress(scanJob, null));
+        }
+
+        @Override
+        public void onScanJobProgress(ScanJobProgress scanJobProgress) {
+            assertThat(scanJobProgress).isNotNull();
+            assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTED);
+            assertThat(scanJobProgress.getScanProgress()).isNotNull();
+            calls.add(scanJobProgress);
+        }
+
+        @Override
+        public void onScanJobCompleted(ScanJob scanJob) {
+            assertThat(scanJob).isNotNull();
+            assertThat(scanJob.getStatus()).isEqualTo(COMPLETE);
+            calls.add(new ScanJobProgress(scanJob, null));
+        }
+
+        @Override
+        public void onScanJobFailed(ScanJob scanJob) {
+            assertThat(scanJob).isNotNull();
+            assertThat(scanJob.getStatus()).isEqualTo(FAILED);
+            calls.add(new ScanJobProgress(scanJob, null));
+        }
+    }
+    
+    private static class ThrowingScanJobServiceObserver implements ScanJobService.Observer {
+
+        private int callCount = 0;
+
+        public int getCallCount() {
+            return callCount;
+        }
+
+        @Override
+        public void onScanJobStarting(ScanJob scanJob) {
+            callCount++;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void onScanJobStarted(ScanJob scanJob) {
+            callCount++;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void onScanJobProgress(ScanJobProgress scanJobProgress) {
+            callCount++;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void onScanJobCompleted(ScanJob scanJob) {
+            callCount++;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void onScanJobFailed(ScanJob scanJob) {
+            callCount++;
+            throw new RuntimeException();
+        }
     }
 }

@@ -2,7 +2,6 @@ package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +20,7 @@ public class GenreTest {
 
         assertThat(list).containsExactly(genre1, genre2, genre2, genreNull);
     }
+    
     @Test
     public void shouldSupportEqualityAndHashCode() throws Exception {
         
@@ -37,16 +37,5 @@ public class GenreTest {
         assertThat(eqGenre1).isNotEqualTo(diffGenre);
         assertThat(eqGenre1).isNotEqualTo("foo1");
         assertThat(eqGenre1).isNotEqualTo(null);
-    }
-
-    @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(Genre.builder()
-                .id(1L)
-                .creationDate(LocalDateTime.now())
-                .updateDate(LocalDateTime.now())
-                .name("someName")
-                .artwork(null)
-                .build().toString()).startsWith("Genre{");
     }
 }

@@ -1,7 +1,6 @@
 package net.dorokhov.pony.library.service.impl;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.fixture.SongFixtures;
 import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.exception.AlbumNotFoundException;
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_ALBUM;
 import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_ARTIST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +53,7 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldExportSong() throws Exception {
-        Song song = SongFixtures.builder()
+        Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
                                 .name("someArtist")
@@ -73,7 +73,7 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldExportSongWithoutName() throws Exception {
-        Song song = SongFixtures.builder()
+        Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
                                 .build())
@@ -91,7 +91,7 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldExportSongWithUnknownArtist() throws Exception {
-        Song song = SongFixtures.builder()
+        Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
                                 .build())
@@ -110,7 +110,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldExportAlbum() throws Exception {
 
-        Song song1 = SongFixtures.builder()
+        Song song1 = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
                                 .name("someArtist")
@@ -164,7 +164,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldExportAlbumWithoutName() throws Exception {
 
-        Song song1 = SongFixtures.builder()
+        Song song1 = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
                                 .build())
@@ -199,7 +199,7 @@ public class ExportServiceImplTest {
                 .name("someArtist")
                 .build();
 
-        Song song1 = SongFixtures.builder()
+        Song song1 = songBuilder()
                 .album(Album.builder()
                         .artist(artist)
                         .name("someAlbum1")

@@ -1,6 +1,5 @@
 package net.dorokhov.pony.installation.service.impl;
 
-import net.dorokhov.pony.installation.domain.Installation;
 import net.dorokhov.pony.installation.service.InstallationService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.DefaultApplicationArguments;
 
+import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,9 +24,7 @@ public class InstallationUpgradeRunnerTest {
 
     @Test
     public void shouldUpgradeIfInstalled() throws Exception {
-        given(installationService.getInstallation()).willReturn(Installation.builder()
-                .version("2.0")
-                .build());
+        given(installationService.getInstallation()).willReturn(installation());
         installationUpgradeRunner.run(new DefaultApplicationArguments(new String[]{}));
         verify(installationService).getInstallation();
         verify(installationService).upgradeIfNeeded();

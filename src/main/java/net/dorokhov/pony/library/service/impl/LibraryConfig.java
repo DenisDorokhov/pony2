@@ -12,15 +12,15 @@ public class LibraryConfig {
 
     @Bean(SCAN_JOB_EXECUTOR)
     public ThreadPoolTaskExecutor scanJobExecutor() {
-        return buildThreadPoolExecutor(2, SCAN_JOB_EXECUTOR);
+        return buildThreadPoolExecutor(SCAN_JOB_EXECUTOR, 1);
     }
 
     @Bean(SCAN_EXECUTOR)
     public ThreadPoolTaskExecutor scanExecutor() {
-        return buildThreadPoolExecutor(10, SCAN_EXECUTOR);
+        return buildThreadPoolExecutor(SCAN_EXECUTOR, 10);
     }
 
-    private ThreadPoolTaskExecutor buildThreadPoolExecutor(int maxPoolSize, String beanName) {
+    private ThreadPoolTaskExecutor buildThreadPoolExecutor(String beanName, int maxPoolSize) {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setMaxPoolSize(maxPoolSize);
         taskExecutor.setThreadNamePrefix(beanName + "-");

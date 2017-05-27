@@ -9,8 +9,8 @@ import net.dorokhov.pony.installation.service.exception.AlreadyInstalledExceptio
 import net.dorokhov.pony.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.installation.service.impl.BuildVersionProvider.BuildVersion;
 import net.dorokhov.pony.log.service.LogService;
-import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.domain.User.Role;
+import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import org.junit.After;
 import org.junit.Before;
@@ -26,6 +26,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.time.LocalDateTime;
 
+import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
+import static net.dorokhov.pony.fixture.InstallationFixtures.installationBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,7 +66,7 @@ public class InstallationServiceImplTest {
 
     @Test
     public void shouldGetInstallation() throws Exception {
-        Installation installation = installationBuilder().build();
+        Installation installation = installation();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         assertThat(installationService.getInstallation()).isSameAs(installation);
     }
@@ -77,7 +79,7 @@ public class InstallationServiceImplTest {
 
     @Test
     public void shouldFailWhenMultipleInstallationsDetected() throws Exception {
-        Installation installation = installationBuilder().build();
+        Installation installation = installation();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation, installation)));
         assertThatThrownBy(installationService::getInstallation).isInstanceOf(IllegalStateException.class);
     }
@@ -87,7 +89,7 @@ public class InstallationServiceImplTest {
         
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
-        Installation installation = installationBuilder().build();
+        Installation installation = installation();
         given(installationRepository.save((Installation) any())).willReturn(installation);
         
         InstallationCommand command = installationCommand();
@@ -109,7 +111,7 @@ public class InstallationServiceImplTest {
 
     @Test
     public void shouldFailWhenAlreadyInstalled() throws Exception {
-        Installation installation = installationBuilder().build();
+        Installation installation = installation();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         assertThatThrownBy(() -> installationService.install(installationCommand())).isInstanceOf(AlreadyInstalledException.class);
     }
@@ -134,7 +136,7 @@ public class InstallationServiceImplTest {
     @Test
     public void shouldNotUpgradeWhenNotNeeded() throws Exception {
 
-        Installation installation = installationBuilder().version("2.0").build();
+        Installation installation = installation();
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of(installation)));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion("2.0"));
         
@@ -147,10 +149,6 @@ public class InstallationServiceImplTest {
     public void shouldFailUpgradeWhenNotInstalled() throws Exception {
         given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
         assertThatThrownBy(installationService::upgradeIfNeeded).isInstanceOf(NotInstalledException.class);
-    }
-
-    private Installation.Builder installationBuilder() {
-        return Installation.builder().version("2.0");
     }
     
     private BuildVersion buildVersion() {

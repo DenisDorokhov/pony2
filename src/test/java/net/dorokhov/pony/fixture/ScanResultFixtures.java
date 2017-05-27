@@ -9,11 +9,11 @@ public final class ScanResultFixtures {
     private ScanResultFixtures() {
     }
     
-    public static ScanResult get(ScanType scanType) {
-        return builder(scanType).build();
+    public static ScanResult scanResult(ScanType scanType) {
+        return scanResultBuilder(scanType).build();
     }
     
-    public static ScanResult.Builder builder(ScanType scanType) {
+    public static ScanResult.Builder scanResultBuilder(ScanType scanType) {
         return ScanResult.builder()
                 .scanType(scanType)
                 .targetPaths(ImmutableList.of())

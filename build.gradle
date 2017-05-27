@@ -72,6 +72,10 @@ springBoot {
     buildInfo()
 }
 
+findbugs {
+    sourceSets = [sourceSets.main]
+}
+
 tasks.withType(FindBugs) {
     reports {
         html.enabled = true

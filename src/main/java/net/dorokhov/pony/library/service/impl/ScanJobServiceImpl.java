@@ -3,15 +3,13 @@ package net.dorokhov.pony.library.service.impl;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.library.domain.ScanJob;
 import net.dorokhov.pony.library.domain.ScanJob.Status;
+import net.dorokhov.pony.library.domain.ScanJobProgress;
 import net.dorokhov.pony.library.domain.ScanResult;
-import net.dorokhov.pony.library.domain.ScanStatus;
 import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.library.service.exception.LibraryNotDefinedException;
-import net.dorokhov.pony.library.service.exception.NoScanEditCommandException;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
 import net.dorokhov.pony.library.service.impl.scan.LibraryScanner;
 import net.dorokhov.pony.log.domain.LogMessage;
@@ -20,67 +18,92 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static net.dorokhov.pony.library.service.impl.LibraryConfig.SCAN_JOB_EXECUTOR;
+import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
 public class ScanJobServiceImpl implements ScanJobService {
 
-    @Component
-    static class TransactionalExecutor {
-
-        private final Executor executor;
-
-        TransactionalExecutor(@Qualifier(SCAN_JOB_EXECUTOR) Executor executor) {
-            this.executor = executor;
-        }
-
-        @Transactional
-        public void execute(Runnable task) {
-            executor.execute(task);
-        }
-    }
-    
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ScanJobRepository scanJobRepository;
     private final ConfigService configService;
     private final LibraryScanner libraryScanner;
     private final LogService logService;
-    private final TransactionalExecutor transactionalExecutor;
+    private final Executor scanJobExecutor;
+    
     private final TransactionTemplate transactionTemplate;
+
+    private final Set<Observer> observers = Collections.synchronizedSet(new LinkedHashSet<>());
+
+    private final AtomicReference<ScanJobProgress> scanJobProgressReference = new AtomicReference<>();
+
+    private final Semaphore scanJobSemaphore = new Semaphore(1);
 
     public ScanJobServiceImpl(ScanJobRepository scanJobRepository,
                               ConfigService configService,
                               LibraryScanner libraryScanner,
                               LogService logService,
-                              TransactionalExecutor transactionalExecutor,
-                              TransactionTemplate transactionTemplate) {
+                              @Qualifier(SCAN_JOB_EXECUTOR) Executor scanJobExecutor,
+                              PlatformTransactionManager transactionManager) {
+        
         this.scanJobRepository = scanJobRepository;
         this.configService = configService;
         this.libraryScanner = libraryScanner;
         this.logService = logService;
-        this.transactionalExecutor = transactionalExecutor;
-        this.transactionTemplate = transactionTemplate;
+        this.scanJobExecutor = scanJobExecutor;
+        
+        transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
+    }
+
+    @Override
+    public void addObserver(Observer observer) {
+        observers.add(checkNotNull(observer));
+    }
+
+    @Override
+    public void removeObserver(Observer observer) {
+        observers.remove(checkNotNull(observer));
+    }
+
+    @Override
+    @Nullable
+    public ScanJobProgress getCurrentScanJobProgress() {
+        return scanJobProgressReference.get();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Nullable
+    public ScanJobProgress getScanJobProgress(Long id) {
+        ScanJobProgress scanJobProgress = scanJobProgressReference.get();
+        if (scanJobProgress != null && id.equals(scanJobProgress.getScanJob().getId())) {
+            return scanJobProgress;
+        } else {
+            ScanJob scanJob = getById(id);
+            return scanJob != null ? new ScanJobProgress(scanJob, null) : null;
+        }
     }
 
     @Override
@@ -96,26 +119,21 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
-    public ScanStatus getScanStatus() {
-        return libraryScanner.getStatus();
-    }
-
-    @Override
     @Transactional
-    public ScanJob startScanJob() throws LibraryNotDefinedException {
+    public ScanJob startScanJob() throws ConcurrentScanException {
         return doStartScanJob(configService.getLibraryFolders());
     }
 
     @Override
     @Transactional
-    public ScanJob startEditJob(List<EditCommand> commands) throws NoScanEditCommandException {
+    public ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException {
 
-        if (commands.size() == 0) {
-            throw new NoScanEditCommandException();
+        if (!scanJobSemaphore.tryAcquire()) {
+            throw new ConcurrentScanException();
         }
 
         LogMessage logStarting = logService.info(logger, "Starting edit job for {} songs...", commands.size());
-        ScanJob startingJob = scanJobRepository.save(ScanJob.builder()
+        ScanJob scanJob = scanJobRepository.save(ScanJob.builder()
                 .scanType(ScanType.EDIT)
                 .status(Status.STARTING)
                 .logMessage(logStarting)
@@ -124,76 +142,42 @@ public class ScanJobServiceImpl implements ScanJobService {
         registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                transactionalExecutor.execute(() -> {
+                onScanJobStatusChange(scanJob);
+                scanJobExecutor.execute(() -> {
                     try {
-                        doEditJob(startingJob, commands);
+                        doEditJob(scanJob, commands);
                     } catch (Exception e) {
-                        // Ensure transaction is not rolled back.
-                        transactionTemplate.execute(status -> {
+                        changeScanJobStatusInTransaction(() -> {
                             LogMessage logFailed = logService.error(logger, "Unexpected error occurred when performing edit job.", e);
-                            ScanJob failedJob = scanJobRepository.findOne(startingJob.getId());
-                            scanJobRepository.save(ScanJob.builder(failedJob)
-                                    .status(Status.FAILED)
-                                    .logMessage(logFailed)
-                                    .build());
-                            return null;
+                            return scanJobRepository.save(
+                                    ScanJob.builder(scanJobRepository.findOne(scanJob.getId()))
+                                            .status(Status.FAILED)
+                                            .logMessage(logFailed)
+                                            .build());
                         });
+                    } finally {
+                        scanJobProgressReference.set(null);
+                        scanJobSemaphore.release();
                     }
                 });
             }
         });
 
-        return startingJob;
-    }
-
-    @Override
-    @Scheduled(fixedDelay = 5 * 60 * 1000, initialDelay = 5 * 60 * 1000)
-    @Transactional
-    @Nullable
-    public ScanJob startAutoScanJobIfNeeded() {
-
-        logger.debug("Checking if automatic scan needed...");
-        boolean shouldScan = false;
-
-        List<File> libraryFolders = configService.getLibraryFolders();
-        if (libraryFolders.size() > 0) {
-            if (!libraryScanner.getStatus().isRunning()) {
-                Integer autoScanInterval = configService.getAutoScanInterval();
-                if (autoScanInterval != null) {
-                    shouldScan = shouldAutoScanByInterval(autoScanInterval);
-                } else {
-                    logger.debug("Automatic scan is off.");
-                }
-            } else {
-                logger.debug("Library is already being scanned.");
-            }
-        } else {
-            logger.debug("No library folders defined.");
-        }
-
-        if (shouldScan) {
-            logger.info("Starting automatic scan...");
-            try {
-                return doStartScanJob(libraryFolders);
-            } catch (LibraryNotDefinedException e) {
-                throw new IllegalStateException("Library is not defined. Race condition?", e);
-            }
-        }
-        return null;
+        return scanJob;
     }
 
     @Nullable
-    private ScanJob doStartScanJob(List<File> targetFolders) throws LibraryNotDefinedException {
+    private ScanJob doStartScanJob(List<File> targetFolders) throws ConcurrentScanException {
 
-        if (targetFolders.size() == 0) {
-            throw new LibraryNotDefinedException();
+        if (!scanJobSemaphore.tryAcquire()) {
+            throw new ConcurrentScanException();
         }
 
         List<String> targetPaths = targetFolders.stream()
                 .map(File::getAbsolutePath)
                 .collect(Collectors.toList());
         LogMessage logStarting = logService.info(logger, "Starting scan job for '{}'...", targetPaths);
-        ScanJob startingJob = scanJobRepository.save(ScanJob.builder()
+        ScanJob scanJob = scanJobRepository.save(ScanJob.builder()
                 .scanType(ScanType.FULL)
                 .status(Status.STARTING)
                 .logMessage(logStarting)
@@ -202,26 +186,28 @@ public class ScanJobServiceImpl implements ScanJobService {
         registerSynchronization(new TransactionSynchronizationAdapter() {
             @Override
             public void afterCommit() {
-                transactionalExecutor.execute(() -> {
+                onScanJobStatusChange(scanJob);
+                scanJobExecutor.execute(() -> {
                     try {
-                        doScanJob(startingJob, targetFolders);
+                        doScanJob(scanJob, targetFolders);
                     } catch (Exception e) {
-                        // Ensure transaction is not rolled back.
-                        transactionTemplate.execute(status -> {
+                        changeScanJobStatusInTransaction(() -> {
                             LogMessage logFailed = logService.error(logger, "Unexpected error occurred when performing scan job.", e);
-                            ScanJob failedJob = scanJobRepository.findOne(startingJob.getId());
-                            scanJobRepository.save(ScanJob.builder(failedJob)
-                                    .status(Status.FAILED)
-                                    .logMessage(logFailed)
-                                    .build());
-                            return null;
+                            return scanJobRepository.save(
+                                    ScanJob.builder(scanJobRepository.findOne(scanJob.getId()))
+                                            .status(Status.FAILED)
+                                            .logMessage(logFailed)
+                                            .build());
                         });
+                    } finally {
+                        scanJobProgressReference.set(null);
+                        scanJobSemaphore.release();
                     }
                 });
             }
         });
 
-        return startingJob;
+        return scanJob;
     }
 
     private void doScanJob(ScanJob scanJob, List<File> targetFolders) {
@@ -230,11 +216,9 @@ public class ScanJobServiceImpl implements ScanJobService {
                 .map(File::getAbsolutePath)
                 .collect(Collectors.toList());
 
-        // Ensure transaction is not rolled back.
-        ScanJob startingScanJob = scanJob;
-        scanJob = transactionTemplate.execute(status -> {
+        ScanJob startedScanJob = changeScanJobStatusInTransaction(() -> {
             LogMessage logStarted = logService.info(logger, "Started scan job for '{}'.", targetPaths);
-            return scanJobRepository.save(ScanJob.builder(startingScanJob)
+            return scanJobRepository.save(ScanJob.builder(scanJob)
                     .status(Status.STARTED)
                     .logMessage(logStarted)
                     .build());
@@ -243,71 +227,88 @@ public class ScanJobServiceImpl implements ScanJobService {
         ScanResult result = null;
         LogMessage logMessage;
         try {
-            result = libraryScanner.scan(targetFolders);
+            result = libraryScanner.scan(targetFolders, scanProgress ->
+                    onScanJobProgress(new ScanJobProgress(startedScanJob, scanProgress)));
             logMessage = logService.info(logger, "Scan job complete for '{}'.", targetPaths);
         } catch (IOException e) {
             logMessage = logService.error(logger, "Scan job failed due to I/O error.", e);
-        } catch (ConcurrentScanException e) {
-            logMessage = logService.error(logger, "Library is already being scanned.");
         }
 
-        scanJobRepository.save(ScanJob.builder(scanJob)
+        onScanJobStatusChange(scanJobRepository.save(ScanJob.builder(startedScanJob)
                 .status(result != null ? Status.COMPLETE : Status.FAILED)
                 .scanResult(result)
                 .logMessage(logMessage)
-                .build());
+                .build()));
     }
 
     private void doEditJob(ScanJob scanJob, List<EditCommand> commands) {
 
-        // Ensure transaction is not rolled back.
-        ScanJob startingScanJob = scanJob;
-        scanJob = transactionTemplate.execute(status -> {
+        ScanJob startedScanJob = changeScanJobStatusInTransaction(() -> {
             LogMessage logStarted = logService.info(logger, "Started edit job for {} songs...", commands.size());
-            return scanJobRepository.save(ScanJob.builder(startingScanJob)
+            return scanJobRepository.save(ScanJob.builder(scanJob)
                     .status(Status.STARTED)
                     .logMessage(logStarted)
                     .build());
         });
 
         ScanResult result = null;
-        LogMessage logMessage;
+        Supplier<LogMessage> logMessage;
         try {
-            result = libraryScanner.edit(commands);
-            logMessage = logService.info(logger, "Edit job complete for {} songs.", commands.size());
+            result = libraryScanner.edit(commands, scanProgress ->
+                    onScanJobProgress(new ScanJobProgress(startedScanJob, scanProgress)));
+            logMessage = () -> logService.info(logger, "Edit job complete for {} songs.", commands.size());
         } catch (SongNotFoundException e) {
-            logMessage = logService.error(logger, "Song '{}' not found.", e.getId());
+            logMessage = () -> logService.error(logger, "Song '{}' not found.", e.getId());
         } catch (IOException e) {
-            logMessage = logService.error(logger, "Edit job failed due to I/O error.", e);
-        } catch (ConcurrentScanException e) {
-            logMessage = logService.error(logger, "Library is already scanning.");
+            logMessage = () -> logService.error(logger, "Edit job failed due to I/O error.", e);
         }
 
-        scanJobRepository.save(ScanJob.builder(scanJob)
-                .status(result != null ? Status.COMPLETE : Status.FAILED)
-                .scanResult(result)
-                .logMessage(logMessage)
-                .build());
+        final ScanResult finalResult = result;
+        final Supplier<LogMessage> finalLogMessage = logMessage;
+        onScanJobStatusChange(transactionTemplate.execute(status -> scanJobRepository.save(ScanJob.builder(startedScanJob)
+                .status(finalResult != null ? Status.COMPLETE : Status.FAILED)
+                .scanResult(finalResult)
+                .logMessage(finalLogMessage.get())
+                .build())));
     }
 
-    private boolean shouldAutoScanByInterval(int autoScanInterval) {
-        Page<ScanJob> page = getAll(new PageRequest(0, 1, Sort.Direction.DESC, "creationDate", "updateDate"));
-        ScanJob lastJob = page.getTotalElements() > 0 ? page.getContent().get(0) : null;
-        if (lastJob != null) {
-            LocalDateTime jobDate = lastJob.getUpdateDate();
-            if (jobDate == null) {
-                jobDate = lastJob.getCreationDate();
-            }
-            long secondsSinceLastScan = jobDate.until(LocalDateTime.now(), ChronoUnit.SECONDS);
-            if (secondsSinceLastScan >= autoScanInterval) {
-                return true;
-            } else {
-                logger.trace("Too early for automatic scan.");
-            }
-        } else {
-            logger.trace("Library was never scanned before.");
-            return true;
+    private ScanJob onScanJobStatusChange(ScanJob scanJob) {
+        scanJobProgressReference.set(new ScanJobProgress(scanJob, null));
+        switch (scanJob.getStatus()) {
+            case STARTING:
+                notifyObservers(observer -> observer.onScanJobStarting(scanJob));
+                break;
+            case STARTED:
+                notifyObservers(observer -> observer.onScanJobStarted(scanJob));
+                break;
+            case COMPLETE:
+                notifyObservers(observer -> observer.onScanJobCompleted(scanJob));
+                break;
+            case FAILED:
+                notifyObservers(observer -> observer.onScanJobFailed(scanJob));
+                break;
+            default:
+                throw new IllegalStateException("Unexpected scan job status.");
         }
-        return false;
+        return scanJob;
+    }
+
+    private void onScanJobProgress(ScanJobProgress scanJobProgress) {
+        scanJobProgressReference.set(scanJobProgress);
+        notifyObservers(observer -> observer.onScanJobProgress(scanJobProgress));
+    }
+
+    private void notifyObservers(Consumer<Observer> handler) {
+        for (Observer observer : new ArrayList<>(observers)) {
+            try {
+                handler.accept(observer);
+            } catch (Exception e) {
+                logger.error("Could not call progress observer {}.", observer, e);
+            }
+        }
+    }
+    
+    private ScanJob changeScanJobStatusInTransaction(Supplier<ScanJob> handler) {
+        return onScanJobStatusChange(transactionTemplate.execute(status -> handler.get()));
     }
 }

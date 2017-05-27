@@ -132,6 +132,9 @@ public class ScanResult {
     @NotNull
     private Integer deletedArtworkCount;
 
+    protected ScanResult() {
+    }
+
     private ScanResult(Builder builder) {
         id = builder.id;
         date = builder.date;

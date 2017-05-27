@@ -36,6 +36,9 @@ public class ScanJob extends BaseEntity<Long> {
     @JoinColumn(name = "scan_result_id", unique = true)
     private ScanResult scanResult;
 
+    protected ScanJob() {
+    }
+
     private ScanJob(Builder builder) {
         id = builder.id;
         creationDate = builder.creationDate;

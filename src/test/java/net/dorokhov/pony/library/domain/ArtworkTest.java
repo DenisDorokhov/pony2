@@ -26,11 +26,6 @@ public class ArtworkTest {
         assertThat(eqArtwork1).isNotEqualTo("foo1");
         assertThat(eqArtwork1).isNotEqualTo(null);
     }
-
-    @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(new Artwork().toString()).startsWith("Artwork{");
-    }
     
     private Artwork.Builder artworkBuilder() {
         return Artwork.builder()

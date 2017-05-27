@@ -9,11 +9,11 @@ public final class SongFixtures {
     private SongFixtures() {
     }
     
-    public static Song get() {
-        return builder().build();
+    public static Song song() {
+        return songBuilder().build();
     }
     
-    public static Song.Builder builder() {
+    public static Song.Builder songBuilder() {
         Artist artist = Artist.builder().build();
         Album album = Album.builder().artist(artist).build();
         Genre genre = Genre.builder().build();

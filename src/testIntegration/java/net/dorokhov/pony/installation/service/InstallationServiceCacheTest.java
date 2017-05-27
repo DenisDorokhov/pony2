@@ -8,6 +8,7 @@ import net.dorokhov.pony.installation.service.command.InstallationCommand;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class InstallationServiceCacheTest extends IntegrationTest {
@@ -20,9 +21,7 @@ public class InstallationServiceCacheTest extends IntegrationTest {
 
     @Test
     public void shouldCacheAfterFetching() throws Exception {
-        installationRepository.save(Installation.builder()
-                .version("2.0")
-                .build());
+        installationRepository.save(installation());
         Installation installation = installationService.getInstallation();
         Installation cachedInstallation = installationService.getInstallation();
         assertThat(installation).isSameAs(cachedInstallation);
@@ -44,9 +43,7 @@ public class InstallationServiceCacheTest extends IntegrationTest {
 
     @Test
     public void shouldEvictCacheAfterUpgrading() throws Exception {
-        installationRepository.save(Installation.builder()
-                .version("2.0")
-                .build());
+        installationRepository.save(installation());
         Installation installation = installationService.upgradeIfNeeded();
         Installation cachedInstallation = installationService.getInstallation();
         assertThat(installation).isNotSameAs(cachedInstallation);

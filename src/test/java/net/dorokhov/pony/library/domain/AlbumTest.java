@@ -2,7 +2,6 @@ package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,19 +58,5 @@ public class AlbumTest {
         assertThat(eqAlbum1).isNotEqualTo(diffAlbum);
         assertThat(eqAlbum1).isNotEqualTo("foo1");
         assertThat(eqAlbum1).isNotEqualTo(null);
-    }
-
-    @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(Album.builder()
-                .id(1L)
-                .creationDate(LocalDateTime.now())
-                .updateDate(LocalDateTime.now())
-                .name("someName")
-                .year(1986)
-                .artwork(null)
-                .songs(null)
-                .artist(new Artist())
-                .build().toString()).startsWith("Album{");
     }
 }

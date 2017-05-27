@@ -25,11 +25,6 @@ public class LogMessageTest {
         assertThat(eqLogMessage1).isNotEqualTo("foo1");
         assertThat(eqLogMessage1).isNotEqualTo(null);
     }
-
-    @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(logMessageBuilder().build().toString()).startsWith("LogMessage{");
-    }
     
     private LogMessage.Builder logMessageBuilder() {
         return LogMessage.builder()

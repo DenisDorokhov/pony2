@@ -1,10 +1,10 @@
 package net.dorokhov.pony.library.domain;
 
-import net.dorokhov.pony.fixture.SongFixtures;
 import org.junit.Test;
 
 import java.util.Arrays;
 
+import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SongTest {
@@ -20,7 +20,7 @@ public class SongTest {
         
         Genre genre = new Genre();
 
-        Song song1_1_1 = SongFixtures.builder()
+        Song song1_1_1 = songBuilder()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -28,7 +28,7 @@ public class SongTest {
                 .name("1")
                 .build();
 
-        Song song1_1_2 = SongFixtures.builder()
+        Song song1_1_2 = songBuilder()
                 .album(album1_1)
                 .genre(genre)
                 .discNumber(1)
@@ -36,7 +36,7 @@ public class SongTest {
                 .name("2")
                 .build();
 
-        Song song1_2_1 = SongFixtures.builder()
+        Song song1_2_1 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(1)
@@ -44,7 +44,7 @@ public class SongTest {
                 .name("1")
                 .build();
 
-        Song song1_2_2 = SongFixtures.builder()
+        Song song1_2_2 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -52,7 +52,7 @@ public class SongTest {
                 .name("2")
                 .build();
 
-        Song song1_2_3 = SongFixtures.builder()
+        Song song1_2_3 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
                 .discNumber(2)
@@ -68,7 +68,7 @@ public class SongTest {
     @Test
     public void shouldBuildSearchTerms() throws Exception {
 
-        Song song1 = SongFixtures.builder()
+        Song song1 = songBuilder()
                 .name("s1")
                 .artistName("ar1")
                 .albumArtistName("ar2")
@@ -83,9 +83,9 @@ public class SongTest {
     @Test
     public void shouldSupportEqualityAndHashCode() throws Exception {
 
-        Song eqSong1 = SongFixtures.builder().id(1L).build();
-        Song eqSong2 = SongFixtures.builder().id(1L).build();
-        Song diffSong = SongFixtures.builder().id(2L).build();
+        Song eqSong1 = songBuilder().id(1L).build();
+        Song eqSong2 = songBuilder().id(1L).build();
+        Song diffSong = songBuilder().id(2L).build();
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
@@ -96,10 +96,5 @@ public class SongTest {
         assertThat(eqSong1).isNotEqualTo(diffSong);
         assertThat(eqSong1).isNotEqualTo("foo1");
         assertThat(eqSong1).isNotEqualTo(null);
-    }
-
-    @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(SongFixtures.get().toString()).startsWith("Song{");
     }
 }
