@@ -13,11 +13,11 @@ import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
 import net.dorokhov.pony.library.service.impl.scan.ScanResultCalculator.AudioFileProcessingResult;
 import net.dorokhov.pony.log.service.LogService;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -47,7 +47,6 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class LibraryScannerTest {
 
-    @InjectMocks
     private LibraryScanner libraryScanner;
 
     @Mock
@@ -71,6 +70,12 @@ public class LibraryScannerTest {
 
     @Rule
     public final TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @Before
+    public void setUp() throws Exception {
+        libraryScanner = new LibraryScanner(logService, songRepository, fileTreeScanner, 
+                scanResultCalculator, libraryCleaner, libraryImporter, libraryArtworkFinder, 1);
+    }
 
     @Test
     public void shouldScan() throws Exception {
@@ -109,6 +114,11 @@ public class LibraryScannerTest {
             return null;
         }).when(libraryCleaner).cleanArtworks(any(), any());
         doAnswer(invocation -> {
+            ItemProgressObserver observer = invocation.getArgument(1);
+            observer.onProgress(1, 1);
+            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), ImmutableList.of());
+        }).when(libraryImporter).readAndImport(any(), any());
+        doAnswer(invocation -> {
             ItemProgressObserver observer = invocation.getArgument(0);
             observer.onProgress(1, 2);
             return null;
@@ -120,8 +130,8 @@ public class LibraryScannerTest {
 
         verify(libraryCleaner).cleanSongs(eq(ImmutableList.of(audioNode1, audioNode2)), any());
         verify(libraryCleaner).cleanArtworks(eq(ImmutableList.of(imageNode1, imageNode2)), any());
-        verify(libraryImporter).importSong(audioNode1);
-        verify(libraryImporter).importSong(audioNode2);
+        verify(libraryImporter).readAndImport(eq(ImmutableList.of(audioNode1)), any());
+        verify(libraryImporter).readAndImport(eq(ImmutableList.of(audioNode2)), any());
 
         assertThat(scanObserver.size()).isEqualTo(11);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
@@ -179,6 +189,11 @@ public class LibraryScannerTest {
         });
 
         doAnswer(invocation -> {
+            ItemProgressObserver observer = invocation.getArgument(1);
+            observer.onProgress(1, 1);
+            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), ImmutableList.of());
+        }).when(libraryImporter).writeAndImport(any(), any());
+        doAnswer(invocation -> {
             ItemProgressObserver observer = invocation.getArgument(0);
             observer.onProgress(1, 2);
             return null;
@@ -190,8 +205,8 @@ public class LibraryScannerTest {
                 new EditCommand(2L, WritableAudioData.builder().build())
         ), scanObserver::observe)).isSameAs(scanResultFixture);
 
-        verify(libraryImporter).writeAndImportSong(eq(audioNode1), any());
-        verify(libraryImporter).writeAndImportSong(eq(audioNode2), any());
+//        verify(libraryImporter).writeAndImport(ImmutableList.of(new LibraryImporter.WriteAndImportCommand(audioNode1, any()));
+//        verify(libraryImporter).writeAndImport(eq(audioNode2), any());
 
         assertThat(scanObserver.size()).isEqualTo(6);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
@@ -231,30 +246,6 @@ public class LibraryScannerTest {
         ScanObserver scanObserver = new ScanObserver();
         assertThatThrownBy(() -> libraryScanner.scan(ImmutableList.of(tempFolder.getRoot()), scanObserver::observe))
                 .isSameAs(calculationException);
-
-        verify(logService).error(any(), any(), any());
-    }
-
-    @Test
-    public void shouldLogScanErrorIfImportFailed() throws Exception {
-
-        FolderNode folderNode = mock(FolderNode.class);
-        AudioNode audioNode = mock(AudioNode.class);
-        given(folderNode.getChildAudios(true)).willReturn(ImmutableList.of(audioNode));
-        given(folderNode.getChildImages(true)).willReturn(ImmutableList.of());
-        File file = new File(tempFolder.getRoot(), "someFile");
-        given(audioNode.getFile()).willReturn(file);
-
-        given(fileTreeScanner.scanFolder(any())).willReturn(folderNode);
-        given(scanResultCalculator.calculateAndSave(any())).willAnswer(invocation -> {
-            Object result = ((Supplier) invocation.getArgument(0)).get();
-            assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult ->
-                    assertThat(audioFileProcessingResult.getFailedFiles()).containsExactly(file));
-            return null;
-        });
-        given(libraryImporter.importSong(any())).willThrow(new IOException());
-
-        libraryScanner.scan(ImmutableList.of(tempFolder.getRoot()), null);
 
         verify(logService).error(any(), any(), any());
     }
@@ -304,29 +295,6 @@ public class LibraryScannerTest {
                 new EditCommand(1L, WritableAudioData.builder().build())
         ), scanObserver::observe)).isSameAs(calculationException);
 
-        verify(logService).error(any(), any(), any());
-    }
-
-    @Test
-    public void shouldLogEditErrorIfImportFailed() throws Exception {
-
-        AudioNode audioNode = mock(AudioNode.class);
-        File file = tempFolder.newFile();
-        given(audioNode.getFile()).willReturn(file);
-        given(fileTreeScanner.scanFile(any())).willReturn(audioNode);
-        given(songRepository.findOne(any())).willReturn(songBuilder()
-                .path(tempFolder.newFile().getAbsolutePath())
-                .build());
-        given(scanResultCalculator.calculateAndSave(any())).willAnswer(invocation -> {
-            Object result = ((Supplier) invocation.getArgument(0)).get();
-            assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult ->
-                    assertThat(audioFileProcessingResult.getFailedFiles()).containsExactly(file));
-            return null;
-        });
-        given(libraryImporter.writeAndImportSong(any(), any())).willThrow(new IOException());
-
-        EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
-        libraryScanner.edit(ImmutableList.of(command), null);
         verify(logService).error(any(), any(), any());
     }
 

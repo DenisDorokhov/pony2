@@ -1,6 +1,7 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import net.dorokhov.pony.library.domain.ScanProgress;
 import net.dorokhov.pony.library.domain.ScanProgress.Step;
 import net.dorokhov.pony.library.domain.ScanResult;
@@ -9,17 +10,17 @@ import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.SongNotFoundException;
-import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.impl.filetree.FileTreeScanner;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FileNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
+import net.dorokhov.pony.library.service.impl.scan.LibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony.library.service.impl.scan.ScanResultCalculator.AudioFileProcessingResult;
 import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -28,36 +29,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static net.dorokhov.pony.library.domain.ScanProgress.Step.*;
-import static net.dorokhov.pony.library.service.impl.LibraryConfig.SCAN_EXECUTOR;
 
 @Component
 public class LibraryScanner {
-
-    public LibraryScanner(LogService logService,
-                          SongRepository songRepository,
-                          FileTreeScanner fileTreeScanner,
-                          ScanResultCalculator scanResultCalculator,
-                          LibraryCleaner libraryCleaner, LibraryImporter libraryImporter,
-                          LibraryArtworkFinder libraryArtworkFinder,
-                          @Qualifier(SCAN_EXECUTOR) Executor executor) {
-        this.logService = logService;
-        this.songRepository = songRepository;
-        this.fileTreeScanner = fileTreeScanner;
-        this.scanResultCalculator = scanResultCalculator;
-        this.libraryCleaner = libraryCleaner;
-        this.libraryImporter = libraryImporter;
-        this.libraryArtworkFinder = libraryArtworkFinder;
-        this.executor = executor;
-    }
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -68,7 +48,24 @@ public class LibraryScanner {
     private final LibraryCleaner libraryCleaner;
     private final LibraryImporter libraryImporter;
     private final LibraryArtworkFinder libraryArtworkFinder;
-    private final Executor executor;
+    private final int importChunkSize;
+
+    public LibraryScanner(LogService logService,
+                          SongRepository songRepository,
+                          FileTreeScanner fileTreeScanner,
+                          ScanResultCalculator scanResultCalculator,
+                          LibraryCleaner libraryCleaner, LibraryImporter libraryImporter,
+                          LibraryArtworkFinder libraryArtworkFinder,
+                          @Value("${pony.scan.importChunkSize}") int importChunkSize) {
+        this.logService = logService;
+        this.songRepository = songRepository;
+        this.fileTreeScanner = fileTreeScanner;
+        this.scanResultCalculator = scanResultCalculator;
+        this.libraryCleaner = libraryCleaner;
+        this.libraryImporter = libraryImporter;
+        this.libraryArtworkFinder = libraryArtworkFinder;
+        this.importChunkSize = importChunkSize;
+    }
 
     public ScanResult scan(List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws IOException {
 
@@ -96,7 +93,7 @@ public class LibraryScanner {
     public ScanResult edit(List<EditCommand> commands, @Nullable Consumer<ScanProgress> observer) throws SongNotFoundException, IOException {
 
         List<File> targetFiles = new ArrayList<>();
-        List<AudioNodeEditCommand> editCommands = new ArrayList<>();
+        List<WriteAndImportCommand> writeAndImportCommands = new ArrayList<>();
         for (EditCommand command : commands) {
             Song song = songRepository.findOne(command.getSongId());
             if (song == null) {
@@ -109,7 +106,7 @@ public class LibraryScanner {
             FileNode fileNode = fileTreeScanner.scanFile(songFile);
             if (fileNode instanceof AudioNode) {
                 targetFiles.add(songFile);
-                editCommands.add(new AudioNodeEditCommand((AudioNode) fileNode, command.getAudioData()));
+                writeAndImportCommands.add(new WriteAndImportCommand((AudioNode) fileNode, command.getAudioData()));
             } else {
                 throw new IOException(String.format("File '%s' is not a song.", songFile.getAbsolutePath()));
             }
@@ -118,7 +115,7 @@ public class LibraryScanner {
         try {
             logService.info(logger, "Editing files {}...", targetFiles);
             notifyProgressObserver(new ScanProgress(EDIT_PREPARING, targetFiles, 0.0), observer);
-            ScanResult scanResult = doEdit(editCommands, observer);
+            ScanResult scanResult = doEdit(writeAndImportCommands, observer);
             logService.info(logger, "Edit of {} has been finished with result {}.", targetFiles, scanResult);
             return scanResult;
         } catch (Exception e) {
@@ -131,7 +128,7 @@ public class LibraryScanner {
         return scanResultCalculator.calculateAndSave(rethrow(() -> performScanSteps(targetFolders, observer)));
     }
 
-    private ScanResult doEdit(List<AudioNodeEditCommand> commands, @Nullable Consumer<ScanProgress> observer) {
+    private ScanResult doEdit(List<WriteAndImportCommand> commands, @Nullable Consumer<ScanProgress> observer) {
         return scanResultCalculator.calculateAndSave(rethrow(() -> performEditSteps(commands, observer)));
     }
 
@@ -159,28 +156,16 @@ public class LibraryScanner {
 
         logService.info(logger, "Importing songs...");
         progressScan(FULL_IMPORTING, targetFolders, 0.0, observer);
-        AtomicInteger processedCount = new AtomicInteger();
+        int processedCount = 0;
         List<File> failedFiles = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(audioNodes.size());
-        for (AudioNode audioNode : audioNodes) {
-            executor.execute(() -> {
-                try {
-                    libraryImporter.importSong(audioNode);
-                } catch (IOException e) {
-                    logService.error(logger, "Could not import audio file '{}'.", audioNode.getFile().getAbsolutePath(), e);
-                    failedFiles.add(audioNode.getFile());
-                } finally {
-                    synchronized (this) {
-                        progressScan(FULL_IMPORTING, targetFolders, (double) processedCount.incrementAndGet() / audioNodes.size(), observer);
-                    }
-                    latch.countDown();
-                }
-            });
-        }
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            logger.warn("Scan has been interrupted.");
+        for (List<AudioNode> chunk : Lists.partition(audioNodes, importChunkSize)) {
+            int finalProcessedCount = processedCount;
+            LibraryImporter.ImportResult result = libraryImporter.readAndImport(chunk, (itemsComplete, itemsTotal) ->
+                    progressScan(FULL_IMPORTING, targetFolders, (double) (finalProcessedCount + itemsComplete) / audioNodes.size(), observer));
+            failedFiles.addAll(result.getFailedImports().stream()
+                    .map(AudioNode::getFile)
+                    .collect(Collectors.toList()));
+            processedCount += chunk.size();
         }
 
         logService.info(logger, "Searching artworks...");
@@ -191,37 +176,25 @@ public class LibraryScanner {
         return new AudioFileProcessingResultImpl(ScanType.FULL, targetFolders, failedFiles, audioNodes.size());
     }
 
-    private AudioFileProcessingResult performEditSteps(List<AudioNodeEditCommand> commands, @Nullable Consumer<ScanProgress> observer) {
+    private AudioFileProcessingResult performEditSteps(List<WriteAndImportCommand> commands, @Nullable Consumer<ScanProgress> observer) {
 
         List<File> targetFiles = commands.stream()
-                .map(AudioNodeEditCommand::getAudioNode)
+                .map(WriteAndImportCommand::getAudioNode)
                 .map(AudioNode::getFile)
                 .collect(Collectors.toList());
 
         logService.info(logger, "Writing songs...");
         progressScan(EDIT_WRITING, targetFiles, 0.0, observer);
-        AtomicInteger processedCount = new AtomicInteger();
+        int processedCount = 0;
         List<File> failedFiles = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(commands.size());
-        for (AudioNodeEditCommand command : commands) {
-            executor.execute(() -> {
-                try {
-                    libraryImporter.writeAndImportSong(command.getAudioNode(), command.getAudioData());
-                } catch (IOException e) {
-                    logService.error(logger, "Could not edit audio file '{}'.", command.getAudioNode().getFile().getAbsolutePath(), e);
-                    failedFiles.add(command.getAudioNode().getFile());
-                } finally {
-                    synchronized (this) {
-                        progressScan(EDIT_WRITING, targetFiles, (double) processedCount.incrementAndGet() / commands.size(), observer);
-                    }
-                    latch.countDown();
-                }
-            });
-        }
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            logger.warn("Edit has been interrupted.");
+        for (List<WriteAndImportCommand> chunk : Lists.partition(commands, importChunkSize)) {
+            int finalProcessedCount = processedCount;
+            LibraryImporter.ImportResult result = libraryImporter.writeAndImport(chunk, (itemsComplete, itemsTotal) ->
+                    progressScan(EDIT_WRITING, targetFiles, (double) (finalProcessedCount + itemsComplete) / commands.size(), observer));
+            failedFiles.addAll(result.getFailedImports().stream()
+                    .map(AudioNode::getFile)
+                    .collect(Collectors.toList()));
+            processedCount += chunk.size();
         }
 
         logService.info(logger, "Searching artworks...");
@@ -243,25 +216,6 @@ public class LibraryScanner {
             } catch (Exception e) {
                 logger.error("Could not call progress observer.", e);
             }
-        }
-    }
-
-    private static final class AudioNodeEditCommand {
-
-        private final AudioNode audioNode;
-        private final WritableAudioData audioData;
-
-        public AudioNodeEditCommand(AudioNode audioNode, WritableAudioData audioData) {
-            this.audioNode = checkNotNull(audioNode);
-            this.audioData = checkNotNull(audioData);
-        }
-
-        public AudioNode getAudioNode() {
-            return audioNode;
-        }
-
-        public WritableAudioData getAudioData() {
-            return audioData;
         }
     }
 

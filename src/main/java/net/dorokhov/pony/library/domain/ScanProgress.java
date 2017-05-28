@@ -49,7 +49,8 @@ public final class ScanProgress {
         @Override
         public String toString() {
             return "Step{" +
-                    "scanType=" + scanType +
+                    "name=" + name() +
+                    ", scanType=" + scanType +
                     ", stepNumber=" + stepNumber +
                     ", totalSteps=" + totalSteps +
                     '}';

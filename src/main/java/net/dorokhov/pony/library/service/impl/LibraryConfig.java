@@ -1,5 +1,6 @@
 package net.dorokhov.pony.library.service.impl;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -8,16 +9,22 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class LibraryConfig {
     
     public static final String SCAN_JOB_EXECUTOR = "scanJobExecutor";
-    public static final String SCAN_EXECUTOR = "scanExecutor";
+    public static final String LIBRARY_IMPORT_EXECUTOR = "libraryImportExecutor";
+
+    private final int importThreadPoolSize;
+    
+    public LibraryConfig(@Value("${pony.scan.importThreadPoolSize}") int importThreadPoolSize) {
+        this.importThreadPoolSize = importThreadPoolSize;
+    }
 
     @Bean(SCAN_JOB_EXECUTOR)
     public ThreadPoolTaskExecutor scanJobExecutor() {
         return buildThreadPoolExecutor(SCAN_JOB_EXECUTOR, 1);
     }
 
-    @Bean(SCAN_EXECUTOR)
-    public ThreadPoolTaskExecutor scanExecutor() {
-        return buildThreadPoolExecutor(SCAN_EXECUTOR, 10);
+    @Bean(LIBRARY_IMPORT_EXECUTOR)
+    public ThreadPoolTaskExecutor libraryImportExecutor() {
+        return buildThreadPoolExecutor(LIBRARY_IMPORT_EXECUTOR, importThreadPoolSize);
     }
 
     private ThreadPoolTaskExecutor buildThreadPoolExecutor(String beanName, int maxPoolSize) {
