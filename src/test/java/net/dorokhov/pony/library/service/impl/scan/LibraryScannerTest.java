@@ -11,6 +11,7 @@ import net.dorokhov.pony.library.service.impl.filetree.FileTreeScanner;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
+import net.dorokhov.pony.library.service.impl.scan.LibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony.library.service.impl.scan.ScanResultCalculator.AudioFileProcessingResult;
 import net.dorokhov.pony.log.service.LogService;
 import org.junit.Before;
@@ -18,6 +19,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -67,6 +70,9 @@ public class LibraryScannerTest {
     @Spy
     @SuppressWarnings("unused")
     private Executor executor = new SimpleAsyncTaskExecutor();
+    
+    @Captor
+    ArgumentCaptor<List<WriteAndImportCommand>> writeAndImportCommandsCaptor;
 
     @Rule
     public final TemporaryFolder tempFolder = new TemporaryFolder();
@@ -205,8 +211,15 @@ public class LibraryScannerTest {
                 new EditCommand(2L, WritableAudioData.builder().build())
         ), scanObserver::observe)).isSameAs(scanResultFixture);
 
-//        verify(libraryImporter).writeAndImport(ImmutableList.of(new LibraryImporter.WriteAndImportCommand(audioNode1, any()));
-//        verify(libraryImporter).writeAndImport(eq(audioNode2), any());
+        verify(libraryImporter, times(2)).writeAndImport(writeAndImportCommandsCaptor.capture(), any());
+        
+        List<WriteAndImportCommand> commands1 = writeAndImportCommandsCaptor.getAllValues().get(0);
+        List<WriteAndImportCommand> commands2 = writeAndImportCommandsCaptor.getAllValues().get(1);
+        
+        assertThat(commands1).hasSize(1);
+        assertThat(commands1).first().satisfies(command -> assertThat(command.getAudioNode()).isSameAs(audioNode1));
+        assertThat(commands2).hasSize(1);
+        assertThat(commands2).first().satisfies(command -> assertThat(command.getAudioNode()).isSameAs(audioNode2));
 
         assertThat(scanObserver.size()).isEqualTo(6);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->

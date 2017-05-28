@@ -1,10 +1,8 @@
 package net.dorokhov.pony.library.domain;
 
 import org.junit.Test;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.LocalDateTime;
-
+import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ArtworkTest {
@@ -25,20 +23,5 @@ public class ArtworkTest {
         assertThat(eqArtwork1).isNotEqualTo(diffArtwork);
         assertThat(eqArtwork1).isNotEqualTo("foo1");
         assertThat(eqArtwork1).isNotEqualTo(null);
-    }
-    
-    private Artwork.Builder artworkBuilder() {
-        return Artwork.builder()
-                .id(1L)
-                .date(LocalDateTime.now())
-                .mimeType("image/png")
-                .checksum("someChecksum")
-                .largeImageSize(0L)
-                .largeImagePath("someLargePath")
-                .smallImageSize(0L)
-                .smallImagePath("someSmallPath")
-                .sourceUri(UriComponentsBuilder
-                        .fromUriString("sourceUri")
-                        .build().toUri());
     }
 }

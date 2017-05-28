@@ -130,9 +130,6 @@ public class Artwork implements Serializable {
         return "Artwork{" +
                 "id=" + id +
                 ", mimeType='" + mimeType + '\'' +
-                ", checksum='" + checksum + '\'' +
-                ", largeImagePath='" + largeImagePath + '\'' +
-                ", smallImagePath='" + smallImagePath + '\'' +
                 ", sourceUri=" + sourceUri +
                 '}';
     }
