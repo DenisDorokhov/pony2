@@ -28,8 +28,6 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     long countByGenreIdAndArtworkNotNull(Long genreId);
 
-    long countByAlbumIdAndArtworkNotNull(Long genreId);
-
     @Query("SELECT SUM(s.size) FROM Song s")
     Long sumSize();
 
@@ -41,7 +39,7 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
 
     Page<Song> findByGenreIdAndArtworkNotNull(Long genreId, Pageable pageable);
 
-    List<Song> findByAlbumIdAndArtworkNotNull(Long genreId);
+    Song findFirstByAlbumIdAndArtworkNotNull(Long albumId);
 
     @Modifying
     @Query("UPDATE Song s SET s.artwork = NULL WHERE s.artwork.id = ?1")

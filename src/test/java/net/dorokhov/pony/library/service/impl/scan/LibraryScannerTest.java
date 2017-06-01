@@ -22,19 +22,17 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResult;
 import static net.dorokhov.pony.fixture.SongFixtures.song;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
@@ -61,16 +59,12 @@ public class LibraryScannerTest {
     @Mock
     private ScanResultCalculator scanResultCalculator;
     @Mock
-    private LibraryCleaner libraryCleaner;
+    private BatchLibraryCleaner batchLibraryCleaner;
     @Mock
     private LibraryImporter libraryImporter;
     @Mock
-    private LibraryArtworkFinder libraryArtworkFinder;
+    private BatchLibraryArtworkFinder batchLibraryArtworkFinder;
 
-    @Spy
-    @SuppressWarnings("unused")
-    private Executor executor = new SimpleAsyncTaskExecutor();
-    
     @Captor
     ArgumentCaptor<List<WriteAndImportCommand>> writeAndImportCommandsCaptor;
 
@@ -80,7 +74,7 @@ public class LibraryScannerTest {
     @Before
     public void setUp() throws Exception {
         libraryScanner = new LibraryScanner(logService, songRepository, fileTreeScanner, 
-                scanResultCalculator, libraryCleaner, libraryImporter, libraryArtworkFinder, 1);
+                scanResultCalculator, batchLibraryCleaner, libraryImporter, batchLibraryArtworkFinder, 1);
     }
 
     @Test
@@ -110,32 +104,32 @@ public class LibraryScannerTest {
         });
 
         doAnswer(invocation -> {
-            ItemProgressObserver observer = invocation.getArgument(1);
+            ProgressObserver observer = invocation.getArgument(1);
             observer.onProgress(1, 2);
             return null;
-        }).when(libraryCleaner).cleanSongs(any(), any());
+        }).when(batchLibraryCleaner).cleanSongs(any(), any());
         doAnswer(invocation -> {
-            ItemProgressObserver observer = invocation.getArgument(1);
+            ProgressObserver observer = invocation.getArgument(1);
             observer.onProgress(1, 2);
             return null;
-        }).when(libraryCleaner).cleanArtworks(any(), any());
+        }).when(batchLibraryCleaner).cleanArtworks(any(), any());
         doAnswer(invocation -> {
-            ItemProgressObserver observer = invocation.getArgument(1);
+            ProgressObserver observer = invocation.getArgument(1);
             observer.onProgress(1, 1);
-            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), ImmutableList.of());
+            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), emptyList());
         }).when(libraryImporter).readAndImport(any(), any());
         doAnswer(invocation -> {
-            ItemProgressObserver observer = invocation.getArgument(0);
+            ProgressObserver observer = invocation.getArgument(0);
             observer.onProgress(1, 2);
             return null;
-        }).when(libraryArtworkFinder).findArtworks(any());
+        }).when(batchLibraryArtworkFinder).findAllArtworks(any());
 
         ScanObserver scanObserver = new ScanObserver();
         assertThat(libraryScanner.scan(ImmutableList.of(tempFolder.getRoot()), scanObserver::observe))
                 .isSameAs(scanResultFixture);
 
-        verify(libraryCleaner).cleanSongs(eq(ImmutableList.of(audioNode1, audioNode2)), any());
-        verify(libraryCleaner).cleanArtworks(eq(ImmutableList.of(imageNode1, imageNode2)), any());
+        verify(batchLibraryCleaner).cleanSongs(eq(ImmutableList.of(audioNode1, audioNode2)), any());
+        verify(batchLibraryCleaner).cleanArtworks(eq(ImmutableList.of(imageNode1, imageNode2)), any());
         verify(libraryImporter).readAndImport(eq(ImmutableList.of(audioNode1)), any());
         verify(libraryImporter).readAndImport(eq(ImmutableList.of(audioNode2)), any());
 
@@ -195,15 +189,15 @@ public class LibraryScannerTest {
         });
 
         doAnswer(invocation -> {
-            ItemProgressObserver observer = invocation.getArgument(1);
+            ProgressObserver observer = invocation.getArgument(1);
             observer.onProgress(1, 1);
-            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), ImmutableList.of());
+            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), emptyList());
         }).when(libraryImporter).writeAndImport(any(), any());
         doAnswer(invocation -> {
-            ItemProgressObserver observer = invocation.getArgument(0);
+            ProgressObserver observer = invocation.getArgument(0);
             observer.onProgress(1, 2);
             return null;
-        }).when(libraryArtworkFinder).findArtworks(any());
+        }).when(batchLibraryArtworkFinder).findAllArtworks(any());
 
         ScanObserver scanObserver = new ScanObserver();
         assertThat(libraryScanner.edit(ImmutableList.of(

@@ -45,25 +45,26 @@ public class LibraryScanner {
     private final SongRepository songRepository;
     private final FileTreeScanner fileTreeScanner;
     private final ScanResultCalculator scanResultCalculator;
-    private final LibraryCleaner libraryCleaner;
+    private final BatchLibraryCleaner batchLibraryCleaner;
     private final LibraryImporter libraryImporter;
-    private final LibraryArtworkFinder libraryArtworkFinder;
+    private final BatchLibraryArtworkFinder batchLibraryArtworkFinder;
     private final int importChunkSize;
 
     public LibraryScanner(LogService logService,
                           SongRepository songRepository,
                           FileTreeScanner fileTreeScanner,
                           ScanResultCalculator scanResultCalculator,
-                          LibraryCleaner libraryCleaner, LibraryImporter libraryImporter,
-                          LibraryArtworkFinder libraryArtworkFinder,
+                          BatchLibraryCleaner batchLibraryCleaner,
+                          LibraryImporter libraryImporter,
+                          BatchLibraryArtworkFinder batchLibraryArtworkFinder,
                           @Value("${pony.scan.importChunkSize}") int importChunkSize) {
         this.logService = logService;
         this.songRepository = songRepository;
         this.fileTreeScanner = fileTreeScanner;
         this.scanResultCalculator = scanResultCalculator;
-        this.libraryCleaner = libraryCleaner;
+        this.batchLibraryCleaner = batchLibraryCleaner;
         this.libraryImporter = libraryImporter;
-        this.libraryArtworkFinder = libraryArtworkFinder;
+        this.batchLibraryArtworkFinder = batchLibraryArtworkFinder;
         this.importChunkSize = importChunkSize;
     }
 
@@ -146,12 +147,12 @@ public class LibraryScanner {
 
         logService.info(logger, "Cleaning songs...");
         progressScan(FULL_CLEANING_SONGS, targetFolders, 0.0, observer);
-        libraryCleaner.cleanSongs(audioNodes, (itemsComplete, itemsTotal) ->
+        batchLibraryCleaner.cleanSongs(audioNodes, (itemsComplete, itemsTotal) ->
                 progressScan(FULL_CLEANING_SONGS, targetFolders, (double) itemsComplete / itemsTotal, observer));
 
         logService.info(logger, "Cleaning artworks...");
         progressScan(FULL_CLEANING_ARTWORKS, targetFolders, 0.0, observer);
-        libraryCleaner.cleanArtworks(imageNodes, (itemsComplete, itemsTotal) ->
+        batchLibraryCleaner.cleanArtworks(imageNodes, (itemsComplete, itemsTotal) ->
                 progressScan(FULL_CLEANING_ARTWORKS, targetFolders, (double) itemsComplete / itemsTotal, observer));
 
         logService.info(logger, "Importing songs...");
@@ -170,7 +171,7 @@ public class LibraryScanner {
 
         logService.info(logger, "Searching artworks...");
         progressScan(FULL_SEARCHING_ARTWORKS, targetFolders, 0.0, observer);
-        libraryArtworkFinder.findArtworks((itemsComplete, itemsTotal) ->
+        batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) ->
                 progressScan(FULL_SEARCHING_ARTWORKS, targetFolders, (double) itemsComplete / itemsTotal, observer));
 
         return new AudioFileProcessingResultImpl(ScanType.FULL, targetFolders, failedFiles, audioNodes.size());
@@ -199,7 +200,7 @@ public class LibraryScanner {
 
         logService.info(logger, "Searching artworks...");
         progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, 0.0, observer);
-        libraryArtworkFinder.findArtworks((itemsComplete, itemsTotal) ->
+        batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) ->
                 progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, (double) itemsComplete / itemsTotal, observer));
 
         return new AudioFileProcessingResultImpl(ScanType.EDIT, targetFiles, failedFiles, commands.size());

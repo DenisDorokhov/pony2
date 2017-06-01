@@ -19,6 +19,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
 import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResultBuilder;
@@ -53,7 +54,7 @@ public class ScanResultCalculatorTest {
 
     @Test
     public void shouldCalculateAndSaveFirstScan() throws Exception {
-        given(scanResultRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(scanResultRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(emptyList()));
         doTestCalculateAndSave(LocalDateTime.MIN);
     }
 

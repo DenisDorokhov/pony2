@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDateTime;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
 import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobBuilder;
 import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobFull;
@@ -55,7 +56,7 @@ public class ScanJobSchedulerTest {
     public void shouldStartAutoScanJobIfRunningFirstTime() throws Exception {
         given(installationService.getInstallation()).willReturn(installation());
         given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(emptyList()));
         ScanJob scanJob = scanJobFull();
         given(scanJobService.startScanJob()).willReturn(scanJob);
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isSameAs(scanJob);
@@ -73,7 +74,7 @@ public class ScanJobSchedulerTest {
     public void shouldSkipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws Exception {
         given(installationService.getInstallation()).willReturn(installation());
         given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(emptyList()));
         given(scanJobService.startScanJob()).willThrow(new ConcurrentScanException());
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService).startScanJob();

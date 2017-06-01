@@ -37,6 +37,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
 import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobEdit;
 import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobFull;
@@ -88,7 +89,7 @@ public class ScanJobServiceImplTest {
 
     @Test
     public void shouldGetAll() throws Exception {
-        Page<ScanJob> page = new PageImpl<>(ImmutableList.of());
+        Page<ScanJob> page = new PageImpl<>(emptyList());
         given(scanJobRepository.findAll((Pageable) any())).willReturn(page);
         assertThat(scanJobService.getAll(new PageRequest(0, 10))).isSameAs(page);
     }
@@ -109,7 +110,7 @@ public class ScanJobServiceImplTest {
         ScanResult scanResult = scanResult(FULL);
         given(libraryScanner.scan(any(), any())).willAnswer(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
-            observer.accept(new ScanProgress(FULL_PREPARING, ImmutableList.of(), 0.5));
+            observer.accept(new ScanProgress(FULL_PREPARING, emptyList(), 0.5));
             return scanResult;
         });
         
@@ -169,7 +170,7 @@ public class ScanJobServiceImplTest {
         ScanResult scanResult = scanResult(ScanType.EDIT);
         given(libraryScanner.edit(any(), any())).willAnswer(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
-            observer.accept(new ScanProgress(EDIT_PREPARING, ImmutableList.of(), 0.5));
+            observer.accept(new ScanProgress(EDIT_PREPARING, emptyList(), 0.5));
             return scanResult;
         });
 
@@ -270,14 +271,14 @@ public class ScanJobServiceImplTest {
     public void shouldFailEditJobOnConcurrentScanException() throws Exception {
 
         given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        scanJobService.startEditJob(ImmutableList.of());
+        scanJobService.startEditJob(emptyList());
         
-        assertThatThrownBy(() -> scanJobService.startEditJob(ImmutableList.of())).isInstanceOf(ConcurrentScanException.class);
+        assertThatThrownBy(() -> scanJobService.startEditJob(emptyList())).isInstanceOf(ConcurrentScanException.class);
 
         AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
         Thread thread = new Thread(() -> {
             try {
-                scanJobService.startEditJob(ImmutableList.of());
+                scanJobService.startEditJob(emptyList());
             } catch (ConcurrentScanException e) {
                 isConcurrentScan.set(true);
             }

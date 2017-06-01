@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_ALBUM;
 import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_ARTIST;
@@ -258,13 +259,13 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldFailIfAlbumNotFound() throws Exception {
-        given(songRepository.findByAlbumId(any(), any())).willReturn(ImmutableList.of());
+        given(songRepository.findByAlbumId(any(), any())).willReturn(emptyList());
         assertThatThrownBy(() -> exportService.exportAlbum(1L)).isInstanceOf(AlbumNotFoundException.class);
     }
 
     @Test
     public void shouldFailIfArtistNotFound() throws Exception {
-        given(songRepository.findByAlbumArtistId(any(), any())).willReturn(ImmutableList.of());
+        given(songRepository.findByAlbumArtistId(any(), any())).willReturn(emptyList());
         assertThatThrownBy(() -> exportService.exportArtist(1L)).isInstanceOf(ArtistNotFoundException.class);
     }
 

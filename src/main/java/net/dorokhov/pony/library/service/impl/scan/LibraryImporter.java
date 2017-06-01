@@ -11,7 +11,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Component
-class LibraryImporter {
+public class LibraryImporter {
     
     public static class ImportResult {
         
@@ -51,12 +51,12 @@ class LibraryImporter {
         }
     }
 
-    public ImportResult readAndImport(List<AudioNode> audioNodes, ItemProgressObserver observer) {
+    public ImportResult readAndImport(List<AudioNode> audioNodes, ProgressObserver observer) {
         // TODO: implement
         return null;
     }
     
-    public ImportResult writeAndImport(List<WriteAndImportCommand> commands, ItemProgressObserver observer) {
+    public ImportResult writeAndImport(List<WriteAndImportCommand> commands, ProgressObserver observer) {
         // TODO: implement
         return null;
     }

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class PageWalkerTest {
@@ -23,7 +24,7 @@ public class PageWalkerTest {
         pages.add(new PageImpl<>(ImmutableList.of("1", "2"), firstPageable, 5));
         pages.add(new PageImpl<>(ImmutableList.of("3", "4"), new PageRequest(1, 2), 5));
         pages.add(new PageImpl<>(ImmutableList.of("5"), new PageRequest(2, 1), 5));
-        pages.add(new PageImpl<>(ImmutableList.of()));
+        pages.add(new PageImpl<>(emptyList()));
 
         List<String> processedItems = new ArrayList<>();
         PageWalker.walk(firstPageable, processedItems::add, pageable -> pages.get(pageable.getPageNumber()));

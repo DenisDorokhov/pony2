@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -46,7 +47,7 @@ public class ScanJobInterruptionRunnerTest {
         List<Page<ScanJob>> pages = new ArrayList<>();
         pages.add(new PageImpl<>(ImmutableList.of(scanJob(), scanJob()), firstPageable, 3));
         pages.add(new PageImpl<>(ImmutableList.of(scanJob()), new PageRequest(1, 2), 3));
-        pages.add(new PageImpl<>(ImmutableList.of()));
+        pages.add(new PageImpl<>(emptyList()));
 
         given(scanJobRepository.findByStatusIn(any(), any())).willAnswer(invocation -> {
             Pageable pageable = invocation.getArgument(1);
@@ -65,7 +66,7 @@ public class ScanJobInterruptionRunnerTest {
 
     @Test
     public void shouldMarkCurrentJobsAsInterruptedOnStartup() throws Exception {
-        given(scanJobRepository.findByStatusIn(any(), any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(scanJobRepository.findByStatusIn(any(), any())).willReturn(new PageImpl<>(emptyList()));
         ScanJobInterruptionRunner spy = Mockito.spy(scanJobInterruptionRunner);
         spy.run(new DefaultApplicationArguments(new String[0]));
         verify(spy).markCurrentJobsAsInterrupted();

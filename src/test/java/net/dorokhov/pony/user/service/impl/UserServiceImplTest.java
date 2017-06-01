@@ -2,7 +2,6 @@ package net.dorokhov.pony.user.service.impl;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
@@ -27,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -89,7 +89,7 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldGetAll() throws Exception {
-        Page<User> page = new PageImpl<>(ImmutableList.of());
+        Page<User> page = new PageImpl<>(emptyList());
         given(userRepository.findAll((Pageable) any())).willReturn(page);
         assertThat(userService.getAll(new PageRequest(0, 10))).isSameAs(page);
     }

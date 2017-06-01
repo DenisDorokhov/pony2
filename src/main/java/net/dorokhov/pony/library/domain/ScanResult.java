@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "scan_result")
@@ -33,12 +34,12 @@ public class ScanResult {
     @Column(name = "target_paths")
     @Convert(converter = JsonAttributeConverter.class)
     @NotNull
-    private List<String> targetPaths = ImmutableList.of();
+    private List<String> targetPaths = emptyList();
 
     @Column(name = "failed_paths")
     @Convert(converter = JsonAttributeConverter.class)
     @NotNull
-    private List<String> failedPaths = ImmutableList.of();
+    private List<String> failedPaths = emptyList();
 
     @Column(name = "processed_audio_file_count")
     @NotNull
@@ -139,8 +140,8 @@ public class ScanResult {
         id = builder.id;
         date = builder.date;
         scanType = checkNotNull(builder.scanType);
-        targetPaths = checkNotNull(builder.targetPaths.build());
-        failedPaths = checkNotNull(builder.failedPaths.build());
+        targetPaths = builder.targetPaths.build();
+        failedPaths = builder.failedPaths.build();
         processedAudioFileCount = checkNotNull(builder.processedAudioFileCount);
         duration = checkNotNull(builder.duration);
         songSize = checkNotNull(builder.songSize);
@@ -179,11 +180,11 @@ public class ScanResult {
     }
 
     public List<String> getTargetPaths() {
-        return targetPaths != null ? ImmutableList.copyOf(targetPaths) : ImmutableList.of();
+        return targetPaths != null ? ImmutableList.copyOf(targetPaths) : emptyList();
     }
 
     public List<String> getFailedPaths() {
-        return failedPaths != null ? ImmutableList.copyOf(failedPaths) : ImmutableList.of();
+        return failedPaths != null ? ImmutableList.copyOf(failedPaths) : emptyList();
     }
 
     public Integer getProcessedAudioFileCount() {
@@ -344,8 +345,8 @@ public class ScanResult {
         private Long id;
         private LocalDateTime date;
         private ScanType scanType;
-        private ImmutableList.Builder<String> targetPaths;
-        private ImmutableList.Builder<String> failedPaths;
+        private ImmutableList.Builder<String> targetPaths = ImmutableList.builder();
+        private ImmutableList.Builder<String> failedPaths = ImmutableList.builder();
         private Integer processedAudioFileCount;
         private Long duration;
         private Long songSize;

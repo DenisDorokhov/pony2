@@ -1,6 +1,5 @@
 package net.dorokhov.pony.fixture;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.domain.ScanType;
 
@@ -16,8 +15,6 @@ public final class ScanResultFixtures {
     public static ScanResult.Builder scanResultBuilder(ScanType scanType) {
         return ScanResult.builder()
                 .scanType(scanType)
-                .targetPaths(ImmutableList.of())
-                .failedPaths(ImmutableList.of())
                 .duration(10L)
                 .songSize(1000L)
                 .artworkSize(5L)

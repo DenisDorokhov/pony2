@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "log_message")
@@ -42,7 +43,7 @@ public class LogMessage implements Serializable {
     @Column(name = "arguments")
     @Convert(converter = JsonAttributeConverter.class)
     @NotNull
-    private List<String> arguments = ImmutableList.of();
+    private List<String> arguments = emptyList();
 
     @Column(name = "text")
     @NotNull
@@ -79,7 +80,7 @@ public class LogMessage implements Serializable {
     }
 
     public List<String> getArguments() {
-        return arguments != null ? arguments : ImmutableList.of();
+        return arguments != null ? arguments : emptyList();
     }
 
     public String getText() {

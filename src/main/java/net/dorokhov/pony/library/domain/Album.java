@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "album")
@@ -35,7 +36,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
     private Artwork artwork;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "album")
-    private List<Song> songs = ImmutableList.of();
+    private List<Song> songs = emptyList();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id", nullable = false)
@@ -72,7 +73,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
     }
 
     public List<Song> getSongs() {
-        return songs != null ? ImmutableList.copyOf(songs) : ImmutableList.of();
+        return songs != null ? ImmutableList.copyOf(songs) : emptyList();
     }
 
     public Artist getArtist() {

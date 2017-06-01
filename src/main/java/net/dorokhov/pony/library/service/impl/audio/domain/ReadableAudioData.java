@@ -4,6 +4,7 @@ import com.google.common.io.ByteSource;
 import net.dorokhov.pony.library.domain.FileType;
 
 import javax.annotation.Nullable;
+import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -55,6 +56,10 @@ public final class ReadableAudioData extends AudioData {
     @Nullable
     public EmbeddedArtwork getEmbeddedArtwork() {
         return embeddedArtwork;
+    }
+    
+    public File getFile() {
+        return new File(path);
     }
 
     @Override

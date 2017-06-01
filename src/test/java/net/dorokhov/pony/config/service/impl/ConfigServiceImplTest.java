@@ -12,6 +12,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -116,7 +117,7 @@ public class ConfigServiceImplTest {
 
         given(configRepository.findOne(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .willReturn(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]"));
-        configService.saveLibraryFolders(ImmutableList.of());
+        configService.saveLibraryFolders(emptyList());
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
         verify(configRepository).save(savedConfig.capture());

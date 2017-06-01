@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.emptySet;
 import static net.dorokhov.pony.user.domain.User.CACHE_REGION;
 import static org.hibernate.annotations.CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
 
@@ -44,7 +45,7 @@ public class User extends BaseEntity<Long> implements Serializable {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
-    private Set<Role> roles = ImmutableSet.of();
+    private Set<Role> roles = emptySet();
 
     protected User() {
     }
@@ -72,7 +73,7 @@ public class User extends BaseEntity<Long> implements Serializable {
     }
 
     public Set<Role> getRoles() {
-        return roles != null ? roles : ImmutableSet.of();
+        return roles != null ? roles : emptySet();
     }
 
     @Override

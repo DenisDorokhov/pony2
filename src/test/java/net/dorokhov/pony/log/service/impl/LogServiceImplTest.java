@@ -1,6 +1,5 @@
 package net.dorokhov.pony.log.service.impl;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
 import org.junit.Test;
@@ -15,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.log.domain.LogMessage.Level.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -41,14 +41,14 @@ public class LogServiceImplTest {
 
     @Test
     public void shouldGetByType() throws Exception {
-        Page<LogMessage> page = new PageImpl<>(ImmutableList.of());
+        Page<LogMessage> page = new PageImpl<>(emptyList());
         given(logMessageRepository.findByLevelGreaterThanEqual(any(), any())).willReturn(page);
         assertThat(logService.getByType(DEBUG, new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
     public void shouldGetByTypeAndDate() throws Exception {
-        Page<LogMessage> page = new PageImpl<>(ImmutableList.of());
+        Page<LogMessage> page = new PageImpl<>(emptyList());
         given(logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(any(), any(), any(), any())).willReturn(page);
         assertThat(logService.getByTypeAndDate(DEBUG, LocalDateTime.now(), LocalDateTime.now(), new PageRequest(0, 10))).isSameAs(page);
     }

@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.time.LocalDateTime;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
 import static net.dorokhov.pony.fixture.InstallationFixtures.installationBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,7 +74,7 @@ public class InstallationServiceImplTest {
 
     @Test
     public void shouldGetNoInstallation() throws Exception {
-        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(emptyList()));
         assertThat(installationService.getInstallation()).isNull();
     }
 
@@ -87,7 +88,7 @@ public class InstallationServiceImplTest {
     @Test
     public void shouldInstall() throws Exception {
         
-        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(emptyList()));
         given(buildVersionProvider.getBuildVersion()).willReturn(buildVersion());
         Installation installation = installation();
         given(installationRepository.save((Installation) any())).willReturn(installation);
@@ -147,7 +148,7 @@ public class InstallationServiceImplTest {
 
     @Test
     public void shouldFailUpgradeWhenNotInstalled() throws Exception {
-        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(ImmutableList.of()));
+        given(installationRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(emptyList()));
         assertThatThrownBy(installationService::upgradeIfNeeded).isInstanceOf(NotInstalledException.class);
     }
     
@@ -161,8 +162,6 @@ public class InstallationServiceImplTest {
     
     private InstallationCommand installationCommand() {
         return InstallationCommand.builder()
-                .autoScanInterval(null)
-                .libraryFolders(ImmutableList.of())
                 .adminName("someName")
                 .adminEmail("someEmail")
                 .adminPassword("somePassword")

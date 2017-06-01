@@ -1,6 +1,5 @@
 package net.dorokhov.pony.installation.service;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.installation.domain.Installation;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
@@ -30,8 +29,6 @@ public class InstallationServiceCacheTest extends IntegrationTest {
     @Test
     public void shouldEvictCacheAfterInstallation() throws Exception {
         InstallationCommand command = InstallationCommand.builder()
-                .autoScanInterval(null)
-                .libraryFolders(ImmutableList.of())
                 .adminName("someName")
                 .adminEmail("foo@bar.com")
                 .adminPassword("somePassword")

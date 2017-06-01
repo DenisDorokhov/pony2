@@ -1,8 +1,8 @@
 package net.dorokhov.pony.library.domain;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.common.SearchableEntity;
 import net.dorokhov.pony.common.OptionalComparators;
+import net.dorokhov.pony.common.SearchableEntity;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
@@ -14,6 +14,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "artist")
@@ -29,7 +31,7 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
     private Artwork artwork;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "artist")
-    private List<Album> albums = ImmutableList.of();
+    private List<Album> albums = emptyList();
 
     protected Artist() {
     }
@@ -54,7 +56,7 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
     }
 
     public List<Album> getAlbums() {
-        return albums != null ? ImmutableList.copyOf(albums) : ImmutableList.of();
+        return albums != null ? ImmutableList.copyOf(albums) : emptyList();
     }
 
     @Override
