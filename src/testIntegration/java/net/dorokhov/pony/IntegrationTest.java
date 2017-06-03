@@ -11,6 +11,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.test.context.ActiveProfiles;
@@ -34,6 +36,9 @@ abstract public class IntegrationTest {
     @Autowired
     protected EntityManager entityManager;
     
+    @Autowired
+    protected CacheManager cacheManager;
+    
     private List<Class> indexedClasses;
     
     @Before
@@ -44,6 +49,7 @@ abstract public class IntegrationTest {
     @After
     public void tearDown() throws Exception {
         purgeIndexes();
+        clearCache();
         flyway.clean();
     }
 
@@ -55,6 +61,12 @@ abstract public class IntegrationTest {
         FullTextEntityManager fullTextSession = Search.getFullTextEntityManager(entityManager);
         indexedClasses.forEach(fullTextSession::purgeAll);
         fullTextSession.flushToIndexes();
+    }
+    
+    private void clearCache() {
+        cacheManager.getCacheNames().stream()
+                .map(cacheManager::getCache)
+                .forEach(Cache::clear);
     }
 
     private List<Class> fetchIndexedClasses() throws Exception {

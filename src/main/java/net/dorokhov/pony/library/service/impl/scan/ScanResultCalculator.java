@@ -74,28 +74,28 @@ public class ScanResultCalculator {
     private ScanResult doCalculateAndSave(AudioFileProcessingResult processingResult, long duration, ScanStateBeforeProcessing scanStateBeforeProcessing) {
 
         long songCountAfterScan = songRepository.count();
-        long songCountCreated = songRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.getLastScanDate());
-        long songCountUpdated = songRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.getLastScanDate(), scanStateBeforeProcessing.getLastScanDate());
-        long songCountDeleted = max(0, scanStateBeforeProcessing.getSongCountBeforeScan() - (songCountAfterScan - songCountCreated));
+        long songCountCreated = songRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.lastScanDate);
+        long songCountUpdated = songRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.lastScanDate, scanStateBeforeProcessing.lastScanDate);
+        long songCountDeleted = max(0, scanStateBeforeProcessing.songCountBeforeScan - (songCountAfterScan - songCountCreated));
 
         long genreCountAfterScan = genreRepository.count();
-        long genreCountCreated = genreRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.getLastScanDate());
-        long genreCountUpdated = genreRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.getLastScanDate(), scanStateBeforeProcessing.getLastScanDate());
-        long genreCountDeleted = max(0, scanStateBeforeProcessing.getGenreCountBeforeScan() - (genreCountAfterScan - genreCountCreated));
+        long genreCountCreated = genreRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.lastScanDate);
+        long genreCountUpdated = genreRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.lastScanDate, scanStateBeforeProcessing.lastScanDate);
+        long genreCountDeleted = max(0, scanStateBeforeProcessing.genreCountBeforeScan - (genreCountAfterScan - genreCountCreated));
 
         long artistCountAfterScan = artistRepository.count();
-        long artistCountCreated = artistRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.getLastScanDate());
-        long artistCountUpdated = artistRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.getLastScanDate(), scanStateBeforeProcessing.getLastScanDate());
-        long artistCountDeleted = max(0, scanStateBeforeProcessing.getArtistCountBeforeScan() - (artistCountAfterScan - artistCountCreated));
+        long artistCountCreated = artistRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.lastScanDate);
+        long artistCountUpdated = artistRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.lastScanDate, scanStateBeforeProcessing.lastScanDate);
+        long artistCountDeleted = max(0, scanStateBeforeProcessing.artistCountBeforeScan - (artistCountAfterScan - artistCountCreated));
 
         long albumCountAfterScan = albumRepository.count();
-        long albumCountCreated = albumRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.getLastScanDate());
-        long albumCountUpdated = albumRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.getLastScanDate(), scanStateBeforeProcessing.getLastScanDate());
-        long albumCountDeleted = max(0, scanStateBeforeProcessing.getAlbumCountBeforeScan() - (albumCountAfterScan - albumCountCreated));
+        long albumCountCreated = albumRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.lastScanDate);
+        long albumCountUpdated = albumRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(scanStateBeforeProcessing.lastScanDate, scanStateBeforeProcessing.lastScanDate);
+        long albumCountDeleted = max(0, scanStateBeforeProcessing.albumCountBeforeScan - (albumCountAfterScan - albumCountCreated));
 
         long artworkCountAfterScan = artworkRepository.count();
-        long artworkCountCreated = artworkRepository.countByDateGreaterThan(scanStateBeforeProcessing.getLastScanDate());
-        long artworkCountDeleted = max(0, scanStateBeforeProcessing.getArtworkCountBeforeScan() - (artworkCountAfterScan - artworkCountCreated));
+        long artworkCountCreated = artworkRepository.countByDateGreaterThan(scanStateBeforeProcessing.lastScanDate);
+        long artworkCountDeleted = max(0, scanStateBeforeProcessing.artworkCountBeforeScan - (artworkCountAfterScan - artworkCountCreated));
 
         ScanResult.Builder builder = ScanResult.builder();
 
@@ -144,12 +144,12 @@ public class ScanResultCalculator {
     
     private class ScanStateBeforeProcessing {
 
-        private final LocalDateTime lastScanDate;
-        private final long songCountBeforeScan;
-        private final long genreCountBeforeScan;
-        private final long artistCountBeforeScan;
-        private final long albumCountBeforeScan;
-        private final long artworkCountBeforeScan;
+        public final LocalDateTime lastScanDate;
+        public final long songCountBeforeScan;
+        public final long genreCountBeforeScan;
+        public final long artistCountBeforeScan;
+        public final long albumCountBeforeScan;
+        public final long artworkCountBeforeScan;
 
         public ScanStateBeforeProcessing() {
             
@@ -164,30 +164,6 @@ public class ScanResultCalculator {
             artistCountBeforeScan = artistRepository.count();
             albumCountBeforeScan = albumRepository.count();
             artworkCountBeforeScan = artworkRepository.count();
-        }
-
-        public LocalDateTime getLastScanDate() {
-            return lastScanDate;
-        }
-
-        public long getSongCountBeforeScan() {
-            return songCountBeforeScan;
-        }
-
-        public long getGenreCountBeforeScan() {
-            return genreCountBeforeScan;
-        }
-
-        public long getArtistCountBeforeScan() {
-            return artistCountBeforeScan;
-        }
-
-        public long getAlbumCountBeforeScan() {
-            return albumCountBeforeScan;
-        }
-
-        public long getArtworkCountBeforeScan() {
-            return artworkCountBeforeScan;
         }
     }
 }

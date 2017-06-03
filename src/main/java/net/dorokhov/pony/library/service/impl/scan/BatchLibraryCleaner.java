@@ -108,7 +108,7 @@ public class BatchLibraryCleaner {
                         if (song.getArtwork() != null) {
                             libraryCleaner.deleteArtworkIfUnused(song.getArtwork());
                         }
-                        logService.debug(logger, "Song '{}' has been deleted: file '{}' not found.", song, song.getPath());
+                        logService.debug(logger, "Deleting song '{}': file '{}' not found.", song, song.getPath());
                     }
                     progressObserver.onProgress(counter.incrementAndGet(), songsToDelete.size());
                 }
@@ -160,7 +160,7 @@ public class BatchLibraryCleaner {
                         artistRepository.clearArtworkByArtworkId(id);
                         genreRepository.clearArtworkByArtworkId(id);
                         artworkStorage.delete(id);
-                        logService.debug(logger, "Artwork '{}' has been deleted: file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
+                        logService.debug(logger, "Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
                     }
                     progressObserver.onProgress(counter.incrementAndGet(), artworksToDelete.size());
                 }

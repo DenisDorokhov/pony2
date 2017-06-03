@@ -3,7 +3,7 @@ package net.dorokhov.pony.library.service.impl.audio.domain;
 import javax.annotation.Nullable;
 import java.io.File;
 
-public final class WritableAudioData extends AudioData {
+public final class WritableAudioData extends AbstractAudioData {
 
     private final boolean writeDiscNumber;
     private final boolean writeDiscCount;
@@ -120,7 +120,7 @@ public final class WritableAudioData extends AudioData {
         return new Builder();
     }
 
-    public static final class Builder extends BuilderAbstract<Builder> {
+    public static final class Builder extends AbstractBuilder<Builder> {
 
         private boolean writeDiscNumber;
         private boolean writeDiscCount;

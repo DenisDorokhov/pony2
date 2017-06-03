@@ -26,9 +26,9 @@ import java.io.IOException;
 
 @Component
 public class LibraryArtworkFinder {
-    
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     private final GenreRepository genreRepository;
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
@@ -44,7 +44,7 @@ public class LibraryArtworkFinder {
                          ArtworkFileFinder artworkFileFinder,
                          ArtworkStorage artworkStorage,
                          LogService logService) {
-        
+
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
@@ -56,7 +56,7 @@ public class LibraryArtworkFinder {
 
     @Transactional
     @Nullable
-    public Artwork findAndSaveArtwork(AudioNode audioNode) throws IOException {
+    public Artwork findAndSaveFileArtwork(AudioNode audioNode) throws IOException {
         ImageNode artwork = artworkFileFinder.findArtwork(audioNode);
         if (artwork != null) {
             return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(audioNode.getFile().toURI(), artwork));
@@ -67,7 +67,7 @@ public class LibraryArtworkFinder {
 
     @Transactional
     @Nullable
-    public Artwork findAndSaveArtwork(ReadableAudioData audioData) throws IOException {
+    public Artwork findAndSaveEmbeddedArtwork(ReadableAudioData audioData) throws IOException {
         ReadableAudioData.EmbeddedArtwork artwork = audioData.getEmbeddedArtwork();
         if (artwork != null) {
             return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(audioData.getFile().toURI(), artwork.getBinaryData()));
@@ -77,7 +77,7 @@ public class LibraryArtworkFinder {
     }
 
     @Transactional
-    public Genre findGenreArtwork(Genre genre) {
+    public Genre findAndSaveGenreArtwork(Genre genre) {
         long genreSongCount = songRepository.countByGenreIdAndArtworkNotNull(genre.getId());
         if (genreSongCount > 0) {
             int songIndex = (int) Math.floor(genreSongCount / 2.0);
@@ -96,7 +96,7 @@ public class LibraryArtworkFinder {
     }
 
     @Transactional
-    public Album findAlbumArtwork(Album album) {
+    public Album findAndSaveAlbumArtwork(Album album) {
         Song song = songRepository.findFirstByAlbumIdAndArtworkNotNull(album.getId());
         if (song != null) {
             Album savedAlbum = albumRepository.save(Album.builder(album)
@@ -109,7 +109,7 @@ public class LibraryArtworkFinder {
     }
 
     @Transactional
-    public Artist findArtistArtwork(Artist artist) {
+    public Artist findAndSaveArtistArtwork(Artist artist) {
         long artistAlbumCount = albumRepository.countByArtistIdAndArtworkNotNull(artist.getId());
         if (artistAlbumCount > 0) {
             int albumIndex = (int) Math.floor(artistAlbumCount / 2.0);
@@ -124,5 +124,23 @@ public class LibraryArtworkFinder {
             }
         }
         return artist;
+    }
+
+    @Transactional
+    public Song findAndSaveSongAndAlbumArtwork(Song song, AudioNode audioNode) throws IOException {
+        Artwork artwork = findAndSaveFileArtwork(audioNode);
+        if (artwork != null) {
+            Song savedSong = songRepository.save(Song.builder(song)
+                    .artwork(artwork)
+                    .build());
+            if (savedSong.getAlbum().getArtwork() == null) {
+                logService.debug(logger, "Artwork for album {} has been set: {}.", song.getAlbum(), artwork);
+                albumRepository.save(Album.builder(savedSong.getAlbum())
+                        .artwork(artwork)
+                        .build());
+            }
+            return savedSong;
+        }
+        return song;
     }
 }

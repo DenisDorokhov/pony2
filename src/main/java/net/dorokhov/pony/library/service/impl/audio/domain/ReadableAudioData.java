@@ -8,7 +8,7 @@ import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class ReadableAudioData extends AudioData {
+public final class ReadableAudioData extends AbstractAudioData {
 
     private final String path;
     private final FileType fileType;
@@ -116,7 +116,7 @@ public final class ReadableAudioData extends AudioData {
         }
     }
     
-    public static final class Builder extends BuilderAbstract<Builder> {
+    public static final class Builder extends AbstractBuilder<Builder> {
 
         private String path;
         private FileType fileType;

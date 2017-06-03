@@ -146,7 +146,7 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
         return bitRate;
     }
 
-    public boolean getBitRateVariable() {
+    public boolean isBitRateVariable() {
         return bitRateVariable;
     }
 

@@ -1,63 +1,290 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
-import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.library.domain.Song;
-import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
+import com.google.common.base.Strings;
+import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.library.repository.AlbumRepository;
+import net.dorokhov.pony.library.repository.ArtistRepository;
+import net.dorokhov.pony.library.repository.GenreRepository;
+import net.dorokhov.pony.library.repository.SongRepository;
+import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
+import net.dorokhov.pony.log.service.LogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class LibraryImporter {
     
-    public static class ImportResult {
-        
-        private final List<Song> importedSongs;
-        private final List<AudioNode> failedImports;
-
-        public ImportResult(List<Song> importedSongs, List<AudioNode> failedImports) {
-            this.importedSongs = ImmutableList.copyOf(importedSongs);
-            this.failedImports = ImmutableList.copyOf(failedImports);
-        }
-
-        public List<Song> getImportedSongs() {
-            return importedSongs;
-        }
-
-        public List<AudioNode> getFailedImports() {
-            return failedImports;
-        }
-    }
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    public static class WriteAndImportCommand {
+    private final GenreRepository genreRepository;
+    private final ArtistRepository artistRepository;
+    private final AlbumRepository albumRepository;
+    private final SongRepository songRepository;
+    private final LibraryArtworkFinder libraryArtworkFinder;
+    private final LibraryCleaner libraryCleaner;
+    private final LogService logService;
+
+    public LibraryImporter(GenreRepository genreRepository, 
+                           ArtistRepository artistRepository, 
+                           AlbumRepository albumRepository, 
+                           SongRepository songRepository, 
+                           LibraryArtworkFinder libraryArtworkFinder, 
+                           LibraryCleaner libraryCleaner, 
+                           LogService logService) {
+        this.genreRepository = genreRepository;
+        this.artistRepository = artistRepository;
+        this.albumRepository = albumRepository;
+        this.songRepository = songRepository;
+        this.libraryArtworkFinder = libraryArtworkFinder;
+        this.libraryCleaner = libraryCleaner;
+        this.logService = logService;
+    }
+
+    @Transactional
+    public Song importSong(AudioNode audioNode, ReadableAudioData audioData) {
         
-        private final AudioNode audioNode;
-        private final WritableAudioData audioData;
+        Genre genre = importGenre(audioData);
+        Album album = importAlbum(audioData, importArtist(audioData));
+        Artwork artwork = importArtwork(audioNode, audioData);
+        Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
+        
+        Album overriddenAlbum = null;
+        Genre overriddenGenre = null;
+        Artwork overriddenArtwork = null;
 
-        public WriteAndImportCommand(AudioNode audioNode, WritableAudioData audioData) {
-            this.audioNode = checkNotNull(audioNode);
-            this.audioData = checkNotNull(audioData);
-        }
+        boolean shouldSave = false;
 
-        public AudioNode getAudioNode() {
-            return audioNode;
+        Song.Builder builder;
+        if (song != null) {
+            builder = Song.builder(song);
+        } else {
+            builder = Song.builder().path(audioNode.getFile().getAbsolutePath());
+            shouldSave = true;
         }
+        if (song != null) {
+            if (!Objects.equals(song.getFileType(), audioData.getFileType()) ||
+                    !Objects.equals(song.getSize(), audioData.getSize()) ||
+                    !Objects.equals(song.getDuration(), audioData.getDuration()) ||
+                    !Objects.equals(song.getBitRate(), audioData.getBitRate()) ||
+                    !Objects.equals(song.isBitRateVariable(), audioData.isBitRateVariable()) ||
+                    !Objects.equals(song.getDiscNumber(), audioData.getDiscNumber()) ||
+                    !Objects.equals(song.getDiscCount(), audioData.getDiscCount()) ||
+                    !Objects.equals(song.getTrackNumber(), audioData.getTrackNumber()) ||
+                    !Objects.equals(song.getTrackCount(), audioData.getTrackCount()) ||
+                    !Objects.equals(song.getName(), audioData.getTitle()) ||
+                    !Objects.equals(song.getGenreName(), audioData.getGenre()) ||
+                    !Objects.equals(song.getArtistName(), audioData.getArtist()) ||
+                    !Objects.equals(song.getAlbumArtistName(), audioData.getAlbumArtist()) ||
+                    !Objects.equals(song.getAlbumName(), audioData.getAlbum()) ||
+                    !Objects.equals(song.getYear(), audioData.getYear())) {
+                shouldSave = true;
+            }
+            if (!Objects.equals(song.getGenre(), genre)) {
+                overriddenGenre = song.getGenre();
+                shouldSave = true;
+            }
+            if (!Objects.equals(song.getAlbum(), album)) {
+                overriddenAlbum = song.getAlbum();
+                shouldSave = true;
+            }
+            if (!Objects.equals(song.getArtwork(), artwork)) {
+                overriddenArtwork = song.getArtwork();
+                shouldSave = true;
+            }
+        }
+        if (shouldSave) {
 
-        public WritableAudioData getAudioData() {
-            return audioData;
+            builder.fileType(audioData.getFileType())
+                    .size(audioData.getSize())
+                    .duration(audioData.getDuration())
+                    .bitRate(audioData.getBitRate())
+                    .bitRateVariable(audioData.isBitRateVariable())
+                    .discNumber(audioData.getDiscNumber())
+                    .discCount(audioData.getDiscCount())
+                    .trackNumber(audioData.getTrackNumber())
+                    .trackCount(audioData.getTrackCount())
+                    .name(audioData.getTitle())
+                    .genreName(audioData.getGenre())
+                    .artistName(audioData.getArtist())
+                    .albumArtistName(audioData.getAlbumArtist())
+                    .albumName(audioData.getAlbum())
+                    .year(audioData.getYear())
+                    .album(album)
+                    .genre(genre)
+                    .artwork(artwork);
+
+            Song savedSong = songRepository.save(builder.build());
+            if (song != null) {
+                logService.debug(logger, "Updating song '{}': '{}'.", song, savedSong);
+            } else {
+                logService.debug(logger, "Creating song '{}'.", savedSong);
+            }
+            if (overriddenAlbum != null) {
+                libraryCleaner.deleteAlbumIfUnused(overriddenAlbum);
+                libraryCleaner.deleteArtistIfUnused(overriddenAlbum.getArtist());
+            }
+            if (overriddenGenre != null) {
+                libraryCleaner.deleteGenreIfUnused(overriddenGenre);
+            }
+            if (overriddenArtwork != null &&
+                    libraryCleaner.deleteArtworkIfUnused(overriddenArtwork) &&
+                    Objects.equals(album.getArtwork(), overriddenArtwork)) {
+                albumRepository.save(Album.builder(album)
+                        .artwork(null)
+                        .build());
+            }
+            if (artwork != null && album.getArtwork() == null) {
+                logService.debug(logger, "Setting artwork for album '{}': '{}'.", album, artwork);
+                albumRepository.save(Album.builder(album)
+                        .artwork(artwork)
+                        .build());
+            }
+            return savedSong;
         }
+        return song;
     }
 
-    public ImportResult readAndImport(List<AudioNode> audioNodes, ProgressObserver observer) {
-        // TODO: implement
-        return null;
+    private Genre importGenre(ReadableAudioData audioData) {
+
+        String genreName = normalizeTitle(audioData.getGenre());
+        Genre genre = genreRepository.findByName(genreName);
+
+        boolean shouldSave = false;
+
+        Genre.Builder builder;
+        if (genre != null) {
+            builder = Genre.builder(genre);
+        } else {
+            builder = Genre.builder();
+            shouldSave = true;
+        }
+        if (genre != null) {
+            // Compare name to detect case changes ignored by database selection.
+            if (!Objects.equals(genre.getName(), genreName)) {
+                shouldSave = true;
+            }
+        }
+        if (shouldSave) {
+            Genre savedGenre = genreRepository.save(builder
+                    .name(genreName)
+                    .build());
+            if (genre != null) {
+                logService.debug(logger, "Updating genre '{}': '{}'.", genre, savedGenre);
+            } else {
+                logService.debug(logger, "Creating genre '{}'.", savedGenre);
+            }
+            return savedGenre;
+        }
+        return genre;
     }
-    
-    public ImportResult writeAndImport(List<WriteAndImportCommand> commands, ProgressObserver observer) {
-        // TODO: implement
-        return null;
+
+    private Artist importArtist(ReadableAudioData audioData) {
+
+        String artistName = normalizeTitle(audioData.getAlbumArtist());
+        if (artistName == null) {
+            artistName = normalizeTitle(audioData.getArtist());
+        }
+        Artist artist = artistRepository.findByName(artistName);
+
+        boolean shouldSave = false;
+
+        Artist.Builder builder;
+        if (artist != null) {
+            builder = Artist.builder(artist);
+        } else {
+            builder = Artist.builder();
+            shouldSave = true;
+        }
+        if (artist != null) {
+            // Compare name to detect case changes ignored by database selection.
+            if (!Objects.equals(artist.getName(), artistName)) {
+                shouldSave = true;
+            }
+        }
+        if (shouldSave) {
+            Artist savedArtist = artistRepository.save(builder
+                    .name(artistName)
+                    .build());
+            if (artist != null) {
+                logService.debug(logger, "Updating artist '{}': '{}'.", artist, savedArtist);
+            } else {
+                logService.debug(logger, "Creating artist '{}'.", savedArtist);
+            }
+            return savedArtist;
+        }
+        return artist;
+    }
+
+    private Album importAlbum(ReadableAudioData audioData, Artist artist) {
+
+        String albumName = normalizeTitle(audioData.getAlbum());
+        Album album = albumRepository.findByArtistIdAndName(artist.getId(), albumName);
+
+        boolean shouldSave = false;
+
+        Album.Builder builder;
+        if (album != null) {
+            builder = Album.builder(album);
+        } else {
+            builder = Album.builder();
+            shouldSave = true;
+        }
+        if (album != null) {
+            // Compare name to detect case changes ignored by database selection.
+            if (!Objects.equals(album.getName(), albumName) ||
+                    !Objects.equals(album.getYear(), audioData.getYear())) {
+                shouldSave = true;
+            }
+        }
+        if (shouldSave) {
+            Album savedAlbum = albumRepository.save(builder
+                    .artist(artist)
+                    .name(albumName)
+                    .year(audioData.getYear())
+                    .build());
+            if (album != null) {
+                logService.debug(logger, "Updating artist '{}': '{}'.", album, savedAlbum);
+            } else {
+                logService.debug(logger, "Creating artist '{}'.", savedAlbum);
+            }
+            return savedAlbum;
+        }
+        return album;
+    }
+
+    @Nullable
+    private Artwork importArtwork(AudioNode audioNode, ReadableAudioData audioData) {
+        Artwork artwork = null;
+        try {
+            artwork = libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData);
+        } catch (IOException e) {
+            logService.error(logger, "Could not find and save embedded artwork for file '{}'.",
+                    audioNode.getFile().getAbsolutePath(), e);
+        }
+        if (artwork == null) {
+            try {
+                artwork = libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
+            } catch (IOException e) {
+                logService.error(logger, "Could not find and save file artwork for data '{}'.",
+                        audioData, e);
+            }
+        }
+        return artwork;
+    }
+
+    @Nullable
+    private String normalizeTitle(@Nullable String title) {
+        if (title != null) {
+            return Strings.emptyToNull(title.trim().replaceAll("\\s+", " "));
+        } else {
+            return null;
+        }
     }
 }

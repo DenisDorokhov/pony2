@@ -11,7 +11,7 @@ import net.dorokhov.pony.library.service.impl.filetree.FileTreeScanner;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
-import net.dorokhov.pony.library.service.impl.scan.LibraryImporter.WriteAndImportCommand;
+import net.dorokhov.pony.library.service.impl.scan.BatchLibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony.library.service.impl.scan.ScanResultCalculator.AudioFileProcessingResult;
 import net.dorokhov.pony.log.service.LogService;
 import org.junit.Before;
@@ -61,7 +61,7 @@ public class LibraryScannerTest {
     @Mock
     private BatchLibraryCleaner batchLibraryCleaner;
     @Mock
-    private LibraryImporter libraryImporter;
+    private BatchLibraryImporter batchLibraryImporter;
     @Mock
     private BatchLibraryArtworkFinder batchLibraryArtworkFinder;
 
@@ -74,7 +74,7 @@ public class LibraryScannerTest {
     @Before
     public void setUp() throws Exception {
         libraryScanner = new LibraryScanner(logService, songRepository, fileTreeScanner, 
-                scanResultCalculator, batchLibraryCleaner, libraryImporter, batchLibraryArtworkFinder, 1);
+                scanResultCalculator, batchLibraryCleaner, batchLibraryImporter, batchLibraryArtworkFinder, 1);
     }
 
     @Test
@@ -116,8 +116,8 @@ public class LibraryScannerTest {
         doAnswer(invocation -> {
             ProgressObserver observer = invocation.getArgument(1);
             observer.onProgress(1, 1);
-            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), emptyList());
-        }).when(libraryImporter).readAndImport(any(), any());
+            return new BatchLibraryImporter.ImportResult(ImmutableList.of(song(), song()), emptyList());
+        }).when(batchLibraryImporter).readAndImport(any(), any());
         doAnswer(invocation -> {
             ProgressObserver observer = invocation.getArgument(0);
             observer.onProgress(1, 2);
@@ -130,8 +130,8 @@ public class LibraryScannerTest {
 
         verify(batchLibraryCleaner).cleanSongs(eq(ImmutableList.of(audioNode1, audioNode2)), any());
         verify(batchLibraryCleaner).cleanArtworks(eq(ImmutableList.of(imageNode1, imageNode2)), any());
-        verify(libraryImporter).readAndImport(eq(ImmutableList.of(audioNode1)), any());
-        verify(libraryImporter).readAndImport(eq(ImmutableList.of(audioNode2)), any());
+        verify(batchLibraryImporter).readAndImport(eq(ImmutableList.of(audioNode1)), any());
+        verify(batchLibraryImporter).readAndImport(eq(ImmutableList.of(audioNode2)), any());
 
         assertThat(scanObserver.size()).isEqualTo(11);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
@@ -191,8 +191,8 @@ public class LibraryScannerTest {
         doAnswer(invocation -> {
             ProgressObserver observer = invocation.getArgument(1);
             observer.onProgress(1, 1);
-            return new LibraryImporter.ImportResult(ImmutableList.of(song(), song()), emptyList());
-        }).when(libraryImporter).writeAndImport(any(), any());
+            return new BatchLibraryImporter.ImportResult(ImmutableList.of(song(), song()), emptyList());
+        }).when(batchLibraryImporter).writeAndImport(any(), any());
         doAnswer(invocation -> {
             ProgressObserver observer = invocation.getArgument(0);
             observer.onProgress(1, 2);
@@ -205,7 +205,7 @@ public class LibraryScannerTest {
                 new EditCommand(2L, WritableAudioData.builder().build())
         ), scanObserver::observe)).isSameAs(scanResultFixture);
 
-        verify(libraryImporter, times(2)).writeAndImport(writeAndImportCommandsCaptor.capture(), any());
+        verify(batchLibraryImporter, times(2)).writeAndImport(writeAndImportCommandsCaptor.capture(), any());
         
         List<WriteAndImportCommand> commands1 = writeAndImportCommandsCaptor.getAllValues().get(0);
         List<WriteAndImportCommand> commands2 = writeAndImportCommandsCaptor.getAllValues().get(1);

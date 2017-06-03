@@ -15,7 +15,7 @@ import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FileNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
-import net.dorokhov.pony.library.service.impl.scan.LibraryImporter.WriteAndImportCommand;
+import net.dorokhov.pony.library.service.impl.scan.BatchLibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony.library.service.impl.scan.ScanResultCalculator.AudioFileProcessingResult;
 import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class LibraryScanner {
     private final FileTreeScanner fileTreeScanner;
     private final ScanResultCalculator scanResultCalculator;
     private final BatchLibraryCleaner batchLibraryCleaner;
-    private final LibraryImporter libraryImporter;
+    private final BatchLibraryImporter batchLibraryImporter;
     private final BatchLibraryArtworkFinder batchLibraryArtworkFinder;
     private final int importChunkSize;
 
@@ -55,7 +55,7 @@ public class LibraryScanner {
                           FileTreeScanner fileTreeScanner,
                           ScanResultCalculator scanResultCalculator,
                           BatchLibraryCleaner batchLibraryCleaner,
-                          LibraryImporter libraryImporter,
+                          BatchLibraryImporter batchLibraryImporter,
                           BatchLibraryArtworkFinder batchLibraryArtworkFinder,
                           @Value("${pony.scan.importChunkSize}") int importChunkSize) {
         this.logService = logService;
@@ -63,7 +63,7 @@ public class LibraryScanner {
         this.fileTreeScanner = fileTreeScanner;
         this.scanResultCalculator = scanResultCalculator;
         this.batchLibraryCleaner = batchLibraryCleaner;
-        this.libraryImporter = libraryImporter;
+        this.batchLibraryImporter = batchLibraryImporter;
         this.batchLibraryArtworkFinder = batchLibraryArtworkFinder;
         this.importChunkSize = importChunkSize;
     }
@@ -161,11 +161,9 @@ public class LibraryScanner {
         List<File> failedFiles = new ArrayList<>();
         for (List<AudioNode> chunk : Lists.partition(audioNodes, importChunkSize)) {
             int finalProcessedCount = processedCount;
-            LibraryImporter.ImportResult result = libraryImporter.readAndImport(chunk, (itemsComplete, itemsTotal) ->
+            BatchLibraryImporter.ImportResult result = batchLibraryImporter.readAndImport(chunk, (itemsComplete, itemsTotal) ->
                     progressScan(FULL_IMPORTING, targetFolders, (double) (finalProcessedCount + itemsComplete) / audioNodes.size(), observer));
-            failedFiles.addAll(result.getFailedImports().stream()
-                    .map(AudioNode::getFile)
-                    .collect(Collectors.toList()));
+            failedFiles.addAll(result.getFailedImports());
             processedCount += chunk.size();
         }
 
@@ -190,11 +188,9 @@ public class LibraryScanner {
         List<File> failedFiles = new ArrayList<>();
         for (List<WriteAndImportCommand> chunk : Lists.partition(commands, importChunkSize)) {
             int finalProcessedCount = processedCount;
-            LibraryImporter.ImportResult result = libraryImporter.writeAndImport(chunk, (itemsComplete, itemsTotal) ->
+            BatchLibraryImporter.ImportResult result = batchLibraryImporter.writeAndImport(chunk, (itemsComplete, itemsTotal) ->
                     progressScan(EDIT_WRITING, targetFiles, (double) (finalProcessedCount + itemsComplete) / commands.size(), observer));
-            failedFiles.addAll(result.getFailedImports().stream()
-                    .map(AudioNode::getFile)
-                    .collect(Collectors.toList()));
+            failedFiles.addAll(result.getFailedImports());
             processedCount += chunk.size();
         }
 

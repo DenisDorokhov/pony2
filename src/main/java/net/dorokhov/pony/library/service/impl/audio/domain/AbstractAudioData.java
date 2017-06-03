@@ -2,7 +2,7 @@ package net.dorokhov.pony.library.service.impl.audio.domain;
 
 import javax.annotation.Nullable;
 
-abstract class AudioData {
+abstract class AbstractAudioData {
 
     protected final Integer discNumber;
     protected final Integer discCount;
@@ -15,7 +15,7 @@ abstract class AudioData {
     protected final Integer year;
     protected final String genre;
 
-    protected AudioData(BuilderAbstract builder) {
+    protected AbstractAudioData(AbstractBuilder builder) {
         this.discNumber = builder.discNumber;
         this.discCount = builder.discCount;
         this.trackNumber = builder.trackNumber;
@@ -78,7 +78,7 @@ abstract class AudioData {
         return genre;
     }
     
-    protected abstract static class BuilderAbstract<T extends BuilderAbstract> {
+    protected abstract static class AbstractBuilder<T extends AbstractBuilder> {
 
         protected Integer discNumber;
         protected Integer discCount;
@@ -143,6 +143,6 @@ abstract class AudioData {
         
         abstract protected T self();
 
-        abstract public AudioData build();
+        abstract public AbstractAudioData build();
     }
 }

@@ -1,0 +1,50 @@
+package net.dorokhov.pony.library.service.impl.scan;
+
+import net.dorokhov.pony.library.domain.Genre;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
+public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
+    
+    @Captor
+    private ArgumentCaptor<Genre> genreCaptor;
+
+    @Test
+    public void shouldCreateGenre() throws Exception {
+        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+                .genre("someValue")
+                .build());
+        verify(genreRepository).save(genreCaptor.capture());
+        assertThat(genreCaptor.getValue()).satisfies(genre ->
+                assertThat(genre.getName()).isEqualTo("someValue"));
+    }
+
+    @Test
+    public void shouldUpdateGenreIfNameChanged() throws Exception {
+        Genre existingGenre = Genre.builder().name("somevalue").build();
+        given(genreRepository.findByName(any())).willReturn(existingGenre);
+        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+                .genre("someValue")
+                .build());
+        verify(genreRepository).save(genreCaptor.capture());
+        assertThat(genreCaptor.getValue()).satisfies(genre ->
+                assertThat(genre.getName()).isEqualTo("someValue"));
+    }
+
+    @Test
+    public void shouldSkipGenreIfNothingChanged() throws Exception {
+        Genre existingGenre = Genre.builder().name("someValue").build();
+        given(genreRepository.findByName(any())).willReturn(existingGenre);
+        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+                .genre("someValue")
+                .build());
+        verify(genreRepository, never()).save((Genre) any());
+    }
+}

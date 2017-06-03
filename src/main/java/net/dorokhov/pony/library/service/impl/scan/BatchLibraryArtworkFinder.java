@@ -66,7 +66,7 @@ public class BatchLibraryArtworkFinder {
             pageable.set(transactionTemplate.execute(status -> {
                 Page<Album> albums = albumRepository.findByArtworkId(null, pageable.get());
                 for (Album album : albums) {
-                    libraryArtworkFinder.findAlbumArtwork(album);
+                    libraryArtworkFinder.findAndSaveAlbumArtwork(album);
                     onItemProgress.run();
                 }
                 return albums.nextPageable();
@@ -80,7 +80,7 @@ public class BatchLibraryArtworkFinder {
             pageable.set(transactionTemplate.execute(status -> {
                 Page<Artist> artists = artistRepository.findByArtworkId(null, pageable.get());
                 for (Artist artist : artists) {
-                    libraryArtworkFinder.findArtistArtwork(artist);
+                    libraryArtworkFinder.findAndSaveArtistArtwork(artist);
                     onItemProgress.run();
                 }
                 return artists.nextPageable();
@@ -94,7 +94,7 @@ public class BatchLibraryArtworkFinder {
             pageable.set(transactionTemplate.execute(status -> {
                 Page<Genre> genres = genreRepository.findByArtworkId(null, pageable.get());
                 for (Genre genre : genres) {
-                    libraryArtworkFinder.findGenreArtwork(genre);
+                    libraryArtworkFinder.findAndSaveGenreArtwork(genre);
                     onItemProgress.run();
                 }
                 return genres.nextPageable();

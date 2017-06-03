@@ -46,7 +46,7 @@ public class LibraryCleaner {
     public boolean deleteArtistIfUnused(Artist artist) {
         if (albumRepository.countByArtistId(artist.getId()) == 0) {
             artistRepository.delete(artist.getId());
-            logService.debug(logger, "Artist '{}' has been deleted.", artist);
+            logService.debug(logger, "Deleting artist '{}'.", artist);
             return true;
         }
         return false;
@@ -56,7 +56,7 @@ public class LibraryCleaner {
     public boolean deleteAlbumIfUnused(Album album) {
         if (songRepository.countByAlbumId(album.getId()) == 0) {
             albumRepository.delete(album.getId());
-            logService.debug(logger, "Album '{}' has been deleted.", album);
+            logService.debug(logger, "Deleting album '{}'.", album);
             return true;
         }
         return false;
@@ -66,7 +66,7 @@ public class LibraryCleaner {
     public boolean deleteGenreIfUnused(Genre genre) {
         if (songRepository.countByGenreId(genre.getId()) == 0) {
             genreRepository.delete(genre.getId());
-            logService.debug(logger, "Genre '{}' has been deleted.", genre);
+            logService.debug(logger, "Deleting genre '{}'.", genre);
             return true;
         }
         return false;

@@ -67,9 +67,9 @@ public class BatchLibraryArtworkFinderTest {
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryArtworkFinder.findAllArtworks(observer);
         
-        verify(libraryArtworkFinder).findAlbumArtwork(any());
-        verify(libraryArtworkFinder).findArtistArtwork(any());
-        verify(libraryArtworkFinder).findGenreArtwork(any());
+        verify(libraryArtworkFinder).findAndSaveAlbumArtwork(any());
+        verify(libraryArtworkFinder).findAndSaveArtistArtwork(any());
+        verify(libraryArtworkFinder).findAndSaveGenreArtwork(any());
 
         assertThat(observer.size()).isEqualTo(3);
         observer.assertThatAt(0, 1, 3);
