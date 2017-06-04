@@ -1,7 +1,10 @@
 package net.dorokhov.pony.library.domain;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
@@ -56,12 +59,62 @@ public final class ScanProgress {
                     '}';
         }
     }
+    
+    public static class Value {
+
+        private final long itemsComplete;
+        private final long itemsTotal;
+
+        public Value(long itemsComplete, long itemsTotal) {
+            this.itemsComplete = itemsComplete;
+            this.itemsTotal = itemsTotal;
+        }
+
+        public long getItemsComplete() {
+            return itemsComplete;
+        }
+
+        public long getItemsTotal() {
+            return itemsTotal;
+        }
+
+        @Override
+        @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
+        public boolean equals(@Nullable Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            Value that = (Value) obj;
+            return Objects.equal(itemsComplete, that.itemsComplete) &&
+                    Objects.equal(itemsTotal, that.itemsTotal);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(itemsComplete, itemsTotal);
+        }
+
+        @Override
+        public String toString() {
+            return "Value{" +
+                    "itemsComplete=" + itemsComplete +
+                    ", itemsTotal=" + itemsTotal +
+                    '}';
+        }
+
+        public static Value of(long itemsComplete, long itemsTotal) {
+            return new Value(itemsComplete, itemsTotal);
+        }
+    }
 
     private final Step step;
     private final List<File> files;
-    private final double value;
+    private final Value value;
 
-    public ScanProgress(Step step, List<File> files, double value) {
+    public ScanProgress(Step step, List<File> files, @Nullable Value value) {
         this.step = checkNotNull(step);
         this.files = ImmutableList.copyOf(files);
         this.value = value;
@@ -75,7 +128,8 @@ public final class ScanProgress {
         return files;
     }
 
-    public double getValue() {
+    @Nullable
+    public Value getValue() {
         return value;
     }
 

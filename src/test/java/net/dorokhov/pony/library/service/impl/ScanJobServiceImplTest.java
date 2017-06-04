@@ -3,6 +3,7 @@ package net.dorokhov.pony.library.service.impl;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.config.service.ConfigService;
 import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.library.domain.ScanProgress.Value;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.command.EditCommand;
@@ -108,7 +109,7 @@ public class ScanJobServiceImplTest {
         ScanResult scanResult = scanResult(FULL);
         when(libraryScanner.scan(any(), any())).then(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
-            observer.accept(new ScanProgress(FULL_PREPARING, emptyList(), 0.5));
+            observer.accept(new ScanProgress(FULL_PREPARING, emptyList(), Value.of(1, 1)));
             return scanResult;
         });
         
@@ -148,7 +149,7 @@ public class ScanJobServiceImplTest {
             //noinspection ConstantConditions
             assertThat(scanJobProgress.getScanProgress().getStep()).isEqualTo(FULL_PREPARING);
             assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
-            assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(0.5);
+            assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(Value.of(1, 1));
         });
         observer.assertThatCompletedAt(3);
 
@@ -168,7 +169,7 @@ public class ScanJobServiceImplTest {
         ScanResult scanResult = scanResult(ScanType.EDIT);
         when(libraryScanner.edit(any(), any())).then(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
-            observer.accept(new ScanProgress(EDIT_PREPARING, emptyList(), 0.5));
+            observer.accept(new ScanProgress(EDIT_PREPARING, emptyList(), Value.of(1, 1)));
             return scanResult;
         });
 
@@ -208,7 +209,7 @@ public class ScanJobServiceImplTest {
             //noinspection ConstantConditions
             assertThat(scanJobProgress.getScanProgress().getStep()).isEqualTo(EDIT_PREPARING);
             assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
-            assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(0.5);
+            assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(Value.of(1, 1));
         });
         observer.assertThatCompletedAt(3);
 

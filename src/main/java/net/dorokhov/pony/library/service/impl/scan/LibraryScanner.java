@@ -81,7 +81,7 @@ public class LibraryScanner {
 
         try {
             logService.info(logger, "Scanning library {}...", targetFolders);
-            notifyProgressObserver(new ScanProgress(FULL_PREPARING, targetFolders, 0.0), observer);
+            notifyProgressObserver(new ScanProgress(FULL_PREPARING, targetFolders, null), observer);
             ScanResult scanResult = doScan(targetFolders, observer);
             logService.info(logger, "Scan of {} has been finished with result {}.", targetFolders, scanResult);
             return scanResult;
@@ -115,7 +115,7 @@ public class LibraryScanner {
 
         try {
             logService.info(logger, "Editing files {}...", targetFiles);
-            notifyProgressObserver(new ScanProgress(EDIT_PREPARING, targetFiles, 0.0), observer);
+            notifyProgressObserver(new ScanProgress(EDIT_PREPARING, targetFiles, null), observer);
             ScanResult scanResult = doEdit(writeAndImportCommands, observer);
             logService.info(logger, "Edit of {} has been finished with result {}.", targetFiles, scanResult);
             return scanResult;
@@ -136,7 +136,7 @@ public class LibraryScanner {
     private AudioFileProcessingResult performScanSteps(List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws IOException {
 
         logService.info(logger, "Searching media files...");
-        progressScan(FULL_SEARCHING_MEDIA, targetFolders, 0.0, observer);
+        progressScan(FULL_SEARCHING_MEDIA, targetFolders, null, observer);
         List<AudioNode> audioNodes = new ArrayList<>();
         List<ImageNode> imageNodes = new ArrayList<>();
         for (File file : targetFolders) {
@@ -146,31 +146,35 @@ public class LibraryScanner {
         }
 
         logService.info(logger, "Cleaning songs...");
-        progressScan(FULL_CLEANING_SONGS, targetFolders, 0.0, observer);
+        progressScan(FULL_CLEANING_SONGS, targetFolders, null, observer);
         batchLibraryCleaner.cleanSongs(audioNodes, (itemsComplete, itemsTotal) ->
-                progressScan(FULL_CLEANING_SONGS, targetFolders, (double) itemsComplete / itemsTotal, observer));
+                progressScan(FULL_CLEANING_SONGS, targetFolders, 
+                        ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
         logService.info(logger, "Cleaning artworks...");
-        progressScan(FULL_CLEANING_ARTWORKS, targetFolders, 0.0, observer);
+        progressScan(FULL_CLEANING_ARTWORKS, targetFolders, null, observer);
         batchLibraryCleaner.cleanArtworks(imageNodes, (itemsComplete, itemsTotal) ->
-                progressScan(FULL_CLEANING_ARTWORKS, targetFolders, (double) itemsComplete / itemsTotal, observer));
+                progressScan(FULL_CLEANING_ARTWORKS, targetFolders, 
+                        ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
         logService.info(logger, "Importing songs...");
-        progressScan(FULL_IMPORTING, targetFolders, 0.0, observer);
+        progressScan(FULL_IMPORTING, targetFolders, null, observer);
         int processedCount = 0;
         List<File> failedFiles = new ArrayList<>();
         for (List<AudioNode> chunk : Lists.partition(audioNodes, importChunkSize)) {
             int finalProcessedCount = processedCount;
             BatchLibraryImporter.ImportResult result = batchLibraryImporter.readAndImport(chunk, (itemsComplete, itemsTotal) ->
-                    progressScan(FULL_IMPORTING, targetFolders, (double) (finalProcessedCount + itemsComplete) / audioNodes.size(), observer));
+                    progressScan(FULL_IMPORTING, targetFolders, 
+                            ScanProgress.Value.of(finalProcessedCount + itemsComplete, audioNodes.size()), observer));
             failedFiles.addAll(result.getFailedFiles());
             processedCount += chunk.size();
         }
 
         logService.info(logger, "Searching artworks...");
-        progressScan(FULL_SEARCHING_ARTWORKS, targetFolders, 0.0, observer);
+        progressScan(FULL_SEARCHING_ARTWORKS, targetFolders, null, observer);
         batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) ->
-                progressScan(FULL_SEARCHING_ARTWORKS, targetFolders, (double) itemsComplete / itemsTotal, observer));
+                progressScan(FULL_SEARCHING_ARTWORKS, targetFolders, 
+                        ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
         return new AudioFileProcessingResultImpl(ScanType.FULL, targetFolders, failedFiles, audioNodes.size());
     }
@@ -183,26 +187,28 @@ public class LibraryScanner {
                 .collect(Collectors.toList());
 
         logService.info(logger, "Writing songs...");
-        progressScan(EDIT_WRITING, targetFiles, 0.0, observer);
+        progressScan(EDIT_WRITING, targetFiles, null, observer);
         int processedCount = 0;
         List<File> failedFiles = new ArrayList<>();
         for (List<WriteAndImportCommand> chunk : Lists.partition(commands, importChunkSize)) {
             int finalProcessedCount = processedCount;
             BatchLibraryImporter.ImportResult result = batchLibraryImporter.writeAndImport(chunk, (itemsComplete, itemsTotal) ->
-                    progressScan(EDIT_WRITING, targetFiles, (double) (finalProcessedCount + itemsComplete) / commands.size(), observer));
+                    progressScan(EDIT_WRITING, targetFiles, 
+                            ScanProgress.Value.of(finalProcessedCount + itemsComplete, commands.size()), observer));
             failedFiles.addAll(result.getFailedFiles());
             processedCount += chunk.size();
         }
 
         logService.info(logger, "Searching artworks...");
-        progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, 0.0, observer);
+        progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, null, observer);
         batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) ->
-                progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, (double) itemsComplete / itemsTotal, observer));
+                progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, 
+                        ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
         return new AudioFileProcessingResultImpl(ScanType.EDIT, targetFiles, failedFiles, commands.size());
     }
 
-    private void progressScan(Step step, List<File> files, double progressValue, @Nullable Consumer<ScanProgress> observer) {
+    private void progressScan(Step step, List<File> files, ScanProgress.Value progressValue, @Nullable Consumer<ScanProgress> observer) {
         notifyProgressObserver(new ScanProgress(step, files, progressValue), observer);
     }
 

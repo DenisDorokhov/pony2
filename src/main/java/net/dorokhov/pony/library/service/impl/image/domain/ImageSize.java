@@ -33,8 +33,8 @@ public final class ImageSize {
             return false;
         }
         ImageSize that = (ImageSize) obj;
-        return Objects.equal(this.width, that.width) &&
-                Objects.equal(this.height, that.height);
+        return Objects.equal(width, that.width) &&
+                Objects.equal(height, that.height);
     }
 
     @Override

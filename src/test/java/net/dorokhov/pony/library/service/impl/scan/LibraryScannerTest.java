@@ -2,6 +2,7 @@ package net.dorokhov.pony.library.service.impl.scan;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.ScanProgress;
+import net.dorokhov.pony.library.domain.ScanProgress.Value;
 import net.dorokhov.pony.library.domain.ScanResult;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.command.EditCommand;
@@ -134,27 +135,27 @@ public class LibraryScannerTest {
 
         assertThat(scanObserver.size()).isEqualTo(11);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
-                checkScanProgress(scanProgress, 0.0, ScanProgress.Step.FULL_PREPARING));
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_PREPARING));
         scanObserver.assertThatProgressAtIndexSatisfies(1, scanProgress ->
-                checkScanProgress(scanProgress, 0.0, ScanProgress.Step.FULL_SEARCHING_MEDIA));
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_SEARCHING_MEDIA));
         scanObserver.assertThatProgressAtIndexSatisfies(2, scanProgress ->
-                checkScanProgress(scanProgress, 0.0, ScanProgress.Step.FULL_CLEANING_SONGS));
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_CLEANING_SONGS));
         scanObserver.assertThatProgressAtIndexSatisfies(3, scanProgress ->
-                checkScanProgress(scanProgress, 0.5, ScanProgress.Step.FULL_CLEANING_SONGS));
+                checkScanProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.FULL_CLEANING_SONGS));
         scanObserver.assertThatProgressAtIndexSatisfies(4, scanProgress ->
-                checkScanProgress(scanProgress, 0.0, ScanProgress.Step.FULL_CLEANING_ARTWORKS));
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_CLEANING_ARTWORKS));
         scanObserver.assertThatProgressAtIndexSatisfies(5, scanProgress ->
-                checkScanProgress(scanProgress, 0.5, ScanProgress.Step.FULL_CLEANING_ARTWORKS));
+                checkScanProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.FULL_CLEANING_ARTWORKS));
         scanObserver.assertThatProgressAtIndexSatisfies(6, scanProgress ->
-                checkScanProgress(scanProgress, 0.0, ScanProgress.Step.FULL_IMPORTING));
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_IMPORTING));
         scanObserver.assertThatProgressAtIndexSatisfies(7, scanProgress ->
-                checkScanProgress(scanProgress, 0.5, ScanProgress.Step.FULL_IMPORTING));
+                checkScanProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.FULL_IMPORTING));
         scanObserver.assertThatProgressAtIndexSatisfies(8, scanProgress ->
-                checkScanProgress(scanProgress, 1.0, ScanProgress.Step.FULL_IMPORTING));
+                checkScanProgress(scanProgress, Value.of(2, 2), ScanProgress.Step.FULL_IMPORTING));
         scanObserver.assertThatProgressAtIndexSatisfies(9, scanProgress ->
-                checkScanProgress(scanProgress, 0.0, ScanProgress.Step.FULL_SEARCHING_ARTWORKS));
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_SEARCHING_ARTWORKS));
         scanObserver.assertThatProgressAtIndexSatisfies(10, scanProgress ->
-                checkScanProgress(scanProgress, 0.5, ScanProgress.Step.FULL_SEARCHING_ARTWORKS));
+                checkScanProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.FULL_SEARCHING_ARTWORKS));
     }
 
     @Test
@@ -216,17 +217,17 @@ public class LibraryScannerTest {
 
         assertThat(scanObserver.size()).isEqualTo(6);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
-                checkEditProgress(scanProgress, 0.0, ScanProgress.Step.EDIT_PREPARING, file1, file2));
+                checkEditProgress(scanProgress, null, ScanProgress.Step.EDIT_PREPARING, file1, file2));
         scanObserver.assertThatProgressAtIndexSatisfies(1, scanProgress ->
-                checkEditProgress(scanProgress, 0.0, ScanProgress.Step.EDIT_WRITING, file1, file2));
+                checkEditProgress(scanProgress, null, ScanProgress.Step.EDIT_WRITING, file1, file2));
         scanObserver.assertThatProgressAtIndexSatisfies(2, scanProgress ->
-                checkEditProgress(scanProgress, 0.5, ScanProgress.Step.EDIT_WRITING, file1, file2));
+                checkEditProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.EDIT_WRITING, file1, file2));
         scanObserver.assertThatProgressAtIndexSatisfies(3, scanProgress ->
-                checkEditProgress(scanProgress, 1.0, ScanProgress.Step.EDIT_WRITING, file1, file2));
+                checkEditProgress(scanProgress, Value.of(2, 2), ScanProgress.Step.EDIT_WRITING, file1, file2));
         scanObserver.assertThatProgressAtIndexSatisfies(4, scanProgress ->
-                checkEditProgress(scanProgress, 0.0, ScanProgress.Step.EDIT_SEARCHING_ARTWORKS, file1, file2));
+                checkEditProgress(scanProgress, null, ScanProgress.Step.EDIT_SEARCHING_ARTWORKS, file1, file2));
         scanObserver.assertThatProgressAtIndexSatisfies(5, scanProgress ->
-                checkEditProgress(scanProgress, 0.5, ScanProgress.Step.EDIT_SEARCHING_ARTWORKS, file1, file2));
+                checkEditProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.EDIT_SEARCHING_ARTWORKS, file1, file2));
     }
 
     @Test
@@ -311,13 +312,13 @@ public class LibraryScannerTest {
         });
     }
 
-    private void checkScanProgress(ScanProgress progress, double value, ScanProgress.Step step) {
+    private void checkScanProgress(ScanProgress progress, Value value, ScanProgress.Step step) {
         assertThat(progress.getFiles()).containsExactly(tempFolder.getRoot());
         assertThat(progress.getValue()).isEqualTo(value);
         assertThat(progress.getStep()).isEqualTo(step);
     }
 
-    private void checkEditProgress(ScanProgress progress, double value, ScanProgress.Step step, File... files) {
+    private void checkEditProgress(ScanProgress progress, Value value, ScanProgress.Step step, File... files) {
         assertThat(progress.getFiles()).containsExactly(files);
         assertThat(progress.getValue()).isEqualTo(value);
         assertThat(progress.getStep()).isEqualTo(step);
