@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -110,7 +111,7 @@ public class BatchLibraryCleaner {
                         }
                         logService.debug(logger, "Deleting song '{}': file '{}' not found.", song, song.getPath());
                     }
-                    progressObserver.onProgress(counter.incrementAndGet(), songsToDelete.size());
+                    notifyObserver(progressObserver, counter.incrementAndGet(), songsToDelete.size());
                 }
                 return null;
             });
@@ -130,7 +131,8 @@ public class BatchLibraryCleaner {
             while (pageable != null) {
                 Page<Artwork> artworks = artworkRepository.findAll(pageable);
                 for (Artwork artwork : artworks.getContent()) {
-                    if (artwork.getSourceUri().getScheme().equals("file")) {
+                    String scheme = artwork.getSourceUri().getScheme();
+                    if (Objects.equals(scheme, "file")) {
                         if (!existingImagePaths.contains(artwork.getSourceUri().getPath())) {
                             result.add(artwork.getId());
                         } else {
@@ -162,10 +164,18 @@ public class BatchLibraryCleaner {
                         artworkStorage.delete(id);
                         logService.debug(logger, "Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
                     }
-                    progressObserver.onProgress(counter.incrementAndGet(), artworksToDelete.size());
+                    notifyObserver(progressObserver, counter.incrementAndGet(), artworksToDelete.size());
                 }
                 return null;
             });
+        }
+    }
+
+    private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
+        try {
+            observer.onProgress(itemsComplete, itemsTotal);
+        } catch (Exception e) {
+            logger.error("Could not call progress observer {}.", observer, e);
         }
     }
 }

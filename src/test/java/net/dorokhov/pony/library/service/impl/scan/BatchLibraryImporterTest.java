@@ -147,6 +147,31 @@ public class BatchLibraryImporterTest {
         observer.assertThatAt(1, 2, 2);
     }
 
+    @Test
+    public void shouldNotFailReadAndImportOnObserverException() throws Exception {
+
+        AudioNode audioNode = audioNode();
+        when(batchLibraryImportPlanner.plan(any())).thenReturn(new Plan(ImmutableList.of(audioNode), emptyList()));
+        when(audioTagger.read(any())).thenReturn(readableAudioData());
+        when(libraryImporter.importAudioData(any(), any())).thenReturn(song());
+
+        batchLibraryImporter.readAndImport(ImmutableList.of(audioNode), (itemsComplete, itemsTotal) -> {
+            throw new RuntimeException();
+        });
+    }
+
+    @Test
+    public void shouldNotFailWriteAndImportOnObserverException() throws Exception {
+
+        WriteAndImportCommand command = new WriteAndImportCommand(audioNode(), writableAudioData());
+        when(audioTagger.write(any(), any())).thenReturn(readableAudioData());
+        when(libraryImporter.importAudioData(any(), any())).thenReturn(song());
+
+        batchLibraryImporter.writeAndImport(ImmutableList.of(command), (itemsComplete, itemsTotal) -> {
+            throw new RuntimeException();
+        });
+    }
+
     private AudioNode audioNode() {
         AudioNode audioNode = mock(AudioNode.class);
         when(audioNode.getFile()).thenReturn(new File("someFile"));

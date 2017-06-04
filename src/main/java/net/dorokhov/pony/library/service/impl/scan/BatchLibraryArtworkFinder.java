@@ -6,6 +6,8 @@ import net.dorokhov.pony.library.domain.Genre;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,8 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 
 @Component
 public class BatchLibraryArtworkFinder {
+    
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final LibraryArtworkFinder libraryArtworkFinder;
     private final GenreRepository genreRepository;
@@ -55,9 +59,9 @@ public class BatchLibraryArtworkFinder {
                 genreRepository.countByArtworkId(null);
         
         AtomicInteger counter = new AtomicInteger();
-        findAllAlbumArtworks(() -> progressObserver.onProgress(counter.incrementAndGet(), itemsTotal));
-        findAllArtistArtworks(() -> progressObserver.onProgress(counter.incrementAndGet(), itemsTotal));
-        findAllGenreArtworks(() -> progressObserver.onProgress(counter.incrementAndGet(), itemsTotal));
+        findAllAlbumArtworks(() -> notifyObserver(progressObserver, counter.incrementAndGet(), itemsTotal));
+        findAllArtistArtworks(() -> notifyObserver(progressObserver, counter.incrementAndGet(), itemsTotal));
+        findAllGenreArtworks(() -> notifyObserver(progressObserver, counter.incrementAndGet(), itemsTotal));
     }
 
     private void findAllAlbumArtworks(Runnable onItemProgress) {
@@ -99,6 +103,14 @@ public class BatchLibraryArtworkFinder {
                 }
                 return genres.nextPageable();
             }));
+        }
+    }
+    
+    private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
+        try {
+            observer.onProgress(itemsComplete, itemsTotal);
+        } catch (Exception e) {
+            logger.error("Could not call progress observer {}.", observer, e);
         }
     }
 }

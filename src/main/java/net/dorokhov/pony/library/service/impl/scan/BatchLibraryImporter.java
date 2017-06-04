@@ -118,7 +118,7 @@ public class BatchLibraryImporter {
                 } finally {
                     synchronized (progressLock) {
                         latch.countDown();
-                        observer.onProgress(itemsTotal - latch.getCount(), itemsTotal);
+                        notifyObserver(observer, itemsTotal - latch.getCount(), itemsTotal);
                     }
                 }
             });
@@ -152,7 +152,7 @@ public class BatchLibraryImporter {
                 } finally {
                     synchronized (progressLock) {
                         latch.countDown();
-                        observer.onProgress(itemsTotal - latch.getCount(), itemsTotal);
+                        notifyObserver(observer, itemsTotal - latch.getCount(), itemsTotal);
                     }
                 }
             });
@@ -165,6 +165,14 @@ public class BatchLibraryImporter {
         }
         
         return doImport(importTasks, emptyList(), failedFiles);
+    }
+
+    private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
+        try {
+            observer.onProgress(itemsComplete, itemsTotal);
+        } catch (Exception e) {
+            logger.error("Could not call progress observer {}.", observer, e);
+        }
     }
     
     private ImportResult doImport(List<ImportTask> importAudioDataTasks, 

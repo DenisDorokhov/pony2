@@ -16,6 +16,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,5 +76,26 @@ public class BatchLibraryArtworkFinderTest {
         observer.assertThatAt(0, 1, 3);
         observer.assertThatAt(1, 2, 3);
         observer.assertThatAt(2, 3, 3);
+    }
+
+    @Test
+    public void shouldNotFailOnObserverException() throws Exception {
+
+        when(albumRepository.countByArtworkId(null)).thenReturn(0L);
+        when(artistRepository.countByArtworkId(null)).thenReturn(0L);
+        when(genreRepository.countByArtworkId(null)).thenReturn(1L);
+
+        Genre genre = Genre.builder().build();
+
+        when(albumRepository.findByArtworkId(isNull(), any()))
+                .thenReturn(new PageImpl<>(emptyList()));
+        when(artistRepository.findByArtworkId(isNull(), any()))
+                .thenReturn(new PageImpl<>(emptyList()));
+        when(genreRepository.findByArtworkId(isNull(), any()))
+                .thenReturn(new PageImpl<>(ImmutableList.of(genre)));
+
+        batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) -> {
+            throw new RuntimeException();
+        });
     }
 }

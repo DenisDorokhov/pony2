@@ -24,9 +24,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.File;
 import java.time.LocalDateTime;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
 import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.fixture.SongFixtures.song;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -175,4 +177,19 @@ public class BatchLibraryCleanerTest {
         observer.assertThatAt(2, 3, 3);
     }
 
+    @Test
+    public void shouldNotFailSongsCleanupOnObserverException() throws Exception {
+        when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(song())));
+        batchLibraryCleaner.cleanSongs(emptyList(), (itemsComplete, itemsTotal) -> {
+            throw new RuntimeException();
+        });
+    }
+
+    @Test
+    public void shouldNotFailArtworksCleanupOnObserverException() throws Exception {
+        when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(artwork())));
+        batchLibraryCleaner.cleanArtworks(emptyList(), (itemsComplete, itemsTotal) -> {
+            throw new RuntimeException();
+        });
+    }
 }
