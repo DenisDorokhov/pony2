@@ -18,7 +18,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
 
     @Test
     public void shouldCreateArtist() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
         verify(artistRepository).save(artistCaptor.capture());
@@ -30,7 +30,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     public void shouldUpdateArtistIfNameChanged() throws Exception {
         Artist existingArtist = Artist.builder().name("somevalue").build();
         given(artistRepository.findByName(any())).willReturn(existingArtist);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
         verify(artistRepository).save(artistCaptor.capture());
@@ -42,7 +42,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     public void shouldUpdateArtistIfAlbumArtistChanged() throws Exception {
         Artist existingArtist = Artist.builder().name("somevalue").build();
         given(artistRepository.findByName(any())).willReturn(existingArtist);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .albumArtist("someValue")
                 .build());
         verify(artistRepository).save(artistCaptor.capture());
@@ -54,7 +54,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     public void shouldSkipArtistIfNothingChanged() throws Exception {
         Artist existingArtist = Artist.builder().name("someValue").build();
         given(artistRepository.findByName(any())).willReturn(existingArtist);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
         verify(artistRepository, never()).save((Artist) any());

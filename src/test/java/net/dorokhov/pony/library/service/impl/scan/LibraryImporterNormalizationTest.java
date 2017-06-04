@@ -13,7 +13,7 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
 
     @Test
     public void shouldNormalizeGenreName() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("some  value ")
                 .build());
         ArgumentCaptor<Genre> genreCaptor = ArgumentCaptor.forClass(Genre.class);
@@ -24,7 +24,7 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
 
     @Test
     public void shouldNormalizeArtistName() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("some  value ")
                 .build());
         ArgumentCaptor<Artist> artistCaptor = ArgumentCaptor.forClass(Artist.class);
@@ -35,7 +35,7 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
 
     @Test
     public void shouldNormalizeAlbumArtistName() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .albumArtist("some  value ")
                 .build());
         ArgumentCaptor<Artist> artistCaptor = ArgumentCaptor.forClass(Artist.class);
@@ -46,7 +46,7 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
 
     @Test
     public void shouldNormalizeAlbumName() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("some  value ")
                 .build());
         ArgumentCaptor<Album> albumCaptor = ArgumentCaptor.forClass(Album.class);

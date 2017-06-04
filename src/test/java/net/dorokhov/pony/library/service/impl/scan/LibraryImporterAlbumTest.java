@@ -19,7 +19,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
     
     @Test
     public void shouldCreateAlbum() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
@@ -38,7 +38,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
                 .year(1986)
                 .build();
         given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
@@ -57,7 +57,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
                 .year(1960)
                 .build();
         given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
@@ -76,7 +76,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
                 .year(1986)
                 .build();
         given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());

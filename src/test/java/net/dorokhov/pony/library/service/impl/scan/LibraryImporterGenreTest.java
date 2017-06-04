@@ -18,7 +18,7 @@ public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
 
     @Test
     public void shouldCreateGenre() throws Exception {
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
         verify(genreRepository).save(genreCaptor.capture());
@@ -30,7 +30,7 @@ public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
     public void shouldUpdateGenreIfNameChanged() throws Exception {
         Genre existingGenre = Genre.builder().name("somevalue").build();
         given(genreRepository.findByName(any())).willReturn(existingGenre);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
         verify(genreRepository).save(genreCaptor.capture());
@@ -42,7 +42,7 @@ public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
     public void shouldSkipGenreIfNothingChanged() throws Exception {
         Genre existingGenre = Genre.builder().name("someValue").build();
         given(genreRepository.findByName(any())).willReturn(existingGenre);
-        libraryImporter.importSong(audioNode(), readableAudioDataBuilder()
+        libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
         verify(genreRepository, never()).save((Genre) any());

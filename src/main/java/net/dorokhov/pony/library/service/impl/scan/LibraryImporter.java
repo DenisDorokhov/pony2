@@ -20,9 +20,9 @@ import java.util.Objects;
 
 @Component
 public class LibraryImporter {
-    
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     private final GenreRepository genreRepository;
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
@@ -31,12 +31,12 @@ public class LibraryImporter {
     private final LibraryCleaner libraryCleaner;
     private final LogService logService;
 
-    public LibraryImporter(GenreRepository genreRepository, 
-                           ArtistRepository artistRepository, 
-                           AlbumRepository albumRepository, 
-                           SongRepository songRepository, 
-                           LibraryArtworkFinder libraryArtworkFinder, 
-                           LibraryCleaner libraryCleaner, 
+    public LibraryImporter(GenreRepository genreRepository,
+                           ArtistRepository artistRepository,
+                           AlbumRepository albumRepository,
+                           SongRepository songRepository,
+                           LibraryArtworkFinder libraryArtworkFinder,
+                           LibraryCleaner libraryCleaner,
                            LogService logService) {
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
@@ -48,13 +48,13 @@ public class LibraryImporter {
     }
 
     @Transactional
-    public Song importSong(AudioNode audioNode, ReadableAudioData audioData) {
-        
+    public Song importAudioData(AudioNode audioNode, ReadableAudioData audioData) {
+
         Genre genre = importGenre(audioData);
         Album album = importAlbum(audioData, importArtist(audioData));
-        Artwork artwork = importArtwork(audioNode, audioData);
+        Artwork artwork = findAndSaveArtwork(audioNode, audioData);
         Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
-        
+
         Album overriddenAlbum = null;
         Genre overriddenGenre = null;
         Artwork overriddenArtwork = null;
@@ -141,12 +141,29 @@ public class LibraryImporter {
                         .build());
             }
             if (artwork != null && album.getArtwork() == null) {
-                logService.debug(logger, "Setting artwork for album '{}': '{}'.", album, artwork);
-                albumRepository.save(Album.builder(album)
-                        .artwork(artwork)
-                        .build());
+                importAlbumArtwork(album, artwork);
             }
             return savedSong;
+        }
+        return song;
+    }
+
+    @Transactional
+    @Nullable
+    public Song importArtwork(AudioNode audioNode) {
+        Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
+        if (song != null) {
+            if (song.getArtwork() == null) {
+                Artwork artwork = findAndSaveFileArtwork(audioNode);
+                if (artwork != null) {
+                    song = songRepository.save(Song.builder(song)
+                            .artwork(artwork)
+                            .build());
+                }
+            }
+            if (song.getArtwork() != null && song.getAlbum().getArtwork() == null) {
+                importAlbumArtwork(song.getAlbum(), song.getArtwork());
+            }
         }
         return song;
     }
@@ -259,24 +276,42 @@ public class LibraryImporter {
         return album;
     }
 
+    private Album importAlbumArtwork(Album album, Artwork artwork) {
+        logService.debug(logger, "Setting artwork for album '{}': '{}'.", album, artwork);
+        return albumRepository.save(Album.builder(album)
+                .artwork(artwork)
+                .build());
+    }
+
     @Nullable
-    private Artwork importArtwork(AudioNode audioNode, ReadableAudioData audioData) {
-        Artwork artwork = null;
-        try {
-            artwork = libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData);
-        } catch (IOException e) {
-            logService.error(logger, "Could not find and save embedded artwork for file '{}'.",
-                    audioNode.getFile().getAbsolutePath(), e);
-        }
+    private Artwork findAndSaveArtwork(AudioNode audioNode, ReadableAudioData audioData) {
+        Artwork artwork = findAndSaveEmbeddedArtwork(audioData);
         if (artwork == null) {
-            try {
-                artwork = libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
-            } catch (IOException e) {
-                logService.error(logger, "Could not find and save file artwork for data '{}'.",
-                        audioData, e);
-            }
+            artwork = findAndSaveFileArtwork(audioNode);
         }
         return artwork;
+    }
+
+    @Nullable
+    private Artwork findAndSaveEmbeddedArtwork(ReadableAudioData audioData) {
+        try {
+            return libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData);
+        } catch (IOException e) {
+            logService.error(logger, "Could not find and save embedded artwork for data '{}'.",
+                    audioData, e);
+        }
+        return null;
+    }
+
+    @Nullable
+    private Artwork findAndSaveFileArtwork(AudioNode audioNode) {
+        try {
+            return libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
+        } catch (IOException e) {
+            logService.error(logger, "Could not find and save file artwork for file '{}'.",
+                    audioNode.getFile().getAbsolutePath(), e);
+        }
+        return null;
     }
 
     @Nullable

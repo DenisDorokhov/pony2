@@ -125,22 +125,4 @@ public class LibraryArtworkFinder {
         }
         return artist;
     }
-
-    @Transactional
-    public Song findAndSaveSongAndAlbumArtwork(Song song, AudioNode audioNode) throws IOException {
-        Artwork artwork = findAndSaveFileArtwork(audioNode);
-        if (artwork != null) {
-            Song savedSong = songRepository.save(Song.builder(song)
-                    .artwork(artwork)
-                    .build());
-            if (savedSong.getAlbum().getArtwork() == null) {
-                logService.debug(logger, "Artwork for album {} has been set: {}.", song.getAlbum(), artwork);
-                albumRepository.save(Album.builder(savedSong.getAlbum())
-                        .artwork(artwork)
-                        .build());
-            }
-            return savedSong;
-        }
-        return song;
-    }
 }

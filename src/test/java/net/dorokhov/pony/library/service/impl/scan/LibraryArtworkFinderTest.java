@@ -31,7 +31,6 @@ import java.io.File;
 
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
-import static net.dorokhov.pony.fixture.SongFixtures.song;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -207,48 +206,5 @@ public class LibraryArtworkFinderTest {
         Artist artist = Artist.builder().build();
         assertThat(libraryArtworkFinder.findAndSaveArtistArtwork(artist).getArtwork()).isNull();
         verify(artistRepository, never()).save((Artist) any());
-    }
-
-    @Test
-    public void shouldFindAndSaveSongAndAlbumArtwork() throws Exception {
-
-        given(artworkFileFinder.findArtwork(any())).willReturn(mock(ImageNode.class));
-        Artwork artwork = artwork();
-        given(artworkStorage.getOrSave((ImageNodeArtworkStorageCommand) any())).willReturn(artwork);
-        given(songRepository.save((Song) any())).willAnswer(returnsFirstArg());
-        
-        AudioNode audioNode = mock(AudioNode.class);
-        given(audioNode.getFile()).willReturn(new File("someFile"));
-        Song savedSong = libraryArtworkFinder.findAndSaveSongAndAlbumArtwork(song(), audioNode);
-        assertThat(savedSong.getArtwork()).isSameAs(artwork);
-        verify(albumRepository).save((Album) any());
-    }
-
-    @Test
-    public void shouldNotSaveAlbumArtworkIfItAlreadyExists() throws Exception {
-        
-        given(artworkFileFinder.findArtwork(any())).willReturn(mock(ImageNode.class));
-        Artwork artwork = artwork();
-        given(artworkStorage.getOrSave((ImageNodeArtworkStorageCommand) any())).willReturn(artwork);
-        given(songRepository.save((Song) any())).willAnswer(returnsFirstArg());
-
-        AudioNode audioNode = mock(AudioNode.class);
-        given(audioNode.getFile()).willReturn(new File("someFile"));
-        Song song = songBuilder()
-                .album(Album.builder()
-                        .artist(Artist.builder().build())
-                        .artwork(artwork)
-                        .build())
-                .build();
-        Song savedSong = libraryArtworkFinder.findAndSaveSongAndAlbumArtwork(song, audioNode);
-        assertThat(savedSong.getArtwork()).isSameAs(artwork);
-        verify(albumRepository, never()).save((Album) any());
-    }
-
-    @Test
-    public void shouldNotSaveSongAndAlbumArtworkIfItIsNotFound() throws Exception {
-        given(artworkFileFinder.findArtwork(any())).willReturn(null);
-        Song savedSong = libraryArtworkFinder.findAndSaveSongAndAlbumArtwork(song(), mock(AudioNode.class));
-        assertThat(savedSong.getArtwork()).isSameAs(null);
     }
 }
