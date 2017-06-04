@@ -26,7 +26,7 @@ import java.io.IOException;
 public class AudioTagger {
 
     private static final String MP3_MIME_TYPE = "audio/mpeg";
-    
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final FileTypeResolver fileTypeResolver;
@@ -70,37 +70,13 @@ public class AudioTagger {
     }
 
     private ReadableAudioData readMp3(File file, FileType fileType) throws Exception {
-        return readMp3(AudioFileIO.read(file), fileType);
-    }
-    
-    private ReadableAudioData readMp3(AudioFile audioFile, FileType fileType) throws Exception {
-
-        AudioHeader audioHeader = audioFile.getAudioHeader();
-        Tag tag = audioFile.getTag();
-
-        ReadableAudioData.Builder builder = ReadableAudioData.builder();
-
-        builder.path(audioFile.getFile().getAbsolutePath())
-                .fileType(fileType)
-                .size(audioFile.getFile().length())
-                .duration(audioHeader.getTrackLength())
-                .bitRate(audioHeader.getBitRateAsNumber())
-                .bitRateVariable(audioHeader.isVariableBitRate())
-                .discNumber(parseInteger(tag, FieldKey.DISC_NO)).discCount(parseInteger(tag, FieldKey.DISC_TOTAL))
-                .trackNumber(parseInteger(tag, FieldKey.TRACK)).trackCount(parseInteger(tag, FieldKey.TRACK_TOTAL))
-                .title(parseString(tag, FieldKey.TITLE))
-                .artist(parseString(tag, FieldKey.ARTIST))
-                .albumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
-                .album(parseString(tag, FieldKey.ALBUM))
-                .year(parseInteger(tag, FieldKey.YEAR))
-                .genre(parseGenre(tag))
-                .embeddedArtwork(parseArtwork(tag));
-
-        return builder.build();
+        logger.debug("Reading MP3 file: '{}'.", file.getAbsolutePath());
+        return tagToAudioData(AudioFileIO.read(file), fileType);
     }
     
     private ReadableAudioData writeMp3(File file, FileType fileType, WritableAudioData data) throws Exception {
 
+        logger.debug("Opening MP3 file for writing: '{}'.", file.getAbsolutePath());
         AudioFile audioFile = AudioFileIO.read(file);
         Tag tag = audioFile.getTagOrCreateDefault();
         audioFile.setTag(tag);
@@ -227,9 +203,9 @@ public class AudioTagger {
             }
         }
 
+        logger.debug("Writing MP3 file: '{}'.", file.getAbsolutePath());
         AudioFileIO.write(audioFile);
-        
-        return readMp3(audioFile, fileType);
+        return tagToAudioData(audioFile, fileType);
     }
 
     private String parseString(Tag tag, FieldKey key) {
@@ -272,5 +248,27 @@ public class AudioTagger {
             }
         }
         return null;
+    }
+    
+    private ReadableAudioData tagToAudioData(AudioFile audioFile, FileType fileType) {
+        AudioHeader audioHeader = audioFile.getAudioHeader();
+        Tag tag = audioFile.getTag();
+        return ReadableAudioData.builder()
+                .path(audioFile.getFile().getAbsolutePath())
+                .fileType(fileType)
+                .size(audioFile.getFile().length())
+                .duration(audioHeader.getTrackLength())
+                .bitRate(audioHeader.getBitRateAsNumber())
+                .bitRateVariable(audioHeader.isVariableBitRate())
+                .discNumber(parseInteger(tag, FieldKey.DISC_NO)).discCount(parseInteger(tag, FieldKey.DISC_TOTAL))
+                .trackNumber(parseInteger(tag, FieldKey.TRACK)).trackCount(parseInteger(tag, FieldKey.TRACK_TOTAL))
+                .title(parseString(tag, FieldKey.TITLE))
+                .artist(parseString(tag, FieldKey.ARTIST))
+                .albumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
+                .album(parseString(tag, FieldKey.ALBUM))
+                .year(parseInteger(tag, FieldKey.YEAR))
+                .genre(parseGenre(tag))
+                .embeddedArtwork(parseArtwork(tag))
+                .build();
     }
 }
