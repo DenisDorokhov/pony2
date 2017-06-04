@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserDetailsServiceImplTest {
@@ -37,7 +37,7 @@ public class UserDetailsServiceImplTest {
                 .password("somePassword")
                 .addRoles(User.Role.USER, User.Role.ADMIN)
                 .build();
-        given(userRepository.findByEmail(any())).willReturn(user);
+        when(userRepository.findByEmail(any())).thenReturn(user);
         
         UserDetails userDetails = userDetailsService.loadUserByUsername("someEmail");
         
@@ -59,7 +59,7 @@ public class UserDetailsServiceImplTest {
 
     @Test
     public void shouldSupportUserNotFound() throws Exception {
-        given(userRepository.findByEmail(any())).willReturn(null);
+        when(userRepository.findByEmail(any())).thenReturn(null);
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("someEmail")).isInstanceOf(UsernameNotFoundException.class);
     }
 }

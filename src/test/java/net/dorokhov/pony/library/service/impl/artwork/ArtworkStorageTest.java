@@ -37,7 +37,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
@@ -87,7 +86,7 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetLargeImageFile() throws Exception {
         Artwork artwork = artwork();
-        given(artworkRepository.findOne(any())).willReturn(artwork);
+        when(artworkRepository.findOne(any())).thenReturn(artwork);
         assertThat(artworkStorage.getLargeImageFile(1L)).satisfies(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder.getRoot(), PATH_LARGE).getAbsolutePath()));
     }
@@ -95,7 +94,7 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetSmallImageFile() throws Exception {
         Artwork artwork = artwork();
-        given(artworkRepository.findOne(any())).willReturn(artwork);
+        when(artworkRepository.findOne(any())).thenReturn(artwork);
         assertThat(artworkStorage.getSmallImageFile(1L)).satisfies(file -> 
                 assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder.getRoot(), PATH_SMALL).getAbsolutePath()));
     }
@@ -103,9 +102,9 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetOrSaveByteSourceArtwork() throws Exception {
 
-        given(checksumCalculator.calculate((byte[]) any())).willReturn(CHECKSUM);
-        given(fileTypeResolver.resolve((byte[]) any())).willReturn(FILE_TYPE);
-        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        when(checksumCalculator.calculate((byte[]) any())).thenReturn(CHECKSUM);
+        when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FILE_TYPE);
+        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
         
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
         ByteSourceArtworkStorageCommand command = new ByteSourceArtworkStorageCommand(sourceUri(), ByteSource.wrap(bytes));
@@ -115,9 +114,9 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetOrSaveFileArtwork() throws Exception {
 
-        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
-        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
-        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
+        when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
+        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
         
         File file = RESOURCE.getFile();
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), file);
@@ -127,12 +126,12 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetOrSaveImageNodeArtwork() throws Exception {
 
-        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
         
         ImageNode imageNode = mock(ImageNode.class);
-        given(imageNode.getFile()).willReturn(RESOURCE.getFile());
-        given(imageNode.getFileType()).willReturn(FileType.of("image/png", "png"));
-        given(imageNode.getChecksum()).willReturn(CHECKSUM);
+        when(imageNode.getFile()).thenReturn(RESOURCE.getFile());
+        when(imageNode.getFileType()).thenReturn(FileType.of("image/png", "png"));
+        when(imageNode.getChecksum()).thenReturn(CHECKSUM);
         ImageNodeArtworkStorageCommand command = new ImageNodeArtworkStorageCommand(sourceUri(), imageNode);
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
@@ -140,9 +139,9 @@ public class ArtworkStorageTest {
     @Test
     public void shouldDeleteCreatedFilesOnRollback() throws Exception {
 
-        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
-        given(fileTypeResolver.resolve((File) any())).willReturn(FILE_TYPE);
-        given(artworkRepository.save((Artwork) any())).willAnswer(returnsFirstArg());
+        when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
+        when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
+        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
 
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), RESOURCE.getFile());
 
@@ -173,7 +172,7 @@ public class ArtworkStorageTest {
 
         Artwork artwork = artwork();
 
-        given(artworkRepository.findOne(any())).willReturn(artwork);
+        when(artworkRepository.findOne(any())).thenReturn(artwork);
         artworkStorage.delete(5L);
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         verify(artworkRepository).delete(artwork);
@@ -185,7 +184,7 @@ public class ArtworkStorageTest {
     @Test
     public void shouldIgnoreNotExistingFilesWhenDeleting() throws Exception {
         Artwork artwork = artwork();
-        given(artworkRepository.findOne(any())).willReturn(artwork);
+        when(artworkRepository.findOne(any())).thenReturn(artwork);
         artworkStorage.delete(5L);
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
@@ -205,7 +204,7 @@ public class ArtworkStorageTest {
         assertThat(savedArtwork.getValue()).isSameAs(artwork);
         checkSavedArtwork(savedArtwork.getValue());
 
-        given(artworkRepository.findByChecksum(any())).willReturn(artwork);
+        when(artworkRepository.findByChecksum(any())).thenReturn(artwork);
         doGetAndSave.get();
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }

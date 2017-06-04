@@ -18,9 +18,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LibraryCleanerTest {
@@ -52,8 +50,8 @@ public class LibraryCleanerTest {
         Artist artist1 = Artist.builder().id(1L).build();
         Artist artist2 = Artist.builder().id(2L).build();
 
-        given(albumRepository.countByArtistId(1L)).willReturn(0L);
-        given(albumRepository.countByArtistId(2L)).willReturn(1L);
+        when(albumRepository.countByArtistId(1L)).thenReturn(0L);
+        when(albumRepository.countByArtistId(2L)).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist1)).isTrue();
         verify(artistRepository).delete(1L);
@@ -70,8 +68,8 @@ public class LibraryCleanerTest {
         Album album1 = Album.builder().id(1L).artist(artist).build();
         Album album2 = Album.builder().id(2L).artist(artist).build();
 
-        given(songRepository.countByAlbumId(1L)).willReturn(0L);
-        given(songRepository.countByAlbumId(2L)).willReturn(1L);
+        when(songRepository.countByAlbumId(1L)).thenReturn(0L);
+        when(songRepository.countByAlbumId(2L)).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album1)).isTrue();
         verify(albumRepository).delete(1L);
@@ -86,8 +84,8 @@ public class LibraryCleanerTest {
         Genre genre1 = Genre.builder().id(1L).build();
         Genre genre2 = Genre.builder().id(2L).build();
 
-        given(songRepository.countByGenreId(1L)).willReturn(0L);
-        given(songRepository.countByGenreId(2L)).willReturn(1L);
+        when(songRepository.countByGenreId(1L)).thenReturn(0L);
+        when(songRepository.countByGenreId(2L)).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteGenreIfUnused(genre1)).isTrue();
         verify(genreRepository).delete(1L);
@@ -102,8 +100,8 @@ public class LibraryCleanerTest {
         Artwork artwork1 = artworkBuilder().id(1L).build();
         Artwork artwork2 = artworkBuilder().id(2L).build();
 
-        given(songRepository.countByArtworkId(1L)).willReturn(0L);
-        given(songRepository.countByArtworkId(2L)).willReturn(1L);
+        when(songRepository.countByArtworkId(1L)).thenReturn(0L);
+        when(songRepository.countByArtworkId(2L)).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtworkIfUnused(artwork1)).isTrue();
         verify(songRepository).clearArtworkByArtworkId(1L);

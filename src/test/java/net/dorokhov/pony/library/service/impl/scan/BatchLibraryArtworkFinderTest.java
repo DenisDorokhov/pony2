@@ -20,8 +20,8 @@ import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.trans
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BatchLibraryArtworkFinderTest {
@@ -49,20 +49,20 @@ public class BatchLibraryArtworkFinderTest {
     @Test
     public void shouldFindAllArtworks() throws Exception {
         
-        given(albumRepository.countByArtworkId(null)).willReturn(1L);
-        given(artistRepository.countByArtworkId(null)).willReturn(1L);
-        given(genreRepository.countByArtworkId(null)).willReturn(1L);
+        when(albumRepository.countByArtworkId(null)).thenReturn(1L);
+        when(artistRepository.countByArtworkId(null)).thenReturn(1L);
+        when(genreRepository.countByArtworkId(null)).thenReturn(1L);
 
         Artist artist = Artist.builder().build();
         Album album = Album.builder().artist(artist).build();
         Genre genre = Genre.builder().build();
         
-        given(albumRepository.findByArtworkId(isNull(), any()))
-                .willReturn(new PageImpl<>(ImmutableList.of(album)));
-        given(artistRepository.findByArtworkId(isNull(), any()))
-                .willReturn(new PageImpl<>(ImmutableList.of(artist)));
-        given(genreRepository.findByArtworkId(isNull(), any()))
-                .willReturn(new PageImpl<>(ImmutableList.of(genre)));
+        when(albumRepository.findByArtworkId(isNull(), any()))
+                .thenReturn(new PageImpl<>(ImmutableList.of(album)));
+        when(artistRepository.findByArtworkId(isNull(), any()))
+                .thenReturn(new PageImpl<>(ImmutableList.of(artist)));
+        when(genreRepository.findByArtworkId(isNull(), any()))
+                .thenReturn(new PageImpl<>(ImmutableList.of(genre)));
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryArtworkFinder.findAllArtworks(observer);

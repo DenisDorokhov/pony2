@@ -7,9 +7,7 @@ import org.mockito.Captor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
 
@@ -29,7 +27,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldUpdateArtistIfNameChanged() throws Exception {
         Artist existingArtist = Artist.builder().name("somevalue").build();
-        given(artistRepository.findByName(any())).willReturn(existingArtist);
+        when(artistRepository.findByName(any())).thenReturn(existingArtist);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
@@ -41,7 +39,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldUpdateArtistIfAlbumArtistChanged() throws Exception {
         Artist existingArtist = Artist.builder().name("somevalue").build();
-        given(artistRepository.findByName(any())).willReturn(existingArtist);
+        when(artistRepository.findByName(any())).thenReturn(existingArtist);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .albumArtist("someValue")
                 .build());
@@ -53,7 +51,7 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldSkipArtistIfNothingChanged() throws Exception {
         Artist existingArtist = Artist.builder().name("someValue").build();
-        given(artistRepository.findByName(any())).willReturn(existingArtist);
+        when(artistRepository.findByName(any())).thenReturn(existingArtist);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());

@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AudioTaggerTest {
@@ -49,8 +49,8 @@ public class AudioTaggerTest {
 
     @Before
     public void setUp() throws Exception {
-        given(fileTypeResolver.resolve((File) any())).willReturn(FileType.of("audio/mpeg", "mp3"));
-        given(fileTypeResolver.resolve((byte[]) any())).willReturn(FileType.of("image/png", "png"));
+        when(fileTypeResolver.resolve((File) any())).thenReturn(FileType.of("audio/mpeg", "mp3"));
+        when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FileType.of("image/png", "png"));
     }
 
     @Test

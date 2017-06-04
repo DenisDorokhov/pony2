@@ -42,7 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -81,18 +80,18 @@ public class LibraryScannerTest {
     public void shouldScan() throws Exception {
 
         FolderNode folderNode = mock(FolderNode.class);
-        given(fileTreeScanner.scanFolder(any())).willReturn(folderNode);
+        when(fileTreeScanner.scanFolder(any())).thenReturn(folderNode);
 
         AudioNode audioNode1 = mock(AudioNode.class);
         AudioNode audioNode2 = mock(AudioNode.class);
-        given(folderNode.getChildAudios(true)).willReturn(ImmutableList.of(audioNode1, audioNode2));
+        when(folderNode.getChildAudios(true)).thenReturn(ImmutableList.of(audioNode1, audioNode2));
 
         ImageNode imageNode1 = mock(ImageNode.class);
         ImageNode imageNode2 = mock(ImageNode.class);
-        given(folderNode.getChildImages(true)).willReturn(ImmutableList.of(imageNode1, imageNode2));
+        when(folderNode.getChildImages(true)).thenReturn(ImmutableList.of(imageNode1, imageNode2));
 
         ScanResult scanResultFixture = scanResult(FULL);
-        given(scanResultCalculator.calculateAndSave(any())).willAnswer(invocation -> {
+        when(scanResultCalculator.calculateAndSave(any())).thenAnswer(invocation -> {
             Object result = ((Supplier) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
                 assertThat(audioFileProcessingResult.getScanType()).isEqualTo(FULL);
@@ -164,20 +163,20 @@ public class LibraryScannerTest {
         File file1 = tempFolder.newFile();
         File file2 = tempFolder.newFile();
         AudioNode audioNode1 = mock(AudioNode.class);
-        given(audioNode1.getFile()).willReturn(file1);
+        when(audioNode1.getFile()).thenReturn(file1);
         AudioNode audioNode2 = mock(AudioNode.class);
-        given(audioNode2.getFile()).willReturn(file2);
-        given(fileTreeScanner.scanFile(file1)).willReturn(audioNode1);
-        given(songRepository.findOne(1L)).willReturn(songBuilder()
+        when(audioNode2.getFile()).thenReturn(file2);
+        when(fileTreeScanner.scanFile(file1)).thenReturn(audioNode1);
+        when(songRepository.findOne(1L)).thenReturn(songBuilder()
                 .path(file1.getAbsolutePath())
                 .build());
-        given(fileTreeScanner.scanFile(file2)).willReturn(audioNode2);
-        given(songRepository.findOne(2L)).willReturn(songBuilder()
+        when(fileTreeScanner.scanFile(file2)).thenReturn(audioNode2);
+        when(songRepository.findOne(2L)).thenReturn(songBuilder()
                 .path(file2.getAbsolutePath())
                 .build());
 
         ScanResult scanResultFixture = scanResult(EDIT);
-        given(scanResultCalculator.calculateAndSave(any())).willAnswer(invocation -> {
+        when(scanResultCalculator.calculateAndSave(any())).thenAnswer(invocation -> {
             Object result = ((Supplier) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
                 assertThat(audioFileProcessingResult.getScanType()).isEqualTo(EDIT);
@@ -248,7 +247,7 @@ public class LibraryScannerTest {
     public void shouldFailScanOnUnexpectedException() throws Exception {
 
         Exception calculationException = new RuntimeException();
-        given(scanResultCalculator.calculateAndSave(any())).willThrow(calculationException);
+        when(scanResultCalculator.calculateAndSave(any())).thenThrow(calculationException);
 
         ScanObserver scanObserver = new ScanObserver();
         assertThatThrownBy(() -> libraryScanner.scan(ImmutableList.of(tempFolder.getRoot()), scanObserver::observe))
@@ -259,7 +258,7 @@ public class LibraryScannerTest {
 
     @Test
     public void shouldFailEditIfSongNotFound() throws Exception {
-        given(songRepository.findOne(any())).willReturn(null);
+        when(songRepository.findOne(any())).thenReturn(null);
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), null))
                 .isInstanceOf(SongNotFoundException.class);
@@ -267,7 +266,7 @@ public class LibraryScannerTest {
 
     @Test
     public void shouldFailEditIfFileNotFound() throws Exception {
-        given(songRepository.findOne(any())).willReturn(song());
+        when(songRepository.findOne(any())).thenReturn(song());
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), null))
                 .isInstanceOf(FileNotFoundException.class);
@@ -275,8 +274,8 @@ public class LibraryScannerTest {
 
     @Test
     public void shouldFailEditIfFileIsNotSong() throws Exception {
-        given(fileTreeScanner.scanFile(any())).willReturn(mock(ImageNode.class));
-        given(songRepository.findOne(any())).willReturn(songBuilder()
+        when(fileTreeScanner.scanFile(any())).thenReturn(mock(ImageNode.class));
+        when(songRepository.findOne(any())).thenReturn(songBuilder()
                 .path(tempFolder.newFile().getAbsolutePath())
                 .build());
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
@@ -288,14 +287,14 @@ public class LibraryScannerTest {
     public void shouldFailEditOnUnexpectedException() throws Exception {
 
         AudioNode audioNode = mock(AudioNode.class);
-        given(fileTreeScanner.scanFile(any())).willReturn(audioNode);
+        when(fileTreeScanner.scanFile(any())).thenReturn(audioNode);
         File file = tempFolder.newFile();
-        given(songRepository.findOne(any())).willReturn(songBuilder()
+        when(songRepository.findOne(any())).thenReturn(songBuilder()
                 .path(file.getAbsolutePath())
                 .build());
 
         Exception calculationException = new RuntimeException();
-        given(scanResultCalculator.calculateAndSave(any())).willThrow(calculationException);
+        when(scanResultCalculator.calculateAndSave(any())).thenThrow(calculationException);
 
         ScanObserver scanObserver = new ScanObserver();
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(

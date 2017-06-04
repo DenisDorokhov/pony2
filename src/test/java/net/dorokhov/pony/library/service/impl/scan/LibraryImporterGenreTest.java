@@ -7,9 +7,7 @@ import org.mockito.Captor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
     
@@ -29,7 +27,7 @@ public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldUpdateGenreIfNameChanged() throws Exception {
         Genre existingGenre = Genre.builder().name("somevalue").build();
-        given(genreRepository.findByName(any())).willReturn(existingGenre);
+        when(genreRepository.findByName(any())).thenReturn(existingGenre);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
@@ -41,7 +39,7 @@ public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldSkipGenreIfNothingChanged() throws Exception {
         Genre existingGenre = Genre.builder().name("someValue").build();
-        given(genreRepository.findByName(any())).willReturn(existingGenre);
+        when(genreRepository.findByName(any())).thenReturn(existingGenre);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());

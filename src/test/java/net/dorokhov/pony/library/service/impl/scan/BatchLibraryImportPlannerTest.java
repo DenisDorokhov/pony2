@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BatchLibraryImportPlannerTest {
@@ -37,12 +37,12 @@ public class BatchLibraryImportPlannerTest {
 
     @Before
     public void setUp() throws Exception {
-        given(audioNode.getFile()).willReturn(tempFolder.newFile());
+        when(audioNode.getFile()).thenReturn(tempFolder.newFile());
     }
 
     @Test
     public void shouldPlanImportOfNonExistentSongs() throws Exception {
-        given(songRepository.findByPath(any())).willReturn(null);
+        when(songRepository.findByPath(any())).thenReturn(null);
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
         assertThat(plan.getAudioNodesToImport()).containsExactly(audioNode);
         assertThat(plan.getAudioNodesToSkip()).isEmpty();
@@ -51,7 +51,7 @@ public class BatchLibraryImportPlannerTest {
     @Test
     public void shouldPlanImportOfSongsOutdatedByCreationDate() throws Exception {
         String songPath = audioNode.getFile().getAbsolutePath();
-        given(songRepository.findByPath(any())).willReturn(songBuilder()
+        when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .creationDate(LocalDateTime.now().minusDays(1))
                 .updateDate(null)
                 .path(songPath)
@@ -64,7 +64,7 @@ public class BatchLibraryImportPlannerTest {
     @Test
     public void shouldPlanImportOfSongsOutdatedByUpdateDate() throws Exception {
         String songPath = audioNode.getFile().getAbsolutePath();
-        given(songRepository.findByPath(any())).willReturn(songBuilder()
+        when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .creationDate(LocalDateTime.now().minusDays(2))
                 .updateDate(LocalDateTime.now().minusDays(1))
                 .path(songPath)
@@ -77,7 +77,7 @@ public class BatchLibraryImportPlannerTest {
     @Test
     public void shouldSkipUpToDateSongs() throws Exception {
         String songPath = audioNode.getFile().getAbsolutePath();
-        given(songRepository.findByPath(any())).willReturn(songBuilder()
+        when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .creationDate(LocalDateTime.now().plusDays(1))
                 .updateDate(null)
                 .path(songPath)

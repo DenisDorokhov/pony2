@@ -19,8 +19,8 @@ import java.util.function.UnaryOperator;
 
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public abstract class AbstractLibraryImporterTest {
@@ -46,15 +46,15 @@ public abstract class AbstractLibraryImporterTest {
 
     @Before
     public void setUp() throws Exception {
-        given(genreRepository.save((Genre) any())).willAnswer(returnsFirstArg());
-        given(artistRepository.save((Artist) any())).willAnswer(returnsFirstArg());
-        given(albumRepository.save((Album) any())).willAnswer(returnsFirstArg());
-        given(songRepository.save((Song) any())).willAnswer(returnsFirstArg());
+        when(genreRepository.save((Genre) any())).thenAnswer(returnsFirstArg());
+        when(artistRepository.save((Artist) any())).thenAnswer(returnsFirstArg());
+        when(albumRepository.save((Album) any())).thenAnswer(returnsFirstArg());
+        when(songRepository.save((Song) any())).thenAnswer(returnsFirstArg());
     }
 
     protected AudioNode audioNode() {
         AudioNode audioNode = mock(AudioNode.class);
-        given(audioNode.getFile()).willReturn(new File("someFile"));
+        when(audioNode.getFile()).thenReturn(new File("someFile"));
         return audioNode;
     }
 
@@ -84,10 +84,10 @@ public abstract class AbstractLibraryImporterTest {
                         .album(existingAlbum)
                         .genre(existingGenre))
                 .build();
-        given(genreRepository.findByName(any())).willReturn(existingGenre);
-        given(artistRepository.findByName(any())).willReturn(existingArtist);
-        given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
-        given(songRepository.findByPath(any())).willReturn(existingSong);
+        when(genreRepository.findByName(any())).thenReturn(existingGenre);
+        when(artistRepository.findByName(any())).thenReturn(existingArtist);
+        when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
+        when(songRepository.findByPath(any())).thenReturn(existingSong);
         return readableAudioDataBuilder()
                 .size(10L)
                 .duration(100L)

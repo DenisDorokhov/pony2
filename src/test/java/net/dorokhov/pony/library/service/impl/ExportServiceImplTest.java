@@ -36,7 +36,7 @@ import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_A
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExportServiceImplTest {
@@ -65,7 +65,7 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        given(songRepository.findOne(any())).willReturn(song);
+        when(songRepository.findOne(any())).thenReturn(song);
         ExportBundle exportBundle = exportService.exportSong(1L);
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
@@ -83,7 +83,7 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        given(songRepository.findOne(any())).willReturn(song);
+        when(songRepository.findOne(any())).thenReturn(song);
         ExportBundle exportBundle = exportService.exportSong(1L);
         assertThat(exportBundle.getFileName()).isEqualTo("bar.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
@@ -101,7 +101,7 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        given(songRepository.findOne(any())).willReturn(song);
+        when(songRepository.findOne(any())).thenReturn(song);
         ExportBundle exportBundle = exportService.exportSong(1L);
         assertThat(exportBundle.getFileName()).isEqualTo("someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
@@ -137,7 +137,7 @@ public class ExportServiceImplTest {
                 .trackNumber(null)
                 .path("foo/song3.mp3")
                 .build();
-        given(songRepository.findByAlbumId(any(), any())).willReturn(ImmutableList.of(song1, song2, song3));
+        when(songRepository.findByAlbumId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3));
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
@@ -177,7 +177,7 @@ public class ExportServiceImplTest {
                 .path("foo/song1.mp3")
                 .build();
         Song song2 = Song.builder(song1).build();
-        given(songRepository.findByAlbumId(any(), any())).willReturn(ImmutableList.of(song1, song2));
+        when(songRepository.findByAlbumId(any(), any())).thenReturn(ImmutableList.of(song1, song2));
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
@@ -227,7 +227,7 @@ public class ExportServiceImplTest {
                 .trackNumber(1)
                 .path("foo/song3.mp3")
                 .build();
-        given(songRepository.findByAlbumArtistId(any(), any())).willReturn(ImmutableList.of(song1, song2, song3));
+        when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3));
 
         ExportBundle exportBundle = exportService.exportArtist(1L);
 
@@ -259,13 +259,13 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldFailIfAlbumNotFound() throws Exception {
-        given(songRepository.findByAlbumId(any(), any())).willReturn(emptyList());
+        when(songRepository.findByAlbumId(any(), any())).thenReturn(emptyList());
         assertThatThrownBy(() -> exportService.exportAlbum(1L)).isInstanceOf(AlbumNotFoundException.class);
     }
 
     @Test
     public void shouldFailIfArtistNotFound() throws Exception {
-        given(songRepository.findByAlbumArtistId(any(), any())).willReturn(emptyList());
+        when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(emptyList());
         assertThatThrownBy(() -> exportService.exportArtist(1L)).isInstanceOf(ArtistNotFoundException.class);
     }
 

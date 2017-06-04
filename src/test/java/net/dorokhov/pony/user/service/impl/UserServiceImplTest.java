@@ -30,9 +30,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserServiceImplTest {
@@ -63,7 +61,7 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldInitToGenerateTokenSecret() throws Exception {
-        given(tokenSecretManager.getTokenSecret()).willThrow(new TokenSecretNotFoundException());
+        when(tokenSecretManager.getTokenSecret()).thenThrow(new TokenSecretNotFoundException());
         userService.init();
         verify(tokenSecretManager).getTokenSecret();
         verify(tokenSecretManager).generateAndStoreTokenSecret();
@@ -71,26 +69,26 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldGetById() throws Exception {
-        given(userRepository.findOne(1L)).willReturn(null);
+        when(userRepository.findOne(1L)).thenReturn(null);
         assertThat(userService.getById(1L)).isNull();
         User user = userBuilder().build();
-        given(userRepository.findOne(1L)).willReturn(user);
+        when(userRepository.findOne(1L)).thenReturn(user);
         assertThat(userService.getById(1L)).isSameAs(user);
     }
 
     @Test
     public void shouldGetByEmail() throws Exception {
-        given(userRepository.findByEmail("someEmail")).willReturn(null);
+        when(userRepository.findByEmail("someEmail")).thenReturn(null);
         assertThat(userService.getByEmail("someEmail")).isNull();
         User user = userBuilder().build();
-        given(userRepository.findByEmail("someEmail")).willReturn(user);
+        when(userRepository.findByEmail("someEmail")).thenReturn(user);
         assertThat(userService.getByEmail("someEmail")).isSameAs(user);
     }
 
     @Test
     public void shouldGetAll() throws Exception {
         Page<User> page = new PageImpl<>(emptyList());
-        given(userRepository.findAll((Pageable) any())).willReturn(page);
+        when(userRepository.findAll((Pageable) any())).thenReturn(page);
         assertThat(userService.getAll(new PageRequest(0, 10))).isSameAs(page);
     }
 
@@ -98,8 +96,8 @@ public class UserServiceImplTest {
     public void shouldCreateUser() throws Exception {
         
         User createdUser = userBuilder().build();
-        given(passwordEncoder.encode("somePassword")).willReturn("encodedPassword");
-        given(userRepository.save((User) any())).willReturn(createdUser);
+        when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");
+        when(userRepository.save((User) any())).thenReturn(createdUser);
 
         UserCreationCommand command = UserCreationCommand.builder()
                 .name("someName")
@@ -120,7 +118,7 @@ public class UserServiceImplTest {
     @Test
     public void shouldCreateExistingUser() throws Exception {
         User existingUser = userBuilder().build();
-        given(userRepository.findByEmail("someEmail")).willReturn(existingUser);
+        when(userRepository.findByEmail("someEmail")).thenReturn(existingUser);
         assertThatThrownBy(() -> userService.create(UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")
@@ -132,8 +130,8 @@ public class UserServiceImplTest {
     public void shouldUpdateUser() throws Exception {
 
         User existingUser = userBuilder().build();
-        given(userRepository.findOne(1L)).willReturn(existingUser);
-        given(userRepository.save((User) any())).willReturn(existingUser);
+        when(userRepository.findOne(1L)).thenReturn(existingUser);
+        when(userRepository.save((User) any())).thenReturn(existingUser);
 
         UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
@@ -156,8 +154,8 @@ public class UserServiceImplTest {
     public void shouldUpdateUserPassword() throws Exception {
 
         User existingUser = userBuilder().build();
-        given(userRepository.findOne(1L)).willReturn(existingUser);
-        given(passwordEncoder.encode("somePassword")).willReturn("encodedPassword");
+        when(userRepository.findOne(1L)).thenReturn(existingUser);
+        when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");
 
         UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
@@ -174,7 +172,7 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldUpdateNotFoundUser() throws Exception {
-        given(userRepository.findOne(1L)).willReturn(null);
+        when(userRepository.findOne(1L)).thenReturn(null);
         UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
@@ -187,9 +185,9 @@ public class UserServiceImplTest {
     @Test
     public void shouldUpdateExistingUser() throws Exception {
         User userToUpdate = userBuilder().email("otherEmail").build();
-        given(userRepository.findOne(1L)).willReturn(userToUpdate);
+        when(userRepository.findOne(1L)).thenReturn(userToUpdate);
         User existingUser = userBuilder().id(2L).build();
-        given(userRepository.findByEmail("someEmail")).willReturn(existingUser);
+        when(userRepository.findByEmail("someEmail")).thenReturn(existingUser);
         UserUpdateCommand command = UserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
@@ -202,21 +200,21 @@ public class UserServiceImplTest {
     @Test
     public void shouldDeleteUser() throws Exception {
         User existingUser = userBuilder().build();
-        given(userRepository.findOne(1L)).willReturn(existingUser);
+        when(userRepository.findOne(1L)).thenReturn(existingUser);
         userService.delete(1L);
         verify(userRepository).delete(1L);
     }
 
     @Test
     public void shouldDeleteNotFoundUser() throws Exception {
-        given(userRepository.findOne(1L)).willReturn(null);
+        when(userRepository.findOne(1L)).thenReturn(null);
         assertThatThrownBy(() -> userService.delete(1L)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
     public void shouldDeleteCurrentUser() throws Exception {
         User existingUser = userBuilder().build();
-        given(userRepository.findOne(1L)).willReturn(existingUser);
+        when(userRepository.findOne(1L)).thenReturn(existingUser);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         assertThatThrownBy(() -> userService.delete(1L)).isInstanceOf(DeletingCurrentUserException.class);
     }
@@ -224,8 +222,8 @@ public class UserServiceImplTest {
     @Test
     public void shouldAuthenticateValidCredentials() throws Exception {
         User existingUser = userBuilder().build();
-        given(authenticationManager.authenticate(any())).willReturn(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        given(tokenSecretManager.getTokenSecret()).willReturn("someSecret");
+        when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
+        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
         UserToken userToken = userService.authenticate("someEmail", "somePassword");
         assertThat(userToken.getUser()).isSameAs(existingUser);
         assertThat(userToken.getToken()).isNotNull();
@@ -234,16 +232,16 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldAuthenticateInvalidCredentials() throws Exception {
-        given(authenticationManager.authenticate(any()))
-                .willThrow(new AuthenticationCredentialsNotFoundException("Credentials not found."));
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new AuthenticationCredentialsNotFoundException("Credentials not found."));
         assertThatThrownBy(() -> userService.authenticate("someEmail", "somePassword")).isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
     public void shouldAuthenticateValidToken() throws Exception {
         User existingUser = userBuilder().build();
-        given(userRepository.findOne(1L)).willReturn(existingUser);
-        given(tokenSecretManager.getTokenSecret()).willReturn("someSecret");
+        when(userRepository.findOne(1L)).thenReturn(existingUser);
+        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
         String token = JWT.create()
                 .withSubject("1")
                 .sign(Algorithm.HMAC256("someSecret"));
@@ -253,14 +251,14 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldAuthenticateInvalidToken() throws Exception {
-        given(tokenSecretManager.getTokenSecret()).willReturn("someSecret");
+        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
         assertThatThrownBy(() -> userService.authenticate("invalidToken")).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
     public void shouldAuthenticateValidTokenForNotExistingUser() throws Exception {
-        given(userRepository.findOne(1L)).willReturn(null);
-        given(tokenSecretManager.getTokenSecret()).willReturn("someSecret");
+        when(userRepository.findOne(1L)).thenReturn(null);
+        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
         String token = JWT.create()
                 .withSubject("1")
                 .sign(Algorithm.HMAC256("someSecret"));
@@ -287,8 +285,8 @@ public class UserServiceImplTest {
     @Test
     public void shouldUpdateCurrentUser() throws Exception {
 
-        given(passwordEncoder.matches(any(), any())).willReturn(true);
-        given(passwordEncoder.encode("newPassword")).willReturn("encodedPassword");
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
         
         User existingUser = User.builder()
                 .id(1L)
@@ -299,8 +297,8 @@ public class UserServiceImplTest {
                 .build();
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         
-        given(userRepository.findOne(1L)).willReturn(existingUser);
-        given(userRepository.save((User) any())).willReturn(existingUser);
+        when(userRepository.findOne(1L)).thenReturn(existingUser);
+        when(userRepository.save((User) any())).thenReturn(existingUser);
 
         CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
                 .name("someName")
@@ -331,7 +329,7 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldUpdateCurrentUserWithInvalidOldPassword() throws Exception {
-        given(passwordEncoder.matches(any(), any())).willReturn(false);
+        when(passwordEncoder.matches(any(), any())).thenReturn(false);
         User existingUser = userBuilder().build();
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
         CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()

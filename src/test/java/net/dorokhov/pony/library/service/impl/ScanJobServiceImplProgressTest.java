@@ -26,7 +26,7 @@ import static net.dorokhov.pony.library.domain.ScanType.FULL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -69,7 +69,7 @@ public class ScanJobServiceImplProgressTest {
 
         assertThat(scanJobService.getCurrentScanJobProgress()).isNull();
 
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
 
         scanJobService.startScanJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -84,11 +84,11 @@ public class ScanJobServiceImplProgressTest {
 
         assertThat(scanJobService.getScanJobProgress(1L)).isNull();
 
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(invocation -> {
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(invocation -> {
             ScanJob scanJob = invocation.getArgument(0);
             return ScanJob.builder(scanJob).id(1L).build();
         });
-        given(scanJobRepository.findOne(2L)).willReturn(scanJobBuilder(FULL).id(2L).build());
+        when(scanJobRepository.findOne(2L)).thenReturn(scanJobBuilder(FULL).id(2L).build());
 
         scanJobService.startScanJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);

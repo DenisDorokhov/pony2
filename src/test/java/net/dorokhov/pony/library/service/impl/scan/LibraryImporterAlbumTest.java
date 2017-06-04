@@ -8,9 +8,7 @@ import org.mockito.Captor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
 
@@ -37,7 +35,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
                 .name("somevalue")
                 .year(1986)
                 .build();
-        given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
+        when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
@@ -56,7 +54,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
                 .name("someValue")
                 .year(1960)
                 .build();
-        given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
+        when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
@@ -75,7 +73,7 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
                 .name("someValue")
                 .year(1986)
                 .build();
-        given(albumRepository.findByArtistIdAndName(any(), any())).willReturn(existingAlbum);
+        when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)

@@ -9,9 +9,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.DefaultApplicationArguments;
 
 import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InstallationUpgradeRunnerTest {
@@ -24,7 +22,7 @@ public class InstallationUpgradeRunnerTest {
 
     @Test
     public void shouldUpgradeIfInstalled() throws Exception {
-        given(installationService.getInstallation()).willReturn(installation());
+        when(installationService.getInstallation()).thenReturn(installation());
         installationUpgradeRunner.run(new DefaultApplicationArguments(new String[]{}));
         verify(installationService).getInstallation();
         verify(installationService).upgradeIfNeeded();
@@ -32,7 +30,7 @@ public class InstallationUpgradeRunnerTest {
 
     @Test
     public void shouldNotUpgradeWhenNotInstalled() throws Exception {
-        given(installationService.getInstallation()).willReturn(null);
+        when(installationService.getInstallation()).thenReturn(null);
         installationUpgradeRunner.run(new DefaultApplicationArguments(new String[]{}));
         verify(installationService).getInstallation();
         verify(installationService, never()).upgradeIfNeeded();

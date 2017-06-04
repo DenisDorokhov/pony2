@@ -22,9 +22,7 @@ import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobBuilder;
 import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobFull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScanJobSchedulerTest {
@@ -41,57 +39,57 @@ public class ScanJobSchedulerTest {
 
     @Test
     public void shouldStartAutoScanJobByInterval() throws Exception {
-        given(installationService.getInstallation()).willReturn(installation());
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(ImmutableList.of(scanJobBuilder(ScanType.FULL)
+        when(installationService.getInstallation()).thenReturn(installation());
+        when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
+        when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(ImmutableList.of(scanJobBuilder(ScanType.FULL)
                 .creationDate(LocalDateTime.now().minusDays(2))
                 .updateDate(null)
                 .build())));
         ScanJob scanJob = scanJobFull();
-        given(scanJobService.startScanJob()).willReturn(scanJob);
+        when(scanJobService.startScanJob()).thenReturn(scanJob);
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isSameAs(scanJob);
     }
 
     @Test
     public void shouldStartAutoScanJobIfRunningFirstTime() throws Exception {
-        given(installationService.getInstallation()).willReturn(installation());
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(emptyList()));
+        when(installationService.getInstallation()).thenReturn(installation());
+        when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
+        when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(emptyList()));
         ScanJob scanJob = scanJobFull();
-        given(scanJobService.startScanJob()).willReturn(scanJob);
+        when(scanJobService.startScanJob()).thenReturn(scanJob);
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isSameAs(scanJob);
     }
 
     @Test
     public void shouldSkipAutoScanJobIfAutoScanIsOff() throws Exception {
-        given(installationService.getInstallation()).willReturn(installation());
-        given(configService.getAutoScanInterval()).willReturn(null);
+        when(installationService.getInstallation()).thenReturn(installation());
+        when(configService.getAutoScanInterval()).thenReturn(null);
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService, never()).startScanJob();
     }
 
     @Test
     public void shouldSkipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws Exception {
-        given(installationService.getInstallation()).willReturn(installation());
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(emptyList()));
-        given(scanJobService.startScanJob()).willThrow(new ConcurrentScanException());
+        when(installationService.getInstallation()).thenReturn(installation());
+        when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
+        when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(emptyList()));
+        when(scanJobService.startScanJob()).thenThrow(new ConcurrentScanException());
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService).startScanJob();
     }
 
     @Test
     public void shouldSkipAutoScanJobIfNotInstalled() throws Exception {
-        given(installationService.getInstallation()).willReturn(null);
+        when(installationService.getInstallation()).thenReturn(null);
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService, never()).startScanJob();
     }
 
     @Test
     public void shouldSkipAutoScanJobByInterval() throws Exception {
-        given(installationService.getInstallation()).willReturn(installation());
-        given(configService.getAutoScanInterval()).willReturn(24 * 60 * 60);
-        given(scanJobService.getAll(any())).willReturn(new PageImpl<>(ImmutableList.of(scanJobFull())));
+        when(installationService.getInstallation()).thenReturn(installation());
+        when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
+        when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(ImmutableList.of(scanJobFull())));
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService, never()).startScanJob();
     }

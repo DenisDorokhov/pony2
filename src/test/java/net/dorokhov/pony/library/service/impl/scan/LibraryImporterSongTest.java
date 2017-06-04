@@ -14,9 +14,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
@@ -243,7 +241,7 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
         Artwork existingArtwork = artworkBuilder().id(1L).build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder.artwork(existingArtwork));
         Artwork newArtwork = artworkBuilder().id(2L).build();
-        given(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).willReturn(newArtwork);
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtwork);
         
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
         

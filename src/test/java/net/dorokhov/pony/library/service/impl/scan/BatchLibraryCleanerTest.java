@@ -30,9 +30,7 @@ import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.trans
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BatchLibraryCleanerTest {
@@ -75,8 +73,8 @@ public class BatchLibraryCleanerTest {
         File file2 = tempFolder.newFile();
         AudioNode audioNode1 = mock(AudioNode.class);
         AudioNode audioNode2 = mock(AudioNode.class);
-        given(audioNode1.getFile()).willReturn(file1);
-        given(audioNode2.getFile()).willReturn(file2);
+        when(audioNode1.getFile()).thenReturn(file1);
+        when(audioNode2.getFile()).thenReturn(file2);
 
         Artwork artwork = artwork();
         Song song1 = songBuilder().id(1L).path(file1.getAbsolutePath()).build();
@@ -85,11 +83,11 @@ public class BatchLibraryCleanerTest {
         Song song4 = songBuilder().id(4L).path("notExistingPath4").artwork(artwork).build();
         Song song5 = songBuilder().id(5L).path("notExistingPath4").build();
 
-        given(songRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(
+        when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
                 ImmutableList.of(song1, song2, song3, song4, song5)));
-        given(songRepository.findOne(3L)).willReturn(song3);
-        given(songRepository.findOne(4L)).willReturn(song4);
-        given(songRepository.findOne(5L)).willReturn(null);
+        when(songRepository.findOne(3L)).thenReturn(song3);
+        when(songRepository.findOne(4L)).thenReturn(song4);
+        when(songRepository.findOne(5L)).thenReturn(null);
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryCleaner.cleanSongs(ImmutableList.of(audioNode1, audioNode2), observer);
@@ -121,8 +119,8 @@ public class BatchLibraryCleanerTest {
         File file2 = tempFolder.newFile();
         ImageNode imageNode1 = mock(ImageNode.class);
         ImageNode imageNode2 = mock(ImageNode.class);
-        given(imageNode1.getFile()).willReturn(file1);
-        given(imageNode2.getFile()).willReturn(file2);
+        when(imageNode1.getFile()).thenReturn(file1);
+        when(imageNode2.getFile()).thenReturn(file2);
 
         Artwork artwork1 = artworkBuilder()
                 .id(1L)
@@ -148,11 +146,11 @@ public class BatchLibraryCleanerTest {
                         .build().toUri())
                 .build();
 
-        given(artworkRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(
+        when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
                 ImmutableList.of(artwork1, artwork2, artwork3, artwork4, artwork5)));
-        given(artworkRepository.findOne(2L)).willReturn(artwork2);
-        given(artworkRepository.findOne(3L)).willReturn(artwork3);
-        given(artworkRepository.findOne(4L)).willReturn(null);
+        when(artworkRepository.findOne(2L)).thenReturn(artwork2);
+        when(artworkRepository.findOne(3L)).thenReturn(artwork3);
+        when(artworkRepository.findOne(4L)).thenReturn(null);
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryCleaner.cleanArtworks(ImmutableList.of(imageNode1, imageNode2), observer);

@@ -26,8 +26,8 @@ import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResultBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScanResultCalculatorTest {
@@ -54,54 +54,54 @@ public class ScanResultCalculatorTest {
 
     @Test
     public void shouldCalculateAndSaveFirstScan() throws Exception {
-        given(scanResultRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(emptyList()));
+        when(scanResultRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
         doTestCalculateAndSave(LocalDateTime.MIN);
     }
 
     @Test
     public void shouldCalculateAndSaveConsequentScan() throws Exception {
         LocalDateTime lastScanDate = LocalDateTime.now();
-        given(scanResultRepository.findAll((Pageable) any())).willReturn(new PageImpl<>(
+        when(scanResultRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
                 ImmutableList.of(scanResultBuilder(ScanType.FULL).date(lastScanDate).build())));
         doTestCalculateAndSave(lastScanDate);
     }
     
     private void doTestCalculateAndSave(LocalDateTime lastScanDate) {
 
-        given(songRepository.count())
-                .willReturn(0L)
-                .willReturn(10L);
-        given(songRepository.countByCreationDateGreaterThan(lastScanDate)).willReturn(10L);
-        given(songRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).willReturn(0L);
+        when(songRepository.count())
+                .thenReturn(0L)
+                .thenReturn(10L);
+        when(songRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(10L);
+        when(songRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
 
-        given(genreRepository.count())
-                .willReturn(0L)
-                .willReturn(2L);
-        given(genreRepository.countByCreationDateGreaterThan(lastScanDate)).willReturn(2L);
-        given(genreRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).willReturn(0L);
+        when(genreRepository.count())
+                .thenReturn(0L)
+                .thenReturn(2L);
+        when(genreRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(2L);
+        when(genreRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
 
-        given(artistRepository.count())
-                .willReturn(0L)
-                .willReturn(3L);
-        given(artistRepository.countByCreationDateGreaterThan(lastScanDate)).willReturn(3L);
-        given(artistRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).willReturn(0L);
+        when(artistRepository.count())
+                .thenReturn(0L)
+                .thenReturn(3L);
+        when(artistRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(3L);
+        when(artistRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
 
-        given(albumRepository.count())
-                .willReturn(0L)
-                .willReturn(4L);
-        given(albumRepository.countByCreationDateGreaterThan(lastScanDate)).willReturn(4L);
-        given(albumRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).willReturn(0L);
+        when(albumRepository.count())
+                .thenReturn(0L)
+                .thenReturn(4L);
+        when(albumRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(4L);
+        when(albumRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
 
-        given(artworkRepository.count())
-                .willReturn(0L)
-                .willReturn(5L);
-        given(artworkRepository.countByDateGreaterThan(lastScanDate)).willReturn(5L);
+        when(artworkRepository.count())
+                .thenReturn(0L)
+                .thenReturn(5L);
+        when(artworkRepository.countByDateGreaterThan(lastScanDate)).thenReturn(5L);
 
-        given(songRepository.sumSize()).willReturn(123L);
-        given(artworkRepository.sumLargeImageSize()).willReturn(100L);
-        given(artworkRepository.sumSmallImageSize()).willReturn(200L);
+        when(songRepository.sumSize()).thenReturn(123L);
+        when(artworkRepository.sumLargeImageSize()).thenReturn(100L);
+        when(artworkRepository.sumSmallImageSize()).thenReturn(200L);
 
-        given(scanResultRepository.save((ScanResult) any())).willAnswer(returnsFirstArg());
+        when(scanResultRepository.save((ScanResult) any())).thenAnswer(returnsFirstArg());
 
         ScanResult scanResult = scanResultCalculator.calculateAndSave(rethrow(() -> {
             Thread.sleep(100);

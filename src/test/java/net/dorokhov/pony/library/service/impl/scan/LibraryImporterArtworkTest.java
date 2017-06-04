@@ -17,23 +17,21 @@ import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
 
     @Test
     public void shouldImportEmbeddedArtwork() throws Exception {
         Artwork artwork = artwork();
-        given(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).willReturn(artwork);
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(artwork);
         Song song = libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder().build());
         assertThat(song.getArtwork()).isSameAs(artwork);
     }
 
     @Test
     public void shouldSkipEmbeddedArtworkWhenImportFailed() throws Exception {
-        given(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).willThrow(new IOException());
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenThrow(new IOException());
         Song song = libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder().build());
         assertThat(song.getArtwork()).isNull();
     }
@@ -41,14 +39,14 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldImportFileArtwork() throws Exception {
         Artwork artwork = artwork();
-        given(libraryArtworkFinder.findAndSaveFileArtwork(any())).willReturn(artwork);
+        when(libraryArtworkFinder.findAndSaveFileArtwork(any())).thenReturn(artwork);
         Song song = libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder().build());
         assertThat(song.getArtwork()).isSameAs(artwork);
     }
 
     @Test
     public void shouldSkipFileArtworkWhenImportFailed() throws Exception {
-        given(libraryArtworkFinder.findAndSaveFileArtwork(any())).willThrow(new IOException());
+        when(libraryArtworkFinder.findAndSaveFileArtwork(any())).thenThrow(new IOException());
         Song song = libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder().build());
         assertThat(song.getArtwork()).isNull();
     }
@@ -59,8 +57,8 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(
                 songBuilder -> songBuilder.artwork(existingArtwork),
                 albumBuilder -> albumBuilder.artwork(existingArtwork));
-        given(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).willReturn(null);
-        given(libraryCleaner.deleteArtworkIfUnused(any())).willReturn(true);
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(null);
+        when(libraryCleaner.deleteArtworkIfUnused(any())).thenReturn(true);
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
         ArgumentCaptor<Album> albumCaptor = ArgumentCaptor.forClass(Album.class);
         verify(albumRepository).save(albumCaptor.capture());
@@ -72,8 +70,8 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
         Artwork existingArtwork = artworkBuilder().id(1L).build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(
                 songBuilder -> songBuilder.artwork(existingArtwork));
-        given(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).willReturn(null);
-        given(libraryCleaner.deleteArtworkIfUnused(any())).willReturn(true);
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(null);
+        when(libraryCleaner.deleteArtworkIfUnused(any())).thenReturn(true);
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
         verify(albumRepository, never()).save((Album) any());
     }
@@ -85,7 +83,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
                 songBuilder -> songBuilder.artwork(existingArtwork),
                 albumBuilder -> albumBuilder.artwork(existingArtwork));
         Artwork newArtwork = artworkBuilder().id(2L).build();
-        given(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).willReturn(newArtwork);
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtwork);
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
         verify(albumRepository, never()).save((Album) any());
     }
@@ -95,14 +93,14 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
         
         AudioNode audioNode = audioNode();
         Artwork artwork = artwork();
-        given(songRepository.findByPath(any())).willReturn(songBuilder()
+        when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .artwork(null)
                 .album(Album.builder()
                         .artist(Artist.builder().build())
                         .build())
                 .build());
-        given(libraryArtworkFinder.findAndSaveFileArtwork(audioNode)).willReturn(artwork);
-        given(songRepository.save((Song) any())).willAnswer(returnsFirstArg());
+        when(libraryArtworkFinder.findAndSaveFileArtwork(audioNode)).thenReturn(artwork);
+        when(songRepository.save((Song) any())).thenAnswer(returnsFirstArg());
         
         Song song = libraryImporter.importArtwork(audioNode);
         
@@ -119,7 +117,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
 
         AudioNode audioNode = audioNode();
         Artwork artwork = artwork();
-        given(songRepository.findByPath(any())).willReturn(songBuilder()
+        when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .artwork(artwork)
                 .album(Album.builder()
                         .artwork(artwork)
@@ -136,7 +134,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
 
     @Test
     public void shouldNotSaveSongAndAlbumArtworkIfItIsNotFound() throws Exception {
-        given(songRepository.findByPath(any())).willReturn(null);
+        when(songRepository.findByPath(any())).thenReturn(null);
         Song song = libraryImporter.importArtwork(audioNode());
         assertThat(song).isNull();
     }
@@ -144,7 +142,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldNotSaveSongAndAlbumArtworkWhenNoArtworkFound() throws Exception {
         
-        given(songRepository.findByPath(any())).willReturn(songBuilder()
+        when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .artwork(null)
                 .album(Album.builder()
                         .artist(Artist.builder().build())

@@ -24,9 +24,7 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScanJobInterruptionRunnerTest {
@@ -49,7 +47,7 @@ public class ScanJobInterruptionRunnerTest {
         pages.add(new PageImpl<>(ImmutableList.of(scanJob()), new PageRequest(1, 2), 3));
         pages.add(new PageImpl<>(emptyList()));
 
-        given(scanJobRepository.findByStatusIn(any(), any())).willAnswer(invocation -> {
+        when(scanJobRepository.findByStatusIn(any(), any())).thenAnswer(invocation -> {
             Pageable pageable = invocation.getArgument(1);
             return pages.get(pageable.getPageNumber());
         });
@@ -66,7 +64,7 @@ public class ScanJobInterruptionRunnerTest {
 
     @Test
     public void shouldMarkCurrentJobsAsInterruptedOnStartup() throws Exception {
-        given(scanJobRepository.findByStatusIn(any(), any())).willReturn(new PageImpl<>(emptyList()));
+        when(scanJobRepository.findByStatusIn(any(), any())).thenReturn(new PageImpl<>(emptyList()));
         ScanJobInterruptionRunner spy = Mockito.spy(scanJobInterruptionRunner);
         spy.run(new DefaultApplicationArguments(new String[0]));
         verify(spy).markCurrentJobsAsInterrupted();

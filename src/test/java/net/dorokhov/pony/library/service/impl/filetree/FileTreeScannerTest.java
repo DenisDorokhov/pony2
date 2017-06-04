@@ -25,9 +25,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FileTreeScannerTest {
@@ -63,7 +61,7 @@ public class FileTreeScannerTest {
     @Before
     public void setUp() throws Exception {
 
-        given(fileTypeResolver.resolve((File) any())).willAnswer(invocation -> {
+        when(fileTypeResolver.resolve((File) any())).thenAnswer(invocation -> {
             File file = (File) invocation.getArguments()[0];
             if (file.getPath().endsWith(".mp3")) {
                 return fileTypeAudio;
@@ -73,9 +71,9 @@ public class FileTreeScannerTest {
             return fileTypeOther;
         });
 
-        given(imageSizeReader.read((File) any())).willReturn(IMAGE_SIZE);
-        given(checksumCalculator.calculate((File) any())).willReturn(CHECKSUM);
-        given(audioTagger.read(any())).willReturn(AUDIO_DATA);
+        when(imageSizeReader.read((File) any())).thenReturn(IMAGE_SIZE);
+        when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
+        when(audioTagger.read(any())).thenReturn(AUDIO_DATA);
     }
 
     @Test

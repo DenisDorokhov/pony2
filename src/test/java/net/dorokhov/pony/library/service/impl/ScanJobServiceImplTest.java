@@ -50,9 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -90,25 +88,25 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldGetAll() throws Exception {
         Page<ScanJob> page = new PageImpl<>(emptyList());
-        given(scanJobRepository.findAll((Pageable) any())).willReturn(page);
+        when(scanJobRepository.findAll((Pageable) any())).thenReturn(page);
         assertThat(scanJobService.getAll(new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
     public void shouldGetById() throws Exception {
         ScanJob scanJob = scanJobFull();
-        given(scanJobRepository.findOne(any())).willReturn(scanJob);
+        when(scanJobRepository.findOne(any())).thenReturn(scanJob);
         assertThat(scanJobService.getById(1L)).isSameAs(scanJob);
     }
 
     @Test
     public void shouldExecuteScanJob() throws Exception {
         
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(logService.info(any(), any(), any())).willReturn(logMessage());
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
+        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
         ScanResult scanResult = scanResult(FULL);
-        given(libraryScanner.scan(any(), any())).willAnswer(invocation -> {
+        when(libraryScanner.scan(any(), any())).thenAnswer(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
             observer.accept(new ScanProgress(FULL_PREPARING, emptyList(), 0.5));
             return scanResult;
@@ -165,10 +163,10 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldExecuteEditJob() throws Exception {
 
-        given(logService.info(any(), any(), any())).willReturn(logMessage());
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
         ScanResult scanResult = scanResult(ScanType.EDIT);
-        given(libraryScanner.edit(any(), any())).willAnswer(invocation -> {
+        when(libraryScanner.edit(any(), any())).thenAnswer(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
             observer.accept(new ScanProgress(EDIT_PREPARING, emptyList(), 0.5));
             return scanResult;
@@ -231,7 +229,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldFailScanJobOnConcurrentScanException() throws Exception {
 
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
         scanJobService.startScanJob();
         
         assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
@@ -270,7 +268,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldFailEditJobOnConcurrentScanException() throws Exception {
 
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
         scanJobService.startEditJob(emptyList());
         
         assertThatThrownBy(() -> scanJobService.startEditJob(emptyList())).isInstanceOf(ConcurrentScanException.class);
@@ -297,7 +295,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldIgnoreExceptionsThrownByObservers() throws Exception {
         
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
         
         ThrowingScanJobServiceObserver observer = new ThrowingScanJobServiceObserver();
         scanJobService.addObserver(observer);
@@ -310,11 +308,11 @@ public class ScanJobServiceImplTest {
 
     private void doTestFailScanJobOnException(Exception e) throws Exception {
         
-        given(configService.getLibraryFolders()).willReturn(ImmutableList.of(new File("someFolder")));
-        given(logService.error(any(), any(), any())).willReturn(logMessage());
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        given(scanJobRepository.findOne(any())).willReturn(scanJobFull());
-        given(libraryScanner.scan(any(), any())).willThrow(e);
+        when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
+        when(logService.error(any(), any(), any())).thenReturn(logMessage());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.findOne(any())).thenReturn(scanJobFull());
+        when(libraryScanner.scan(any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);
@@ -340,10 +338,10 @@ public class ScanJobServiceImplTest {
     
     private void doTestFailEditJobOnException(Exception e) throws Exception {
         
-        given(logService.error(any(), any(), any())).willReturn(logMessage());
-        given(scanJobRepository.save((ScanJob) any())).willAnswer(returnsFirstArg());
-        given(scanJobRepository.findOne(any())).willReturn(scanJobEdit());
-        given(libraryScanner.edit(any(), any())).willThrow(e);
+        when(logService.error(any(), any(), any())).thenReturn(logMessage());
+        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.findOne(any())).thenReturn(scanJobEdit());
+        when(libraryScanner.edit(any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);

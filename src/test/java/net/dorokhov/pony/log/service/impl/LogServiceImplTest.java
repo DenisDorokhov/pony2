@@ -19,8 +19,8 @@ import static net.dorokhov.pony.log.domain.LogMessage.Level.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LogServiceImplTest {
@@ -42,41 +42,41 @@ public class LogServiceImplTest {
     @Test
     public void shouldGetByType() throws Exception {
         Page<LogMessage> page = new PageImpl<>(emptyList());
-        given(logMessageRepository.findByLevelGreaterThanEqual(any(), any())).willReturn(page);
+        when(logMessageRepository.findByLevelGreaterThanEqual(any(), any())).thenReturn(page);
         assertThat(logService.getByType(DEBUG, new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
     public void shouldGetByTypeAndDate() throws Exception {
         Page<LogMessage> page = new PageImpl<>(emptyList());
-        given(logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(any(), any(), any(), any())).willReturn(page);
+        when(logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(any(), any(), any(), any())).thenReturn(page);
         assertThat(logService.getByTypeAndDate(DEBUG, LocalDateTime.now(), LocalDateTime.now(), new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
     public void shouldLogDebugMessage() throws Exception {
-        given(logMessageRepository.save((LogMessage) any())).willAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
         checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), DEBUG);
         verify(logger).debug(any(), (Object[]) any());
     }
     
     @Test
     public void shouldLogInfoMessage() throws Exception {
-        given(logMessageRepository.save((LogMessage) any())).willAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
         checkLogMessage(logService.info(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), INFO);
         verify(logger).info(any(), (Object[]) any());
     }
     
     @Test
     public void shouldLogWarnMessage() throws Exception {
-        given(logMessageRepository.save((LogMessage) any())).willAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
         checkLogMessage(logService.warn(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), WARN);
         verify(logger).warn(any(), (Object[]) any());
     }
     
     @Test
     public void shouldLogErrorMessage() throws Exception {
-        given(logMessageRepository.save((LogMessage) any())).willAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
         checkLogMessage(logService.error(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), ERROR);
         verify(logger).error(any(), (Object[]) any());
     }
