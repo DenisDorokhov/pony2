@@ -101,7 +101,7 @@ public class ScanResultCalculatorTest {
         when(artworkRepository.sumLargeImageSize()).thenReturn(100L);
         when(artworkRepository.sumSmallImageSize()).thenReturn(200L);
 
-        when(scanResultRepository.save((ScanResult) any())).thenAnswer(returnsFirstArg());
+        when(scanResultRepository.save((ScanResult) any())).then(returnsFirstArg());
 
         ScanResult scanResult = scanResultCalculator.calculateAndSave(rethrow(() -> {
             Thread.sleep(100);

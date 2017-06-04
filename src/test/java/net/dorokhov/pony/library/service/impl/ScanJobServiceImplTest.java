@@ -104,9 +104,9 @@ public class ScanJobServiceImplTest {
         
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         ScanResult scanResult = scanResult(FULL);
-        when(libraryScanner.scan(any(), any())).thenAnswer(invocation -> {
+        when(libraryScanner.scan(any(), any())).then(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
             observer.accept(new ScanProgress(FULL_PREPARING, emptyList(), 0.5));
             return scanResult;
@@ -164,9 +164,9 @@ public class ScanJobServiceImplTest {
     public void shouldExecuteEditJob() throws Exception {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         ScanResult scanResult = scanResult(ScanType.EDIT);
-        when(libraryScanner.edit(any(), any())).thenAnswer(invocation -> {
+        when(libraryScanner.edit(any(), any())).then(invocation -> {
             Consumer<ScanProgress> observer = invocation.getArgument(1);
             observer.accept(new ScanProgress(EDIT_PREPARING, emptyList(), 0.5));
             return scanResult;
@@ -229,7 +229,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldFailScanJobOnConcurrentScanException() throws Exception {
 
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         scanJobService.startScanJob();
         
         assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
@@ -268,7 +268,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldFailEditJobOnConcurrentScanException() throws Exception {
 
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         scanJobService.startEditJob(emptyList());
         
         assertThatThrownBy(() -> scanJobService.startEditJob(emptyList())).isInstanceOf(ConcurrentScanException.class);
@@ -295,7 +295,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldIgnoreExceptionsThrownByObservers() throws Exception {
         
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         
         ThrowingScanJobServiceObserver observer = new ThrowingScanJobServiceObserver();
         scanJobService.addObserver(observer);
@@ -310,7 +310,7 @@ public class ScanJobServiceImplTest {
         
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         when(scanJobRepository.findOne(any())).thenReturn(scanJobFull());
         when(libraryScanner.scan(any(), any())).thenThrow(e);
 
@@ -339,7 +339,7 @@ public class ScanJobServiceImplTest {
     private void doTestFailEditJobOnException(Exception e) throws Exception {
         
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         when(scanJobRepository.findOne(any())).thenReturn(scanJobEdit());
         when(libraryScanner.edit(any(), any())).thenThrow(e);
 

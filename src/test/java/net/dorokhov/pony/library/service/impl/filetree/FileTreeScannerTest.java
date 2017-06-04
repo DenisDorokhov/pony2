@@ -61,7 +61,7 @@ public class FileTreeScannerTest {
     @Before
     public void setUp() throws Exception {
 
-        when(fileTypeResolver.resolve((File) any())).thenAnswer(invocation -> {
+        when(fileTypeResolver.resolve((File) any())).then(invocation -> {
             File file = (File) invocation.getArguments()[0];
             if (file.getPath().endsWith(".mp3")) {
                 return fileTypeAudio;

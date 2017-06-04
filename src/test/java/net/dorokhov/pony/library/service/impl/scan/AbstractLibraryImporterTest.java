@@ -17,6 +17,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.io.File;
 import java.util.function.UnaryOperator;
 
+import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -46,22 +47,16 @@ public abstract class AbstractLibraryImporterTest {
 
     @Before
     public void setUp() throws Exception {
-        when(genreRepository.save((Genre) any())).thenAnswer(returnsFirstArg());
-        when(artistRepository.save((Artist) any())).thenAnswer(returnsFirstArg());
-        when(albumRepository.save((Album) any())).thenAnswer(returnsFirstArg());
-        when(songRepository.save((Song) any())).thenAnswer(returnsFirstArg());
+        when(genreRepository.save((Genre) any())).then(returnsFirstArg());
+        when(artistRepository.save((Artist) any())).then(returnsFirstArg());
+        when(albumRepository.save((Album) any())).then(returnsFirstArg());
+        when(songRepository.save((Song) any())).then(returnsFirstArg());
     }
 
     protected AudioNode audioNode() {
         AudioNode audioNode = mock(AudioNode.class);
         when(audioNode.getFile()).thenReturn(new File("someFile"));
         return audioNode;
-    }
-
-    protected ReadableAudioData.Builder readableAudioDataBuilder() {
-        return ReadableAudioData.builder()
-                .path("someFile")
-                .fileType(FileType.of("audio/mpeg", "mp3"));
     }
 
     protected ReadableAudioData.Builder mockExistingSong(UnaryOperator<Song.Builder> songModifier) {

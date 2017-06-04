@@ -55,28 +55,28 @@ public class LogServiceImplTest {
 
     @Test
     public void shouldLogDebugMessage() throws Exception {
-        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
         checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), DEBUG);
         verify(logger).debug(any(), (Object[]) any());
     }
     
     @Test
     public void shouldLogInfoMessage() throws Exception {
-        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
         checkLogMessage(logService.info(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), INFO);
         verify(logger).info(any(), (Object[]) any());
     }
     
     @Test
     public void shouldLogWarnMessage() throws Exception {
-        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
         checkLogMessage(logService.warn(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), WARN);
         verify(logger).warn(any(), (Object[]) any());
     }
     
     @Test
     public void shouldLogErrorMessage() throws Exception {
-        when(logMessageRepository.save((LogMessage) any())).thenAnswer(returnsFirstArg());
+        when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
         checkLogMessage(logService.error(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), ERROR);
         verify(logger).error(any(), (Object[]) any());
     }

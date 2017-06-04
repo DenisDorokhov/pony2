@@ -104,7 +104,7 @@ public class ArtworkStorageTest {
 
         when(checksumCalculator.calculate((byte[]) any())).thenReturn(CHECKSUM);
         when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FILE_TYPE);
-        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
+        when(artworkRepository.save((Artwork) any())).then(returnsFirstArg());
         
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
         ByteSourceArtworkStorageCommand command = new ByteSourceArtworkStorageCommand(sourceUri(), ByteSource.wrap(bytes));
@@ -116,7 +116,7 @@ public class ArtworkStorageTest {
 
         when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
         when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
-        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
+        when(artworkRepository.save((Artwork) any())).then(returnsFirstArg());
         
         File file = RESOURCE.getFile();
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), file);
@@ -126,7 +126,7 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetOrSaveImageNodeArtwork() throws Exception {
 
-        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
+        when(artworkRepository.save((Artwork) any())).then(returnsFirstArg());
         
         ImageNode imageNode = mock(ImageNode.class);
         when(imageNode.getFile()).thenReturn(RESOURCE.getFile());
@@ -141,7 +141,7 @@ public class ArtworkStorageTest {
 
         when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
         when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
-        when(artworkRepository.save((Artwork) any())).thenAnswer(returnsFirstArg());
+        when(artworkRepository.save((Artwork) any())).then(returnsFirstArg());
 
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), RESOURCE.getFile());
 

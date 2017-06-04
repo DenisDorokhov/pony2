@@ -13,6 +13,7 @@ import java.io.IOException;
 
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
+import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -100,7 +101,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
                         .build())
                 .build());
         when(libraryArtworkFinder.findAndSaveFileArtwork(audioNode)).thenReturn(artwork);
-        when(songRepository.save((Song) any())).thenAnswer(returnsFirstArg());
+        when(songRepository.save((Song) any())).then(returnsFirstArg());
         
         Song song = libraryImporter.importArtwork(audioNode);
         

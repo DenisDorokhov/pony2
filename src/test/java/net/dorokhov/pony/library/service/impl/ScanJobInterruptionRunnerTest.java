@@ -47,7 +47,7 @@ public class ScanJobInterruptionRunnerTest {
         pages.add(new PageImpl<>(ImmutableList.of(scanJob()), new PageRequest(1, 2), 3));
         pages.add(new PageImpl<>(emptyList()));
 
-        when(scanJobRepository.findByStatusIn(any(), any())).thenAnswer(invocation -> {
+        when(scanJobRepository.findByStatusIn(any(), any())).then(invocation -> {
             Pageable pageable = invocation.getArgument(1);
             return pages.get(pageable.getPageNumber());
         });

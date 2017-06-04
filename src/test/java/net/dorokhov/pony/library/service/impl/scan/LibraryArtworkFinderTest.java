@@ -117,7 +117,7 @@ public class LibraryArtworkFinderTest {
         Pageable requiredSongPageable = new PageRequest(1, 1, Sort.Direction.ASC, "year");
         when(songRepository.findByGenreIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(ImmutableList.of(song)));
-        when(genreRepository.save((Genre) any())).thenAnswer(returnsFirstArg());
+        when(genreRepository.save((Genre) any())).then(returnsFirstArg());
 
         Genre genre = Genre.builder().build();
         assertThat(libraryArtworkFinder.findAndSaveGenreArtwork(genre).getArtwork()).isSameAs(artwork);
@@ -152,7 +152,7 @@ public class LibraryArtworkFinderTest {
                 .artwork(artwork)
                 .build();
         when(songRepository.findFirstByAlbumIdAndArtworkNotNull(any())).thenReturn(song);
-        when(albumRepository.save((Album) any())).thenAnswer(returnsFirstArg());
+        when(albumRepository.save((Album) any())).then(returnsFirstArg());
         
         assertThat(libraryArtworkFinder.findAndSaveAlbumArtwork(song.getAlbum()).getArtwork())
                 .isSameAs(artwork);
@@ -181,7 +181,7 @@ public class LibraryArtworkFinderTest {
         Pageable requiredSongPageable = new PageRequest(1, 1, Sort.Direction.ASC, "year");
         when(albumRepository.findByArtistIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(ImmutableList.of(album)));
-        when(artistRepository.save((Artist) any())).thenAnswer(returnsFirstArg());
+        when(artistRepository.save((Artist) any())).then(returnsFirstArg());
         
         assertThat(libraryArtworkFinder.findAndSaveArtistArtwork(artist).getArtwork()).isSameAs(artwork);
     }

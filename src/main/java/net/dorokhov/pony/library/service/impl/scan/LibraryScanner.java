@@ -163,7 +163,7 @@ public class LibraryScanner {
             int finalProcessedCount = processedCount;
             BatchLibraryImporter.ImportResult result = batchLibraryImporter.readAndImport(chunk, (itemsComplete, itemsTotal) ->
                     progressScan(FULL_IMPORTING, targetFolders, (double) (finalProcessedCount + itemsComplete) / audioNodes.size(), observer));
-            failedFiles.addAll(result.getFailedImports());
+            failedFiles.addAll(result.getFailedFiles());
             processedCount += chunk.size();
         }
 
@@ -190,7 +190,7 @@ public class LibraryScanner {
             int finalProcessedCount = processedCount;
             BatchLibraryImporter.ImportResult result = batchLibraryImporter.writeAndImport(chunk, (itemsComplete, itemsTotal) ->
                     progressScan(EDIT_WRITING, targetFiles, (double) (finalProcessedCount + itemsComplete) / commands.size(), observer));
-            failedFiles.addAll(result.getFailedImports());
+            failedFiles.addAll(result.getFailedFiles());
             processedCount += chunk.size();
         }
 

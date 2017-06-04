@@ -69,7 +69,7 @@ public class ScanJobServiceImplProgressTest {
 
         assertThat(scanJobService.getCurrentScanJobProgress()).isNull();
 
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(returnsFirstArg());
+        when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
 
         scanJobService.startScanJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -84,7 +84,7 @@ public class ScanJobServiceImplProgressTest {
 
         assertThat(scanJobService.getScanJobProgress(1L)).isNull();
 
-        when(scanJobRepository.save((ScanJob) any())).thenAnswer(invocation -> {
+        when(scanJobRepository.save((ScanJob) any())).then(invocation -> {
             ScanJob scanJob = invocation.getArgument(0);
             return ScanJob.builder(scanJob).id(1L).build();
         });

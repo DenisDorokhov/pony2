@@ -91,7 +91,7 @@ public class LibraryScannerTest {
         when(folderNode.getChildImages(true)).thenReturn(ImmutableList.of(imageNode1, imageNode2));
 
         ScanResult scanResultFixture = scanResult(FULL);
-        when(scanResultCalculator.calculateAndSave(any())).thenAnswer(invocation -> {
+        when(scanResultCalculator.calculateAndSave(any())).then(invocation -> {
             Object result = ((Supplier) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
                 assertThat(audioFileProcessingResult.getScanType()).isEqualTo(FULL);
@@ -176,7 +176,7 @@ public class LibraryScannerTest {
                 .build());
 
         ScanResult scanResultFixture = scanResult(EDIT);
-        when(scanResultCalculator.calculateAndSave(any())).thenAnswer(invocation -> {
+        when(scanResultCalculator.calculateAndSave(any())).then(invocation -> {
             Object result = ((Supplier) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
                 assertThat(audioFileProcessingResult.getScanType()).isEqualTo(EDIT);
