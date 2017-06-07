@@ -37,11 +37,10 @@ public class CachingImageNodeTest {
                 fileTypeResolver, checksumCalculator, imageSizeReader);
 
         FileType result = imageNode.getFileType();
-        assertThat(result).isEqualTo(fileType);
+        assertThat(result).isSameAs(fileType);
         verify(fileTypeResolver, times(1)).resolve((File) any());
 
-        result = imageNode.getFileType();
-        assertThat(result).isEqualTo(fileType);
+        assertThat(imageNode.getFileType()).isSameAs(result);
         verify(fileTypeResolver, times(1)).resolve((File) any());
     }
 
@@ -54,11 +53,10 @@ public class CachingImageNodeTest {
                 fileTypeResolver, checksumCalculator, imageSizeReader);
 
         String result = imageNode.getChecksum();
-        assertThat(result).isEqualTo(checksum);
+        assertThat(result).isSameAs(checksum);
         verify(checksumCalculator, times(1)).calculate((File) any());
 
-        result = imageNode.getChecksum();
-        assertThat(result).isEqualTo(checksum);
+        assertThat(imageNode.getChecksum()).isSameAs(result);
         verify(checksumCalculator, times(1)).calculate((File) any());
     }
 
@@ -71,11 +69,10 @@ public class CachingImageNodeTest {
                 fileTypeResolver, checksumCalculator, imageSizeReader);
 
         ImageSize result = imageNode.getImageSize();
-        assertThat(result).isEqualTo(imageSize);
+        assertThat(result).isSameAs(imageSize);
         verify(imageSizeReader, times(1)).read((File) any());
 
-        result = imageNode.getImageSize();
-        assertThat(result).isEqualTo(imageSize);
+        assertThat(imageNode.getImageSize()).isSameAs(result);
         verify(imageSizeReader, times(1)).read((File) any());
     }
 }

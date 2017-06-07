@@ -95,7 +95,7 @@ public class LibraryScannerTest {
         when(scanResultCalculator.calculateAndSave(any())).then(invocation -> {
             Object result = ((Supplier) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
-                assertThat(audioFileProcessingResult.getScanType()).isEqualTo(FULL);
+                assertThat(audioFileProcessingResult.getScanType()).isSameAs(FULL);
                 assertThat(audioFileProcessingResult.getTargetFiles()).containsExactly(tempFolder.getRoot());
                 assertThat(audioFileProcessingResult.getFailedFiles()).isEmpty();
                 assertThat(audioFileProcessingResult.getProcessedAudioFileCount()).isEqualTo(2);
@@ -180,7 +180,7 @@ public class LibraryScannerTest {
         when(scanResultCalculator.calculateAndSave(any())).then(invocation -> {
             Object result = ((Supplier) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
-                assertThat(audioFileProcessingResult.getScanType()).isEqualTo(EDIT);
+                assertThat(audioFileProcessingResult.getScanType()).isSameAs(EDIT);
                 assertThat(audioFileProcessingResult.getTargetFiles()).containsExactly(file1, file2);
                 assertThat(audioFileProcessingResult.getFailedFiles()).isEmpty();
                 assertThat(audioFileProcessingResult.getProcessedAudioFileCount()).isEqualTo(2);

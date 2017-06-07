@@ -117,8 +117,8 @@ public class ScanJobServiceImplTest {
         scanJobService.addObserver(observer);
         
         ScanJob scanJobStarting = scanJobService.startScanJob();
-        assertThat(scanJobStarting.getScanType()).isEqualTo(FULL);
-        assertThat(scanJobStarting.getStatus()).isEqualTo(STARTING);
+        assertThat(scanJobStarting.getScanType()).isSameAs(FULL);
+        assertThat(scanJobStarting.getStatus()).isSameAs(STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
         assertThat(scanJobStarting.getScanResult()).isNull();
         verify(logService).info(any(), any(), any());
@@ -132,13 +132,13 @@ public class ScanJobServiceImplTest {
         ScanJob scanJobStarted = savedScanJob.getAllValues().get(1);
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
         
-        assertThat(scanJobStarted.getScanType()).isEqualTo(FULL);
-        assertThat(scanJobStarted.getStatus()).isEqualTo(STARTED);
+        assertThat(scanJobStarted.getScanType()).isSameAs(FULL);
+        assertThat(scanJobStarted.getStatus()).isSameAs(STARTED);
         assertThat(scanJobStarted.getLogMessage()).isNotNull();
         assertThat(scanJobStarted.getScanResult()).isNull();
         
-        assertThat(scanJobComplete.getScanType()).isEqualTo(FULL);
-        assertThat(scanJobComplete.getStatus()).isEqualTo(ScanJob.Status.COMPLETE);
+        assertThat(scanJobComplete.getScanType()).isSameAs(FULL);
+        assertThat(scanJobComplete.getStatus()).isSameAs(ScanJob.Status.COMPLETE);
         assertThat(scanJobComplete.getLogMessage()).isNotNull();
         assertThat(scanJobComplete.getScanResult()).isSameAs(scanResult);
         
@@ -147,7 +147,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatProgressedAt(2, scanJobProgress -> {
             //noinspection ConstantConditions
-            assertThat(scanJobProgress.getScanProgress().getStep()).isEqualTo(FULL_PREPARING);
+            assertThat(scanJobProgress.getScanProgress().getStep()).isSameAs(FULL_PREPARING);
             assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
             assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(Value.of(1, 1));
         });
@@ -177,8 +177,8 @@ public class ScanJobServiceImplTest {
         scanJobService.addObserver(observer);
 
         ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
-        assertThat(scanJobStarting.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobStarting.getStatus()).isEqualTo(STARTING);
+        assertThat(scanJobStarting.getScanType()).isSameAs(ScanType.EDIT);
+        assertThat(scanJobStarting.getStatus()).isSameAs(STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
         assertThat(scanJobStarting.getScanResult()).isNull();
         verify(logService).info(any(), any(), any());
@@ -192,13 +192,13 @@ public class ScanJobServiceImplTest {
         ScanJob scanJobStarted = savedScanJob.getAllValues().get(1);
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
 
-        assertThat(scanJobStarted.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobStarted.getStatus()).isEqualTo(STARTED);
+        assertThat(scanJobStarted.getScanType()).isSameAs(ScanType.EDIT);
+        assertThat(scanJobStarted.getStatus()).isSameAs(STARTED);
         assertThat(scanJobStarted.getLogMessage()).isNotNull();
         assertThat(scanJobStarted.getScanResult()).isNull();
 
-        assertThat(scanJobComplete.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobComplete.getStatus()).isEqualTo(ScanJob.Status.COMPLETE);
+        assertThat(scanJobComplete.getScanType()).isSameAs(ScanType.EDIT);
+        assertThat(scanJobComplete.getStatus()).isSameAs(ScanJob.Status.COMPLETE);
         assertThat(scanJobComplete.getLogMessage()).isNotNull();
         assertThat(scanJobComplete.getScanResult()).isSameAs(scanResult);
 
@@ -207,7 +207,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatProgressedAt(2, scanJobProgress -> {
             //noinspection ConstantConditions
-            assertThat(scanJobProgress.getScanProgress().getStep()).isEqualTo(EDIT_PREPARING);
+            assertThat(scanJobProgress.getScanProgress().getStep()).isSameAs(EDIT_PREPARING);
             assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
             assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(Value.of(1, 1));
         });
@@ -326,8 +326,8 @@ public class ScanJobServiceImplTest {
         verify(logService, times(2)).info(any(), any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
-        assertThat(scanJobFailed.getScanType()).isEqualTo(FULL);
-        assertThat(scanJobFailed.getStatus()).isEqualTo(ScanJob.Status.FAILED);
+        assertThat(scanJobFailed.getScanType()).isSameAs(FULL);
+        assertThat(scanJobFailed.getStatus()).isSameAs(ScanJob.Status.FAILED);
         assertThat(scanJobFailed.getLogMessage()).isNotNull();
         assertThat(scanJobFailed.getScanResult()).isNull();
         
@@ -355,8 +355,8 @@ public class ScanJobServiceImplTest {
         verify(logService, times(2)).info(any(), any(), any());
 
         ScanJob scanJobFailed = savedScanJob.getValue();
-        assertThat(scanJobFailed.getScanType()).isEqualTo(ScanType.EDIT);
-        assertThat(scanJobFailed.getStatus()).isEqualTo(ScanJob.Status.FAILED);
+        assertThat(scanJobFailed.getScanType()).isSameAs(ScanType.EDIT);
+        assertThat(scanJobFailed.getStatus()).isSameAs(ScanJob.Status.FAILED);
         assertThat(scanJobFailed.getLogMessage()).isNotNull();
         assertThat(scanJobFailed.getScanResult()).isNull();
 
@@ -388,21 +388,21 @@ public class ScanJobServiceImplTest {
         
         public void assertThatStartingAt(int index) {
             assertThat(calls).element(index).satisfies(scanJobProgress -> {
-                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTING);
+                assertThat(scanJobProgress.getScanJob().getStatus()).isSameAs(STARTING);
                 assertThat(scanJobProgress.getScanProgress()).isNull();
             });
         }
         
         public void assertThatStartedAt(int index) {
             assertThat(calls).element(index).satisfies(scanJobProgress -> {
-                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTED);
+                assertThat(scanJobProgress.getScanJob().getStatus()).isSameAs(STARTED);
                 assertThat(scanJobProgress.getScanProgress()).isNull();
             });
         }
         
         public void assertThatProgressedAt(int index, Consumer<ScanJobProgress> handler) {
             assertThat(calls).element(index).satisfies(scanJobProgress -> {
-                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTED);
+                assertThat(scanJobProgress.getScanJob().getStatus()).isSameAs(STARTED);
                 assertThat(scanJobProgress.getScanProgress()).isNotNull();
                 handler.accept(scanJobProgress);
             });
@@ -410,14 +410,14 @@ public class ScanJobServiceImplTest {
 
         public void assertThatCompletedAt(int index) {
             assertThat(calls).element(index).satisfies(scanJobProgress -> {
-                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(COMPLETE);
+                assertThat(scanJobProgress.getScanJob().getStatus()).isSameAs(COMPLETE);
                 assertThat(scanJobProgress.getScanProgress()).isNull();
             });
         }
 
         public void assertThatFailedAt(int index) {
             assertThat(calls).element(index).satisfies(scanJobProgress -> {
-                assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(FAILED);
+                assertThat(scanJobProgress.getScanJob().getStatus()).isSameAs(FAILED);
                 assertThat(scanJobProgress.getScanProgress()).isNull();
             });
         }
@@ -425,21 +425,21 @@ public class ScanJobServiceImplTest {
         @Override
         public void onScanJobStarting(ScanJob scanJob) {
             assertThat(scanJob).isNotNull();
-            assertThat(scanJob.getStatus()).isEqualTo(STARTING);
+            assertThat(scanJob.getStatus()).isSameAs(STARTING);
             calls.add(new ScanJobProgress(scanJob, null));
         }
 
         @Override
         public void onScanJobStarted(ScanJob scanJob) {
             assertThat(scanJob).isNotNull();
-            assertThat(scanJob.getStatus()).isEqualTo(STARTED);
+            assertThat(scanJob.getStatus()).isSameAs(STARTED);
             calls.add(new ScanJobProgress(scanJob, null));
         }
 
         @Override
         public void onScanJobProgress(ScanJobProgress scanJobProgress) {
             assertThat(scanJobProgress).isNotNull();
-            assertThat(scanJobProgress.getScanJob().getStatus()).isEqualTo(STARTED);
+            assertThat(scanJobProgress.getScanJob().getStatus()).isSameAs(STARTED);
             assertThat(scanJobProgress.getScanProgress()).isNotNull();
             calls.add(scanJobProgress);
         }
@@ -447,14 +447,14 @@ public class ScanJobServiceImplTest {
         @Override
         public void onScanJobCompleted(ScanJob scanJob) {
             assertThat(scanJob).isNotNull();
-            assertThat(scanJob.getStatus()).isEqualTo(COMPLETE);
+            assertThat(scanJob.getStatus()).isSameAs(COMPLETE);
             calls.add(new ScanJobProgress(scanJob, null));
         }
 
         @Override
         public void onScanJobFailed(ScanJob scanJob) {
             assertThat(scanJob).isNotNull();
-            assertThat(scanJob.getStatus()).isEqualTo(FAILED);
+            assertThat(scanJob.getStatus()).isSameAs(FAILED);
             calls.add(new ScanJobProgress(scanJob, null));
         }
     }

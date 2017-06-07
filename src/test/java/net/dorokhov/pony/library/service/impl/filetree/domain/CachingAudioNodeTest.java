@@ -38,11 +38,10 @@ public class CachingAudioNodeTest {
                 fileTypeResolver, checksumCalculator, audioTagger);
         
         FileType result = audioNode.getFileType();
-        assertThat(result).isEqualTo(fileType);
+        assertThat(result).isSameAs(fileType);
         verify(fileTypeResolver, times(1)).resolve((File) any());
         
-        result = audioNode.getFileType();
-        assertThat(result).isEqualTo(fileType);
+        assertThat(audioNode.getFileType()).isSameAs(result);
         verify(fileTypeResolver, times(1)).resolve((File) any());
     }
 
@@ -55,11 +54,10 @@ public class CachingAudioNodeTest {
                 fileTypeResolver, checksumCalculator, audioTagger);
 
         String result = audioNode.getChecksum();
-        assertThat(result).isEqualTo(checksum);
+        assertThat(result).isSameAs(checksum);
         verify(checksumCalculator, times(1)).calculate((File) any());
 
-        result = audioNode.getChecksum();
-        assertThat(result).isEqualTo(checksum);
+        assertThat(audioNode.getChecksum()).isSameAs(result);
         verify(checksumCalculator, times(1)).calculate((File) any());
     }
 
@@ -72,11 +70,10 @@ public class CachingAudioNodeTest {
                 fileTypeResolver, checksumCalculator, audioTagger);
 
         ReadableAudioData result = audioNode.getAudioData();
-        assertThat(result).isEqualTo(audioData);
+        assertThat(result).isSameAs(audioData);
         verify(audioTagger, times(1)).read(any());
 
-        result = audioNode.getAudioData();
-        assertThat(result).isEqualTo(audioData);
+        assertThat(audioNode.getAudioData()).isSameAs(result);
         verify(audioTagger, times(1)).read(any());
     }
 }

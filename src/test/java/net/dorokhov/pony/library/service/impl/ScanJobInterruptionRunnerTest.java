@@ -57,7 +57,8 @@ public class ScanJobInterruptionRunnerTest {
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
 
-        savedScanJob.getAllValues().forEach(scanJob -> assertThat(scanJob.getStatus()).isEqualTo(ScanJob.Status.INTERRUPTED));
+        savedScanJob.getAllValues().forEach(scanJob -> assertThat(scanJob.getStatus())
+                .isSameAs(ScanJob.Status.INTERRUPTED));
         
         verify(logService).warn(any(), any(), any());
     }

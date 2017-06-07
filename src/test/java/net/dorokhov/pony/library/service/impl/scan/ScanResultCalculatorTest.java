@@ -132,7 +132,7 @@ public class ScanResultCalculatorTest {
 
         verify(scanResultRepository).save((ScanResult) any());
 
-        assertThat(scanResult.getScanType()).isEqualTo(ScanType.FULL);
+        assertThat(scanResult.getScanType()).isSameAs(ScanType.FULL);
         assertThat(scanResult.getTargetPaths()).containsExactly("/file1", "/file2");
         assertThat(scanResult.getFailedPaths()).containsExactly("/file3");
         assertThat(scanResult.getProcessedAudioFileCount()).isEqualTo(20);

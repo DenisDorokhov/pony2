@@ -142,7 +142,7 @@ public class FileTreeScannerTest {
 
     private void checkArtist1(FolderNode folder, FolderNode root) {
 
-        assertThat(folder.getParentFolder()).isEqualTo(root);
+        assertThat(folder.getParentFolder()).isSameAs(root);
 
         assertThat(nodesToNames(folder.getChildFolders())).containsOnly("album1-1", "album1-2");
         assertThat(nodesToNames(folder.getChildImages())).isEmpty();
@@ -174,7 +174,7 @@ public class FileTreeScannerTest {
 
     private void checkArtist2(FolderNode folder, FolderNode root) {
 
-        assertThat(folder.getParentFolder()).isEqualTo(root);
+        assertThat(folder.getParentFolder()).isSameAs(root);
 
         assertThat(nodesToNames(folder.getChildFolders())).isEmpty();
         assertThat(nodesToNames(folder.getChildImages())).isEmpty();
