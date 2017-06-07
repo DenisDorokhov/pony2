@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.service.impl.audio.AudioTagger;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
@@ -24,8 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.synchronizedList;
+import static java.util.Collections.*;
 import static net.dorokhov.pony.library.service.impl.LibraryConfig.LIBRARY_IMPORT_EXECUTOR;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
@@ -38,8 +36,8 @@ public class BatchLibraryImporter {
         private final List<File> failedFiles;
 
         public ImportResult(List<Song> importedSongs, List<File> failedFiles) {
-            this.importedSongs = ImmutableList.copyOf(importedSongs);
-            this.failedFiles = ImmutableList.copyOf(failedFiles);
+            this.importedSongs = unmodifiableList(importedSongs);
+            this.failedFiles = unmodifiableList(failedFiles);
         }
 
         public List<Song> getImportedSongs() {

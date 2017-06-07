@@ -55,7 +55,7 @@ public class ArtworkFileFinder {
         if (artwork != null) {
             return artwork;
         } else {
-            List<FolderNode> childFolders = folderNode.getChildFolders(false);
+            List<FolderNode> childFolders = folderNode.getChildFolders();
             return childFolders.stream()
                     .filter(this::isFolderArtwork)
                     .map(this::fetchArtworkFromFolder)
@@ -72,7 +72,7 @@ public class ArtworkFileFinder {
     @Nullable
     private ImageNode fetchArtworkFromFolder(FolderNode folderNode) {
         List<ImageNode> candidatesBySize = new ArrayList<>();
-        return folderNode.getChildImages(false).stream()
+        return folderNode.getChildImages().stream()
                 .filter(this::isImageArtworkBySize)
                 .sorted(Comparator.comparing(image -> image.getFile().getName()))
                 .peek(candidatesBySize::add)

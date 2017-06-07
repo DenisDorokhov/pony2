@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.dorokhov.pony.library.domain.ScanProgress;
 import net.dorokhov.pony.library.domain.ScanProgress.Step;
@@ -33,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.unmodifiableList;
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static net.dorokhov.pony.library.domain.ScanProgress.Step.*;
 
@@ -91,7 +91,7 @@ public class LibraryScanner {
         }
     }
 
-    public ScanResult edit(List<EditCommand> commands, @Nullable Consumer<ScanProgress> observer) throws SongNotFoundException, IOException {
+    public ScanResult edit(List<EditCommand> commands, List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws SongNotFoundException, IOException {
 
         List<File> targetFiles = new ArrayList<>();
         List<WriteAndImportCommand> writeAndImportCommands = new ArrayList<>();
@@ -104,12 +104,12 @@ public class LibraryScanner {
             if (!songFile.exists()) {
                 throw new FileNotFoundException(songFile.getAbsolutePath());
             }
-            FileNode fileNode = fileTreeScanner.scanFile(songFile);
+            FileNode fileNode = fileTreeScanner.scanFile(songFile, targetFolders);
             if (fileNode instanceof AudioNode) {
                 targetFiles.add(songFile);
                 writeAndImportCommands.add(new WriteAndImportCommand((AudioNode) fileNode, command.getAudioData()));
             } else {
-                throw new IOException(String.format("File '%s' is not a song.", songFile.getAbsolutePath()));
+                throw new IOException(String.format("Audio file '%s' could not be resolved.", songFile.getAbsolutePath()));
             }
         }
 
@@ -141,8 +141,8 @@ public class LibraryScanner {
         List<ImageNode> imageNodes = new ArrayList<>();
         for (File file : targetFolders) {
             FolderNode folderNode = fileTreeScanner.scanFolder(file);
-            audioNodes.addAll(folderNode.getChildAudios(true));
-            imageNodes.addAll(folderNode.getChildImages(true));
+            audioNodes.addAll(folderNode.getChildAudiosRecursively());
+            imageNodes.addAll(folderNode.getChildImagesRecursively());
         }
 
         logService.info(logger, "Cleaning songs...");
@@ -234,8 +234,8 @@ public class LibraryScanner {
                                              List<File> failedFiles,
                                              int processedAudioFileCount) {
             this.scanType = checkNotNull(scanType);
-            this.targetFiles = ImmutableList.copyOf(targetFiles);
-            this.failedFiles = ImmutableList.copyOf(failedFiles);
+            this.targetFiles = unmodifiableList(targetFiles);
+            this.failedFiles = unmodifiableList(failedFiles);
             this.processedAudioFileCount = processedAudioFileCount;
         }
 

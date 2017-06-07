@@ -19,6 +19,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 @Entity
 @Table(name = "album")
@@ -73,7 +74,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
     }
 
     public List<Song> getSongs() {
-        return songs != null ? ImmutableList.copyOf(songs) : emptyList();
+        return songs != null ? unmodifiableList(songs) : emptyList();
     }
 
     public Artist getArtist() {

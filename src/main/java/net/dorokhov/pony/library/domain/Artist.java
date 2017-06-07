@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 @Entity
 @Table(name = "artist")
@@ -56,7 +57,7 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
     }
 
     public List<Album> getAlbums() {
-        return albums != null ? ImmutableList.copyOf(albums) : emptyList();
+        return albums != null ? unmodifiableList(albums) : emptyList();
     }
 
     @Override

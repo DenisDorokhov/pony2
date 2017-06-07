@@ -254,7 +254,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         ScanResult result = null;
         Supplier<LogMessage> logMessage;
         try {
-            result = libraryScanner.edit(commands, scanProgress ->
+            result = libraryScanner.edit(commands, configService.getLibraryFolders(), scanProgress ->
                     onScanJobProgress(new ScanJobProgress(startedScanJob, scanProgress)));
             logMessage = () -> logService.info(logger, "Edit job complete for {} songs.", commands.size());
         } catch (SongNotFoundException e) {

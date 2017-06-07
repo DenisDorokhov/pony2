@@ -1,7 +1,6 @@
 package net.dorokhov.pony.library.domain;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.annotation.Nullable;
@@ -9,6 +8,7 @@ import java.io.File;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.unmodifiableList;
 import static net.dorokhov.pony.library.domain.ScanType.EDIT;
 import static net.dorokhov.pony.library.domain.ScanType.FULL;
 
@@ -116,7 +116,7 @@ public final class ScanProgress {
 
     public ScanProgress(Step step, List<File> files, @Nullable Value value) {
         this.step = checkNotNull(step);
-        this.files = ImmutableList.copyOf(files);
+        this.files = unmodifiableList(files);
         this.value = value;
     }
 

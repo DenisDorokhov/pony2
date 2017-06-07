@@ -12,6 +12,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 @Entity
 @Table(name = "scan_result")
@@ -180,11 +181,11 @@ public class ScanResult {
     }
 
     public List<String> getTargetPaths() {
-        return targetPaths != null ? ImmutableList.copyOf(targetPaths) : emptyList();
+        return targetPaths != null ? unmodifiableList(targetPaths) : emptyList();
     }
 
     public List<String> getFailedPaths() {
-        return failedPaths != null ? ImmutableList.copyOf(failedPaths) : emptyList();
+        return failedPaths != null ? unmodifiableList(failedPaths) : emptyList();
     }
 
     public Integer getProcessedAudioFileCount() {

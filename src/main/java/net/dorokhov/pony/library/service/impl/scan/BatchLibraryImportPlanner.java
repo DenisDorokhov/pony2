@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
@@ -13,6 +12,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.unmodifiableList;
+
 @Component
 public class BatchLibraryImportPlanner {
 
@@ -22,8 +23,8 @@ public class BatchLibraryImportPlanner {
         private final List<AudioNode> audioNodesToSkip;
 
         public Plan(List<AudioNode> audioNodesToImport, List<AudioNode> audioNodesToSkip) {
-            this.audioNodesToImport = ImmutableList.copyOf(audioNodesToImport);
-            this.audioNodesToSkip = ImmutableList.copyOf(audioNodesToSkip);
+            this.audioNodesToImport = unmodifiableList(audioNodesToImport);
+            this.audioNodesToSkip = unmodifiableList(audioNodesToSkip);
         }
 
         public List<AudioNode> getAudioNodesToImport() {

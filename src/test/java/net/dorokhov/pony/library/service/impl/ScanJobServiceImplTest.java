@@ -167,8 +167,8 @@ public class ScanJobServiceImplTest {
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         ScanResult scanResult = scanResult(ScanType.EDIT);
-        when(libraryScanner.edit(any(), any())).then(invocation -> {
-            Consumer<ScanProgress> observer = invocation.getArgument(1);
+        when(libraryScanner.edit(any(), any(), any())).then(invocation -> {
+            Consumer<ScanProgress> observer = invocation.getArgument(2);
             observer.accept(new ScanProgress(EDIT_PREPARING, emptyList(), Value.of(1, 1)));
             return scanResult;
         });
@@ -342,7 +342,7 @@ public class ScanJobServiceImplTest {
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         when(scanJobRepository.findOne(any())).thenReturn(scanJobEdit());
-        when(libraryScanner.edit(any(), any())).thenThrow(e);
+        when(libraryScanner.edit(any(), any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);

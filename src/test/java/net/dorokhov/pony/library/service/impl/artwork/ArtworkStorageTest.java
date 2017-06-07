@@ -88,7 +88,7 @@ public class ArtworkStorageTest {
         Artwork artwork = artwork();
         when(artworkRepository.findOne(any())).thenReturn(artwork);
         assertThat(artworkStorage.getLargeImageFile(1L)).satisfies(file -> 
-                assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder.getRoot(), PATH_LARGE).getAbsolutePath()));
+                assertThat(file).isEqualTo(new File(artworkFolder.getRoot(), PATH_LARGE)));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class ArtworkStorageTest {
         Artwork artwork = artwork();
         when(artworkRepository.findOne(any())).thenReturn(artwork);
         assertThat(artworkStorage.getSmallImageFile(1L)).satisfies(file -> 
-                assertThat(file.getAbsolutePath()).isEqualTo(new File(artworkFolder.getRoot(), PATH_SMALL).getAbsolutePath()));
+                assertThat(file).isEqualTo(new File(artworkFolder.getRoot(), PATH_SMALL)));
     }
 
     @Test

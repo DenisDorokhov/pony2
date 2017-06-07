@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipOutputStream;
 
+import static java.util.Collections.unmodifiableList;
+
 public class ExportServiceImpl implements ExportService {
 
     static final String UNKNOWN_ARTIST = "Unknown Artist";
@@ -194,7 +196,7 @@ public class ExportServiceImpl implements ExportService {
         private final List<ZipEntry> entries;
 
         public ZipContent(List<ZipEntry> entries) {
-            this.entries = ImmutableList.copyOf(entries);
+            this.entries = unmodifiableList(entries);
         }
 
         public List<ZipEntry> getEntries() {
