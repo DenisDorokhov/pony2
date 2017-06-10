@@ -62,6 +62,7 @@ dependencies {
     testCompile 'org.mockito:mockito-core:2.7.14'
     testCompile 'org.assertj:assertj-core:3.6.2'
     testCompile 'info.solidsoft.mockito:mockito-java8:2.0.1'
+    testCompile 'org.apache.httpcomponents:httpclient:4.5.3'
 }
 
 springBoot {

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -204,6 +205,7 @@ public class UserServiceImpl implements UserService {
     @Nullable
     public User getCurrentUser() {
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .filter(authentication -> !(authentication instanceof AnonymousAuthenticationToken))
                 .map(authentication -> (UserDetailsImpl) authentication.getPrincipal())
                 .map(UserDetailsImpl::getUser)
                 .orElse(null);

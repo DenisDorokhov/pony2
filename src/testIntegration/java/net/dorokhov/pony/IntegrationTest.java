@@ -2,6 +2,8 @@ package net.dorokhov.pony;
 
 import net.dorokhov.pony.common.RethrowingLambdas;
 import org.flywaydb.core.Flyway;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.jpa.FullTextEntityManager;
 import org.hibernate.search.jpa.Search;
@@ -18,6 +20,9 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.FileSystemUtils;
 
@@ -30,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
+import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -47,8 +53,15 @@ abstract public class IntegrationTest {
 
     @Value("${pony.artwork.path}")
     private File artworkFolder;
+    
+    private TransactionTemplate transactionTemplate;
 
     private List<Class> indexedClasses;
+    
+    @Autowired
+    private void initTransactionTemplate(PlatformTransactionManager transactionManager) {
+        transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -58,7 +71,7 @@ abstract public class IntegrationTest {
     @After
     public void tearDown() throws Exception {
         cleanFiles();
-        purgeIndexes();
+        purgeSearchIndexes();
         clearCache();
         flyway.clean();
     }
@@ -71,7 +84,7 @@ abstract public class IntegrationTest {
     }
 
     @SuppressWarnings("unchecked")
-    private void purgeIndexes() throws Exception {
+    private void purgeSearchIndexes() throws Exception {
         if (indexedClasses == null) {
             indexedClasses = fetchIndexedClasses();
         }
@@ -81,9 +94,16 @@ abstract public class IntegrationTest {
     }
 
     private void clearCache() {
+        // Clear Spring cache.
         cacheManager.getCacheNames().stream()
                 .map(cacheManager::getCache)
                 .forEach(Cache::clear);
+        // Clear Hibernate second level cache.
+        transactionTemplate.execute(status -> {
+            SessionFactory sessionFactory = entityManager.unwrap(Session.class).getSessionFactory();
+            sessionFactory.getCache().evictAllRegions();
+            return null;
+        });
     }
 
     private List<Class> fetchIndexedClasses() throws Exception {

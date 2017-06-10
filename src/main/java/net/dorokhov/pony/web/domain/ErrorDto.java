@@ -18,6 +18,7 @@ public final class ErrorDto {
         MAX_UPLOAD_SIZE_EXCEEDED,
         ACCESS_DENIED,
         VALIDATION,
+        INVALID_CREDENTIALS,
     }
     
     public static final class FieldViolation {

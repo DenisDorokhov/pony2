@@ -51,17 +51,10 @@ public class InstallationControllerTest extends IntegrationTest {
 
         ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(errorDto -> {
-            assertThat(errorDto.getCode()).isSameAs(Code.VALIDATION);
-            assertThat(errorDto.getMessage()).isNotNull();
-            assertThat(errorDto.getFieldViolations().size()).isGreaterThanOrEqualTo(5);
-            assertThat(errorDto.getFieldViolations()).allSatisfy(fieldViolation -> {
-                assertThat(fieldViolation.getField()).isNotNull();
-                assertThat(fieldViolation.getCode()).isNotNull();
-                assertThat(fieldViolation.getMessage()).isNotNull();
-                assertThat(fieldViolation.getArguments()).isNotNull();
-            });
-            assertThat(errorDto.getFieldViolations().stream()
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(Code.VALIDATION);
+            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(5);
+            assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
                     .containsExactlyInAnyOrder("installationSecret", "libraryFolders[0].path", "adminName", "adminEmail", "adminPassword");
         });
@@ -113,9 +106,7 @@ public class InstallationControllerTest extends IntegrationTest {
         restTemplate.postForEntity("/api/installation", command, Void.class);
         ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(errorDto -> {
-            assertThat(errorDto.getCode()).isSameAs(Code.BAD_REQUEST);
-            assertThat(errorDto.getMessage()).isNotNull();
-        });
+        assertThat(response.getBody()).satisfies(errorDto -> 
+                assertThat(errorDto.getCode()).isSameAs(Code.BAD_REQUEST));
     }
 }
