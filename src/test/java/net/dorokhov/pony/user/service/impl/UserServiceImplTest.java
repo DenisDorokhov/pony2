@@ -2,6 +2,7 @@ package net.dorokhov.pony.user.service.impl;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import net.dorokhov.pony.common.SecretNotFoundException;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
@@ -53,16 +54,16 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldInitToGetTokenSecret() throws Exception {
-        userService.init();
+    public void shouldNotGenerateSecretIfItExists() throws Exception {
+        userService.assureTokenSecretExists();
         verify(tokenSecretManager).getTokenSecret();
         verify(tokenSecretManager, never()).generateAndStoreTokenSecret();
     }
 
     @Test
-    public void shouldInitToGenerateTokenSecret() throws Exception {
-        when(tokenSecretManager.getTokenSecret()).thenThrow(new TokenSecretNotFoundException());
-        userService.init();
+    public void shouldGenerateSecretIfItDoesNotExist() throws Exception {
+        when(tokenSecretManager.getTokenSecret()).thenThrow(new SecretNotFoundException());
+        userService.assureTokenSecretExists();
         verify(tokenSecretManager).getTokenSecret();
         verify(tokenSecretManager).generateAndStoreTokenSecret();
     }

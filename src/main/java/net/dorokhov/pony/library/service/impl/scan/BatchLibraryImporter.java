@@ -24,7 +24,7 @@ import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.*;
-import static net.dorokhov.pony.library.service.impl.LibraryConfig.LIBRARY_IMPORT_EXECUTOR;
+import static net.dorokhov.pony.library.LibraryConfig.LIBRARY_IMPORT_EXECUTOR;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Component

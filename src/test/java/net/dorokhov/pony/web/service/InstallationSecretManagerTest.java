@@ -1,4 +1,4 @@
-package net.dorokhov.pony.user.service.impl;
+package net.dorokhov.pony.web.service;
 
 import net.dorokhov.pony.common.SecretManager;
 import org.junit.Test;
@@ -12,23 +12,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TokenSecretManagerTest {
+public class InstallationSecretManagerTest {
     
     @InjectMocks
-    private TokenSecretManager tokenSecretManager;
-    
+    private InstallationSecretManager installationSecretManager;
+
     @Mock
     private SecretManager secretManager;
 
     @Test
     public void shouldGenerateAndStoreTokenSecret() throws Exception {
         when(secretManager.generateAndStoreSecret(any())).thenReturn("someSecret");
-        assertThat(tokenSecretManager.generateAndStoreTokenSecret()).isEqualTo("someSecret");
+        assertThat(installationSecretManager.generateAndStoreInstallationSecret()).isEqualTo("someSecret");
     }
 
     @Test
     public void shouldFetchTokenSecret() throws Exception {
         when(secretManager.fetchSecret(any())).thenReturn("someSecret");
-        assertThat(tokenSecretManager.getTokenSecret()).isEqualTo("someSecret");
+        assertThat(installationSecretManager.fetchInstallationSecret()).isEqualTo("someSecret");
     }
 }

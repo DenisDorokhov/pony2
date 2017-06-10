@@ -1,4 +1,4 @@
-package net.dorokhov.pony.library.service.impl;
+package net.dorokhov.pony.library;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

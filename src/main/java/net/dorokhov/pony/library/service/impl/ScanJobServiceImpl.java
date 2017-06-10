@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static net.dorokhov.pony.library.service.impl.LibraryConfig.SCAN_JOB_EXECUTOR;
+import static net.dorokhov.pony.library.LibraryConfig.SCAN_JOB_EXECUTOR;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 

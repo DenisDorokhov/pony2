@@ -1,12 +1,16 @@
-package net.dorokhov.pony.common;
+package net.dorokhov.pony;
 
-import net.dorokhov.pony.PonyApplication;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -17,7 +21,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 @EnableScheduling
 @EnableCaching
-public class CommonConfig implements AsyncConfigurer {
+public class CommonConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderCustomizer {
 
     @Override
     public ThreadPoolTaskExecutor getAsyncExecutor() {
@@ -30,5 +34,10 @@ public class CommonConfig implements AsyncConfigurer {
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return new SimpleAsyncUncaughtExceptionHandler();
+    }
+
+    @Override
+    public void customize(Jackson2ObjectMapperBuilder jacksonObjectMapperBuilder) {
+        jacksonObjectMapperBuilder.modules(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES), new JavaTimeModule());
     }
 }

@@ -13,9 +13,6 @@ buildscript {
 plugins {
     id 'com.gorylenko.gradle-git-properties' version '1.4.17'
 }
-plugins {
-    id 'net.ltgt.apt' version '0.8'
-}
 
 apply plugin: 'java'
 apply plugin: 'idea'
@@ -51,16 +48,15 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter-websocket'
     compile 'org.springframework.boot:spring-boot-starter-cache'
 
+    compile 'com.auth0:java-jwt:3.0.1'
+    compile 'org.apache.tika:tika-core:1.14'
+    compile 'net.coobird:thumbnailator:0.4.8'
+    compile 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.8.8'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.8'
     compile 'org.flywaydb:flyway-core'
     compile 'org.hibernate:hibernate-ehcache:5.0.12.Final'
     compile 'org.hibernate:hibernate-search-orm:5.6.1.Final'
     compile 'net.jthink:jaudiotagger:2.2.3'
-    compile 'net.coobird:thumbnailator:0.4.8'
-    compile 'org.apache.tika:tika-core:1.14'
-    compile 'com.auth0:java-jwt:3.0.1'
-
-    apt 'org.mapstruct:mapstruct-processor:1.1.0.Final'
-    compile 'org.mapstruct:mapstruct-jdk8:1.1.0.Final'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
     testCompile 'org.mockito:mockito-core:2.7.14'
@@ -74,6 +70,10 @@ springBoot {
 
 findbugs {
     sourceSets = [sourceSets.main]
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-parameters" << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
 tasks.withType(FindBugs) {

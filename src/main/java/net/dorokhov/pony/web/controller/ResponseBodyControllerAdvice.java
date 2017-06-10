@@ -1,0 +1,81 @@
+package net.dorokhov.pony.web.controller;
+
+import net.dorokhov.pony.web.domain.ErrorDto;
+import net.dorokhov.pony.web.domain.ErrorDto.Code;
+import net.dorokhov.pony.web.domain.ErrorDto.FieldViolation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@ControllerAdvice(assignableTypes = ResponseBodyController.class)
+@ResponseBody
+public class ResponseBodyControllerAdvice {
+    
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto onValidationError(MethodArgumentNotValidException e) {
+        List<FieldViolation> fieldViolations = new ArrayList<>();
+        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
+            List<String> errorArguments = new ArrayList<>();
+            for (Object argument : fieldError.getArguments()) {
+                if (argument instanceof Byte
+                        || argument instanceof Short
+                        || argument instanceof Integer
+                        || argument instanceof Long
+                        || argument instanceof Float
+                        || argument instanceof Double
+                        || argument instanceof Character
+                        || argument instanceof Boolean
+                        || argument instanceof String
+                        ) {
+                    errorArguments.add(argument.toString());
+                }
+            }
+            fieldViolations.add(new FieldViolation(fieldError.getField(), fieldError.getCode(), fieldError.getDefaultMessage(), errorArguments));
+        }
+        return new ErrorDto(Code.VALIDATION, "Invalid request, check field violations.", fieldViolations);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto onMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        return new ErrorDto(Code.MAX_UPLOAD_SIZE_EXCEEDED, e.getMessage(), String.valueOf(e.getMaxUploadSize()));
+    }
+
+    @ExceptionHandler({
+            HttpMediaTypeException.class, 
+            HttpMessageNotReadableException.class, 
+            MissingServletRequestParameterException.class
+    })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto onBadRequest() {
+        return new ErrorDto(Code.BAD_REQUEST, "Bad request.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Object onUnexpectedError(Exception e) {
+        if (e.getCause() instanceof IOException) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Avoid logging of broken pipe exceptions.
+        }
+        logger.error("Unexpected error occurred.", e);
+        return new ErrorDto(Code.UNEXPECTED, "Unexpected error occurred.");
+    }
+}
