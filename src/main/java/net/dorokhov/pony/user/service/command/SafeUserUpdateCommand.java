@@ -1,32 +1,26 @@
 package net.dorokhov.pony.user.service.command;
 
-import com.google.common.collect.ImmutableSet;
-import net.dorokhov.pony.user.domain.User;
-
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class UserUpdateCommand {
-    
-    private final long id;
+public final class SafeUserUpdateCommand {
+
+    private final Long id;
     private final String name;
     private final String email;
+    private final String oldPassword;
     private final String newPassword;
-    private final Set<User.Role> roles;
 
-    private UserUpdateCommand(Builder builder) {
-        id = builder.id;
+    private SafeUserUpdateCommand(Builder builder) {
+        id = checkNotNull(builder.id);
         name = checkNotNull(builder.name);
         email = checkNotNull(builder.email);
+        oldPassword = checkNotNull(builder.oldPassword);
         newPassword = builder.newPassword;
-        roles = builder.roles.build();
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -38,13 +32,13 @@ public final class UserUpdateCommand {
         return email;
     }
 
+    public String getOldPassword() {
+        return oldPassword;
+    }
+
     @Nullable
     public String getNewPassword() {
         return newPassword;
-    }
-
-    public Set<User.Role> getRoles() {
-        return roles;
     }
     
     public static Builder builder() {
@@ -53,17 +47,17 @@ public final class UserUpdateCommand {
 
     public static final class Builder {
         
-        private long id;
+        private Long id;
         private String name;
         private String email;
+        private String oldPassword;
         private String newPassword;
-        private ImmutableSet.Builder<User.Role> roles = ImmutableSet.builder();
 
-        public Builder id(long id) {
+        public Builder id(Long id) {
             this.id = id;
             return this;
         }
-
+        
         public Builder name(String name) {
             this.name = name;
             return this;
@@ -74,27 +68,18 @@ public final class UserUpdateCommand {
             return this;
         }
 
+        public Builder oldPassword(String oldPassword) {
+            this.oldPassword = oldPassword;
+            return this;
+        }
+
         public Builder newPassword(@Nullable String newPassword) {
             this.newPassword = newPassword;
             return this;
         }
-        
-        public Builder roles(Collection<User.Role> roles) {
-            this.roles = ImmutableSet.<User.Role>builder().addAll(roles);
-            return this;
-        }
 
-        public Builder roles(User.Role... roles) {
-            return roles(Arrays.asList(roles));
-        }
-        
-        public Builder addRole(User.Role role) {
-            this.roles.add(role);
-            return this;
-        }
-
-        public UserUpdateCommand build() {
-            return new UserUpdateCommand(this);
+        public SafeUserUpdateCommand build() {
+            return new SafeUserUpdateCommand(this);
         }
     }
 }

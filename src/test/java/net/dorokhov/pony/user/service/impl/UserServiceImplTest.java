@@ -1,21 +1,21 @@
 package net.dorokhov.pony.user.service.impl;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import net.dorokhov.pony.common.SecretNotFoundException;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
-import net.dorokhov.pony.user.service.command.CurrentUserUpdateCommand;
+import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
+import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.command.UserUpdateCommand;
-import net.dorokhov.pony.user.service.exception.*;
-import org.junit.After;
+import net.dorokhov.pony.user.service.exception.InvalidCredentialsException;
+import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
+import net.dorokhov.pony.user.service.exception.UserExistsException;
+import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,64 +24,44 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static java.util.Collections.emptyList;
+import static net.dorokhov.pony.fixture.UserFixtures.user;
+import static net.dorokhov.pony.fixture.UserFixtures.userBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserServiceImplTest {
     
     @InjectMocks
+    @Spy
     private UserServiceImpl userService;
     
     @Mock
     private UserRepository userRepository;
     @Mock
-    private TokenSecretManager tokenSecretManager;
+    private TokenManager tokenManager;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
     private AuthenticationManager authenticationManager;
 
-    @After
-    public void tearDown() throws Exception {
-        SecurityContextHolder.clearContext();
-    }
-
-    @Test
-    public void shouldNotGenerateSecretIfItExists() throws Exception {
-        userService.assureTokenSecretExists();
-        verify(tokenSecretManager).getTokenSecret();
-        verify(tokenSecretManager, never()).generateAndStoreTokenSecret();
-    }
-
-    @Test
-    public void shouldGenerateSecretIfItDoesNotExist() throws Exception {
-        when(tokenSecretManager.getTokenSecret()).thenThrow(new SecretNotFoundException());
-        userService.assureTokenSecretExists();
-        verify(tokenSecretManager).getTokenSecret();
-        verify(tokenSecretManager).generateAndStoreTokenSecret();
-    }
-
     @Test
     public void shouldGetById() throws Exception {
-        when(userRepository.findOne(1L)).thenReturn(null);
-        assertThat(userService.getById(1L)).isNull();
-        User user = userBuilder().build();
+        User user = user();
         when(userRepository.findOne(1L)).thenReturn(user);
         assertThat(userService.getById(1L)).isSameAs(user);
     }
 
     @Test
     public void shouldGetByEmail() throws Exception {
-        when(userRepository.findByEmail("someEmail")).thenReturn(null);
-        assertThat(userService.getByEmail("someEmail")).isNull();
-        User user = userBuilder().build();
+        User user = user();
         when(userRepository.findByEmail("someEmail")).thenReturn(user);
         assertThat(userService.getByEmail("someEmail")).isSameAs(user);
     }
@@ -96,9 +76,8 @@ public class UserServiceImplTest {
     @Test
     public void shouldCreateUser() throws Exception {
         
-        User createdUser = userBuilder().build();
         when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");
-        when(userRepository.save((User) any())).thenReturn(createdUser);
+        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
 
         UserCreationCommand command = UserCreationCommand.builder()
                 .name("someName")
@@ -106,19 +85,22 @@ public class UserServiceImplTest {
                 .password("somePassword")
                 .roles(User.Role.USER, User.Role.ADMIN)
                 .build();
-        assertThat(userService.create(command)).isSameAs(createdUser);
+        User createdUser = userService.create(command);
         
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getName()).isEqualTo("someName");
-        assertThat(userCaptor.getValue().getEmail()).isEqualTo("someEmail");
-        assertThat(userCaptor.getValue().getPassword()).isEqualTo("encodedPassword");
-        assertThat(userCaptor.getValue().getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
+        assertThat(userCaptor.getValue()).satisfies(user -> {
+            assertThat(createdUser).isSameAs(user);
+            assertThat(user.getName()).isEqualTo("someName");
+            assertThat(user.getEmail()).isEqualTo("someEmail");
+            assertThat(user.getPassword()).isEqualTo("encodedPassword");
+            assertThat(user.getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
+        });
     }
 
     @Test
-    public void shouldCreateExistingUser() throws Exception {
-        User existingUser = userBuilder().build();
+    public void shouldFailUserCreationIfUserExists() throws Exception {
+        User existingUser = user();
         when(userRepository.findByEmail("someEmail")).thenReturn(existingUser);
         assertThatThrownBy(() -> userService.create(UserCreationCommand.builder()
                 .name("someName")
@@ -128,53 +110,61 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldUpdateUser() throws Exception {
+    public void shouldUpdateUserUnsafely() throws Exception {
 
-        User existingUser = userBuilder().build();
+        User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
-        when(userRepository.save((User) any())).thenReturn(existingUser);
+        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
 
-        UserUpdateCommand command = UserUpdateCommand.builder()
+        UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .roles(User.Role.USER, User.Role.ADMIN)
                 .build();
-        assertThat(userService.update(command)).isSameAs(existingUser);
+        User updatedUser = userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getId()).isEqualTo(1L);
-        assertThat(userCaptor.getValue().getName()).isEqualTo("someName");
-        assertThat(userCaptor.getValue().getEmail()).isEqualTo("someEmail");
-        assertThat(userCaptor.getValue().getPassword()).isEqualTo("somePassword");
-        assertThat(userCaptor.getValue().getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
+        assertThat(userCaptor.getValue()).satisfies(user -> {
+            assertThat(updatedUser).isSameAs(user);
+            assertThat(user.getId()).isEqualTo(1L);
+            assertThat(user.getName()).isEqualTo("someName");
+            assertThat(user.getEmail()).isEqualTo("someEmail");
+            assertThat(user.getPassword()).isEqualTo("somePassword");
+            assertThat(user.getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
+        });
     }
 
     @Test
-    public void shouldUpdateUserPassword() throws Exception {
+    public void shouldUpdateUserPasswordUnsafely() throws Exception {
 
-        User existingUser = userBuilder().build();
+        User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
-        when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");
+        when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(existingUser);
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
+        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
 
-        UserUpdateCommand command = UserUpdateCommand.builder()
-                .id(1L)
-                .name("someName")
-                .email("someEmail")
-                .newPassword("somePassword")
+        UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
+                .id(existingUser.getId())
+                .name(existingUser.getName())
+                .email(existingUser.getEmail())
+                .newPassword("newPassword")
                 .build();
-        userService.update(command);
+        User updatedUser = userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getPassword()).isEqualTo("encodedPassword");
+        assertThat(userCaptor.getValue()).satisfies(user -> {
+            assertThat(updatedUser).isSameAs(user);
+            assertThat(user.getPassword()).isEqualTo("encodedPassword");
+        });
     }
 
     @Test
-    public void shouldUpdateNotFoundUser() throws Exception {
+    public void shouldFailUnsafeUserUpdateIfUserNotFound() throws Exception {
         when(userRepository.findOne(1L)).thenReturn(null);
-        UserUpdateCommand command = UserUpdateCommand.builder()
+        UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
@@ -184,12 +174,12 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldUpdateExistingUser() throws Exception {
+    public void shouldFailUnsafeUserUpdateIfNewUserEmailExists() throws Exception {
         User userToUpdate = userBuilder().email("otherEmail").build();
         when(userRepository.findOne(1L)).thenReturn(userToUpdate);
         User existingUser = userBuilder().id(2L).build();
         when(userRepository.findByEmail("someEmail")).thenReturn(existingUser);
-        UserUpdateCommand command = UserUpdateCommand.builder()
+        UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
@@ -200,95 +190,24 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldDeleteUser() throws Exception {
-        User existingUser = userBuilder().build();
+        User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
         userService.delete(1L);
         verify(userRepository).delete(1L);
     }
 
     @Test
-    public void shouldDeleteNotFoundUser() throws Exception {
+    public void shouldFailUserDeletionIdUserNotFound() throws Exception {
         when(userRepository.findOne(1L)).thenReturn(null);
         assertThatThrownBy(() -> userService.delete(1L)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
-    public void shouldDeleteCurrentUser() throws Exception {
-        User existingUser = userBuilder().build();
-        when(userRepository.findOne(1L)).thenReturn(existingUser);
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        assertThatThrownBy(() -> userService.delete(1L)).isInstanceOf(DeletingCurrentUserException.class);
-    }
-
-    @Test
-    public void shouldAuthenticateValidCredentials() throws Exception {
-        User existingUser = userBuilder().build();
-        when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
-        UserToken userToken = userService.authenticate("someEmail", "somePassword");
-        assertThat(userToken.getUser()).isSameAs(existingUser);
-        assertThat(userToken.getToken()).isNotNull();
-        assertThat(userService.getCurrentUser()).isSameAs(existingUser);
-    }
-
-    @Test
-    public void shouldAuthenticateInvalidCredentials() throws Exception {
-        when(authenticationManager.authenticate(any()))
-                .thenThrow(new AuthenticationCredentialsNotFoundException("Credentials not found."));
-        assertThatThrownBy(() -> userService.authenticate("someEmail", "somePassword")).isInstanceOf(InvalidCredentialsException.class);
-    }
-
-    @Test
-    public void shouldAuthenticateValidToken() throws Exception {
-        User existingUser = userBuilder().build();
-        when(userRepository.findOne(1L)).thenReturn(existingUser);
-        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
-        String token = JWT.create()
-                .withSubject("1")
-                .sign(Algorithm.HMAC256("someSecret"));
-        assertThat(userService.authenticate(token)).isSameAs(existingUser);
-        assertThat(userService.getCurrentUser()).isSameAs(existingUser);
-    }
-
-    @Test
-    public void shouldAuthenticateInvalidToken() throws Exception {
-        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
-        assertThatThrownBy(() -> userService.authenticate("invalidToken")).isInstanceOf(InvalidTokenException.class);
-    }
-
-    @Test
-    public void shouldAuthenticateValidTokenForNotExistingUser() throws Exception {
-        when(userRepository.findOne(1L)).thenReturn(null);
-        when(tokenSecretManager.getTokenSecret()).thenReturn("someSecret");
-        String token = JWT.create()
-                .withSubject("1")
-                .sign(Algorithm.HMAC256("someSecret"));
-        assertThatThrownBy(() -> userService.authenticate(token)).isInstanceOf(InvalidTokenException.class);
-    }
-
-    @Test
-    public void shouldLogout() throws Exception {
-        User existingUser = userBuilder().build();
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        assertThat(userService.logout()).isSameAs(existingUser);
-    }
-
-    @Test
-    public void shouldLogoutNotAuthenticatedUser() throws Exception {
-        assertThat(userService.logout()).isNull();
-    }
-
-    @Test
-    public void shouldGetCurrentUserWhenNotAuthenticated() throws Exception {
-        assertThat(userService.getCurrentUser()).isNull();
-    }
-
-    @Test
-    public void shouldUpdateCurrentUser() throws Exception {
+    public void shouldUpdateUserSafely() throws Exception {
 
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
-        
+
         User existingUser = User.builder()
                 .id(1L)
                 .name("oldName")
@@ -296,56 +215,74 @@ public class UserServiceImplTest {
                 .password("oldPassword")
                 .addRoles(User.Role.USER, User.Role.ADMIN)
                 .build();
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        
         when(userRepository.findOne(1L)).thenReturn(existingUser);
-        when(userRepository.save((User) any())).thenReturn(existingUser);
+        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
 
-        CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
+        SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
+                .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .oldPassword("oldPassword")
                 .newPassword("newPassword")
                 .build();
-        assertThat(userService.updateCurrentUser(command)).isEqualTo(existingUser);
+        User updatedUser = userService.update(command);
+        
+        assertThat(updatedUser.getId()).isEqualTo(1L);
+        assertThat(updatedUser.getName()).isEqualTo("someName");
+        assertThat(updatedUser.getEmail()).isEqualTo("someEmail");
+        assertThat(updatedUser.getPassword()).isEqualTo("encodedPassword");
+        assertThat(updatedUser.getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getId()).isEqualTo(1L);
-        assertThat(userCaptor.getValue().getName()).isEqualTo("someName");
-        assertThat(userCaptor.getValue().getEmail()).isEqualTo("someEmail");
-        assertThat(userCaptor.getValue().getPassword()).isEqualTo("encodedPassword");
-        assertThat(userCaptor.getValue().getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
+        ArgumentCaptor<UnsafeUserUpdateCommand> unsafeCommandCaptor = ArgumentCaptor.forClass(UnsafeUserUpdateCommand.class);
+        verify(userService).update(unsafeCommandCaptor.capture());
+        assertThat(unsafeCommandCaptor.getValue()).satisfies(unsafeCommand -> {
+            assertThat(unsafeCommand.getId()).isEqualTo(1L);
+            assertThat(unsafeCommand.getName()).isEqualTo("someName");
+            assertThat(unsafeCommand.getEmail()).isEqualTo("someEmail");
+            assertThat(unsafeCommand.getNewPassword()).isEqualTo("newPassword");
+            assertThat(unsafeCommand.getRoles()).containsOnly(User.Role.USER, User.Role.ADMIN);
+        });
     }
 
     @Test
-    public void shouldUpdateWhenNotAuthenticated() throws Exception {
-        CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
-                .name("someName")
-                .email("someEmail")
-                .oldPassword("oldPassword")
-                .build();
-        assertThatThrownBy(() -> userService.updateCurrentUser(command)).isInstanceOf(NotAuthenticatedException.class);
-    }
-
-    @Test
-    public void shouldUpdateCurrentUserWithInvalidOldPassword() throws Exception {
-        when(passwordEncoder.matches(any(), any())).thenReturn(false);
-        User existingUser = userBuilder().build();
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        CurrentUserUpdateCommand command = CurrentUserUpdateCommand.builder()
+    public void shouldFailSafeUserUpdateIfUserNotFound() throws Exception {
+        when(userRepository.findOne(1L)).thenReturn(null);
+        SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
+                .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .oldPassword("invalidPassword")
                 .build();
-        assertThatThrownBy(() -> userService.updateCurrentUser(command)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> userService.update(command)).isInstanceOf(UserNotFoundException.class);
     }
-    
-    private User.Builder userBuilder() {
-        return User.builder()
+
+    @Test
+    public void shouldFailSafeUserUpdateIfOldPasswordIsInvalid() throws Exception {
+        when(userRepository.findOne(1L)).thenReturn(user());
+        when(passwordEncoder.matches(any(), any())).thenReturn(false);
+        SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
-                .password("somePassword");
+                .oldPassword("invalidPassword")
+                .build();
+        assertThatThrownBy(() -> userService.update(command)).isInstanceOf(InvalidPasswordException.class);
+    }
+
+    @Test
+    public void shouldAuthenticate() throws Exception {
+        User existingUser = user();
+        when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
+        when(tokenManager.signToken(any())).thenReturn("someToken");
+        UserToken userToken = userService.authenticate("someEmail", "somePassword");
+        assertThat(userToken.getUser()).isSameAs(existingUser);
+        assertThat(userToken.getToken()).isEqualTo("someToken");
+    }
+
+    @Test
+    public void shouldFailAuthenticationOnInvalidCredentials() throws Exception {
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new AuthenticationCredentialsNotFoundException("Credentials not found."));
+        assertThatThrownBy(() -> userService.authenticate("someEmail", "somePassword")).isInstanceOf(InvalidCredentialsException.class);
     }
 }

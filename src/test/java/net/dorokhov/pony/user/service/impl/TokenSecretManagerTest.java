@@ -29,6 +29,6 @@ public class TokenSecretManagerTest {
     @Test
     public void shouldFetchTokenSecret() throws Exception {
         when(secretManager.fetchSecret(any())).thenReturn("someSecret");
-        assertThat(tokenSecretManager.getTokenSecret()).isEqualTo("someSecret");
+        assertThat(tokenSecretManager.fetchTokenSecret()).isEqualTo("someSecret");
     }
 }

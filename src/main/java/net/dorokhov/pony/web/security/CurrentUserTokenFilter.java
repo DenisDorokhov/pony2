@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.security;
 
 import com.google.common.base.Charsets;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.user.service.CurrentUserService;
 import net.dorokhov.pony.user.service.exception.InvalidTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +21,17 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 @Component
-public class UserTokenFilter extends GenericFilterBean {
+public class CurrentUserTokenFilter extends GenericFilterBean {
     
     private static final String TOKEN_HEADER_PREFIX = "Bearer ";
     private static final String TOKEN_COOKIE_NAME = "pony_access_token";
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    private final UserService userService;
+    private final CurrentUserService currentUserService;
 
-    public UserTokenFilter(UserService userService) {
-        this.userService = userService;
+    public CurrentUserTokenFilter(CurrentUserService currentUserService) {
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class UserTokenFilter extends GenericFilterBean {
         String token = fetchAccessToken(request);
         if (token != null) {
             try {
-                userService.authenticate(token);
+                currentUserService.authenticate(token);
             } catch (InvalidTokenException e) {
                 logger.debug("Invalid token detected.");
             }

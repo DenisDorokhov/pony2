@@ -13,15 +13,15 @@ public class TokenSecretManagerCacheTest extends IntegrationTest {
 
     @Test
     public void shouldCacheAfterFetching() throws Exception {
-        String token = tokenSecretManager.getTokenSecret();
-        String cachedToken = tokenSecretManager.getTokenSecret();
+        String token = tokenSecretManager.fetchTokenSecret();
+        String cachedToken = tokenSecretManager.fetchTokenSecret();
         assertThat(token).isSameAs(cachedToken);
     }
 
     @Test
     public void shouldCacheAfterGeneration() throws Exception {
         String token = tokenSecretManager.generateAndStoreTokenSecret();
-        String cachedToken = tokenSecretManager.getTokenSecret();
+        String cachedToken = tokenSecretManager.fetchTokenSecret();
         assertThat(token).isSameAs(cachedToken);
     }
 }

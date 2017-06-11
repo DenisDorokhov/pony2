@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManagerFactory;
 
+import static net.dorokhov.pony.fixture.UserFixtures.user;
+import static net.dorokhov.pony.fixture.UserFixtures.userBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UserRepositoryTest extends IntegrationTest {
@@ -21,7 +23,7 @@ public class UserRepositoryTest extends IntegrationTest {
 
     @Test
     public void shouldSave() throws Exception {
-        User user = userRepository.save(userBuilder().build());
+        User user = userRepository.save(user());
         assertThat(userRepository.findOne(user.getId())).isNotNull();
     }
 
@@ -51,14 +53,6 @@ public class UserRepositoryTest extends IntegrationTest {
         assertThat(statistics.getSecondLevelCacheMissCount()).isEqualTo(1);
         assertThat(statistics.getSecondLevelCacheHitCount()).isEqualTo(0);
         assertThat(statistics.getSecondLevelCachePutCount()).isEqualTo(1);
-    }
-    
-    private User.Builder userBuilder() {
-        return User.builder()
-                .name("someName")
-                .email("someEmail")
-                .password("somePassword")
-                .addRoles(User.Role.USER, User.Role.ADMIN);
     }
     
     private Statistics getStatistics() {

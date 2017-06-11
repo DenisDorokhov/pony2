@@ -37,7 +37,7 @@ public class TokenSecretManager {
     }
 
     @Cacheable(key = CACHE_KEY)
-    public String getTokenSecret() throws SecretNotFoundException, IOException {
+    public String fetchTokenSecret() throws SecretNotFoundException, IOException {
         return secretManager.fetchSecret(tokenSecretFile);
     }
 }
