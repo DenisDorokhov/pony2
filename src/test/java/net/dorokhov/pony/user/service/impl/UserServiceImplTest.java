@@ -1,12 +1,10 @@
 package net.dorokhov.pony.user.service.impl;
 
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
 import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.InvalidCredentialsException;
 import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserExistsException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
@@ -21,9 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static java.util.Collections.emptyList;
@@ -46,11 +41,7 @@ public class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private TokenManager tokenManager;
-    @Mock
     private PasswordEncoder passwordEncoder;
-    @Mock
-    private AuthenticationManager authenticationManager;
 
     @Test
     public void shouldGetById() throws Exception {
@@ -267,22 +258,5 @@ public class UserServiceImplTest {
                 .oldPassword("invalidPassword")
                 .build();
         assertThatThrownBy(() -> userService.update(command)).isInstanceOf(InvalidPasswordException.class);
-    }
-
-    @Test
-    public void shouldAuthenticate() throws Exception {
-        User existingUser = user();
-        when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(new UserDetailsImpl(existingUser), null, null));
-        when(tokenManager.signToken(any())).thenReturn("someToken");
-        UserToken userToken = userService.authenticate("someEmail", "somePassword");
-        assertThat(userToken.getUser()).isSameAs(existingUser);
-        assertThat(userToken.getToken()).isEqualTo("someToken");
-    }
-
-    @Test
-    public void shouldFailAuthenticationOnInvalidCredentials() throws Exception {
-        when(authenticationManager.authenticate(any()))
-                .thenThrow(new AuthenticationCredentialsNotFoundException("Credentials not found."));
-        assertThatThrownBy(() -> userService.authenticate("someEmail", "somePassword")).isInstanceOf(InvalidCredentialsException.class);
     }
 }

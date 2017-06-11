@@ -6,12 +6,12 @@ import net.dorokhov.pony.user.service.exception.NotAuthenticatedException;
 
 import javax.annotation.Nullable;
 
-public interface CurrentUserService {
+public interface UserContextService {
     
     @Nullable
-    User getCurrentUser();
+    User getUser();
     
-    User authenticate(String token) throws InvalidTokenException;
+    User setUserFromToken(String token) throws InvalidTokenException;
 
-    User logout() throws NotAuthenticatedException;
+    User clearUser() throws NotAuthenticatedException;
 }

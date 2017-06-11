@@ -1,21 +1,18 @@
 package net.dorokhov.pony.user.service.impl;
 
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.domain.UserToken;
 import net.dorokhov.pony.user.repository.UserRepository;
 import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
-import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
-import net.dorokhov.pony.user.service.exception.*;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
+import net.dorokhov.pony.user.service.exception.UserExistsException;
+import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,16 +27,11 @@ public class UserServiceImpl implements UserService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final UserRepository userRepository;
-    private final TokenManager tokenManager;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
 
-    public UserServiceImpl(UserRepository userRepository, TokenManager tokenSecretManager,
-                           PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.tokenManager = tokenSecretManager;
         this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -130,18 +122,5 @@ public class UserServiceImpl implements UserService {
         }
         logger.info("Deleting user '{}'.", userToDelete.getId());
         userRepository.delete(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public UserToken authenticate(String email, String password) throws InvalidCredentialsException {
-        Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        } catch (AuthenticationException e) {
-            throw new InvalidCredentialsException(email);
-        }
-        User currentUser = ((UserDetailsImpl) authentication.getPrincipal()).getUser();
-        return new UserToken(currentUser, tokenManager.signToken(currentUser.getId().toString()));
     }
 }

@@ -2,8 +2,8 @@ package net.dorokhov.pony.user.service.impl;
 
 import com.google.common.primitives.Longs;
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.repository.UserRepository;
-import net.dorokhov.pony.user.service.CurrentUserService;
+import net.dorokhov.pony.user.service.UserContextService;
+import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.exception.InvalidTokenException;
 import net.dorokhov.pony.user.service.exception.NotAuthenticatedException;
 import org.slf4j.Logger;
@@ -18,22 +18,22 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Service
-public class CurrentUserServiceImpl implements CurrentUserService {
+public class UserContextServiceImpl implements UserContextService {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final TokenManager tokenManager;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public CurrentUserServiceImpl(TokenManager tokenManager, UserRepository userRepository) {
+    public UserContextServiceImpl(TokenManager tokenManager, UserService userService) {
         this.tokenManager = tokenManager;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public User getCurrentUser() {
+    public User getUser() {
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .filter(authentication -> authentication.getPrincipal() instanceof UserDetailsImpl)
                 .map(authentication -> (UserDetailsImpl) authentication.getPrincipal())
@@ -43,12 +43,12 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public User authenticate(String token) throws InvalidTokenException {
+    public User setUserFromToken(String token) throws InvalidTokenException {
         Long userId = Longs.tryParse(tokenManager.verifyToken(token));
         if (userId == null) {
             throw new InvalidTokenException();
         }
-        User user = userRepository.findOne(userId);
+        User user = userService.getById(userId);
         if (user == null) {
             throw new InvalidTokenException();
         }
@@ -59,8 +59,8 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         return user;
     }
 
-    public User logout() throws NotAuthenticatedException {
-        User user = getCurrentUser();
+    public User clearUser() throws NotAuthenticatedException {
+        User user = getUser();
         if (user == null) {
             throw new NotAuthenticatedException();
         }

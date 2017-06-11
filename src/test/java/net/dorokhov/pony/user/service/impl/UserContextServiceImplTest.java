@@ -1,7 +1,7 @@
 package net.dorokhov.pony.user.service.impl;
 
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.repository.UserRepository;
+import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.exception.InvalidTokenException;
 import net.dorokhov.pony.user.service.exception.NotAuthenticatedException;
 import org.junit.After;
@@ -20,15 +20,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CurrentUserServiceImplTest {
+public class UserContextServiceImplTest {
     
     @InjectMocks
-    private CurrentUserServiceImpl currentUserService;
+    private UserContextServiceImpl currentUserService;
 
     @Mock
     private TokenManager tokenManager;
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @After
     public void tearDown() throws Exception {
@@ -40,40 +40,40 @@ public class CurrentUserServiceImplTest {
         User user = user();
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(new UserDetailsImpl(user), null, null));
-        assertThat(currentUserService.getCurrentUser()).isSameAs(user);
+        assertThat(currentUserService.getUser()).isSameAs(user);
     }
 
     @Test
     public void shouldNotReturnCurrentUserWhenNotAuthenticated() throws Exception {
-        assertThat(currentUserService.getCurrentUser()).isNull();
+        assertThat(currentUserService.getUser()).isNull();
     }
 
     @Test
     public void shouldAuthenticate() throws Exception {
         when(tokenManager.verifyToken(any())).thenReturn("1");
         User user = user();
-        when(userRepository.findOne(1L)).thenReturn(user);
-        currentUserService.authenticate("someToken");
-        assertThat(currentUserService.getCurrentUser()).isSameAs(user);
+        when(userService.getById(1L)).thenReturn(user);
+        currentUserService.setUserFromToken("someToken");
+        assertThat(currentUserService.getUser()).isSameAs(user);
     }
 
     @Test
     public void shouldFailAuthenticationOnInvalidToken() throws Exception {
         when(tokenManager.verifyToken(any())).thenThrow(new InvalidTokenException());
-        assertThatThrownBy(() -> currentUserService.authenticate("invalidToken")).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> currentUserService.setUserFromToken("invalidToken")).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
     public void shouldFailAuthenticationOnInvalidSubject() throws Exception {
         when(tokenManager.verifyToken(any())).thenReturn("invalidSubject");
-        assertThatThrownBy(() -> currentUserService.authenticate("someToken")).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> currentUserService.setUserFromToken("someToken")).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
     public void shouldFailAuthenticationOnNotExistingUser() throws Exception {
         when(tokenManager.verifyToken(any())).thenReturn("1");
-        when(userRepository.findOne(1L)).thenReturn(null);
-        assertThatThrownBy(() -> currentUserService.authenticate("someToken")).isInstanceOf(InvalidTokenException.class);
+        when(userService.getById(1L)).thenReturn(null);
+        assertThatThrownBy(() -> currentUserService.setUserFromToken("someToken")).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
@@ -81,12 +81,12 @@ public class CurrentUserServiceImplTest {
         User user = user();
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(new UserDetailsImpl(user), null, null));
-        assertThat(currentUserService.logout()).isSameAs(user);
+        assertThat(currentUserService.clearUser()).isSameAs(user);
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
     @Test
     public void shouldFailLogoutIfUserIsNotAuthenticated() throws Exception {
-        assertThatThrownBy(() -> currentUserService.logout()).isInstanceOf(NotAuthenticatedException.class);
+        assertThatThrownBy(() -> currentUserService.clearUser()).isInstanceOf(NotAuthenticatedException.class);
     }
 }

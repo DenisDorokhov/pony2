@@ -1,8 +1,8 @@
 package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.CurrentUserService;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.user.service.UserAuthenticationService;
+import net.dorokhov.pony.user.service.UserContextService;
 import net.dorokhov.pony.user.service.exception.InvalidCredentialsException;
 import net.dorokhov.pony.user.service.exception.NotAuthenticatedException;
 import net.dorokhov.pony.web.domain.CredentialsDto;
@@ -41,17 +41,17 @@ public class AuthenticationController implements ResponseBodyController {
         }
     }
     
-    private final UserService userService;
-    private final CurrentUserService currentUserService;
+    private final UserAuthenticationService userAuthenticationService;
+    private final UserContextService userContextService;
 
-    public AuthenticationController(UserService userService, CurrentUserService currentUserService) {
-        this.userService = userService;
-        this.currentUserService = currentUserService;
+    public AuthenticationController(UserAuthenticationService useruserAuthenticationService, UserContextService userContextService) {
+        this.userAuthenticationService = useruserAuthenticationService;
+        this.userContextService = userContextService;
     }
     
     @GetMapping
     public UserDto getCurrentUser() throws NotAuthenticatedException {
-        User user = currentUserService.getCurrentUser();
+        User user = userContextService.getUser();
         if (user != null) {
             return new UserDto(user);
         } else {
@@ -61,11 +61,11 @@ public class AuthenticationController implements ResponseBodyController {
 
     @PostMapping
     public UserTokenDto authenticate(@Valid @RequestBody CredentialsDto credentials) throws InvalidCredentialsException {
-        return new UserTokenDto(userService.authenticate(credentials.getEmail(), credentials.getPassword()));
+        return new UserTokenDto(userAuthenticationService.authenticate(credentials.getEmail(), credentials.getPassword()));
     }
     
     @DeleteMapping
     public UserDto logout() throws NotAuthenticatedException {
-        return new UserDto(currentUserService.logout());
+        return new UserDto(userContextService.clearUser());
     }
 }
