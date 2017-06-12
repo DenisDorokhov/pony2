@@ -56,7 +56,7 @@ public class LibraryArtworkFinder {
 
     @Transactional
     @Nullable
-    public Artwork findAndSaveFileArtwork(AudioNode audioNode) throws IOException {
+    public ArtworkFiles findAndSaveFileArtwork(AudioNode audioNode) throws IOException {
         ImageNode artwork = artworkFileFinder.findArtwork(audioNode);
         if (artwork != null) {
             return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(audioNode.getFile().toURI(), artwork));
@@ -67,7 +67,7 @@ public class LibraryArtworkFinder {
 
     @Transactional
     @Nullable
-    public Artwork findAndSaveEmbeddedArtwork(ReadableAudioData audioData) throws IOException {
+    public ArtworkFiles findAndSaveEmbeddedArtwork(ReadableAudioData audioData) throws IOException {
         ReadableAudioData.EmbeddedArtwork artwork = audioData.getEmbeddedArtwork();
         if (artwork != null) {
             return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(audioData.getFile().toURI(), artwork.getBinaryData()));

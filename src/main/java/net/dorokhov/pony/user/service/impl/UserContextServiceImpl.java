@@ -52,7 +52,6 @@ public class UserContextServiceImpl implements UserContextService {
         if (user == null) {
             throw new InvalidTokenException();
         }
-        logger.debug("Authenticating user '{}'.", user.getId());
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -64,7 +63,6 @@ public class UserContextServiceImpl implements UserContextService {
         if (user == null) {
             throw new NotAuthenticatedException();
         }
-        logger.debug("Logging out user '{}'.", user.getId());
         SecurityContextHolder.clearContext();
         return user;
     }

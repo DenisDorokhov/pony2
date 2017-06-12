@@ -28,18 +28,20 @@ public class AuthenticationController implements ResponseBodyController {
 
         @ExceptionHandler(InvalidCredentialsException.class)
         @ResponseStatus(HttpStatus.UNAUTHORIZED)
-        public ErrorDto onInvalidCredentials(InvalidCredentialsException e) {
+        public ErrorDto onInvalidCredentials() {
             logger.debug("Credentials are invalid.");
             return new ErrorDto(ErrorDto.Code.INVALID_CREDENTIALS, "Credentials are invalid.");
         }
 
         @ExceptionHandler(NotAuthenticatedException.class)
         @ResponseStatus(HttpStatus.UNAUTHORIZED)
-        public ErrorDto onNotAuthenticated(NotAuthenticatedException e) {
+        public ErrorDto onNotAuthenticated() {
             logger.debug("User is not authenticated.");
             return new ErrorDto(ErrorDto.Code.ACCESS_DENIED, "Access denied.");
         }
     }
+    
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private final UserAuthenticationService userAuthenticationService;
     private final UserContextService userContextService;
@@ -61,11 +63,15 @@ public class AuthenticationController implements ResponseBodyController {
 
     @PostMapping
     public UserTokenDto authenticate(@Valid @RequestBody CredentialsDto credentials) throws InvalidCredentialsException {
-        return new UserTokenDto(userAuthenticationService.authenticate(credentials.getEmail(), credentials.getPassword()));
+        UserTokenDto userToken = new UserTokenDto(userAuthenticationService.authenticate(credentials.getEmail(), credentials.getPassword()));
+        logger.debug("User '{}' has logged in.", userToken.getUser().getEmail());
+        return userToken;
     }
     
     @DeleteMapping
     public UserDto logout() throws NotAuthenticatedException {
-        return new UserDto(userContextService.clearUser());
+        UserDto user = new UserDto(userContextService.clearUser());
+        logger.debug("User '{}' has logged out.", user.getEmail());
+        return user;
     }
 }

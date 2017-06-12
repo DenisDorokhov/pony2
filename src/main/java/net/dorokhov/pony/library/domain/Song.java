@@ -35,9 +35,6 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
     @NotNull
     private String fileExtension;
 
-    @Transient
-    private FileType fileType;
-
     @Column(name = "size", nullable = false)
     @NotNull
     private Long size;
@@ -95,6 +92,9 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "genre_id", nullable = false)
     private Genre genre;
+
+    @Transient
+    private FileType fileType;
 
     protected Song() {
     }
@@ -211,6 +211,11 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
 
     public Genre getGenre() {
         return genre;
+    }
+    
+    @PostLoad
+    public void postLoad() {
+        fileType = FileType.of(mimeType, fileExtension);
     }
 
     @Transient

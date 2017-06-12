@@ -8,7 +8,7 @@ import net.dorokhov.pony.library.domain.ScanType;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.command.EditCommand;
-import net.dorokhov.pony.library.service.exception.SongNotFoundException;
+import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.library.service.impl.filetree.FileTreeScanner;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.FileNode;
@@ -91,14 +91,14 @@ public class LibraryScanner {
         }
     }
 
-    public ScanResult edit(List<EditCommand> commands, List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws SongNotFoundException, IOException {
+    public ScanResult edit(List<EditCommand> commands, List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws ObjectNotFoundException, IOException {
 
         List<File> targetFiles = new ArrayList<>();
         List<WriteAndImportCommand> writeAndImportCommands = new ArrayList<>();
         for (EditCommand command : commands) {
             Song song = songRepository.findOne(command.getSongId());
             if (song == null) {
-                throw new SongNotFoundException(command.getSongId());
+                throw new ObjectNotFoundException(command.getSongId(), Song.class);
             }
             File songFile = song.getFile();
             if (!songFile.exists()) {

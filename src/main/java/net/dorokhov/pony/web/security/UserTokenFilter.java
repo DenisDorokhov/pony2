@@ -21,16 +21,16 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 @Component
-public class CurrentUserTokenFilter extends GenericFilterBean {
+public class UserTokenFilter extends GenericFilterBean {
     
     private static final String TOKEN_HEADER_PREFIX = "Bearer ";
-    private static final String TOKEN_COOKIE_NAME = "pony_access_token";
+    private static final String TOKEN_COOKIE_NAME = "PONY_TOKEN";
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private final UserContextService userContextService;
 
-    public CurrentUserTokenFilter(UserContextService userContextService) {
+    public UserTokenFilter(UserContextService userContextService) {
         this.userContextService = userContextService;
     }
 
@@ -54,7 +54,7 @@ public class CurrentUserTokenFilter extends GenericFilterBean {
         if (token != null) {
             return token;
         }
-        if (!httpRequest.getServletPath().startsWith("/api/") && httpRequest.getMethod().equals("GET")) {
+        if (httpRequest.getServletPath().startsWith("/file/") && httpRequest.getMethod().equals("GET")) {
             token = fetchTokenFromCookies(httpRequest);
             if (token != null) {
                 return token;

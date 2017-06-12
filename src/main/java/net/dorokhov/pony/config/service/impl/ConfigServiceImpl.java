@@ -39,7 +39,8 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional
     public void saveAutoScanInterval(@Nullable Integer value) {
         Config.Builder builder = Optional.ofNullable(configRepository.findOne(CONFIG_AUTO_SCAN_INTERVAL))
-                .map(Config::builder).orElse(Config.builder().id(CONFIG_AUTO_SCAN_INTERVAL));
+                .map(Config::builder)
+                .orElse(Config.builder().id(CONFIG_AUTO_SCAN_INTERVAL));
         builder.value(value);
         configRepository.save(builder.build());
     }
@@ -65,7 +66,8 @@ public class ConfigServiceImpl implements ConfigService {
                 .collect(Collectors.toList()));
 
         Config.Builder builder = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
-                .map(Config::builder).orElse(Config.builder().id(CONFIG_LIBRARY_FOLDERS));
+                .map(Config::builder)
+                .orElse(Config.builder().id(CONFIG_LIBRARY_FOLDERS));
         builder.value(Strings.emptyToNull(value));
         configRepository.save(builder.build());
     }

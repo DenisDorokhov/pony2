@@ -1,6 +1,8 @@
 package net.dorokhov.pony.library.service.impl.artwork;
 
+import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.Artwork;
+import net.dorokhov.pony.library.domain.ArtworkFiles;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
 import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkStorageCommand;
@@ -30,16 +32,16 @@ import static org.springframework.transaction.support.TransactionSynchronization
 public class ArtworkStorage {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     private final ArtworkRepository artworkRepository;
     private final FileTypeResolver fileTypeResolver;
     private final ChecksumCalculator checksumCalculator;
     private final ThumbnailGenerator thumbnailGenerator;
-    
+
     private final File artworkFolder;
     private final ImageSize artworkSizeSmall;
     private final ImageSize artworkSizeLarge;
-    
+
     private final Object modificationLock = new Object();
 
     public ArtworkStorage(ArtworkRepository artworkRepository,
@@ -49,10 +51,12 @@ public class ArtworkStorage {
                           @Value("${pony.artwork.path}") File artworkFolder,
                           @Value("${pony.artwork.size.small}") int[] artworkSizeSmall,
                           @Value("${pony.artwork.size.large}") int[] artworkSizeLarge) {
+
         this.artworkRepository = artworkRepository;
         this.fileTypeResolver = fileTypeResolver;
         this.checksumCalculator = checksumCalculator;
         this.thumbnailGenerator = thumbnailGenerator;
+
         this.artworkFolder = artworkFolder;
         this.artworkSizeSmall = ImageSize.of(artworkSizeSmall[0], artworkSizeSmall[1]);
         this.artworkSizeLarge = ImageSize.of(artworkSizeLarge[0], artworkSizeLarge[1]);
@@ -60,37 +64,27 @@ public class ArtworkStorage {
 
     @Transactional(readOnly = true)
     @Nullable
-    public File getLargeImageFile(Long artworkId) {
+    public ArtworkFiles getArtworkFile(Long artworkId) {
         Artwork artwork = artworkRepository.findOne(artworkId);
         if (artwork == null) {
             return null;
         }
-        return new File(artworkFolder, artwork.getLargeImagePath());
-    }
-
-    @Transactional(readOnly = true)
-    @Nullable
-    public File getSmallImageFile(Long artworkId) {
-        Artwork artwork = artworkRepository.findOne(artworkId);
-        if (artwork == null) {
-            return null;
-        }
-        return new File(artworkFolder, artwork.getSmallImagePath());
+        return artworkToArtworkFiles(artwork);
     }
 
     @Transactional
-    public Artwork getOrSave(ByteSourceArtworkStorageCommand command) throws IOException {
+    public ArtworkFiles getOrSave(ByteSourceArtworkStorageCommand command) throws IOException {
         synchronized (modificationLock) {
             byte[] content = command.getByteSource().read();
-            return doGetOrSave(command.getSourceUri(), 
-                    () -> checksumCalculator.calculate(content), 
+            return doGetOrSave(command.getSourceUri(),
+                    () -> checksumCalculator.calculate(content),
                     () -> fileTypeResolver.resolve(content),
                     () -> new ByteArrayInputStream(content));
         }
     }
 
     @Transactional
-    public Artwork getOrSave(FileArtworkStorageCommand command) throws IOException {
+    public ArtworkFiles getOrSave(FileArtworkStorageCommand command) throws IOException {
         synchronized (modificationLock) {
             File file = command.getFile();
             return doGetOrSave(command.getSourceUri(),
@@ -101,7 +95,7 @@ public class ArtworkStorage {
     }
 
     @Transactional
-    public Artwork getOrSave(ImageNodeArtworkStorageCommand command) throws IOException {
+    public ArtworkFiles getOrSave(ImageNodeArtworkStorageCommand command) throws IOException {
         synchronized (modificationLock) {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> command.getImageNode().getChecksum()),
@@ -130,16 +124,22 @@ public class ArtworkStorage {
             });
         }
     }
-    
-    private Artwork doGetOrSave(URI sourceUri,
-                                Supplier<String> checksumSupplier, 
-                                Supplier<FileType> fileTypeSupplier,
-                                Supplier<InputStream> streamSupplier) throws IOException {
+
+    private ArtworkFiles artworkToArtworkFiles(Artwork artwork) {
+        return new ArtworkFiles(artwork,
+                new File(artworkFolder, artwork.getSmallImagePath()),
+                new File(artworkFolder, artwork.getLargeImagePath()));
+    }
+
+    private ArtworkFiles doGetOrSave(URI sourceUri,
+                                     Supplier<String> checksumSupplier,
+                                     Supplier<FileType> fileTypeSupplier,
+                                     Supplier<InputStream> streamSupplier) throws IOException {
 
         String checksum = checksumSupplier.get();
         Artwork artwork = artworkRepository.findByChecksum(checksum);
         if (artwork != null) {
-            return artwork;
+            return artworkToArtworkFiles(artwork);
         }
 
         FileType fileType = fileTypeSupplier.get();
@@ -150,6 +150,9 @@ public class ArtworkStorage {
 
         File smallImageFile = new File(artworkFolder, smallImagePath);
         File largeImageFile = new File(artworkFolder, largeImagePath);
+        Files.createParentDirs(smallImageFile);
+        Files.createParentDirs(largeImageFile);
+
         thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeSmall, smallImageFile);
         thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeLarge, largeImageFile);
 
@@ -177,9 +180,9 @@ public class ArtworkStorage {
             }
         });
 
-        return artwork;
+        return artworkToArtworkFiles(artwork);
     }
-    
+
     private String buildImagePath(String name, String suffix, String extension) {
         StringBuilder builder = new StringBuilder();
         builder.append(name.substring(0, 2)).append("/");

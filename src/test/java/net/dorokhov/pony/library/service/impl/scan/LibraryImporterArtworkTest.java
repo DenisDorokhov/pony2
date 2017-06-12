@@ -1,9 +1,6 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
-import net.dorokhov.pony.library.domain.Album;
-import net.dorokhov.pony.library.domain.Artist;
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
 import org.junit.Test;
@@ -11,8 +8,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
+import static net.dorokhov.pony.fixture.ArtworkFixtures.*;
 import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,10 +20,10 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
 
     @Test
     public void shouldImportEmbeddedArtwork() throws Exception {
-        Artwork artwork = artwork();
-        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(artwork);
+        ArtworkFiles artworkFiles = artworkFiles();
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(artworkFiles);
         Song song = libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder().build());
-        assertThat(song.getArtwork()).isSameAs(artwork);
+        assertThat(song.getArtwork()).isSameAs(artworkFiles.getArtwork());
     }
 
     @Test
@@ -39,10 +35,10 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
 
     @Test
     public void shouldImportFileArtwork() throws Exception {
-        Artwork artwork = artwork();
-        when(libraryArtworkFinder.findAndSaveFileArtwork(any())).thenReturn(artwork);
+        ArtworkFiles artworkFiles = artworkFiles();
+        when(libraryArtworkFinder.findAndSaveFileArtwork(any())).thenReturn(artworkFiles);
         Song song = libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder().build());
-        assertThat(song.getArtwork()).isSameAs(artwork);
+        assertThat(song.getArtwork()).isSameAs(artworkFiles.getArtwork());
     }
 
     @Test
@@ -83,8 +79,8 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(
                 songBuilder -> songBuilder.artwork(existingArtwork),
                 albumBuilder -> albumBuilder.artwork(existingArtwork));
-        Artwork newArtwork = artworkBuilder().id(2L).build();
-        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtwork);
+        ArtworkFiles newArtworkFiles = artworkFiles(artworkBuilder().id(2L).build());
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
         verify(albumRepository, never()).save((Album) any());
     }
@@ -92,25 +88,25 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldFindAndSaveSongAndAlbumArtwork() throws Exception {
         
-        AudioNode audioNode = audioNode();
-        Artwork artwork = artwork();
         when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .artwork(null)
                 .album(Album.builder()
                         .artist(Artist.builder().build())
                         .build())
                 .build());
-        when(libraryArtworkFinder.findAndSaveFileArtwork(audioNode)).thenReturn(artwork);
+        AudioNode audioNode = audioNode();
+        ArtworkFiles artworkFiles = artworkFiles();
+        when(libraryArtworkFinder.findAndSaveFileArtwork(audioNode)).thenReturn(artworkFiles);
         when(songRepository.save((Song) any())).then(returnsFirstArg());
         
         Song song = libraryImporter.importArtwork(audioNode);
         
         assertThat(song).isNotNull();
-        assertThat(song.getArtwork()).isSameAs(artwork);
+        assertThat(song.getArtwork()).isSameAs(artworkFiles.getArtwork());
         verify(songRepository).save((Song) any());
         ArgumentCaptor<Album> albumCaptor = ArgumentCaptor.forClass(Album.class);
         verify(albumRepository).save(albumCaptor.capture());
-        assertThat(albumCaptor.getValue().getArtwork()).isSameAs(artwork);
+        assertThat(albumCaptor.getValue().getArtwork()).isSameAs(artworkFiles.getArtwork());
     }
 
     @Test

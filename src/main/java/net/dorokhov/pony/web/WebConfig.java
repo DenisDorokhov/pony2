@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web;
 
 import net.dorokhov.pony.web.security.UnauthorizedEntryPoint;
-import net.dorokhov.pony.web.security.CurrentUserTokenFilter;
+import net.dorokhov.pony.web.security.UserTokenFilter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,11 +17,11 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class WebConfig extends WebSecurityConfigurerAdapter {
 
     private final UnauthorizedEntryPoint unauthorizedEntryPoint;
-    private final CurrentUserTokenFilter currentUserTokenFilter;
+    private final UserTokenFilter userTokenFilter;
 
-    public WebConfig(UnauthorizedEntryPoint unauthorizedEntryPoint, CurrentUserTokenFilter currentUserTokenFilter) {
+    public WebConfig(UnauthorizedEntryPoint unauthorizedEntryPoint, UserTokenFilter userTokenFilter) {
         this.unauthorizedEntryPoint = unauthorizedEntryPoint;
-        this.currentUserTokenFilter = currentUserTokenFilter;
+        this.userTokenFilter = userTokenFilter;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedEntryPoint)
                 .and()
-                .addFilterBefore(currentUserTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(userTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers(
                         "/",

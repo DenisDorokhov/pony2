@@ -1,6 +1,7 @@
 package net.dorokhov.pony.library.service.impl.scan;
 
 import net.dorokhov.pony.library.domain.Artwork;
+import net.dorokhov.pony.library.domain.ArtworkFiles;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.service.impl.audio.domain.ReadableAudioData;
@@ -12,6 +13,7 @@ import org.mockito.Captor;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
+import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkFiles;
 import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -241,13 +243,13 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
         
         Artwork existingArtwork = artworkBuilder().id(1L).build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder.artwork(existingArtwork));
-        Artwork newArtwork = artworkBuilder().id(2L).build();
-        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtwork);
+        ArtworkFiles newArtworkFiles = artworkFiles(artworkBuilder().id(2L).build());
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
         
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
         
         verify(songRepository).save(songCaptor.capture());
-        assertThat(songCaptor.getValue().getArtwork()).isEqualTo(newArtwork);
+        assertThat(songCaptor.getValue().getArtwork()).isEqualTo(newArtworkFiles.getArtwork());
     }
 
     @Test

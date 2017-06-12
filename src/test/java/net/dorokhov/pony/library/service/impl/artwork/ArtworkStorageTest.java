@@ -3,6 +3,7 @@ package net.dorokhov.pony.library.service.impl.artwork;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.Artwork;
+import net.dorokhov.pony.library.domain.ArtworkFiles;
 import net.dorokhov.pony.library.domain.FileType;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
 import net.dorokhov.pony.library.service.impl.artwork.command.ByteSourceArtworkStorageCommand;
@@ -54,7 +55,7 @@ public class ArtworkStorageTest {
     private static final ImageSize SMALL_IMAGE_SIZE = ImageSize.of(20, 20);
 
     @Rule
-    public final TemporaryFolder artworkFolder = new TemporaryFolder();
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
     
     @Mock
     private ArtworkRepository artworkRepository;
@@ -64,15 +65,16 @@ public class ArtworkStorageTest {
     private ChecksumCalculator checksumCalculator;
     @Mock
     private ThumbnailGenerator thumbnailGenerator;
+    
+    private File artworkFolder;
 
     private ArtworkStorage artworkStorage;
 
     @Before
     public void setUp() throws Exception {
+        artworkFolder = new File(tempFolder.getRoot(), "some/nested/path");
         artworkStorage = new ArtworkStorage(artworkRepository, 
-                fileTypeResolver, checksumCalculator, 
-                thumbnailGenerator, 
-                artworkFolder.getRoot(), 
+                fileTypeResolver, checksumCalculator, thumbnailGenerator, artworkFolder, 
                 new int[]{SMALL_IMAGE_SIZE.getWidth(), SMALL_IMAGE_SIZE.getHeight()}, 
                 new int[]{LARGE_IMAGE_SIZE.getWidth(), LARGE_IMAGE_SIZE.getHeight()});
         initSynchronization();
@@ -84,19 +86,13 @@ public class ArtworkStorageTest {
     }
 
     @Test
-    public void shouldGetLargeImageFile() throws Exception {
+    public void shouldGetArtworkFile() throws Exception {
         Artwork artwork = artwork();
         when(artworkRepository.findOne(any())).thenReturn(artwork);
-        assertThat(artworkStorage.getLargeImageFile(1L)).satisfies(file -> 
-                assertThat(file).isEqualTo(new File(artworkFolder.getRoot(), PATH_LARGE)));
-    }
-
-    @Test
-    public void shouldGetSmallImageFile() throws Exception {
-        Artwork artwork = artwork();
-        when(artworkRepository.findOne(any())).thenReturn(artwork);
-        assertThat(artworkStorage.getSmallImageFile(1L)).satisfies(file -> 
-                assertThat(file).isEqualTo(new File(artworkFolder.getRoot(), PATH_SMALL)));
+        ArtworkFiles artworkFiles = artworkStorage.getArtworkFile(1L);
+        assertThat(artworkFiles).isNotNull();
+        assertThat(artworkFiles.getLargeFile()).isEqualTo(new File(artworkFolder, PATH_LARGE));
+        assertThat(artworkFiles.getSmallFile()).isEqualTo(new File(artworkFolder, PATH_SMALL));
     }
 
     @Test
@@ -145,33 +141,31 @@ public class ArtworkStorageTest {
 
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), RESOURCE.getFile());
 
-        Artwork artwork = artworkStorage.getOrSave(command);
+        ArtworkFiles artworkFiles = artworkStorage.getOrSave(command);
         
-        File largeFile = new File(artworkFolder.getRoot(), artwork.getLargeImagePath());
-        File smallFile = new File(artworkFolder.getRoot(), artwork.getSmallImagePath());
-        Files.createParentDirs(largeFile);
-        Files.createParentDirs(smallFile);
-        Files.touch(largeFile);
-        Files.touch(smallFile);
+        Files.createParentDirs(artworkFiles.getLargeFile());
+        Files.createParentDirs(artworkFiles.getSmallFile());
+        Files.touch(artworkFiles.getLargeFile());
+        Files.touch(artworkFiles.getSmallFile());
         
         getSynchronizations().forEach(transactionSynchronization -> 
                 transactionSynchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
         
-        assertThat(largeFile).doesNotExist();
-        assertThat(smallFile).doesNotExist();
+        assertThat(artworkFiles.getLargeFile()).doesNotExist();
+        assertThat(artworkFiles.getSmallFile()).doesNotExist();
     }
 
     @Test
     public void shouldDelete() throws Exception {
         
-        File largeImageFile = new File(artworkFolder.getRoot(), PATH_LARGE);
-        File smallImageFile = new File(artworkFolder.getRoot(), PATH_SMALL);
-        
+        File largeImageFile = new File(artworkFolder, PATH_LARGE);
+        File smallImageFile = new File(artworkFolder, PATH_SMALL);
+        Files.createParentDirs(largeImageFile);
+        Files.createParentDirs(smallImageFile);
         Files.touch(largeImageFile);
         Files.touch(smallImageFile);
 
         Artwork artwork = artwork();
-
         when(artworkRepository.findOne(any())).thenReturn(artwork);
         artworkStorage.delete(5L);
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -189,22 +183,24 @@ public class ArtworkStorageTest {
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
 
-    private void checkGetAndSaveArtwork(Supplier<Artwork> doGetAndSave) throws Exception {
+    private void checkGetAndSaveArtwork(Supplier<ArtworkFiles> doGetAndSave) throws Exception {
 
         ArgumentCaptor<Artwork> savedArtwork = ArgumentCaptor.forClass(Artwork.class);
 
-        Artwork artwork = doGetAndSave.get();
+        ArtworkFiles artworkFiles = doGetAndSave.get();
         
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         verify(artworkRepository).save(savedArtwork.capture());
-        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(SMALL_IMAGE_SIZE), eq(new File(artworkFolder.getRoot(), artwork.getSmallImagePath())));
-        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), eq(LARGE_IMAGE_SIZE), eq(new File(artworkFolder.getRoot(), artwork.getLargeImagePath())));
+        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), 
+                eq(SMALL_IMAGE_SIZE), eq(artworkFiles.getSmallFile()));
+        verify(thumbnailGenerator).generateThumbnail((InputStream) any(), 
+                eq(LARGE_IMAGE_SIZE), eq(artworkFiles.getLargeFile()));
 
-        assertThat(savedArtwork.getValue()).isSameAs(artwork);
+        assertThat(savedArtwork.getValue()).isSameAs(artworkFiles.getArtwork());
         checkSavedArtwork(savedArtwork.getValue());
 
-        when(artworkRepository.findByChecksum(any())).thenReturn(artwork);
+        when(artworkRepository.findByChecksum(any())).thenReturn(artworkFiles.getArtwork());
         doGetAndSave.get();
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }

@@ -1,5 +1,6 @@
 package net.dorokhov.pony.web.controller;
 
+import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.web.domain.CredentialsDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
@@ -17,10 +18,14 @@ public class AuthenticationControllerTest extends InstallingIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+    
+    @Autowired
+    private ApiTemplate apiTemplate;
 
     @Test
     public void shouldAuthenticate() throws Exception {
-        ResponseEntity<UserTokenDto> response = authenticate(ADMIN_EMAIL, ADMIN_PASSWORD);
+        ResponseEntity<UserTokenDto> response = restTemplate.postForEntity("/api/authentication", 
+                new CredentialsDto(ADMIN_EMAIL, ADMIN_PASSWORD), UserTokenDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userToken -> {
             assertThat(userToken.getToken()).isNotNull();
@@ -30,18 +35,18 @@ public class AuthenticationControllerTest extends InstallingIntegrationTest {
 
     @Test
     public void shouldGetCurrentUser() throws Exception {
-        ResponseEntity<UserTokenDto> authenticationResponse = authenticate(ADMIN_EMAIL, ADMIN_PASSWORD);
+        UserTokenDto userToken = apiTemplate.authenticateAdmin();
         ResponseEntity<UserDto> response = restTemplate.exchange("/api/authentication", HttpMethod.GET,
-                createAuthorizedRequest((Void) null, authenticationResponse.getBody().getToken()), UserDto.class);
+                apiTemplate.createHeaderRequest(userToken.getToken()), UserDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(this::checkAdminUser);
     }
 
     @Test
     public void shouldLogout() throws Exception {
-        ResponseEntity<UserTokenDto> authenticationResponse = authenticate(ADMIN_EMAIL, ADMIN_PASSWORD);
+        UserTokenDto userToken = apiTemplate.authenticateAdmin();
         ResponseEntity<UserDto> response = restTemplate.exchange("/api/authentication", HttpMethod.DELETE,
-                createAuthorizedRequest((Void) null, authenticationResponse.getBody().getToken()), UserDto.class);
+                apiTemplate.createHeaderRequest(userToken.getToken()), UserDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(this::checkAdminUser);
     }
@@ -72,7 +77,7 @@ public class AuthenticationControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailGettingCurrentUserIfTokenIsInvalid() throws Exception {
         ResponseEntity<ErrorDto> response = restTemplate.exchange("/api/authentication", HttpMethod.DELETE,
-                createAuthorizedRequest((Void) null, "invalidToken"), ErrorDto.class);
+                apiTemplate.createHeaderRequest("invalidToken"), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error -> 
                 assertThat(error.getCode()).isSameAs(Code.ACCESS_DENIED));
@@ -100,15 +105,5 @@ public class AuthenticationControllerTest extends InstallingIntegrationTest {
         assertThat(user.getName()).isEqualTo(ADMIN_NAME);
         assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL);
         assertThat(user.getRole()).isSameAs(UserDto.Role.ADMIN);
-    }
-
-    private ResponseEntity<UserTokenDto> authenticate(String email, String password) {
-        return restTemplate.postForEntity("/api/authentication", new CredentialsDto(email, password), UserTokenDto.class);
-    }
-
-    private <T> HttpEntity<T> createAuthorizedRequest(T request, String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        return new HttpEntity<>(request, headers);
     }
 }

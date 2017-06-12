@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ImageSizeReaderTest {
     
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
-    private static final ImageSize IMAGE_SIZE = ImageSize.of(90, 100);
+    private static final ImageSize IMAGE_SIZE = ImageSize.of(400, 444);
     
     private final ImageSizeReader imageSizeReader = new ImageSizeReader();
 

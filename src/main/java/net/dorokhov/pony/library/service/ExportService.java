@@ -1,14 +1,12 @@
 package net.dorokhov.pony.library.service;
 
 import net.dorokhov.pony.library.domain.ExportBundle;
-import net.dorokhov.pony.library.service.exception.AlbumNotFoundException;
-import net.dorokhov.pony.library.service.exception.ArtistNotFoundException;
-import net.dorokhov.pony.library.service.exception.SongNotFoundException;
+import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 
 import java.io.IOException;
 
 public interface ExportService {
-    ExportBundle exportSong(Long id) throws SongNotFoundException, IOException;
-    ExportBundle exportAlbum(Long id) throws AlbumNotFoundException, IOException;
-    ExportBundle exportArtist(Long id) throws ArtistNotFoundException, IOException;
+    ExportBundle exportSong(Long id) throws ObjectNotFoundException, IOException;
+    ExportBundle exportAlbum(Long id) throws ObjectNotFoundException, IOException;
+    ExportBundle exportArtist(Long id) throws ObjectNotFoundException, IOException;
 }

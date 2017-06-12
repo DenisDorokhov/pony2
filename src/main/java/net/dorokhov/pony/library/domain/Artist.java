@@ -64,8 +64,13 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
     public int compareTo(@Nonnull Artist artist) {
         String regex = "^the\\s+";
         return OptionalComparators.<String>nullLast().compare(
-                Optional.ofNullable(name).map(String::toLowerCase).map(s -> s.replaceAll(regex, "")),
-                Optional.ofNullable(artist.name).map(String::toLowerCase).map(s -> s.replaceAll(regex, "")));
+                Optional.ofNullable(name)
+                        .map(String::toLowerCase)
+                        .map(s -> s.replaceAll(regex, "")),
+                Optional.ofNullable(artist.name)
+                        .map(String::toLowerCase)
+                        .map(s -> s.replaceAll(regex, ""))
+        );
     }
 
     @Override

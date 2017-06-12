@@ -2,11 +2,13 @@ package net.dorokhov.pony.library.service.impl;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.Artist;
+import net.dorokhov.pony.library.domain.Artwork;
+import net.dorokhov.pony.library.domain.ArtworkFiles;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.service.exception.ArtistNotFoundException;
-import net.dorokhov.pony.library.service.exception.SongNotFoundException;
+import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
+import net.dorokhov.pony.library.service.impl.artwork.ArtworkStorage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -14,13 +16,17 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Sort;
 
+import java.io.File;
 import java.util.List;
 
+import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
+import static net.dorokhov.pony.fixture.SongFixtures.song;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyIterable;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -33,6 +39,8 @@ public class LibraryServiceImplTest {
     private ArtistRepository artistRepository;
     @Mock
     private SongRepository songRepository;
+    @Mock
+    private ArtworkStorage artworkStorage;
 
     @Test
     public void shouldGetArtists() throws Exception {
@@ -53,8 +61,43 @@ public class LibraryServiceImplTest {
     public void shouldFailGettingArtistIfArtistNotFound() throws Exception {
         when(artistRepository.findOne(any())).thenReturn(null);
         assertThatThrownBy(() -> libraryService.getArtistById(1L))
-                .isInstanceOfSatisfying(ArtistNotFoundException.class, e -> 
-                        assertThat(e.getId()).isEqualTo(1L));
+                .isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+                    assertThat(e.getId()).isEqualTo(1L);
+                    assertThat(e.getObjectClass()).isEqualTo(Artist.class);
+                });
+    }
+
+    @Test
+    public void shouldGetSongById() throws Exception {
+        Song song = song();
+        when(songRepository.findOne(any())).thenReturn(song);
+        assertThat(libraryService.getSongById(1L)).isSameAs(song);
+    }
+
+    @Test
+    public void shouldFailGettingSongIfSongNotFound() throws Exception {
+        when(songRepository.findOne(any())).thenReturn(null);
+        assertThatThrownBy(() -> libraryService.getSongById(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+            assertThat(e.getId()).isEqualTo(1L);
+            assertThat(e.getObjectClass()).isEqualTo(Song.class);
+        });
+    }
+
+    @Test
+    public void shouldGetArtworkFileById() throws Exception {
+        ArtworkFiles artworkFiles = new ArtworkFiles(artwork(), mock(File.class), mock(File.class));
+        when(artworkStorage.getArtworkFile(any())).thenReturn(artworkFiles);
+        assertThat(libraryService.getArtworkFilesById(1L)).isSameAs(artworkFiles);
+    }
+
+    @Test
+    public void shouldFailGettingArtworkIfArtworkNotFound() throws Exception {
+        when(artworkStorage.getArtworkFile(any())).thenReturn(null);
+        assertThatThrownBy(() -> libraryService.getArtworkFilesById(1L))
+                .isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+                    assertThat(e.getId()).isEqualTo(1L);
+                    assertThat(e.getObjectClass()).isEqualTo(Artwork.class);
+                });
     }
 
     @Test
@@ -72,7 +115,9 @@ public class LibraryServiceImplTest {
                 songBuilder().id(1L).build(), songBuilder().id(2L).build());
         when(songRepository.findAll(anyIterable())).thenReturn(songs);
         assertThatThrownBy(() -> libraryService.getSongsByIds(ImmutableList.of(1L, 2L, 3L)))
-                .isInstanceOfSatisfying(SongNotFoundException.class, e -> 
-                        assertThat(e.getId()).isEqualTo(3L));
+                .isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+                    assertThat(e.getId()).isEqualTo(3L);
+                    assertThat(e.getObjectClass()).isEqualTo(Song.class);
+                });
     }
 }

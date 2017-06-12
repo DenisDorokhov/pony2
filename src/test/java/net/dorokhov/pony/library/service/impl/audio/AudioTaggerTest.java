@@ -686,7 +686,7 @@ public class AudioTaggerTest {
         ReadableAudioData.EmbeddedArtwork embeddedArtwork = data.getEmbeddedArtwork();
         if (embeddedArtwork != null) {
             try {
-                assertThat(embeddedArtwork.getBinaryData().size()).isEqualTo(3002);
+                assertThat(embeddedArtwork.getBinaryData().size()).isEqualTo(4285L);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

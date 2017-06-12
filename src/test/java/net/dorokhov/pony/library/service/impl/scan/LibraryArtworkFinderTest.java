@@ -31,6 +31,7 @@ import java.io.File;
 
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
+import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkFiles;
 import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -65,18 +66,18 @@ public class LibraryArtworkFinderTest {
         AudioNode audioNode = mock(AudioNode.class);
         when(audioNode.getFile()).thenReturn(new File("someFile"));
         when(artworkFileFinder.findArtwork(any())).thenReturn(mock(ImageNode.class));
-        Artwork artwork = artwork();
-        when(artworkStorage.getOrSave((ImageNodeArtworkStorageCommand) any())).thenReturn(artwork);
+        ArtworkFiles artworkFiles = artworkFiles();
+        when(artworkStorage.getOrSave((ImageNodeArtworkStorageCommand) any())).thenReturn(artworkFiles);
 
-        Artwork savedArtwork = libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
-        assertThat(savedArtwork).isSameAs(artwork);
+        ArtworkFiles savedArtworkFiles = libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
+        assertThat(savedArtworkFiles).isSameAs(artworkFiles);
     }
 
     @Test
     public void shouldNotSaveFileArtworkWhenArtworkNotFound() throws Exception {
         when(artworkFileFinder.findArtwork(any())).thenReturn(null);
-        Artwork savedArtwork = libraryArtworkFinder.findAndSaveFileArtwork(mock(AudioNode.class));
-        assertThat(savedArtwork).isNull();
+        ArtworkFiles savedArtworkFiles = libraryArtworkFinder.findAndSaveFileArtwork(mock(AudioNode.class));
+        assertThat(savedArtworkFiles).isNull();
         verify(artworkStorage, never()).getOrSave((ImageNodeArtworkStorageCommand) any());
     }
 
@@ -89,10 +90,10 @@ public class LibraryArtworkFinderTest {
                 .embeddedArtwork(new EmbeddedArtwork(
                         ByteSource.empty(), FileType.of("image/png", "png")))
                 .build();
-        Artwork artwork = artwork();
-        when(artworkStorage.getOrSave((ByteSourceArtworkStorageCommand) any())).thenReturn(artwork);
+        ArtworkFiles artworkFiles = artworkFiles();
+        when(artworkStorage.getOrSave((ByteSourceArtworkStorageCommand) any())).thenReturn(artworkFiles);
 
-        assertThat(libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData)).isSameAs(artwork);
+        assertThat(libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData)).isSameAs(artworkFiles);
     }
 
     @Test

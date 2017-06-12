@@ -19,6 +19,7 @@ public final class ErrorDto {
         ACCESS_DENIED,
         VALIDATION,
         INVALID_CREDENTIALS,
+        OBJECT_NOT_FOUND,
     }
     
     public static final class FieldViolation {

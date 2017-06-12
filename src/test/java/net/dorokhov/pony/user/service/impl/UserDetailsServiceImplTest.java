@@ -47,7 +47,7 @@ public class UserDetailsServiceImplTest {
         Set<String> authorities = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
-        assertThat(authorities).containsOnly("USER", "ADMIN");
+        assertThat(authorities).containsOnly("ROLE_USER", "ROLE_ADMIN");
         assertThat(userDetails.isAccountNonExpired()).isTrue();
         assertThat(userDetails.isAccountNonLocked()).isTrue();
         assertThat(userDetails.isCredentialsNonExpired()).isTrue();

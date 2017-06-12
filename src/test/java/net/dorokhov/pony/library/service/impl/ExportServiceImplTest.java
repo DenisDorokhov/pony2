@@ -3,9 +3,7 @@ package net.dorokhov.pony.library.service.impl;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.service.exception.AlbumNotFoundException;
-import net.dorokhov.pony.library.service.exception.ArtistNotFoundException;
-import net.dorokhov.pony.library.service.exception.SongNotFoundException;
+import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.library.service.impl.ExportServiceImpl.Mp3Content;
 import net.dorokhov.pony.library.service.impl.ExportServiceImpl.ZipContent;
 import org.junit.Rule;
@@ -254,19 +252,28 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldFailIfSongNotFound() throws Exception {
-        assertThatThrownBy(() -> exportService.exportSong(1L)).isInstanceOf(SongNotFoundException.class);
+        assertThatThrownBy(() -> exportService.exportSong(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+            assertThat(e.getId()).isEqualTo(1L);
+            assertThat(e.getObjectClass()).isEqualTo(Song.class);
+        });
     }
 
     @Test
     public void shouldFailIfAlbumNotFound() throws Exception {
         when(songRepository.findByAlbumId(any(), any())).thenReturn(emptyList());
-        assertThatThrownBy(() -> exportService.exportAlbum(1L)).isInstanceOf(AlbumNotFoundException.class);
+        assertThatThrownBy(() -> exportService.exportAlbum(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+            assertThat(e.getId()).isEqualTo(1L);
+            assertThat(e.getObjectClass()).isEqualTo(Album.class);
+        });
     }
 
     @Test
     public void shouldFailIfArtistNotFound() throws Exception {
         when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(emptyList());
-        assertThatThrownBy(() -> exportService.exportArtist(1L)).isInstanceOf(ArtistNotFoundException.class);
+        assertThatThrownBy(() -> exportService.exportArtist(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+            assertThat(e.getId()).isEqualTo(1L);
+            assertThat(e.getObjectClass()).isEqualTo(Artist.class);
+        });
     }
 
     @Test

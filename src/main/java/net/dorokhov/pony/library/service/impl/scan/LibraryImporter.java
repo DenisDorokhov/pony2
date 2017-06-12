@@ -52,8 +52,10 @@ public class LibraryImporter {
 
         Genre genre = importGenre(audioData);
         Album album = importAlbum(audioData, importArtist(audioData));
-        Artwork artwork = findAndSaveArtwork(audioNode, audioData);
         Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
+        
+        ArtworkFiles artworkFiles = findAndSaveArtwork(audioNode, audioData);
+        Artwork artwork = artworkFiles != null ? artworkFiles.getArtwork() : null;
 
         Album overriddenAlbum = null;
         Genre overriddenGenre = null;
@@ -154,10 +156,10 @@ public class LibraryImporter {
         Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
         if (song != null) {
             if (song.getArtwork() == null) {
-                Artwork artwork = findAndSaveFileArtwork(audioNode);
-                if (artwork != null) {
+                ArtworkFiles artworkFiles = findAndSaveFileArtwork(audioNode);
+                if (artworkFiles != null) {
                     song = songRepository.save(Song.builder(song)
-                            .artwork(artwork)
+                            .artwork(artworkFiles.getArtwork())
                             .build());
                 }
             }
@@ -284,16 +286,16 @@ public class LibraryImporter {
     }
 
     @Nullable
-    private Artwork findAndSaveArtwork(AudioNode audioNode, ReadableAudioData audioData) {
-        Artwork artwork = findAndSaveEmbeddedArtwork(audioData);
-        if (artwork == null) {
-            artwork = findAndSaveFileArtwork(audioNode);
+    private ArtworkFiles findAndSaveArtwork(AudioNode audioNode, ReadableAudioData audioData) {
+        ArtworkFiles artworkFiles = findAndSaveEmbeddedArtwork(audioData);
+        if (artworkFiles == null) {
+            artworkFiles = findAndSaveFileArtwork(audioNode);
         }
-        return artwork;
+        return artworkFiles;
     }
 
     @Nullable
-    private Artwork findAndSaveEmbeddedArtwork(ReadableAudioData audioData) {
+    private ArtworkFiles findAndSaveEmbeddedArtwork(ReadableAudioData audioData) {
         try {
             return libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData);
         } catch (IOException e) {
@@ -304,7 +306,7 @@ public class LibraryImporter {
     }
 
     @Nullable
-    private Artwork findAndSaveFileArtwork(AudioNode audioNode) {
+    private ArtworkFiles findAndSaveFileArtwork(AudioNode audioNode) {
         try {
             return libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
         } catch (IOException e) {
