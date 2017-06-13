@@ -4,10 +4,8 @@ import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.ScanProgress;
 import net.dorokhov.pony.library.domain.ScanProgress.Value;
 import net.dorokhov.pony.library.domain.ScanResult;
-import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.command.EditCommand;
-import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.impl.filetree.FileTreeScanner;
 import net.dorokhov.pony.library.service.impl.filetree.domain.AudioNode;
@@ -15,6 +13,7 @@ import net.dorokhov.pony.library.service.impl.filetree.domain.FolderNode;
 import net.dorokhov.pony.library.service.impl.filetree.domain.ImageNode;
 import net.dorokhov.pony.library.service.impl.scan.BatchLibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony.library.service.impl.scan.ScanResultCalculator.AudioFileProcessingResult;
+import net.dorokhov.pony.library.service.impl.scan.exception.SongNotFoundException;
 import net.dorokhov.pony.log.service.LogService;
 import org.junit.Before;
 import org.junit.Rule;
@@ -263,10 +262,8 @@ public class LibraryScannerTest {
         when(songRepository.findOne(any())).thenReturn(null);
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
-                .isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
-                    assertThat(e.getId()).isEqualTo(1L);
-                    assertThat(e.getObjectClass()).isEqualTo(Song.class);
-                });
+                .isInstanceOfSatisfying(SongNotFoundException.class, e -> 
+                        assertThat(e.getSongId()).isEqualTo(1L));
     }
 
     @Test

@@ -21,7 +21,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 @EnableScheduling
 @EnableCaching
-public class CommonConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderCustomizer {
+public class PonyConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderCustomizer {
 
     @Override
     public ThreadPoolTaskExecutor getAsyncExecutor() {

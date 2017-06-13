@@ -3,7 +3,6 @@ package net.dorokhov.pony.library.service.impl;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.library.service.impl.ExportServiceImpl.Mp3Content;
 import net.dorokhov.pony.library.service.impl.ExportServiceImpl.ZipContent;
 import org.junit.Rule;
@@ -32,7 +31,6 @@ import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
 import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_ALBUM;
 import static net.dorokhov.pony.library.service.impl.ExportServiceImpl.UNKNOWN_ARTIST;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +50,7 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldExportSong() throws Exception {
+        
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -64,7 +63,10 @@ public class ExportServiceImplTest {
                 .path("foo/bar.mp3")
                 .build();
         when(songRepository.findOne(any())).thenReturn(song);
+        
         ExportBundle exportBundle = exportService.exportSong(1L);
+
+        assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
                 assertThat(mp3Content.getFile()).isEqualTo(new File("foo/bar.mp3")));
@@ -72,6 +74,7 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldExportSongWithoutName() throws Exception {
+        
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -82,7 +85,10 @@ public class ExportServiceImplTest {
                 .path("foo/bar.mp3")
                 .build();
         when(songRepository.findOne(any())).thenReturn(song);
+        
         ExportBundle exportBundle = exportService.exportSong(1L);
+
+        assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("bar.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
                 assertThat(mp3Content.getFile()).isEqualTo(new File("foo/bar.mp3")));
@@ -90,6 +96,7 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldExportSongWithUnknownArtist() throws Exception {
+        
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -100,7 +107,10 @@ public class ExportServiceImplTest {
                 .path("foo/bar.mp3")
                 .build();
         when(songRepository.findOne(any())).thenReturn(song);
+        
         ExportBundle exportBundle = exportService.exportSong(1L);
+        
+        assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
                 assertThat(mp3Content.getFile()).isEqualTo(new File("foo/bar.mp3")));
@@ -139,6 +149,7 @@ public class ExportServiceImplTest {
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
+        assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - 1986 - someAlbum.zip");
         checkZipExportBundle(exportBundle, zipContent -> {
                 assertThat(zipContent.getEntries().stream()
@@ -179,6 +190,7 @@ public class ExportServiceImplTest {
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
+        assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getContent()).isInstanceOfSatisfying(ZipContent.class, zipContent -> {
             List<String> paths = zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getPath)
@@ -229,6 +241,7 @@ public class ExportServiceImplTest {
 
         ExportBundle exportBundle = exportService.exportArtist(1L);
 
+        assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist.zip");
         checkZipExportBundle(exportBundle, zipContent -> {
             assertThat(zipContent.getEntries().stream()
@@ -251,29 +264,20 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldFailIfSongNotFound() throws Exception {
-        assertThatThrownBy(() -> exportService.exportSong(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
-            assertThat(e.getId()).isEqualTo(1L);
-            assertThat(e.getObjectClass()).isEqualTo(Song.class);
-        });
+    public void shouldReturnNullIfSongNotFound() throws Exception {
+        assertThat(exportService.exportSong(1L)).isNull();
     }
 
     @Test
-    public void shouldFailIfAlbumNotFound() throws Exception {
+    public void shouldReturnNullIfAlbumNotFound() throws Exception {
         when(songRepository.findByAlbumId(any(), any())).thenReturn(emptyList());
-        assertThatThrownBy(() -> exportService.exportAlbum(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
-            assertThat(e.getId()).isEqualTo(1L);
-            assertThat(e.getObjectClass()).isEqualTo(Album.class);
-        });
+        assertThat(exportService.exportAlbum(1L)).isNull();
     }
 
     @Test
     public void shouldFailIfArtistNotFound() throws Exception {
         when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(emptyList());
-        assertThatThrownBy(() -> exportService.exportArtist(1L)).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
-            assertThat(e.getId()).isEqualTo(1L);
-            assertThat(e.getObjectClass()).isEqualTo(Artist.class);
-        });
+        assertThat(exportService.exportArtist(1L)).isNull();
     }
 
     @Test

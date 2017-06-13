@@ -8,9 +8,9 @@ import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.impl.scan.LibraryScanner;
+import net.dorokhov.pony.library.service.impl.scan.exception.SongNotFoundException;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.junit.After;
@@ -256,7 +256,7 @@ public class ScanJobServiceImplTest {
 
     @Test
     public void shouldFailEditJobOnSongNotFoundException() throws Exception {
-        doTestFailEditJobOnException(new ObjectNotFoundException(1L, Song.class));
+        doTestFailEditJobOnException(new SongNotFoundException(1L));
         verify(logService).error(any(), any(), any());
     }
 

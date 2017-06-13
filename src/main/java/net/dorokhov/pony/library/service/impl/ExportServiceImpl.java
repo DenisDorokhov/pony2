@@ -5,13 +5,13 @@ import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.ExportService;
-import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import org.apache.tika.io.FilenameUtils;
 import org.apache.tika.io.IOUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,11 +43,12 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public ExportBundle exportSong(Long id) throws ObjectNotFoundException, IOException {
+    @Nullable
+    public ExportBundle exportSong(Long id) throws IOException {
 
         Song song = songRepository.findOne(id);
         if (song == null) {
-            throw new ObjectNotFoundException(id, Song.class);
+            return null;
         }
 
         String baseName;
@@ -67,12 +68,13 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public ExportBundle exportAlbum(Long id) throws ObjectNotFoundException, IOException {
+    @Nullable
+    public ExportBundle exportAlbum(Long id) throws IOException {
 
         List<Song> songList = songRepository.findByAlbumId(id,
                 new Sort("discNumber", "trackNumber", "name"));
         if (songList.size() == 0) {
-            throw new ObjectNotFoundException(id, Album.class);
+            return null;
         }
 
         Song firstSong = songList.get(0);
@@ -84,12 +86,13 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public ExportBundle exportArtist(Long id) throws ObjectNotFoundException, IOException {
+    @Nullable
+    public ExportBundle exportArtist(Long id) throws IOException {
 
         List<Song> songList = songRepository.findByAlbumArtistId(id,
                 new Sort("album.year", "album.name", "discNumber", "trackNumber", "name"));
         if (songList.size() == 0) {
-            throw new ObjectNotFoundException(id, Artist.class);
+            return null;
         }
 
         Song firstSong = songList.get(0);

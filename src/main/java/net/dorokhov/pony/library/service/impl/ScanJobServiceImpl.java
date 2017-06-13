@@ -10,8 +10,8 @@ import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.command.EditCommand;
 import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.library.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.library.service.impl.scan.LibraryScanner;
+import net.dorokhov.pony.library.service.impl.scan.exception.SongNotFoundException;
 import net.dorokhov.pony.log.domain.LogMessage;
 import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
@@ -257,8 +257,8 @@ public class ScanJobServiceImpl implements ScanJobService {
             result = libraryScanner.edit(commands, configService.getLibraryFolders(), scanProgress ->
                     onScanJobProgress(new ScanJobProgress(startedScanJob, scanProgress)));
             logMessage = () -> logService.info(logger, "Edit job complete for {} songs.", commands.size());
-        } catch (ObjectNotFoundException e) {
-            logMessage = () -> logService.error(logger, "Song '{}' not found.", e.getId());
+        } catch (SongNotFoundException e) {
+            logMessage = () -> logService.error(logger, "Song '{}' not found.", e.getSongId());
         } catch (IOException e) {
             logMessage = () -> logService.error(logger, "Edit job failed due to I/O error.", e);
         }
