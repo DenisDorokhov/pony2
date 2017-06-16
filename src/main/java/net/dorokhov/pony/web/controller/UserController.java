@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.web.domain.UserDto;
-import net.dorokhov.pony.security.service.UserContextService;
+import net.dorokhov.pony.web.service.UserContextService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

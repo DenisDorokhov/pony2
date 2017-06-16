@@ -11,7 +11,7 @@ import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.impl.artwork.ArtworkStorage;
 import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
-import net.dorokhov.pony.security.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;

@@ -1,6 +1,6 @@
 package net.dorokhov.pony;
 
-import net.dorokhov.pony.security.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

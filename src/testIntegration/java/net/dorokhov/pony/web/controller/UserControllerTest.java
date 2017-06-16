@@ -2,7 +2,7 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
-import net.dorokhov.pony.security.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.UserDto;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

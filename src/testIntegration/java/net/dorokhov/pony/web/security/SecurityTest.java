@@ -3,8 +3,9 @@ package net.dorokhov.pony.web.security;
 import com.google.common.collect.ImmutableMap;
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
-import net.dorokhov.pony.security.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
+import net.dorokhov.pony.web.domain.UserDto;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -25,6 +26,8 @@ public class SecurityTest extends InstallingIntegrationTest {
     public void shouldAuthenticate() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         assertThat(authentication.getToken()).isNotNull();
+        assertThat(authentication.getUser()).satisfies(user -> 
+                assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
     }
 
     @Test
@@ -42,10 +45,12 @@ public class SecurityTest extends InstallingIntegrationTest {
     @Test
     public void shouldLogout() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/authentication", HttpMethod.DELETE, 
-                apiTemplate.createHeaderRequest(authentication.getToken()), Void.class);
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NO_CONTENT);
+                apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(user -> 
+                assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
     }
 
     @Test
