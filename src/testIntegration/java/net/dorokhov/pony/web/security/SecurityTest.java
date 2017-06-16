@@ -6,7 +6,7 @@ import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.UserExistsException;
+import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.UserDto;
@@ -38,7 +38,7 @@ public class SecurityTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldDenyAccessIfAuthenticationFails() throws Exception {
+    public void shouldFailAuthenticationIfAuthenticationFails() throws Exception {
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(ImmutableMap.of(
                 "email", "invalidEmail",
                 "password", "invalidPassword"
@@ -46,7 +46,7 @@ public class SecurityTest extends InstallingIntegrationTest {
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().postForEntity("/api/authentication", entity, ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->
-                assertThat(error.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
 
     @Test
@@ -61,28 +61,33 @@ public class SecurityTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldDenyAccessIfLogoutFails() throws Exception {
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
+    public void shouldFailAuthenticationIfLogoutFails() throws Exception {
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/authentication", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest("invalidToken"), Void.class);
+                apiTemplate.createHeaderRequest("invalidToken"), ErrorDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
 
     @Test
-    public void shouldDenyAccessToApiResponse() throws Exception {
+    public void shouldFailAuthenticationIfApiResponseRequestedWithNoAuthentication() throws Exception {
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().getForEntity("/api/someResource", ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).satisfies(errorDto -> 
-                assertThat(errorDto.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+        assertThat(response.getBody()).satisfies(error -> 
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
 
     @Test
-    public void shouldDenyAdminAreaIfRoleIsUser() throws Exception {
+    public void shouldDenyAccessToAdminAreaIfRoleIsUser() throws Exception {
         User user = createUser();
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().getForEntity("/api/admin/someResource", ErrorDto.class);
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).satisfies(errorDto ->
-                assertThat(errorDto.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/someResource", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
     }
 
     @Test
@@ -95,7 +100,7 @@ public class SecurityTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
     
-    private User createUser() throws UserExistsException {
+    private User createUser() throws DuplicateEmailException {
         return userService.create(UserCreationCommand.builder()
                 .name("Plain User")
                 .email("plainUser@foobar.com")

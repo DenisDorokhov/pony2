@@ -11,7 +11,7 @@ import net.dorokhov.pony.log.service.LogService;
 import net.dorokhov.pony.user.domain.User.Role;
 import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.UserExistsException;
+import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheConfig;
@@ -84,7 +84,7 @@ public class InstallationServiceImpl implements InstallationService {
                     .password(command.getAdminPassword())
                     .roles(Role.USER, Role.ADMIN)
                     .build());
-        } catch (UserExistsException e) {
+        } catch (DuplicateEmailException e) {
             throw new IllegalStateException(String.format("User '%s' already exists. Installation inconsistency?", command.getAdminEmail()), e);
         }
 

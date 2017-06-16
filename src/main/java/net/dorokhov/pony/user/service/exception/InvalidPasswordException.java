@@ -3,6 +3,6 @@ package net.dorokhov.pony.user.service.exception;
 public final class InvalidPasswordException extends Exception {
 
     public InvalidPasswordException() {
-        super("Entered password is invalid.");
+        super("Password is invalid.");
     }
 }

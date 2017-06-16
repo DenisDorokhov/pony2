@@ -18,13 +18,13 @@ import java.io.IOException;
 import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
 @Component
-public class AuthorizationExceptionHandler implements AuthenticationEntryPoint {
+public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MappingJackson2HttpMessageConverter messageConverter;
 
-    public AuthorizationExceptionHandler(MappingJackson2HttpMessageConverter messageConverter) {
+    public AuthenticationEntryPointImpl(MappingJackson2HttpMessageConverter messageConverter) {
         this.messageConverter = messageConverter;
     }
 
@@ -32,6 +32,6 @@ public class AuthorizationExceptionHandler implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         logger.debug("Access denied to '{}'.", request.getServletPath());
         response.setStatus(SC_UNAUTHORIZED);
-        messageConverter.write(ErrorDto.accessDenied(), MediaType.ALL, new ServletServerHttpResponse(response));
+        messageConverter.write(ErrorDto.authenticationFailed(), MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

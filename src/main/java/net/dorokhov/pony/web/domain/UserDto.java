@@ -6,11 +6,15 @@ import net.dorokhov.pony.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public final class UserDto {
     
     public enum Role {
         USER, ADMIN
     }
+    
+    private final Long id;
     
     private final LocalDateTime creationDate;
     private final LocalDateTime updateDate;
@@ -21,19 +25,25 @@ public final class UserDto {
     private final Role role;
 
     @JsonCreator
-    public UserDto(LocalDateTime creationDate, LocalDateTime updateDate, 
+    public UserDto(Long id,
+                   LocalDateTime creationDate, LocalDateTime updateDate, 
                    String name, String email, 
                    Role role) {
-        this.creationDate = creationDate;
+        this.id = checkNotNull(id);
+        this.creationDate = checkNotNull(creationDate);
         this.updateDate = updateDate;
-        this.name = name;
-        this.email = email;
-        this.role = role;
+        this.name = checkNotNull(name);
+        this.email = checkNotNull(email);
+        this.role = checkNotNull(role);
     }
     
     public UserDto(User user) {
-        this(user.getCreationDate(), user.getUpdateDate(), 
+        this(user.getId(), user.getCreationDate(), user.getUpdateDate(), 
                 user.getName(), user.getEmail(), rolesToDto(user.getRoles()));
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public LocalDateTime getCreationDate() {

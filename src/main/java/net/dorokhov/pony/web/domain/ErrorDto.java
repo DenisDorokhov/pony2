@@ -9,7 +9,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.web.domain.ErrorDto.Code.ACCESS_DENIED;
+import static net.dorokhov.pony.web.domain.ErrorDto.Code.AUTHENTICATION_FAILED;
 import static net.dorokhov.pony.web.domain.ErrorDto.Code.OBJECT_NOT_FOUND;
 
 public final class ErrorDto {
@@ -17,10 +17,13 @@ public final class ErrorDto {
     public enum Code {
         UNEXPECTED,
         BAD_REQUEST,
-        MAX_UPLOAD_SIZE_EXCEEDED,
+        AUTHENTICATION_FAILED,
         ACCESS_DENIED,
         VALIDATION,
         OBJECT_NOT_FOUND,
+        INVALID_PASSWORD,
+        DUPLICATE_EMAIL,
+        MAX_UPLOAD_SIZE_EXCEEDED,
     }
     
     public static final class FieldViolation {
@@ -100,8 +103,8 @@ public final class ErrorDto {
         return new ErrorDto(ErrorDto.Code.BAD_REQUEST, "Bad request.");
     }
     
-    public static ErrorDto accessDenied() {
-        return new ErrorDto(ACCESS_DENIED, "Access denied.");
+    public static ErrorDto authenticationFailed() {
+        return new ErrorDto(AUTHENTICATION_FAILED, "Authentication failed.");
     }
     
     public static ErrorDto objectNotFound(Class objectType, Long id) {

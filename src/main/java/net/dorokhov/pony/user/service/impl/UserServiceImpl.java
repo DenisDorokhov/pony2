@@ -7,7 +7,7 @@ import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
-import net.dorokhov.pony.user.service.exception.UserExistsException;
+import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,10 +56,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User create(UserCreationCommand command) throws UserExistsException {
+    public User create(UserCreationCommand command) throws DuplicateEmailException {
         String email = command.getEmail().trim();
         if (getByEmail(email) != null) {
-            throw new UserExistsException(email);
+            throw new DuplicateEmailException(email);
         }
         User createdUser = userRepository.save(User.builder()
                 .name(command.getName())
@@ -73,14 +73,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User update(UnsafeUserUpdateCommand command) throws UserNotFoundException, UserExistsException {
+    public User update(UnsafeUserUpdateCommand command) throws UserNotFoundException, DuplicateEmailException {
         User userToUpdate = getById(command.getId());
         if (userToUpdate == null) {
             throw new UserNotFoundException(command.getId());
         }
         User sameEmailUser = getByEmail(command.getEmail());
         if (sameEmailUser != null && !Objects.equals(sameEmailUser.getId(), command.getId())) {
-            throw new UserExistsException(command.getEmail());
+            throw new DuplicateEmailException(command.getEmail());
         }
         String password = Optional.ofNullable(command.getNewPassword())
                 .map(passwordEncoder::encode)
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User update(SafeUserUpdateCommand command) throws InvalidPasswordException, UserNotFoundException, UserExistsException {
+    public User update(SafeUserUpdateCommand command) throws InvalidPasswordException, UserNotFoundException, DuplicateEmailException {
         User user = userRepository.findOne(command.getId());
         if (user == null) {
             throw new UserNotFoundException(command.getId());

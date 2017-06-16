@@ -1,7 +1,6 @@
 package net.dorokhov.pony.web;
 
 import net.dorokhov.pony.web.security.handler.AuthenticationFailureHandlerImpl;
-import net.dorokhov.pony.web.security.handler.AuthorizationExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -10,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -27,7 +28,8 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final SecurityContextRepository securityContextRepository;
-    private final AuthorizationExceptionHandler authorizationExceptionHandler;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final AccessDeniedHandler accessDeniedHandler;
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final AuthenticationFailureHandler authenticationFailureHandler;
     private final LogoutSuccessHandler logoutSuccessHandler;
@@ -35,14 +37,16 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     public WebConfig(UserDetailsService userDetailsService,
                      PasswordEncoder passwordEncoder,
                      SecurityContextRepository securityContextRepository,
-                     AuthorizationExceptionHandler authorizationExceptionHandler,
+                     AuthenticationEntryPoint authenticationEntryPoint,
+                     AccessDeniedHandler accessDeniedHandler, 
                      AuthenticationSuccessHandler authenticationSuccessHandler,
                      AuthenticationFailureHandlerImpl authenticationFailureHandler,
                      LogoutSuccessHandler logoutSuccessHandler) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.securityContextRepository = securityContextRepository;
-        this.authorizationExceptionHandler = authorizationExceptionHandler;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.authenticationFailureHandler = authenticationFailureHandler;
         this.logoutSuccessHandler = logoutSuccessHandler;
@@ -69,7 +73,8 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                 .and()
 
                 .exceptionHandling()
-                .authenticationEntryPoint(authorizationExceptionHandler)
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
 
                 .and()
 

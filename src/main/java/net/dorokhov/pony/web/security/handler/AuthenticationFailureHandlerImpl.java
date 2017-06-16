@@ -34,6 +34,6 @@ public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHa
                                         AuthenticationException exception) throws IOException, ServletException {
         logger.debug("Authentication failed.");
         response.setStatus(SC_UNAUTHORIZED);
-        messageConverter.write(ErrorDto.accessDenied(), MediaType.ALL, new ServletServerHttpResponse(response));
+        messageConverter.write(ErrorDto.authenticationFailed(), MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

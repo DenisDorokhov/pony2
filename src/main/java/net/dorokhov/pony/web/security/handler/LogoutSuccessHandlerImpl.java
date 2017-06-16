@@ -54,7 +54,7 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
         } else {
             logger.debug("Logging out failed: user is not authenticated.");
             response.setStatus(SC_UNAUTHORIZED);
-            messageConverter.write(ErrorDto.accessDenied(), MediaType.ALL, new ServletServerHttpResponse(response));
+            messageConverter.write(ErrorDto.authenticationFailed(), MediaType.ALL, new ServletServerHttpResponse(response));
         }
     }
 }

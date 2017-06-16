@@ -6,7 +6,7 @@ import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
-import net.dorokhov.pony.user.service.exception.UserExistsException;
+import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,7 +97,7 @@ public class UserServiceImplTest {
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword")
-                .build())).isInstanceOf(UserExistsException.class);        
+                .build())).isInstanceOf(DuplicateEmailException.class);        
     }
 
     @Test
@@ -176,7 +176,7 @@ public class UserServiceImplTest {
                 .email("someEmail")
                 .newPassword("somePassword")
                 .build();
-        assertThatThrownBy(() -> userService.update(command)).isInstanceOf(UserExistsException.class);
+        assertThatThrownBy(() -> userService.update(command)).isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test

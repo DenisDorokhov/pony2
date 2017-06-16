@@ -2,11 +2,11 @@ package net.dorokhov.pony.user.service.exception;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class UserExistsException extends Exception {
+public final class DuplicateEmailException extends Exception {
 
     private final String email;
     
-    public UserExistsException(String email) {
+    public DuplicateEmailException(String email) {
         super(String.format("User with email '%s' already exists.", email));
         this.email = checkNotNull(email);
     }
