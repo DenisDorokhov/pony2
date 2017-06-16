@@ -12,7 +12,7 @@ import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationCommandDto.LibraryFolder;
 import net.dorokhov.pony.web.domain.InstallationDto;
-import net.dorokhov.pony.web.service.InstallationSecretManager;
+import net.dorokhov.pony.web.service.impl.InstallationSecretManager;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;

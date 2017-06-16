@@ -7,13 +7,13 @@ import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.service.ExportService;
 import net.dorokhov.pony.library.service.LibraryService;
 import net.dorokhov.pony.web.util.FileRequestHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.UriUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,25 +24,8 @@ import java.io.OutputStream;
 
 @Controller
 @ResponseBody
-@RequestMapping("/file")
-public class FileController {
-
-    @ControllerAdvice(assignableTypes = FileController.class)
-    public static class FileControllerAdvice {
-
-        private final Logger logger = LoggerFactory.getLogger(getClass());
-
-        @ExceptionHandler(AccessDeniedException.class)
-        public ResponseEntity<String> onAccessDenied() {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        @ExceptionHandler(Exception.class)
-        public ResponseEntity<String> onUnexpectedError(Exception e) {
-            logger.error("Unexpected error occurred.", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+@RequestMapping("/api/file")
+public class FileController implements ErrorHandlingController {
 
     private final LibraryService libraryService;
     private final ExportService exportService;

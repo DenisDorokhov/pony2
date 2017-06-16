@@ -9,6 +9,8 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
+import static net.dorokhov.pony.web.domain.ErrorDto.Code.ACCESS_DENIED;
+import static net.dorokhov.pony.web.domain.ErrorDto.Code.OBJECT_NOT_FOUND;
 
 public final class ErrorDto {
     
@@ -18,7 +20,6 @@ public final class ErrorDto {
         MAX_UPLOAD_SIZE_EXCEEDED,
         ACCESS_DENIED,
         VALIDATION,
-        INVALID_CREDENTIALS,
         OBJECT_NOT_FOUND,
     }
     
@@ -89,5 +90,23 @@ public final class ErrorDto {
 
     public List<FieldViolation> getFieldViolations() {
         return fieldViolations;
+    }
+    
+    public static ErrorDto unexpected() {
+        return new ErrorDto(ErrorDto.Code.UNEXPECTED, "Unexpected error occurred.");
+    }
+    
+    public static ErrorDto badRequest() {
+        return new ErrorDto(ErrorDto.Code.BAD_REQUEST, "Bad request.");
+    }
+    
+    public static ErrorDto accessDenied() {
+        return new ErrorDto(ACCESS_DENIED, "Access denied.");
+    }
+    
+    public static ErrorDto objectNotFound(Class objectType, Long id) {
+        return new ErrorDto(OBJECT_NOT_FOUND, 
+                String.format("Object '%d' of type '%s' not found.", id, objectType.toString()), 
+                objectType.toString(), id.toString());
     }
 }

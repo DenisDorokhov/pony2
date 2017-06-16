@@ -1,16 +1,16 @@
 package net.dorokhov.pony.web.validation;
 
-import net.dorokhov.pony.web.service.InstallationSecretManager;
+import net.dorokhov.pony.web.service.InstallationServiceFacade;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 public final class InstallationSecretValidator implements ConstraintValidator<InstallationSecret, String> {
     
-    private final InstallationSecretManager installationSecretManager;
+    private final InstallationServiceFacade installationServiceFacade;
 
-    public InstallationSecretValidator(InstallationSecretManager installationSecretManager) {
-        this.installationSecretManager = installationSecretManager;
+    public InstallationSecretValidator(InstallationServiceFacade installationServiceFacade) {
+        this.installationServiceFacade = installationServiceFacade;
     }
 
     @Override
@@ -19,12 +19,6 @@ public final class InstallationSecretValidator implements ConstraintValidator<In
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        String installationSecret;
-        try {
-            installationSecret = installationSecretManager.fetchInstallationSecret();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not fetch installation secret.", e);
-        }
-        return installationSecret.equals(value);
+        return installationServiceFacade.verifyInstallationSecret(value);
     }
 }

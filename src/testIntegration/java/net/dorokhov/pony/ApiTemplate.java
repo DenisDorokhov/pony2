@@ -1,32 +1,41 @@
 package net.dorokhov.pony;
 
-import net.dorokhov.pony.web.domain.CredentialsDto;
-import net.dorokhov.pony.web.domain.UserTokenDto;
+import net.dorokhov.pony.security.domain.AuthenticationDto;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import static net.dorokhov.pony.InstallingIntegrationTest.ADMIN_EMAIL;
 import static net.dorokhov.pony.InstallingIntegrationTest.ADMIN_PASSWORD;
 
 @Component
 public class ApiTemplate {
-    
+
     private final TestRestTemplate restTemplate;
 
     public ApiTemplate(TestRestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public UserTokenDto authenticateAdmin() {
+    public TestRestTemplate getRestTemplate() {
+        return restTemplate;
+    }
+
+    public AuthenticationDto authenticateAdmin() {
         return authenticate(ADMIN_EMAIL, ADMIN_PASSWORD);
     }
 
-    public UserTokenDto authenticate(String email, String password) {
-        return restTemplate.postForEntity("/api/authentication", new CredentialsDto(email, password), UserTokenDto.class).getBody();
+    public AuthenticationDto authenticate(String email, String password) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("email", email);
+        params.add("password", password);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, null);
+        return restTemplate.postForEntity("/api/authentication", entity, AuthenticationDto.class).getBody();
     }
-    
+
     public HttpEntity<Void> createHeaderRequest(String token) {
         return createHeaderRequest(null, token);
     }
@@ -36,7 +45,7 @@ public class ApiTemplate {
         headers.set("Authorization", "Bearer " + token);
         return new HttpEntity<>(request, headers);
     }
-    
+
     public HttpEntity<Void> createCookieRequest(String token) {
         return createCookieRequest(null, token);
     }
