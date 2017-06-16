@@ -16,11 +16,13 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.nio.file.Files;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,6 +77,21 @@ public class FileControllerTest extends InstallingIntegrationTest {
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/{id}", HttpMethod.GET, 
                 apiTemplate.createCookieRequest(authentication.getToken()), byte[].class, song.getId());
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expectedContents);
+    }
+
+    @Test
+    public void shouldServeByteRangeAudio() throws Exception {
+        byte[] contents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
+        byte[] expectedContents = Arrays.copyOfRange(contents, 1024, 2048);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Range", "bytes=1024-2047");
+        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/file/audio/{id}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(null, authentication.getToken(), httpHeaders), 
+                byte[].class, song.getId());
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.PARTIAL_CONTENT);
         assertThat(response.getBody()).isEqualTo(expectedContents);
     }
 

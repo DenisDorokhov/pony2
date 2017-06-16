@@ -41,7 +41,10 @@ public class ApiTemplate {
     }
 
     public <T> HttpEntity<T> createHeaderRequest(T request, String token) {
-        HttpHeaders headers = new HttpHeaders();
+        return createHeaderRequest(request, token, new HttpHeaders());
+    }
+
+    public <T> HttpEntity<T> createHeaderRequest(T request, String token, HttpHeaders headers) {
         headers.set("Authorization", "Bearer " + token);
         return new HttpEntity<>(request, headers);
     }
@@ -51,7 +54,10 @@ public class ApiTemplate {
     }
 
     public <T> HttpEntity<T> createCookieRequest(T request, String token) {
-        HttpHeaders headers = new HttpHeaders();
+        return createCookieRequest(request, token, new HttpHeaders());
+    }
+
+    public <T> HttpEntity<T> createCookieRequest(T request, String token, HttpHeaders headers) {
         headers.add("Cookie", "PONY_TOKEN=" + token);
         return new HttpEntity<>(request, headers);
     }

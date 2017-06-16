@@ -199,20 +199,20 @@ public class FileRequestHandler {
                     response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BYTERANGES);
                     response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
                     // Cast back to ServletOutputStream to get the easy println methods.
-                    ServletOutputStream sos = (ServletOutputStream) output;
+                    ServletOutputStream servletOutputStream = (ServletOutputStream) output;
                     // Copy multi part range.
                     for (Range r : ranges) {
                         // Add multipart boundary and header fields for every range.
-                        sos.println();
-                        sos.println("--" + MULTIPART_BYTERANGES);
-                        sos.println("Content-Type: " + command.getContentType());
-                        sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
+                        servletOutputStream.println();
+                        servletOutputStream.println("--" + MULTIPART_BYTERANGES);
+                        servletOutputStream.println("Content-Type: " + command.getContentType());
+                        servletOutputStream.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
                         // Copy single part range of multi part range.
                         copy(bufferedInputStream, output, length, r.start, r.length);
                     }
                     // End with multipart boundary.
-                    sos.println();
-                    sos.println("--" + MULTIPART_BYTERANGES + "--");
+                    servletOutputStream.println();
+                    servletOutputStream.println("--" + MULTIPART_BYTERANGES + "--");
                 }
             }
         }

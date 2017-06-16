@@ -3,6 +3,10 @@ package net.dorokhov.pony.web.security;
 import com.google.common.collect.ImmutableMap;
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.user.service.exception.UserExistsException;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.UserDto;
@@ -21,6 +25,9 @@ public class SecurityTest extends InstallingIntegrationTest {
 
     @Autowired
     private ApiTemplate apiTemplate;
+    
+    @Autowired
+    private UserService userService;
 
     @Test
     public void shouldAuthenticate() throws Exception {
@@ -66,5 +73,34 @@ public class SecurityTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(errorDto -> 
                 assertThat(errorDto.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+    }
+
+    @Test
+    public void shouldDenyAdminAreaIfRoleIsUser() throws Exception {
+        User user = createUser();
+        AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().getForEntity("/api/admin/someResource", ErrorDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).satisfies(errorDto ->
+                assertThat(errorDto.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+    }
+
+    @Test
+    public void shouldNotDenyUserAreaIfRoleIsUser() throws Exception {
+        User user = createUser();
+        AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
+        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/user", HttpMethod.GET, 
+                apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+    
+    private User createUser() throws UserExistsException {
+        return userService.create(UserCreationCommand.builder()
+                .name("Plain User")
+                .email("plainUser@foobar.com")
+                .password("foobar")
+                .roles(User.Role.USER)
+                .build());
     }
 }
