@@ -11,6 +11,7 @@ import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretExceptio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -39,9 +40,10 @@ public class InstallationServiceFacadeImpl implements InstallationServiceFacade 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InstallationDto getInstallation() {
         Installation installation = installationService.getInstallation();
-        return installation != null ? new InstallationDto(installation) : null;
+        return installation != null ? InstallationDto.of(installation) : null;
     }
 
     @Override
@@ -57,10 +59,11 @@ public class InstallationServiceFacadeImpl implements InstallationServiceFacade 
     }
 
     @Override
+    @Transactional
     public InstallationDto install(InstallationCommandDto command) throws InvalidInstallationSecretException, AlreadyInstalledException {
         if (!verifyInstallationSecret(command.getInstallationSecret())) {
             throw new InvalidInstallationSecretException();
         }
-        return new InstallationDto(installationService.install(command.convert()));
+        return InstallationDto.of(installationService.install(command.convert()));
     }
 }

@@ -43,6 +43,6 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         User user = userContextService.getAuthenticatedUser();
         logger.debug("User '{}' has logged in.", user.getId());
         String token = tokenManager.createToken(user.getId().toString());
-        messageConverter.write(new AuthenticationDto(new UserDto(user), token), MediaType.ALL, new ServletServerHttpResponse(response));
+        messageConverter.write(new AuthenticationDto(UserDto.of(user), token), MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

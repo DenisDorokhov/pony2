@@ -2,8 +2,8 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.service.UserService;
-import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import net.dorokhov.pony.web.domain.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
@@ -49,13 +49,13 @@ public class UserController implements ErrorHandlingController {
 
     @GetMapping
     public UserDto getCurrentUser() {
-        return new UserDto(userContextService.getAuthenticatedUser());
+        return UserDto.of(userContextService.getAuthenticatedUser());
     }
     
     @PutMapping
     public UserDto updateCurrentUser(@Valid @RequestBody CurrentUserUpdateCommandDto command) 
             throws UserNotFoundException, InvalidPasswordException, DuplicateEmailException {
         User currentUser = userContextService.getAuthenticatedUser();
-        return new UserDto(userService.update(command.convert(currentUser.getId())));
+        return UserDto.of(userService.update(command.convert(currentUser.getId())));
     }
 }

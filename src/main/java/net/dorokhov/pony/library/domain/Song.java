@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity

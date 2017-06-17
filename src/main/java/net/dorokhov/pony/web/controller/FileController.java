@@ -1,11 +1,9 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.ArtworkFiles;
-import net.dorokhov.pony.library.domain.ExportBundle;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.service.ExportService;
 import net.dorokhov.pony.library.service.LibraryService;
+import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.util.FileRequestHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,11 +38,11 @@ public class FileController implements ErrorHandlingController {
     }
 
     @GetMapping("/audio/{songId}")
-    public ResponseEntity<?> getAudio(@PathVariable("songId") Long songId,
-                                      HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<?> getAudio(@PathVariable Long songId,
+                                      HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         Song song = libraryService.getSongById(songId);
         if (song == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ObjectNotFoundException(Song.class, songId);
         }
         File file = song.getFile();
         fileRequestHandler.handleRequest(new FileRequestHandler.Command(
@@ -55,11 +53,11 @@ public class FileController implements ErrorHandlingController {
     }
 
     @GetMapping("/artwork/large/{artworkId}")
-    public ResponseEntity<?> getLargeArtwork(@PathVariable("artworkId") Long artworkId,
-                                             HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<?> getLargeArtwork(@PathVariable Long artworkId,
+                                             HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
         if (artworkFiles == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ObjectNotFoundException(Artwork.class, artworkId);
         }
         Artwork artwork = artworkFiles.getArtwork();
         File file = artworkFiles.getLargeFile();
@@ -70,11 +68,11 @@ public class FileController implements ErrorHandlingController {
     }
 
     @GetMapping("/artwork/small/{artworkId}")
-    public ResponseEntity<?> getSmallArtwork(@PathVariable("artworkId") Long artworkId,
-                                             HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<?> getSmallArtwork(@PathVariable Long artworkId,
+                                             HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
         if (artworkFiles == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ObjectNotFoundException(Artwork.class, artworkId);
         }
         Artwork artwork = artworkFiles.getArtwork();
         File file = artworkFiles.getSmallFile();
@@ -85,10 +83,10 @@ public class FileController implements ErrorHandlingController {
     }
 
     @GetMapping("/export/song/{songId}")
-    public ResponseEntity<?> exportSong(@PathVariable("songId") Long songId, HttpServletResponse response) throws IOException {
+    public ResponseEntity<?> exportSong(@PathVariable Long songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = exportService.exportSong(songId);
         if (exportBundle == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ObjectNotFoundException(Song.class, songId);
         }
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {
@@ -98,10 +96,10 @@ public class FileController implements ErrorHandlingController {
     }
 
     @GetMapping("/export/album/{albumId}")
-    public ResponseEntity<?> exportAlbum(@PathVariable("albumId") Long albumId, HttpServletResponse response) throws IOException {
+    public ResponseEntity<?> exportAlbum(@PathVariable Long albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = exportService.exportAlbum(albumId);
         if (exportBundle == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ObjectNotFoundException(Album.class, albumId);
         }
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {

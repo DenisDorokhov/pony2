@@ -75,6 +75,10 @@ abstract public class IntegrationTest {
         clearCache();
         flyway.clean();
     }
+    
+    protected TransactionTemplate getTransactionTemplate() {
+        return transactionTemplate;
+    }
 
     private void cleanFiles() {
         Optional.ofNullable(artworkFolder.listFiles())

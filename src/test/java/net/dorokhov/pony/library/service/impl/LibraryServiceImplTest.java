@@ -3,8 +3,10 @@ package net.dorokhov.pony.library.service.impl;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.Artist;
 import net.dorokhov.pony.library.domain.ArtworkFiles;
+import net.dorokhov.pony.library.domain.Genre;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.repository.ArtistRepository;
+import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.impl.artwork.ArtworkStorage;
 import org.junit.Test;
@@ -12,6 +14,8 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
 
 import java.io.File;
@@ -33,11 +37,21 @@ public class LibraryServiceImplTest {
     private LibraryServiceImpl libraryService;
 
     @Mock
+    private GenreRepository genreRepository;
+    @Mock
     private ArtistRepository artistRepository;
     @Mock
     private SongRepository songRepository;
     @Mock
     private ArtworkStorage artworkStorage;
+
+    @Test
+    public void shouldGetGenres() throws Exception {
+        List<Genre> genres = ImmutableList.of(Genre.builder().build(), Genre.builder().build());
+        when(genreRepository.findAll((Sort) any())).thenReturn(genres);
+        List<Genre> result = libraryService.getGenres();
+        assertThat(result).isSameAs(genres);
+    }
 
     @Test
     public void shouldGetArtists() throws Exception {
@@ -55,10 +69,25 @@ public class LibraryServiceImplTest {
     }
 
     @Test
+    public void shouldGetGenreById() throws Exception {
+        Genre genre = Genre.builder().build();
+        when(genreRepository.findOne(any())).thenReturn(genre);
+        assertThat(libraryService.getGenreById(1L)).isSameAs(genre);
+    }
+
+    @Test
     public void shouldGetSongById() throws Exception {
         Song song = song();
         when(songRepository.findOne(any())).thenReturn(song);
         assertThat(libraryService.getSongById(1L)).isSameAs(song);
+    }
+
+    @Test
+    public void shouldGetSongsByGenreId() throws Exception {
+        List<Song> songs = ImmutableList.of(song(), song());
+        when(songRepository.findByGenreId(any(), any())).thenReturn(new PageImpl<>(songs));
+        Page<Song> result = libraryService.getSongsByGenreId(1L, 0);
+        assertThat(result.getContent()).isEqualTo(songs);
     }
 
     @Test

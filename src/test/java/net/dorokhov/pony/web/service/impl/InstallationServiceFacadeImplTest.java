@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,7 @@ public class InstallationServiceFacadeImplTest {
     @Test
     public void shouldGetInstallation() throws Exception {
         Installation installation = Installation.builder()
+                .creationDate(LocalDateTime.now())
                 .version("2.0")
                 .build();
         when(installationService.getInstallation()).thenReturn(installation);
@@ -68,6 +70,7 @@ public class InstallationServiceFacadeImplTest {
     public void shouldInstall() throws Exception {
         when(installationSecretManager.fetchInstallationSecret()).thenReturn("someSecret");
         Installation installation = Installation.builder()
+                .creationDate(LocalDateTime.now())
                 .version("2.0")
                 .build();
         when(installationService.install(any())).thenReturn(installation);

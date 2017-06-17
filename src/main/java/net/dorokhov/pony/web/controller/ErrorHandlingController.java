@@ -1,6 +1,8 @@
 package net.dorokhov.pony.web.controller;
 
+import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.ErrorDto;
+import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -50,13 +52,13 @@ public interface ErrorHandlingController {
                 }
                 fieldViolations.add(new ErrorDto.FieldViolation(fieldError.getField(), fieldError.getCode(), fieldError.getDefaultMessage(), errorArguments));
             }
-            return new ErrorDto(ErrorDto.Code.VALIDATION, "Invalid request, check field violations.", fieldViolations);
+            return new ErrorDto(Code.VALIDATION, "Invalid request, check field violations.", fieldViolations);
         }
 
         @ExceptionHandler(MaxUploadSizeExceededException.class)
         @ResponseStatus(HttpStatus.BAD_REQUEST)
         public ErrorDto onMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
-            return new ErrorDto(ErrorDto.Code.MAX_UPLOAD_SIZE_EXCEEDED, e.getMessage(), String.valueOf(e.getMaxUploadSize()));
+            return new ErrorDto(Code.MAX_UPLOAD_SIZE_EXCEEDED, e.getMessage(), String.valueOf(e.getMaxUploadSize()));
         }
 
         @ExceptionHandler({
@@ -67,6 +69,12 @@ public interface ErrorHandlingController {
         @ResponseStatus(HttpStatus.BAD_REQUEST)
         public ErrorDto onBadRequest() {
             return ErrorDto.badRequest();
+        }
+
+        @ExceptionHandler(ObjectNotFoundException.class)
+        @ResponseStatus(HttpStatus.NOT_FOUND)
+        public ErrorDto onObjectNotFound(ObjectNotFoundException e) {
+            return new ErrorDto(Code.NOT_FOUND, e.getMessage(), e.getObjectType().getSimpleName(), e.getObjectId().toString());
         }
 
         @ExceptionHandler(Exception.class)

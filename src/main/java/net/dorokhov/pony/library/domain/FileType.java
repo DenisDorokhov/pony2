@@ -11,7 +11,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class FileType implements Serializable {
 
     private final String mimeType;
-
     private final String fileExtension;
 
     public FileType(String mimeType, String fileExtension) {
@@ -26,11 +25,11 @@ public final class FileType implements Serializable {
     public String getFileExtension() {
         return fileExtension;
     }
-    
+
     public boolean isImage() {
         return mimeType.startsWith("image/");
     }
-    
+
     public boolean isAudio() {
         return mimeType.startsWith("audio/");
     }

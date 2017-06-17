@@ -36,6 +36,8 @@ public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
     List<Song> findByAlbumId(Long albumId, Sort sort);
 
     List<Song> findByAlbumArtistId(Long artistId, Sort sort);
+    
+    Page<Song> findByGenreId(Long genreId, Pageable pageable);
 
     Page<Song> findByGenreIdAndArtworkNotNull(Long genreId, Pageable pageable);
 

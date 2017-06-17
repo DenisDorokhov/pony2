@@ -88,8 +88,11 @@ public class InstallationControllerTest extends IntegrationTest {
             assertThat(user.getRoles()).containsExactlyInAnyOrder(Role.USER, Role.ADMIN);
         });
 
-        assertThat(installationService.getInstallation()).satisfies(installation -> 
-                assertThat(installation.getVersion()).isNotNull());
+        assertThat(installationService.getInstallation()).satisfies(installation -> {
+            assertThat(installation.getCreationDate()).isNotNull();
+            assertThat(installation.getUpdateDate()).isNull();
+            assertThat(installation.getVersion()).isNotNull();
+        });
     }
 
     @Test

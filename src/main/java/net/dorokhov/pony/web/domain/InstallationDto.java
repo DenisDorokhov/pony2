@@ -1,24 +1,37 @@
 package net.dorokhov.pony.web.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import net.dorokhov.pony.installation.domain.Installation;
+
+import java.time.LocalDateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class InstallationDto {
     
+    private final LocalDateTime creationDate;
+    private final LocalDateTime updateDate;
+
     private final String version;
 
-    @JsonCreator
-    public InstallationDto(String version) {
+    public InstallationDto(LocalDateTime creationDate, LocalDateTime updateDate, String version) {
+        this.creationDate = checkNotNull(creationDate);
+        this.updateDate = updateDate;
         this.version = checkNotNull(version);
     }
-    
-    public InstallationDto(Installation installation) {
-        this(installation.getVersion());
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public LocalDateTime getUpdateDate() {
+        return updateDate;
     }
 
     public String getVersion() {
         return version;
+    }
+
+    public static InstallationDto of(Installation installation) {
+        return new InstallationDto(installation.getCreationDate(), installation.getUpdateDate(), installation.getVersion());
     }
 }

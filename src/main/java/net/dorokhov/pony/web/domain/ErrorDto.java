@@ -10,7 +10,6 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.web.domain.ErrorDto.Code.AUTHENTICATION_FAILED;
-import static net.dorokhov.pony.web.domain.ErrorDto.Code.OBJECT_NOT_FOUND;
 
 public final class ErrorDto {
     
@@ -20,7 +19,7 @@ public final class ErrorDto {
         AUTHENTICATION_FAILED,
         ACCESS_DENIED,
         VALIDATION,
-        OBJECT_NOT_FOUND,
+        NOT_FOUND,
         INVALID_PASSWORD,
         DUPLICATE_EMAIL,
         MAX_UPLOAD_SIZE_EXCEEDED,
@@ -105,11 +104,5 @@ public final class ErrorDto {
     
     public static ErrorDto authenticationFailed() {
         return new ErrorDto(AUTHENTICATION_FAILED, "Authentication failed.");
-    }
-    
-    public static ErrorDto objectNotFound(Class objectType, Long id) {
-        return new ErrorDto(OBJECT_NOT_FOUND, 
-                String.format("Object '%d' of type '%s' not found.", id, objectType.toString()), 
-                objectType.toString(), id.toString());
     }
 }
