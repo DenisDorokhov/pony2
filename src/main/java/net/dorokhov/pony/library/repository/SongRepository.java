@@ -4,15 +4,15 @@ import net.dorokhov.pony.library.domain.Song;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface SongRepository extends PagingAndSortingRepository<Song, Long> {
+public interface SongRepository extends JpaRepository<Song, Long> {
 
     long countByGenreId(Long genreId);
 

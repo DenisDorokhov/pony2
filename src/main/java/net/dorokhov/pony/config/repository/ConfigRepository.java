@@ -1,7 +1,7 @@
 package net.dorokhov.pony.config.repository;
 
 import net.dorokhov.pony.config.domain.Config;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ConfigRepository extends PagingAndSortingRepository<Config, String> {
+public interface ConfigRepository extends JpaRepository<Config, String> {
 }

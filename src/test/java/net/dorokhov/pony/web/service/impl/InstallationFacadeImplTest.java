@@ -21,10 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InstallationServiceFacadeImplTest {
+public class InstallationFacadeImplTest {
     
     @InjectMocks
-    private InstallationServiceFacadeImpl installationServiceFacade;
+    private InstallationFacadeImpl installationServiceFacade;
 
     @Mock
     private InstallationService installationService;

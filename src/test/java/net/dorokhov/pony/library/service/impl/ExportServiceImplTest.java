@@ -62,7 +62,7 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        when(songRepository.findOne(any())).thenReturn(song);
+        when(songRepository.findOne((Long) any())).thenReturn(song);
         
         ExportBundle exportBundle = exportService.exportSong(1L);
 
@@ -84,7 +84,7 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        when(songRepository.findOne(any())).thenReturn(song);
+        when(songRepository.findOne((Long) any())).thenReturn(song);
         
         ExportBundle exportBundle = exportService.exportSong(1L);
 
@@ -106,7 +106,7 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        when(songRepository.findOne(any())).thenReturn(song);
+        when(songRepository.findOne((Long) any())).thenReturn(song);
         
         ExportBundle exportBundle = exportService.exportSong(1L);
         

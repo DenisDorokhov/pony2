@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
                 .map(passwordEncoder::encode)
                 .orElse(userToUpdate.getPassword());
         logger.info("Updating user '{}'.", command.getId());
-        return userRepository.save(User.builder(userToUpdate)
+        return userRepository.saveAndFlush(User.builder(userToUpdate)
                 .name(command.getName())
                 .email(command.getEmail())
                 .password(password)

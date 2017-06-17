@@ -64,21 +64,21 @@ public class LibraryServiceImplTest {
     @Test
     public void shouldGetArtistById() throws Exception {
         Artist artist = Artist.builder().build();
-        when(artistRepository.findOne(any())).thenReturn(artist);
+        when(artistRepository.findOne((Long) any())).thenReturn(artist);
         assertThat(libraryService.getArtistById(1L)).isSameAs(artist);
     }
 
     @Test
     public void shouldGetGenreById() throws Exception {
         Genre genre = Genre.builder().build();
-        when(genreRepository.findOne(any())).thenReturn(genre);
+        when(genreRepository.findOne((Long) any())).thenReturn(genre);
         assertThat(libraryService.getGenreById(1L)).isSameAs(genre);
     }
 
     @Test
     public void shouldGetSongById() throws Exception {
         Song song = song();
-        when(songRepository.findOne(any())).thenReturn(song);
+        when(songRepository.findOne((Long) any())).thenReturn(song);
         assertThat(libraryService.getSongById(1L)).isSameAs(song);
     }
 

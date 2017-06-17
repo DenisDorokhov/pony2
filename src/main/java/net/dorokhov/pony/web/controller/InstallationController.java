@@ -4,7 +4,7 @@ import net.dorokhov.pony.installation.service.exception.AlreadyInstalledExceptio
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;
-import net.dorokhov.pony.web.service.InstallationServiceFacade;
+import net.dorokhov.pony.web.service.InstallationFacade;
 import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +34,14 @@ public class InstallationController implements ErrorHandlingController {
         }
     }
     
-    private final InstallationServiceFacade installationServiceFacade;
+    private final InstallationFacade installationFacade;
 
-    public InstallationController(InstallationServiceFacade installationServiceFacade) {
-        this.installationServiceFacade = installationServiceFacade;
+    public InstallationController(InstallationFacade installationFacade) {
+        this.installationFacade = installationFacade;
     }
 
     @PostMapping
     public InstallationDto install(@Valid @RequestBody InstallationCommandDto command) throws InvalidInstallationSecretException, AlreadyInstalledException {
-        return installationServiceFacade.install(command);
+        return installationFacade.install(command);
     }
 }

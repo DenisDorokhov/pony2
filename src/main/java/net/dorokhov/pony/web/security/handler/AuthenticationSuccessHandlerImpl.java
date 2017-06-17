@@ -1,10 +1,10 @@
 package net.dorokhov.pony.web.security.handler;
 
+import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.UserDto;
 import net.dorokhov.pony.web.security.token.TokenManager;
-import net.dorokhov.pony.web.service.UserContextService;
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.web.service.impl.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -24,14 +24,14 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final UserContextService userContextService;
+    private final UserContext userContext;
     private final TokenManager tokenManager;
     private final MappingJackson2HttpMessageConverter messageConverter;
 
-    public AuthenticationSuccessHandlerImpl(UserContextService userContextService,
+    public AuthenticationSuccessHandlerImpl(UserContext userContext,
                                             TokenManager tokenManager,
                                             MappingJackson2HttpMessageConverter messageConverter) {
-        this.userContextService = userContextService;
+        this.userContext = userContext;
         this.tokenManager = tokenManager;
         this.messageConverter = messageConverter;
     }
@@ -40,7 +40,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        User user = userContextService.getAuthenticatedUser();
+        User user = userContext.getAuthenticatedUser();
         logger.debug("User '{}' has logged in.", user.getId());
         String token = tokenManager.createToken(user.getId().toString());
         messageConverter.write(new AuthenticationDto(UserDto.of(user), token), MediaType.ALL, new ServletServerHttpResponse(response));

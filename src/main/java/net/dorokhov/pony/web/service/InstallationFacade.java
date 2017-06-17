@@ -5,7 +5,7 @@ import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;
 import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretException;
 
-public interface InstallationServiceFacade {
+public interface InstallationFacade {
 
     InstallationDto getInstallation();
 

@@ -6,7 +6,7 @@ import net.dorokhov.pony.installation.service.InstallationService;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;
-import net.dorokhov.pony.web.service.InstallationServiceFacade;
+import net.dorokhov.pony.web.service.InstallationFacade;
 import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +17,15 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 @Service
-public class InstallationServiceFacadeImpl implements InstallationServiceFacade {
+public class InstallationFacadeImpl implements InstallationFacade {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final InstallationService installationService;
     private final InstallationSecretManager installationSecretManager;
 
-    public InstallationServiceFacadeImpl(InstallationService installationService,
-                                         InstallationSecretManager installationSecretManager) {
+    public InstallationFacadeImpl(InstallationService installationService,
+                                  InstallationSecretManager installationSecretManager) {
         this.installationService = installationService;
         this.installationSecretManager = installationSecretManager;
     }

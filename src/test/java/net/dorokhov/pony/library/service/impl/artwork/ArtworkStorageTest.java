@@ -88,7 +88,7 @@ public class ArtworkStorageTest {
     @Test
     public void shouldGetArtworkFile() throws Exception {
         Artwork artwork = artwork();
-        when(artworkRepository.findOne(any())).thenReturn(artwork);
+        when(artworkRepository.findOne((Long) any())).thenReturn(artwork);
         ArtworkFiles artworkFiles = artworkStorage.getArtworkFile(1L);
         assertThat(artworkFiles).isNotNull();
         assertThat(artworkFiles.getLargeFile()).isEqualTo(new File(artworkFolder, PATH_LARGE));
@@ -166,7 +166,7 @@ public class ArtworkStorageTest {
         Files.touch(smallImageFile);
 
         Artwork artwork = artwork();
-        when(artworkRepository.findOne(any())).thenReturn(artwork);
+        when(artworkRepository.findOne((Long) any())).thenReturn(artwork);
         artworkStorage.delete(5L);
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         verify(artworkRepository).delete(artwork);
@@ -178,7 +178,7 @@ public class ArtworkStorageTest {
     @Test
     public void shouldIgnoreNotExistingFilesWhenDeleting() throws Exception {
         Artwork artwork = artwork();
-        when(artworkRepository.findOne(any())).thenReturn(artwork);
+        when(artworkRepository.findOne((Long) any())).thenReturn(artwork);
         artworkStorage.delete(5L);
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }

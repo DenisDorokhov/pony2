@@ -96,7 +96,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldGetById() throws Exception {
         ScanJob scanJob = scanJobFull();
-        when(scanJobRepository.findOne(any())).thenReturn(scanJob);
+        when(scanJobRepository.findOne((Long) any())).thenReturn(scanJob);
         assertThat(scanJobService.getById(1L)).isSameAs(scanJob);
     }
 
@@ -312,7 +312,7 @@ public class ScanJobServiceImplTest {
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
-        when(scanJobRepository.findOne(any())).thenReturn(scanJobFull());
+        when(scanJobRepository.findOne((Long) any())).thenReturn(scanJobFull());
         when(libraryScanner.scan(any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
@@ -341,7 +341,7 @@ public class ScanJobServiceImplTest {
         
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
-        when(scanJobRepository.findOne(any())).thenReturn(scanJobEdit());
+        when(scanJobRepository.findOne((Long) any())).thenReturn(scanJobEdit());
         when(libraryScanner.edit(any(), any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();

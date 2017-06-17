@@ -105,7 +105,7 @@ public class UserServiceImplTest {
 
         User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
-        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
+        when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
 
         UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(1L)
@@ -116,7 +116,7 @@ public class UserServiceImplTest {
         User updatedUser = userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).saveAndFlush(userCaptor.capture());
         assertThat(userCaptor.getValue()).satisfies(user -> {
             assertThat(updatedUser).isSameAs(user);
             assertThat(user.getId()).isEqualTo(1L);
@@ -134,7 +134,7 @@ public class UserServiceImplTest {
         when(userRepository.findOne(1L)).thenReturn(existingUser);
         when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(existingUser);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
-        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
+        when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
 
         UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(existingUser.getId())
@@ -145,7 +145,7 @@ public class UserServiceImplTest {
         User updatedUser = userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).saveAndFlush(userCaptor.capture());
         assertThat(userCaptor.getValue()).satisfies(user -> {
             assertThat(updatedUser).isSameAs(user);
             assertThat(user.getPassword()).isEqualTo("encodedPassword");
@@ -207,7 +207,7 @@ public class UserServiceImplTest {
                 .addRoles(User.Role.USER, User.Role.ADMIN)
                 .build();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
-        when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
+        when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
 
         SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
                 .id(1L)

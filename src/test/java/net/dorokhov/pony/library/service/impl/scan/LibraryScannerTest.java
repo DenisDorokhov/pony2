@@ -259,7 +259,7 @@ public class LibraryScannerTest {
 
     @Test
     public void shouldFailEditIfSongNotFound() throws Exception {
-        when(songRepository.findOne(any())).thenReturn(null);
+        when(songRepository.findOne((Long) any())).thenReturn(null);
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOfSatisfying(SongNotFoundException.class, e -> 
@@ -268,7 +268,7 @@ public class LibraryScannerTest {
 
     @Test
     public void shouldFailEditIfFileNotFound() throws Exception {
-        when(songRepository.findOne(any())).thenReturn(song());
+        when(songRepository.findOne((Long) any())).thenReturn(song());
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(FileNotFoundException.class);
@@ -277,7 +277,7 @@ public class LibraryScannerTest {
     @Test
     public void shouldFailEditIfFileIsNotSong() throws Exception {
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(mock(ImageNode.class));
-        when(songRepository.findOne(any())).thenReturn(songBuilder()
+        when(songRepository.findOne((Long) any())).thenReturn(songBuilder()
                 .path(tempFolder.newFile().getAbsolutePath())
                 .build());
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
@@ -291,7 +291,7 @@ public class LibraryScannerTest {
         AudioNode audioNode = mock(AudioNode.class);
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(audioNode);
         File file = tempFolder.newFile();
-        when(songRepository.findOne(any())).thenReturn(songBuilder()
+        when(songRepository.findOne((Long) any())).thenReturn(songBuilder()
                 .path(file.getAbsolutePath())
                 .build());
 

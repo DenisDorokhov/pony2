@@ -1,7 +1,5 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
@@ -9,7 +7,7 @@ import net.dorokhov.pony.web.domain.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import net.dorokhov.pony.web.domain.UserDto;
-import net.dorokhov.pony.web.service.UserContextService;
+import net.dorokhov.pony.web.service.UserFacade;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -39,23 +37,20 @@ public class UserController implements ErrorHandlingController {
         }
     }
     
-    private final UserContextService userContextService;
-    private final UserService userService;
+    private final UserFacade userFacade;
 
-    public UserController(UserContextService userContextService, UserService userService) {
-        this.userContextService = userContextService;
-        this.userService = userService;
+    public UserController(UserFacade userFacade) {
+        this.userFacade = userFacade;
     }
 
     @GetMapping
     public UserDto getCurrentUser() {
-        return UserDto.of(userContextService.getAuthenticatedUser());
+        return userFacade.getCurrentUser();
     }
     
     @PutMapping
     public UserDto updateCurrentUser(@Valid @RequestBody CurrentUserUpdateCommandDto command) 
             throws UserNotFoundException, InvalidPasswordException, DuplicateEmailException {
-        User currentUser = userContextService.getAuthenticatedUser();
-        return UserDto.of(userService.update(command.convert(currentUser.getId())));
+        return userFacade.updateCurrentUser(command);
     }
 }

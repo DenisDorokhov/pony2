@@ -2,7 +2,7 @@ package net.dorokhov.pony.web.security;
 
 import net.dorokhov.pony.web.service.exception.NotAuthenticatedException;
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.web.service.impl.UserContextServiceImpl;
+import net.dorokhov.pony.web.service.impl.UserContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,10 +16,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(MockitoJUnitRunner.class)
-public class UserContextServiceImplTest {
+public class UserContextTest {
     
     @InjectMocks
-    private UserContextServiceImpl userContextService;
+    private UserContext userContextService;
 
     @After
     public void tearDown() throws Exception {
