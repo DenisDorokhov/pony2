@@ -1,6 +1,7 @@
 package net.dorokhov.pony.web.service.impl;
 
 import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.library.service.ExportService;
 import net.dorokhov.pony.library.service.LibraryService;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.search.domain.SearchQuery;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,13 +25,16 @@ public class LibraryFacadeImpl implements LibraryFacade {
     private final LibraryService libraryService;
     private final SearchService searchService;
     private final ScanJobService scanJobService;
+    private final ExportService exportService;
 
-    public LibraryFacadeImpl(LibraryService libraryService, 
-                             SearchService searchService, 
-                             ScanJobService scanJobService) {
+    public LibraryFacadeImpl(LibraryService libraryService,
+                             SearchService searchService,
+                             ScanJobService scanJobService, 
+                             ExportService exportService) {
         this.libraryService = libraryService;
         this.searchService = searchService;
         this.scanJobService = scanJobService;
+        this.exportService = exportService;
     }
 
     @Override
@@ -89,5 +94,63 @@ public class LibraryFacadeImpl implements LibraryFacade {
     public ScanStatusDto getScanStatus() {
         ScanJobProgress scanJobProgress = scanJobService.getCurrentScanJobProgress();
         return new ScanStatusDto(scanJobProgress != null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FileDistribution getSongDistribution(Long songId) throws ObjectNotFoundException {
+        Song song = libraryService.getSongById(songId);
+        if (song == null) {
+            throw new ObjectNotFoundException(Song.class, songId);
+        }
+        File file = song.getFile();
+        return new FileDistribution(file, file.getName(), song.getFileType().getMimeType(),
+                song.getUpdateDate() != null ? song.getUpdateDate() : song.getCreationDate());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FileDistribution getLargeArtworkDistribution(Long artworkId) throws ObjectNotFoundException {
+        ArtworkFiles artworkFiles = getArtworkFiles(artworkId);
+        Artwork artwork = artworkFiles.getArtwork();
+        File file = artworkFiles.getLargeFile();
+        return new FileDistribution(file, file.getName(), artwork.getMimeType(), artwork.getDate());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FileDistribution getSmallArtworkDistribution(Long artworkId) throws ObjectNotFoundException {
+        ArtworkFiles artworkFiles = getArtworkFiles(artworkId);
+        Artwork artwork = artworkFiles.getArtwork();
+        File file = artworkFiles.getSmallFile();
+        return new FileDistribution(file, file.getName(), artwork.getMimeType(), artwork.getDate());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExportBundle exportSong(Long songId) throws ObjectNotFoundException {
+        ExportBundle exportBundle = exportService.exportSong(songId);
+        if (exportBundle == null) {
+            throw new ObjectNotFoundException(Song.class, songId);
+        }
+        return exportBundle;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExportBundle exportAlbum(Long albumId) throws ObjectNotFoundException {
+        ExportBundle exportBundle = exportService.exportAlbum(albumId);
+        if (exportBundle == null) {
+            throw new ObjectNotFoundException(Album.class, albumId);
+        }
+        return exportBundle;
+    }
+    
+    private ArtworkFiles getArtworkFiles(Long artworkId) throws ObjectNotFoundException {
+        ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
+        if (artworkFiles == null) {
+            throw new ObjectNotFoundException(Artwork.class, artworkId);
+        }
+        return artworkFiles;
     }
 }

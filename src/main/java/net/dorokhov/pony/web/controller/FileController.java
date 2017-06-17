@@ -1,10 +1,9 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.library.domain.*;
-import net.dorokhov.pony.library.service.ExportService;
-import net.dorokhov.pony.library.service.LibraryService;
+import net.dorokhov.pony.library.domain.ExportBundle;
 import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
-import net.dorokhov.pony.web.util.FileRequestHandler;
+import net.dorokhov.pony.web.service.FileDistributor;
+import net.dorokhov.pony.web.service.LibraryFacade;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -16,7 +15,6 @@ import org.springframework.web.util.UriUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -25,69 +23,38 @@ import java.io.OutputStream;
 @RequestMapping("/api/file")
 public class FileController implements ErrorHandlingController {
 
-    private final LibraryService libraryService;
-    private final ExportService exportService;
-    private final FileRequestHandler fileRequestHandler;
+    private final LibraryFacade libraryFacade;
+    private final FileDistributor fileDistributor;
 
-    public FileController(LibraryService libraryService, ExportService exportService) {
-
-        this.libraryService = libraryService;
-        this.exportService = exportService;
-
-        fileRequestHandler = new FileRequestHandler();
+    public FileController(LibraryFacade libraryFacade, FileDistributor fileDistributor) {
+        this.libraryFacade = libraryFacade;
+        this.fileDistributor = fileDistributor;
     }
 
     @GetMapping("/audio/{songId}")
     public ResponseEntity<?> getAudio(@PathVariable Long songId,
                                       HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        Song song = libraryService.getSongById(songId);
-        if (song == null) {
-            throw new ObjectNotFoundException(Song.class, songId);
-        }
-        File file = song.getFile();
-        fileRequestHandler.handleRequest(new FileRequestHandler.Command(
-                file, file.getName(), song.getFileType().getMimeType(),
-                song.getUpdateDate() != null ? song.getUpdateDate() : song.getCreationDate()
-        ), request, response);
+        fileDistributor.distribute(libraryFacade.getSongDistribution(songId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/artwork/large/{artworkId}")
     public ResponseEntity<?> getLargeArtwork(@PathVariable Long artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
-        if (artworkFiles == null) {
-            throw new ObjectNotFoundException(Artwork.class, artworkId);
-        }
-        Artwork artwork = artworkFiles.getArtwork();
-        File file = artworkFiles.getLargeFile();
-        fileRequestHandler.handleRequest(new FileRequestHandler.Command(
-                file, file.getName(), artwork.getMimeType(), artwork.getDate()
-        ), request, response);
+        fileDistributor.distribute(libraryFacade.getLargeArtworkDistribution(artworkId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/artwork/small/{artworkId}")
     public ResponseEntity<?> getSmallArtwork(@PathVariable Long artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
-        if (artworkFiles == null) {
-            throw new ObjectNotFoundException(Artwork.class, artworkId);
-        }
-        Artwork artwork = artworkFiles.getArtwork();
-        File file = artworkFiles.getSmallFile();
-        fileRequestHandler.handleRequest(new FileRequestHandler.Command(
-                file, file.getName(), artwork.getMimeType(), artwork.getDate()
-        ), request, response);
+        fileDistributor.distribute(libraryFacade.getSmallArtworkDistribution(artworkId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/export/song/{songId}")
     public ResponseEntity<?> exportSong(@PathVariable Long songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        ExportBundle exportBundle = exportService.exportSong(songId);
-        if (exportBundle == null) {
-            throw new ObjectNotFoundException(Song.class, songId);
-        }
+        ExportBundle exportBundle = libraryFacade.exportSong(songId);
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {
             exportBundle.getContent().write(outputStream);
@@ -97,10 +64,7 @@ public class FileController implements ErrorHandlingController {
 
     @GetMapping("/export/album/{albumId}")
     public ResponseEntity<?> exportAlbum(@PathVariable Long albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        ExportBundle exportBundle = exportService.exportAlbum(albumId);
-        if (exportBundle == null) {
-            throw new ObjectNotFoundException(Album.class, albumId);
-        }
+        ExportBundle exportBundle = libraryFacade.exportAlbum(albumId);
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {
             exportBundle.getContent().write(outputStream);

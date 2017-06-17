@@ -1,64 +1,35 @@
-package net.dorokhov.pony.web.util;
+package net.dorokhov.pony.web.service.impl;
 
 import com.google.common.base.Charsets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import net.dorokhov.pony.web.domain.FileDistribution;
+import net.dorokhov.pony.web.service.FileDistributor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriUtils;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 // Based on http://balusc.blogspot.in/2009/02/fileservlet-supporting-resume-and.html.
-public class FileRequestHandler {
-
-    public static class Command {
-
-        private final File file;
-        private final String fileName;
-        private final String contentType;
-        private final LocalDateTime modificationDate;
-
-        public Command(File file, String fileName, String contentType, LocalDateTime modificationDate) {
-            this.file = checkNotNull(file);
-            this.fileName = checkNotNull(fileName);
-            this.contentType = checkNotNull(contentType);
-            this.modificationDate = checkNotNull(modificationDate);
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public String getContentType() {
-            return contentType;
-        }
-
-        public LocalDateTime getModificationDate() {
-            return modificationDate;
-        }
-    }
+@Component
+public class FileDistributorImpl implements FileDistributor {
 
     private static final int BUFFER_SIZE = 20480; // ..bytes = 20KB.
     private static final long EXPIRE_TIME = 604800000L; // ..ms = 1 week.
     private static final String MULTIPART_BYTERANGES = "MULTIPART_BYTERANGES";
 
-    public void handleRequest(Command command, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try (FileInputStream inputStream = new FileInputStream(command.getFile())) {
+    @Override
+    public void distribute(FileDistribution distribution, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try (FileInputStream inputStream = new FileInputStream(distribution.getFile())) {
 
-            long length = command.getFile().length();
-            long lastModified = command.getModificationDate()
+            long length = distribution.getFile().length();
+            long lastModified = distribution.getModificationDate()
                     .atZone(ZoneId.systemDefault())
                     .toInstant()
                     .toEpochMilli();
@@ -67,8 +38,8 @@ public class FileRequestHandler {
 
             // If-None-Match header should contain "*" or ETag. If so, then return 304.
             String ifNoneMatch = request.getHeader("If-None-Match");
-            if (ifNoneMatch != null && matches(ifNoneMatch, command.getFileName())) {
-                response.setHeader("ETag", command.getFileName()); // Required in 304.
+            if (ifNoneMatch != null && matches(ifNoneMatch, distribution.getName())) {
+                response.setHeader("ETag", distribution.getName()); // Required in 304.
                 response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
             }
@@ -77,7 +48,7 @@ public class FileRequestHandler {
             // This header is ignored if any If-None-Match header is specified.
             long ifModifiedSince = request.getDateHeader("If-Modified-Since");
             if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
-                response.setHeader("ETag", command.getFileName()); // Required in 304.
+                response.setHeader("ETag", distribution.getName()); // Required in 304.
                 response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
             }
@@ -86,7 +57,7 @@ public class FileRequestHandler {
 
             // If-Match header should contain "*" or ETag. If not, then return 412.
             String ifMatch = request.getHeader("If-Match");
-            if (ifMatch != null && !matches(ifMatch, command.getFileName())) {
+            if (ifMatch != null && !matches(ifMatch, distribution.getName())) {
                 response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
                 return;
             }
@@ -116,7 +87,7 @@ public class FileRequestHandler {
                 }
 
                 String ifRange = request.getHeader("If-Range");
-                if (ifRange != null && !ifRange.equals(command.getFileName())) {
+                if (ifRange != null && !ifRange.equals(distribution.getName())) {
                     try {
                         long ifRangeTime = request.getDateHeader("If-Range"); // Throws IAE if invalid.
                         if (ifRangeTime != -1) {
@@ -157,20 +128,20 @@ public class FileRequestHandler {
             // Get content type by file name and set content disposition.
             String disposition = "inline";
 
-            if (!command.getContentType().startsWith("image")) {
+            if (!distribution.getMimeType().startsWith("image")) {
                 // Else, expect for images, determine content disposition. If content type is supported by
                 // the browser, then set to inline, else attachment which will pop a 'save as' dialogue.
                 String accept = request.getHeader("Accept");
-                disposition = accept != null && accepts(accept, command.getContentType())
+                disposition = accept != null && accepts(accept, distribution.getMimeType())
                         ? "inline" : "attachment";
             }
 
             // Initialize response.
             response.reset();
             response.setBufferSize(BUFFER_SIZE);
-            response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(command.getFileName(), Charsets.UTF_8.name()) + "\"");
+            response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(distribution.getName(), Charsets.UTF_8.name()) + "\"");
             response.setHeader("Accept-Ranges", "bytes");
-            response.setHeader("ETag", command.getFileName());
+            response.setHeader("ETag", distribution.getName());
             response.setDateHeader("Last-Modified", lastModified);
             response.setDateHeader("Expires", System.currentTimeMillis() + EXPIRE_TIME);
 
@@ -181,14 +152,14 @@ public class FileRequestHandler {
             ) {
                 if (ranges.isEmpty() || ranges.get(0) == full) {
                     // Return full file.
-                    response.setContentType(command.getContentType());
+                    response.setContentType(distribution.getMimeType());
                     response.setHeader("Content-Range", "bytes " + full.start + "-" + full.end + "/" + full.total);
                     response.setHeader("Content-Length", String.valueOf(full.length));
                     copy(bufferedInputStream, output, length, full.start, full.length);
                 } else if (ranges.size() == 1) {
                     // Return single part of file.
                     Range r = ranges.get(0);
-                    response.setContentType(command.getContentType());
+                    response.setContentType(distribution.getMimeType());
                     response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
                     response.setHeader("Content-Length", String.valueOf(r.length));
                     response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
@@ -205,7 +176,7 @@ public class FileRequestHandler {
                         // Add multipart boundary and header fields for every range.
                         servletOutputStream.println();
                         servletOutputStream.println("--" + MULTIPART_BYTERANGES);
-                        servletOutputStream.println("Content-Type: " + command.getContentType());
+                        servletOutputStream.println("Content-Type: " + distribution.getMimeType());
                         servletOutputStream.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
                         // Copy single part range of multi part range.
                         copy(bufferedInputStream, output, length, r.start, r.length);

@@ -3,16 +3,15 @@ package net.dorokhov.pony.library.service;
 import net.dorokhov.pony.library.domain.ExportBundle;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 
 public interface ExportService {
     
     @Nullable
-    ExportBundle exportSong(Long id) throws IOException;
+    ExportBundle exportSong(Long id);
     
     @Nullable
-    ExportBundle exportAlbum(Long id) throws IOException;
+    ExportBundle exportAlbum(Long id);
     
     @Nullable
-    ExportBundle exportArtist(Long id) throws IOException;
+    ExportBundle exportArtist(Long id);
 }

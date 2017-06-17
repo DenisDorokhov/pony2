@@ -1,5 +1,6 @@
 package net.dorokhov.pony.web.service;
 
+import net.dorokhov.pony.library.domain.ExportBundle;
 import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.*;
 
@@ -18,4 +19,11 @@ public interface LibraryFacade {
     SearchResultDto search(String query);
 
     ScanStatusDto getScanStatus();
+    
+    FileDistribution getSongDistribution(Long songId) throws ObjectNotFoundException;
+    FileDistribution getLargeArtworkDistribution(Long artworkId) throws ObjectNotFoundException;
+    FileDistribution getSmallArtworkDistribution(Long artworkId) throws ObjectNotFoundException;
+    
+    ExportBundle exportSong(Long songId) throws ObjectNotFoundException;
+    ExportBundle exportAlbum(Long albumId) throws ObjectNotFoundException;
 }
