@@ -78,4 +78,16 @@ public class UserFacadeImpl implements UserFacade {
             throw new ObjectNotFoundException(User.class, command.getId());
         }
     }
+
+    @Override
+    @Transactional
+    public UserDto deleteUserById(Long id) throws ObjectNotFoundException {
+        User user = userService.getById(id);
+        try {
+            userService.delete(id);
+        } catch (UserNotFoundException e) {
+            throw new ObjectNotFoundException(User.class, id);
+        }
+        return UserDto.of(user);
+    }
 }

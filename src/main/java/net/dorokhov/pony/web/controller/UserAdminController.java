@@ -44,4 +44,12 @@ public class UserAdminController implements ErrorHandlingController {
         }
         return userFacade.updateUser(command);
     }
+    
+    @DeleteMapping("/{userId}")
+    public UserDto deleteUser(@PathVariable Long userId) throws BadRequestException, ObjectNotFoundException {
+        if (userFacade.getCurrentUser().getId().equals(userId)) {
+            throw new BadRequestException();
+        }
+        return userFacade.deleteUserById(userId);
+    }
 }

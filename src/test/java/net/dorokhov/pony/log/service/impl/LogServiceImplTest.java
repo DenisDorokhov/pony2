@@ -40,13 +40,6 @@ public class LogServiceImplTest {
     private Logger logger;
 
     @Test
-    public void shouldGetByType() throws Exception {
-        Page<LogMessage> page = new PageImpl<>(emptyList());
-        when(logMessageRepository.findByLevelGreaterThanEqual(any(), any())).thenReturn(page);
-        assertThat(logService.getByType(DEBUG, new PageRequest(0, 10))).isSameAs(page);
-    }
-
-    @Test
     public void shouldGetByTypeAndDate() throws Exception {
         Page<LogMessage> page = new PageImpl<>(emptyList());
         when(logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(any(), any(), any(), any())).thenReturn(page);

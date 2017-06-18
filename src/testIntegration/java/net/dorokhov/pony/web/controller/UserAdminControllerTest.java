@@ -199,7 +199,49 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                     assertThat(fieldViolation.getField()).isEqualTo("email"));
         });
     }
-    
+
+    @Test
+    public void shouldDeleteUser() throws Exception {
+        User user = userService.create(UserCreationCommand.builder()
+                .name("Plain User")
+                .email("new@email.com")
+                .password("foobar")
+                .roles(User.Role.USER)
+                .build());
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/users/{userId}", HttpMethod.DELETE,
+                apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class, user.getId());
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(userDto -> checkUser(userDto, user));
+    }
+
+    @Test
+    public void shouldFailWhenDeletingNotExistingUser() throws Exception {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/users/1000", HttpMethod.DELETE,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("User");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
+    }
+
+    @Test
+    public void shouldFailWhenDeletingCurrentUser() throws Exception {
+        User user = userService.getAll().get(0);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/users/{userId}", HttpMethod.DELETE,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class, user.getId());
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> 
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.BAD_REQUEST));
+    }
+
     private void checkUser(UserDto dto, User user) {
         assertThat(dto.getId()).isEqualTo(user.getId());
         assertThat(dto.getCreationDate()).isEqualTo(user.getCreationDate());

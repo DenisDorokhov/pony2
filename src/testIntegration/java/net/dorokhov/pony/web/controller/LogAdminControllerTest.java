@@ -1,0 +1,111 @@
+package net.dorokhov.pony.web.controller;
+
+import net.dorokhov.pony.ApiTemplate;
+import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.log.domain.LogMessage;
+import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.LogDto;
+import net.dorokhov.pony.web.domain.LogMessageDto;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class LogAdminControllerTest extends InstallingIntegrationTest {
+    
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    
+    @Autowired
+    private ApiTemplate apiTemplate;
+    
+    @Autowired
+    private LogService logService;
+
+    @Test
+    public void shouldGetLog() throws Exception {
+        LogMessage logMessage = logService.info(logger, "someMessage");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<LogDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), LogDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
+    }
+
+    @Test
+    public void shouldGetLogByMinLevel() throws Exception {
+        logService.info(logger, "someMessage");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<LogDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?minLevel=WARN", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), LogDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(this::checkEmptyLog);
+    }
+
+    @Test
+    public void shouldGetLogByMinAndMaxDate() throws Exception {
+        
+        LogMessage logMessage = logService.info(logger, "someMessage");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        
+        ResponseEntity<LogDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?minDate=1986-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), LogDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
+        
+        response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?minDate=3000-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), LogDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(this::checkEmptyLog);
+    }
+
+    @Test
+    public void shouldGetLogByPageIndex() throws Exception {
+        logService.info(logger, "someMessage");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<LogDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?pageIndex=1", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), LogDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(log -> {
+            assertThat(log.getPageIndex()).isEqualTo(1);
+            assertThat(log.getPageSize()).isGreaterThan(0);
+            assertThat(log.getTotalPages()).isEqualTo(1);
+            assertThat(log.getMessages()).isEmpty();
+        });
+    }
+
+    private void checkLog(LogMessage logMessage, LogDto log) {
+        assertThat(log.getPageIndex()).isEqualTo(0);
+        assertThat(log.getPageSize()).isGreaterThan(0);
+        assertThat(log.getTotalPages()).isEqualTo(1);
+        assertThat(log.getMessages()).hasSize(1);
+        assertThat(log.getMessages()).first().satisfies(logMessageDto ->
+                checkLogMessage(logMessageDto, logMessage));
+    }
+    
+    private void checkLogMessage(LogMessageDto dto, LogMessage logMessage) {
+        assertThat(dto.getId()).isEqualTo(logMessage.getId());
+        assertThat(dto.getDate()).isEqualTo(logMessage.getDate());
+        assertThat(dto.getLevel().convert()).isEqualTo(logMessage.getLevel());
+        assertThat(dto.getPattern()).isEqualTo(logMessage.getPattern());
+        assertThat(dto.getArguments()).isEqualTo(logMessage.getArguments());
+        assertThat(dto.getText()).isEqualTo(logMessage.getText());
+    }
+
+    private void checkEmptyLog(LogDto log) {
+        assertThat(log.getPageIndex()).isEqualTo(0);
+        assertThat(log.getPageSize()).isGreaterThan(0);
+        assertThat(log.getTotalPages()).isEqualTo(0);
+        assertThat(log.getMessages()).isEmpty();
+    }
+}

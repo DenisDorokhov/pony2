@@ -22,4 +22,6 @@ public interface UserFacade {
     
     UserDto createUser(UserCreationCommandDto command) throws DuplicateEmailException;
     UserDto updateUser(UserUpdateCommandDto command) throws ObjectNotFoundException, DuplicateEmailException;
+    
+    UserDto deleteUserById(Long id) throws ObjectNotFoundException;
 }
