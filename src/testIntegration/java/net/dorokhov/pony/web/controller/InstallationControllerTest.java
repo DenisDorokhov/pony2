@@ -7,11 +7,8 @@ import net.dorokhov.pony.installation.service.InstallationService;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.domain.User.Role;
 import net.dorokhov.pony.user.service.UserService;
-import net.dorokhov.pony.web.domain.ErrorDto;
+import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
-import net.dorokhov.pony.web.domain.InstallationCommandDto;
-import net.dorokhov.pony.web.domain.InstallationDto;
-import net.dorokhov.pony.web.domain.InstallationStatusDto;
 import net.dorokhov.pony.web.service.impl.InstallationSecretManager;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +88,7 @@ public class InstallationControllerTest extends IntegrationTest {
 
         InstallationCommandDto command = new InstallationCommandDto(
                 "invalidSecret",
-                ImmutableList.of(new InstallationCommandDto.LibraryFolder("notExistingFile")),
+                ImmutableList.of(new LibraryFolderDto("notExistingFile")),
                 " ",
                 "invalidEmail",
                 " "

@@ -60,11 +60,9 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional
     public void saveLibraryFolders(List<File> files) {
-
         String value = JsonConverter.toJson(files.stream()
                 .map(File::getPath)
                 .collect(Collectors.toList()));
-
         Config.Builder builder = Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
                 .map(Config::builder)
                 .orElse(Config.builder().id(CONFIG_LIBRARY_FOLDERS));

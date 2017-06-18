@@ -1,7 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
 import net.dorokhov.pony.installation.service.command.InstallationCommand;
-import net.dorokhov.pony.web.validation.FolderExists;
 import net.dorokhov.pony.web.validation.InstallationSecret;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
@@ -9,32 +8,17 @@ import org.hibernate.validator.constraints.NotBlank;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public final class InstallationCommandDto {
 
-    public static final class LibraryFolder {
-        
-        @FolderExists
-        private final String path;
-
-        public LibraryFolder(String path) {
-            this.path = path;
-        }
-
-        public String getPath() {
-            return path;
-        }
-    }
-    
     @InstallationSecret
     private final String installationSecret;
 
     @NotNull
     @Valid
-    private final List<LibraryFolder> libraryFolders;
+    private final List<LibraryFolderDto> libraryFolders;
 
     @NotBlank
     @Size(max = 255)
@@ -50,7 +34,7 @@ public final class InstallationCommandDto {
     private final String adminPassword;
 
     public InstallationCommandDto(String installationSecret, 
-                                  List<LibraryFolder> libraryFolders, 
+                                  List<LibraryFolderDto> libraryFolders, 
                                   String adminName, String adminEmail, String adminPassword) {
         this.installationSecret = installationSecret;
         this.libraryFolders = libraryFolders;
@@ -63,7 +47,7 @@ public final class InstallationCommandDto {
         return installationSecret;
     }
 
-    public List<LibraryFolder> getLibraryFolders() {
+    public List<LibraryFolderDto> getLibraryFolders() {
         return libraryFolders;
     }
 
@@ -82,8 +66,7 @@ public final class InstallationCommandDto {
     public InstallationCommand convert() {
         return InstallationCommand.builder()
                 .libraryFolders(libraryFolders.stream()
-                        .map(libraryFolderDto -> libraryFolderDto.path)
-                        .map(File::new)
+                        .map(LibraryFolderDto::convert)
                         .collect(Collectors.toList()))
                 .adminName(adminName)
                 .adminEmail(adminEmail)
