@@ -1,12 +1,14 @@
 package net.dorokhov.pony.web.domain;
 
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
+import net.dorokhov.pony.web.validation.UpdateUniqueEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@UpdateUniqueEmail
 public final class UserUpdateCommandDto {
 
     @NotNull
@@ -17,8 +19,8 @@ public final class UserUpdateCommandDto {
     private final String name;
 
     @NotBlank
-    @Email
     @Size(max = 255)
+    @Email
     private final String email;
 
     @Size(min = 6, max = 255)

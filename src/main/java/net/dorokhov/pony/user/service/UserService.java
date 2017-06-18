@@ -19,6 +19,8 @@ public interface UserService {
     User getByEmail(String email);
 
     List<User> getAll();
+    
+    boolean checkUserPassword(Long id, String password) throws UserNotFoundException;
 
     User create(UserCreationCommand command) throws DuplicateEmailException;
     User update(UnsafeUserUpdateCommand command) throws UserNotFoundException, DuplicateEmailException;

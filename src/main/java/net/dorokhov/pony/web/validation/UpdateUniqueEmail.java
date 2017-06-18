@@ -3,21 +3,19 @@ package net.dorokhov.pony.web.validation;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
-import javax.validation.constraints.NotNull;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.TYPE;
 
-@Target({METHOD, FIELD})
+@Target({TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = FolderExistsValidator.class)
+@Constraint(validatedBy = UpdateUniqueEmailValidator.class)
 @ReportAsSingleViolation
-@NotNull
-public @interface FolderExists {
+public @interface UpdateUniqueEmail {
 
-    String message() default "must be an existing folder";
+    String message() default "must be unique";
 
     Class<?>[] groups() default {};
 

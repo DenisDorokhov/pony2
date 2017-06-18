@@ -2,7 +2,6 @@ package net.dorokhov.pony.web.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -21,8 +20,6 @@ public final class ErrorDto {
         ACCESS_DENIED,
         VALIDATION,
         NOT_FOUND,
-        INVALID_PASSWORD,
-        DUPLICATE_EMAIL,
         MAX_UPLOAD_SIZE_EXCEEDED,
     }
     
@@ -105,9 +102,5 @@ public final class ErrorDto {
     
     public static ErrorDto authenticationFailed() {
         return new ErrorDto(AUTHENTICATION_FAILED, "Authentication failed.");
-    }
-    
-    public static ErrorDto duplicateEmail(DuplicateEmailException e) {
-        return new ErrorDto(ErrorDto.Code.DUPLICATE_EMAIL, e.getMessage(), e.getEmail());
     }
 }

@@ -64,6 +64,29 @@ public class UserServiceImplTest {
     }
 
     @Test
+    public void shouldCheckUserPassword() throws Exception {
+        User existingUser = user();
+        when(userRepository.findOne(existingUser.getId())).thenReturn(existingUser);
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
+        assertThat(userService.checkUserPassword(existingUser.getId(), "somePassword")).isTrue();
+    }
+
+    @Test
+    public void shouldFailUserPasswordCheckIfUserNotFound() throws Exception {
+        when(userRepository.findOne(1L)).thenReturn(null);
+        assertThatThrownBy(() -> userService.checkUserPassword(1L, "somePassword")).isInstanceOfSatisfying(UserNotFoundException.class, e -> 
+                assertThat(e.getId()).isEqualTo(1L));
+    }
+
+    @Test
+    public void shouldFailUserPasswordCheckIfPasswordDoesNotMatch() throws Exception {
+        User existingUser = user();
+        when(userRepository.findOne(existingUser.getId())).thenReturn(existingUser);
+        when(passwordEncoder.matches(any(), any())).thenReturn(false);
+        assertThat(userService.checkUserPassword(1L, "somePassword")).isFalse();
+    }
+
+    @Test
     public void shouldCreateUser() throws Exception {
         
         when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");

@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.*;
 
-@Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER})
+@Target({METHOD, FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = InstallationSecretValidator.class)
 @ReportAsSingleViolation

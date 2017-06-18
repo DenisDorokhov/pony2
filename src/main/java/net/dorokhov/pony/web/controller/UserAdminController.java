@@ -2,15 +2,11 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.web.controller.exception.BadRequestException;
-import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
-import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.UserCreationCommandDto;
 import net.dorokhov.pony.web.domain.UserDto;
 import net.dorokhov.pony.web.domain.UserUpdateCommandDto;
 import net.dorokhov.pony.web.service.UserFacade;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -19,18 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/users")
 public class UserAdminController implements ErrorHandlingController {
-
-    @ControllerAdvice(assignableTypes = UserAdminController.class)
-    @ResponseBody
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public static class Advice {
-
-        @ExceptionHandler(DuplicateEmailException.class)
-        @ResponseStatus(HttpStatus.BAD_REQUEST)
-        public ErrorDto onDuplicateEmail(DuplicateEmailException e) {
-            return ErrorDto.duplicateEmail(e);
-        }
-    }
     
     private final UserFacade userFacade;
 

@@ -76,20 +76,24 @@ public class UserControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailOnInvalidPassword() throws Exception {
+    public void shouldFailValidationOnInvalidPassword() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         CurrentUserUpdateCommandDto command = new CurrentUserUpdateCommandDto("newName", "new@email.com",
                 "incorrectPassword", "newPassword");
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).satisfies(error -> 
-            assertThat(error.getCode()).isSameAs(Code.INVALID_PASSWORD));
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation -> 
+                    assertThat(fieldViolation.getField()).isEqualTo("oldPassword"));
+        });
     }
 
     @Test
-    public void shouldFailOnDuplicateEmail() throws Exception {
+    public void shouldFailValidationOnDuplicateEmail() throws Exception {
         User user = userService.create(UserCreationCommand.builder()
                 .name("Plain User")
                 .email("new@email.com")
@@ -103,7 +107,11 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 "/api/user", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(error ->
-                assertThat(error.getCode()).isSameAs(Code.DUPLICATE_EMAIL));
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("email"));
+        });
     }
 }

@@ -2,20 +2,19 @@ package net.dorokhov.pony.web.service;
 
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
-import net.dorokhov.pony.user.service.exception.UserNotFoundException;
-import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony.web.domain.UserCreationCommandDto;
 import net.dorokhov.pony.web.domain.UserDto;
 import net.dorokhov.pony.web.domain.UserUpdateCommandDto;
+import net.dorokhov.pony.web.service.exception.NotAuthenticatedException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 
 import java.util.List;
 
 public interface UserFacade {
 
-    UserDto getCurrentUser();
-    UserDto updateCurrentUser(CurrentUserUpdateCommandDto command) throws 
-            UserNotFoundException, InvalidPasswordException, DuplicateEmailException;
+    UserDto getCurrentUser() throws NotAuthenticatedException;
+    UserDto updateCurrentUser(CurrentUserUpdateCommandDto command) throws InvalidPasswordException, DuplicateEmailException;
     
     List<UserDto> getAllUsers();
     

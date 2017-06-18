@@ -95,7 +95,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUserCreationOnDuplicateEmail() throws Exception {
+    public void shouldFailUserCreationValidationOnDuplicateEmail() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         UserCreationCommandDto command = new UserCreationCommandDto("someName", ADMIN_EMAIL,
                 "somePassword", UserDto.Role.ADMIN);
@@ -103,8 +103,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 "/api/admin/users", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(error ->
-                assertThat(error.getCode()).isSameAs(ErrorDto.Code.DUPLICATE_EMAIL));
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("email"));
+        });
     }
 
     @Test
@@ -173,7 +177,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUserUpdateOnDuplicateEmail() throws Exception {
+    public void shouldFailUserUpdateValidationOnDuplicateEmail() throws Exception {
         User user = userService.getAll().get(0);
         userService.create(UserCreationCommand.builder()
                 .name("Plain User")
@@ -188,8 +192,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 "/api/admin/users/{userId}", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class, user.getId());
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(error ->
-                assertThat(error.getCode()).isSameAs(ErrorDto.Code.DUPLICATE_EMAIL));
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("email"));
+        });
     }
     
     private void checkUser(UserDto dto, User user) {

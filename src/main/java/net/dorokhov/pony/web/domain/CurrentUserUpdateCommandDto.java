@@ -1,6 +1,8 @@
 package net.dorokhov.pony.web.domain;
 
 import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
+import net.dorokhov.pony.web.validation.CurrentUserPasswordMatch;
+import net.dorokhov.pony.web.validation.UniqueCurrentUserEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -13,11 +15,13 @@ public final class CurrentUserUpdateCommandDto {
     private final String name;
 
     @NotBlank
-    @Email
     @Size(max = 255)
+    @Email
+    @UniqueCurrentUserEmail
     private final String email;
     
     @NotBlank
+    @CurrentUserPasswordMatch
     private final String oldPassword;
 
     @Size(min = 6, max = 255)

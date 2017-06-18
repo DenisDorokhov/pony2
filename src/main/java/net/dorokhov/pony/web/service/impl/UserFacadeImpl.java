@@ -5,6 +5,7 @@ import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
+import net.dorokhov.pony.web.service.exception.NotAuthenticatedException;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony.web.domain.UserCreationCommandDto;
@@ -29,16 +30,19 @@ public class UserFacadeImpl implements UserFacade {
     }
 
     @Override
-    public UserDto getCurrentUser() {
+    public UserDto getCurrentUser() throws NotAuthenticatedException {
         return UserDto.of(userContext.getAuthenticatedUser());
     }
 
     @Override
     @Transactional
-    public UserDto updateCurrentUser(CurrentUserUpdateCommandDto command) throws 
-            UserNotFoundException, InvalidPasswordException, DuplicateEmailException {
+    public UserDto updateCurrentUser(CurrentUserUpdateCommandDto command) throws InvalidPasswordException, DuplicateEmailException {
         User currentUser = userContext.getAuthenticatedUser();
-        return UserDto.of(userService.update(command.convert(currentUser.getId())));
+        try {
+            return UserDto.of(userService.update(command.convert(currentUser.getId())));
+        } catch (UserNotFoundException e) {
+            throw new IllegalStateException(String.format("Current user '%d' not found.", currentUser.getId()));
+        }
     }
 
     @Override

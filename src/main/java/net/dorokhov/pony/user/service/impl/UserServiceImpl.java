@@ -55,6 +55,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean checkUserPassword(Long id, String password) throws UserNotFoundException {
+        try {
+            doCheckUserPassword(id, password);
+        } catch (InvalidPasswordException e) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     @Transactional
     public User create(UserCreationCommand command) throws DuplicateEmailException {
         String email = command.getEmail().trim();
@@ -97,13 +108,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User update(SafeUserUpdateCommand command) throws InvalidPasswordException, UserNotFoundException, DuplicateEmailException {
-        User user = userRepository.findOne(command.getId());
-        if (user == null) {
-            throw new UserNotFoundException(command.getId());
-        }
-        if (!passwordEncoder.matches(command.getOldPassword(), user.getPassword())) {
-            throw new InvalidPasswordException();
-        }
+        User user = doCheckUserPassword(command.getId(), command.getOldPassword());
         return update(UnsafeUserUpdateCommand.builder()
                 .id(user.getId())
                 .name(command.getName())
@@ -122,5 +127,16 @@ public class UserServiceImpl implements UserService {
         }
         logger.info("Deleting user '{}'.", userToDelete.getId());
         userRepository.delete(id);
+    }
+    
+    private User doCheckUserPassword(Long id, String password) throws UserNotFoundException, InvalidPasswordException {
+        User user = userRepository.findOne(id);
+        if (user == null) {
+            throw new UserNotFoundException(id);
+        }
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new InvalidPasswordException();
+        }
+        return user;
     }
 }
