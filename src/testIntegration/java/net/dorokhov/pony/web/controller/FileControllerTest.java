@@ -12,6 +12,7 @@ import net.dorokhov.pony.library.service.impl.artwork.ArtworkStorage;
 import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony.library.service.impl.file.FileTypeResolver;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.ErrorDto;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -98,9 +99,14 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldReportNotFoundAudio() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getToken()), Void.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/1000", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Song");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
     }
 
     @Test
@@ -116,9 +122,14 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldReportNotFoundLargeArtwork() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/large/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getToken()), Void.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/large/1000", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Artwork");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
     }
 
     @Test
@@ -134,9 +145,14 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldReportNotFoundSmallArtwork() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/small/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getToken()), Void.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/small/1000", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Artwork");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
     }
 
     @Test
@@ -154,9 +170,14 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldReportNotFoundExportingSong() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getToken()), String.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/1000", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Song");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
     }
 
     @Test
@@ -174,8 +195,13 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldReportNotFoundExportingAlbum() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange("/api/file/export/album/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getToken()), String.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/export/album/1000", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Album");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
     }
 }

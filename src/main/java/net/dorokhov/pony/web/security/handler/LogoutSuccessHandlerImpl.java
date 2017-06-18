@@ -3,6 +3,7 @@ package net.dorokhov.pony.web.security.handler;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.UserDto;
+import net.dorokhov.pony.web.security.LogoutDelegate;
 import net.dorokhov.pony.web.security.UserDetailsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
@@ -31,11 +33,13 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
 
     private final SecurityContextRepository securityContextRepository;
     private final MappingJackson2HttpMessageConverter messageConverter;
+    private final List<LogoutDelegate> logoutDelegates;
 
     public LogoutSuccessHandlerImpl(SecurityContextRepository securityContextRepository,
-                                    MappingJackson2HttpMessageConverter messageConverter) {
+                                    MappingJackson2HttpMessageConverter messageConverter, List<LogoutDelegate> logoutDelegates) {
         this.securityContextRepository = securityContextRepository;
         this.messageConverter = messageConverter;
+        this.logoutDelegates = logoutDelegates;
     }
 
     @Override
@@ -49,6 +53,7 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
                 .map(UserDetailsImpl::getUser)
                 .orElse(null);
         if (loggedOutUser != null) {
+            logoutDelegates.forEach(logoutDelegate -> logoutDelegate.onLogout(loggedOutUser));
             logger.debug("User '{}' has logged out.");
             messageConverter.write(UserDto.of(loggedOutUser), MediaType.ALL, new ServletServerHttpResponse(response));
         } else {
