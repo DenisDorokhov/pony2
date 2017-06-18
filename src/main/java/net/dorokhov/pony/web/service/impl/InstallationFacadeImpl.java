@@ -6,8 +6,10 @@ import net.dorokhov.pony.installation.service.InstallationService;
 import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;
+import net.dorokhov.pony.web.domain.InstallationStatusDto;
 import net.dorokhov.pony.web.service.InstallationFacade;
 import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -41,9 +43,18 @@ public class InstallationFacadeImpl implements InstallationFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public InstallationDto getInstallation() {
+    public InstallationStatusDto getInstallationStatus() {
+        return new InstallationStatusDto(installationService.getInstallation() != null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InstallationDto getInstallation() throws ObjectNotFoundException {
         Installation installation = installationService.getInstallation();
-        return installation != null ? InstallationDto.of(installation) : null;
+        if (installation == null) {
+            throw new ObjectNotFoundException(Installation.class);
+        }
+        return InstallationDto.of(installation);
     }
 
     @Override

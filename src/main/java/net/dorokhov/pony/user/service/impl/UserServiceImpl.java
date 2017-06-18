@@ -6,18 +6,18 @@ import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,8 +50,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<User> getAll(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public List<User> getAll() {
+        return userRepository.findAll(new Sort("name", "email"));
     }
 
     @Override

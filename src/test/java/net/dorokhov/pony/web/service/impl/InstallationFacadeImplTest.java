@@ -5,6 +5,7 @@ import net.dorokhov.pony.installation.domain.Installation;
 import net.dorokhov.pony.installation.service.InstallationService;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -45,7 +46,10 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldGetNoInstallation() throws Exception {
         when(installationService.getInstallation()).thenReturn(null);
-        assertThat(installationServiceFacade.getInstallation()).isNull();
+        assertThatThrownBy(() -> installationServiceFacade.getInstallation()).isInstanceOfSatisfying(ObjectNotFoundException.class, e -> {
+            assertThat(e.getObjectType()).isEqualTo(Installation.class);
+            assertThat(e.getObjectId()).isNull();
+        });
     }
 
     @Test

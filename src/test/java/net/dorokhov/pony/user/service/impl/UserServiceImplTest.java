@@ -1,12 +1,13 @@
 package net.dorokhov.pony.user.service.impl;
 
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.repository.UserRepository;
 import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,13 +16,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static java.util.Collections.emptyList;
+import java.util.List;
+
 import static net.dorokhov.pony.fixture.UserFixtures.user;
 import static net.dorokhov.pony.fixture.UserFixtures.userBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,9 +58,9 @@ public class UserServiceImplTest {
 
     @Test
     public void shouldGetAll() throws Exception {
-        Page<User> page = new PageImpl<>(emptyList());
-        when(userRepository.findAll((Pageable) any())).thenReturn(page);
-        assertThat(userService.getAll(new PageRequest(0, 10))).isSameAs(page);
+        List<User> users = ImmutableList.of(user());
+        when(userRepository.findAll((Sort) any())).thenReturn(users);
+        assertThat(userService.getAll()).isSameAs(users);
     }
 
     @Test

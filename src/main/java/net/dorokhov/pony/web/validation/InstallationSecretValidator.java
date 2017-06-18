@@ -6,7 +6,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 public final class InstallationSecretValidator implements ConstraintValidator<InstallationSecret, String> {
-    
+
     private final InstallationFacade installationFacade;
 
     public InstallationSecretValidator(InstallationFacade installationFacade) {

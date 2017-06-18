@@ -10,16 +10,16 @@ import net.dorokhov.pony.user.service.UserService;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
-import net.dorokhov.pony.web.domain.InstallationCommandDto.LibraryFolder;
 import net.dorokhov.pony.web.domain.InstallationDto;
+import net.dorokhov.pony.web.domain.InstallationStatusDto;
 import net.dorokhov.pony.web.service.impl.InstallationSecretManager;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,25 +39,11 @@ public class InstallationControllerTest extends IntegrationTest {
     private InstallationService installationService;
 
     @Test
-    public void shouldValidateInstallationCommand() throws Exception {
-
-        InstallationCommandDto command = new InstallationCommandDto(
-                "invalidSecret",
-                ImmutableList.of(new LibraryFolder("notExistingFile")),
-                " ",
-                "invalidEmail",
-                " "
-        );
-
-        ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(error -> {
-            assertThat(error.getCode()).isSameAs(Code.VALIDATION);
-            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(5);
-            assertThat(error.getFieldViolations().stream()
-                    .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("installationSecret", "libraryFolders[0].path", "adminName", "adminEmail", "adminPassword");
-        });
+    public void shouldReturnNoInstallation() throws Exception {
+        ResponseEntity<InstallationStatusDto> response = restTemplate.getForEntity("/api/installation/status", InstallationStatusDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(installationStatus -> 
+                assertThat(installationStatus.isInstalled()).isFalse());
     }
 
     @Test
@@ -71,17 +57,17 @@ public class InstallationControllerTest extends IntegrationTest {
                 "somePassword"
         );
 
-        ResponseEntity<InstallationDto> response = restTemplate.postForEntity("/api/installation", command, InstallationDto.class);
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(installationDto -> 
+        ResponseEntity<InstallationDto> installationResponse = restTemplate.postForEntity("/api/installation", command, InstallationDto.class);
+        assertThat(installationResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(installationResponse.getBody()).satisfies(installationDto -> 
                 assertThat(installationDto.getVersion()).isNotNull());
 
         assertThat(configService.getAutoScanInterval()).isNull();
         assertThat(configService.getLibraryFolders()).isEmpty();
 
-        Page<User> users = userService.getAll(new PageRequest(0, 100));
-        assertThat(users.getTotalElements()).isEqualTo(1);
-        assertThat(users.getContent()).first().satisfies(user -> {
+        List<User> users = userService.getAll();
+        assertThat(users).hasSize(1);
+        assertThat(users).first().satisfies(user -> {
             assertThat(user.getName()).isEqualTo("Foo Bar");
             assertThat(user.getEmail()).isEqualTo("foo@bar.com");
             assertThat(user.getPassword()).isNotNull();
@@ -92,6 +78,33 @@ public class InstallationControllerTest extends IntegrationTest {
             assertThat(installation.getCreationDate()).isNotNull();
             assertThat(installation.getUpdateDate()).isNull();
             assertThat(installation.getVersion()).isNotNull();
+        });
+
+        ResponseEntity<InstallationStatusDto> statusResponse = restTemplate.getForEntity("/api/installation/status", InstallationStatusDto.class);
+        assertThat(statusResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(statusResponse.getBody()).satisfies(installationStatus ->
+                assertThat(installationStatus.isInstalled()).isTrue());
+    }
+
+    @Test
+    public void shouldValidateInstallationCommand() throws Exception {
+
+        InstallationCommandDto command = new InstallationCommandDto(
+                "invalidSecret",
+                ImmutableList.of(new InstallationCommandDto.LibraryFolder("notExistingFile")),
+                " ",
+                "invalidEmail",
+                " "
+        );
+
+        ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(Code.VALIDATION);
+            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(5);
+            assertThat(error.getFieldViolations().stream()
+                    .map(ErrorDto.FieldViolation::getField).distinct())
+                    .containsExactlyInAnyOrder("installationSecret", "libraryFolders[0].path", "adminName", "adminEmail", "adminPassword");
         });
     }
 

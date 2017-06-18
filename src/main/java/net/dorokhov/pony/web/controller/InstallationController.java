@@ -4,6 +4,7 @@ import net.dorokhov.pony.installation.service.exception.AlreadyInstalledExceptio
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;
+import net.dorokhov.pony.web.domain.InstallationStatusDto;
 import net.dorokhov.pony.web.service.InstallationFacade;
 import net.dorokhov.pony.web.service.exception.InvalidInstallationSecretException;
 import org.slf4j.Logger;
@@ -38,6 +39,11 @@ public class InstallationController implements ErrorHandlingController {
 
     public InstallationController(InstallationFacade installationFacade) {
         this.installationFacade = installationFacade;
+    }
+    
+    @GetMapping("/status")
+    public InstallationStatusDto getInstallationStatus() {
+        return installationFacade.getInstallationStatus();
     }
 
     @PostMapping

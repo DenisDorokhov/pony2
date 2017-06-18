@@ -1,8 +1,10 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
+import com.google.common.collect.ImmutableList;
+import net.dorokhov.pony.web.controller.exception.BadRequestException;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 public interface ErrorHandlingController {
 
@@ -64,7 +68,8 @@ public interface ErrorHandlingController {
         @ExceptionHandler({
                 HttpMediaTypeException.class,
                 HttpMessageNotReadableException.class,
-                MissingServletRequestParameterException.class
+                MissingServletRequestParameterException.class,
+                BadRequestException.class
         })
         @ResponseStatus(HttpStatus.BAD_REQUEST)
         public ErrorDto onBadRequest() {
@@ -74,7 +79,12 @@ public interface ErrorHandlingController {
         @ExceptionHandler(ObjectNotFoundException.class)
         @ResponseStatus(HttpStatus.NOT_FOUND)
         public ErrorDto onObjectNotFound(ObjectNotFoundException e) {
-            return new ErrorDto(Code.NOT_FOUND, e.getMessage(), e.getObjectType().getSimpleName(), e.getObjectId().toString());
+            ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
+            argumentsBuilder.add(e.getObjectType().getSimpleName());
+            if (e.getObjectId() != null) {
+                argumentsBuilder.add(e.getObjectId().toString());
+            }
+            return new ErrorDto(Code.NOT_FOUND, e.getMessage(), argumentsBuilder.build(), emptyList());
         }
 
         @ExceptionHandler(Exception.class)

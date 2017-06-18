@@ -33,7 +33,7 @@ public class UserController implements ErrorHandlingController {
         @ExceptionHandler(DuplicateEmailException.class)
         @ResponseStatus(HttpStatus.BAD_REQUEST)
         public ErrorDto onDuplicateEmail(DuplicateEmailException e) {
-            return new ErrorDto(Code.DUPLICATE_EMAIL, e.getMessage(), e.getEmail());
+            return ErrorDto.duplicateEmail(e);
         }
     }
     

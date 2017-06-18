@@ -1,12 +1,16 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
+import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-public final class CurrentUserUpdateCommandDto {
+public final class UserUpdateCommandDto {
+
+    @NotNull
+    private final Long id;
 
     @NotBlank
     @Size(max = 255)
@@ -16,18 +20,23 @@ public final class CurrentUserUpdateCommandDto {
     @Email
     @Size(max = 255)
     private final String email;
-    
-    @NotBlank
-    private final String oldPassword;
 
     @Size(min = 6, max = 255)
     private final String newPassword;
 
-    public CurrentUserUpdateCommandDto(String name, String email, String oldPassword, String newPassword) {
+    @NotNull
+    private final UserDto.Role role;
+
+    public UserUpdateCommandDto(Long id, String name, String email, String newPassword, UserDto.Role role) {
+        this.id = id;
         this.name = name;
         this.email = email;
-        this.oldPassword = oldPassword;
         this.newPassword = newPassword;
+        this.role = role;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getName() {
@@ -38,21 +47,21 @@ public final class CurrentUserUpdateCommandDto {
         return email;
     }
 
-    public String getOldPassword() {
-        return oldPassword;
-    }
-
     public String getNewPassword() {
         return newPassword;
     }
 
-    public SafeUserUpdateCommand convert(Long userId) {
-        return SafeUserUpdateCommand.builder()
-                .id(userId)
+    public UserDto.Role getRole() {
+        return role;
+    }
+    
+    public UnsafeUserUpdateCommand convert() {
+        return UnsafeUserUpdateCommand.builder()
+                .id(id)
                 .name(name)
                 .email(email)
-                .oldPassword(oldPassword)
                 .newPassword(newPassword)
+                .roles(role.convert())
                 .build();
     }
 }

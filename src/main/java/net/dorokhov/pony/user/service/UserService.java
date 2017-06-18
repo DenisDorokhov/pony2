@@ -4,13 +4,12 @@ import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.user.service.exception.UserNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public interface UserService {
 
@@ -19,7 +18,7 @@ public interface UserService {
     @Nullable
     User getByEmail(String email);
 
-    Page<User> getAll(Pageable pageable);
+    List<User> getAll();
 
     User create(UserCreationCommand command) throws DuplicateEmailException;
     User update(UnsafeUserUpdateCommand command) throws UserNotFoundException, DuplicateEmailException;

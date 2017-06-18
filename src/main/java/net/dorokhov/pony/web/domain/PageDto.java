@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-public class PageDto {
+public abstract class PageDto {
     
     protected final int pageIndex;
     protected final int pageSize;

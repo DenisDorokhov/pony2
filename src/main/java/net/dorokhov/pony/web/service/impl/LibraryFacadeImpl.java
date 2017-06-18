@@ -6,7 +6,7 @@ import net.dorokhov.pony.library.service.LibraryService;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.search.domain.SearchQuery;
 import net.dorokhov.pony.search.service.SearchService;
-import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.service.LibraryFacade;
 import org.springframework.data.domain.Page;

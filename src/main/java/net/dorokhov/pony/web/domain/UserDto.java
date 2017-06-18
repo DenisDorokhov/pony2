@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.domain;
 
+import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.domain.User.Role;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -9,6 +9,27 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class UserDto extends BaseDto {
+    
+    public enum Role {
+        
+        USER, ADMIN;
+        
+        public Set<User.Role> convert() {
+            if (this == ADMIN) {
+                return ImmutableSet.of(User.Role.USER, User.Role.ADMIN);
+            } else {
+                return ImmutableSet.of(User.Role.USER);
+            }
+        }
+
+        public static Role of(Set<User.Role> roles) {
+            if (roles.contains(User.Role.ADMIN)) {
+                return Role.ADMIN;
+            } else {
+                return Role.USER;
+            }
+        }
+    }
 
     private final String name;
     private final String email;
@@ -37,16 +58,8 @@ public final class UserDto extends BaseDto {
         return role;
     }
 
-    private static Role rolesToDto(Set<Role> roles) {
-        if (roles.contains(Role.ADMIN)) {
-            return Role.ADMIN;
-        } else {
-            return Role.USER;
-        }
-    }
-
     public static UserDto of(User user) {
         return new UserDto(user.getId(), user.getCreationDate(), user.getUpdateDate(),
-                user.getName(), user.getEmail(), rolesToDto(user.getRoles()));
+                user.getName(), user.getEmail(), Role.of(user.getRoles()));
     }
 }

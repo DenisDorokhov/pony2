@@ -17,7 +17,7 @@ import static java.lang.annotation.ElementType.*;
 @NotNull
 public @interface FolderExists {
 
-    String message() default "{net.dorokhov.pony.web.validation.FolderExists.message}";
+    String message() default "must be an existing folder";
 
     Class<?>[] groups() default {};
 

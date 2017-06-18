@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.service.LibraryFacade;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.service;
 
 import net.dorokhov.pony.library.domain.ExportBundle;
-import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.*;
 
 import java.util.List;

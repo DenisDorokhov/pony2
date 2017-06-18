@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-public class ScanStatusDto {
+public final class ScanStatusDto {
     
     private final boolean scanning;
 

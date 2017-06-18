@@ -19,7 +19,7 @@ CREATE TABLE user (
 
   email VARCHAR_IGNORECASE (255) NOT NULL,
 
-  password VARCHAR (255) NOT NULL,
+  password TEXT NOT NULL,
 
   UNIQUE (email)
 );

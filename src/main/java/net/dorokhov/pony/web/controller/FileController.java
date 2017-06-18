@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.library.domain.ExportBundle;
-import net.dorokhov.pony.web.controller.exception.ObjectNotFoundException;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.service.FileDistributor;
 import net.dorokhov.pony.web.service.LibraryFacade;
 import org.springframework.http.HttpStatus;
