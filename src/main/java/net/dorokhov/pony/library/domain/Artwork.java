@@ -14,6 +14,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Entity
 @Table(name = "artwork")
 public class Artwork implements Serializable {
+    
+    public static final String SOURCE_URI_SCHEME_FILE = "file";
+    public static final String SOURCE_URI_SCHEME_EMBEDDED = "embedded";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +54,9 @@ public class Artwork implements Serializable {
     @Column(name = "source_uri")
     private URI sourceUri;
 
+    @Column(name = "source_uri_scheme")
+    private String sourceUriScheme;
+
     protected Artwork() {
     }
 
@@ -64,6 +70,7 @@ public class Artwork implements Serializable {
         smallImageSize = checkNotNull(builder.smallImageSize);
         smallImagePath = checkNotNull(builder.smallImagePath);
         sourceUri = checkNotNull(builder.sourceUri);
+        sourceUriScheme = sourceUri.getScheme();
     }
 
     public Long getId() {
@@ -102,6 +109,10 @@ public class Artwork implements Serializable {
         return sourceUri;
     }
 
+    public String getSourceUriScheme() {
+        return sourceUriScheme;
+    }
+
     @PrePersist
     public void prePersist() {
         date = LocalDateTime.now();
@@ -130,10 +141,12 @@ public class Artwork implements Serializable {
         return "Artwork{" +
                 "id=" + id +
                 ", mimeType='" + mimeType + '\'' +
+                ", checksum='" + checksum + '\'' +
                 ", sourceUri=" + sourceUri +
+                ", sourceUriScheme=" + sourceUriScheme +
                 '}';
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

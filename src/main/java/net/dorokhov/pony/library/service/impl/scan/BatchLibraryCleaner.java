@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static net.dorokhov.pony.library.domain.Artwork.SOURCE_URI_SCHEME_FILE;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Component
@@ -131,8 +132,7 @@ public class BatchLibraryCleaner {
             while (pageable != null) {
                 Page<Artwork> artworks = artworkRepository.findAll(pageable);
                 for (Artwork artwork : artworks.getContent()) {
-                    String scheme = artwork.getSourceUri().getScheme();
-                    if (Objects.equals(scheme, "file")) {
+                    if (Objects.equals(artwork.getSourceUriScheme(), SOURCE_URI_SCHEME_FILE)) {
                         if (!existingImagePaths.contains(artwork.getSourceUri().getPath())) {
                             result.add(artwork.getId());
                         } else {

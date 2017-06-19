@@ -137,7 +137,7 @@ public class ArtworkStorage {
                                      Supplier<InputStream> streamSupplier) throws IOException {
 
         String checksum = checksumSupplier.get();
-        Artwork artwork = artworkRepository.findByChecksum(checksum);
+        Artwork artwork = artworkRepository.findByChecksumAndSourceUriScheme(checksum, sourceUri.getScheme());
         if (artwork != null) {
             return artworkToArtworkFiles(artwork);
         }

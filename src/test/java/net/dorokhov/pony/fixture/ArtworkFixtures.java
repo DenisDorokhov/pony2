@@ -35,7 +35,7 @@ public final class ArtworkFixtures {
                 .smallImageSize(0L)
                 .smallImagePath("someSmallPath")
                 .sourceUri(UriComponentsBuilder
-                        .fromUriString("sourceUri")
+                        .fromUriString("file:sourceUri")
                         .build().toUri());
     }
 }

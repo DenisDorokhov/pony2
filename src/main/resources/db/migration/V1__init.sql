@@ -142,13 +142,13 @@ CREATE TABLE artwork (
   small_image_size BIGINT NOT NULL,
   small_image_path VARCHAR (255) NOT NULL,
   source_uri VARCHAR (1000) NOT NULL,
+  source_uri_scheme VARCHAR (255),
 
+  UNIQUE (source_uri_scheme, checksum),
+  UNIQUE (source_uri),
   UNIQUE (large_image_path),
-  UNIQUE (small_image_path),
-  UNIQUE (source_uri)
+  UNIQUE (small_image_path)
 );
-
-CREATE INDEX index_artwork_source_uri ON artwork (source_uri);
 
 CREATE TABLE genre (
 

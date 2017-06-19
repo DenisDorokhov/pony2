@@ -23,7 +23,7 @@ public class ArtworkRepositoryTest extends IntegrationTest {
                 .smallImageSize(12L)
                 .smallImagePath("/smallPath")
                 .sourceUri(UriComponentsBuilder
-                        .fromUriString("sourceUri")
+                        .fromUriString("file:sourceUri")
                         .build().toUri())
                 .build());
         assertThat(artworkRepository.findOne(artwork.getId())).isNotNull();

@@ -63,13 +63,13 @@ public class LibraryArtworkFinderTest {
     @Test
     public void shouldFindAndSaveFileArtwork() throws Exception {
 
-        AudioNode audioNode = mock(AudioNode.class);
-        when(audioNode.getFile()).thenReturn(new File("someFile"));
-        when(artworkFileFinder.findArtwork(any())).thenReturn(mock(ImageNode.class));
+        ImageNode imageNode = mock(ImageNode.class);
+        when(imageNode.getFile()).thenReturn(new File("someFile"));
+        when(artworkFileFinder.findArtwork(any())).thenReturn(imageNode);
         ArtworkFiles artworkFiles = artworkFiles();
         when(artworkStorage.getOrSave((ImageNodeArtworkStorageCommand) any())).thenReturn(artworkFiles);
 
-        ArtworkFiles savedArtworkFiles = libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
+        ArtworkFiles savedArtworkFiles = libraryArtworkFinder.findAndSaveFileArtwork(mock(AudioNode.class));
         assertThat(savedArtworkFiles).isSameAs(artworkFiles);
     }
 

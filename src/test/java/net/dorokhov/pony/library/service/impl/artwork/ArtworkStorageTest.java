@@ -200,7 +200,7 @@ public class ArtworkStorageTest {
         assertThat(savedArtwork.getValue()).isSameAs(artworkFiles.getArtwork());
         checkSavedArtwork(savedArtwork.getValue());
 
-        when(artworkRepository.findByChecksum(any())).thenReturn(artworkFiles.getArtwork());
+        when(artworkRepository.findByChecksumAndSourceUriScheme(any(), any())).thenReturn(artworkFiles.getArtwork());
         doGetAndSave.get();
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }
@@ -229,7 +229,7 @@ public class ArtworkStorageTest {
     
     private URI sourceUri() {
         return UriComponentsBuilder
-                .fromUriString("sourceUri")
+                .fromUriString("file:sourceUri")
                 .build().toUri();
     }
 }

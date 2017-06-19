@@ -16,5 +16,5 @@ public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
     @Query("SELECT SUM(f.smallImageSize) FROM Artwork f")
     Long sumSmallImageSize();
 
-    Artwork findByChecksum(String checksum);
+    Artwork findByChecksumAndSourceUriScheme(String checksum, String sourceUriScheme);
 }

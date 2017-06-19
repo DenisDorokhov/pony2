@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class LibraryArtworkFinder {
     public ArtworkFiles findAndSaveFileArtwork(AudioNode audioNode) throws IOException {
         ImageNode artwork = artworkFileFinder.findArtwork(audioNode);
         if (artwork != null) {
-            return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(audioNode.getFile().toURI(), artwork));
+            return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(artwork.getFile().toURI(), artwork));
         } else {
             return null;
         }
@@ -70,7 +71,12 @@ public class LibraryArtworkFinder {
     public ArtworkFiles findAndSaveEmbeddedArtwork(ReadableAudioData audioData) throws IOException {
         ReadableAudioData.EmbeddedArtwork artwork = audioData.getEmbeddedArtwork();
         if (artwork != null) {
-            return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(audioData.getFile().toURI(), artwork.getBinaryData()));
+            return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(
+                    UriComponentsBuilder.fromUri(audioData.getFile().toURI())
+                            .scheme(Artwork.SOURCE_URI_SCHEME_EMBEDDED)
+                            .build()
+                            .toUri(), 
+                    artwork.getBinaryData()));
         } else {
             return null;
         }
