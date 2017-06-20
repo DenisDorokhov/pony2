@@ -3,17 +3,18 @@ package net.dorokhov.pony.web.domain;
 import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.user.domain.User;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class UserDto extends BaseDto {
-    
+
     public enum Role {
-        
+
         USER, ADMIN;
-        
+
         public Set<User.Role> convert() {
             if (this == ADMIN) {
                 return ImmutableSet.of(User.Role.USER, User.Role.ADMIN);
@@ -36,10 +37,8 @@ public final class UserDto extends BaseDto {
 
     private final Role role;
 
-    public UserDto(Long id,
-                   LocalDateTime creationDate, LocalDateTime updateDate,
-                   String name, String email,
-                   Role role) {
+    UserDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+            String name, String email, Role role) {
         super(id, creationDate, updateDate);
         this.name = checkNotNull(name);
         this.email = checkNotNull(email);

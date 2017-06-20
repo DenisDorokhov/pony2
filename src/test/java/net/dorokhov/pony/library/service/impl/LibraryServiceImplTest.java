@@ -50,7 +50,7 @@ public class LibraryServiceImplTest {
         List<Genre> genres = ImmutableList.of(Genre.builder().build(), Genre.builder().build());
         when(genreRepository.findAll((Sort) any())).thenReturn(genres);
         List<Genre> result = libraryService.getGenres();
-        assertThat(result).isSameAs(genres);
+        assertThat(result).isEqualTo(genres);
     }
 
     @Test
@@ -58,7 +58,7 @@ public class LibraryServiceImplTest {
         List<Artist> artists = ImmutableList.of(Artist.builder().build(), Artist.builder().build());
         when(artistRepository.findAll((Sort) any())).thenReturn(artists);
         List<Artist> result = libraryService.getArtists();
-        assertThat(result).isSameAs(artists);
+        assertThat(result).isEqualTo(artists);
     }
 
     @Test

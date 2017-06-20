@@ -1,21 +1,21 @@
 package net.dorokhov.pony.web.domain;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.Album;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.unmodifiableList;
 
 public final class AlbumSongsDto {
 
     private final AlbumDto album;
     private final List<SongDto> songs;
 
-    public AlbumSongsDto(AlbumDto album, List<SongDto> songs) {
+    AlbumSongsDto(AlbumDto album, List<SongDto> songs) {
         this.album = checkNotNull(album);
-        this.songs = ImmutableList.copyOf(songs);
+        this.songs = unmodifiableList(songs);
     }
 
     public AlbumDto getAlbum() {

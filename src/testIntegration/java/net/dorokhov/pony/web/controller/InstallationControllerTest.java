@@ -16,6 +16,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.File;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -88,7 +89,7 @@ public class InstallationControllerTest extends IntegrationTest {
 
         InstallationCommandDto command = new InstallationCommandDto(
                 "invalidSecret",
-                ImmutableList.of(new LibraryFolderDto("notExistingFile")),
+                ImmutableList.of(LibraryFolderDto.of(new File("notExistingFile"))),
                 " ",
                 "invalidEmail",
                 " "

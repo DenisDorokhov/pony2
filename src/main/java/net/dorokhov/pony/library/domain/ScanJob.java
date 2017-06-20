@@ -57,10 +57,12 @@ public class ScanJob extends BaseEntity<Long> {
         return status;
     }
 
+    @Nullable
     public LogMessage getLogMessage() {
         return logMessage;
     }
 
+    @Nullable
     public ScanResult getScanResult() {
         return scanResult;
     }
@@ -96,10 +98,10 @@ public class ScanJob extends BaseEntity<Long> {
         private LogMessage logMessage;
         private ScanResult scanResult;
 
-        public Builder() {
+        private Builder() {
         }
 
-        public Builder(ScanJob scanJob) {
+        private Builder(ScanJob scanJob) {
             this.id = scanJob.id;
             this.scanType = scanJob.scanType;
             this.status = scanJob.status;

@@ -10,7 +10,8 @@ public final class ArtistDto extends BaseDto {
     private final String name;
     private final Long artwork;
 
-    public ArtistDto(Long id, LocalDateTime creationDate, LocalDateTime updateDate, String name, Long artwork) {
+    ArtistDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate, 
+              @Nullable String name, @Nullable Long artwork) {
         super(id, creationDate, updateDate);
         this.name = name;
         this.artwork = artwork;

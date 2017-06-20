@@ -1,9 +1,9 @@
 package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.library.domain.ExportBundle;
-import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.service.FileDistributor;
-import net.dorokhov.pony.web.service.LibraryFacade;
+import net.dorokhov.pony.web.service.FileFacade;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,38 +23,38 @@ import java.io.OutputStream;
 @RequestMapping("/api/file")
 public class FileController implements ErrorHandlingController {
 
-    private final LibraryFacade libraryFacade;
+    private final FileFacade fileFacade;
     private final FileDistributor fileDistributor;
 
-    public FileController(LibraryFacade libraryFacade, FileDistributor fileDistributor) {
-        this.libraryFacade = libraryFacade;
+    public FileController(FileFacade fileFacade, FileDistributor fileDistributor) {
+        this.fileFacade = fileFacade;
         this.fileDistributor = fileDistributor;
     }
 
     @GetMapping("/audio/{songId}")
     public ResponseEntity<?> getAudio(@PathVariable Long songId,
                                       HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        fileDistributor.distribute(libraryFacade.getSongDistribution(songId), request, response);
+        fileDistributor.distribute(fileFacade.getSongDistribution(songId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/artwork/large/{artworkId}")
     public ResponseEntity<?> getLargeArtwork(@PathVariable Long artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        fileDistributor.distribute(libraryFacade.getLargeArtworkDistribution(artworkId), request, response);
+        fileDistributor.distribute(fileFacade.getLargeArtworkDistribution(artworkId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/artwork/small/{artworkId}")
     public ResponseEntity<?> getSmallArtwork(@PathVariable Long artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        fileDistributor.distribute(libraryFacade.getSmallArtworkDistribution(artworkId), request, response);
+        fileDistributor.distribute(fileFacade.getSmallArtworkDistribution(artworkId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/export/song/{songId}")
     public ResponseEntity<?> exportSong(@PathVariable Long songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        ExportBundle exportBundle = libraryFacade.exportSong(songId);
+        ExportBundle exportBundle = fileFacade.exportSong(songId);
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {
             exportBundle.getContent().write(outputStream);
@@ -64,7 +64,7 @@ public class FileController implements ErrorHandlingController {
 
     @GetMapping("/export/album/{albumId}")
     public ResponseEntity<?> exportAlbum(@PathVariable Long albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
-        ExportBundle exportBundle = libraryFacade.exportAlbum(albumId);
+        ExportBundle exportBundle = fileFacade.exportAlbum(albumId);
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {
             exportBundle.getContent().write(outputStream);

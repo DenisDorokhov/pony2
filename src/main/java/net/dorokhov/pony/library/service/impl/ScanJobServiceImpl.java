@@ -119,6 +119,13 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @Nullable
+    public ScanJob getLastSuccessfulJob() {
+        return scanJobRepository.findFirstByStatusOrderByUpdateDateDesc(Status.COMPLETE);
+    }
+
+    @Override
     @Transactional
     public ScanJob startScanJob() throws ConcurrentScanException {
         return doStartScanJob(configService.getLibraryFolders());

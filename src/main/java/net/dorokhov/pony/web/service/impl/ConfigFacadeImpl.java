@@ -21,10 +21,7 @@ public class ConfigFacadeImpl implements ConfigFacade {
     @Override
     @Transactional(readOnly = true)
     public ConfigDto getConfig() {
-        return new ConfigDto(configService.getAutoScanInterval(),
-                configService.getLibraryFolders().stream()
-                        .map(LibraryFolderDto::of)
-                        .collect(Collectors.toList()));
+        return ConfigDto.of(configService.getAutoScanInterval(), configService.getLibraryFolders());
     }
 
     @Override

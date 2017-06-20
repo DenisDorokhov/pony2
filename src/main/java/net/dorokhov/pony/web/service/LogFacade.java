@@ -1,11 +1,11 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.web.domain.LogDto;
-import net.dorokhov.pony.web.domain.LogMessageDto;
+import net.dorokhov.pony.log.domain.LogMessage.Level;
+import net.dorokhov.pony.web.domain.LogMessagePageDto;
 
 import java.time.LocalDateTime;
 
 public interface LogFacade {
-    LogDto getLog(LogMessageDto.Level minLevel, int pageIndex);
-    LogDto getLog(LogMessageDto.Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex);
+    LogMessagePageDto getLog(Level minLevel, int pageIndex);
+    LogMessagePageDto getLog(Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex);
 }

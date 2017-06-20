@@ -79,10 +79,10 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
         private String name;
         private Artwork artwork;
 
-        public Builder() {
+        private Builder() {
         }
         
-        public Builder(Genre genre) {
+        private Builder(Genre genre) {
             name = genre.name;
             artwork = genre.artwork;
             id = genre.id;

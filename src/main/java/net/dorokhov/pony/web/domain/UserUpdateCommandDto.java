@@ -5,6 +5,7 @@ import net.dorokhov.pony.web.validation.UpdateUniqueEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -29,7 +30,7 @@ public final class UserUpdateCommandDto {
     @NotNull
     private final UserDto.Role role;
 
-    public UserUpdateCommandDto(Long id, String name, String email, String newPassword, UserDto.Role role) {
+    public UserUpdateCommandDto(Long id, String name, String email, @Nullable String newPassword, UserDto.Role role) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -49,6 +50,7 @@ public final class UserUpdateCommandDto {
         return email;
     }
 
+    @Nullable
     public String getNewPassword() {
         return newPassword;
     }
@@ -56,7 +58,7 @@ public final class UserUpdateCommandDto {
     public UserDto.Role getRole() {
         return role;
     }
-    
+
     public UnsafeUserUpdateCommand convert() {
         return UnsafeUserUpdateCommand.builder()
                 .id(id)

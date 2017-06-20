@@ -10,4 +10,6 @@ import java.util.Collection;
 public interface ScanJobRepository extends JpaRepository<ScanJob, Long> {
 
     Page<ScanJob> findByStatusIn(Collection<ScanJob.Status> statuses, Pageable pageable);
+    
+    ScanJob findFirstByStatusOrderByUpdateDateDesc(ScanJob.Status status);
 }

@@ -5,11 +5,11 @@ import net.dorokhov.pony.library.domain.Album;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class AlbumDetailsDto {
-    
+
     private final AlbumDto album;
     private final ArtistDto artist;
 
-    public AlbumDetailsDto(AlbumDto album, ArtistDto artist) {
+    AlbumDetailsDto(AlbumDto album, ArtistDto artist) {
         this.album = checkNotNull(album);
         this.artist = checkNotNull(artist);
     }
@@ -21,7 +21,7 @@ public final class AlbumDetailsDto {
     public ArtistDto getArtist() {
         return artist;
     }
-    
+
     public static AlbumDetailsDto of(Album album) {
         return new AlbumDetailsDto(AlbumDto.of(album), ArtistDto.of(album.getArtist()));
     }

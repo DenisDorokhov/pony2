@@ -1,8 +1,8 @@
 package net.dorokhov.pony.web.service.impl;
 
+import net.dorokhov.pony.log.domain.LogMessage.Level;
 import net.dorokhov.pony.log.service.LogService;
-import net.dorokhov.pony.web.domain.LogDto;
-import net.dorokhov.pony.web.domain.LogMessageDto;
+import net.dorokhov.pony.web.domain.LogMessagePageDto;
 import net.dorokhov.pony.web.service.LogFacade;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,14 +23,14 @@ public class LogFacadeImpl implements LogFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public LogDto getLog(LogMessageDto.Level minLevel, int pageIndex) {
-        return LogDto.of(logService.getByType(minLevel.convert(), new PageRequest(pageIndex, PAGE_SIZE)));
+    public LogMessagePageDto getLog(Level minLevel, int pageIndex) {
+        return LogMessagePageDto.of(logService.getByType(minLevel, new PageRequest(pageIndex, PAGE_SIZE)));
     }
     
     @Override
     @Transactional(readOnly = true)
-    public LogDto getLog(LogMessageDto.Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex) {
-        return LogDto.of(logService.getByTypeAndDate(minLevel.convert(), minDate, maxDate,
+    public LogMessagePageDto getLog(Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex) {
+        return LogMessagePageDto.of(logService.getByTypeAndDate(minLevel, minDate, maxDate,
                 new PageRequest(pageIndex, PAGE_SIZE)));
     }
 }

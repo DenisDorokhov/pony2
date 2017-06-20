@@ -104,10 +104,10 @@ public class User extends BaseEntity<Long> implements Serializable {
         private String password;
         private ImmutableSet.Builder<Role> roles = ImmutableSet.builder();
 
-        public Builder() {
+        private Builder() {
         }
 
-        public Builder(User user) {
+        private Builder(User user) {
             id = user.id;
             creationDate = user.creationDate;
             updateDate = user.updateDate;

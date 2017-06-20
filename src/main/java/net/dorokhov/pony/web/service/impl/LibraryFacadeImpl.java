@@ -1,19 +1,18 @@
 package net.dorokhov.pony.web.service.impl;
 
-import net.dorokhov.pony.library.domain.*;
-import net.dorokhov.pony.library.service.ExportService;
+import net.dorokhov.pony.library.domain.Album;
+import net.dorokhov.pony.library.domain.Artist;
+import net.dorokhov.pony.library.domain.Genre;
+import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.service.LibraryService;
-import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.search.domain.SearchQuery;
 import net.dorokhov.pony.search.service.SearchService;
-import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.service.LibraryFacade;
-import org.springframework.data.domain.Page;
+import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,17 +23,11 @@ public class LibraryFacadeImpl implements LibraryFacade {
     
     private final LibraryService libraryService;
     private final SearchService searchService;
-    private final ScanJobService scanJobService;
-    private final ExportService exportService;
 
     public LibraryFacadeImpl(LibraryService libraryService,
-                             SearchService searchService,
-                             ScanJobService scanJobService, 
-                             ExportService exportService) {
+                             SearchService searchService) {
         this.libraryService = libraryService;
         this.searchService = searchService;
-        this.scanJobService = scanJobService;
-        this.exportService = exportService;
     }
 
     @Override
@@ -67,16 +60,12 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public GenreSongsDto getGenreSongs(Long genreId, int pageIndex) throws ObjectNotFoundException {
+    public GenreSongsPageDto getGenreSongs(Long genreId, int pageIndex) throws ObjectNotFoundException {
         Genre genre = libraryService.getGenreById(genreId);
         if (genre == null) {
             throw new ObjectNotFoundException(Genre.class, genreId);
         }
-        Page<Song> songPage = libraryService.getSongsByGenreId(genreId, pageIndex);
-        return new GenreSongsDto(pageIndex, songPage.getSize(), songPage.getTotalPages(), GenreDto.of(genre),
-                songPage.getContent().stream()
-                        .map(SongAlbumDto::of)
-                        .collect(Collectors.toList()));
+        return GenreSongsPageDto.of(genre, libraryService.getSongsByGenreId(genreId, pageIndex));
     }
 
     @Override
@@ -87,70 +76,5 @@ public class LibraryFacadeImpl implements LibraryFacade {
         List<Album> albums = searchService.searchAlbums(SearchQuery.of(query), SEARCH_RESULT_COUNT);
         List<Song> songs = searchService.searchSongs(SearchQuery.of(query), SEARCH_RESULT_COUNT);
         return SearchResultDto.of(genres, artists, albums, songs);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ScanStatusDto getScanStatus() {
-        ScanJobProgress scanJobProgress = scanJobService.getCurrentScanJobProgress();
-        return new ScanStatusDto(scanJobProgress != null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public FileDistribution getSongDistribution(Long songId) throws ObjectNotFoundException {
-        Song song = libraryService.getSongById(songId);
-        if (song == null) {
-            throw new ObjectNotFoundException(Song.class, songId);
-        }
-        File file = song.getFile();
-        return new FileDistribution(file, file.getName(), song.getFileType().getMimeType(),
-                song.getUpdateDate() != null ? song.getUpdateDate() : song.getCreationDate());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public FileDistribution getLargeArtworkDistribution(Long artworkId) throws ObjectNotFoundException {
-        ArtworkFiles artworkFiles = getArtworkFiles(artworkId);
-        Artwork artwork = artworkFiles.getArtwork();
-        File file = artworkFiles.getLargeFile();
-        return new FileDistribution(file, file.getName(), artwork.getMimeType(), artwork.getDate());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public FileDistribution getSmallArtworkDistribution(Long artworkId) throws ObjectNotFoundException {
-        ArtworkFiles artworkFiles = getArtworkFiles(artworkId);
-        Artwork artwork = artworkFiles.getArtwork();
-        File file = artworkFiles.getSmallFile();
-        return new FileDistribution(file, file.getName(), artwork.getMimeType(), artwork.getDate());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExportBundle exportSong(Long songId) throws ObjectNotFoundException {
-        ExportBundle exportBundle = exportService.exportSong(songId);
-        if (exportBundle == null) {
-            throw new ObjectNotFoundException(Song.class, songId);
-        }
-        return exportBundle;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExportBundle exportAlbum(Long albumId) throws ObjectNotFoundException {
-        ExportBundle exportBundle = exportService.exportAlbum(albumId);
-        if (exportBundle == null) {
-            throw new ObjectNotFoundException(Album.class, albumId);
-        }
-        return exportBundle;
-    }
-    
-    private ArtworkFiles getArtworkFiles(Long artworkId) throws ObjectNotFoundException {
-        ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
-        if (artworkFiles == null) {
-            throw new ObjectNotFoundException(Artwork.class, artworkId);
-        }
-        return artworkFiles;
     }
 }

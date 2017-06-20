@@ -23,7 +23,7 @@ public final class UserCreationCommandDto {
     @NotBlank
     @Size(min = 6, max = 255)
     private final String password;
-    
+
     @NotNull
     private final UserDto.Role role;
 
@@ -49,7 +49,7 @@ public final class UserCreationCommandDto {
     public UserDto.Role getRole() {
         return role;
     }
-    
+
     public UserCreationCommand convert() {
         return UserCreationCommand.builder()
                 .name(name)

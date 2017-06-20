@@ -60,7 +60,7 @@ public final class ScanProgress {
         }
     }
     
-    public static class Value {
+    public static final class Value {
 
         private final long itemsComplete;
         private final long itemsTotal;

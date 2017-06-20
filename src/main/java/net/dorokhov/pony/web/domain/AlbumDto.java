@@ -14,8 +14,8 @@ public final class AlbumDto extends BaseDto {
     private final Long artwork;
     private final Long artist;
 
-    public AlbumDto(Long id, LocalDateTime creationDate, LocalDateTime updateDate,
-                    String name, Integer year, Long artwork, Long artist) {
+    AlbumDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+             @Nullable String name, @Nullable Integer year, @Nullable Long artwork, Long artist) {
         super(id, creationDate, updateDate);
         this.name = name;
         this.year = year;

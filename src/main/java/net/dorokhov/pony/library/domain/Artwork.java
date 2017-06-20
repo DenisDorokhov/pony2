@@ -163,7 +163,7 @@ public class Artwork implements Serializable {
         private String smallImagePath;
         private URI sourceUri;
 
-        public Builder() {
+        private Builder() {
         }
 
         public Builder id(@Nullable Long id) {

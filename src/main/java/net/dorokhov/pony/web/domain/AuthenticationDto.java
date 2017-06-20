@@ -1,14 +1,18 @@
 package net.dorokhov.pony.web.domain;
 
+import net.dorokhov.pony.user.domain.User;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public final class AuthenticationDto {
-    
+
     private final UserDto user;
-    
+
     private final String token;
 
-    public AuthenticationDto(UserDto user, String token) {
-        this.user = user;
-        this.token = token;
+    AuthenticationDto(UserDto user, String token) {
+        this.user = checkNotNull(user);
+        this.token = checkNotNull(token);
     }
 
     public UserDto getUser() {
@@ -17,5 +21,9 @@ public final class AuthenticationDto {
 
     public String getToken() {
         return token;
+    }
+
+    public static AuthenticationDto of(User user, String token) {
+        return new AuthenticationDto(UserDto.of(user), token);
     }
 }

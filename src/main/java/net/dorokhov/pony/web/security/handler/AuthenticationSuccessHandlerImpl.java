@@ -2,7 +2,6 @@ package net.dorokhov.pony.web.security.handler;
 
 import net.dorokhov.pony.user.domain.User;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
-import net.dorokhov.pony.web.domain.UserDto;
 import net.dorokhov.pony.web.security.LoginDelegate;
 import net.dorokhov.pony.web.security.token.TokenManager;
 import net.dorokhov.pony.web.service.impl.UserContext;
@@ -49,6 +48,6 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         loginDelegates.forEach(loginDelegate -> loginDelegate.onLogin(user));
         logger.debug("User '{}' has logged in.", user.getId());
         String token = tokenManager.createToken(user.getId().toString());
-        messageConverter.write(new AuthenticationDto(UserDto.of(user), token), MediaType.ALL, new ServletServerHttpResponse(response));
+        messageConverter.write(AuthenticationDto.of(user, token), MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

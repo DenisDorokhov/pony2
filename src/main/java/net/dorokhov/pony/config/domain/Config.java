@@ -152,10 +152,10 @@ public class Config implements Serializable {
         private LocalDateTime updateDate;
         private String value;
 
-        public Builder() {
+        private Builder() {
         }
         
-        public Builder(Config config) {
+        private Builder(Config config) {
             id = config.id;
             creationDate = config.creationDate;
             updateDate = config.updateDate;

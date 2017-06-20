@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.web.domain.LogDto;
-import net.dorokhov.pony.web.domain.LogMessageDto.Level;
+import net.dorokhov.pony.log.domain.LogMessage.Level;
+import net.dorokhov.pony.web.domain.LogMessagePageDto;
 import net.dorokhov.pony.web.service.LogFacade;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,10 +22,10 @@ public class LogAdminController implements ErrorHandlingController {
     }
 
     @GetMapping
-    public LogDto getLog(@RequestParam(required = false) Level minLevel,
-                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime minDate,
-                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime maxDate,
-                         @RequestParam(defaultValue = "0") int pageIndex) {
+    public LogMessagePageDto getLog(@RequestParam(required = false) Level minLevel,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime minDate,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime maxDate,
+                                    @RequestParam(defaultValue = "0") int pageIndex) {
         if (minLevel == null) {
             minLevel = Level.INFO;
         }

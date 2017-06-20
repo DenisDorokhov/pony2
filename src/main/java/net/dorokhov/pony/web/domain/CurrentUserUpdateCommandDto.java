@@ -6,6 +6,7 @@ import net.dorokhov.pony.web.validation.UniqueCurrentUserEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.Size;
 
 public final class CurrentUserUpdateCommandDto {
@@ -19,7 +20,7 @@ public final class CurrentUserUpdateCommandDto {
     @Email
     @UniqueCurrentUserEmail
     private final String email;
-    
+
     @NotBlank
     @CurrentUserPasswordMatch
     private final String oldPassword;
@@ -27,7 +28,7 @@ public final class CurrentUserUpdateCommandDto {
     @Size(min = 6, max = 255)
     private final String newPassword;
 
-    public CurrentUserUpdateCommandDto(String name, String email, String oldPassword, String newPassword) {
+    public CurrentUserUpdateCommandDto(String name, String email, String oldPassword, @Nullable String newPassword) {
         this.name = name;
         this.email = email;
         this.oldPassword = oldPassword;
@@ -46,6 +47,7 @@ public final class CurrentUserUpdateCommandDto {
         return oldPassword;
     }
 
+    @Nullable
     public String getNewPassword() {
         return newPassword;
     }

@@ -10,7 +10,7 @@ public final class SongDetailsDto {
     private final AlbumDetailsDto album;
     private final GenreDto genre;
 
-    public SongDetailsDto(SongDto song, AlbumDetailsDto album, GenreDto genre) {
+    SongDetailsDto(SongDto song, AlbumDetailsDto album, GenreDto genre) {
         this.song = checkNotNull(song);
         this.album = checkNotNull(album);
         this.genre = checkNotNull(genre);

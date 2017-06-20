@@ -33,6 +33,9 @@ public interface ScanJobService {
 
     ScanJob getById(Long id);
     
+    @Nullable
+    ScanJob getLastSuccessfulJob();
+    
     ScanJob startScanJob() throws ConcurrentScanException;
     ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException;
 }

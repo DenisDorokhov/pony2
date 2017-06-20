@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BaseDto {
-    
+
     protected final Long id;
     protected final LocalDateTime creationDate;
     protected final LocalDateTime updateDate;
 
-    public BaseDto(Long id, LocalDateTime creationDate, LocalDateTime updateDate) {
+    protected BaseDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate) {
         this.id = checkNotNull(id);
         this.creationDate = checkNotNull(creationDate);
         this.updateDate = updateDate;

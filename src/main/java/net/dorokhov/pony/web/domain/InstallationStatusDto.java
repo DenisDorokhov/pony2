@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.domain;
 
 public final class InstallationStatusDto {
-    
+
     private final boolean installed;
 
     public InstallationStatusDto(boolean installed) {

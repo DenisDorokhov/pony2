@@ -232,9 +232,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetGenreSongs() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<GenreSongsDto> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<GenreSongsPageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genreSongs/{genreId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), GenreSongsDto.class, genre1.getId());
+                apiTemplate.createHeaderRequest(authentication.getToken()), GenreSongsPageDto.class, genre1.getId());
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(genreSongs -> {
             assertThat(genreSongs.getPageIndex()).isEqualTo(0);

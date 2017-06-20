@@ -99,10 +99,10 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
         private ImmutableList.Builder<Album> albums = ImmutableList.builder();
         private Artwork artwork;
 
-        public Builder() {
+        private Builder() {
         }
         
-        public Builder(Artist artist) {
+        private Builder(Artist artist) {
             id = artist.id;
             creationDate = artist.creationDate;
             updateDate = artist.updateDate;

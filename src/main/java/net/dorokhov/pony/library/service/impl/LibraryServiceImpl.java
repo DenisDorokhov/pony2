@@ -1,6 +1,5 @@
 package net.dorokhov.pony.library.service.impl;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.domain.Artist;
 import net.dorokhov.pony.library.domain.ArtworkFiles;
 import net.dorokhov.pony.library.domain.Genre;
@@ -18,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.util.List;
+
+import static java.util.Collections.unmodifiableList;
 
 @Service
 public class LibraryServiceImpl implements LibraryService {
@@ -42,19 +43,19 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public List<Genre> getGenres() {
-        return ImmutableList.copyOf(genreRepository.findAll(new Sort("name")));
+        return unmodifiableList(genreRepository.findAll(new Sort("name")));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Artist> getArtists() {
-        return ImmutableList.copyOf(artistRepository.findAll(new Sort("name")));
+        return unmodifiableList(artistRepository.findAll(new Sort("name")));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Song> getSongsByIds(List<Long> ids) {
-        return ImmutableList.copyOf(songRepository.findAll(ids));
+        return unmodifiableList(songRepository.findAll(ids));
     }
 
     @Override

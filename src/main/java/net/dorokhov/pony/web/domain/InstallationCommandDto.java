@@ -33,8 +33,8 @@ public final class InstallationCommandDto {
     @Size(min = 6, max = 255)
     private final String adminPassword;
 
-    public InstallationCommandDto(String installationSecret, 
-                                  List<LibraryFolderDto> libraryFolders, 
+    public InstallationCommandDto(String installationSecret,
+                                  List<LibraryFolderDto> libraryFolders,
                                   String adminName, String adminEmail, String adminPassword) {
         this.installationSecret = installationSecret;
         this.libraryFolders = libraryFolders;

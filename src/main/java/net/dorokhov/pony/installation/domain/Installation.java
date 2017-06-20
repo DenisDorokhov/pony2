@@ -57,10 +57,10 @@ public class Installation extends BaseEntity<Long> implements Serializable {
         private LocalDateTime updateDate;
         private String version;
 
-        public Builder() {
+        private Builder() {
         }
         
-        public Builder(Installation installation) {
+        private Builder(Installation installation) {
             version = installation.version;
             id = installation.id;
             creationDate = installation.creationDate;

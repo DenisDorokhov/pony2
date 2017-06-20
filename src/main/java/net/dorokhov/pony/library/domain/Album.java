@@ -127,7 +127,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
         private ImmutableList.Builder<Song> songs = ImmutableList.builder();
         private Artist artist;
 
-        public Builder() {
+        private Builder() {
         }
 
         private Builder(Album builder) {

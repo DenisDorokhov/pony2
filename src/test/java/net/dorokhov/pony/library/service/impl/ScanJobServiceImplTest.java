@@ -101,6 +101,13 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
+    public void shouldGetLastSuccessfulJob() throws Exception {
+        ScanJob scanJob = scanJobFull();
+        when(scanJobRepository.findFirstByStatusOrderByUpdateDateDesc(any())).thenReturn(scanJob);
+        assertThat(scanJobService.getLastSuccessfulJob()).isSameAs(scanJob);
+    }
+
+    @Test
     public void shouldExecuteScanJob() throws Exception {
         
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));

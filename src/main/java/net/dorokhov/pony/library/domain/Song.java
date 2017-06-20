@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity
@@ -289,10 +288,10 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
         private Album album;
         private Genre genre;
 
-        public Builder() {
+        private Builder() {
         }
         
-        public Builder(Song song) {
+        private Builder(Song song) {
             path = song.path;
             fileType = song.fileType;
             size = song.size;

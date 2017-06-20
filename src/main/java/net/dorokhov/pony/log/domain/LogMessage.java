@@ -132,7 +132,7 @@ public class LogMessage implements Serializable {
         private ImmutableList.Builder<String> arguments = ImmutableList.builder();
         private String text;
 
-        public Builder() {
+        private Builder() {
         }
 
         public Builder id(@Nullable Long id) {

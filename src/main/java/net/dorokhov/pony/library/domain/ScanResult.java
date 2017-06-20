@@ -372,7 +372,7 @@ public class ScanResult {
         private Integer createdArtworkCount;
         private Integer deletedArtworkCount;
 
-        public Builder() {
+        private Builder() {
         }
 
         public Builder id(@Nullable Long id) {
