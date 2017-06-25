@@ -72,7 +72,7 @@ public class LibraryArtworkFinder {
         ReadableAudioData.EmbeddedArtwork artwork = audioData.getEmbeddedArtwork();
         if (artwork != null) {
             return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(
-                    UriComponentsBuilder.fromUri(audioData.getFile().toURI())
+                    UriComponentsBuilder.fromPath(audioData.getFile().getAbsolutePath())
                             .scheme(Artwork.SOURCE_URI_SCHEME_EMBEDDED)
                             .build()
                             .toUri(), 
@@ -94,7 +94,7 @@ public class LibraryArtworkFinder {
                 Genre savedGenre = genreRepository.save(Genre.builder(genre)
                         .artwork(middleSong.getArtwork())
                         .build());
-                logService.debug(logger, "Artwork for genre {} has been set: {}.", genre, middleSong.getArtwork());
+                logService.debug(logger, "Setting artwork for genre '{}': '{}'.", genre, middleSong.getArtwork());
                 return savedGenre;
             }
         }
@@ -108,7 +108,7 @@ public class LibraryArtworkFinder {
             Album savedAlbum = albumRepository.save(Album.builder(album)
                     .artwork(song.getArtwork())
                     .build());
-            logService.debug(logger, "Artwork for album {} has been set: {}.", album, song.getArtwork());
+            logService.debug(logger, "Setting artwork for album '{}': '{}'.", album, song.getArtwork());
             return savedAlbum;
         }
         return album;
@@ -125,7 +125,7 @@ public class LibraryArtworkFinder {
                 Artist savedArtist = artistRepository.save(Artist.builder(artist)
                         .artwork(middleAlbum.getContent().get(0).getArtwork())
                         .build());
-                logService.debug(logger, "Artwork for artist {} has been set: {}.", artist, middleAlbum.getContent().get(0).getArtwork());
+                logService.debug(logger, "Setting artwork for artist '{}': '{}'.", artist, middleAlbum.getContent().get(0).getArtwork());
                 return savedArtist;
             }
         }

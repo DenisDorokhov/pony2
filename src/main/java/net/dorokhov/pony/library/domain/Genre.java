@@ -1,6 +1,7 @@
 package net.dorokhov.pony.library.domain;
 
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import net.dorokhov.pony.common.SearchableEntity;
 import org.hibernate.search.annotations.Analyzer;
@@ -12,6 +13,10 @@ import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 @Entity
 @Table(name = "genre")
@@ -26,6 +31,9 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
     @JoinColumn(name = "artwork_id")
     private Artwork artwork;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "genre")
+    private List<Song> songs = emptyList();
+
     protected Genre() {
     }
 
@@ -35,6 +43,7 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
         updateDate = builder.updateDate;
         name = builder.name;
         artwork = builder.artwork;
+        songs = builder.songs.build();
     }
 
     @Nullable
@@ -45,6 +54,10 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
     @Nullable
     public Artwork getArtwork() {
         return artwork;
+    }
+
+    public List<Song> getSongs() {
+        return songs != null ? unmodifiableList(songs) : emptyList();
     }
 
     @Override
@@ -78,16 +91,18 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
         private LocalDateTime updateDate;
         private String name;
         private Artwork artwork;
+        private ImmutableList.Builder<Song> songs = ImmutableList.builder();
 
         private Builder() {
         }
         
         private Builder(Genre genre) {
-            name = genre.name;
-            artwork = genre.artwork;
             id = genre.id;
             creationDate = genre.creationDate;
             updateDate = genre.updateDate;
+            name = genre.name;
+            artwork = genre.artwork;
+            songs = ImmutableList.<Song>builder().addAll(genre.songs);
         }
 
         public Builder id(@Nullable Long id) {
@@ -112,6 +127,15 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
 
         public Builder artwork(@Nullable Artwork artwork) {
             this.artwork = artwork;
+            return this;
+        }
+
+        public Builder songs(@Nullable List<Song> songs) {
+            if (songs != null) {
+                this.songs = ImmutableList.<Song>builder().addAll(songs);
+            } else {
+                this.songs = ImmutableList.builder();
+            }
             return this;
         }
 

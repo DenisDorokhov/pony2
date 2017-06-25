@@ -27,9 +27,9 @@ public class LibraryConfig {
         return buildThreadPoolExecutor(LIBRARY_IMPORT_EXECUTOR, importThreadPoolSize);
     }
 
-    private ThreadPoolTaskExecutor buildThreadPoolExecutor(String beanName, int maxPoolSize) {
+    private ThreadPoolTaskExecutor buildThreadPoolExecutor(String beanName, int poolSize) {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setMaxPoolSize(maxPoolSize);
+        taskExecutor.setCorePoolSize(poolSize);
         taskExecutor.setThreadNamePrefix(beanName + "-");
         return taskExecutor;
     }

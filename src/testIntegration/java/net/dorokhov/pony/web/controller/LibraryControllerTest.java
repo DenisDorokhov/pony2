@@ -2,12 +2,14 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.fixture.BlockingScanJobServiceObserver;
 import net.dorokhov.pony.fixture.SongFixtures;
 import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
+import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.impl.artwork.ArtworkStorage;
 import net.dorokhov.pony.library.service.impl.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony.web.domain.*;
@@ -23,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public class LibraryControllerTest extends InstallingIntegrationTest {
 
@@ -42,6 +45,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @Autowired
     private ArtworkStorage artworkStorage;
 
+    @Autowired
+    private ScanJobService scanJobService;
+
     private ArtworkFiles artworkFiles;
 
     private Genre genre1;
@@ -58,6 +64,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private Song song1_1_2;
     private Song song1_2_1;
     private Song song2_1_1;
+
+    private final BlockingScanJobServiceObserver blockingObserver = new BlockingScanJobServiceObserver();
 
     @Override
     public void setUp() throws Exception {
@@ -152,6 +160,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
             return null;
         });
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        scanJobService.removeObserver(blockingObserver);
     }
 
     @Test
@@ -345,7 +359,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldReturnScanStatus() throws Exception {
+    public void shouldGetNegativeScanStatus() throws Exception {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         ResponseEntity<ScanStatusDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatus", HttpMethod.GET,
@@ -353,6 +367,59 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatus -> 
                 assertThat(scanStatus.isScanning()).isFalse());
+    }
+
+    @Test
+    public void shouldGetPositiveScanStatus() throws Exception {
+
+        scanJobService.addObserver(blockingObserver);
+        ScanJob scanJob = scanJobService.startScanJob();
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<ScanStatusDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/scanStatus", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatusDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(scanStatus ->
+                assertThat(scanStatus.isScanning()).isTrue());
+        
+        blockingObserver.unlock();
+
+        await().until(() -> scanJobService.getById(scanJob.getId()).getStatus() == ScanJob.Status.COMPLETE);
+    }
+
+    @Test
+    public void shouldGetScanStatistics() throws Exception {
+        ScanJob scanJob = scanJobService.startScanJob();
+        await().until(() -> scanJobService.getById(scanJob.getId()).getStatus() == ScanJob.Status.COMPLETE);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<ScanStatisticsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/scanStatistics", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatisticsDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(scanStatistics -> {
+            assertThat(scanStatistics.getDuration()).isGreaterThan(0);
+            assertThat(scanStatistics.getSongSize()).isEqualTo(0);
+            assertThat(scanStatistics.getArtworkSize()).isEqualTo(0);
+            assertThat(scanStatistics.getGenreCount()).isEqualTo(0);
+            assertThat(scanStatistics.getArtistCount()).isEqualTo(0);
+            assertThat(scanStatistics.getAlbumCount()).isEqualTo(0);
+            assertThat(scanStatistics.getSongCount()).isEqualTo(0);
+            assertThat(scanStatistics.getArtworkCount()).isEqualTo(0);
+        });
+    }
+
+    @Test
+    public void shouldFailGettingScanStatisticsIfNotScannedYet() throws Exception {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/scanStatistics", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("ScanResult");
+        });
     }
 
     @SuppressWarnings({"ConstantConditions", "Duplicates"})

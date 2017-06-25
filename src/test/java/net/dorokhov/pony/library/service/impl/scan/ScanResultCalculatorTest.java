@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -55,7 +56,7 @@ public class ScanResultCalculatorTest {
     @Test
     public void shouldCalculateAndSaveFirstScan() throws Exception {
         when(scanResultRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
-        doTestCalculateAndSave(LocalDateTime.MIN);
+        doTestCalculateAndSave(null);
     }
 
     @Test
@@ -66,36 +67,49 @@ public class ScanResultCalculatorTest {
         doTestCalculateAndSave(lastScanDate);
     }
     
-    private void doTestCalculateAndSave(LocalDateTime lastScanDate) {
+    private void doTestCalculateAndSave(@Nullable LocalDateTime lastScanDate) {
 
         when(songRepository.count())
                 .thenReturn(0L)
                 .thenReturn(10L);
-        when(songRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(10L);
-        when(songRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
+        when(songRepository.countByCreationDateGreaterThan(lastScanDate != null ? lastScanDate : any()))
+                .thenReturn(10L);
+        when(songRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(
+                lastScanDate != null ? lastScanDate : any(), 
+                lastScanDate != null ? lastScanDate : any())).thenReturn(0L);
 
         when(genreRepository.count())
                 .thenReturn(0L)
                 .thenReturn(2L);
-        when(genreRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(2L);
-        when(genreRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
+        when(genreRepository.countByCreationDateGreaterThan(lastScanDate != null ? lastScanDate : any()))
+                .thenReturn(2L);
+        when(genreRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(
+                lastScanDate != null ? lastScanDate : any(), 
+                lastScanDate != null ? lastScanDate : any())).thenReturn(0L);
 
         when(artistRepository.count())
                 .thenReturn(0L)
                 .thenReturn(3L);
-        when(artistRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(3L);
-        when(artistRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
+        when(artistRepository.countByCreationDateGreaterThan(lastScanDate != null ? lastScanDate : any()))
+                .thenReturn(3L);
+        when(artistRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(
+                lastScanDate != null ? lastScanDate : any(),
+                lastScanDate != null ? lastScanDate : any())).thenReturn(0L);
 
         when(albumRepository.count())
                 .thenReturn(0L)
                 .thenReturn(4L);
-        when(albumRepository.countByCreationDateGreaterThan(lastScanDate)).thenReturn(4L);
-        when(albumRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(lastScanDate, lastScanDate)).thenReturn(0L);
+        when(albumRepository.countByCreationDateGreaterThan(lastScanDate != null ? lastScanDate : any()))
+                .thenReturn(4L);
+        when(albumRepository.countByCreationDateLessThanAndUpdateDateGreaterThan(
+                lastScanDate != null ? lastScanDate : any(),
+                lastScanDate != null ? lastScanDate : any())).thenReturn(0L);
 
         when(artworkRepository.count())
                 .thenReturn(0L)
                 .thenReturn(5L);
-        when(artworkRepository.countByDateGreaterThan(lastScanDate)).thenReturn(5L);
+        when(artworkRepository.countByDateGreaterThan(lastScanDate != null ? lastScanDate : any()))
+                .thenReturn(5L);
 
         when(songRepository.sumSize()).thenReturn(123L);
         when(artworkRepository.sumLargeImageSize()).thenReturn(100L);

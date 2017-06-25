@@ -93,6 +93,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
                 checkLogMessage(logMessageDto, logMessage));
     }
     
+    @SuppressWarnings("Duplicates")
     private void checkLogMessage(LogMessageDto dto, LogMessage logMessage) {
         assertThat(dto.getId()).isEqualTo(logMessage.getId());
         assertThat(dto.getDate()).isEqualTo(logMessage.getDate());

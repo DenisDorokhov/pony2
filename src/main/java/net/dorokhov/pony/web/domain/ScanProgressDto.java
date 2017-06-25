@@ -5,11 +5,11 @@ import net.dorokhov.pony.library.domain.ScanType;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.unmodifiableList;
 
 public final class ScanProgressDto {
     
@@ -77,7 +77,7 @@ public final class ScanProgressDto {
 
     ScanProgressDto(Step step, List<String> files, @Nullable Value value) {
         this.step = checkNotNull(step);
-        this.files = Collections.unmodifiableList(files);
+        this.files = unmodifiableList(files);
         this.value = value;
     }
 
@@ -98,6 +98,6 @@ public final class ScanProgressDto {
                 scanProgress.getFiles().stream()
                         .map(File::getAbsolutePath)
                         .collect(Collectors.toList()),
-                Value.of(scanProgress.getValue()));
+                scanProgress.getValue() != null ? Value.of(scanProgress.getValue()) : null);
     }
 }

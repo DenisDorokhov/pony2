@@ -130,15 +130,15 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
         private Builder() {
         }
 
-        private Builder(Album builder) {
-            id = builder.id;
-            creationDate = builder.creationDate;
-            updateDate = builder.updateDate;
-            name = builder.name;
-            year = builder.year;
-            artwork = builder.artwork;
-            songs = ImmutableList.<Song>builder().addAll(builder.songs);
-            artist = builder.artist;
+        private Builder(Album album) {
+            id = album.id;
+            creationDate = album.creationDate;
+            updateDate = album.updateDate;
+            name = album.name;
+            year = album.year;
+            artwork = album.artwork;
+            songs = ImmutableList.<Song>builder().addAll(album.songs);
+            artist = album.artist;
         }
 
         public Builder id(@Nullable Long id) {

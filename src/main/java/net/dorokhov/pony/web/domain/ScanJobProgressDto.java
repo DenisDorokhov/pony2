@@ -7,22 +7,23 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class ScanJobProgressDto {
 
     private final ScanJobDto scanJob;
-    private final ScanProgressDto scanProgressDto;
+    private final ScanProgressDto scanProgress;
 
-    ScanJobProgressDto(ScanJobDto scanJob, ScanProgressDto scanProgressDto) {
+    ScanJobProgressDto(ScanJobDto scanJob, ScanProgressDto scanProgress) {
         this.scanJob = checkNotNull(scanJob);
-        this.scanProgressDto = checkNotNull(scanProgressDto);
+        this.scanProgress = scanProgress;
     }
 
     public ScanJobDto getScanJob() {
         return scanJob;
     }
 
-    public ScanProgressDto getScanProgressDto() {
-        return scanProgressDto;
+    public ScanProgressDto getScanProgress() {
+        return scanProgress;
     }
 
     public static ScanJobProgressDto of(ScanJobProgress scanJobProgress) {
-        return new ScanJobProgressDto(ScanJobDto.of(scanJobProgress.getScanJob()), ScanProgressDto.of(scanJobProgress.getScanProgress()));
+        return new ScanJobProgressDto(ScanJobDto.of(scanJobProgress.getScanJob()),
+                scanJobProgress.getScanProgress() != null ? ScanProgressDto.of(scanJobProgress.getScanProgress()) : null);
     }
 }

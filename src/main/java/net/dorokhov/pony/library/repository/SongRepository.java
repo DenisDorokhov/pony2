@@ -18,8 +18,6 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     long countByAlbumId(Long albumId);
 
-    long countByAlbumArtistId(Long artistId);
-
     long countByArtworkId(@Nullable Long artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
@@ -28,8 +26,8 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     long countByGenreIdAndArtworkNotNull(Long genreId);
 
-    @Query("SELECT SUM(s.size) FROM Song s")
-    Long sumSize();
+    @Query("SELECT COALESCE(SUM(s.size), 0) FROM Song s")
+    long sumSize();
 
     Song findByPath(String path);
 

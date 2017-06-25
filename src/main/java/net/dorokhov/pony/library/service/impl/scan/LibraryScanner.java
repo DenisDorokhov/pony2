@@ -83,7 +83,7 @@ public class LibraryScanner {
             logService.info(logger, "Scanning library {}...", targetFolders);
             notifyProgressObserver(new ScanProgress(FULL_PREPARING, targetFolders, null), observer);
             ScanResult scanResult = doScan(targetFolders, observer);
-            logService.info(logger, "Scan of {} has been finished with result {}.", targetFolders, scanResult);
+            logService.info(logger, "Scan of {} has been finished with result '{}'.", targetFolders, scanResult);
             return scanResult;
         } catch (Exception e) {
             logService.error(logger, "Scan failed.", e);
@@ -117,7 +117,7 @@ public class LibraryScanner {
             logService.info(logger, "Editing files {}...", targetFiles);
             notifyProgressObserver(new ScanProgress(EDIT_PREPARING, targetFiles, null), observer);
             ScanResult scanResult = doEdit(writeAndImportCommands, observer);
-            logService.info(logger, "Edit of {} has been finished with result {}.", targetFiles, scanResult);
+            logService.info(logger, "Edit of {} has been finished with result '{}'.", targetFiles, scanResult);
             return scanResult;
         } catch (Exception e) {
             logService.error(logger, "Edit failed.", e);

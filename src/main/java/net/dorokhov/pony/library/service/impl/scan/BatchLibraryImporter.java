@@ -19,8 +19,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.*;
@@ -67,17 +69,17 @@ public class BatchLibraryImporter {
             return audioData;
         }
     }
-    
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     private final BatchLibraryImportPlanner batchLibraryImportPlanner;
     private final AudioTagger audioTagger;
     private final LibraryImporter libraryImporter;
     private final LogService logService;
     private final Executor executor;
-    
+
     private final TransactionTemplate transactionTemplate;
-    
+
     private final Object progressLock = new Object();
 
     public BatchLibraryImporter(BatchLibraryImportPlanner batchLibraryImportPlanner,
@@ -86,7 +88,7 @@ public class BatchLibraryImporter {
                                 LogService logService,
                                 @Qualifier(LIBRARY_IMPORT_EXECUTOR) Executor executor,
                                 PlatformTransactionManager transactionManager) {
-        
+
         this.batchLibraryImportPlanner = batchLibraryImportPlanner;
         this.audioTagger = audioTagger;
         this.libraryImporter = libraryImporter;
@@ -100,23 +102,27 @@ public class BatchLibraryImporter {
 
         Plan plan = batchLibraryImportPlanner.plan(audioNodes);
 
-        List<ImportTask> importTasks = new ArrayList<>();
+        List<ImportTask> importTasks = synchronizedList(new ArrayList<>());
+        plan.getAudioNodesToImport().forEach(audioNode -> importTasks.add(null));
         List<File> failedFiles = synchronizedList(new ArrayList<>());
 
         int itemsTotal = plan.getAudioNodesToImport().size();
         CountDownLatch latch = new CountDownLatch(itemsTotal);
-        for (AudioNode audioNode : plan.getAudioNodesToImport()) {
+        for (int i = 0; i < plan.getAudioNodesToImport().size(); i++) {
+            AudioNode audioNode = plan.getAudioNodesToImport().get(i);
+            final int index = i;
             executor.execute(() -> {
                 try {
-                    importTasks.add(new ImportTask(audioNode, audioTagger.read(audioNode.getFile())));
+                    // Preserve original order.
+                    importTasks.set(index, new ImportTask(audioNode, audioTagger.read(audioNode.getFile())));
                 } catch (IOException e) {
                     logService.error(logger, "Could not read audio data from '{}'.",
                             audioNode.getFile().getAbsolutePath(), e);
                     failedFiles.add(audioNode.getFile());
                 } finally {
                     synchronized (progressLock) {
+                        notifyObserver(observer, itemsTotal - latch.getCount() + 1, itemsTotal);
                         latch.countDown();
-                        notifyObserver(observer, itemsTotal - latch.getCount(), itemsTotal);
                     }
                 }
             });
@@ -127,21 +133,27 @@ public class BatchLibraryImporter {
             logger.warn("Batch audio data reading has been interrupted.", e);
             throw new RuntimeException("Batch audio data writing has been interrupted.", e);
         }
-        
-        return doImport(importTasks, plan.getAudioNodesToSkip(), failedFiles);
+
+        return doImport(importTasks.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()), plan.getAudioNodesToSkip(), failedFiles);
     }
 
     public ImportResult writeAndImport(List<WriteAndImportCommand> commands, ProgressObserver observer) {
 
-        List<ImportTask> importTasks = new ArrayList<>();
+        List<ImportTask> importTasks = synchronizedList(new ArrayList<>());
+        commands.forEach(audioNode -> importTasks.add(null));
         List<File> failedFiles = synchronizedList(new ArrayList<>());
-        
+
         int itemsTotal = commands.size();
         CountDownLatch latch = new CountDownLatch(itemsTotal);
-        for (WriteAndImportCommand command : commands) {
+        for (int i = 0; i < commands.size(); i++) {
+            WriteAndImportCommand command = commands.get(i);
+            final int index = i;
             executor.execute(() -> {
                 try {
-                    importTasks.add(new ImportTask(command.getAudioNode(),
+                    // Preserve original order.
+                    importTasks.set(index, new ImportTask(command.getAudioNode(),
                             audioTagger.write(command.getAudioNode().getFile(), command.getAudioData())));
                 } catch (IOException e) {
                     logService.error(logger, "Could not write audio data to '{}': '{}'.",
@@ -149,8 +161,8 @@ public class BatchLibraryImporter {
                     failedFiles.add(command.getAudioNode().getFile());
                 } finally {
                     synchronized (progressLock) {
+                        notifyObserver(observer, itemsTotal - latch.getCount() + 1, itemsTotal);
                         latch.countDown();
-                        notifyObserver(observer, itemsTotal - latch.getCount(), itemsTotal);
                     }
                 }
             });
@@ -161,8 +173,10 @@ public class BatchLibraryImporter {
             logger.warn("Batch audio data writing has been interrupted.", e);
             throw new RuntimeException("Batch audio data writing has been interrupted.", e);
         }
-        
-        return doImport(importTasks, emptyList(), failedFiles);
+
+        return doImport(importTasks.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()), emptyList(), failedFiles);
     }
 
     private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
@@ -172,9 +186,9 @@ public class BatchLibraryImporter {
             logger.error("Could not call progress observer {}.", observer, e);
         }
     }
-    
-    private ImportResult doImport(List<ImportTask> importAudioDataTasks, 
-                                  List<AudioNode> importArtworkTasks, 
+
+    private ImportResult doImport(List<ImportTask> importAudioDataTasks,
+                                  List<AudioNode> importArtworkTasks,
                                   List<File> failedFiles) {
         return transactionTemplate.execute(status -> {
             List<Song> importedSongs = new ArrayList<>();

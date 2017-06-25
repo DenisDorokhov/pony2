@@ -157,7 +157,7 @@ public class ScanResultCalculator {
             lastScanDate = scanResults.getContent().stream()
                     .findFirst()
                     .map(ScanResult::getDate)
-                    .orElse(LocalDateTime.MIN);
+                    .orElse(LocalDateTime.now().minusSeconds(1));
 
             songCountBeforeScan = songRepository.count();
             genreCountBeforeScan = genreRepository.count();

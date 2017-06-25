@@ -144,6 +144,21 @@ public class ArtworkFileFinderTest {
         assertThat(otherArtworkFileFinder.findArtwork(audio)).isSameAs(otherFolderImage);
     }
 
+    @Test
+    public void shouldNotFailIfNoArtworkIsFoundInChildFolder() throws Exception {
+
+        FolderNode rootFolder = mockFolder(new File("root"), null);
+        AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
+        FolderNode childFolder = mockFolder(new File("root/child"), rootFolder);
+        ImageNode image = mockImage(new File("root/child/image.png"), childFolder);
+
+        when(image.getImageSize()).thenReturn(ImageSize.of(50, 100));
+        when(childFolder.getChildImages()).thenReturn(ImmutableList.of(image));
+        when(rootFolder.getChildFolders()).thenReturn(ImmutableList.of(childFolder));
+
+        assertThat(artworkFileFinder.findArtwork(audio)).isNull();
+    }
+
     private FolderNode mockFolder(File file, FolderNode parentFolder) {
         FolderNode folderNode = mock(FolderNode.class);
         when(folderNode.getFile()).thenReturn(file);

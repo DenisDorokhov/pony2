@@ -63,6 +63,7 @@ public class ArtworkFileFinder {
                     .orElseGet(() ->
                             childFolders.stream()
                                     .map(this::fetchArtworkFromFolder)
+                                    .filter(Objects::nonNull)
                                     .findFirst()
                                     .orElse(null)
                     );

@@ -59,7 +59,7 @@ public class ScanFacadeImpl implements ScanFacade {
     public ScanJobProgressDto getScanJobProgress(Long scanJobId) throws ObjectNotFoundException {
         ScanJobProgress scanJobProgress = scanJobService.getScanJobProgress(scanJobId);
         if (scanJobProgress == null) {
-            throw new ObjectNotFoundException(ScanJobProgress.class, scanJobId);
+            throw new ObjectNotFoundException(ScanJob.class, scanJobId);
         }
         return ScanJobProgressDto.of(scanJobProgress);
     }
@@ -67,7 +67,8 @@ public class ScanFacadeImpl implements ScanFacade {
     @Override
     @Transactional(readOnly = true)
     public ScanJobPageDto getScanJobs(int pageIndex) {
-        return ScanJobPageDto.of(scanJobService.getAll(new PageRequest(pageIndex, PAGE_SIZE, new Sort(DESC, "date"))));
+        return ScanJobPageDto.of(scanJobService.getAll(new PageRequest(pageIndex, PAGE_SIZE, 
+                new Sort(DESC, "creationDate", "updateDate"))));
     }
 
     @Override

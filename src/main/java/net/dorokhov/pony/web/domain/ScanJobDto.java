@@ -45,7 +45,8 @@ public final class ScanJobDto extends BaseDto {
 
     public static ScanJobDto of(ScanJob scanJob) {
         return new ScanJobDto(scanJob.getId(), scanJob.getCreationDate(), scanJob.getUpdateDate(),
-                scanJob.getScanType(), scanJob.getStatus(), LogMessageDto.of(scanJob.getLogMessage()),
-                ScanResultDto.of(scanJob.getScanResult()));
+                scanJob.getScanType(), scanJob.getStatus(),
+                scanJob.getLogMessage() != null ? LogMessageDto.of(scanJob.getLogMessage()) : null,
+                scanJob.getScanResult() != null ? ScanResultDto.of(scanJob.getScanResult()) : null);
     }
 }

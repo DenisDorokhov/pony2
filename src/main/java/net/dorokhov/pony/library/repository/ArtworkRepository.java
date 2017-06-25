@@ -10,11 +10,11 @@ public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
 
     long countByDateGreaterThan(LocalDateTime date);
 
-    @Query("SELECT SUM(f.largeImageSize) FROM Artwork f")
-    Long sumLargeImageSize();
+    @Query("SELECT COALESCE(SUM(f.largeImageSize), 0) FROM Artwork f")
+    long sumLargeImageSize();
     
-    @Query("SELECT SUM(f.smallImageSize) FROM Artwork f")
-    Long sumSmallImageSize();
+    @Query("SELECT COALESCE(SUM(f.smallImageSize), 0) FROM Artwork f")
+    long sumSmallImageSize();
 
     Artwork findByChecksumAndSourceUriScheme(String checksum, String sourceUriScheme);
 }

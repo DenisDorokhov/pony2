@@ -10,10 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
 
 @Service
 public class ConfigServiceImpl implements ConfigService {
@@ -51,7 +52,7 @@ public class ConfigServiceImpl implements ConfigService {
         return Optional.ofNullable(configRepository.findOne(CONFIG_LIBRARY_FOLDERS))
                 .map(Config::getValue)
                 .map(s -> JsonConverter.listFromJson(s, String.class))
-                .orElse(Collections.emptyList())
+                .orElse(emptyList())
                 .stream()
                 .map(File::new)
                 .collect(Collectors.toList());

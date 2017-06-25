@@ -269,9 +269,9 @@ public class LibraryImporter {
                     .year(audioData.getYear())
                     .build());
             if (album != null) {
-                logService.debug(logger, "Updating artist '{}': '{}'.", album, savedAlbum);
+                logService.debug(logger, "Updating album '{}': '{}'.", album, savedAlbum);
             } else {
-                logService.debug(logger, "Creating artist '{}'.", savedAlbum);
+                logService.debug(logger, "Creating album '{}'.", savedAlbum);
             }
             return savedAlbum;
         }

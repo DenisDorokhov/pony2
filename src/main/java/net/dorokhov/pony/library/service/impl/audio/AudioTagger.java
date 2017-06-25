@@ -153,7 +153,7 @@ public class AudioTagger {
                 logger.debug("Updating album artist '{}' in file '{}'.", value, file.getAbsolutePath());
                 tag.setField(FieldKey.ALBUM_ARTIST, value);
             } else {
-                logger.debug("Delete album artist in file '{}'.", file.getAbsolutePath());
+                logger.debug("Deleting album artist in file '{}'.", file.getAbsolutePath());
                 tag.deleteField(FieldKey.ALBUM_ARTIST);
             }
         }
