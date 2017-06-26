@@ -1,10 +1,7 @@
 package net.dorokhov.pony.fixture;
 
 import com.google.common.io.Files;
-import net.dorokhov.pony.library.domain.Genre;
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.domain.ScanType;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.service.LibraryService;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.impl.audio.AudioTagger;
@@ -183,7 +180,46 @@ public class ScanTestPlanExecutor {
     }
 
     private void verifyArtists(Context context) {
-        // TODO: implement
+        List<Artist> artists = libraryService.getArtists();
+        assertThat(artists).hasSize(context.getScanTestPlan().getExpectedData().getArtists().size());
+        for (ScanTestPlan.ExpectedData.Artist expectedArtist : context.getScanTestPlan().getExpectedData().getArtists()) {
+            List<Artist> foundArtists = artists.stream()
+                    .filter(artist -> Objects.equals(artist.getName(), expectedArtist.getName()))
+                    .collect(Collectors.toList());
+            assertThat(foundArtists).hasSize(1);
+            assertThat(foundArtists).first().satisfies(artist -> {
+                if (expectedArtist.getArtworkPath() != null) {
+                    assertThat(artist.getArtwork()).satisfies(artwork ->
+                            assertThat(artwork.getSourceUri())
+                                    .isEqualTo(expectedArtworkPathToUri(expectedArtist.getArtworkPath(), context)));
+                } else {
+                    assertThat(artist.getArtwork()).isNull();
+                }
+                for (ScanTestPlan.ExpectedData.Artist.Album expectedAlbum : expectedArtist.getAlbums()) {
+                    List<Album> foundAlbums = artist.getAlbums().stream()
+                            .filter(album -> Objects.equals(album.getName(), expectedAlbum.getName()))
+                            .collect(Collectors.toList());
+                    assertThat(foundAlbums).hasSize(1);
+                    assertThat(foundAlbums).first().satisfies(album -> {
+                        assertThat(album.getYear()).isEqualTo(expectedAlbum.getYear());
+                        if (expectedAlbum.getArtworkPath() != null) {
+                            assertThat(album.getArtwork()).satisfies(artwork ->
+                                    assertThat(artwork.getSourceUri())
+                                            .isEqualTo(expectedArtworkPathToUri(expectedAlbum.getArtworkPath(), context)));
+                        } else {
+                            assertThat(album.getArtwork()).isNull();
+                        }
+                        List<Song> songs = album.getSongs();
+                        assertThat(songs).hasSize(expectedAlbum.getSongPaths().size());
+                        assertThat(songs.stream().map(Song::getPath))
+                                .containsAll(expectedAlbum.getSongPaths().stream()
+                                        .map(relativePath -> new File(context.getRootFolder().getAbsolutePath(), relativePath))
+                                        .map(File::getAbsolutePath)
+                                        .collect(Collectors.toList()));
+                    });
+                }
+            });
+        }
     }
 
     private void verifySongs(Context context) {

@@ -508,12 +508,12 @@
       },
       {
         "name": "Bad Music",
-        "artworkPath": "embedded:green.png",
+        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
         "albums": [
           {
-            "name": "Worse than ever",
-            "year": null,
-            "artworkPath": "embedded:green.png",
+            "name": "Worse Than Ever",
+            "year": 1991,
+            "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
             "songPaths": [
               "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
               "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
