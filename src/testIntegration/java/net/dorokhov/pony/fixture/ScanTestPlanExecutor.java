@@ -2,7 +2,9 @@ package net.dorokhov.pony.fixture;
 
 import com.google.common.io.Files;
 import net.dorokhov.pony.library.domain.*;
-import net.dorokhov.pony.library.service.LibraryService;
+import net.dorokhov.pony.library.repository.ArtistRepository;
+import net.dorokhov.pony.library.repository.GenreRepository;
+import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.ScanJobService;
 import net.dorokhov.pony.library.service.impl.audio.AudioTagger;
 import net.dorokhov.pony.library.service.impl.audio.domain.WritableAudioData;
@@ -50,12 +52,17 @@ public class ScanTestPlanExecutor {
 
     private final AudioTagger audioTagger;
     private final ScanJobService scanJobService;
-    private final LibraryService libraryService;
+    private final GenreRepository genreRepository;
+    private final ArtistRepository artistRepository;
+    private final SongRepository songRepository;
 
-    public ScanTestPlanExecutor(AudioTagger audioTagger, ScanJobService scanJobService, LibraryService libraryService) {
+    public ScanTestPlanExecutor(AudioTagger audioTagger, ScanJobService scanJobService, 
+                                GenreRepository genreRepository, ArtistRepository artistRepository, SongRepository songRepository) {
         this.audioTagger = audioTagger;
         this.scanJobService = scanJobService;
-        this.libraryService = libraryService;
+        this.genreRepository = genreRepository;
+        this.artistRepository = artistRepository;
+        this.songRepository = songRepository;
     }
 
     public Context prepare(ScanTestPlan scanTestPlan) throws IOException {
@@ -112,7 +119,6 @@ public class ScanTestPlanExecutor {
 
     private void verifyScanJob(ScanJob scanJob, Context context) {
         assertThat(scanJob).isNotNull();
-        assertThat(scanJob.getId()).isNotNull();
         assertThat(scanJob.getCreationDate()).isNotNull();
         assertThat(scanJob.getUpdateDate()).isNotNull();
         assertThat(scanJob.getScanType()).isSameAs(ScanType.FULL);
@@ -120,7 +126,6 @@ public class ScanTestPlanExecutor {
         assertThat(scanJob.getLogMessage()).satisfies(logMessage ->
                 assertThat(logMessage.getLevel()).isSameAs(LogMessage.Level.INFO));
         assertThat(scanJob.getScanResult()).satisfies(scanResult -> {
-            assertThat(scanResult.getId()).isNotNull();
             assertThat(scanResult.getDate()).isNotNull();
             assertThat(scanResult.getScanType()).isSameAs(ScanType.FULL);
             assertThat(scanResult.getTargetPaths()).containsExactly(context.getRootFolder().getAbsolutePath());
@@ -153,7 +158,7 @@ public class ScanTestPlanExecutor {
     }
 
     private void verifyGenres(Context context) {
-        List<Genre> genres = libraryService.getGenres();
+        List<Genre> genres = genreRepository.findAll();
         assertThat(genres).hasSize(context.getScanTestPlan().getExpectedData().getGenres().size());
         for (ScanTestPlan.ExpectedData.Genre expectedGenre : context.getScanTestPlan().getExpectedData().getGenres()) {
             List<Genre> foundGenres = genres.stream()
@@ -180,7 +185,7 @@ public class ScanTestPlanExecutor {
     }
 
     private void verifyArtists(Context context) {
-        List<Artist> artists = libraryService.getArtists();
+        List<Artist> artists = artistRepository.findAll();
         assertThat(artists).hasSize(context.getScanTestPlan().getExpectedData().getArtists().size());
         for (ScanTestPlan.ExpectedData.Artist expectedArtist : context.getScanTestPlan().getExpectedData().getArtists()) {
             List<Artist> foundArtists = artists.stream()
@@ -223,7 +228,42 @@ public class ScanTestPlanExecutor {
     }
 
     private void verifySongs(Context context) {
-        // TODO: implement
+        List<Song> songs = songRepository.findAll();
+        assertThat(songs).hasSize(context.getScanTestPlan().getExpectedData().getSongs().size());
+        for (ScanTestPlan.ExpectedData.Song expectedSong : context.getScanTestPlan().getExpectedData().getSongs()) {
+            String expectedPath = new File(context.getRootFolder(), expectedSong.getPath()).getAbsolutePath();
+            List<Song> foundSongs = songs.stream()
+                    .filter(song -> Objects.equals(song.getPath(), expectedPath))
+                    .collect(Collectors.toList());
+            assertThat(foundSongs).hasSize(1);
+            assertThat(foundSongs).first().satisfies(song -> {
+                System.out.println("!!!" + song.getDuration());
+                assertThat(song.getPath()).isEqualTo(expectedPath);
+                assertThat(song.getFileType().getMimeType()).isEqualTo(expectedSong.getMimeType());
+                assertThat(song.getFileType().getFileExtension()).isEqualTo(expectedSong.getFileExtension());
+                assertThat(song.getSize()).isNotNull();
+                assertThat(song.getDuration()).isNotNull();
+                assertThat(song.getBitRate()).isNotNull();
+                assertThat(song.isBitRateVariable()).isNotNull();
+                assertThat(song.getDiscNumber()).isEqualTo(expectedSong.getDiscNumber());
+                assertThat(song.getDiscCount()).isEqualTo(expectedSong.getDiscCount());
+                assertThat(song.getTrackNumber()).isEqualTo(expectedSong.getTrackNumber());
+                assertThat(song.getTrackCount()).isEqualTo(expectedSong.getTrackCount());
+                assertThat(song.getName()).isEqualTo(expectedSong.getTitle());
+                assertThat(song.getGenreName()).isEqualTo(expectedSong.getGenre());
+                assertThat(song.getArtistName()).isEqualTo(expectedSong.getArtist());
+                assertThat(song.getAlbumArtistName()).isEqualTo(expectedSong.getAlbumArtist());
+                assertThat(song.getAlbumName()).isEqualTo(expectedSong.getAlbum());
+                assertThat(song.getYear()).isEqualTo(expectedSong.getYear());
+                if (expectedSong.getArtworkPath() != null) {
+                    assertThat(song.getArtwork()).satisfies(artwork ->
+                            assertThat(artwork.getSourceUri())
+                                    .isEqualTo(expectedArtworkPathToUri(expectedSong.getArtworkPath(), context)));
+                } else {
+                    assertThat(song.getArtwork()).isNull();
+                }
+            });
+        }
     }
 
     private URI expectedArtworkPathToUri(String artworkPath, Context context) {
