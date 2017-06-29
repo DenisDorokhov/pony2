@@ -56,6 +56,8 @@ public class ScanTestPlanExecutor {
     private final ArtistRepository artistRepository;
     private final SongRepository songRepository;
 
+    private final File rootFolder;
+
     public ScanTestPlanExecutor(AudioTagger audioTagger, ScanJobService scanJobService, 
                                 GenreRepository genreRepository, ArtistRepository artistRepository, SongRepository songRepository) {
         this.audioTagger = audioTagger;
@@ -63,10 +65,11 @@ public class ScanTestPlanExecutor {
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
         this.songRepository = songRepository;
+        
+        rootFolder = Files.createTempDir();
     }
 
     public Context prepare(ScanTestPlan scanTestPlan) throws IOException {
-        File rootFolder = Files.createTempDir();
         for (ScanTestPlan.FileArtwork fileArtwork : scanTestPlan.getArtworksToGenerate()) {
             File targetFile = new File(rootFolder, fileArtwork.getCopyTo());
             Files.createParentDirs(targetFile);
@@ -90,6 +93,10 @@ public class ScanTestPlanExecutor {
         verifyGenres(context);
         verifyArtists(context);
         verifySongs(context);
+    }
+    
+    public void clean() {
+        rootFolder.delete();
     }
 
     private void writeAudioData(File file, ScanTestPlan.SongToGenerate songToGenerate) throws IOException {
@@ -237,7 +244,6 @@ public class ScanTestPlanExecutor {
                     .collect(Collectors.toList());
             assertThat(foundSongs).hasSize(1);
             assertThat(foundSongs).first().satisfies(song -> {
-                System.out.println("!!!" + song.getDuration());
                 assertThat(song.getPath()).isEqualTo(expectedPath);
                 assertThat(song.getFileType().getMimeType()).isEqualTo(expectedSong.getMimeType());
                 assertThat(song.getFileType().getFileExtension()).isEqualTo(expectedSong.getFileExtension());

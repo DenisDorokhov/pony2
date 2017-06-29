@@ -49,6 +49,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     public void tearDown() throws Exception {
         super.tearDown();
         scanJobService.removeObserver(blockingObserver);
+        scanTestPlanExecutor.clean();
     }
 
     @Test
@@ -107,6 +108,8 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             return status == Status.COMPLETE || status == Status.FAILED;
         });
         scanTestPlanExecutor.verify(scanJob.getId(), context);
+
+        runAndVerifyDeletionDuringScan();
     }
 
     @Test
@@ -270,5 +273,18 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getDeletedGenreCount()).isEqualTo(scanResult.getDeletedGenreCount());
         assertThat(dto.getCreatedArtworkCount()).isEqualTo(scanResult.getCreatedArtworkCount());
         assertThat(dto.getDeletedArtworkCount()).isEqualTo(scanResult.getDeletedArtworkCount());
+    }
+
+    private void runAndVerifyDeletionDuringScan() throws Exception {
+
+        ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-02-delete.json").getFile(), ScanTestPlan.class);
+        ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
+        ScanJob scanJob = scanJobService.startScanJob();
+
+        await().atMost(30, SECONDS).until(() -> {
+            Status status = scanJobService.getById(scanJob.getId()).getStatus();
+            return status == Status.COMPLETE || status == Status.FAILED;
+        });
+        scanTestPlanExecutor.verify(scanJob.getId(), context);
     }
 }

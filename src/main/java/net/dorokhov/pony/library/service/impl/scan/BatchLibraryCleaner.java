@@ -103,6 +103,7 @@ public class BatchLibraryCleaner {
                 for (Long id : chunk) {
                     Song song = songRepository.findOne(id);
                     if (song != null) {
+                        logService.debug(logger, "Deleting song '{}': file '{}' not found.", song, song.getPath());
                         songRepository.delete(song);
                         libraryCleaner.deleteAlbumIfUnused(song.getAlbum());
                         libraryCleaner.deleteArtistIfUnused(song.getAlbum().getArtist());
@@ -110,7 +111,6 @@ public class BatchLibraryCleaner {
                         if (song.getArtwork() != null) {
                             libraryCleaner.deleteArtworkIfUnused(song.getArtwork());
                         }
-                        logService.debug(logger, "Deleting song '{}': file '{}' not found.", song, song.getPath());
                     }
                     notifyObserver(progressObserver, counter.incrementAndGet(), songsToDelete.size());
                 }
@@ -157,12 +157,12 @@ public class BatchLibraryCleaner {
                 for (Long id : chunk) {
                     Artwork artwork = artworkRepository.findOne(id);
                     if (artwork != null) {
+                        logService.debug(logger, "Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
                         songRepository.clearArtworkByArtworkId(id);
                         albumRepository.clearArtworkByArtworkId(id);
                         artistRepository.clearArtworkByArtworkId(id);
                         genreRepository.clearArtworkByArtworkId(id);
                         artworkStorage.delete(id);
-                        logService.debug(logger, "Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
                     }
                     notifyObserver(progressObserver, counter.incrementAndGet(), artworksToDelete.size());
                 }
