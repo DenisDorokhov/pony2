@@ -54,69 +54,25 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
     @Test
     public void shouldPerformFullScan() throws Exception {
-
-        ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-01-init.json").getFile(), ScanTestPlan.class);
-        ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
-        configService.saveLibraryFolders(ImmutableList.of(context.getRootFolder()));
-
-        scanJobService.addObserver(blockingObserver);
-
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ResponseEntity<ScanJobDto> scanJobResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/library/scanJobs/full", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobDto.class);
-
-        assertThat(scanJobResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        ScanJobDto scanJob = scanJobResponse.getBody();
-        assertThat(scanJob.getId()).isNotNull();
-        assertThat(scanJob.getCreationDate()).isNotNull();
-        assertThat(scanJob.getUpdateDate()).isNull();
-        assertThat(scanJob.getScanType()).isSameAs(ScanType.FULL);
-        assertThat(scanJob.getStatus()).isSameAs(Status.STARTING);
-        assertThat(scanJob.getLogMessage()).isNotNull();
-        assertThat(scanJob.getScanResult()).isNull();
-
-        await().until(() -> {
-            ScanJobProgress scanJobProgress = scanJobService.getScanJobProgress(scanJob.getId());
-            return scanJobProgress != null && scanJobProgress.getScanProgress() != null;
-        });
-
-        ResponseEntity<ScanJobProgressDto> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/library/scanJobProgress", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobProgressDto.class);
-
-        assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
-            assertThat(scanJobProgress.getScanJob()).isNotNull();
-            assertThat(scanJobProgress.getScanProgress()).isNotNull();
-        });
-
-        scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/library/scanJobProgress/{scanJobId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobProgressDto.class, scanJob.getId());
-
-        assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
-            assertThat(scanJobProgress.getScanJob()).isNotNull();
-            assertThat(scanJobProgress.getScanProgress()).isNotNull();
-        });
-        
-        blockingObserver.unlock();
-
-        await().atMost(30, SECONDS).until(() -> {
-            Status status = scanJobService.getById(scanJob.getId()).getStatus();
-            return status == Status.COMPLETE || status == Status.FAILED;
-        });
-        scanTestPlanExecutor.verify(scanJob.getId(), context);
-
-        runAndVerifyDeletionDuringScan();
-        runAndVerifyModificationDuringScan();
+        runAndVerifyInitialScan();
     }
 
     @Test
     @Repeat(10)
     public void shouldPerformFullScanRepeatedly() throws Exception {
         shouldPerformFullScan();
+    }
+
+    @Test
+    public void shouldPerformFullScanFlow() throws Exception {
+        
+        runAndVerifyInitialScan();
+
+        Thread.sleep(1000); // Make sure files are written with modification date in the future.
+        runAndVerifyDeletionScan();
+
+        Thread.sleep(1000); // Make sure files are written with modification date in the future.
+        runAndVerifyModificationScan();
     }
 
     @Test
@@ -214,6 +170,63 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(error.getArguments().get(1)).isEqualTo("1000");
         });
     }
+    
+    private void runAndVerifyInitialScan() throws Exception {
+
+        ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-01-init.json").getFile(), ScanTestPlan.class);
+        ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
+        configService.saveLibraryFolders(ImmutableList.of(context.getRootFolder()));
+
+        scanJobService.addObserver(blockingObserver);
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ResponseEntity<ScanJobDto> scanJobResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/scanJobs/full", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobDto.class);
+
+        assertThat(scanJobResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        ScanJobDto scanJob = scanJobResponse.getBody();
+        assertThat(scanJob.getId()).isNotNull();
+        assertThat(scanJob.getCreationDate()).isNotNull();
+        assertThat(scanJob.getUpdateDate()).isNull();
+        assertThat(scanJob.getScanType()).isSameAs(ScanType.FULL);
+        assertThat(scanJob.getStatus()).isSameAs(Status.STARTING);
+        assertThat(scanJob.getLogMessage()).isNotNull();
+        assertThat(scanJob.getScanResult()).isNull();
+
+        await().until(() -> {
+            ScanJobProgress scanJobProgress = scanJobService.getScanJobProgress(scanJob.getId());
+            return scanJobProgress != null && scanJobProgress.getScanProgress() != null;
+        });
+
+        ResponseEntity<ScanJobProgressDto> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/scanJobProgress", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobProgressDto.class);
+
+        assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
+            assertThat(scanJobProgress.getScanJob()).isNotNull();
+            assertThat(scanJobProgress.getScanProgress()).isNotNull();
+        });
+
+        scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/scanJobProgress/{scanJobId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobProgressDto.class, scanJob.getId());
+
+        assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
+            assertThat(scanJobProgress.getScanJob()).isNotNull();
+            assertThat(scanJobProgress.getScanProgress()).isNotNull();
+        });
+
+        blockingObserver.unlock();
+
+        await().atMost(30, SECONDS).until(() -> {
+            Status status = scanJobService.getById(scanJob.getId()).getStatus();
+            return status == Status.COMPLETE || status == Status.FAILED;
+        });
+        scanTestPlanExecutor.verify(scanJob.getId(), context);
+    }
 
     private Long createAndFinishScanJob() throws ConcurrentScanException {
         ScanJob scanJob = scanJobService.startScanJob();
@@ -276,7 +289,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getDeletedArtworkCount()).isEqualTo(scanResult.getDeletedArtworkCount());
     }
 
-    private void runAndVerifyDeletionDuringScan() throws Exception {
+    private void runAndVerifyDeletionScan() throws Exception {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-02-delete.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
@@ -289,7 +302,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         scanTestPlanExecutor.verify(scanJob.getId(), context);
     }
 
-    private void runAndVerifyModificationDuringScan() throws Exception {
+    private void runAndVerifyModificationScan() throws Exception {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-03-modify.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
