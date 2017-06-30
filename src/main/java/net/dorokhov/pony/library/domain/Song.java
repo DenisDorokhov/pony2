@@ -292,28 +292,28 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
         }
         
         private Builder(Song song) {
-            path = song.path;
-            fileType = song.fileType;
-            size = song.size;
-            duration = song.duration;
-            bitRate = song.bitRate;
-            bitRateVariable = song.bitRateVariable;
-            discNumber = song.discNumber;
-            discCount = song.discCount;
-            id = song.id;
-            trackNumber = song.trackNumber;
-            trackCount = song.trackCount;
-            creationDate = song.creationDate;
-            name = song.name;
-            genreName = song.genreName;
-            updateDate = song.updateDate;
-            artistName = song.artistName;
-            albumArtistName = song.albumArtistName;
-            albumName = song.albumName;
-            year = song.year;
-            artwork = song.artwork;
-            album = song.album;
-            genre = song.genre;
+            id = song.getId();
+            creationDate = song.getCreationDate();
+            updateDate = song.getUpdateDate();
+            path = song.getPath();
+            fileType = song.getFileType();
+            size = song.getSize();
+            duration = song.getDuration();
+            bitRate = song.getBitRate();
+            bitRateVariable = song.isBitRateVariable();
+            discNumber = song.getDiscNumber();
+            discCount = song.getDiscCount();
+            trackNumber = song.getTrackNumber();
+            trackCount = song.getTrackCount();
+            name = song.getName();
+            genreName = song.getGenreName();
+            artistName = song.getArtistName();
+            albumArtistName = song.getAlbumArtistName();
+            albumName = song.getAlbumName();
+            year = song.getYear();
+            artwork = song.getArtwork();
+            album = song.getAlbum();
+            genre = song.getGenre();
         }
 
         public Builder id(@Nullable Long id) {

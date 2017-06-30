@@ -55,7 +55,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldPerformFullScan() throws Exception {
 
-        ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-01.json").getFile(), ScanTestPlan.class);
+        ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-01-init.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
         configService.saveLibraryFolders(ImmutableList.of(context.getRootFolder()));
 
@@ -110,6 +110,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         scanTestPlanExecutor.verify(scanJob.getId(), context);
 
         runAndVerifyDeletionDuringScan();
+        runAndVerifyModificationDuringScan();
     }
 
     @Test
@@ -278,6 +279,19 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     private void runAndVerifyDeletionDuringScan() throws Exception {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-02-delete.json").getFile(), ScanTestPlan.class);
+        ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
+        ScanJob scanJob = scanJobService.startScanJob();
+
+        await().atMost(30, SECONDS).until(() -> {
+            Status status = scanJobService.getById(scanJob.getId()).getStatus();
+            return status == Status.COMPLETE || status == Status.FAILED;
+        });
+        scanTestPlanExecutor.verify(scanJob.getId(), context);
+    }
+
+    private void runAndVerifyModificationDuringScan() throws Exception {
+
+        ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-03-modify.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
         ScanJob scanJob = scanJobService.startScanJob();
 

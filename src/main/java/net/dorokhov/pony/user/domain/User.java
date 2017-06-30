@@ -108,13 +108,13 @@ public class User extends BaseEntity<Long> implements Serializable {
         }
 
         private Builder(User user) {
-            id = user.id;
-            creationDate = user.creationDate;
-            updateDate = user.updateDate;
-            name = user.name;
-            email = user.email;
-            password = user.password;
-            roles = ImmutableSet.<Role>builder().addAll(user.roles);
+            id = user.getId();
+            creationDate = user.getCreationDate();
+            updateDate = user.getUpdateDate();
+            name = user.getName();
+            email = user.getEmail();
+            password = user.getPassword();
+            roles = ImmutableSet.<Role>builder().addAll(user.getRoles());
         }
 
         public Builder id(@Nullable Long id) {

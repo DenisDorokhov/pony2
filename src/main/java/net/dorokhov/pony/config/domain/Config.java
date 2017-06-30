@@ -156,10 +156,10 @@ public class Config implements Serializable {
         }
         
         private Builder(Config config) {
-            id = config.id;
-            creationDate = config.creationDate;
-            updateDate = config.updateDate;
-            value = config.value;
+            id = config.getId();
+            creationDate = config.getCreationDate();
+            updateDate = config.getUpdateDate();
+            value = config.getValue();
         }
 
         public Builder id(String id) {

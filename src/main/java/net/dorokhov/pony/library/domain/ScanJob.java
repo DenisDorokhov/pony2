@@ -102,13 +102,13 @@ public class ScanJob extends BaseEntity<Long> {
         }
 
         private Builder(ScanJob scanJob) {
-            this.id = scanJob.id;
-            this.scanType = scanJob.scanType;
-            this.status = scanJob.status;
-            this.creationDate = scanJob.creationDate;
-            this.updateDate = scanJob.updateDate;
-            this.logMessage = scanJob.logMessage;
-            this.scanResult = scanJob.scanResult;
+            this.id = scanJob.getId();
+            this.scanType = scanJob.getScanType();
+            this.status = scanJob.getStatus();
+            this.creationDate = scanJob.getCreationDate();
+            this.updateDate = scanJob.getUpdateDate();
+            this.logMessage = scanJob.getLogMessage();
+            this.scanResult = scanJob.getScanResult();
         }
 
         public Builder id(@Nullable Long id) {

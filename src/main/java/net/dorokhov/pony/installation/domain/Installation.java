@@ -61,10 +61,10 @@ public class Installation extends BaseEntity<Long> implements Serializable {
         }
         
         private Builder(Installation installation) {
-            version = installation.version;
-            id = installation.id;
-            creationDate = installation.creationDate;
-            updateDate = installation.updateDate;
+            id = installation.getId();
+            creationDate = installation.getCreationDate();
+            updateDate = installation.getUpdateDate();
+            version = installation.getVersion();
         }
 
         public Builder id(@Nullable Long id) {

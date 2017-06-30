@@ -97,12 +97,12 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
         }
         
         private Builder(Genre genre) {
-            id = genre.id;
-            creationDate = genre.creationDate;
-            updateDate = genre.updateDate;
-            name = genre.name;
-            artwork = genre.artwork;
-            songs = ImmutableList.<Song>builder().addAll(genre.songs);
+            id = genre.getId();
+            creationDate = genre.getCreationDate();
+            updateDate = genre.getUpdateDate();
+            name = genre.getName();
+            artwork = genre.getArtwork();
+            songs = ImmutableList.<Song>builder().addAll(genre.getSongs());
         }
 
         public Builder id(@Nullable Long id) {

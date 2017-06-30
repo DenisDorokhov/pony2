@@ -103,12 +103,12 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
         }
         
         private Builder(Artist artist) {
-            id = artist.id;
-            creationDate = artist.creationDate;
-            updateDate = artist.updateDate;
-            name = artist.name;
-            albums = ImmutableList.<Album>builder().addAll(artist.albums);
-            artwork = artist.artwork;
+            id = artist.getId();
+            creationDate = artist.getCreationDate();
+            updateDate = artist.getUpdateDate();
+            name = artist.getName();
+            artwork = artist.getArtwork();
+            albums = ImmutableList.<Album>builder().addAll(artist.getAlbums());
         }
 
         public Builder id(@Nullable Long id) {
