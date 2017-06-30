@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -144,6 +145,8 @@ public class LibraryScanner {
             audioNodes.addAll(folderNode.getChildAudiosRecursively());
             imageNodes.addAll(folderNode.getChildImagesRecursively());
         }
+        audioNodes.sort(Comparator.comparing(audioNode -> audioNode.getFile().getAbsolutePath()));
+        imageNodes.sort(Comparator.comparing(imageNode -> imageNode.getFile().getAbsolutePath()));
 
         logService.info(logger, "Cleaning songs...");
         progressScan(FULL_CLEANING_SONGS, targetFolders, null, observer);
