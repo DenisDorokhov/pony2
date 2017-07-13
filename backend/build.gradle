@@ -21,7 +21,9 @@ apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 apply plugin: 'org.springframework.boot'
 
-group 'net.dorokhov.pony'
+jar {
+    baseName = 'pony2'
+}
 
 repositories {
     mavenCentral()
@@ -75,7 +77,7 @@ check.dependsOn testReport
 
 dependencies {
 
-    runtime 'com.h2database:h2'
+    compile project(':frontend')
 
     compile 'com.google.guava:guava:21.0'
     compile 'com.google.code.findbugs:annotations:3.0.1'
@@ -98,6 +100,8 @@ dependencies {
     compile 'org.hibernate:hibernate-ehcache:5.0.12.Final'
     compile 'org.hibernate:hibernate-search-orm:5.6.1.Final'
     compile 'net.jthink:jaudiotagger:2.2.3'
+
+    runtime 'com.h2database:h2'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
     testCompile 'org.mockito:mockito-core:2.7.14'
