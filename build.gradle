@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.gorylenko.gradle-git-properties' version '1.4.17'
+    id 'org.unbroken-dome.test-sets' version '1.4.2'
 }
 
 apply plugin: 'java'
@@ -21,8 +21,6 @@ apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 apply plugin: 'org.springframework.boot'
 
-apply from: "$rootDir/gradle/testIntegration.gradle"
-
 group 'net.dorokhov.pony'
 
 repositories {
@@ -31,6 +29,49 @@ repositories {
         url "https://dl.bintray.com/ijabz/maven"
     }
 }
+
+springBoot {
+    buildInfo()
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-parameters" << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+testSets {
+    testIntegration
+}
+
+findbugs {
+    sourceSets = [sourceSets.main]
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        html.enabled = true
+        xml.enabled = false
+    }
+}
+
+task testMerge(type: JacocoMerge) {
+    executionData test, testIntegration
+}
+
+task testReport(dependsOn: testMerge, type: JacocoReport) {
+    group = 'verification'
+    description = 'Generates test coverage report for test and testIntegration tasks.'
+    executionData testMerge.destinationFile
+    sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+    classDirectories = files(sourceSets.main.output)
+    reports {
+        xml.enabled = true
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        html.enabled = true
+        html.destination "${buildDir}/reports/jacoco/report"
+    }
+}
+
+check.dependsOn testReport
 
 dependencies {
 
@@ -64,44 +105,6 @@ dependencies {
     testCompile 'info.solidsoft.mockito:mockito-java8:2.0.1'
     testCompile 'org.apache.httpcomponents:httpclient:4.5.3'
     testCompile 'org.awaitility:awaitility:3.0.0'
-}
 
-springBoot {
-    buildInfo()
+    testIntegrationCompile sourceSets.test.output
 }
-
-findbugs {
-    sourceSets = [sourceSets.main]
-}
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs << "-parameters" << "-Xlint:unchecked" << "-Xlint:deprecation"
-}
-
-tasks.withType(FindBugs) {
-    reports {
-        html.enabled = true
-        xml.enabled = false
-    }
-}
-
-task codeCoverageAggregate(type: JacocoMerge) {
-    executionData test, testIntegration
-}
-
-task codeCoverageReport(dependsOn: codeCoverageAggregate, type: JacocoReport) {
-    group = 'verification'
-    description = 'Generates code coverage report for test and testIntegration tasks.'
-    executionData codeCoverageAggregate.destinationFile
-    sourceDirectories = files(sourceSets.main.allSource.srcDirs)
-    classDirectories = files(sourceSets.main.output)
-    reports {
-        xml.enabled = true
-        xml.destination "${buildDir}/reports/jacoco/report.xml"
-        html.enabled = true
-        html.destination "${buildDir}/reports/jacoco/report"
-    }
-}
-
-check.dependsOn testIntegration
-check.dependsOn codeCoverageReport
