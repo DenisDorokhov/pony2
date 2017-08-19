@@ -1,8 +1,8 @@
 language: java
 jdk:
   - oraclejdk8
-script:
-  - TERM=dumb ./gradlew check
+env:
+  - TERM=dumb
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 dist: trusty
