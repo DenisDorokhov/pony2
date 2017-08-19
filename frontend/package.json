@@ -4,12 +4,12 @@
   "license": "MIT",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --proxy-config proxy.conf.json",
-    "build": "ng build --prod",
-    "buildDev": "ng build",
-    "test": "ng test --single-run",
+    "start": "ng serve --proxy-config proxy.conf.json --progress=false",
+    "build": "ng build --prod --progress=false",
+    "buildDev": "ng build --progress=false",
+    "test": "ng test --single-run --progress=false",
     "lint": "ng lint --type-check",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e --progress=false"
   },
   "private": true,
   "dependencies": {
