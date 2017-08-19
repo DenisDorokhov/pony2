@@ -25,13 +25,6 @@ jar {
     baseName = 'pony2'
 }
 
-repositories {
-    mavenCentral()
-    maven {
-        url "https://dl.bintray.com/ijabz/maven"
-    }
-}
-
 springBoot {
     buildInfo()
 }
@@ -61,7 +54,6 @@ task testMerge(type: JacocoMerge) {
 
 task testReport(dependsOn: testMerge, type: JacocoReport) {
     group = 'verification'
-    description = 'Generates test coverage report for test and testIntegration tasks.'
     executionData testMerge.destinationFile
     sourceDirectories = files(sourceSets.main.allSource.srcDirs)
     classDirectories = files(sourceSets.main.output)
@@ -74,6 +66,13 @@ task testReport(dependsOn: testMerge, type: JacocoReport) {
 }
 
 check.dependsOn testReport
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://dl.bintray.com/ijabz/maven"
+    }
+}
 
 dependencies {
 

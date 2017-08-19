@@ -1,5 +1,57 @@
+plugins {
+    id 'com.moowork.node' version '1.2.0'
+}
+
 apply plugin: 'java'
 
 jar {
     baseName = 'pony2-frontend'
 }
+
+node {
+    version = '8.4.0'
+    yarnVersion = '0.27.5'
+    download = true
+    workDir = file("${project.buildDir}/nodejs")
+    yarnWorkDir = file("${project.buildDir}/yarn")
+}
+
+yarn {
+    doLast {
+        mkdir "$buildDir/resources/main/static"
+    }
+}
+
+task yarnBuild(type: YarnTask, dependsOn: 'yarn') {
+    group = 'build'
+    args = ['run', 'build']
+}
+
+task yarnBuildDev(type: YarnTask, dependsOn: 'yarn') {
+    group = 'build'
+    args = ['run', 'buildDev']
+}
+
+task yarnTest(type: YarnTask, dependsOn: 'yarn') {
+    group = 'test'
+    args = ['run', 'test']
+}
+
+task yarnLint(type: YarnTask, dependsOn: 'yarn') {
+    group = 'check'
+    args = ['run', 'lint']
+}
+
+task yarnStart(type: YarnTask, dependsOn: 'yarn') {
+    group = 'application'
+    args = ['run', 'start']
+}
+
+if (gradle.startParameter.taskNames.contains('bootRun')) {
+    jar.dependsOn yarnBuildDev
+} else {
+    jar.dependsOn yarnBuild
+}
+
+test.dependsOn yarnTest
+check.dependsOn yarnLint
