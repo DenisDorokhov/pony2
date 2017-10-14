@@ -33,6 +33,13 @@ tasks.withType(JavaCompile) {
     options.compilerArgs << "-parameters" << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
+test {
+    testLogging {
+        events "failed"
+        exceptionFormat "short"
+    }
+}
+
 testSets {
     testIntegration
 }
