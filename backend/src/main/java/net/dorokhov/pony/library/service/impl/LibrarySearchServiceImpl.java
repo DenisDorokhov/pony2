@@ -1,11 +1,11 @@
-package net.dorokhov.pony.search.service.impl;
+package net.dorokhov.pony.library.service.impl;
 
 import net.dorokhov.pony.library.domain.Album;
 import net.dorokhov.pony.library.domain.Artist;
 import net.dorokhov.pony.library.domain.Genre;
 import net.dorokhov.pony.library.domain.Song;
-import net.dorokhov.pony.search.service.SearchService;
-import net.dorokhov.pony.search.domain.SearchQuery;
+import net.dorokhov.pony.library.service.LibrarySearchService;
+import net.dorokhov.pony.library.domain.LibrarySearchQuery;
 import org.apache.lucene.analysis.core.StopAnalyzer;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -23,40 +23,40 @@ import static org.apache.lucene.search.BooleanClause.Occur.MUST;
 import static org.apache.lucene.search.BooleanClause.Occur.SHOULD;
 
 @Service
-public class SearchServiceImpl implements SearchService {
+public class LibrarySearchServiceImpl implements LibrarySearchService {
     
     private final EntityManager entityManager;
 
-    public SearchServiceImpl(EntityManager entityManager) {
+    public LibrarySearchServiceImpl(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Genre> searchGenres(SearchQuery query, int maxResults) {
+    public List<Genre> searchGenres(LibrarySearchQuery query, int maxResults) {
         return search(query, maxResults, Genre.class, "name");
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Artist> searchArtists(SearchQuery query, int maxResults) {
+    public List<Artist> searchArtists(LibrarySearchQuery query, int maxResults) {
         return search(query, maxResults, Artist.class, "name");
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Album> searchAlbums(SearchQuery query, int maxResults) {
+    public List<Album> searchAlbums(LibrarySearchQuery query, int maxResults) {
         return search(query, maxResults, Album.class, "searchTerms");
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> searchSongs(SearchQuery query, int maxResults) {
+    public List<Song> searchSongs(LibrarySearchQuery query, int maxResults) {
         return search(query, maxResults, Song.class, "searchTerms");
     }
     
     @SuppressWarnings("unchecked")
-    private <T> List<T> search(SearchQuery query, int maxResults, Class<T> clazz, String searchField) {
+    private <T> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, String searchField) {
 
         FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
 

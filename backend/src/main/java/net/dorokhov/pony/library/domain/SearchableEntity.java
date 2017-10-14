@@ -1,5 +1,6 @@
-package net.dorokhov.pony.common;
+package net.dorokhov.pony.library.domain;
 
+import net.dorokhov.pony.common.BaseEntity;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.apache.lucene.analysis.standard.StandardFilterFactory;
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
@@ -9,7 +10,7 @@ import org.hibernate.search.annotations.TokenizerDef;
 
 import java.io.Serializable;
 
-import static net.dorokhov.pony.common.SearchableEntity.ANALYZER;
+import static net.dorokhov.pony.library.domain.SearchableEntity.ANALYZER;
 
 @AnalyzerDef(name = ANALYZER,
         tokenizer = @TokenizerDef(factory = StandardTokenizerFactory.class),

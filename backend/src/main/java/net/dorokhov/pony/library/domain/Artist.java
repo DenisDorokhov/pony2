@@ -2,7 +2,6 @@ package net.dorokhov.pony.library.domain;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.common.OptionalComparators;
-import net.dorokhov.pony.common.SearchableEntity;
 import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;

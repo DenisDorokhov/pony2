@@ -5,8 +5,8 @@ import net.dorokhov.pony.library.domain.Artist;
 import net.dorokhov.pony.library.domain.Genre;
 import net.dorokhov.pony.library.domain.Song;
 import net.dorokhov.pony.library.service.LibraryService;
-import net.dorokhov.pony.search.domain.SearchQuery;
-import net.dorokhov.pony.search.service.SearchService;
+import net.dorokhov.pony.library.domain.LibrarySearchQuery;
+import net.dorokhov.pony.library.service.LibrarySearchService;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.service.LibraryFacade;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
@@ -22,12 +22,12 @@ public class LibraryFacadeImpl implements LibraryFacade {
     private final static int SEARCH_RESULT_COUNT = 10;
     
     private final LibraryService libraryService;
-    private final SearchService searchService;
+    private final LibrarySearchService librarySearchService;
 
     public LibraryFacadeImpl(LibraryService libraryService,
-                             SearchService searchService) {
+                             LibrarySearchService librarySearchService) {
         this.libraryService = libraryService;
-        this.searchService = searchService;
+        this.librarySearchService = librarySearchService;
     }
 
     @Override
@@ -71,10 +71,10 @@ public class LibraryFacadeImpl implements LibraryFacade {
     @Override
     @Transactional(readOnly = true)
     public SearchResultDto search(String query) {
-        List<Genre> genres = searchService.searchGenres(SearchQuery.of(query), SEARCH_RESULT_COUNT);
-        List<Artist> artists = searchService.searchArtists(SearchQuery.of(query), SEARCH_RESULT_COUNT);
-        List<Album> albums = searchService.searchAlbums(SearchQuery.of(query), SEARCH_RESULT_COUNT);
-        List<Song> songs = searchService.searchSongs(SearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Genre> genres = librarySearchService.searchGenres(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Artist> artists = librarySearchService.searchArtists(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Album> albums = librarySearchService.searchAlbums(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Song> songs = librarySearchService.searchSongs(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         return SearchResultDto.of(genres, artists, albums, songs);
     }
 }

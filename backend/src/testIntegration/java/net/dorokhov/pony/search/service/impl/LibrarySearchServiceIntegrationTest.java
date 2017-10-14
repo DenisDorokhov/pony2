@@ -9,18 +9,18 @@ import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.search.service.SearchService;
+import net.dorokhov.pony.library.service.LibrarySearchService;
 import net.dorokhov.pony.IntegrationTest;
-import net.dorokhov.pony.search.domain.SearchQuery;
+import net.dorokhov.pony.library.domain.LibrarySearchQuery;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SearchServiceIntegrationTest extends IntegrationTest {
+public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
 
     @Autowired
-    private SearchService searchService;
+    private LibrarySearchService librarySearchService;
 
     @Autowired
     private GenreRepository genreRepository;
@@ -37,11 +37,11 @@ public class SearchServiceIntegrationTest extends IntegrationTest {
         Genre genre1 = genreRepository.save(buildGenre("the foobar entity1"));
         Genre genre2 = genreRepository.save(buildGenre("the foobar entity2"));
 
-        assertThat(searchService.searchGenres(SearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
-        assertThat(searchService.searchGenres(SearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(searchService.searchGenres(SearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
-        assertThat(searchService.searchGenres(SearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
-        assertThat(searchService.searchGenres(SearchQuery.of("other"), 10)).isEmpty();
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 
     @Test
@@ -50,11 +50,11 @@ public class SearchServiceIntegrationTest extends IntegrationTest {
         Artist artist1 = artistRepository.save(buildArtist("the foobar entity1"));
         Artist artist2 = artistRepository.save(buildArtist("the foobar entity2"));
 
-        assertThat(searchService.searchArtists(SearchQuery.of("foo"), 10)).containsOnly(artist1, artist2);
-        assertThat(searchService.searchArtists(SearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(searchService.searchArtists(SearchQuery.of("ent th foo"), 10)).containsOnly(artist1, artist2);
-        assertThat(searchService.searchArtists(SearchQuery.of("entity1 the foobar"), 10)).containsExactly(artist1);
-        assertThat(searchService.searchArtists(SearchQuery.of("other"), 10)).isEmpty();
+        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 10)).containsOnly(artist1, artist2);
+        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(artist1, artist2);
+        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(artist1);
+        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 
     @Test
@@ -65,11 +65,11 @@ public class SearchServiceIntegrationTest extends IntegrationTest {
         Album album1 = albumRepository.save(buildAlbum(artist, "the foobar entity1"));
         Album album2 = albumRepository.save(buildAlbum(artist, "the foobar entity2"));
 
-        assertThat(searchService.searchAlbums(SearchQuery.of("foo"), 10)).containsOnly(album1, album2);
-        assertThat(searchService.searchAlbums(SearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(searchService.searchAlbums(SearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
-        assertThat(searchService.searchAlbums(SearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
-        assertThat(searchService.searchAlbums(SearchQuery.of("other"), 10)).isEmpty();
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 10)).containsOnly(album1, album2);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 
     @Test
@@ -82,11 +82,11 @@ public class SearchServiceIntegrationTest extends IntegrationTest {
         Song song1 = songRepository.save(buildSong("the foobar entity1", genre, album));
         Song song2 = songRepository.save(buildSong("the foobar entity2", genre, album));
 
-        assertThat(searchService.searchSongs(SearchQuery.of("foo"), 10)).containsOnly(song1, song2);
-        assertThat(searchService.searchSongs(SearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(searchService.searchSongs(SearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
-        assertThat(searchService.searchSongs(SearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
-        assertThat(searchService.searchSongs(SearchQuery.of("other"), 10)).isEmpty();
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 10)).containsOnly(song1, song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 
     private Genre buildGenre(String name) {
