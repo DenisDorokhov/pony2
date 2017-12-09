@@ -1,0 +1,61 @@
+buildscript {
+    ext {
+        springBootVersion = '1.5.2.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+plugins {
+    id 'org.unbroken-dome.test-sets' version '1.4.2'
+}
+
+apply plugin: 'org.springframework.boot'
+
+jar {
+    baseName = 'pony2'
+}
+
+springBoot {
+    buildInfo()
+}
+
+testSets {
+    testIntegration
+}
+
+testIntegration.dependsOn {
+    rootProject.subprojects.collect {
+        it.tasks.getByName 'test'
+    }
+}
+
+check.dependsOn testIntegration
+
+repositories {
+    maven {
+        url "https://dl.bintray.com/ijabz/maven"
+    }
+}
+
+dependencies {
+
+    compile project(':backend:core')
+    compile project(':backend:web')
+    compile project(':frontend')
+
+    compile 'org.flywaydb:flyway-core'
+    compile 'org.hibernate:hibernate-ehcache:5.0.12.Final'
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+
+    runtime 'com.h2database:h2'
+
+    testCompile 'org.apache.httpcomponents:httpclient:4.5.3'
+    testCompile 'org.awaitility:awaitility:3.0.0'
+
+    testIntegrationCompile project(':backend:test')
+}

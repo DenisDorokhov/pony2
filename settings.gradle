@@ -1,1 +1,6 @@
-include 'backend', 'frontend'
+include 'backend:api',
+        'backend:test',
+        'backend:core',
+        'backend:web',
+        'frontend',
+        'app'

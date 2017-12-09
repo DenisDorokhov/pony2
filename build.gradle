@@ -1,0 +1,82 @@
+def backendSubprojects = subprojects.findAll { 
+    it.name != 'frontend' 
+}
+
+configure(backendSubprojects) {
+
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'findbugs'
+    apply plugin: 'jacoco'
+
+    ext { 
+        springBootVersion = '1.5.7.RELEASE'
+    }
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-parameters" << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+
+    test {
+        testLogging {
+            events "failed"
+            exceptionFormat "short"
+        }
+    }
+
+    findbugs {
+        sourceSets = [sourceSets.main]
+    }
+
+    tasks.withType(FindBugs) {
+        reports {
+            html.enabled = true
+            xml.enabled = false
+        }
+    }
+    
+    dependencies {
+        testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+        testCompile 'org.mockito:mockito-core:2.7.14'
+        testCompile 'org.assertj:assertj-core:3.6.2'
+        testCompile 'info.solidsoft.mockito:mockito-java8:2.0.1'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'jacoco'
+
+task testReport(type: JacocoReport) {
+    group = 'verification'
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    sourceDirectories = files(backendSubprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(backendSubprojects.sourceSets.main.output)
+    reports {
+        xml.enabled = true
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        html.enabled = true
+        html.destination "${buildDir}/reports/jacoco/report"
+    }
+}
+
+testReport.dependsOn {
+    rootProject.subprojects.collect {
+        it.tasks.getByName 'test'
+    }
+}
+testReport.dependsOn {
+    rootProject.subprojects.findAll { 
+        it.name == 'app' 
+    }.collect {
+        it.tasks.getByName 'testIntegration'
+    }
+}
+
+check.dependsOn testReport
