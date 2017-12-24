@@ -10,6 +10,8 @@ dependencies {
 
     compile 'org.apache.tika:tika-core:1.14'
     compile 'net.coobird:thumbnailator:0.4.8'
+    compile 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.8.8'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.8'
     compile 'net.jthink:jaudiotagger:2.2.3'
     compile "org.springframework.boot:spring-boot-starter-cache:${springBootVersion}"
     compile "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"

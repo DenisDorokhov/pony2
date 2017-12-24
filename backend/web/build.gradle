@@ -3,8 +3,6 @@ dependencies {
     compile project(':backend:api')
 
     compile 'com.auth0:java-jwt:3.0.1'
-    compile 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.8.8'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.8'
     compile "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
     compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
     

@@ -20,11 +20,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
-@EntityScan(basePackageClasses = {PonyApplication.class, Jsr310JpaConverters.class})
+@EntityScan(basePackageClasses = Jsr310JpaConverters.class)
 @EnableAsync
 @EnableScheduling
 @EnableCaching
-public class PonyConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderCustomizer {
+public class CoreConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderCustomizer {
 
     @Override
     public ThreadPoolTaskExecutor getAsyncExecutor() {
@@ -44,7 +44,7 @@ public class PonyConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderC
         jacksonObjectMapperBuilder
                 .modules(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES), new JavaTimeModule());
     }
-    
+
     @Autowired
     public void customize(ObjectMapper objectMapper) {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
