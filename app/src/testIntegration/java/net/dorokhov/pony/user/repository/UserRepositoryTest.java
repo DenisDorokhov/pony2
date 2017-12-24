@@ -1,7 +1,7 @@
 package net.dorokhov.pony.user.repository;
 
 import net.dorokhov.pony.IntegrationTest;
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.Test;

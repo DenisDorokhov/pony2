@@ -1,7 +1,7 @@
 package net.dorokhov.pony.library.service.filetree.domain;
 
 import net.dorokhov.pony.library.service.AudioTagger;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
+import net.dorokhov.pony.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.file.FileTypeResolver;
 

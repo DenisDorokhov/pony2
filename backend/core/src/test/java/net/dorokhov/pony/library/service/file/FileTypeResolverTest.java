@@ -1,8 +1,7 @@
 package net.dorokhov.pony.library.service.file;
 
 import com.google.common.io.ByteStreams;
-import net.dorokhov.pony.library.domain.FileType;
-import net.dorokhov.pony.library.service.file.FileTypeResolver;
+import net.dorokhov.pony.api.library.domain.FileType;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;

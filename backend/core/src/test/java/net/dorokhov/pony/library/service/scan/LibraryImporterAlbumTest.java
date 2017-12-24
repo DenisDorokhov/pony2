@@ -1,7 +1,7 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.Album;
-import net.dorokhov.pony.library.domain.Artist;
+import net.dorokhov.pony.api.library.domain.Album;
+import net.dorokhov.pony.api.library.domain.Artist;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;

@@ -1,9 +1,9 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.Album;
-import net.dorokhov.pony.library.domain.Artist;
-import net.dorokhov.pony.library.domain.Genre;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.Album;
+import net.dorokhov.pony.api.library.domain.Artist;
+import net.dorokhov.pony.api.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Song;
 
 import java.util.List;
 import java.util.stream.Collectors;

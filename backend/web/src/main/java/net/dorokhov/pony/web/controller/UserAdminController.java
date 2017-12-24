@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.web.controller.exception.BadRequestException;
 import net.dorokhov.pony.web.domain.UserCreationCommandDto;
 import net.dorokhov.pony.web.domain.UserDto;

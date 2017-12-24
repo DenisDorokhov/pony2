@@ -1,14 +1,13 @@
 package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.base.Strings;
-import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

@@ -1,10 +1,10 @@
 package net.dorokhov.pony.log.service;
 
 import com.google.common.base.Throwables;
-import net.dorokhov.pony.log.domain.LogMessage;
-import net.dorokhov.pony.log.domain.LogMessage.Level;
+import net.dorokhov.pony.api.log.domain.LogMessage;
+import net.dorokhov.pony.api.log.domain.LogMessage.Level;
+import net.dorokhov.pony.api.log.service.LogService;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
-import net.dorokhov.pony.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.helpers.MessageFormatter;
 import org.springframework.data.domain.Page;

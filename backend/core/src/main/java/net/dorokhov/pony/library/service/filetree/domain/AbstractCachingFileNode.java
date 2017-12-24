@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.service.filetree.domain;
 
-import net.dorokhov.pony.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.FileType;
 import net.dorokhov.pony.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.file.FileTypeResolver;
 

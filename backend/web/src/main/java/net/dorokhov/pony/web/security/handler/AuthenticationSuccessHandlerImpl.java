@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.security.handler;
 
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.security.LoginDelegate;
 import net.dorokhov.pony.web.security.token.TokenManager;

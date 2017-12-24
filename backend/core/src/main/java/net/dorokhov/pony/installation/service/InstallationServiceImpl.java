@@ -1,16 +1,17 @@
 package net.dorokhov.pony.installation.service;
 
-import net.dorokhov.pony.config.service.ConfigService;
-import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.api.config.service.ConfigService;
+import net.dorokhov.pony.api.installation.domain.Installation;
+import net.dorokhov.pony.api.installation.service.InstallationService;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
-import net.dorokhov.pony.installation.service.command.InstallationCommand;
-import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
-import net.dorokhov.pony.installation.service.exception.NotInstalledException;
-import net.dorokhov.pony.log.service.LogService;
-import net.dorokhov.pony.user.domain.User.Role;
-import net.dorokhov.pony.user.service.UserService;
-import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
+import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
+import net.dorokhov.pony.api.installation.service.exception.NotInstalledException;
+import net.dorokhov.pony.api.log.service.LogService;
+import net.dorokhov.pony.api.user.domain.User.Role;
+import net.dorokhov.pony.api.user.service.UserService;
+import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheConfig;

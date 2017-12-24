@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import net.dorokhov.pony.web.domain.ScanJobDto;

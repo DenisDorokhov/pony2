@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.api.user.domain.User;
+import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.web.security.UserDetailsImpl;
 import net.dorokhov.pony.web.security.UserDetailsServiceImpl;
 import org.junit.Test;

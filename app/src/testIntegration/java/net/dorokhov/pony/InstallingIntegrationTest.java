@@ -1,8 +1,8 @@
 package net.dorokhov.pony;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.installation.service.InstallationService;
-import net.dorokhov.pony.installation.service.command.InstallationCommand;
+import net.dorokhov.pony.api.installation.service.InstallationService;
+import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -2,11 +2,11 @@ package net.dorokhov.pony.web.controller;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.IntegrationTest;
-import net.dorokhov.pony.config.service.ConfigService;
-import net.dorokhov.pony.installation.service.InstallationService;
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.domain.User.Role;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.api.config.service.ConfigService;
+import net.dorokhov.pony.api.installation.service.InstallationService;
+import net.dorokhov.pony.api.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User.Role;
+import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import net.dorokhov.pony.web.service.InstallationSecretManager;

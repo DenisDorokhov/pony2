@@ -1,17 +1,17 @@
 package net.dorokhov.pony.installation.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.config.service.ConfigService;
-import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.api.config.service.ConfigService;
+import net.dorokhov.pony.api.installation.domain.Installation;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
-import net.dorokhov.pony.installation.service.command.InstallationCommand;
-import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
-import net.dorokhov.pony.installation.service.exception.NotInstalledException;
+import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
+import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
+import net.dorokhov.pony.api.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.installation.service.BuildVersionProvider.BuildVersion;
-import net.dorokhov.pony.log.service.LogService;
-import net.dorokhov.pony.user.domain.User.Role;
-import net.dorokhov.pony.user.service.UserService;
-import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.api.log.service.LogService;
+import net.dorokhov.pony.api.user.domain.User.Role;
+import net.dorokhov.pony.api.user.service.UserService;
+import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,12 +1,9 @@
 package net.dorokhov.pony.web.security.token;
 
 import net.dorokhov.pony.web.security.UserDetailsImpl;
-import net.dorokhov.pony.web.security.token.RequestTokenFinder;
-import net.dorokhov.pony.web.security.token.TokenManager;
-import net.dorokhov.pony.web.security.token.TokenSecurityContextRepository;
 import net.dorokhov.pony.web.security.token.exception.InvalidTokenException;
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.api.user.domain.User;
+import net.dorokhov.pony.api.user.service.UserService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;

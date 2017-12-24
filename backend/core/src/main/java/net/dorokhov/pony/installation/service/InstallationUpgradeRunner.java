@@ -1,6 +1,6 @@
 package net.dorokhov.pony.installation.service;
 
-import net.dorokhov.pony.installation.service.InstallationService;
+import net.dorokhov.pony.api.installation.service.InstallationService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;

@@ -1,10 +1,10 @@
 package net.dorokhov.pony.library.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanJob;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
-import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;

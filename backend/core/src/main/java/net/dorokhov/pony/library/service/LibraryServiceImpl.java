@@ -1,13 +1,13 @@
 package net.dorokhov.pony.library.service;
 
-import net.dorokhov.pony.library.domain.Artist;
-import net.dorokhov.pony.library.domain.ArtworkFiles;
-import net.dorokhov.pony.library.domain.Genre;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.Artist;
+import net.dorokhov.pony.api.library.domain.ArtworkFiles;
+import net.dorokhov.pony.api.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Song;
+import net.dorokhov.pony.api.library.service.LibraryService;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.service.LibraryService;
 import net.dorokhov.pony.library.service.artwork.ArtworkStorage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -1,7 +1,6 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.*;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

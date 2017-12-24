@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.service.filetree;
 
-import net.dorokhov.pony.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.FileType;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.filetree.domain.CachingAudioNode;
 import net.dorokhov.pony.library.service.filetree.domain.CachingImageNode;

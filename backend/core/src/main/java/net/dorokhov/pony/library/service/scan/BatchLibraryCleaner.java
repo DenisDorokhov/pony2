@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.Song;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
@@ -22,7 +22,7 @@ import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.filetree.domain.ImageNode;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +35,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static net.dorokhov.pony.library.domain.Artwork.SOURCE_URI_SCHEME_FILE;
+import static net.dorokhov.pony.api.library.domain.Artwork.SOURCE_URI_SCHEME_FILE;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Component

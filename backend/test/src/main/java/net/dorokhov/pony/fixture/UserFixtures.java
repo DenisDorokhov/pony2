@@ -1,6 +1,6 @@
 package net.dorokhov.pony.fixture;
 
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 
 public final class UserFixtures {
 

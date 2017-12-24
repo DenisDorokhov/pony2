@@ -1,6 +1,6 @@
 package net.dorokhov.pony.fixture;
 
-import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.api.installation.domain.Installation;
 
 public final class InstallationFixtures {
 

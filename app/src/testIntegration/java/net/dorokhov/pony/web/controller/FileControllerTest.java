@@ -2,8 +2,8 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.fixture.SongFixtures;
-import net.dorokhov.pony.library.domain.*;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;

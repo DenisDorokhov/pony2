@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import net.dorokhov.pony.library.domain.FileType;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
+import net.dorokhov.pony.api.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.AudioTagger;
 import net.dorokhov.pony.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony.library.service.file.FileTypeResolver;

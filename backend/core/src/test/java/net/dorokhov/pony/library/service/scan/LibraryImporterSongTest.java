@@ -1,10 +1,10 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.ArtworkFiles;
-import net.dorokhov.pony.library.domain.FileType;
-import net.dorokhov.pony.library.domain.Song;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
+import net.dorokhov.pony.api.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.ArtworkFiles;
+import net.dorokhov.pony.api.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import org.junit.Test;
 import org.junit.runner.RunWith;

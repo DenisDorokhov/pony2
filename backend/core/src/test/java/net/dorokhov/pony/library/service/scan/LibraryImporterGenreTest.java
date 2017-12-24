@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Genre;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;

@@ -2,14 +2,12 @@ package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.fixture.ProgressObserverFixture;
-import net.dorokhov.pony.library.domain.Album;
-import net.dorokhov.pony.library.domain.Artist;
-import net.dorokhov.pony.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Album;
+import net.dorokhov.pony.api.library.domain.Artist;
+import net.dorokhov.pony.api.library.domain.Genre;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
-import net.dorokhov.pony.library.service.scan.BatchLibraryArtworkFinder;
-import net.dorokhov.pony.library.service.scan.LibraryArtworkFinder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

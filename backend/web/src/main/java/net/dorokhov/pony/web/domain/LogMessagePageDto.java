@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.log.domain.LogMessage;
+import net.dorokhov.pony.api.log.domain.LogMessage;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

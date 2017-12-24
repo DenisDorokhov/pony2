@@ -1,5 +1,6 @@
 package net.dorokhov.pony.installation.service;
 
+import net.dorokhov.pony.api.installation.service.InstallationService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;

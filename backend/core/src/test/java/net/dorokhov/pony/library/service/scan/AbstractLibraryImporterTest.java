@@ -1,16 +1,12 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony.library.service.scan.LibraryArtworkFinder;
-import net.dorokhov.pony.library.service.scan.LibraryCleaner;
-import net.dorokhov.pony.library.service.scan.LibraryImporter;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;

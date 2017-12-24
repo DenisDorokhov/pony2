@@ -7,9 +7,9 @@ import java.util.function.Supplier;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.ArtworkFiles;
-import net.dorokhov.pony.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.ArtworkFiles;
+import net.dorokhov.pony.api.library.domain.FileType;
 import net.dorokhov.pony.library.repository.ArtworkRepository;
 import net.dorokhov.pony.library.service.artwork.command.ByteSourceArtworkStorageCommand;
 import net.dorokhov.pony.library.service.artwork.command.FileArtworkStorageCommand;

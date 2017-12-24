@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
+import net.dorokhov.pony.api.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony.web.validation.UpdateUniqueEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;

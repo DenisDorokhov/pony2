@@ -1,10 +1,9 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.library.domain.*;
-import net.dorokhov.pony.library.service.ExportService;
-import net.dorokhov.pony.library.service.LibraryService;
+import net.dorokhov.pony.api.library.domain.*;
+import net.dorokhov.pony.api.library.service.ExportService;
+import net.dorokhov.pony.api.library.service.LibraryService;
 import net.dorokhov.pony.web.domain.FileDistribution;
-import net.dorokhov.pony.web.service.FileFacade;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

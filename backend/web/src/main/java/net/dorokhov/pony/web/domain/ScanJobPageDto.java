@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanJob;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

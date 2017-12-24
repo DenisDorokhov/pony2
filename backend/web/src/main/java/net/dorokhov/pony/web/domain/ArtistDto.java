@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.Artist;
+import net.dorokhov.pony.api.library.domain.Artist;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;

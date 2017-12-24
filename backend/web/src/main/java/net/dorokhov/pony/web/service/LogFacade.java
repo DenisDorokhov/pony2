@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.log.domain.LogMessage.Level;
+import net.dorokhov.pony.api.log.domain.LogMessage.Level;
 import net.dorokhov.pony.web.domain.LogMessagePageDto;
 
 import java.time.LocalDateTime;

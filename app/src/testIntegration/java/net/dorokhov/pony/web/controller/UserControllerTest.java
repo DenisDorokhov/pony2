@@ -2,9 +2,9 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.UserService;
-import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.api.user.domain.User;
+import net.dorokhov.pony.api.user.service.UserService;
+import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony.web.domain.ErrorDto;

@@ -1,6 +1,6 @@
 package net.dorokhov.pony.fixture;
 
-import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.api.library.domain.*;
 
 import java.time.LocalDateTime;
 

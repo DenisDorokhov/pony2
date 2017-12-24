@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.repository;
 
-import net.dorokhov.pony.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.Artwork;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

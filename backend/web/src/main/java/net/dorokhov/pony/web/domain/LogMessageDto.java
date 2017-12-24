@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.log.domain.LogMessage;
-import net.dorokhov.pony.log.domain.LogMessage.Level;
+import net.dorokhov.pony.api.log.domain.LogMessage;
+import net.dorokhov.pony.api.log.domain.LogMessage.Level;
 
 import java.time.LocalDateTime;
 import java.util.List;

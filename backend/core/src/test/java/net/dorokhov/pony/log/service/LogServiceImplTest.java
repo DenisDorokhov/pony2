@@ -1,8 +1,7 @@
 package net.dorokhov.pony.log.service;
 
-import net.dorokhov.pony.log.domain.LogMessage;
+import net.dorokhov.pony.api.log.domain.LogMessage;
 import net.dorokhov.pony.log.repository.LogMessageRepository;
-import net.dorokhov.pony.log.service.LogServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -16,7 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.log.domain.LogMessage.Level.*;
+import static net.dorokhov.pony.api.log.domain.LogMessage.Level.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;

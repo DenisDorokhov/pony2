@@ -17,8 +17,8 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import static net.dorokhov.pony.user.domain.User.Role.ADMIN;
-import static net.dorokhov.pony.user.domain.User.Role.USER;
+import static net.dorokhov.pony.api.user.domain.User.Role.ADMIN;
+import static net.dorokhov.pony.api.user.domain.User.Role.USER;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration

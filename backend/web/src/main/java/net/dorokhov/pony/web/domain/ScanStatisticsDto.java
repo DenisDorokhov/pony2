@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.ScanResult;
+import net.dorokhov.pony.api.library.domain.ScanResult;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.library.domain.ExportBundle;
+import net.dorokhov.pony.api.library.domain.ExportBundle;
 import net.dorokhov.pony.web.domain.FileDistribution;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 

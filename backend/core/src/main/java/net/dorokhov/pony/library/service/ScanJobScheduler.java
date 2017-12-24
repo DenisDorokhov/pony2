@@ -1,10 +1,10 @@
 package net.dorokhov.pony.library.service;
 
-import net.dorokhov.pony.config.service.ConfigService;
-import net.dorokhov.pony.installation.service.InstallationService;
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.service.ScanJobService;
-import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony.api.config.service.ConfigService;
+import net.dorokhov.pony.api.installation.service.InstallationService;
+import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.service.ScanJobService;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.validation;
 
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.api.user.domain.User;
+import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.web.domain.UserUpdateCommandDto;
 
 import javax.validation.ConstraintValidator;

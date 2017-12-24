@@ -1,7 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.ScanResult;
-import net.dorokhov.pony.library.domain.ScanType;
+import net.dorokhov.pony.api.library.domain.ScanResult;
 
 import java.time.LocalDateTime;
 import java.util.List;

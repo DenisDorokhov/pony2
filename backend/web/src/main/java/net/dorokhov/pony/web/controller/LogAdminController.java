@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.log.domain.LogMessage.Level;
+import net.dorokhov.pony.api.log.domain.LogMessage.Level;
 import net.dorokhov.pony.web.domain.LogMessagePageDto;
 import net.dorokhov.pony.web.service.LogFacade;
 import org.springframework.format.annotation.DateTimeFormat;

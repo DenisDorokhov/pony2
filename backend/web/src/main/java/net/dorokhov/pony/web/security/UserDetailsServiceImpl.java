@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.security;
 
-import net.dorokhov.pony.user.domain.User;
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.api.user.domain.User;
+import net.dorokhov.pony.api.user.service.UserService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

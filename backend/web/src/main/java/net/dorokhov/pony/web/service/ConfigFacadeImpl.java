@@ -2,7 +2,7 @@ package net.dorokhov.pony.web.service;
 
 import java.util.stream.Collectors;
 
-import net.dorokhov.pony.config.service.ConfigService;
+import net.dorokhov.pony.api.config.service.ConfigService;
 import net.dorokhov.pony.web.domain.ConfigDto;
 import net.dorokhov.pony.web.domain.LibraryFolderDto;
 import org.springframework.stereotype.Service;

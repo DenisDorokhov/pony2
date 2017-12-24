@@ -1,9 +1,8 @@
 package net.dorokhov.pony.library.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.library.domain.*;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.service.ExportServiceImpl;
 import net.dorokhov.pony.library.service.ExportServiceImpl.Mp3Content;
 import net.dorokhov.pony.library.service.ExportServiceImpl.ZipContent;
 import org.junit.Rule;

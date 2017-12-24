@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.validation;
 
-import net.dorokhov.pony.user.service.UserService;
+import net.dorokhov.pony.api.user.service.UserService;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

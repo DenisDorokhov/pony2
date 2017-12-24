@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.security;
 
 import net.dorokhov.pony.web.service.exception.NotAuthenticatedException;
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.web.service.UserContext;
 import org.junit.After;
 import org.junit.Test;

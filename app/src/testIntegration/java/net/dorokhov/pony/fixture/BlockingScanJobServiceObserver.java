@@ -1,8 +1,8 @@
 package net.dorokhov.pony.fixture;
 
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.domain.ScanJobProgress;
-import net.dorokhov.pony.library.service.ScanJobService;
+import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanJobProgress;
+import net.dorokhov.pony.api.library.service.ScanJobService;
 
 import java.util.concurrent.CountDownLatch;
 

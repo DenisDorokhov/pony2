@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.repository;
 
-import net.dorokhov.pony.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Genre;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

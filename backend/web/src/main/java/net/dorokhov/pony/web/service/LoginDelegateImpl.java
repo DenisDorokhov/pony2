@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.web.security.LoginDelegate;
 import org.springframework.stereotype.Component;
 

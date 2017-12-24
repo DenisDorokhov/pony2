@@ -1,15 +1,15 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.Album;
-import net.dorokhov.pony.library.domain.Artist;
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Album;
+import net.dorokhov.pony.api.library.domain.Artist;
+import net.dorokhov.pony.api.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.Genre;
 import net.dorokhov.pony.library.repository.AlbumRepository;
 import net.dorokhov.pony.library.repository.ArtistRepository;
 import net.dorokhov.pony.library.repository.GenreRepository;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.artwork.ArtworkStorage;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

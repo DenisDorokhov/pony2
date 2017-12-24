@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.Genre;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.Genre;
+import net.dorokhov.pony.api.library.domain.Song;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

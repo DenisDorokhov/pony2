@@ -2,15 +2,13 @@ package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.fixture.ProgressObserverFixture;
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.Song;
 import net.dorokhov.pony.library.repository.*;
 import net.dorokhov.pony.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.filetree.domain.ImageNode;
-import net.dorokhov.pony.library.service.scan.BatchLibraryCleaner;
-import net.dorokhov.pony.library.service.scan.LibraryCleaner;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

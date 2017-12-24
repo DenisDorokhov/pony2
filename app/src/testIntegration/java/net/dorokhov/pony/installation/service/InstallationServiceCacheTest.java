@@ -1,9 +1,10 @@
 package net.dorokhov.pony.installation.service;
 
 import net.dorokhov.pony.IntegrationTest;
-import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.api.installation.domain.Installation;
+import net.dorokhov.pony.api.installation.service.InstallationService;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
-import net.dorokhov.pony.installation.service.command.InstallationCommand;
+import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

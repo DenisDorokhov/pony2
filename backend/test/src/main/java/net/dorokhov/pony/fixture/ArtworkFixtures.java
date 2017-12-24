@@ -3,8 +3,8 @@ package net.dorokhov.pony.fixture;
 import java.io.File;
 import java.time.LocalDateTime;
 
-import net.dorokhov.pony.library.domain.Artwork;
-import net.dorokhov.pony.library.domain.ArtworkFiles;
+import net.dorokhov.pony.api.library.domain.Artwork;
+import net.dorokhov.pony.api.library.domain.ArtworkFiles;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public final class ArtworkFixtures {

@@ -1,6 +1,6 @@
 package net.dorokhov.pony.library.service.scan;
 
-import net.dorokhov.pony.library.domain.Song;
+import net.dorokhov.pony.api.library.domain.Song;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import org.springframework.stereotype.Component;

@@ -1,13 +1,11 @@
 package net.dorokhov.pony.library.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.config.service.ConfigService;
-import net.dorokhov.pony.installation.service.InstallationService;
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.domain.ScanType;
-import net.dorokhov.pony.library.service.ScanJobScheduler;
-import net.dorokhov.pony.library.service.ScanJobService;
-import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony.api.config.service.ConfigService;
+import net.dorokhov.pony.api.installation.service.InstallationService;
+import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.service.ScanJobService;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;

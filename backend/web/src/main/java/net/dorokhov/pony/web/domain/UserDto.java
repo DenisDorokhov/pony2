@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.domain;
 
 import com.google.common.collect.ImmutableSet;
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;

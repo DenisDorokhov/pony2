@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
-import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
+import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony.web.domain.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony.web.domain.UserCreationCommandDto;
 import net.dorokhov.pony.web.domain.UserDto;

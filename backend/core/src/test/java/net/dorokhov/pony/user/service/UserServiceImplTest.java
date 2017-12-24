@@ -1,15 +1,14 @@
 package net.dorokhov.pony.user.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.user.repository.UserRepository;
-import net.dorokhov.pony.user.service.UserServiceImpl;
-import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
-import net.dorokhov.pony.user.service.command.UnsafeUserUpdateCommand;
-import net.dorokhov.pony.user.service.command.UserCreationCommand;
-import net.dorokhov.pony.user.service.exception.DuplicateEmailException;
-import net.dorokhov.pony.user.service.exception.InvalidPasswordException;
-import net.dorokhov.pony.user.service.exception.UserNotFoundException;
+import net.dorokhov.pony.api.user.service.command.SafeUserUpdateCommand;
+import net.dorokhov.pony.api.user.service.command.UnsafeUserUpdateCommand;
+import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.api.user.service.exception.InvalidPasswordException;
+import net.dorokhov.pony.api.user.service.exception.UserNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;

@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.validation;
 
-import net.dorokhov.pony.user.service.UserService;
-import net.dorokhov.pony.user.service.exception.UserNotFoundException;
+import net.dorokhov.pony.api.user.service.UserService;
+import net.dorokhov.pony.api.user.service.exception.UserNotFoundException;
 import net.dorokhov.pony.web.domain.UserDto;
 import net.dorokhov.pony.web.service.UserFacade;
 

@@ -1,12 +1,11 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.domain.ScanJobProgress;
-import net.dorokhov.pony.library.domain.ScanResult;
-import net.dorokhov.pony.library.service.ScanJobService;
-import net.dorokhov.pony.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanJobProgress;
+import net.dorokhov.pony.api.library.domain.ScanResult;
+import net.dorokhov.pony.api.library.service.ScanJobService;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.web.domain.*;
-import net.dorokhov.pony.web.service.ScanFacade;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

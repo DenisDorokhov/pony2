@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Files;
-import net.dorokhov.pony.library.domain.FileType;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
-import net.dorokhov.pony.library.domain.WritableAudioData;
+import net.dorokhov.pony.api.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.ReadableAudioData;
+import net.dorokhov.pony.api.library.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.file.FileTypeResolver;
 import org.junit.Before;
 import org.junit.Rule;

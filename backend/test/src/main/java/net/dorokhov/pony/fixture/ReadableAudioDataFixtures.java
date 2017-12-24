@@ -1,7 +1,7 @@
 package net.dorokhov.pony.fixture;
 
-import net.dorokhov.pony.library.domain.FileType;
-import net.dorokhov.pony.library.domain.ReadableAudioData;
+import net.dorokhov.pony.api.library.domain.FileType;
+import net.dorokhov.pony.api.library.domain.ReadableAudioData;
 
 public class ReadableAudioDataFixtures {
     

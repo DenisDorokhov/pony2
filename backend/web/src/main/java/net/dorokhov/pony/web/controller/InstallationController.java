@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.installation.service.exception.AlreadyInstalledException;
+import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;

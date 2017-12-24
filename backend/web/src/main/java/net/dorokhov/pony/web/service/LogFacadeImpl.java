@@ -1,9 +1,8 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.log.domain.LogMessage.Level;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.domain.LogMessage.Level;
+import net.dorokhov.pony.api.log.service.LogService;
 import net.dorokhov.pony.web.domain.LogMessagePageDto;
-import net.dorokhov.pony.web.service.LogFacade;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

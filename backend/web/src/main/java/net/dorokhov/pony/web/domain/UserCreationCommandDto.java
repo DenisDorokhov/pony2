@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.web.validation.UniqueEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;

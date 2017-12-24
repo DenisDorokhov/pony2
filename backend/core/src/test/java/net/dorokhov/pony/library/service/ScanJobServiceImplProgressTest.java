@@ -1,13 +1,12 @@
 package net.dorokhov.pony.library.service;
 
-import net.dorokhov.pony.config.service.ConfigService;
+import net.dorokhov.pony.api.config.service.ConfigService;
 import net.dorokhov.pony.fixture.NoOpTaskExecutor;
-import net.dorokhov.pony.library.domain.ScanJob;
-import net.dorokhov.pony.library.domain.ScanJobProgress;
+import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
-import net.dorokhov.pony.library.service.ScanJobServiceImpl;
 import net.dorokhov.pony.library.service.scan.LibraryScanner;
-import net.dorokhov.pony.log.service.LogService;
+import net.dorokhov.pony.api.log.service.LogService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +22,7 @@ import java.util.concurrent.Executor;
 
 import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
 import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobBuilder;
-import static net.dorokhov.pony.library.domain.ScanType.FULL;
+import static net.dorokhov.pony.api.library.domain.ScanType.FULL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;

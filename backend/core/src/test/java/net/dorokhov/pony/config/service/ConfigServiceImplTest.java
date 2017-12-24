@@ -3,7 +3,7 @@ package net.dorokhov.pony.config.service;
 import java.io.File;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.config.domain.Config;
+import net.dorokhov.pony.api.config.domain.Config;
 import net.dorokhov.pony.config.repository.ConfigRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;

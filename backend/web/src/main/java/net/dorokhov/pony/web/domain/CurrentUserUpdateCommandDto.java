@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.user.service.command.SafeUserUpdateCommand;
+import net.dorokhov.pony.api.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony.web.validation.CurrentUserPasswordMatch;
 import net.dorokhov.pony.web.validation.UniqueCurrentUserEmail;
 import org.hibernate.validator.constraints.Email;

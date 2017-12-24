@@ -2,10 +2,8 @@ package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import net.dorokhov.pony.library.domain.ScanResult;
-import net.dorokhov.pony.library.domain.ScanType;
+import net.dorokhov.pony.api.library.domain.ScanResult;
 import net.dorokhov.pony.library.repository.*;
-import net.dorokhov.pony.library.service.scan.ScanResultCalculator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;

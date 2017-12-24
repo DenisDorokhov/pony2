@@ -2,7 +2,7 @@ package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
-import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.api.installation.domain.Installation;
 import net.dorokhov.pony.installation.repository.InstallationRepository;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ErrorDto;

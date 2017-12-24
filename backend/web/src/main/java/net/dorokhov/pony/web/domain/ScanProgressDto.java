@@ -1,7 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.ScanProgress;
-import net.dorokhov.pony.library.domain.ScanType;
+import net.dorokhov.pony.api.library.domain.ScanProgress;
 
 import javax.annotation.Nullable;
 import java.io.File;

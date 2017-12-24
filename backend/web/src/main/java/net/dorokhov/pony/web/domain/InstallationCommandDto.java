@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.installation.service.command.InstallationCommand;
+import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.web.validation.InstallationSecret;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;

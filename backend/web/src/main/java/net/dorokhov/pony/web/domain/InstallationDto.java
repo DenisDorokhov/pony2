@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.installation.domain.Installation;
+import net.dorokhov.pony.api.installation.domain.Installation;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;

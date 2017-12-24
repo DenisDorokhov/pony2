@@ -1,6 +1,6 @@
 package net.dorokhov.pony.log.repository;
 
-import net.dorokhov.pony.log.domain.LogMessage;
+import net.dorokhov.pony.api.log.domain.LogMessage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.security.handler;
 
-import net.dorokhov.pony.user.domain.User;
+import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.UserDto;
 import net.dorokhov.pony.web.security.LogoutDelegate;
@@ -23,8 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-
-import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
 @Component
 public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {

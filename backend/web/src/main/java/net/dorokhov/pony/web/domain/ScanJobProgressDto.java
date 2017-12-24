@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.domain;
 
-import net.dorokhov.pony.library.domain.ScanJobProgress;
+import net.dorokhov.pony.api.library.domain.ScanJobProgress;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

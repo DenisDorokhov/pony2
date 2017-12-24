@@ -7,8 +7,9 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Strings;
+import net.dorokhov.pony.api.config.service.ConfigService;
 import net.dorokhov.pony.common.JsonConverter;
-import net.dorokhov.pony.config.domain.Config;
+import net.dorokhov.pony.api.config.domain.Config;
 import net.dorokhov.pony.config.repository.ConfigRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
