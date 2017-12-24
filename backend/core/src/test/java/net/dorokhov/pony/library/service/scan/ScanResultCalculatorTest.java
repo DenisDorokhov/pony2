@@ -3,6 +3,7 @@ package net.dorokhov.pony.library.service.scan;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.api.library.domain.ScanResult;
+import net.dorokhov.pony.api.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,8 +22,8 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
-import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
-import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResultBuilder;
+import static net.dorokhov.pony.test.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.test.ScanResultFixtures.scanResultBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;

@@ -1,7 +1,7 @@
 package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.fixture.ProgressObserverFixture;
+import net.dorokhov.pony.test.ProgressObserverFixture;
 import net.dorokhov.pony.api.library.domain.Artwork;
 import net.dorokhov.pony.api.library.domain.Song;
 import net.dorokhov.pony.library.repository.*;
@@ -25,11 +25,11 @@ import java.io.File;
 import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
-import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
-import static net.dorokhov.pony.fixture.SongFixtures.song;
-import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
+import static net.dorokhov.pony.test.ArtworkFixtures.artwork;
+import static net.dorokhov.pony.test.ArtworkFixtures.artworkBuilder;
+import static net.dorokhov.pony.test.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.test.SongFixtures.song;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

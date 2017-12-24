@@ -1,7 +1,7 @@
 package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.fixture.ProgressObserverFixture;
+import net.dorokhov.pony.test.ProgressObserverFixture;
 import net.dorokhov.pony.library.service.AudioTagger;
 import net.dorokhov.pony.api.library.domain.WritableAudioData;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.util.concurrent.Executor;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
-import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioData;
-import static net.dorokhov.pony.fixture.SongFixtures.song;
+import static net.dorokhov.pony.test.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioData;
+import static net.dorokhov.pony.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

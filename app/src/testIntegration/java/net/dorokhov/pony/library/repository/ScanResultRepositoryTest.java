@@ -5,7 +5,7 @@ import net.dorokhov.pony.api.library.domain.ScanResult;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResult;
+import static net.dorokhov.pony.test.ScanResultFixtures.scanResult;
 import static net.dorokhov.pony.api.library.domain.ScanType.FULL;
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,22 +1,14 @@
 package net.dorokhov.pony.library.service.scan;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Lists;
 import net.dorokhov.pony.api.library.domain.ScanProgress;
 import net.dorokhov.pony.api.library.domain.ScanProgress.Step;
 import net.dorokhov.pony.api.library.domain.ScanResult;
+import net.dorokhov.pony.api.library.domain.ScanType;
 import net.dorokhov.pony.api.library.domain.Song;
-import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.api.library.service.command.EditCommand;
+import net.dorokhov.pony.api.log.service.LogService;
+import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.filetree.FileTreeScanner;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.library.service.filetree.domain.FileNode;
@@ -25,16 +17,25 @@ import net.dorokhov.pony.library.service.filetree.domain.ImageNode;
 import net.dorokhov.pony.library.service.scan.BatchLibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony.library.service.scan.ScanResultCalculator.AudioFileProcessingResult;
 import net.dorokhov.pony.library.service.scan.exception.SongNotFoundException;
-import net.dorokhov.pony.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.unmodifiableList;
-import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static net.dorokhov.pony.api.library.domain.ScanProgress.Step.*;
+import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 
 @Component
 public class LibraryScanner {

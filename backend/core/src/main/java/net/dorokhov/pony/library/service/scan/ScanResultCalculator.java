@@ -2,6 +2,7 @@ package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.base.Stopwatch;
 import net.dorokhov.pony.api.library.domain.ScanResult;
+import net.dorokhov.pony.api.library.domain.ScanType;
 import net.dorokhov.pony.library.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

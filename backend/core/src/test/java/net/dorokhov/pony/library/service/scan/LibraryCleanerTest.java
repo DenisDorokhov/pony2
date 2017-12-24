@@ -16,7 +16,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
+import static net.dorokhov.pony.test.ArtworkFixtures.artworkBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 

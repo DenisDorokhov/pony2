@@ -1,6 +1,7 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
 
 import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanType;
 
 import java.time.LocalDateTime;
 

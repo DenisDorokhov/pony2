@@ -1,6 +1,7 @@
 package net.dorokhov.pony.web.domain;
 
 import net.dorokhov.pony.api.library.domain.ScanJob;
+import net.dorokhov.pony.api.library.domain.ScanType;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;

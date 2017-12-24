@@ -8,7 +8,7 @@ import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
+import static net.dorokhov.pony.test.InstallationFixtures.installation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class InstallationServiceCacheTest extends IntegrationTest {

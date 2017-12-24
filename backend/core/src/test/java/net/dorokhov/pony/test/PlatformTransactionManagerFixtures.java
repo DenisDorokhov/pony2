@@ -1,4 +1,4 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
 
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;

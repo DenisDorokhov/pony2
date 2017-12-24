@@ -34,9 +34,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResult;
-import static net.dorokhov.pony.fixture.SongFixtures.song;
-import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
+import static net.dorokhov.pony.test.ScanResultFixtures.scanResult;
+import static net.dorokhov.pony.test.SongFixtures.song;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static net.dorokhov.pony.api.library.domain.ScanType.EDIT;
 import static net.dorokhov.pony.api.library.domain.ScanType.FULL;
 import static org.assertj.core.api.Assertions.assertThat;

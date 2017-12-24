@@ -27,7 +27,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static net.dorokhov.pony.library.service.ExportServiceImpl.UNKNOWN_ALBUM;
 import static net.dorokhov.pony.library.service.ExportServiceImpl.UNKNOWN_ARTIST;
 import static org.assertj.core.api.Assertions.assertThat;

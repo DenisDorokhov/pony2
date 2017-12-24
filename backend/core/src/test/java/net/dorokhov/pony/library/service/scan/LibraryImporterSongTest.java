@@ -12,9 +12,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkBuilder;
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artworkFiles;
-import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
+import static net.dorokhov.pony.test.ArtworkFixtures.artworkBuilder;
+import static net.dorokhov.pony.test.ArtworkFixtures.artworkFiles;
+import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

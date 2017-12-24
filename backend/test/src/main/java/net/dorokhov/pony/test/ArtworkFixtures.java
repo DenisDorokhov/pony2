@@ -1,4 +1,4 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
 
 import java.io.File;
 import java.time.LocalDateTime;

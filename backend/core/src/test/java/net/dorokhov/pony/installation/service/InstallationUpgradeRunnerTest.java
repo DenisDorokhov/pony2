@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.DefaultApplicationArguments;
 
-import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
+import static net.dorokhov.pony.test.InstallationFixtures.installation;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)

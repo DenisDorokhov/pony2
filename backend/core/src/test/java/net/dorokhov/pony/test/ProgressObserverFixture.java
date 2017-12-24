@@ -1,4 +1,4 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
 
 import java.util.ArrayList;
 import java.util.List;

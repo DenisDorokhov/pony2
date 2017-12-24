@@ -16,7 +16,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.io.File;
 import java.util.function.UnaryOperator;
 
-import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
+import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;

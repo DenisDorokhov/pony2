@@ -21,9 +21,9 @@ import org.springframework.data.domain.Sort;
 import java.io.File;
 import java.util.List;
 
-import static net.dorokhov.pony.fixture.ArtworkFixtures.artwork;
-import static net.dorokhov.pony.fixture.SongFixtures.song;
-import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
+import static net.dorokhov.pony.test.ArtworkFixtures.artwork;
+import static net.dorokhov.pony.test.SongFixtures.song;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyIterable;

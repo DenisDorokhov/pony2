@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 
-import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
+import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioDataBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

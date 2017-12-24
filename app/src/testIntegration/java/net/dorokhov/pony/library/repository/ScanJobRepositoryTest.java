@@ -5,7 +5,7 @@ import net.dorokhov.pony.api.library.domain.ScanJob;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobFull;
+import static net.dorokhov.pony.test.ScanJobFixtures.scanJobFull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ScanJobRepositoryTest extends IntegrationTest {

@@ -12,7 +12,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
 
-import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioData;
+import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioData;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

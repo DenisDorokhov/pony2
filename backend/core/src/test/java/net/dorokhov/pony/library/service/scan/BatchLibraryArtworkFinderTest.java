@@ -1,7 +1,7 @@
 package net.dorokhov.pony.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.fixture.ProgressObserverFixture;
+import net.dorokhov.pony.test.ProgressObserverFixture;
 import net.dorokhov.pony.api.library.domain.Album;
 import net.dorokhov.pony.api.library.domain.Artist;
 import net.dorokhov.pony.api.library.domain.Genre;
@@ -17,7 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.test.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;

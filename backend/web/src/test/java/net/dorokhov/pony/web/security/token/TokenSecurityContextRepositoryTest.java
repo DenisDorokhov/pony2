@@ -14,8 +14,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 
-import static net.dorokhov.pony.fixture.UserFixtures.user;
-import static net.dorokhov.pony.fixture.UserFixtures.userBuilder;
+import static net.dorokhov.pony.test.UserFixtures.user;
+import static net.dorokhov.pony.test.UserFixtures.userBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;

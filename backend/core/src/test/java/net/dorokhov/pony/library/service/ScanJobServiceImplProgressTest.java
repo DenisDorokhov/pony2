@@ -1,7 +1,7 @@
 package net.dorokhov.pony.library.service;
 
 import net.dorokhov.pony.api.config.service.ConfigService;
-import net.dorokhov.pony.fixture.NoOpTaskExecutor;
+import net.dorokhov.pony.test.NoOpTaskExecutor;
 import net.dorokhov.pony.api.library.domain.ScanJob;
 import net.dorokhov.pony.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony.library.repository.ScanJobRepository;
@@ -20,8 +20,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.util.concurrent.Executor;
 
-import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
-import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobBuilder;
+import static net.dorokhov.pony.test.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.test.ScanJobFixtures.scanJobBuilder;
 import static net.dorokhov.pony.api.library.domain.ScanType.FULL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;

@@ -2,8 +2,9 @@ package net.dorokhov.pony.library.service;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.api.library.domain.ScanJob;
-import net.dorokhov.pony.library.repository.ScanJobRepository;
+import net.dorokhov.pony.api.library.domain.ScanType;
 import net.dorokhov.pony.api.log.service.LogService;
+import net.dorokhov.pony.library.repository.ScanJobRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;

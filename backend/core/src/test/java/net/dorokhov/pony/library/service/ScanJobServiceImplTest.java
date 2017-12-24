@@ -1,30 +1,17 @@
 package net.dorokhov.pony.library.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import javax.annotation.Nullable;
-
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.api.config.service.ConfigService;
-import net.dorokhov.pony.api.library.domain.ScanJob;
-import net.dorokhov.pony.api.library.domain.ScanJobProgress;
-import net.dorokhov.pony.api.library.domain.ScanProgress;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.api.library.domain.ScanProgress.Value;
-import net.dorokhov.pony.api.library.domain.ScanResult;
-import net.dorokhov.pony.api.library.domain.WritableAudioData;
 import net.dorokhov.pony.api.library.service.ScanJobService;
-import net.dorokhov.pony.library.repository.ScanJobRepository;
 import net.dorokhov.pony.api.library.service.command.EditCommand;
 import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.library.service.scan.LibraryScanner;
-import net.dorokhov.pony.library.service.scan.exception.SongNotFoundException;
 import net.dorokhov.pony.api.log.domain.LogMessage;
 import net.dorokhov.pony.api.log.service.LogService;
+import net.dorokhov.pony.library.repository.ScanJobRepository;
+import net.dorokhov.pony.library.service.scan.LibraryScanner;
+import net.dorokhov.pony.library.service.scan.exception.SongNotFoundException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,29 +29,31 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
 
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.PlatformTransactionManagerFixtures.transactionManager;
-import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobEdit;
-import static net.dorokhov.pony.fixture.ScanJobFixtures.scanJobFull;
-import static net.dorokhov.pony.fixture.ScanResultFixtures.scanResult;
-import static net.dorokhov.pony.api.library.domain.ScanJob.Status.COMPLETE;
-import static net.dorokhov.pony.api.library.domain.ScanJob.Status.FAILED;
-import static net.dorokhov.pony.api.library.domain.ScanJob.Status.STARTED;
-import static net.dorokhov.pony.api.library.domain.ScanJob.Status.STARTING;
+import static net.dorokhov.pony.api.library.domain.ScanJob.Status.*;
 import static net.dorokhov.pony.api.library.domain.ScanProgress.Step.EDIT_PREPARING;
 import static net.dorokhov.pony.api.library.domain.ScanProgress.Step.FULL_PREPARING;
 import static net.dorokhov.pony.api.library.domain.ScanType.FULL;
+import static net.dorokhov.pony.test.PlatformTransactionManagerFixtures.transactionManager;
+import static net.dorokhov.pony.test.ScanJobFixtures.scanJobEdit;
+import static net.dorokhov.pony.test.ScanJobFixtures.scanJobFull;
+import static net.dorokhov.pony.test.ScanResultFixtures.scanResult;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization;
-import static org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations;
-import static org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization;
+import static org.mockito.Mockito.*;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScanJobServiceImplTest {

@@ -7,9 +7,9 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 
-import static net.dorokhov.pony.fixture.ArtworkFixtures.*;
-import static net.dorokhov.pony.fixture.ReadableAudioDataFixtures.readableAudioDataBuilder;
-import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
+import static net.dorokhov.pony.test.ArtworkFixtures.*;
+import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioDataBuilder;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;

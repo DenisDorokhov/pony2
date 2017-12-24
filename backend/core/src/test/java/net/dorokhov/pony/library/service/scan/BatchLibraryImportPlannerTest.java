@@ -3,7 +3,6 @@ package net.dorokhov.pony.library.service.scan;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.library.repository.SongRepository;
 import net.dorokhov.pony.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony.library.service.scan.BatchLibraryImportPlanner;
 import net.dorokhov.pony.library.service.scan.BatchLibraryImportPlanner.Plan;
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,7 +15,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.LocalDateTime;
 
-import static net.dorokhov.pony.fixture.SongFixtures.songBuilder;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;

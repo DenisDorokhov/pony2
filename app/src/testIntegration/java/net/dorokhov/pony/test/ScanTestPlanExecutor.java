@@ -1,4 +1,18 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
+
+import com.google.common.io.Files;
+import net.dorokhov.pony.api.library.domain.*;
+import net.dorokhov.pony.api.library.service.ScanJobService;
+import net.dorokhov.pony.api.log.domain.LogMessage;
+import net.dorokhov.pony.library.repository.ArtistRepository;
+import net.dorokhov.pony.library.repository.GenreRepository;
+import net.dorokhov.pony.library.repository.SongRepository;
+import net.dorokhov.pony.library.service.AudioTagger;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,25 +21,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.google.common.io.Files;
-import net.dorokhov.pony.api.library.domain.Album;
-import net.dorokhov.pony.api.library.domain.Artist;
-import net.dorokhov.pony.api.library.domain.Genre;
-import net.dorokhov.pony.api.library.domain.ScanJob;
-import net.dorokhov.pony.api.library.domain.Song;
-import net.dorokhov.pony.api.library.domain.WritableAudioData;
-import net.dorokhov.pony.library.repository.ArtistRepository;
-import net.dorokhov.pony.library.repository.GenreRepository;
-import net.dorokhov.pony.library.repository.SongRepository;
-import net.dorokhov.pony.library.service.AudioTagger;
-import net.dorokhov.pony.api.library.service.ScanJobService;
-import net.dorokhov.pony.api.log.domain.LogMessage;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;

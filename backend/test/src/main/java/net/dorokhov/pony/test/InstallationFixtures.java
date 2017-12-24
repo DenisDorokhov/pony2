@@ -1,4 +1,4 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
 
 import net.dorokhov.pony.api.installation.domain.Installation;
 

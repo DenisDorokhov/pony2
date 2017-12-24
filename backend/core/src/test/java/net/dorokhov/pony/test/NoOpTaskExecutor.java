@@ -1,7 +1,7 @@
-package net.dorokhov.pony.fixture;
+package net.dorokhov.pony.test;
 
-import java.util.concurrent.Executor;
 import javax.annotation.Nonnull;
+import java.util.concurrent.Executor;
 
 public class NoOpTaskExecutor implements Executor {
 

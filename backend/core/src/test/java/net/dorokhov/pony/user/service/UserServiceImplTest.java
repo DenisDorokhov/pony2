@@ -21,8 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
-import static net.dorokhov.pony.fixture.UserFixtures.user;
-import static net.dorokhov.pony.fixture.UserFixtures.userBuilder;
+import static net.dorokhov.pony.test.UserFixtures.user;
+import static net.dorokhov.pony.test.UserFixtures.userBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;

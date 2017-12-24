@@ -27,8 +27,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.fixture.InstallationFixtures.installation;
-import static net.dorokhov.pony.fixture.InstallationFixtures.installationBuilder;
+import static net.dorokhov.pony.test.InstallationFixtures.installation;
+import static net.dorokhov.pony.test.InstallationFixtures.installationBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;

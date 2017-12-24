@@ -9,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManagerFactory;
 
-import static net.dorokhov.pony.fixture.UserFixtures.user;
-import static net.dorokhov.pony.fixture.UserFixtures.userBuilder;
+import static net.dorokhov.pony.test.UserFixtures.user;
+import static net.dorokhov.pony.test.UserFixtures.userBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UserRepositoryTest extends IntegrationTest {
