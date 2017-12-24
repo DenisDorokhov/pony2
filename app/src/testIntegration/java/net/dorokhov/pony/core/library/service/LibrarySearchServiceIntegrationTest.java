@@ -8,10 +8,10 @@ import net.dorokhov.pony.api.library.domain.Genre;
 import net.dorokhov.pony.api.library.domain.LibrarySearchQuery;
 import net.dorokhov.pony.api.library.domain.Song;
 import net.dorokhov.pony.api.library.service.LibrarySearchService;
-import net.dorokhov.pony.library.repository.AlbumRepository;
-import net.dorokhov.pony.library.repository.ArtistRepository;
-import net.dorokhov.pony.library.repository.GenreRepository;
-import net.dorokhov.pony.library.repository.SongRepository;
+import net.dorokhov.pony.core.library.repository.AlbumRepository;
+import net.dorokhov.pony.core.library.repository.ArtistRepository;
+import net.dorokhov.pony.core.library.repository.GenreRepository;
+import net.dorokhov.pony.core.library.repository.SongRepository;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
