@@ -1,3 +1,5 @@
 pony2.iml
 .idea
 .gradle
+build
+out

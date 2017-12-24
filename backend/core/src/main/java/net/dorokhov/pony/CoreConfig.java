@@ -1,13 +1,10 @@
 package net.dorokhov.pony;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -43,10 +40,5 @@ public class CoreConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderC
     public void customize(Jackson2ObjectMapperBuilder jacksonObjectMapperBuilder) {
         jacksonObjectMapperBuilder
                 .modules(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES), new JavaTimeModule());
-    }
-
-    @Autowired
-    public void customize(ObjectMapper objectMapper) {
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 }
