@@ -1,8 +1,8 @@
 package net.dorokhov.pony.common;
 
+import java.io.Serializable;
 import javax.annotation.Nullable;
 import javax.persistence.AttributeConverter;
-import java.io.Serializable;
 
 public class JsonAttributeConverter implements AttributeConverter<Serializable, String> {
 
