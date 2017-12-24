@@ -2,8 +2,6 @@ plugins {
     id 'com.moowork.node' version '1.2.0'
 }
 
-apply plugin: 'java'
-
 jar {
     baseName = 'pony2-frontend'
 }
@@ -55,5 +53,3 @@ if (gradle.startParameter.taskNames.contains('bootRun')) {
 
 test.dependsOn yarnTest
 check.dependsOn yarnLint
-
-compileJava.mustRunAfter ':backend:common:compileJava'
