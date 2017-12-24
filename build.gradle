@@ -1,8 +1,4 @@
-def backendSubprojects = subprojects.findAll { 
-    it.name != 'frontend' 
-}
-
-configure(backendSubprojects) {
+subprojects {
 
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -56,8 +52,8 @@ apply plugin: 'jacoco'
 task testReport(type: JacocoReport) {
     group = 'verification'
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
-    sourceDirectories = files(backendSubprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories = files(backendSubprojects.sourceSets.main.output)
+    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(subprojects.sourceSets.main.output)
     reports {
         xml.enabled = true
         xml.destination "${buildDir}/reports/jacoco/report.xml"
@@ -66,17 +62,15 @@ task testReport(type: JacocoReport) {
     }
 }
 
-testReport.dependsOn {
-    rootProject.subprojects.collect {
-        it.tasks.getByName 'test'
-    }
-}
-testReport.dependsOn {
-    rootProject.subprojects.findAll { 
-        it.name == 'app' 
-    }.collect {
-        it.tasks.getByName 'testIntegration'
-    }
-}
-
 check.dependsOn testReport
+
+// Make sure test report is generated after all subprojects are built.
+testReport.mustRunAfter rootProject.subprojects.collect {
+    it.tasks
+}
+// Make sure frontend is built after backend.
+tasks.getByPath(':frontend:jar').mustRunAfter subprojects.findAll {
+    it.name != 'app' && it.name != 'frontend'
+}.collect {
+    it.tasks
+}

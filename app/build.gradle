@@ -28,13 +28,12 @@ testSets {
     testIntegration
 }
 
-testIntegration.dependsOn {
-    rootProject.subprojects.collect {
-        it.tasks.getByName 'test'
-    }
-}
-
 check.dependsOn testIntegration
+
+// Make sure integration tests run after unit tests.
+testIntegration.mustRunAfter rootProject.subprojects.collect {
+    it.tasks.getByName 'test'
+}
 
 repositories {
     maven {
