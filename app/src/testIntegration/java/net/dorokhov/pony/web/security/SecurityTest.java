@@ -1,8 +1,8 @@
 package net.dorokhov.pony.web.security;
 
 import com.google.common.collect.ImmutableMap;
-import net.dorokhov.pony.ApiTemplate;
-import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.app.ApiTemplate;
+import net.dorokhov.pony.app.InstallingIntegrationTest;
 import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.api.user.service.command.UserCreationCommand;

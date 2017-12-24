@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.controller;
 
-import net.dorokhov.pony.ApiTemplate;
-import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.app.ApiTemplate;
+import net.dorokhov.pony.app.InstallingIntegrationTest;
 import net.dorokhov.pony.api.log.domain.LogMessage;
 import net.dorokhov.pony.api.log.service.LogService;
 import net.dorokhov.pony.web.domain.AuthenticationDto;

@@ -1,7 +1,7 @@
 package net.dorokhov.pony.web.controller;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.IntegrationTest;
+import net.dorokhov.pony.app.IntegrationTest;
 import net.dorokhov.pony.api.config.service.ConfigService;
 import net.dorokhov.pony.api.installation.service.InstallationService;
 import net.dorokhov.pony.api.user.domain.User;

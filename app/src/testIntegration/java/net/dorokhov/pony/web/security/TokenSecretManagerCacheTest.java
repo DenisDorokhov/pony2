@@ -1,6 +1,6 @@
 package net.dorokhov.pony.web.security;
 
-import net.dorokhov.pony.IntegrationTest;
+import net.dorokhov.pony.app.IntegrationTest;
 import net.dorokhov.pony.web.security.token.TokenSecretManager;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
