@@ -1,8 +1,8 @@
 package net.dorokhov.pony.web.controller;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.app.ApiTemplate;
-import net.dorokhov.pony.app.InstallingIntegrationTest;
+import net.dorokhov.pony.ApiTemplate;
+import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ConfigDto;
 import net.dorokhov.pony.web.domain.ErrorDto;

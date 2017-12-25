@@ -1,5 +1,9 @@
 package net.dorokhov.pony.web.controller;
 
+import javax.validation.Valid;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
@@ -12,12 +16,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/installation")
+@RequestMapping(value = "/api/installation", produces = "application/json")
+@Api(description = "Installation operations")
 public class InstallationController implements ErrorHandlingController {
 
     @ControllerAdvice(assignableTypes = InstallationController.class)
@@ -42,11 +53,13 @@ public class InstallationController implements ErrorHandlingController {
     }
     
     @GetMapping("/status")
+    @ApiOperation("Get installation status.")
     public InstallationStatusDto getInstallationStatus() {
         return installationFacade.getInstallationStatus();
     }
 
     @PostMapping
+    @ApiOperation("Perform installation.")
     public InstallationDto install(@Valid @RequestBody InstallationCommandDto command) throws InvalidInstallationSecretException, AlreadyInstalledException {
         return installationFacade.install(command);
     }

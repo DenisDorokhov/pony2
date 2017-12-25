@@ -1,4 +1,4 @@
-package net.dorokhov.pony.app;
+package net.dorokhov.pony;
 
 import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.*;

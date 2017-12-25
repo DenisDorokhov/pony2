@@ -1,6 +1,6 @@
 package net.dorokhov.pony.core.log.repository;
 
-import net.dorokhov.pony.app.IntegrationTest;
+import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.api.log.domain.LogMessage;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

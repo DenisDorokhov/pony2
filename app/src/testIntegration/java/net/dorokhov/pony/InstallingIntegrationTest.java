@@ -1,4 +1,4 @@
-package net.dorokhov.pony.app;
+package net.dorokhov.pony;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.api.installation.service.InstallationService;

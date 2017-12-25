@@ -1,4 +1,4 @@
-package net.dorokhov.pony.app;
+package net.dorokhov.pony;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

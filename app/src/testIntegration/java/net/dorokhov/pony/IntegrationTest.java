@@ -1,4 +1,4 @@
-package net.dorokhov.pony.app;
+package net.dorokhov.pony;
 
 import net.dorokhov.pony.PonyApplication;
 import net.dorokhov.pony.common.RethrowingLambdas;

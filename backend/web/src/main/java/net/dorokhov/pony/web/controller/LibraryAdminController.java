@@ -1,5 +1,7 @@
 package net.dorokhov.pony.web.controller;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
@@ -14,7 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/library")
+@RequestMapping(value = "/api/admin/library", produces = "application/json")
+@Api(description = "Library administration operations")
 public class LibraryAdminController implements ErrorHandlingController {
 
     @ControllerAdvice(assignableTypes = LibraryAdminController.class)
@@ -36,26 +39,31 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @GetMapping("/scanJobProgress")
+    @ApiOperation("Get current scan job progress.")
     public ScanJobProgressDto getCurrentScanJobProgress() throws ObjectNotFoundException {
         return scanFacade.getCurrentScanJobProgress();
     }
     
     @GetMapping("/scanJobProgress/{scanJobId}")
+    @ApiOperation("Get scan job progress by scan job ID. Used to track scan job progress which was explicitly initiated.")
     public ScanJobProgressDto getScanJobProgress(@PathVariable Long scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJobProgress(scanJobId);
     }
     
     @GetMapping("/scanJobs")
+    @ApiOperation("Get list of scan jobs.")
     public ScanJobPageDto getScanJobs(@RequestParam(defaultValue = "0") int pageIndex) {
         return scanFacade.getScanJobs(pageIndex);
     }
     
     @GetMapping("/scanJobs/{scanJobId}")
+    @ApiOperation("Get scan job details by scan job ID.")
     public ScanJobDto getScanJob(@PathVariable Long scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJob(scanJobId);
     }
     
     @PostMapping("/scanJobs/full")
+    @ApiOperation("Start full scan job.")
     public ScanJobDto startScanJob() throws ConcurrentScanException {
         return scanFacade.startScanJob();
     }

@@ -1,6 +1,6 @@
 package net.dorokhov.pony.core.library.repository;
 
-import net.dorokhov.pony.app.IntegrationTest;
+import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.api.library.domain.Genre;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package net.dorokhov.pony.app;
+package net.dorokhov.pony;
 
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import static net.dorokhov.pony.app.InstallingIntegrationTest.ADMIN_EMAIL;
-import static net.dorokhov.pony.app.InstallingIntegrationTest.ADMIN_PASSWORD;
+import static net.dorokhov.pony.InstallingIntegrationTest.ADMIN_EMAIL;
+import static net.dorokhov.pony.InstallingIntegrationTest.ADMIN_PASSWORD;
 
 @Component
 public class ApiTemplate {

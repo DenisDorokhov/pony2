@@ -1,6 +1,6 @@
 package net.dorokhov.pony.core.library.service;
 
-import net.dorokhov.pony.app.IntegrationTest;
+import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.api.library.domain.Album;
 import net.dorokhov.pony.api.library.domain.Artist;
 import net.dorokhov.pony.api.library.domain.FileType;

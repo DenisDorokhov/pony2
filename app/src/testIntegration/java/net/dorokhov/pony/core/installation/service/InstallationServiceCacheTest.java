@@ -1,6 +1,6 @@
 package net.dorokhov.pony.core.installation.service;
 
-import net.dorokhov.pony.app.IntegrationTest;
+import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.api.installation.domain.Installation;
 import net.dorokhov.pony.api.installation.service.InstallationService;
 import net.dorokhov.pony.core.installation.repository.InstallationRepository;
