@@ -18,10 +18,12 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiKey;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static net.dorokhov.pony.api.user.domain.User.Role.ADMIN;
 import static net.dorokhov.pony.api.user.domain.User.Role.USER;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -63,7 +65,12 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(WebConfig.class.getPackage().getName()))
-                .build();
+                .build()
+                .securitySchemes(newArrayList(apiKey()));
+    }
+    
+    private ApiKey apiKey() {
+        return new ApiKey("token", "Authorization", "header");
     }
 
     @Override
