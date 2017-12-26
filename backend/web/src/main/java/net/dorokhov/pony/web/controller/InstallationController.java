@@ -1,10 +1,11 @@
 package net.dorokhov.pony.web.controller;
 
-import javax.validation.Valid;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
+import net.dorokhov.pony.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.InstallationCommandDto;
 import net.dorokhov.pony.web.domain.InstallationDto;
@@ -16,15 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+import static net.dorokhov.pony.web.controller.common.ApiResponseValues.BAD_REQUEST_CODE;
 
 @RestController
 @RequestMapping(value = "/api/installation", produces = "application/json")
@@ -45,7 +42,7 @@ public class InstallationController implements ErrorHandlingController {
             return ErrorDto.badRequest();
         }
     }
-    
+
     private final InstallationFacade installationFacade;
 
     public InstallationController(InstallationFacade installationFacade) {
@@ -60,6 +57,9 @@ public class InstallationController implements ErrorHandlingController {
 
     @PostMapping
     @ApiOperation("Perform installation.")
+    @ApiResponses({
+            @ApiResponse(code = BAD_REQUEST_CODE, message = "Already installed or invalid request.", response = ErrorDto.class),
+    })
     public InstallationDto install(@Valid @RequestBody InstallationCommandDto command) throws InvalidInstallationSecretException, AlreadyInstalledException {
         return installationFacade.install(command);
     }

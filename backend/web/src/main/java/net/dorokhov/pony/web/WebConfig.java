@@ -77,12 +77,13 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                         new Contact(
                                 "Denis Dorokhov", 
                                 "https://github.com/DenisDorokhov/pony2", 
-                                "denis@dorokhov.net"
+                                null
                         ),
                         null,
                         null, 
                         emptyList()
                 ))
+                .useDefaultResponseMessages(false)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(WebConfig.class.getPackage().getName()))
                 .build()

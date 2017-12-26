@@ -1,4 +1,4 @@
-package net.dorokhov.pony.web.controller;
+package net.dorokhov.pony.web.controller.common;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.web.controller.exception.BadRequestException;

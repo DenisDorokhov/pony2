@@ -12,11 +12,14 @@ import springfox.documentation.builders.OperationBuilder;
 import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiDescription;
+import springfox.documentation.service.ResponseMessage;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.ApiListingScannerPlugin;
 import springfox.documentation.spi.service.contexts.DocumentationContext;
 import springfox.documentation.spring.web.readers.operation.CachingOperationNameGenerator;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 
 @Component
@@ -50,12 +53,20 @@ public class SecurityApiListingScanner implements ApiListingScannerPlugin {
                                                         .parameterType("form")
                                                         .build()
                                         ))
+                                        .responseMessages(ImmutableSet.of(
+                                                new ResponseMessage(200, "User has been logged in.", null, emptyMap(), emptyList()),
+                                                new ResponseMessage(401, "Authentication failed.", null, emptyMap(), emptyList())
+                                        ))
                                         .build(),
                                 new OperationBuilder(new CachingOperationNameGenerator())
                                         .tags(ImmutableSet.of("Security"))
                                         .codegenMethodNameStem("apiAuthenticationDELETE")
                                         .method(HttpMethod.DELETE)
                                         .summary("Log user out.")
+                                        .responseMessages(ImmutableSet.of(
+                                                new ResponseMessage(200, "User has been logged out.", null, emptyMap(), emptyList()),
+                                                new ResponseMessage(401, "Authentication failed.", null, emptyMap(), emptyList())
+                                        ))
                                         .build()
                         ), 
                         false)

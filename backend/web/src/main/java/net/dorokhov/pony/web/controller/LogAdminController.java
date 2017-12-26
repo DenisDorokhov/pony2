@@ -1,10 +1,12 @@
 package net.dorokhov.pony.web.controller;
 
-import java.time.LocalDateTime;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import net.dorokhov.pony.api.log.domain.LogMessage.Level;
+import net.dorokhov.pony.web.controller.common.ErrorHandlingController;
+import net.dorokhov.pony.web.domain.ErrorDto;
 import net.dorokhov.pony.web.domain.LogMessagePageDto;
 import net.dorokhov.pony.web.service.LogFacade;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,11 +15,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+
+import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+
 @RestController
 @RequestMapping(value = "/api/admin/log", produces = "application/json")
 @Api(tags = "Log Administration")
+@ApiResponses({
+        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = FORBIDDEN_CODE, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
+})
 public class LogAdminController implements ErrorHandlingController {
-    
+
     private final LogFacade logFacade;
 
     public LogAdminController(LogFacade logFacade) {

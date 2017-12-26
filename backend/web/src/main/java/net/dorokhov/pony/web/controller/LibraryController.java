@@ -1,28 +1,26 @@
 package net.dorokhov.pony.web.controller;
 
-import java.util.List;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import net.dorokhov.pony.web.domain.ArtistDto;
-import net.dorokhov.pony.web.domain.ArtistSongsDto;
-import net.dorokhov.pony.web.domain.GenreDto;
-import net.dorokhov.pony.web.domain.GenreSongsPageDto;
-import net.dorokhov.pony.web.domain.ScanStatisticsDto;
-import net.dorokhov.pony.web.domain.ScanStatusDto;
-import net.dorokhov.pony.web.domain.SearchResultDto;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import net.dorokhov.pony.web.controller.common.ErrorHandlingController;
+import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.service.LibraryFacade;
 import net.dorokhov.pony.web.service.ScanFacade;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
 
 @RestController
 @RequestMapping(value = "/api/library", produces = "application/json")
 @Api(tags = "Library")
+@ApiResponses({
+        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+})
 public class LibraryController implements ErrorHandlingController {
 
     private final LibraryFacade libraryFacade;
@@ -41,6 +39,9 @@ public class LibraryController implements ErrorHandlingController {
 
     @GetMapping("/artistSongs/{artistId}")
     @ApiOperation("Get artist songs by artist ID.")
+    @ApiResponses({
+            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artist not found.", response = ErrorDto.class),
+    })
     public ArtistSongsDto getArtistSongs(@PathVariable Long artistId) throws ObjectNotFoundException {
         return libraryFacade.getArtistSongs(artistId);
     }
@@ -53,6 +54,9 @@ public class LibraryController implements ErrorHandlingController {
 
     @GetMapping("/genreSongs/{genreId}")
     @ApiOperation("Get page of genre songs by genre ID.")
+    @ApiResponses({
+            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested genre not found.", response = ErrorDto.class),
+    })
     public GenreSongsPageDto getGenreSongs(@PathVariable Long genreId, @RequestParam(defaultValue = "0") int pageIndex) throws ObjectNotFoundException {
         return libraryFacade.getGenreSongs(genreId, pageIndex);
     }
@@ -71,6 +75,9 @@ public class LibraryController implements ErrorHandlingController {
 
     @GetMapping("/scanStatistics")
     @ApiOperation("Get last scan statistics.")
+    @ApiResponses({
+            @ApiResponse(code = NOT_FOUND_CODE, message = "Library was never scanned.", response = ErrorDto.class),
+    })
     public ScanStatisticsDto getStatistics() throws ObjectNotFoundException {
         return scanFacade.getScanStatistics();
     }
