@@ -76,4 +76,36 @@ public class LibraryFacadeImpl implements LibraryFacade {
         List<Song> songs = librarySearchService.searchSongs(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         return SearchResultDto.of(genres, artists, albums, songs);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SongDetailsDto> getRandomSongs(int count) {
+        return libraryService.getRandomSongs(count).stream()
+                .map(SongDetailsDto::of)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SongDetailsDto> getRandomSongsByAlbumId(Long albumId, int count) {
+        return libraryService.getRandomSongsByAlbumId(albumId, count).stream()
+                .map(SongDetailsDto::of)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SongDetailsDto> getRandomSongsByArtistId(Long artistId, int count) {
+        return libraryService.getRandomSongsByArtistId(artistId, count).stream()
+                .map(SongDetailsDto::of)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SongDetailsDto> getRandomSongsByGenreId(Long genreId, int count) {
+        return libraryService.getRandomSongsByGenreId(genreId, count).stream()
+                .map(SongDetailsDto::of)
+                .collect(Collectors.toList());
+    }
 }

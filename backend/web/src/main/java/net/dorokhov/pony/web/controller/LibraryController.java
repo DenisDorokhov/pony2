@@ -23,6 +23,8 @@ import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
 })
 public class LibraryController implements ErrorHandlingController {
 
+    private final static int MAX_RANDOM_COUNT = 30;
+
     private final LibraryFacade libraryFacade;
     private final ScanFacade scanFacade;
 
@@ -65,6 +67,30 @@ public class LibraryController implements ErrorHandlingController {
     @ApiOperation("Search genres, artists, albums and songs.")
     public SearchResultDto search(@RequestParam String query) {
         return libraryFacade.search(query);
+    }
+
+    @GetMapping("/randomSongs")
+    @ApiOperation("Get random songs.")
+    public List<SongDetailsDto> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
+        return libraryFacade.getRandomSongs(Math.min(count, MAX_RANDOM_COUNT));
+    }
+
+    @GetMapping("/randomArtistSongs/{artistId}")
+    @ApiOperation("Get random songs of an artist provided.")
+    public List<SongDetailsDto> getArtistRandomSongs(@PathVariable Long artistId, @RequestParam(defaultValue = "10") int count) {
+        return libraryFacade.getRandomSongsByArtistId(artistId, Math.min(count, MAX_RANDOM_COUNT));
+    }
+
+    @GetMapping("/randomAlbumSongs/{albumId}")
+    @ApiOperation("Get random songs of an album provided.")
+    public List<SongDetailsDto> getAlbumRandomSongs(@PathVariable Long albumId, @RequestParam(defaultValue = "10") int count) {
+        return libraryFacade.getRandomSongsByAlbumId(albumId, Math.min(count, MAX_RANDOM_COUNT));
+    }
+
+    @GetMapping("/randomGenreSongs/{genreId}")
+    @ApiOperation("Get random songs of an genre provided.")
+    public List<SongDetailsDto> getGenreRandomSongs(@PathVariable Long genreId, @RequestParam(defaultValue = "10") int count) {
+        return libraryFacade.getRandomSongsByGenreId(genreId, Math.min(count, MAX_RANDOM_COUNT));
     }
 
     @GetMapping("/scanStatus")

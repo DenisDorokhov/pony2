@@ -16,4 +16,12 @@ public interface LibraryFacade {
     GenreSongsPageDto getGenreSongs(Long genreId, int pageIndex) throws ObjectNotFoundException;
 
     SearchResultDto search(String query);
+
+    List<SongDetailsDto> getRandomSongs(int count);
+
+    List<SongDetailsDto> getRandomSongsByAlbumId(Long albumId, int count);
+
+    List<SongDetailsDto> getRandomSongsByArtistId(Long artistId, int count);
+
+    List<SongDetailsDto> getRandomSongsByGenreId(Long genreId, int count);
 }

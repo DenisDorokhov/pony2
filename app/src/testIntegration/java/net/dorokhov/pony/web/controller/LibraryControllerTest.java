@@ -382,6 +382,118 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldGetRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomSongs?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, 3);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs ->
+                assertThat(songs).hasSize(3));
+    }
+
+    @Test
+    public void shouldNotGetTooManyRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomSongs?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, 1000);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs -> 
+                assertThat(songs).hasSize(30));
+    }
+
+    @Test
+    public void shouldGetAlbumRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomAlbumSongs/{albumId}?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, album1_1.getId(), 3);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs ->
+                assertThat(songs).hasSize(3));
+    }
+
+    @Test
+    public void shouldNotGetTooManyAlbumRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomAlbumSongs/{albumId}?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, album1_1.getId(), 1000);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs -> 
+                assertThat(songs).hasSize(30));
+    }
+
+    @Test
+    public void shouldGetArtistRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomArtistSongs/{artistId}?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, artist1.getId(), 3);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs ->
+                assertThat(songs).hasSize(3));
+    }
+
+    @Test
+    public void shouldNotGetTooManyArtistRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomArtistSongs/{artistId}?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, artist1.getId(), 1000);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs -> 
+                assertThat(songs).hasSize(30));
+    }
+
+    @Test
+    public void shouldGetGenreRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomGenreSongs/{genreId}?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, genre1.getId(), 3);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs ->
+                assertThat(songs).hasSize(3));
+    }
+
+    @Test
+    public void shouldNotGetTooManyGenreRandomSongs() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/randomGenreSongs/{genreId}?count={count}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, genre1.getId(), 1000);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songs -> 
+                assertThat(songs).hasSize(30));
+    }
+
+    @Test
     public void shouldGetNegativeScanStatus() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
