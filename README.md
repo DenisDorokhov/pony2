@@ -14,3 +14,10 @@ Running frontend on default port 4200:
 ``
 ./gradlew yarnStart
 ``
+
+## Rest API Documentation
+
+Swagger-based REST API documentation can be found here:
+``
+/swagger-ui.html
+``

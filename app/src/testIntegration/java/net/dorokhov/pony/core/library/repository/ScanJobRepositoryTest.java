@@ -14,8 +14,10 @@ public class ScanJobRepositoryTest extends IntegrationTest {
     private ScanJobRepository scanJobRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         ScanJob scanJob = scanJobRepository.save(scanJobFull());
+
         assertThat(scanJobRepository.findOne(scanJob.getId())).isNotNull();
     }
 }

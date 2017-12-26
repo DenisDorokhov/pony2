@@ -13,11 +13,13 @@ public class ConfigRepositoryTest extends IntegrationTest {
     private ConfigRepository configRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         Config config = configRepository.save(Config.builder()
                 .id("someConfig")
                 .value("someValue")
                 .build());
+
         assertThat(configRepository.findOne(config.getId())).isNotNull();
     }
 }

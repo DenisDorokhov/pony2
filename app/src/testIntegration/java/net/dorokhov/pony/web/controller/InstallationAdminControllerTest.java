@@ -24,11 +24,14 @@ public class InstallationAdminControllerTest extends InstallingIntegrationTest {
     private InstallationRepository installationRepository;
 
     @Test
-    public void shouldGetInstallation() throws Exception {
+    public void shouldGetInstallation() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<InstallationDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/installation", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), InstallationDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(installationDto -> {
             Installation installation = installationRepository.findAll().get(0);
@@ -39,12 +42,15 @@ public class InstallationAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingInstallationIfNotInstalled() throws Exception {
+    public void shouldFailGettingInstallationIfNotInstalled() {
+
         installationRepository.deleteAll();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/installation", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);

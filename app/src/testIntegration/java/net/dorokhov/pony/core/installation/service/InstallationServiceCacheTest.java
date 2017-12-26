@@ -3,6 +3,8 @@ package net.dorokhov.pony.core.installation.service;
 import net.dorokhov.pony.IntegrationTest;
 import net.dorokhov.pony.api.installation.domain.Installation;
 import net.dorokhov.pony.api.installation.service.InstallationService;
+import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
+import net.dorokhov.pony.api.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony.core.installation.repository.InstallationRepository;
 import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import org.junit.Test;
@@ -20,15 +22,18 @@ public class InstallationServiceCacheTest extends IntegrationTest {
     private InstallationRepository installationRepository;
 
     @Test
-    public void shouldCacheAfterFetching() throws Exception {
+    public void shouldCacheAfterFetching() {
+
         installationRepository.save(installation());
         Installation installation = installationService.getInstallation();
         Installation cachedInstallation = installationService.getInstallation();
+
         assertThat(installation).isSameAs(cachedInstallation);
     }
 
     @Test
-    public void shouldEvictCacheAfterInstallation() throws Exception {
+    public void shouldEvictCacheAfterInstallation() throws AlreadyInstalledException {
+
         InstallationCommand command = InstallationCommand.builder()
                 .adminName("someName")
                 .adminEmail("foo@bar.com")
@@ -36,14 +41,17 @@ public class InstallationServiceCacheTest extends IntegrationTest {
                 .build();
         Installation installation = installationService.install(command);
         Installation cachedInstallation = installationService.getInstallation();
+
         assertThat(installation).isNotSameAs(cachedInstallation);
     }
 
     @Test
-    public void shouldEvictCacheAfterUpgrading() throws Exception {
+    public void shouldEvictCacheAfterUpgrading() throws NotInstalledException {
+
         installationRepository.save(installation());
         Installation installation = installationService.upgradeIfNeeded();
         Installation cachedInstallation = installationService.getInstallation();
+
         assertThat(installation).isNotSameAs(cachedInstallation);
     }
 }

@@ -5,6 +5,7 @@ import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
+import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.web.domain.*;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,14 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     private UserService userService;
 
     @Test
-    public void shouldGetAllUsers() throws Exception {
+    public void shouldGetAllUsers() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<UserDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), UserDto[].class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(users -> {
             assertThat(users).hasSize(1);
@@ -36,22 +40,28 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetUserById() throws Exception {
+    public void shouldGetUserById() {
+
         User user = userService.getAll().get(0);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/{userId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class, user.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> checkUser(userDto, user));
     }
 
     @Test
-    public void shouldFailGettingUserByIdOnNotExistingUser() throws Exception {
+    public void shouldFailGettingUserByIdOnNotExistingUser() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/1000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -61,29 +71,36 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldCreateUser() throws Exception {
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+    public void shouldCreateUser() {
+
         UserCreationCommandDto command = new UserCreationCommandDto("someName", "some@email.com",
                 "somePassword", UserDto.Role.USER);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), UserDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> {
             User user = userService.getById(userDto.getId());
+            assertThat(user).isNotNull();
             checkUser(userDto, user);
         });
         apiTemplate.authenticate("some@email.com", "somePassword");
     }
 
     @Test
-    public void shouldValidateUserCreationCommand() throws Exception {
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+    public void shouldValidateUserCreationCommand() {
+
         UserCreationCommandDto command = new UserCreationCommandDto(" ", "invalidEmail", 
                 "", null);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
@@ -95,13 +112,16 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUserCreationValidationOnDuplicateEmail() throws Exception {
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+    public void shouldFailUserCreationValidationOnDuplicateEmail() {
+
         UserCreationCommandDto command = new UserCreationCommandDto("someName", ADMIN_EMAIL,
                 "somePassword", UserDto.Role.ADMIN);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
@@ -112,31 +132,38 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldUpdateUser() throws Exception {
+    public void shouldUpdateUser() {
+
         User user = userService.getAll().get(0);
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         UserUpdateCommandDto command = new UserUpdateCommandDto(user.getId(), "someName", "some@email.com",
                 "newPassword", UserDto.Role.ADMIN);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/{userId}", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), UserDto.class, user.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> {
             User updatedUser = userService.getById(userDto.getId());
+            assertThat(updatedUser).isNotNull();
             checkUser(userDto, updatedUser);
         });
         apiTemplate.authenticate("some@email.com", "newPassword");
     }
 
     @Test
-    public void shouldValidateUserUpdateCommand() throws Exception {
+    public void shouldValidateUserUpdateCommand() {
+
         User user = userService.getAll().get(0);
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         UserUpdateCommandDto command = new UserUpdateCommandDto(user.getId(), " ", "invalidEmail",
                 "", null);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/{userId}", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class, user.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
@@ -148,26 +175,32 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUserUpdateOnInvalidId() throws Exception {
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+    public void shouldFailUserUpdateOnInvalidId() {
+
         UserUpdateCommandDto command = new UserUpdateCommandDto(0L, "someName", "some@email.com",
                 "somePassword", UserDto.Role.USER);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/1000", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> 
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.BAD_REQUEST));
     }
 
     @Test
-    public void shouldFailUserUpdateOnNotExistingUser() throws Exception {
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+    public void shouldFailUserUpdateOnNotExistingUser() {
+
         UserUpdateCommandDto command = new UserUpdateCommandDto(1000L, "someName", "some@email.com",
                 "somePassword", UserDto.Role.USER);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/1000", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -177,7 +210,8 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUserUpdateValidationOnDuplicateEmail() throws Exception {
+    public void shouldFailUserUpdateValidationOnDuplicateEmail() throws DuplicateEmailException {
+
         User user = userService.getAll().get(0);
         userService.create(UserCreationCommand.builder()
                 .name("Plain User")
@@ -185,12 +219,14 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .password("foobar")
                 .roles(User.Role.USER)
                 .build());
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         UserUpdateCommandDto command = new UserUpdateCommandDto(user.getId(), "someName", "new@email.com",
                 "somePassword", UserDto.Role.ADMIN);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/{userId}", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class, user.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
@@ -201,7 +237,8 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldDeleteUser() throws Exception {
+    public void shouldDeleteUser() throws DuplicateEmailException {
+
         User user = userService.create(UserCreationCommand.builder()
                 .name("Plain User")
                 .email("new@email.com")
@@ -209,19 +246,24 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .roles(User.Role.USER)
                 .build());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/{userId}", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class, user.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> checkUser(userDto, user));
     }
 
     @Test
-    public void shouldFailWhenDeletingNotExistingUser() throws Exception {
+    public void shouldFailWhenDeletingNotExistingUser() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/1000", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -231,12 +273,15 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailWhenDeletingCurrentUser() throws Exception {
+    public void shouldFailWhenDeletingCurrentUser() {
+
         User user = userService.getAll().get(0);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users/{userId}", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class, user.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> 
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.BAD_REQUEST));

@@ -16,11 +16,13 @@ public class AlbumRepositoryTest extends IntegrationTest {
     private AlbumRepository albumRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         Artist artist = artistRepository.save(Artist.builder().build());
         Album album = albumRepository.save(Album.builder()
                 .artist(artist)
                 .build());
+
         assertThat(albumRepository.findOne(album.getId())).isNotNull();
     }
 }

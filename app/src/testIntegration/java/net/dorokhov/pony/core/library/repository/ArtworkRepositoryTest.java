@@ -14,7 +14,8 @@ public class ArtworkRepositoryTest extends IntegrationTest {
     private ArtworkRepository artworkRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         Artwork artwork = artworkRepository.save(Artwork.builder()
                 .mimeType("text/plain")
                 .checksum("123")
@@ -26,6 +27,7 @@ public class ArtworkRepositoryTest extends IntegrationTest {
                         .fromUriString("file:sourceUri")
                         .build().toUri())
                 .build());
+
         assertThat(artworkRepository.findOne(artwork.getId())).isNotNull();
     }
 }

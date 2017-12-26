@@ -25,6 +25,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Repeat;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
+
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -53,18 +56,18 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldPerformFullScan() throws Exception {
+    public void shouldPerformFullScan() throws IOException {
         runAndVerifyInitialScan();
     }
 
     @Test
     @Repeat(10)
-    public void shouldPerformFullScanRepeatedly() throws Exception {
+    public void shouldPerformFullScanRepeatedly() throws IOException {
         shouldPerformFullScan();
     }
 
     @Test
-    public void shouldPerformFullScanFlow() throws Exception {
+    public void shouldPerformFullScanFlow() throws IOException, InterruptedException, ConcurrentScanException {
         
         runAndVerifyInitialScan();
 
@@ -76,15 +79,16 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailFullScanIfItIsAlreadyRunning() throws Exception {
+    public void shouldFailFullScanIfItIsAlreadyRunning() throws ConcurrentScanException {
 
         scanJobService.addObserver(blockingObserver);
         ScanJob scanJob = scanJobService.startScanJob();
-
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/full", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> 
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_SCAN));
@@ -98,13 +102,16 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetAllScanJobs() throws Exception {
+    public void shouldGetAllScanJobs() throws ConcurrentScanException {
+
         Long scanJob1 = createAndFinishScanJob();
         Long scanJob2 = createAndFinishScanJob();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ScanJobPageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobPageDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanJobPage -> {
             assertThat(scanJobPage.getPageIndex()).isEqualTo(0);
@@ -120,22 +127,28 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetScanJobById() throws Exception {
+    public void shouldGetScanJobById() throws ConcurrentScanException {
+
         Long scanJobId = createAndFinishScanJob();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ScanJobDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/{scanJobId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobDto.class, scanJobId);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(dto -> checkScanJobDto(dto, scanJobId));
     }
 
     @Test
-    public void shouldFailGettingScanJobIfScanJobNotFound() throws Exception {
+    public void shouldFailGettingScanJobIfScanJobNotFound() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/1000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -145,11 +158,14 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingCurrentScanJobProgressWhenThereIsNoScanJobRunning() throws Exception {
+    public void shouldFailGettingCurrentScanJobProgressWhenThereIsNoScanJobRunning() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -158,11 +174,14 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingScanJobProgressWhenScanJobIsNotFound() throws Exception {
+    public void shouldFailGettingScanJobProgressWhenScanJobIsNotFound() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress/1000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -171,15 +190,14 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         });
     }
     
-    private void runAndVerifyInitialScan() throws Exception {
+    private void runAndVerifyInitialScan() throws IOException {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-01-init.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
         configService.saveLibraryFolders(ImmutableList.of(context.getRootFolder()));
-
         scanJobService.addObserver(blockingObserver);
-
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ScanJobDto> scanJobResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/full", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobDto.class);
@@ -249,7 +267,9 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @SuppressWarnings("Duplicates")
-    private void checkLogMessageDto(LogMessageDto dto, LogMessage logMessage) {
+    private void checkLogMessageDto(@Nullable LogMessageDto dto, @Nullable LogMessage logMessage) {
+        assertThat(logMessage).isNotNull();
+        assertThat(dto).isNotNull();
         assertThat(dto.getId()).isEqualTo(logMessage.getId());
         assertThat(dto.getDate()).isEqualTo(logMessage.getDate());
         assertThat(dto.getLevel()).isEqualTo(logMessage.getLevel());
@@ -258,7 +278,9 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getText()).isEqualTo(logMessage.getText());
     }
 
-    private void checkScanResultDto(ScanResultDto dto, ScanResult scanResult) {
+    private void checkScanResultDto(@Nullable ScanResultDto dto, @Nullable ScanResult scanResult) {
+        assertThat(scanResult).isNotNull();
+        assertThat(dto).isNotNull();
         assertThat(dto.getId()).isEqualTo(scanResult.getId());
         assertThat(dto.getDate()).isEqualTo(scanResult.getDate());
         assertThat(dto.getScanType()).isEqualTo(scanResult.getScanType());
@@ -289,7 +311,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getDeletedArtworkCount()).isEqualTo(scanResult.getDeletedArtworkCount());
     }
 
-    private void runAndVerifyDeletionScan() throws Exception {
+    private void runAndVerifyDeletionScan() throws IOException, ConcurrentScanException {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-02-delete.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
@@ -302,7 +324,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         scanTestPlanExecutor.verify(scanJob.getId(), context);
     }
 
-    private void runAndVerifyModificationScan() throws Exception {
+    private void runAndVerifyModificationScan() throws IOException, ConcurrentScanException {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-03-modify.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);

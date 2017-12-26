@@ -32,7 +32,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     private SongRepository songRepository;
 
     @Test
-    public void shouldSearchGenres() throws Exception {
+    public void shouldSearchGenres() {
 
         Genre genre1 = genreRepository.save(buildGenre("the foobar entity1"));
         Genre genre2 = genreRepository.save(buildGenre("the foobar entity2"));
@@ -45,7 +45,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldSearchArtists() throws Exception {
+    public void shouldSearchArtists() {
 
         Artist artist1 = artistRepository.save(buildArtist("the foobar entity1"));
         Artist artist2 = artistRepository.save(buildArtist("the foobar entity2"));
@@ -58,7 +58,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldSearchAlbums() throws Exception {
+    public void shouldSearchAlbums() {
 
         Artist artist = artistRepository.save(Artist.builder().build());
 
@@ -73,7 +73,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldSearchSongs() throws Exception {
+    public void shouldSearchSongs() {
 
         Genre genre = genreRepository.save(Genre.builder().build());
         Artist artist = artistRepository.save(Artist.builder().build());

@@ -15,8 +15,10 @@ public class ScanResultRepositoryTest extends IntegrationTest {
     private ScanResultRepository scanResultRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         ScanResult genre = scanResultRepository.save(scanResult(FULL));
+
         assertThat(scanResultRepository.findOne(genre.getId())).isNotNull();
     }
 }

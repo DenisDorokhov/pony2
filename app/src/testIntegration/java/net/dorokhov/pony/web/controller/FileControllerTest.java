@@ -22,6 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 
@@ -72,35 +73,44 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldServeAudio() throws Exception {
+    public void shouldServeAudio() throws IOException {
+
         byte[] expectedContents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/{id}", HttpMethod.GET, 
                 apiTemplate.createCookieRequest(authentication.getToken()), byte[].class, song.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
     }
 
     @Test
-    public void shouldServeByteRangeAudio() throws Exception {
+    public void shouldServeByteRangeAudio() throws IOException {
+
         byte[] contents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
         byte[] expectedContents = Arrays.copyOfRange(contents, 1024, 2048);
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Range", "bytes=1024-2047");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/file/audio/{id}", HttpMethod.GET,
                 apiTemplate.createCookieRequest(null, authentication.getToken(), httpHeaders), 
                 byte[].class, song.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.PARTIAL_CONTENT);
         assertThat(response.getBody()).isEqualTo(expectedContents);
     }
 
     @Test
-    public void shouldReportNotFoundAudio() throws Exception {
+    public void shouldReportNotFoundAudio() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/1000", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -110,20 +120,26 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldServeLargeArtwork() throws Exception {
+    public void shouldServeLargeArtwork() throws IOException {
+
         byte[] expectedContents = Files.readAllBytes(artworkFiles.getLargeFile().toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/large/{artworkId}", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), byte[].class, artworkFiles.getArtwork().getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
     }
 
     @Test
-    public void shouldReportNotFoundLargeArtwork() throws Exception {
+    public void shouldReportNotFoundLargeArtwork() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/large/1000", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -133,20 +149,26 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldServeSmallArtwork() throws Exception {
+    public void shouldServeSmallArtwork() throws IOException {
+
         byte[] expectedContents = Files.readAllBytes(artworkFiles.getSmallFile().toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/small/{artworkId}", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), byte[].class, artworkFiles.getArtwork().getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
     }
 
     @Test
-    public void shouldReportNotFoundSmallArtwork() throws Exception {
+    public void shouldReportNotFoundSmallArtwork() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/small/1000", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -156,11 +178,14 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldExportSong() throws Exception {
+    public void shouldExportSong() throws IOException {
+
         byte[] expectedContents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/{songId}", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), byte[].class, song.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getHeaders().get("Content-Disposition")).isNotNull();
         assertThat(response.getHeaders().getFirst("Content-Type")).isEqualTo("audio/mpeg");
@@ -168,10 +193,13 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldReportNotFoundExportingSong() throws Exception {
+    public void shouldReportNotFoundExportingSong() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/1000", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
@@ -181,22 +209,27 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldExportAlbum() throws Exception {
+    public void shouldExportAlbum() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/export/album/{albumId}", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), byte[].class, album.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getHeaders().get("Content-Disposition")).isNotNull();
         assertThat(response.getHeaders().getFirst("Content-Type")).isEqualTo("application/zip");
-        FileType fileType = fileTypeResolver.resolve(response.getBody());
-        assertThat(fileType.getMimeType()).isEqualTo("application/zip");
+        assertThat(fileTypeResolver.resolve(response.getBody()).getMimeType()).isEqualTo("application/zip");
     }
 
     @Test
-    public void shouldReportNotFoundExportingAlbum() throws Exception {
+    public void shouldReportNotFoundExportingAlbum() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/export/album/1000", HttpMethod.GET,
                 apiTemplate.createCookieRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);

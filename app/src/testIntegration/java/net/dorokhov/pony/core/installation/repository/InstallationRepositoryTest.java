@@ -14,8 +14,10 @@ public class InstallationRepositoryTest extends IntegrationTest {
     private InstallationRepository installationRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         Installation installation = installationRepository.save(installation());
+
         assertThat(installationRepository.findOne(installation.getId())).isNotNull();
     }
 }

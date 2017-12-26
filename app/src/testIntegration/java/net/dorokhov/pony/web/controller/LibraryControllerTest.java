@@ -4,6 +4,7 @@ import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.BlockingScanJobServiceObserver;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.test.SongFixtures;
 import net.dorokhov.pony.core.library.repository.AlbumRepository;
 import net.dorokhov.pony.core.library.repository.ArtistRepository;
@@ -68,6 +69,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private final BlockingScanJobServiceObserver blockingObserver = new BlockingScanJobServiceObserver();
 
     @Override
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void setUp() throws Exception {
         super.setUp();
         getTransactionTemplate().execute(status -> {
@@ -128,8 +130,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     .album(album1_1)
                     .genre(genre1)
                     .build());
-            song1_1_1.getAlbum().getArtist();
-            song1_1_1.getGenre();
+            song1_1_1.getAlbum().getArtist(); // Pre-fetch.
+            song1_1_1.getGenre(); // Pre-fetch.
 
             song1_1_2 = songRepository.save(songBuilder
                     .path("song1_1_2")
@@ -137,8 +139,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     .album(album1_1)
                     .genre(genre1)
                     .build());
-            song1_1_2.getAlbum().getArtist();
-            song1_1_2.getGenre();
+            song1_1_2.getAlbum().getArtist(); // Pre-fetch.
+            song1_1_2.getGenre(); // Pre-fetch.
 
             song1_2_1 = songRepository.save(songBuilder
                     .path("song1_2_1")
@@ -146,8 +148,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     .album(album1_2)
                     .genre(genre1)
                     .build());
-            song1_2_1.getAlbum().getArtist();
-            song1_2_1.getGenre();
+            song1_2_1.getAlbum().getArtist(); // Pre-fetch.
+            song1_2_1.getGenre(); // Pre-fetch.
 
             song2_1_1 = songRepository.save(songBuilder
                     .path("song2_1_1")
@@ -155,8 +157,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     .album(album2_1)
                     .genre(genre2)
                     .build());
-            song2_1_1.getAlbum().getArtist();
-            song2_1_1.getGenre();
+            song2_1_1.getAlbum().getArtist(); // Pre-fetch.
+            song2_1_1.getGenre(); // Pre-fetch.
 
             return null;
         });
@@ -169,11 +171,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetArtists() throws Exception {
+    public void shouldGetArtists() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ArtistDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artists", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ArtistDto[].class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artists -> {
             assertThat(artists).hasSize(2);
@@ -183,11 +188,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetArtistSongs() throws Exception {
+    public void shouldGetArtistSongs() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artistSongs/{artistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ArtistSongsDto.class, artist1.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
             checkArtistDto(artistSongs.getArtist(), artist1);
@@ -216,11 +224,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingArtistSongsIfArtistIsNotFound() throws Exception {
+    public void shouldFailGettingArtistSongsIfArtistIsNotFound() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artistSongs/1000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);
@@ -230,11 +241,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetGenres() throws Exception {
+    public void shouldGetGenres() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<GenreDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genres", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), GenreDto[].class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(genres -> {
             assertThat(genres).hasSize(2);
@@ -244,11 +258,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetGenreSongs() throws Exception {
+    public void shouldGetGenreSongs() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<GenreSongsPageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genreSongs/{genreId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), GenreSongsPageDto.class, genre1.getId());
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(genreSongs -> {
             assertThat(genreSongs.getPageIndex()).isEqualTo(0);
@@ -278,11 +295,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingGenreSongsIfGenreIsNotFound() throws Exception {
+    public void shouldFailGettingGenreSongsIfGenreIsNotFound() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genreSongs/1000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);
@@ -292,11 +312,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldSearch() throws Exception {
+    public void shouldSearch() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<SearchResultDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/search?query=foo", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), SearchResultDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(searchResult -> {
             assertThat(searchResult.getGenres()).satisfies(genres -> {
@@ -359,26 +382,30 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetNegativeScanStatus() throws Exception {
+    public void shouldGetNegativeScanStatus() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ScanStatusDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatus", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatusDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatus -> 
                 assertThat(scanStatus.isScanning()).isFalse());
     }
 
     @Test
-    public void shouldGetPositiveScanStatus() throws Exception {
+    public void shouldGetPositiveScanStatus() throws ConcurrentScanException {
 
         scanJobService.addObserver(blockingObserver);
         ScanJob scanJob = scanJobService.startScanJob();
-
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ScanStatusDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatus", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatusDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatus ->
                 assertThat(scanStatus.isScanning()).isTrue());
@@ -389,13 +416,16 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetScanStatistics() throws Exception {
+    public void shouldGetScanStatistics() throws ConcurrentScanException {
+
         ScanJob scanJob = scanJobService.startScanJob();
         await().until(() -> scanJobService.getById(scanJob.getId()).getStatus() == ScanJob.Status.COMPLETE);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ScanStatisticsDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatistics", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatisticsDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatistics -> {
             assertThat(scanStatistics.getDuration()).isGreaterThan(0);
@@ -410,11 +440,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingScanStatisticsIfNotScannedYet() throws Exception {
+    public void shouldFailGettingScanStatisticsIfNotScannedYet() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatistics", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);

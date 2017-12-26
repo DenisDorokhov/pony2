@@ -30,73 +30,91 @@ public class SecurityTest extends InstallingIntegrationTest {
     private UserService userService;
 
     @Test
-    public void shouldAuthenticate() throws Exception {
+    public void shouldAuthenticate() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         assertThat(authentication.getToken()).isNotNull();
         assertThat(authentication.getUser()).satisfies(user -> 
                 assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
     }
 
     @Test
-    public void shouldFailAuthenticationIfAuthenticationFails() throws Exception {
+    public void shouldFailAuthenticationIfAuthenticationFails() {
+
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(ImmutableMap.of(
                 "email", "invalidEmail",
                 "password", "invalidPassword"
         ));
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().postForEntity("/api/authentication", entity, ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
 
     @Test
-    public void shouldLogout() throws Exception {
+    public void shouldLogout() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/authentication", HttpMethod.DELETE, 
                 apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> 
                 assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
     }
 
     @Test
-    public void shouldFailAuthenticationIfLogoutFails() throws Exception {
+    public void shouldFailAuthenticationIfLogoutFails() {
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/authentication", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest("invalidToken"), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
 
     @Test
-    public void shouldFailAuthenticationIfApiResponseRequestedWithNoAuthentication() throws Exception {
+    public void shouldFailAuthenticationIfApiResponseRequestedWithNoAuthentication() {
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().getForEntity("/api/someResource", ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error -> 
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
 
     @Test
-    public void shouldDenyAccessToAdminAreaIfRoleIsUser() throws Exception {
+    public void shouldDenyAccessToAdminAreaIfRoleIsUser() throws DuplicateEmailException {
+
         User user = createUser();
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/someResource", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).satisfies(error ->
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
     }
 
     @Test
-    public void shouldNotDenyUserAreaIfRoleIsUser() throws Exception {
+    public void shouldNotDenyUserAreaIfRoleIsUser() throws DuplicateEmailException {
+
         User user = createUser();
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
+
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.GET, 
                 apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
     

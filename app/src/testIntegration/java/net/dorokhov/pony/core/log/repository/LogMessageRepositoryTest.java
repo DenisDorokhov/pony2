@@ -13,13 +13,15 @@ public class LogMessageRepositoryTest extends IntegrationTest {
     private LogMessageRepository logMessageRepository;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
+
         LogMessage logMessage = logMessageRepository.save(LogMessage.builder()
                 .type(LogMessage.Level.DEBUG)
                 .pattern("someCode")
                 .arguments("arg1", "arg2")
                 .text("someText")
                 .build());
+
         assertThat(logMessageRepository.findOne(logMessage.getId())).isNotNull();
     }
 }

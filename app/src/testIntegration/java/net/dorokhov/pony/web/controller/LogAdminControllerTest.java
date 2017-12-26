@@ -28,29 +28,35 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     private LogService logService;
 
     @Test
-    public void shouldGetLog() throws Exception {
+    public void shouldGetLog() {
+
         LogMessage logMessage = logService.info(logger, "someMessage");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
     }
 
     @Test
-    public void shouldGetLogByMinLevel() throws Exception {
+    public void shouldGetLogByMinLevel() {
+
         logService.info(logger, "someMessage");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=WARN", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(this::checkEmptyLog);
     }
 
     @Test
-    public void shouldGetLogByMinAndMaxDate() throws Exception {
+    public void shouldGetLogByMinAndMaxDate() {
         
         LogMessage logMessage = logService.info(logger, "someMessage");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
@@ -58,23 +64,28 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minDate=1986-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
         
         response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minDate=3000-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(this::checkEmptyLog);
     }
 
     @Test
-    public void shouldGetLogByPageIndex() throws Exception {
+    public void shouldGetLogByPageIndex() {
+
         logService.info(logger, "someMessage");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?pageIndex=1", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> {
             assertThat(log.getPageIndex()).isEqualTo(1);

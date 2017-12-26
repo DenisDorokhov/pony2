@@ -10,6 +10,7 @@ import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import net.dorokhov.pony.web.service.InstallationSecretManager;
+import net.dorokhov.pony.web.service.exception.SecretNotFoundException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -37,7 +39,7 @@ public class InstallationControllerTest extends IntegrationTest {
     private InstallationService installationService;
 
     @Test
-    public void shouldReturnNoInstallation() throws Exception {
+    public void shouldReturnNoInstallation() {
         ResponseEntity<InstallationStatusDto> response = restTemplate.getForEntity("/api/installation/status", InstallationStatusDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(installationStatus -> 
@@ -45,7 +47,7 @@ public class InstallationControllerTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldInstall() throws Exception {
+    public void shouldInstall() throws SecretNotFoundException, IOException {
 
         InstallationCommandDto command = new InstallationCommandDto(
                 installationSecretManager.fetchInstallationSecret(),
@@ -56,6 +58,7 @@ public class InstallationControllerTest extends IntegrationTest {
         );
 
         ResponseEntity<InstallationDto> installationResponse = restTemplate.postForEntity("/api/installation", command, InstallationDto.class);
+
         assertThat(installationResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(installationResponse.getBody()).satisfies(installationDto -> 
                 assertThat(installationDto.getVersion()).isNotNull());
@@ -79,13 +82,14 @@ public class InstallationControllerTest extends IntegrationTest {
         });
 
         ResponseEntity<InstallationStatusDto> statusResponse = restTemplate.getForEntity("/api/installation/status", InstallationStatusDto.class);
+
         assertThat(statusResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(statusResponse.getBody()).satisfies(installationStatus ->
                 assertThat(installationStatus.isInstalled()).isTrue());
     }
 
     @Test
-    public void shouldValidateInstallationCommand() throws Exception {
+    public void shouldValidateInstallationCommand() {
 
         InstallationCommandDto command = new InstallationCommandDto(
                 "invalidSecret",
@@ -96,6 +100,7 @@ public class InstallationControllerTest extends IntegrationTest {
         );
 
         ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(Code.VALIDATION);
@@ -107,7 +112,7 @@ public class InstallationControllerTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldFailIfAlreadyInstalled() throws Exception {
+    public void shouldFailIfAlreadyInstalled() throws SecretNotFoundException, IOException {
 
         InstallationCommandDto command = new InstallationCommandDto(
                 installationSecretManager.fetchInstallationSecret(),
@@ -116,9 +121,10 @@ public class InstallationControllerTest extends IntegrationTest {
                 "foo@bar.com",
                 "somePassword"
         );
-
         restTemplate.postForEntity("/api/installation", command, Void.class);
+
         ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(errorDto -> 
                 assertThat(errorDto.getCode()).isSameAs(Code.BAD_REQUEST));

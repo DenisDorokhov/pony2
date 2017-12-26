@@ -22,13 +22,13 @@ public class UserRepositoryTest extends IntegrationTest {
     private EntityManagerFactory entityManagerFactory;
 
     @Test
-    public void shouldSave() throws Exception {
+    public void shouldSave() {
         User user = userRepository.save(user());
         assertThat(userRepository.findOne(user.getId())).isNotNull();
     }
 
     @Test
-    public void shouldCacheUser() throws Exception {
+    public void shouldCacheUser() {
         
         Statistics statistics = getStatistics();
         statistics.setStatisticsEnabled(true);
@@ -36,12 +36,14 @@ public class UserRepositoryTest extends IntegrationTest {
         User user = userRepository.save(userBuilder().name("oldName").build());
         statistics.clear();
         user = userRepository.findOne(user.getId());
+
         assertThat(statistics.getSecondLevelCacheMissCount()).isEqualTo(1);
         assertThat(statistics.getSecondLevelCacheHitCount()).isEqualTo(0);
         assertThat(statistics.getSecondLevelCachePutCount()).isEqualTo(1);
         
         statistics.clear();
         user = userRepository.findOne(user.getId());
+
         assertThat(statistics.getSecondLevelCacheMissCount()).isEqualTo(0);
         assertThat(statistics.getSecondLevelCacheHitCount()).isEqualTo(1);
         assertThat(statistics.getSecondLevelCachePutCount()).isEqualTo(0);
@@ -49,6 +51,7 @@ public class UserRepositoryTest extends IntegrationTest {
         user = userRepository.save(User.builder(user).name("newName").build());
         statistics.clear();
         user = userRepository.findOne(user.getId());
+
         assertThat(user.getName()).isEqualTo("newName");
         assertThat(statistics.getSecondLevelCacheMissCount()).isEqualTo(1);
         assertThat(statistics.getSecondLevelCacheHitCount()).isEqualTo(0);

@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,11 +24,14 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
     private ApiTemplate apiTemplate;
 
     @Test
-    public void shouldGetConfig() throws Exception {
+    public void shouldGetConfig() {
+
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/config", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getToken()), ConfigDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(config -> {
             assertThat(config.getAutoScanInterval()).isEqualTo(AUTO_SCAN_INTERVAL);
@@ -38,13 +42,16 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldSaveConfig() throws Exception {
+    public void shouldSaveConfig() throws IOException {
+
         File newLibraryFolder = tempFolder.newFolder();
         ConfigDto newConfig = new ConfigDto(128, ImmutableList.of(LibraryFolderDto.of(newLibraryFolder)));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/config", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(newConfig, authentication.getToken()), ConfigDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(config -> {
             assertThat(config.getAutoScanInterval()).isEqualTo(128);
@@ -55,12 +62,15 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldValidateConfig() throws Exception {
+    public void shouldValidateConfig() {
+
         ConfigDto config = new ConfigDto(128, ImmutableList.of(LibraryFolderDto.of(new File("notExistingFile"))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/config", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(config, authentication.getToken()), ErrorDto.class);
+
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
