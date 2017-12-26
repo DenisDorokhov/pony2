@@ -23,7 +23,7 @@ import org.springframework.web.util.UriUtils;
 @Controller
 @ResponseBody
 @RequestMapping("/api/file")
-@Api(description = "File operations")
+@Api(tags = "Files")
 public class FileController implements ErrorHandlingController {
 
     private final FileFacade fileFacade;

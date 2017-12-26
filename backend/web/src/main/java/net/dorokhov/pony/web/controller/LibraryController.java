@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/library", produces = "application/json")
-@Api(description = "Library operations")
+@Api(tags = "Library")
 public class LibraryController implements ErrorHandlingController {
 
     private final LibraryFacade libraryFacade;

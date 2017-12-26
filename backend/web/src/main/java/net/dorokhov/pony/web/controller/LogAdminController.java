@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/admin/log", produces = "application/json")
-@Api(description = "Log administration operations")
+@Api(tags = "Log Administration")
 public class LogAdminController implements ErrorHandlingController {
     
     private final LogFacade logFacade;

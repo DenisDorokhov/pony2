@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/user", produces = "application/json")
-@Api(description = "Current user operations")
+@Api(tags = "User")
 public class UserController implements ErrorHandlingController {
     
     private final UserFacade userFacade;

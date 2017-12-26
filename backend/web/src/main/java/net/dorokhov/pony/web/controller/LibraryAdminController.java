@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/api/admin/library", produces = "application/json")
-@Api(description = "Library administration operations")
+@Api(tags = "Library Administration")
 public class LibraryAdminController implements ErrorHandlingController {
 
     @ControllerAdvice(assignableTypes = LibraryAdminController.class)

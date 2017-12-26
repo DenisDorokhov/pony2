@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/admin/users", produces = "application/json")
-@Api(description = "User administration operations")
+@Api(tags = "User Administration")
 public class UserAdminController implements ErrorHandlingController {
     
     private final UserFacade userFacade;

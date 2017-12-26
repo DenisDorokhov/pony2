@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/admin/config", produces = "application/json")
-@Api(description = "Configuration administration operations.")
+@Api(tags = "Config Administration")
 public class ConfigAdminController implements ErrorHandlingController {
     
     private final ConfigFacade configFacade;

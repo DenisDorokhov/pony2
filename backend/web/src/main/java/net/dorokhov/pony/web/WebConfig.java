@@ -18,12 +18,15 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
+import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.api.user.domain.User.Role.ADMIN;
 import static net.dorokhov.pony.api.user.domain.User.Role.USER;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -63,6 +66,23 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public Docket swaggerConfig() {
         return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(new ApiInfo(
+                        "Pony - Music Streamer",
+                        "Pony is an open source music streaming server written in Java. " 
+                                + "This project was originally started as a playground for development of my skills in Java and modern web interfaces. " 
+                                + "Later it turned into something that I really like to use myself. " 
+                                + "If you have an MP3 collection that you want to listen in your web browser, then probably it's a project for you.",
+                        null,
+                        null,
+                        new Contact(
+                                "Denis Dorokhov", 
+                                "https://github.com/DenisDorokhov/pony2", 
+                                "denis@dorokhov.net"
+                        ),
+                        null,
+                        null, 
+                        emptyList()
+                ))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(WebConfig.class.getPackage().getName()))
                 .build()

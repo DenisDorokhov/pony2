@@ -27,10 +27,10 @@ public class SecurityApiListingScanner implements ApiListingScannerPlugin {
         return new ArrayList<>(singletonList(
                 new ApiDescription(
                         "/api/authentication",
-                        "Security operations.",
+                        "",
                         Arrays.asList(
                                 new OperationBuilder(new CachingOperationNameGenerator())
-                                        .tags(ImmutableSet.of("security"))
+                                        .tags(ImmutableSet.of("Security"))
                                         .codegenMethodNameStem("apiAuthenticationPOST")
                                         .method(HttpMethod.POST)
                                         .summary("Log user in.")
@@ -52,7 +52,7 @@ public class SecurityApiListingScanner implements ApiListingScannerPlugin {
                                         ))
                                         .build(),
                                 new OperationBuilder(new CachingOperationNameGenerator())
-                                        .tags(ImmutableSet.of("security"))
+                                        .tags(ImmutableSet.of("Security"))
                                         .codegenMethodNameStem("apiAuthenticationDELETE")
                                         .method(HttpMethod.DELETE)
                                         .summary("Log user out.")

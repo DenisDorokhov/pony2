@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/installation", produces = "application/json")
-@Api(description = "Installation operations")
+@Api(tags = "Installation")
 public class InstallationController implements ErrorHandlingController {
 
     @ControllerAdvice(assignableTypes = InstallationController.class)
