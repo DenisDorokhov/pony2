@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Sort;
 import org.springframework.util.DigestUtils;
 
 import java.io.*;
@@ -27,9 +28,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static net.dorokhov.pony.core.library.service.ExportServiceImpl.UNKNOWN_ALBUM;
 import static net.dorokhov.pony.core.library.service.ExportServiceImpl.UNKNOWN_ARTIST;
+import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -145,7 +146,7 @@ public class ExportServiceImplTest {
                 .trackNumber(null)
                 .path("foo/song3.mp3")
                 .build();
-        when(songRepository.findByAlbumId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3));
+        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3));
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
@@ -186,7 +187,7 @@ public class ExportServiceImplTest {
                 .path("foo/song1.mp3")
                 .build();
         Song song2 = Song.builder(song1).build();
-        when(songRepository.findByAlbumId(any(), any())).thenReturn(ImmutableList.of(song1, song2));
+        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2));
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
@@ -237,7 +238,7 @@ public class ExportServiceImplTest {
                 .trackNumber(1)
                 .path("foo/song3.mp3")
                 .build();
-        when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3));
+        when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3));
 
         ExportBundle exportBundle = exportService.exportArtist(1L);
 
@@ -271,7 +272,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldReturnNullIfAlbumNotFound() {
 
-        when(songRepository.findByAlbumId(any(), any())).thenReturn(emptyList());
+        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(emptyList());
 
         assertThat(exportService.exportAlbum(1L)).isNull();
     }
@@ -279,7 +280,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldFailIfArtistNotFound() {
 
-        when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(emptyList());
+        when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(emptyList());
 
         assertThat(exportService.exportArtist(1L)).isNull();
     }

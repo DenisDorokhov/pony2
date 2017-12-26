@@ -14,21 +14,21 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.test.ArtworkFixtures.artwork;
 import static net.dorokhov.pony.test.SongFixtures.song;
 import static net.dorokhov.pony.test.SongFixtures.songBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyIterable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LibraryServiceImplTest {
@@ -44,6 +44,8 @@ public class LibraryServiceImplTest {
     private SongRepository songRepository;
     @Mock
     private ArtworkStorage artworkStorage;
+    @Mock
+    private RandomFetcher randomFetcher;
 
     @Test
     public void shouldGetGenres() {
@@ -120,5 +122,79 @@ public class LibraryServiceImplTest {
         List<Song> result = libraryService.getSongsByIds(ImmutableList.of(1L, 2L));
 
         assertThat(result).isEqualTo(songs);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldGetRandomSongs() {
+
+        when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
+        List<Song> songs = new ArrayList<>();
+        when(randomFetcher.fetch(eq(2), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
+            RandomFetcher.Repository repository = invocation.getArgument(1);
+            repository.fetchCount();
+            repository.fetchContent(new PageRequest(0, 1));
+            return songs;
+        });
+
+        assertThat(libraryService.getRandomSongs(2)).isSameAs(songs);
+
+        verify(songRepository).count();
+        verify(songRepository).findAll((Pageable) any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldGetRandomSongsByAlbumId() {
+
+        List<Song> songs = new ArrayList<>();
+        when(randomFetcher.fetch(eq(3), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
+            RandomFetcher.Repository repository = invocation.getArgument(1);
+            repository.fetchCount();
+            repository.fetchContent(new PageRequest(0, 1));
+            return songs;
+        });
+
+        assertThat(libraryService.getRandomSongsByAlbumId(1L, 3)).isSameAs(songs);
+
+        verify(songRepository).countByAlbumId(1L);
+        verify(songRepository).findByAlbumId(eq(1L), (Pageable) any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldGetRandomSongsByArtistId() {
+
+        List<Song> songs = new ArrayList<>();
+        when(randomFetcher.fetch(eq(4), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
+            RandomFetcher.Repository repository = invocation.getArgument(1);
+            repository.fetchCount();
+            repository.fetchContent(new PageRequest(0, 1));
+            return songs;
+        });
+
+        assertThat(libraryService.getRandomSongsByArtistId(1L, 4)).isSameAs(songs);
+
+        verify(songRepository).countByAlbumArtistId(1L);
+        verify(songRepository).findByAlbumArtistId(eq(1L), (Pageable) any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldGetRandomSongsByGenreId() {
+
+        when(songRepository.findByGenreId(any(), any())).thenReturn(new PageImpl<>(emptyList()));
+        List<Song> songs = new ArrayList<>();
+        when(randomFetcher.fetch(eq(5), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
+            RandomFetcher.Repository repository = invocation.getArgument(1);
+            repository.fetchCount();
+            repository.fetchContent(new PageRequest(0, 1));
+            return songs;
+        });
+
+        assertThat(libraryService.getRandomSongsByGenreId(1L, 5)).isSameAs(songs);
+
+        verify(songRepository).countByGenreId(1L);
+        verify(songRepository).findByGenreId(eq(1L), any());
     }
 }

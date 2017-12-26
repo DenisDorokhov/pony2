@@ -11,14 +11,13 @@ import net.dorokhov.pony.core.library.repository.SongRepository;
 import net.dorokhov.pony.core.library.service.artwork.ArtworkStorage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.util.List;
-
-import static java.util.Collections.unmodifiableList;
 
 @Service
 public class LibraryServiceImpl implements LibraryService {
@@ -29,33 +28,36 @@ public class LibraryServiceImpl implements LibraryService {
     private final ArtistRepository artistRepository;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
+    private final RandomFetcher randomFetcher;
 
-    public LibraryServiceImpl(GenreRepository genreRepository, 
+    public LibraryServiceImpl(GenreRepository genreRepository,
                               ArtistRepository artistRepository,
                               SongRepository songRepository,
-                              ArtworkStorage artworkStorage) {
+                              ArtworkStorage artworkStorage, 
+                              RandomFetcher randomFetcher) {
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
+        this.randomFetcher = randomFetcher;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Genre> getGenres() {
-        return unmodifiableList(genreRepository.findAll(new Sort("name")));
+        return genreRepository.findAll(new Sort("name"));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Artist> getArtists() {
-        return unmodifiableList(artistRepository.findAll(new Sort("name")));
+        return artistRepository.findAll(new Sort("name"));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Song> getSongsByIds(List<Long> ids) {
-        return unmodifiableList(songRepository.findAll(ids));
+        return songRepository.findAll(ids);
     }
 
     @Override
@@ -91,5 +93,73 @@ public class LibraryServiceImpl implements LibraryService {
     @Nullable
     public ArtworkFiles getArtworkFilesById(Long id) {
         return artworkStorage.getArtworkFile(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Song> getRandomSongs(int count) {
+        return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
+
+            @Override
+            public long fetchCount() {
+                return songRepository.count();
+            }
+
+            @Override
+            public List<Song> fetchContent(Pageable pageable) {
+                return songRepository.findAll(pageable).getContent();
+            }
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Song> getRandomSongsByAlbumId(Long albumId, int count) {
+        return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
+
+            @Override
+            public long fetchCount() {
+                return songRepository.countByAlbumId(albumId);
+            }
+
+            @Override
+            public List<Song> fetchContent(Pageable pageable) {
+                return songRepository.findByAlbumId(albumId, pageable);
+            }
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Song> getRandomSongsByArtistId(Long artistId, int count) {
+        return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
+
+            @Override
+            public long fetchCount() {
+                return songRepository.countByAlbumArtistId(artistId);
+            }
+
+            @Override
+            public List<Song> fetchContent(Pageable pageable) {
+                return songRepository.findByAlbumArtistId(artistId, pageable);
+            }
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Song> getRandomSongsByGenreId(Long genreId, int count) {
+        return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
+
+            @Override
+            public long fetchCount() {
+                return songRepository.countByGenreId(genreId);
+            }
+
+            @Override
+            public List<Song> fetchContent(Pageable pageable) {
+                return songRepository.findByGenreId(genreId, pageable).getContent();
+            }
+        });
     }
 }

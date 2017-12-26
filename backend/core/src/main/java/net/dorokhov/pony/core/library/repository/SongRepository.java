@@ -18,6 +18,8 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     long countByAlbumId(Long albumId);
 
+    long countByAlbumArtistId(Long artistId);
+
     long countByArtworkId(@Nullable Long artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
@@ -33,8 +35,12 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     List<Song> findByAlbumId(Long albumId, Sort sort);
 
+    List<Song> findByAlbumId(Long albumId, Pageable pageable);
+
     List<Song> findByAlbumArtistId(Long artistId, Sort sort);
-    
+
+    List<Song> findByAlbumArtistId(Long artistId, Pageable pageable);
+
     Page<Song> findByGenreId(Long genreId, Pageable pageable);
 
     Page<Song> findByGenreIdAndArtworkNotNull(Long genreId, Pageable pageable);

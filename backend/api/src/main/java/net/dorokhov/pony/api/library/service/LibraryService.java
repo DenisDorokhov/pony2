@@ -10,15 +10,15 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public interface LibraryService {
-    
+
     List<Genre> getGenres();
 
     List<Artist> getArtists();
 
     List<Song> getSongsByIds(List<Long> ids);
-    
+
     Page<Song> getSongsByGenreId(Long genreId, int pageIndex);
-    
+
     @Nullable
     Genre getGenreById(Long genreId);
 
@@ -30,4 +30,12 @@ public interface LibraryService {
 
     @Nullable
     ArtworkFiles getArtworkFilesById(Long id);
+
+    List<Song> getRandomSongs(int count);
+
+    List<Song> getRandomSongsByAlbumId(Long albumId, int count);
+
+    List<Song> getRandomSongsByArtistId(Long artistId, int count);
+
+    List<Song> getRandomSongsByGenreId(Long genreId, int count);
 }
