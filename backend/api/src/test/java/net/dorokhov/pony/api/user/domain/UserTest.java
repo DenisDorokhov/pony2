@@ -1,6 +1,5 @@
 package net.dorokhov.pony.api.user.domain;
 
-import net.dorokhov.pony.api.user.domain.User;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserTest {
     
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         User eqUser1 = userBuilder().id(1L).build();
         User eqUser2 = userBuilder().id(1L).build();

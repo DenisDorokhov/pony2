@@ -12,37 +12,37 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class RethrowingLambdasTest {
 
     @Test
-    public void shouldRethrowConsumer() throws Exception {
+    public void shouldRethrowConsumer() {
         assertThatThrownBy(() -> rethrow((ThrowingConsumer<Object>) value -> { throw new Exception(); })
                 .accept("value")).isInstanceOf(RuntimeException.class);
     }
     
     @Test
-    public void shouldRethrowBiConsumer() throws Exception {
+    public void shouldRethrowBiConsumer() {
         assertThatThrownBy(() -> rethrow((value1, value2) -> { throw new Exception(); })
                 .accept("value1", "value2")).isInstanceOf(RuntimeException.class);
     }
     
     @Test
-    public void shouldRethrowFunction() throws Exception {
+    public void shouldRethrowFunction() {
         assertThatThrownBy(() -> rethrow((ThrowingFunction<Object, Object>) value -> { throw new Exception(); })
                 .apply("value")).isInstanceOf(RuntimeException.class);
     }
     
     @Test
-    public void shouldRethrowSupplier() throws Exception {
+    public void shouldRethrowSupplier() {
         assertThatThrownBy(() -> rethrow(() -> { throw new Exception(); })
                 .get()).isInstanceOf(RuntimeException.class);
     }
     
     @Test
-    public void shouldRethrowUnaryOperator() throws Exception {
+    public void shouldRethrowUnaryOperator() {
         assertThatThrownBy(() -> rethrow((ThrowingUnaryOperator<Object>) value -> { throw new Exception(); })
                 .apply("value")).isInstanceOf(RuntimeException.class);
     }
     
     @Test
-    public void shouldRethrowRunnable() throws Exception {
+    public void shouldRethrowRunnable() {
         assertThatThrownBy(() -> rethrow((ThrowingRunnable) () -> { throw new Exception(); })
                 .run()).isInstanceOf(RuntimeException.class);
     }

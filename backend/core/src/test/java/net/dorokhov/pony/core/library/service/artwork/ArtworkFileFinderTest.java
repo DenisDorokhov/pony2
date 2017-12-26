@@ -1,14 +1,14 @@
 package net.dorokhov.pony.core.library.service.artwork;
 
-import java.io.File;
-import java.io.IOException;
-
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.core.library.service.filetree.domain.FolderNode;
 import net.dorokhov.pony.core.library.service.filetree.domain.ImageNode;
 import net.dorokhov.pony.core.library.service.image.domain.ImageSize;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -24,7 +24,7 @@ public class ArtworkFileFinderTest {
     private final ArtworkFileFinder artworkFileFinder = new ArtworkFileFinder(RATIO_MIN, RATIO_MAX, FILE_NAMES, FOLDER_NAMES);
 
     @Test
-    public void shouldNotFindNotExistingArtwork() throws Exception {
+    public void shouldNotFindNotExistingArtwork() {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -33,7 +33,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldFindArtworkInCurrentFolder() throws Exception {
+    public void shouldFindArtworkInCurrentFolder() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -46,7 +46,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldFindArtworkInParentFolder() throws Exception {
+    public void shouldFindArtworkInParentFolder() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         ImageNode image = mockImage(new File("root/image.png"), rootFolder);
@@ -61,7 +61,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldFindArtworkInChildFolder() throws Exception {
+    public void shouldFindArtworkInChildFolder() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -76,7 +76,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldReturnNothingWhenFailing() throws Exception {
+    public void shouldReturnNothingWhenFailing() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -89,7 +89,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldRespectRatio() throws Exception {
+    public void shouldRespectRatio() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -105,7 +105,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldLookForGivenImageNamesFirst() throws Exception {
+    public void shouldLookForGivenImageNamesFirst() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -123,7 +123,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldLookForGivenFolderNamesFirst() throws Exception {
+    public void shouldLookForGivenFolderNamesFirst() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);
@@ -145,7 +145,7 @@ public class ArtworkFileFinderTest {
     }
 
     @Test
-    public void shouldNotFailIfNoArtworkIsFoundInChildFolder() throws Exception {
+    public void shouldNotFailIfNoArtworkIsFoundInChildFolder() throws IOException {
 
         FolderNode rootFolder = mockFolder(new File("root"), null);
         AudioNode audio = mockAudio(new File("root/song.mp3"), rootFolder);

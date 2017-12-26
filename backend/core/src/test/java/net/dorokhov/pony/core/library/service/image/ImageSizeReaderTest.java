@@ -1,13 +1,12 @@
 package net.dorokhov.pony.core.library.service.image;
 
 import com.google.common.io.ByteStreams;
-import net.dorokhov.pony.core.library.service.image.ImageSizeReader;
 import net.dorokhov.pony.core.library.service.image.domain.ImageSize;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,25 +19,30 @@ public class ImageSizeReaderTest {
     private final ImageSizeReader imageSizeReader = new ImageSizeReader();
 
     @Test
-    public void shouldReadFromInputStream() throws Exception {
+    public void shouldReadFromInputStream() throws IOException {
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
+
             ImageSize size = imageSizeReader.read(stream);
+
             assertThat(size).isEqualTo(IMAGE_SIZE);
         }
     }
 
     @Test
-    public void shouldReadFromBytes() throws Exception {
+    public void shouldReadFromBytes() throws IOException {
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
+
             ImageSize size = imageSizeReader.read(ByteStreams.toByteArray(stream));
+
             assertThat(size).isEqualTo(IMAGE_SIZE);
         }
     }
 
     @Test
-    public void shouldReadFromFile() throws Exception {
-        File file = IMAGE_RESOURCE.getFile();
-        ImageSize size = imageSizeReader.read(file);
+    public void shouldReadFromFile() throws IOException {
+
+        ImageSize size = imageSizeReader.read(IMAGE_RESOURCE.getFile());
+
         assertThat(size).isEqualTo(IMAGE_SIZE);
     }
 }

@@ -57,7 +57,7 @@ import static org.springframework.transaction.support.TransactionSynchronization
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScanJobServiceImplTest {
-    
+
     @InjectMocks
     private ScanJobServiceImpl scanJobService;
 
@@ -69,7 +69,7 @@ public class ScanJobServiceImplTest {
     private LibraryScanner libraryScanner;
     @Mock
     private LogService logService;
-    
+
     @Spy
     @SuppressWarnings("unused")
     private final Executor executor = new SyncTaskExecutor();
@@ -78,39 +78,45 @@ public class ScanJobServiceImplTest {
     private final PlatformTransactionManager transactionManager = transactionManager();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         initSynchronization();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         clearSynchronization();
     }
 
     @Test
-    public void shouldGetAll() throws Exception {
+    public void shouldGetAll() {
+
         Page<ScanJob> page = new PageImpl<>(emptyList());
         when(scanJobRepository.findAll((Pageable) any())).thenReturn(page);
+
         assertThat(scanJobService.getAll(new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
-    public void shouldGetById() throws Exception {
+    public void shouldGetById() {
+
         ScanJob scanJob = scanJobFull();
         when(scanJobRepository.findOne((Long) any())).thenReturn(scanJob);
+
         assertThat(scanJobService.getById(1L)).isSameAs(scanJob);
     }
 
     @Test
-    public void shouldGetLastSuccessfulJob() throws Exception {
+    public void shouldGetLastSuccessfulJob() {
+
         ScanJob scanJob = scanJobFull();
         when(scanJobRepository.findFirstByStatusOrderByUpdateDateDesc(any())).thenReturn(scanJob);
+
         assertThat(scanJobService.getLastSuccessfulJob()).isSameAs(scanJob);
     }
 
     @Test
-    public void shouldExecuteScanJob() throws Exception {
-        
+    public void shouldExecuteScanJob() throws IOException, ConcurrentScanException {
+
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
@@ -120,10 +126,10 @@ public class ScanJobServiceImplTest {
             observer.accept(new ScanProgress(FULL_PREPARING, emptyList(), Value.of(1, 1)));
             return scanResult;
         });
-        
+
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);
-        
+
         ScanJob scanJobStarting = scanJobService.startScanJob();
         assertThat(scanJobStarting.getScanType()).isSameAs(FULL);
         assertThat(scanJobStarting.getStatus()).isSameAs(STARTING);
@@ -132,24 +138,24 @@ public class ScanJobServiceImplTest {
         verify(logService).info(any(), any(), any());
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-        
+
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
         verify(logService, times(3)).info(any(), any(), any());
 
         ScanJob scanJobStarted = savedScanJob.getAllValues().get(1);
         ScanJob scanJobComplete = savedScanJob.getAllValues().get(2);
-        
+
         assertThat(scanJobStarted.getScanType()).isSameAs(FULL);
         assertThat(scanJobStarted.getStatus()).isSameAs(STARTED);
         assertThat(scanJobStarted.getLogMessage()).isNotNull();
         assertThat(scanJobStarted.getScanResult()).isNull();
-        
+
         assertThat(scanJobComplete.getScanType()).isSameAs(FULL);
         assertThat(scanJobComplete.getStatus()).isSameAs(ScanJob.Status.COMPLETE);
         assertThat(scanJobComplete.getLogMessage()).isNotNull();
         assertThat(scanJobComplete.getScanResult()).isSameAs(scanResult);
-        
+
         assertThat(observer.getCallCount()).isEqualTo(5);
 
         observer.assertThatStartingAt(0);
@@ -160,20 +166,21 @@ public class ScanJobServiceImplTest {
             assertThat(scanJobProgress.getScanProgress().getFiles()).isEmpty();
             assertThat(scanJobProgress.getScanProgress().getValue()).isEqualTo(Value.of(1, 1));
         });
-        
+
         observer.assertThatCompletingAt(3);
         observer.assertThatCompletedAt(4);
 
         scanJobService.removeObserver(observer);
 
         scanJobService.startScanJob();
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         assertThat(observer.getCallCount()).isEqualTo(5);
     }
 
     @Test
-    public void shouldExecuteEditJob() throws Exception {
+    public void shouldExecuteEditJob() throws IOException, SongNotFoundException, ConcurrentScanException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
@@ -230,25 +237,28 @@ public class ScanJobServiceImplTest {
         scanJobService.removeObserver(observer);
 
         scanJobService.startScanJob();
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         assertThat(observer.getCallCount()).isEqualTo(5);
     }
 
     @Test
-    public void shouldFailScanJobOnIOException() throws Exception {
+    public void shouldFailScanJobOnIOException() throws IOException, ConcurrentScanException {
+        
         doTestFailScanJobOnException(new IOException());
+        
         verify(logService).error(any(), any(), any());
     }
 
     @Test
-    public void shouldFailScanJobOnConcurrentScanException() throws Exception {
+    public void shouldFailScanJobOnConcurrentScanException() throws ConcurrentScanException, InterruptedException {
 
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         scanJobService.startScanJob();
-        
+
         assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
-        
+
         AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
         Thread thread = new Thread(() -> {
             try {
@@ -263,29 +273,35 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailScanJobOnUnexpectedException() throws Exception {
+    public void shouldFailScanJobOnUnexpectedException() throws IOException, ConcurrentScanException {
+
         doTestFailScanJobOnException(new RuntimeException());
+
         verify(logService).error(any(), any(), any());
     }
 
     @Test
-    public void shouldFailEditJobOnSongNotFoundException() throws Exception {
+    public void shouldFailEditJobOnSongNotFoundException() throws ConcurrentScanException, IOException, SongNotFoundException {
+
         doTestFailEditJobOnException(new SongNotFoundException(1L));
+
         verify(logService).error(any(), any(), any());
     }
 
     @Test
-    public void shouldFailEditJobOnIOException() throws Exception {
+    public void shouldFailEditJobOnIOException() throws ConcurrentScanException, IOException, SongNotFoundException {
+
         doTestFailEditJobOnException(new IOException());
+
         verify(logService).error(any(), any(), any());
     }
 
     @Test
-    public void shouldFailEditJobOnConcurrentScanException() throws Exception {
+    public void shouldFailEditJobOnConcurrentScanException() throws ConcurrentScanException, InterruptedException {
 
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         scanJobService.startEditJob(emptyList());
-        
+
         assertThatThrownBy(() -> scanJobService.startEditJob(emptyList())).isInstanceOf(ConcurrentScanException.class);
 
         AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
@@ -302,27 +318,29 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailEditJobOnUnexpectedException() throws Exception {
+    public void shouldFailEditJobOnUnexpectedException() throws ConcurrentScanException, IOException, SongNotFoundException {
+
         doTestFailEditJobOnException(new RuntimeException());
+
         verify(logService).error(any(), any(), any());
     }
 
     @Test
-    public void shouldIgnoreExceptionsThrownByObservers() throws Exception {
-        
+    public void shouldIgnoreExceptionsThrownByObservers() throws ConcurrentScanException {
+
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
-        
         ThrowingScanJobServiceObserver observer = new ThrowingScanJobServiceObserver();
         scanJobService.addObserver(observer);
-        
+
         scanJobService.startScanJob();
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-        
+
         assertThat(observer.getCallCount()).isEqualTo(4);
     }
 
-    private void doTestFailScanJobOnException(Exception e) throws Exception {
-        
+    private void doTestFailScanJobOnException(Exception e) throws IOException, ConcurrentScanException {
+
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
@@ -331,7 +349,7 @@ public class ScanJobServiceImplTest {
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);
-        
+
         scanJobService.startScanJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
@@ -344,7 +362,7 @@ public class ScanJobServiceImplTest {
         assertThat(scanJobFailed.getStatus()).isSameAs(ScanJob.Status.FAILED);
         assertThat(scanJobFailed.getLogMessage()).isNotNull();
         assertThat(scanJobFailed.getScanResult()).isNull();
-        
+
         assertThat(observer.getCallCount()).isEqualTo(4);
 
         observer.assertThatStartingAt(0);
@@ -352,9 +370,9 @@ public class ScanJobServiceImplTest {
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
     }
-    
-    private void doTestFailEditJobOnException(Exception e) throws Exception {
-        
+
+    private void doTestFailEditJobOnException(Exception e) throws IOException, SongNotFoundException, ConcurrentScanException {
+
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
         when(scanJobRepository.findOne((Long) any())).thenReturn(scanJobEdit());
@@ -364,6 +382,7 @@ public class ScanJobServiceImplTest {
         scanJobService.addObserver(observer);
 
         scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
@@ -383,7 +402,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
     }
-    
+
     private LogMessage logMessage() {
         return LogMessage.builder()
                 .type(LogMessage.Level.DEBUG)
@@ -391,7 +410,7 @@ public class ScanJobServiceImplTest {
                 .text("someText")
                 .build();
     }
-    
+
     private WritableAudioData writableAudioData() {
         return WritableAudioData.builder().build();
     }
@@ -403,10 +422,10 @@ public class ScanJobServiceImplTest {
             private enum Type {
                 STARTING, STARTED, PROGRESS, COMPLETING, COMPLETED, FAILING, FAILED
             }
-            
+
             private final Type type;
             private final ScanJobProgress scanJobProgress;
-            
+
             public Call(Type type) {
                 this(type, null);
             }
@@ -427,21 +446,21 @@ public class ScanJobServiceImplTest {
         }
 
         private final List<Call> calls = new ArrayList<>();
-        
+
         public int getCallCount() {
             return calls.size();
         }
-        
+
         public void assertThatStartingAt(int index) {
-            assertThat(calls).element(index).satisfies(call -> 
+            assertThat(calls).element(index).satisfies(call ->
                     assertThat(call.getType()).isSameAs(Call.Type.STARTING));
         }
-        
+
         public void assertThatStartedAt(int index) {
-            assertThat(calls).element(index).satisfies(call -> 
+            assertThat(calls).element(index).satisfies(call ->
                     assertThat(call.getType()).isSameAs(Call.Type.STARTED));
         }
-        
+
         public void assertThatProgressedAt(int index, Consumer<ScanJobProgress> handler) {
             assertThat(calls).element(index).satisfies(call -> {
                 assertThat(call.getType()).isSameAs(Call.Type.PROGRESS);
@@ -455,7 +474,7 @@ public class ScanJobServiceImplTest {
         }
 
         public void assertThatCompletedAt(int index) {
-            assertThat(calls).element(index).satisfies(call -> 
+            assertThat(calls).element(index).satisfies(call ->
                     assertThat(call.getType()).isSameAs(Call.Type.COMPLETED));
         }
 
@@ -465,7 +484,7 @@ public class ScanJobServiceImplTest {
         }
 
         public void assertThatFailedAt(int index) {
-            assertThat(calls).element(index).satisfies(call -> 
+            assertThat(calls).element(index).satisfies(call ->
                     assertThat(call.getType()).isSameAs(Call.Type.FAILED));
         }
 
@@ -519,7 +538,7 @@ public class ScanJobServiceImplTest {
             calls.add(new Call(Call.Type.FAILED));
         }
     }
-    
+
     private static class ThrowingScanJobServiceObserver implements ScanJobService.Observer {
 
         private int callCount = 0;

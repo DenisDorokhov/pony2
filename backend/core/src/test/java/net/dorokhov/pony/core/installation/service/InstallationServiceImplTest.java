@@ -3,6 +3,7 @@ package net.dorokhov.pony.core.installation.service;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.api.config.service.ConfigService;
 import net.dorokhov.pony.api.installation.domain.Installation;
+import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony.core.installation.repository.InstallationRepository;
 import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.api.installation.service.exception.AlreadyInstalledException;
@@ -54,45 +55,54 @@ public class InstallationServiceImplTest {
     private LogService logService;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         initSynchronization();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         clearSynchronization();
     }
 
     @Test
-    public void shouldGetInstallation() throws Exception {
+    public void shouldGetInstallation() {
+
         Installation installation = installation();
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(installation)));
+
         assertThat(installationService.getInstallation()).isSameAs(installation);
     }
 
     @Test
-    public void shouldGetNoInstallation() throws Exception {
+    public void shouldGetNoInstallation() {
+
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
+
         assertThat(installationService.getInstallation()).isNull();
     }
 
     @Test
-    public void shouldFailWhenMultipleInstallationsDetected() throws Exception {
+    public void shouldFailWhenMultipleInstallationsDetected() {
+
         Installation installation = installation();
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(installation, installation)));
+
         assertThatThrownBy(installationService::getInstallation).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldInstall() throws Exception {
+    public void shouldInstall() throws AlreadyInstalledException, DuplicateEmailException {
         
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
         when(buildVersionProvider.getBuildVersion()).thenReturn(buildVersion());
         Installation installation = installation();
+
         when(installationRepository.save((Installation) any())).thenReturn(installation);
         
         InstallationCommand command = installationCommand();
+
         assertThat(installationService.install(command)).isSameAs(installation);
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
         verify(configService).saveAutoScanInterval(command.getAutoScanInterval());
@@ -109,14 +119,16 @@ public class InstallationServiceImplTest {
     }
 
     @Test
-    public void shouldFailWhenAlreadyInstalled() throws Exception {
+    public void shouldFailWhenAlreadyInstalled() {
+
         Installation installation = installation();
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(installation)));
+
         assertThatThrownBy(() -> installationService.install(installationCommand())).isInstanceOf(AlreadyInstalledException.class);
     }
 
     @Test
-    public void shouldUpgrade() throws Exception {
+    public void shouldUpgrade() throws NotInstalledException {
 
         Installation installation = installationBuilder().version("2.0").build();
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(installation)));
@@ -124,6 +136,7 @@ public class InstallationServiceImplTest {
         when(installationRepository.save((Installation) any())).thenReturn(installation);
 
         assertThat(installationService.upgradeIfNeeded()).isSameAs(installation);
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<Installation> savedInstallation = ArgumentCaptor.forClass(Installation.class);
@@ -133,7 +146,7 @@ public class InstallationServiceImplTest {
     }
 
     @Test
-    public void shouldNotUpgradeWhenNotNeeded() throws Exception {
+    public void shouldNotUpgradeWhenNotNeeded() throws NotInstalledException {
 
         Installation installation = installation();
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(installation)));
@@ -145,8 +158,10 @@ public class InstallationServiceImplTest {
     }
 
     @Test
-    public void shouldFailUpgradeWhenNotInstalled() throws Exception {
+    public void shouldFailUpgradeWhenNotInstalled() {
+
         when(installationRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
+
         assertThatThrownBy(installationService::upgradeIfNeeded).isInstanceOf(NotInstalledException.class);
     }
     

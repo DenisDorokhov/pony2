@@ -49,8 +49,8 @@ public class ExportServiceImplTest {
     private SongRepository songRepository;
 
     @Test
-    public void shouldExportSong() throws Exception {
-        
+    public void shouldExportSong() {
+
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -63,7 +63,7 @@ public class ExportServiceImplTest {
                 .path("foo/bar.mp3")
                 .build();
         when(songRepository.findOne((Long) any())).thenReturn(song);
-        
+
         ExportBundle exportBundle = exportService.exportSong(1L);
 
         assertThat(exportBundle).isNotNull();
@@ -73,8 +73,8 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldExportSongWithoutName() throws Exception {
-        
+    public void shouldExportSongWithoutName() {
+
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -85,7 +85,7 @@ public class ExportServiceImplTest {
                 .path("foo/bar.mp3")
                 .build();
         when(songRepository.findOne((Long) any())).thenReturn(song);
-        
+
         ExportBundle exportBundle = exportService.exportSong(1L);
 
         assertThat(exportBundle).isNotNull();
@@ -95,8 +95,8 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldExportSongWithUnknownArtist() throws Exception {
-        
+    public void shouldExportSongWithUnknownArtist() {
+
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -107,9 +107,9 @@ public class ExportServiceImplTest {
                 .path("foo/bar.mp3")
                 .build();
         when(songRepository.findOne((Long) any())).thenReturn(song);
-        
+
         ExportBundle exportBundle = exportService.exportSong(1L);
-        
+
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
@@ -117,7 +117,7 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldExportAlbum() throws Exception {
+    public void shouldExportAlbum() {
 
         Song song1 = songBuilder()
                 .album(Album.builder()
@@ -152,27 +152,27 @@ public class ExportServiceImplTest {
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - 1986 - someAlbum.zip");
         checkZipExportBundle(exportBundle, zipContent -> {
-                assertThat(zipContent.getEntries().stream()
-                        .map(ExportServiceImpl.ZipEntry::getFile)
-                        .collect(Collectors.toList()))
-                        .containsExactly(
-                                new File("foo/song1.mp3"),
-                                new File("foo/song2.mp3"),
-                                new File("foo/song3.mp3")
-                        );
-                assertThat(zipContent.getEntries().stream()
-                        .map(ExportServiceImpl.ZipEntry::getPath)
-                        .collect(Collectors.toList()))
-                        .containsExactly(
-                                Paths.get("someArtist/1986 - someAlbum/CD1/01 - song1.mp3"),
-                                Paths.get("someArtist/1986 - someAlbum/CD1/12 - song2.mp3"),
-                                Paths.get("someArtist/1986 - someAlbum/CD2/song3.mp3")
-                        );
+            assertThat(zipContent.getEntries().stream()
+                    .map(ExportServiceImpl.ZipEntry::getFile)
+                    .collect(Collectors.toList()))
+                    .containsExactly(
+                            new File("foo/song1.mp3"),
+                            new File("foo/song2.mp3"),
+                            new File("foo/song3.mp3")
+                    );
+            assertThat(zipContent.getEntries().stream()
+                    .map(ExportServiceImpl.ZipEntry::getPath)
+                    .collect(Collectors.toList()))
+                    .containsExactly(
+                            Paths.get("someArtist/1986 - someAlbum/CD1/01 - song1.mp3"),
+                            Paths.get("someArtist/1986 - someAlbum/CD1/12 - song2.mp3"),
+                            Paths.get("someArtist/1986 - someAlbum/CD2/song3.mp3")
+                    );
         });
     }
 
     @Test
-    public void shouldExportAlbumWithoutName() throws Exception {
+    public void shouldExportAlbumWithoutName() {
 
         Song song1 = songBuilder()
                 .album(Album.builder()
@@ -204,7 +204,7 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldExportArtist() throws Exception {
+    public void shouldExportArtist() {
 
         Artist artist = Artist.builder()
                 .name("someArtist")
@@ -264,35 +264,43 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldReturnNullIfSongNotFound() throws Exception {
+    public void shouldReturnNullIfSongNotFound() {
         assertThat(exportService.exportSong(1L)).isNull();
     }
 
     @Test
-    public void shouldReturnNullIfAlbumNotFound() throws Exception {
+    public void shouldReturnNullIfAlbumNotFound() {
+
         when(songRepository.findByAlbumId(any(), any())).thenReturn(emptyList());
+
         assertThat(exportService.exportAlbum(1L)).isNull();
     }
 
     @Test
-    public void shouldFailIfArtistNotFound() throws Exception {
+    public void shouldFailIfArtistNotFound() {
+
         when(songRepository.findByAlbumArtistId(any(), any())).thenReturn(emptyList());
+
         assertThat(exportService.exportArtist(1L)).isNull();
     }
 
     @Test
-    public void shouldWriteMp3Content() throws Exception {
+    public void shouldWriteMp3Content() throws IOException {
+
         File sourceFile = SONG_RESOURCE.getFile();
         File targetFile = tempFolder.newFile("target.mp3");
+
         try (OutputStream outputStream = new FileOutputStream(targetFile)) {
             new Mp3Content(sourceFile).write(outputStream);
         }
+
         assertThat(DigestUtils.md5Digest(new FileInputStream(sourceFile)))
                 .isEqualTo(DigestUtils.md5Digest(new FileInputStream(targetFile)));
     }
 
     @Test
-    public void shouldWriteZipContent() throws Exception {
+    public void shouldWriteZipContent() throws IOException {
+
         File sourceFile = SONG_RESOURCE.getFile();
         ZipContent zipContent = new ZipContent(ImmutableList.of(
                 new ExportServiceImpl.ZipEntry(sourceFile, Paths.get("song1.mp3")),
@@ -301,9 +309,11 @@ public class ExportServiceImplTest {
                 new ExportServiceImpl.ZipEntry(sourceFile, Paths.get("foo/bar/song4.mp3"))
         ));
         File targetFile = tempFolder.newFile("target.zip");
+
         try (OutputStream outputStream = new FileOutputStream(targetFile)) {
             zipContent.write(outputStream);
         }
+
         assertThat(getFileListFromZip(targetFile))
                 .contains("song1.mp3", "foo/song2.mp3", "foo/bar/song3.mp3", "foo/bar/song4.mp3");
     }

@@ -12,6 +12,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
+
 import static net.dorokhov.pony.test.ArtworkFixtures.artworkBuilder;
 import static net.dorokhov.pony.test.ArtworkFixtures.artworkFiles;
 import static net.dorokhov.pony.test.ReadableAudioDataFixtures.readableAudioDataBuilder;
@@ -26,7 +28,8 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
     private ArgumentCaptor<Song> songCaptor;
 
     @Test
-    public void shouldCreateSong() throws Exception {
+    public void shouldCreateSong() {
+
         AudioNode audioNode = audioNode();
         ReadableAudioData audioData = readableAudioDataBuilder()
                 .size(100L)
@@ -44,7 +47,9 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
                 .album("someAlbum")
                 .year(1986)
                 .build();
+
         Song song = libraryImporter.importAudioData(audioNode, audioData);
+
         verify(songRepository).save((Song) any());
         assertThat(song.getPath()).isEqualTo(audioNode.getFile().getAbsolutePath());
         assertThat(song.getFileType()).isEqualTo(audioData.getFileType());
@@ -70,157 +75,199 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldUpdateSongIfFileTypeChanged() throws Exception {
+    public void shouldUpdateSongIfFileTypeChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .fileType(FileType.of("audio/mpeg", "mp3")));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .fileType(FileType.of("audio/ogg", "ogg"))
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getFileType())
                 .isEqualTo(FileType.of("audio/ogg", "ogg"));
     }
 
     @Test
-    public void shouldUpdateSongIfSizeChanged() throws Exception {
+    public void shouldUpdateSongIfSizeChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .size(1L));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .size(2L)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getSize()).isEqualTo(2L);
     }
 
     @Test
-    public void shouldUpdateSongIfDurationChanged() throws Exception {
+    public void shouldUpdateSongIfDurationChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .duration(1L));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .duration(2L)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getDuration()).isEqualTo(2L);
     }
 
     @Test
-    public void shouldUpdateSongIfBitrateChanged() throws Exception {
+    public void shouldUpdateSongIfBitrateChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .bitRate(1L));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .bitRate(2L)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getBitRate()).isEqualTo(2L);
     }
 
     @Test
-    public void shouldUpdateSongIfBitrateVariableChanged() throws Exception {
+    public void shouldUpdateSongIfBitrateVariableChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .bitRateVariable(false));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .bitRateVariable(true)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().isBitRateVariable()).isEqualTo(true);
     }
 
     @Test
-    public void shouldUpdateSongIfDiscNumberChanged() throws Exception {
+    public void shouldUpdateSongIfDiscNumberChanged() {
+        
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .discNumber(1));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .discNumber(2)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getDiscNumber()).isEqualTo(2);
     }
 
     @Test
-    public void shouldUpdateSongIfDiscCountChanged() throws Exception {
+    public void shouldUpdateSongIfDiscCountChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .discCount(1));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .discCount(2)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getDiscCount()).isEqualTo(2);
     }
 
     @Test
-    public void shouldUpdateSongIfTrackNumberChanged() throws Exception {
+    public void shouldUpdateSongIfTrackNumberChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .trackNumber(1));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .trackNumber(2)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getTrackNumber()).isEqualTo(2);
     }
 
     @Test
-    public void shouldUpdateSongIfTrackCountChanged() throws Exception {
+    public void shouldUpdateSongIfTrackCountChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .trackCount(1));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .trackCount(2)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getTrackCount()).isEqualTo(2);
     }
 
     @Test
-    public void shouldUpdateSongIfNameChanged() throws Exception {
+    public void shouldUpdateSongIfNameChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .name("oldValue"));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .title("value")
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getName()).isEqualTo("value");
     }
 
     @Test
-    public void shouldUpdateSongIfGenreNameChanged() throws Exception {
+    public void shouldUpdateSongIfGenreNameChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .genreName("oldValue"));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .genre("value")
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         verify(libraryCleaner).deleteGenreIfUnused(any());
         assertThat(songCaptor.getValue().getGenreName()).isEqualTo("value");
     }
 
     @Test
-    public void shouldUpdateSongIfArtistNameChanged() throws Exception {
+    public void shouldUpdateSongIfArtistNameChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .artistName("oldValue"));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .artist("value")
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getArtistName()).isEqualTo("value");
     }
 
     @Test
-    public void shouldUpdateSongIfAlbumArtistNameChanged() throws Exception {
+    public void shouldUpdateSongIfAlbumArtistNameChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .albumArtistName("oldValue"));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .albumArtist("value")
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getAlbumArtistName()).isEqualTo("value");
     }
 
     @Test
-    public void shouldUpdateSongIfAlbumNameChanged() throws Exception {
+    public void shouldUpdateSongIfAlbumNameChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .albumName("oldValue"));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .album("value")
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         verify(libraryCleaner).deleteAlbumIfUnused(any());
         verify(libraryCleaner).deleteArtistIfUnused(any());
@@ -228,18 +275,21 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldUpdateSongIfYearNameChanged() throws Exception {
+    public void shouldUpdateSongIfYearNameChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder
                 .year(1986));
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder
                 .year(1960)
                 .build());
+
         verify(songRepository).save(songCaptor.capture());
         assertThat(songCaptor.getValue().getYear()).isEqualTo(1960);
     }
 
     @Test
-    public void shouldUpdateSongIfArtworkChanged() throws Exception {
+    public void shouldUpdateSongIfArtworkChanged() throws IOException {
         
         Artwork existingArtwork = artworkBuilder().id(1L).build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder.artwork(existingArtwork));
@@ -253,9 +303,12 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldSkipSongIfNothingChanged() throws Exception {
+    public void shouldSkipSongIfNothingChanged() {
+
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder);
+
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());
+
         verify(songRepository, never()).save((Song) any());
     }
 }

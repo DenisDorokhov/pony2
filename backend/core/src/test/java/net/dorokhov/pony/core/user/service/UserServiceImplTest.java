@@ -32,74 +32,86 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserServiceImplTest {
-    
+
     @InjectMocks
     @Spy
     private UserServiceImpl userService;
-    
+
     @Mock
     private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
 
     @Test
-    public void shouldGetById() throws Exception {
+    public void shouldGetById() {
+
         User user = user();
         when(userRepository.findOne(1L)).thenReturn(user);
+
         assertThat(userService.getById(1L)).isSameAs(user);
     }
 
     @Test
-    public void shouldGetByEmail() throws Exception {
+    public void shouldGetByEmail() {
+
         User user = user();
         when(userRepository.findByEmail("someEmail")).thenReturn(user);
+
         assertThat(userService.getByEmail("someEmail")).isSameAs(user);
     }
 
     @Test
-    public void shouldGetAll() throws Exception {
+    public void shouldGetAll() {
+
         List<User> users = ImmutableList.of(user());
         when(userRepository.findAll((Sort) any())).thenReturn(users);
+
         assertThat(userService.getAll()).isSameAs(users);
     }
 
     @Test
-    public void shouldCheckUserPassword() throws Exception {
+    public void shouldCheckUserPassword() throws UserNotFoundException {
+
         User existingUser = user();
         when(userRepository.findOne(existingUser.getId())).thenReturn(existingUser);
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
+
         assertThat(userService.checkUserPassword(existingUser.getId(), "somePassword")).isTrue();
     }
 
     @Test
-    public void shouldFailUserPasswordCheckIfUserNotFound() throws Exception {
+    public void shouldFailUserPasswordCheckIfUserNotFound() {
+
         when(userRepository.findOne(1L)).thenReturn(null);
-        assertThatThrownBy(() -> userService.checkUserPassword(1L, "somePassword")).isInstanceOfSatisfying(UserNotFoundException.class, e -> 
+
+        assertThatThrownBy(() -> userService.checkUserPassword(1L, "somePassword")).isInstanceOfSatisfying(UserNotFoundException.class, e ->
                 assertThat(e.getId()).isEqualTo(1L));
     }
 
     @Test
-    public void shouldFailUserPasswordCheckIfPasswordDoesNotMatch() throws Exception {
+    public void shouldFailUserPasswordCheckIfPasswordDoesNotMatch() throws UserNotFoundException {
+
         User existingUser = user();
         when(userRepository.findOne(existingUser.getId())).thenReturn(existingUser);
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
+
         assertThat(userService.checkUserPassword(1L, "somePassword")).isFalse();
     }
 
     @Test
-    public void shouldCreateUser() throws Exception {
-        
+    public void shouldCreateUser() throws DuplicateEmailException {
+
         when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");
         when(userRepository.save((User) any())).thenAnswer(returnsFirstArg());
-
         UserCreationCommand command = UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword")
                 .roles(User.Role.USER, User.Role.ADMIN)
                 .build();
+
         User createdUser = userService.create(command);
-        
+
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).satisfies(user -> {
@@ -112,29 +124,31 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldFailUserCreationIfUserExists() throws Exception {
+    public void shouldFailUserCreationIfUserExists() {
+
         User existingUser = user();
         when(userRepository.findByEmail("someEmail")).thenReturn(existingUser);
+
         assertThatThrownBy(() -> userService.create(UserCreationCommand.builder()
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword")
-                .build())).isInstanceOf(DuplicateEmailException.class);        
+                .build())).isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test
-    public void shouldUpdateUserUnsafely() throws Exception {
+    public void shouldUpdateUserUnsafely() throws UserNotFoundException, DuplicateEmailException {
 
         User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
         when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
-
         UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
                 .email("someEmail")
                 .roles(User.Role.USER, User.Role.ADMIN)
                 .build();
+
         User updatedUser = userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -150,20 +164,20 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldUpdateUserPasswordUnsafely() throws Exception {
+    public void shouldUpdateUserPasswordUnsafely() throws UserNotFoundException, DuplicateEmailException {
 
         User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
         when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(existingUser);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
         when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
-
         UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(existingUser.getId())
                 .name(existingUser.getName())
                 .email(existingUser.getEmail())
                 .newPassword("newPassword")
                 .build();
+
         User updatedUser = userService.update(command);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -175,7 +189,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldFailUnsafeUserUpdateIfUserNotFound() throws Exception {
+    public void shouldFailUnsafeUserUpdateIfUserNotFound() {
+
         when(userRepository.findOne(1L)).thenReturn(null);
         UnsafeUserUpdateCommand command = UnsafeUserUpdateCommand.builder()
                 .id(1L)
@@ -183,11 +198,13 @@ public class UserServiceImplTest {
                 .email("someEmail")
                 .newPassword("somePassword")
                 .build();
+
         assertThatThrownBy(() -> userService.update(command)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
-    public void shouldFailUnsafeUserUpdateIfNewUserEmailExists() throws Exception {
+    public void shouldFailUnsafeUserUpdateIfNewUserEmailExists() {
+
         User userToUpdate = userBuilder().email("otherEmail").build();
         when(userRepository.findOne(1L)).thenReturn(userToUpdate);
         User existingUser = userBuilder().id(2L).build();
@@ -198,29 +215,34 @@ public class UserServiceImplTest {
                 .email("someEmail")
                 .newPassword("somePassword")
                 .build();
+
         assertThatThrownBy(() -> userService.update(command)).isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test
-    public void shouldDeleteUser() throws Exception {
+    public void shouldDeleteUser() throws UserNotFoundException {
+
         User existingUser = user();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
+
         userService.delete(1L);
+
         verify(userRepository).delete(1L);
     }
 
     @Test
-    public void shouldFailUserDeletionIdUserNotFound() throws Exception {
+    public void shouldFailUserDeletionIdUserNotFound() {
+
         when(userRepository.findOne(1L)).thenReturn(null);
+
         assertThatThrownBy(() -> userService.delete(1L)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
-    public void shouldUpdateUserSafely() throws Exception {
+    public void shouldUpdateUserSafely() throws UserNotFoundException, InvalidPasswordException, DuplicateEmailException {
 
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
-
         User existingUser = User.builder()
                 .id(1L)
                 .name("oldName")
@@ -230,7 +252,6 @@ public class UserServiceImplTest {
                 .build();
         when(userRepository.findOne(1L)).thenReturn(existingUser);
         when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
-
         SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
                 .id(1L)
                 .name("someName")
@@ -238,8 +259,9 @@ public class UserServiceImplTest {
                 .oldPassword("oldPassword")
                 .newPassword("newPassword")
                 .build();
+
         User updatedUser = userService.update(command);
-        
+
         assertThat(updatedUser.getId()).isEqualTo(1L);
         assertThat(updatedUser.getName()).isEqualTo("someName");
         assertThat(updatedUser.getEmail()).isEqualTo("someEmail");
@@ -258,7 +280,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldFailSafeUserUpdateIfUserNotFound() throws Exception {
+    public void shouldFailSafeUserUpdateIfUserNotFound() {
+
         when(userRepository.findOne(1L)).thenReturn(null);
         SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
                 .id(1L)
@@ -266,11 +289,13 @@ public class UserServiceImplTest {
                 .email("someEmail")
                 .oldPassword("invalidPassword")
                 .build();
+
         assertThatThrownBy(() -> userService.update(command)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
-    public void shouldFailSafeUserUpdateIfOldPasswordIsInvalid() throws Exception {
+    public void shouldFailSafeUserUpdateIfOldPasswordIsInvalid() {
+
         when(userRepository.findOne(1L)).thenReturn(user());
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
         SafeUserUpdateCommand command = SafeUserUpdateCommand.builder()
@@ -279,6 +304,7 @@ public class UserServiceImplTest {
                 .email("someEmail")
                 .oldPassword("invalidPassword")
                 .build();
+
         assertThatThrownBy(() -> userService.update(command)).isInstanceOf(InvalidPasswordException.class);
     }
 }

@@ -1,10 +1,5 @@
 package net.dorokhov.pony.core.library.service.filetree.domain;
 
-import net.dorokhov.pony.core.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.FolderNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.ImageNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.LazyFolderNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.Node;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +37,8 @@ public class LazyFolderNodeTest {
     private File audio1_2;
 
     @Before
-    public void setUp() throws Exception {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void setUp() throws IOException {
         
         folder1 = new File(tempFolder.getRoot(), "folder1");
         folder1.mkdir();
@@ -67,8 +63,10 @@ public class LazyFolderNodeTest {
     }
 
     @Test
-    public void shouldNotGoOutOfRootFolder() throws Exception {
+    public void shouldNotGoOutOfRootFolder() {
+
         LazyFolderNode folderNode = new LazyFolderNode(folder1_1, tempFolder.getRoot(), fileNodeResolver);
+
         assertThat(folderNode.getParentFolder()).isNotNull();
         assertThat(folderNode.getParentFolder().getFile()).isEqualTo(folder1);
         assertThat(folderNode.getParentFolder().getParentFolder()).isNotNull();
@@ -77,38 +75,50 @@ public class LazyFolderNodeTest {
     }
 
     @Test
-    public void shouldCacheParentFolder() throws Exception {
+    public void shouldCacheParentFolder() {
+
         LazyFolderNode folderNode = new LazyFolderNode(folder1, tempFolder.getRoot(), fileNodeResolver);
+
         FolderNode parentFolder = folderNode.getParentFolder();
+
         assertThat(folderNode.getParentFolder()).isSameAs(parentFolder);
     }
 
     @Test
-    public void shouldCacheChildNodes() throws Exception {
+    public void shouldCacheChildNodes() {
+
         LazyFolderNode folderNode = new LazyFolderNode(folder1, tempFolder.getRoot(), fileNodeResolver);
+
         List<Node> childNodes = folderNode.getChildNodes();
+
         assertThat(childNodes.stream().filter(node -> node instanceof FolderNode).count()).isEqualTo(2);
         assertThat(childNodes.stream().map(Node::getFile)).containsExactlyInAnyOrder(folder1_1, folder1_2);
         assertThat(folderNode.getChildNodes()).isSameAs(childNodes);
     }
 
     @Test
-    public void shouldNotFailWhenFileNodeResolverThrowsIOException() throws Exception {
+    public void shouldNotFailWhenFileNodeResolverThrowsIOException() throws IOException {
+
         LazyFolderNode folderNode = new LazyFolderNode(folder1, tempFolder.getRoot(), fileNodeResolver);
         when(fileNodeResolver.resolveFileNode(any(), any())).thenThrow(new IOException());
+
         List<Node> childNodes = folderNode.getChildNodes();
+
         assertThat(childNodes.stream().map(Node::getFile)).containsExactlyInAnyOrder(folder1_1, folder1_2);
     }
 
     @Test
-    public void shouldNotFailWhenFileIsNotDirectory() throws Exception {
+    public void shouldNotFailWhenFileIsNotDirectory() {
+
         LazyFolderNode folderNode = new LazyFolderNode(image1_1, tempFolder.getRoot(), fileNodeResolver);
+
         List<Node> childNodes = folderNode.getChildNodes();
+
         assertThat(childNodes).isEmpty();
     }
 
     @Test
-    public void shouldGetChildrenByType() throws Exception {
+    public void shouldGetChildrenByType() throws IOException {
         
         LazyFolderNode folderNode = new LazyFolderNode(folder1, tempFolder.getRoot(), fileNodeResolver);
         when(fileNodeResolver.resolveFileNode(any(), any())).thenAnswer(invocation -> {

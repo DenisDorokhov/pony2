@@ -38,7 +38,8 @@ public class ScanJobSchedulerTest {
     private ScanJobService scanJobService;
 
     @Test
-    public void shouldStartAutoScanJobByInterval() throws Exception {
+    public void shouldStartAutoScanJobByInterval() throws ConcurrentScanException {
+        
         when(installationService.getInstallation()).thenReturn(installation());
         when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
         when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(ImmutableList.of(scanJobBuilder(ScanType.FULL)
@@ -47,49 +48,60 @@ public class ScanJobSchedulerTest {
                 .build())));
         ScanJob scanJob = scanJobFull();
         when(scanJobService.startScanJob()).thenReturn(scanJob);
+        
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isSameAs(scanJob);
     }
 
     @Test
-    public void shouldStartAutoScanJobIfRunningFirstTime() throws Exception {
+    public void shouldStartAutoScanJobIfRunningFirstTime() throws ConcurrentScanException {
+        
         when(installationService.getInstallation()).thenReturn(installation());
         when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
         when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(emptyList()));
         ScanJob scanJob = scanJobFull();
         when(scanJobService.startScanJob()).thenReturn(scanJob);
+        
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isSameAs(scanJob);
     }
 
     @Test
-    public void shouldSkipAutoScanJobIfAutoScanIsOff() throws Exception {
+    public void shouldSkipAutoScanJobIfAutoScanIsOff() throws ConcurrentScanException {
+        
         when(installationService.getInstallation()).thenReturn(installation());
         when(configService.getAutoScanInterval()).thenReturn(null);
+        
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService, never()).startScanJob();
     }
 
     @Test
-    public void shouldSkipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws Exception {
+    public void shouldSkipAutoScanJobIfLibraryIsAlreadyBeingScanned() throws ConcurrentScanException {
+        
         when(installationService.getInstallation()).thenReturn(installation());
         when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
         when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(emptyList()));
         when(scanJobService.startScanJob()).thenThrow(new ConcurrentScanException());
+        
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService).startScanJob();
     }
 
     @Test
-    public void shouldSkipAutoScanJobIfNotInstalled() throws Exception {
+    public void shouldSkipAutoScanJobIfNotInstalled() throws ConcurrentScanException {
+        
         when(installationService.getInstallation()).thenReturn(null);
+        
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService, never()).startScanJob();
     }
 
     @Test
-    public void shouldSkipAutoScanJobByInterval() throws Exception {
+    public void shouldSkipAutoScanJobByInterval() throws ConcurrentScanException {
+        
         when(installationService.getInstallation()).thenReturn(installation());
         when(configService.getAutoScanInterval()).thenReturn(24 * 60 * 60);
         when(scanJobService.getAll(any())).thenReturn(new PageImpl<>(ImmutableList.of(scanJobFull())));
+        
         assertThat(scanJobScheduler.startAutoScanJobIfNeeded()).isNull();
         verify(scanJobService, never()).startScanJob();
     }

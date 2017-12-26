@@ -1,17 +1,16 @@
 package net.dorokhov.pony.api.library.domain;
 
+import org.junit.Test;
+
 import java.time.LocalDateTime;
 import java.util.Arrays;
-
-import net.dorokhov.pony.api.library.domain.*;
-import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SongTest {
 
     @Test
-    public void shouldSort() throws Exception {
+    public void shouldSort() {
 
         Artist artist1 = Artist.builder().name("1").build();
         Artist artist2 = Artist.builder().name("2").build();
@@ -28,7 +27,6 @@ public class SongTest {
                 .trackNumber(1)
                 .name("1")
                 .build();
-
         Song song1_1_2 = songBuilder()
                 .album(album1_1)
                 .genre(genre)
@@ -44,7 +42,6 @@ public class SongTest {
                 .trackNumber(1)
                 .name("1")
                 .build();
-
         Song song1_2_2 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
@@ -52,7 +49,6 @@ public class SongTest {
                 .trackNumber(1)
                 .name("2")
                 .build();
-
         Song song1_2_3 = songBuilder()
                 .album(album1_2)
                 .genre(genre)
@@ -67,7 +63,7 @@ public class SongTest {
     }
 
     @Test
-    public void shouldBuildSearchTerms() throws Exception {
+    public void shouldBuildSearchTerms() {
 
         Song song1 = songBuilder()
                 .name("s1")
@@ -75,6 +71,7 @@ public class SongTest {
                 .albumArtistName("ar2")
                 .albumName("al1")
                 .build();
+
         assertThat(song1.getSearchTerms()).isEqualTo("s1 ar1 ar2 al1");
 
         Song song2 = new Song();
@@ -82,7 +79,7 @@ public class SongTest {
     }
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         Song eqSong1 = songBuilder().id(1L).build();
         Song eqSong2 = songBuilder().id(1L).build();

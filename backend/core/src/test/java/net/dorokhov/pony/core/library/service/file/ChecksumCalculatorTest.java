@@ -1,11 +1,12 @@
 package net.dorokhov.pony.core.library.service.file;
 
-import java.io.File;
-import java.io.InputStream;
-
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,23 +19,30 @@ public class ChecksumCalculatorTest {
     private final ChecksumCalculator checksumCalculator = new ChecksumCalculator();
 
     @Test
-    public void shouldCalculateStreamChecksum() throws Exception {
+    public void shouldCalculateStreamChecksum() throws IOException {
         try (InputStream stream = RESOURCE.getInputStream()) {
+
             String checksum = checksumCalculator.calculate(stream);
+
             assertThat(checksum).isEqualTo(CHECKSUM);
         }
     }
 
     @Test
-    public void shouldCalculateBytesChecksum() throws Exception {
+    public void shouldCalculateBytesChecksum() {
+
         String checksum = checksumCalculator.calculate(BYTES);
+
         assertThat(checksum).isEqualTo(CHECKSUM);
     }
 
     @Test
-    public void shouldCalculateFileChecksum() throws Exception {
+    public void shouldCalculateFileChecksum() throws IOException {
+
         File file = RESOURCE.getFile();
+
         String checksum = checksumCalculator.calculate(file);
+
         assertThat(checksum).isEqualTo(CHECKSUM);
     }
 }

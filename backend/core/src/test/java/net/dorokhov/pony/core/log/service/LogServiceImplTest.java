@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LogServiceImplTest {
-    
+
     private static final String PATTERN = "foo {}";
     private static final String ARGUMENT = "bar";
     private static final String ERROR_MESSAGE = "error";
@@ -32,48 +32,58 @@ public class LogServiceImplTest {
 
     @InjectMocks
     private LogServiceImpl logService;
-    
+
     @Mock
     private LogMessageRepository logMessageRepository;
-    
+
     @Mock
     private Logger logger;
 
     @Test
-    public void shouldGetByTypeAndDate() throws Exception {
+    public void shouldGetByTypeAndDate() {
+
         Page<LogMessage> page = new PageImpl<>(emptyList());
         when(logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(any(), any(), any(), any())).thenReturn(page);
+
         assertThat(logService.getByTypeAndDate(DEBUG, LocalDateTime.now(), LocalDateTime.now(), new PageRequest(0, 10))).isSameAs(page);
     }
 
     @Test
-    public void shouldLogDebugMessage() throws Exception {
+    public void shouldLogDebugMessage() {
+
         when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
+
         checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), DEBUG);
         verify(logger).debug(any(), (Object[]) any());
     }
-    
+
     @Test
-    public void shouldLogInfoMessage() throws Exception {
+    public void shouldLogInfoMessage() {
+
         when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
+
         checkLogMessage(logService.info(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), INFO);
         verify(logger).info(any(), (Object[]) any());
     }
-    
+
     @Test
-    public void shouldLogWarnMessage() throws Exception {
+    public void shouldLogWarnMessage() {
+
         when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
+
         checkLogMessage(logService.warn(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), WARN);
         verify(logger).warn(any(), (Object[]) any());
     }
-    
+
     @Test
-    public void shouldLogErrorMessage() throws Exception {
+    public void shouldLogErrorMessage() {
+
         when(logMessageRepository.save((LogMessage) any())).then(returnsFirstArg());
+
         checkLogMessage(logService.error(logger, PATTERN, ARGUMENT, new RuntimeException(ERROR_MESSAGE)), ERROR);
         verify(logger).error(any(), (Object[]) any());
     }
-    
+
     private void checkLogMessage(LogMessage logMessage, LogMessage.Level level) {
         assertThat(logMessage.getLevel()).isEqualTo(level);
         assertThat(logMessage.getPattern()).isEqualTo(PATTERN);

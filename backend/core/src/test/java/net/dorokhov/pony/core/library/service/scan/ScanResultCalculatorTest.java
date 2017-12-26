@@ -54,13 +54,13 @@ public class ScanResultCalculatorTest {
     private PlatformTransactionManager transactionManager = transactionManager();
 
     @Test
-    public void shouldCalculateAndSaveFirstScan() throws Exception {
+    public void shouldCalculateAndSaveFirstScan() {
         when(scanResultRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
         doTestCalculateAndSave(null);
     }
 
     @Test
-    public void shouldCalculateAndSaveConsequentScan() throws Exception {
+    public void shouldCalculateAndSaveConsequentScan() {
         LocalDateTime lastScanDate = LocalDateTime.now();
         when(scanResultRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
                 ImmutableList.of(scanResultBuilder(ScanType.FULL).date(lastScanDate).build())));

@@ -17,11 +17,13 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
     private ArgumentCaptor<Album> albumCaptor;
     
     @Test
-    public void shouldCreateAlbum() throws Exception {
+    public void shouldCreateAlbum() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
+
         verify(albumRepository).save(albumCaptor.capture());
         assertThat(albumCaptor.getValue()).satisfies(album -> {
             assertThat(album.getName()).isEqualTo("someValue");
@@ -30,17 +32,20 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldUpdateAlbumIfNameChanged() throws Exception {
+    public void shouldUpdateAlbumIfNameChanged() {
+
         Album existingAlbum = Album.builder()
                 .artist(Artist.builder().build())
                 .name("somevalue")
                 .year(1986)
                 .build();
         when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
+
         verify(albumRepository).save(albumCaptor.capture());
         assertThat(albumCaptor.getValue()).satisfies(album -> {
             assertThat(album.getName()).isEqualTo("someValue");
@@ -49,17 +54,20 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldUpdateAlbumIfYearChanged() throws Exception {
+    public void shouldUpdateAlbumIfYearChanged() {
+
         Album existingAlbum = Album.builder()
                 .artist(Artist.builder().build())
                 .name("someValue")
                 .year(1960)
                 .build();
         when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
+
         verify(albumRepository).save(albumCaptor.capture());
         assertThat(albumCaptor.getValue()).satisfies(album -> {
             assertThat(album.getName()).isEqualTo("someValue");
@@ -68,17 +76,20 @@ public class LibraryImporterAlbumTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldSkipAlbumIfNothingChanged() throws Exception {
+    public void shouldSkipAlbumIfNothingChanged() {
+
         Album existingAlbum = Album.builder()
                 .artist(Artist.builder().build())
                 .name("someValue")
                 .year(1986)
                 .build();
         when(albumRepository.findByArtistIdAndName(any(), any())).thenReturn(existingAlbum);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("someValue")
                 .year(1986)
                 .build());
+
         verify(albumRepository, never()).save((Album) any());
     }
 }

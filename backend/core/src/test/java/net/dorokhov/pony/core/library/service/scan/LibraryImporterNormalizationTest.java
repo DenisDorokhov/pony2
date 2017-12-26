@@ -13,10 +13,12 @@ import static org.mockito.Mockito.verify;
 public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTest {
 
     @Test
-    public void shouldNormalizeGenreName() throws Exception {
+    public void shouldNormalizeGenreName() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("some  value ")
                 .build());
+
         ArgumentCaptor<Genre> genreCaptor = ArgumentCaptor.forClass(Genre.class);
         verify(genreRepository).save(genreCaptor.capture());
         assertThat(genreCaptor.getValue()).satisfies(genre ->
@@ -24,10 +26,12 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
     }
 
     @Test
-    public void shouldNormalizeArtistName() throws Exception {
+    public void shouldNormalizeArtistName() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("some  value ")
                 .build());
+
         ArgumentCaptor<Artist> artistCaptor = ArgumentCaptor.forClass(Artist.class);
         verify(artistRepository).save(artistCaptor.capture());
         assertThat(artistCaptor.getValue()).satisfies(artist ->
@@ -35,10 +39,12 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
     }
 
     @Test
-    public void shouldNormalizeAlbumArtistName() throws Exception {
+    public void shouldNormalizeAlbumArtistName() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .albumArtist("some  value ")
                 .build());
+
         ArgumentCaptor<Artist> artistCaptor = ArgumentCaptor.forClass(Artist.class);
         verify(artistRepository).save(artistCaptor.capture());
         assertThat(artistCaptor.getValue()).satisfies(artist ->
@@ -46,10 +52,12 @@ public class LibraryImporterNormalizationTest extends AbstractLibraryImporterTes
     }
 
     @Test
-    public void shouldNormalizeAlbumName() throws Exception {
+    public void shouldNormalizeAlbumName() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .album("some  value ")
                 .build());
+
         ArgumentCaptor<Album> albumCaptor = ArgumentCaptor.forClass(Album.class);
         verify(albumRepository).save(albumCaptor.capture());
         assertThat(albumCaptor.getValue()).satisfies(album ->

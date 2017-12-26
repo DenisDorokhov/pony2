@@ -7,6 +7,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,29 +19,29 @@ public class FileTypeResolverTest {
     private FileTypeResolver fileTypeResolver = new FileTypeResolver();
 
     @Test
-    public void shouldResolveImageInputStream() throws Exception {
+    public void shouldResolveImageInputStream() throws IOException {
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             checkImageFileType(fileTypeResolver.resolve(stream));
         }
     }
 
     @Test
-    public void shouldResolveImageFile() throws Exception {
-        File file = IMAGE_RESOURCE.getFile();
-        checkImageFileType(fileTypeResolver.resolve(file));
+    public void shouldResolveImageFile() throws IOException {
+        checkImageFileType(fileTypeResolver.resolve(IMAGE_RESOURCE.getFile()));
     }
 
     @Test
-    public void shouldResolveImageContent() throws Exception {
+    public void shouldResolveImageContent() throws IOException {
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             checkImageFileType(fileTypeResolver.resolve(ByteStreams.toByteArray(stream)));
         }
     }
     
     @Test
-    public void shouldResolveMp3() throws Exception {
+    public void shouldResolveMp3() throws IOException {
 
         File file = new ClassPathResource("audio/empty.mp3").getFile();
+
         FileType fileType = fileTypeResolver.resolve(file);
 
         assertThat(fileType.getMimeType()).isEqualTo("audio/mpeg");
@@ -48,8 +49,11 @@ public class FileTypeResolverTest {
     }
 
     @Test
-    public void shouldImplementToString() throws Exception {
-        assertThat(FileType.of("text/plain", "txt").toString()).startsWith("FileType{");
+    public void shouldImplementToString() {
+        
+        FileType fileType = FileType.of("text/plain", "txt");
+        
+        assertThat(fileType.toString()).startsWith("FileType{");
     }
 
     private void checkImageFileType(FileType fileType) {

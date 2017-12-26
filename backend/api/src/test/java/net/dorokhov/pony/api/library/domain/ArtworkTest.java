@@ -1,17 +1,16 @@
 package net.dorokhov.pony.api.library.domain;
 
-import java.time.LocalDateTime;
-
-import net.dorokhov.pony.api.library.domain.Artwork;
 import org.junit.Test;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ArtworkTest {
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         Artwork eqArtwork1 = artworkBuilder().id(1L).build();
         Artwork eqArtwork2 = artworkBuilder().id(1L).build();

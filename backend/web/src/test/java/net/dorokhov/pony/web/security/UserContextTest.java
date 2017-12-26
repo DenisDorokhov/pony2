@@ -17,33 +17,39 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserContextTest {
-    
+
     @InjectMocks
     private UserContext userContextService;
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void shouldGetCurrentUser() throws Exception {
+    public void shouldGetCurrentUser() {
+
         User user = user();
+
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(new UserDetailsImpl(user), null));
+
         assertThat(userContextService.getAuthenticatedUser()).isSameAs(user);
     }
 
     @Test
-    public void shouldNotReturnCurrentUserWhenNotAuthenticated() throws Exception {
+    public void shouldNotReturnCurrentUserWhenNotAuthenticated() {
         assertThatThrownBy(() -> userContextService.getAuthenticatedUser()).isInstanceOf(NotAuthenticatedException.class);
     }
 
     @Test
-    public void shouldCheckIfUserIsAuthenticated() throws Exception {
+    public void shouldCheckIfUserIsAuthenticated() {
+
         assertThat(userContextService.isUserAuthenticated()).isFalse();
+
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken(new UserDetailsImpl(user()), null));
+
         assertThat(userContextService.isUserAuthenticated()).isTrue();
     }
 }

@@ -1,12 +1,5 @@
 package net.dorokhov.pony.core.library.service.filetree;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.FileType;
@@ -14,11 +7,7 @@ import net.dorokhov.pony.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony.core.library.service.AudioTagger;
 import net.dorokhov.pony.core.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony.core.library.service.file.FileTypeResolver;
-import net.dorokhov.pony.core.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.FileNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.FolderNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.ImageNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.Node;
+import net.dorokhov.pony.core.library.service.filetree.domain.*;
 import net.dorokhov.pony.core.library.service.image.ImageSizeReader;
 import net.dorokhov.pony.core.library.service.image.domain.ImageSize;
 import org.junit.Before;
@@ -29,6 +18,13 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +64,7 @@ public class FileTreeScannerTest {
     private final FileType fileTypeOther = FileType.of("text/plain", "txt");
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException {
 
         when(fileTypeResolver.resolve((File) any())).then(invocation -> {
             File file = (File) invocation.getArguments()[0];
@@ -86,13 +82,15 @@ public class FileTreeScannerTest {
     }
 
     @Test
-    public void shouldScanFolder() throws Exception {
+    public void shouldScanFolder() throws IOException {
         checkRoot(fileTreeScanner.scanFolder(FOLDER.getFile()));
     }
 
     @Test
-    public void shouldScanImageFile() throws Exception {
+    public void shouldScanImageFile() throws IOException {
+
         FileNode fileNode = fileTreeScanner.scanFile(FILE_IMAGE.getFile(), ImmutableList.of(FOLDER.getFile()));
+
         assertThat(fileNode).isInstanceOfSatisfying(ImageNode.class, rethrow(image -> {
             assertThat(image.getFile()).isEqualTo(FILE_IMAGE.getFile());
             assertThat(image.getParentFolder()).isNotNull();
@@ -104,8 +102,10 @@ public class FileTreeScannerTest {
     }
 
     @Test
-    public void shouldScanAudioFile() throws Exception {
+    public void shouldScanAudioFile() throws IOException {
+
         FileNode fileNode = fileTreeScanner.scanFile(FILE_AUDIO.getFile(), ImmutableList.of(FOLDER.getFile()));
+
         assertThat(fileNode).isInstanceOfSatisfying(AudioNode.class, rethrow(audio -> {
             assertThat(audio.getFile()).isEqualTo(FILE_AUDIO.getFile());
             assertThat(audio.getParentFolder()).isNotNull();
@@ -117,7 +117,7 @@ public class FileTreeScannerTest {
     }
 
     @Test
-    public void shouldFailIfFileIsNotFoundInRootFolders() throws Exception {
+    public void shouldFailIfFileIsNotFoundInRootFolders() {
         assertThatThrownBy(() -> fileTreeScanner.scanFile(FILE_AUDIO.getFile(), ImmutableList.of(Files.createTempDir())))
                 .isInstanceOf(FileNotFoundException.class);
     }

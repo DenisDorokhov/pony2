@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static net.dorokhov.pony.test.SongFixtures.songBuilder;
@@ -36,53 +37,65 @@ public class BatchLibraryImportPlannerTest {
     public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException {
         when(audioNode.getFile()).thenReturn(tempFolder.newFile());
     }
 
     @Test
-    public void shouldPlanImportOfNonExistentSongs() throws Exception {
+    public void shouldPlanImportOfNonExistentSongs() {
+
         when(songRepository.findByPath(any())).thenReturn(null);
+
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
+
         assertThat(plan.getAudioNodesToImport()).containsExactly(audioNode);
         assertThat(plan.getAudioNodesToSkip()).isEmpty();
     }
 
     @Test
-    public void shouldPlanImportOfSongsOutdatedByCreationDate() throws Exception {
+    public void shouldPlanImportOfSongsOutdatedByCreationDate() {
+
         String songPath = audioNode.getFile().getAbsolutePath();
         when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .creationDate(LocalDateTime.now().minusDays(1))
                 .updateDate(null)
                 .path(songPath)
                 .build());
+
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
+
         assertThat(plan.getAudioNodesToImport()).containsExactly(audioNode);
         assertThat(plan.getAudioNodesToSkip()).isEmpty();
     }
 
     @Test
-    public void shouldPlanImportOfSongsOutdatedByUpdateDate() throws Exception {
+    public void shouldPlanImportOfSongsOutdatedByUpdateDate() {
+
         String songPath = audioNode.getFile().getAbsolutePath();
         when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .creationDate(LocalDateTime.now().minusDays(2))
                 .updateDate(LocalDateTime.now().minusDays(1))
                 .path(songPath)
                 .build());
+
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
+
         assertThat(plan.getAudioNodesToImport()).containsExactly(audioNode);
         assertThat(plan.getAudioNodesToSkip()).isEmpty();
     }
 
     @Test
-    public void shouldSkipUpToDateSongs() throws Exception {
+    public void shouldSkipUpToDateSongs() {
+
         String songPath = audioNode.getFile().getAbsolutePath();
         when(songRepository.findByPath(any())).thenReturn(songBuilder()
                 .creationDate(LocalDateTime.now().plusDays(1))
                 .updateDate(null)
                 .path(songPath)
                 .build());
+
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
+
         assertThat(plan.getAudioNodesToImport()).isEmpty();
         assertThat(plan.getAudioNodesToSkip()).containsExactly(audioNode);
     }

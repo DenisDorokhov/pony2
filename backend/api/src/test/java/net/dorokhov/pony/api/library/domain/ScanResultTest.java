@@ -1,7 +1,5 @@
 package net.dorokhov.pony.api.library.domain;
 
-import net.dorokhov.pony.api.library.domain.ScanResult;
-import net.dorokhov.pony.api.library.domain.ScanType;
 import org.junit.Test;
 
 import static net.dorokhov.pony.api.library.domain.ScanType.FULL;
@@ -10,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ScanResultTest {
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         ScanResult eqScanResult1 = scanResultBuilder(FULL).id(1L).build();
         ScanResult eqScanResult2 = scanResultBuilder(FULL).id(1L).build();

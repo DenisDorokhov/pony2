@@ -1,17 +1,15 @@
 package net.dorokhov.pony.api.library.domain;
 
-import java.util.Arrays;
-
-import net.dorokhov.pony.api.library.domain.Album;
-import net.dorokhov.pony.api.library.domain.Artist;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class AlbumTest {
 
     @Test
-    public void shouldSort() throws Exception {
+    public void shouldSort() {
 
         Artist artist1 = Artist.builder().name("1").build();
         Artist artist2 = Artist.builder().name("2").build();
@@ -30,7 +28,7 @@ public class AlbumTest {
     }
 
     @Test
-    public void shouldBuildSearchTerms() throws Exception {
+    public void shouldBuildSearchTerms() {
 
         Artist artist1 = Artist.builder().name("ar1").build();
         Artist artistNull = Artist.builder().name(null).build();
@@ -43,7 +41,7 @@ public class AlbumTest {
     }
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         Artist artist = new Artist();
 

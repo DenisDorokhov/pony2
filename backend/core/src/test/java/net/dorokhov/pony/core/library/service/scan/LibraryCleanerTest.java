@@ -39,13 +39,13 @@ public class LibraryCleanerTest {
     private LogService logService;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         libraryCleaner = new LibraryCleaner(songRepository, albumRepository, artistRepository, genreRepository,
                 artworkStorage, logService);
     }
 
     @Test
-    public void shouldDeleteArtistIfUnused() throws Exception {
+    public void shouldDeleteArtistIfUnused() {
 
         Artist artist1 = Artist.builder().id(1L).build();
         Artist artist2 = Artist.builder().id(2L).build();
@@ -61,7 +61,7 @@ public class LibraryCleanerTest {
     }
 
     @Test
-    public void shouldDeleteAlbumIfUnused() throws Exception {
+    public void shouldDeleteAlbumIfUnused() {
 
         Artist artist = Artist.builder().build();
 
@@ -79,7 +79,7 @@ public class LibraryCleanerTest {
     }
 
     @Test
-    public void shouldDeleteGenreIfUnused() throws Exception {
+    public void shouldDeleteGenreIfUnused() {
 
         Genre genre1 = Genre.builder().id(1L).build();
         Genre genre2 = Genre.builder().id(2L).build();
@@ -95,7 +95,7 @@ public class LibraryCleanerTest {
     }
 
     @Test
-    public void shouldDeleteArtworkIfUnused() throws Exception {
+    public void shouldDeleteArtworkIfUnused() {
 
         Artwork artwork1 = artworkBuilder().id(1L).build();
         Artwork artwork2 = artworkBuilder().id(2L).build();

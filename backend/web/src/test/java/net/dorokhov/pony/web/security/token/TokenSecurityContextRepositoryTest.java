@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TokenSecurityContextRepositoryTest {
-    
+
     @InjectMocks
     private TokenSecurityContextRepository tokenSecurityContextRepository;
 
@@ -34,14 +34,17 @@ public class TokenSecurityContextRepositoryTest {
     private UserService userService;
 
     @Test
-    public void shouldLoadNonemptySecurityContext() throws Exception {
+    public void shouldLoadNonemptySecurityContext() throws InvalidTokenException {
+
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
         when(tokenManager.verifyToken("someToken")).thenReturn(1L);
         User user = userBuilder()
                 .addRoles(User.Role.USER)
                 .build();
         when(userService.getById(1L)).thenReturn(user);
+
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+
         assertThat(securityContext.getAuthentication()).satisfies(authentication -> {
             assertThat(authentication.getPrincipal()).isInstanceOfSatisfying(UserDetailsImpl.class, userDetails -> {
                 assertThat(userDetails.getUser()).isSameAs(user);
@@ -52,40 +55,53 @@ public class TokenSecurityContextRepositoryTest {
     }
 
     @Test
-    public void shouldLoadEmptySecurityContextIfNoTokenFound() throws Exception {
+    public void shouldLoadEmptySecurityContextIfNoTokenFound() {
+
         when(requestTokenFinder.findToken(any())).thenReturn(null);
+
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+
         assertThat(securityContext.getAuthentication()).isNull();
     }
 
     @Test
-    public void shouldLoadEmptySecurityContextIfTokenIsInvalid() throws Exception {
+    public void shouldLoadEmptySecurityContextIfTokenIsInvalid() throws InvalidTokenException {
+
         when(requestTokenFinder.findToken(any())).thenReturn("invalidToken");
         when(tokenManager.verifyToken("invalidToken")).thenThrow(new InvalidTokenException());
+
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+
         assertThat(securityContext.getAuthentication()).isNull();
     }
 
     @Test
-    public void shouldLoadEmptySecurityContextIfUserIsNotFound() throws Exception {
+    public void shouldLoadEmptySecurityContextIfUserIsNotFound() throws InvalidTokenException {
+
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
         when(tokenManager.verifyToken("someToken")).thenReturn(1L);
         when(userService.getById(1L)).thenReturn(null);
+
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+
         assertThat(securityContext.getAuthentication()).isNull();
     }
 
     @Test
-    public void shouldContainContext() throws Exception {
+    public void shouldContainContext() throws InvalidTokenException {
+
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
         when(tokenManager.verifyToken("someToken")).thenReturn(1L);
         when(userService.getById(1L)).thenReturn(user());
+
         assertThat(tokenSecurityContextRepository.containsContext(new MockHttpServletRequest())).isTrue();
     }
 
     @Test
-    public void shouldNotContainContextIfTokenIsInvalid() throws Exception {
+    public void shouldNotContainContextIfTokenIsInvalid() {
+
         when(requestTokenFinder.findToken(any())).thenReturn(null);
+
         assertThat(tokenSecurityContextRepository.containsContext(new MockHttpServletRequest())).isFalse();
     }
 

@@ -1,11 +1,5 @@
 package net.dorokhov.pony.core.library.service.image;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.imageio.ImageIO;
-
 import com.google.common.io.ByteStreams;
 import net.dorokhov.pony.core.library.service.image.domain.ImageSize;
 import org.junit.Rule;
@@ -13,6 +7,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,27 +27,36 @@ public class ThumbnailGeneratorTest {
     private final ThumbnailGenerator thumbnailGenerator = new ThumbnailGenerator();
     
     @Test
-    public void shouldGenerateThumbnailFromInputStream() throws Exception {
+    public void shouldGenerateThumbnailFromInputStream() throws IOException {
+
         File file = tempFolder.newFile();
+
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, file);
         }
+
         checkFile(file);
     }
 
     @Test
-    public void shouldGenerateThumbnailFromBytes() throws Exception {
+    public void shouldGenerateThumbnailFromBytes() throws IOException {
+
         File file = tempFolder.newFile();
+
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
             thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, file);
         }
+
         checkFile(file);
     }
 
     @Test
-    public void shouldGenerateThumbnailFromFile() throws Exception {
+    public void shouldGenerateThumbnailFromFile() throws IOException {
+
         File file = tempFolder.newFile();
+
         thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, file);
+
         checkFile(file);
     }
     

@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.io.File;
+import java.io.IOException;
 
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony.test.ArtworkFixtures.artwork;
@@ -60,7 +61,7 @@ public class LibraryArtworkFinderTest {
     private LogService logService;
 
     @Test
-    public void shouldFindAndSaveFileArtwork() throws Exception {
+    public void shouldFindAndSaveFileArtwork() throws IOException {
 
         ImageNode imageNode = mock(ImageNode.class);
         when(imageNode.getFile()).thenReturn(new File("someFile"));
@@ -69,19 +70,23 @@ public class LibraryArtworkFinderTest {
         when(artworkStorage.getOrSave((ImageNodeArtworkStorageCommand) any())).thenReturn(artworkFiles);
 
         ArtworkFiles savedArtworkFiles = libraryArtworkFinder.findAndSaveFileArtwork(mock(AudioNode.class));
+
         assertThat(savedArtworkFiles).isSameAs(artworkFiles);
     }
 
     @Test
-    public void shouldNotSaveFileArtworkWhenArtworkNotFound() throws Exception {
+    public void shouldNotSaveFileArtworkWhenArtworkNotFound() throws IOException {
+
         when(artworkFileFinder.findArtwork(any())).thenReturn(null);
+
         ArtworkFiles savedArtworkFiles = libraryArtworkFinder.findAndSaveFileArtwork(mock(AudioNode.class));
+
         assertThat(savedArtworkFiles).isNull();
         verify(artworkStorage, never()).getOrSave((ImageNodeArtworkStorageCommand) any());
     }
 
     @Test
-    public void shouldFindAndSaveEmbeddedArtwork() throws Exception {
+    public void shouldFindAndSaveEmbeddedArtwork() throws IOException {
 
         ReadableAudioData audioData = ReadableAudioData.builder()
                 .path("somePath")
@@ -96,18 +101,20 @@ public class LibraryArtworkFinderTest {
     }
 
     @Test
-    public void shouldNotSaveEmbeddedArtworkWhenArtworkNotFound() throws Exception {
+    public void shouldNotSaveEmbeddedArtworkWhenArtworkNotFound() throws IOException {
+
         ReadableAudioData audioData = ReadableAudioData.builder()
                 .path("somePath")
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .embeddedArtwork(null)
                 .build();
+
         assertThat(libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData)).isNull();
         verify(artworkStorage, never()).getOrSave((ByteSourceArtworkStorageCommand) any());
     }
 
     @Test
-    public void shouldFindAndSaveGenreArtwork() throws Exception {
+    public void shouldFindAndSaveGenreArtwork() {
 
         when(songRepository.countByGenreIdAndArtworkNotNull(any())).thenReturn(3L);
         Artwork artwork = artwork();
@@ -118,34 +125,36 @@ public class LibraryArtworkFinderTest {
         when(songRepository.findByGenreIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(ImmutableList.of(song)));
         when(genreRepository.save((Genre) any())).then(returnsFirstArg());
-
         Genre genre = Genre.builder().build();
+
         assertThat(libraryArtworkFinder.findAndSaveGenreArtwork(genre).getArtwork()).isSameAs(artwork);
     }
 
     @Test
-    public void shouldNotSaveGenreArtworkWhenSongsWithArtworkNotFound() throws Exception {
+    public void shouldNotSaveGenreArtworkWhenSongsWithArtworkNotFound() {
+
         when(songRepository.countByGenreIdAndArtworkNotNull(any())).thenReturn(0L);
         Genre genre = Genre.builder().build();
+
         assertThat(libraryArtworkFinder.findAndSaveGenreArtwork(genre).getArtwork()).isNull();
         verify(genreRepository, never()).save((Genre) any());
     }
 
     @Test
-    public void shouldNotSaveGenreArtworkWhenMiddleSongNotFound() throws Exception {
+    public void shouldNotSaveGenreArtworkWhenMiddleSongNotFound() {
         
         when(songRepository.countByGenreIdAndArtworkNotNull(any())).thenReturn(1L);
         Pageable requiredSongPageable = new PageRequest(0, 1, Sort.Direction.ASC, "year");
         when(songRepository.findByGenreIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(emptyList()));
-
         Genre genre = Genre.builder().build();
+
         assertThat(libraryArtworkFinder.findAndSaveGenreArtwork(genre).getArtwork()).isNull();
         verify(genreRepository, never()).save((Genre) any());
     }
     
     @Test
-    public void shouldFindAndSaveAlbumArtwork() throws Exception {
+    public void shouldFindAndSaveAlbumArtwork() {
         
         Artwork artwork = artwork();
         Song song = SongFixtures.songBuilder()
@@ -159,17 +168,19 @@ public class LibraryArtworkFinderTest {
     }
 
     @Test
-    public void shouldNotSaveAlbumArtworkWhenSongsWithArtworkNotFound() throws Exception {
+    public void shouldNotSaveAlbumArtworkWhenSongsWithArtworkNotFound() {
+
         when(songRepository.findFirstByAlbumIdAndArtworkNotNull(any())).thenReturn(null);
         Album album = Album.builder()
                 .artist(Artist.builder().build())
                 .build();
+
         assertThat(libraryArtworkFinder.findAndSaveAlbumArtwork(album).getArtwork()).isNull();
         verify(albumRepository, never()).save((Album) any());
     }
 
     @Test
-    public void shouldFindAndSaveArtistArtwork() throws Exception {
+    public void shouldFindAndSaveArtistArtwork() {
         
         when(albumRepository.countByArtistIdAndArtworkNotNull(any())).thenReturn(3L);
         Artwork artwork = artwork();
@@ -187,22 +198,24 @@ public class LibraryArtworkFinderTest {
     }
 
     @Test
-    public void shouldNotSaveArtistArtworkWhenAlbumsWithArtworkNotFound() throws Exception {
+    public void shouldNotSaveArtistArtworkWhenAlbumsWithArtworkNotFound() {
+
         when(albumRepository.countByArtistIdAndArtworkNotNull(any())).thenReturn(0L);
         Artist artist = Artist.builder().build();
+
         assertThat(libraryArtworkFinder.findAndSaveArtistArtwork(artist).getArtwork()).isNull();
         verify(artistRepository, never()).save((Artist) any());
     }
 
     @Test
-    public void shouldNotSaveArtistArtworkWhenMiddleAlbumNotFound() throws Exception {
+    public void shouldNotSaveArtistArtworkWhenMiddleAlbumNotFound() {
 
         when(albumRepository.countByArtistIdAndArtworkNotNull(any())).thenReturn(1L);
         Pageable requiredSongPageable = new PageRequest(0, 1, Sort.Direction.ASC, "year");
         when(albumRepository.findByArtistIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(emptyList()));
-
         Artist artist = Artist.builder().build();
+
         assertThat(libraryArtworkFinder.findAndSaveArtistArtwork(artist).getArtwork()).isNull();
         verify(artistRepository, never()).save((Artist) any());
     }

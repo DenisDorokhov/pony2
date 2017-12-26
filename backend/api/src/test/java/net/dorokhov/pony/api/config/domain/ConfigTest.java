@@ -1,6 +1,5 @@
 package net.dorokhov.pony.api.config.domain;
 
-import net.dorokhov.pony.api.config.domain.Config;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,8 +8,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class ConfigTest {
 
     @Test
-    public void shouldSupportNullValue() throws Exception {
+    public void shouldSupportNullValue() {
+
         Config config = Config.of("foo", null);
+
         assertThat(config.getValue()).isNull();
         assertThat(config.getInteger()).isNull();
         assertThat(config.getLong()).isNull();
@@ -20,8 +21,10 @@ public class ConfigTest {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void shouldSupportStringValue() throws Exception {
+    public void shouldSupportStringValue() {
+
         Config config = Config.of("foo", "bar");
+
         assertThat(config.getValue()).isEqualTo("bar");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
@@ -30,8 +33,10 @@ public class ConfigTest {
     }
 
     @Test
-    public void shouldSupportIntegerValue() throws Exception {
+    public void shouldSupportIntegerValue() {
+
         Config config = Config.of("foo", 1);
+
         assertThat(config.getValue()).isEqualTo("1");
         assertThat(config.getInteger()).isEqualTo(1);
         assertThat(config.getLong()).isEqualTo(1L);
@@ -40,8 +45,10 @@ public class ConfigTest {
     }
 
     @Test
-    public void shouldSupportLongValue() throws Exception {
+    public void shouldSupportLongValue() {
+
         Config config = Config.of("foo", 1L);
+
         assertThat(config.getValue()).isEqualTo("1");
         assertThat(config.getInteger()).isEqualTo(1);
         assertThat(config.getLong()).isEqualTo(1L);
@@ -51,8 +58,10 @@ public class ConfigTest {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void shouldSupportDoubleValue() throws Exception {
+    public void shouldSupportDoubleValue() {
+
         Config config = Config.of("foo", 1.2);
+
         assertThat(config.getValue()).isEqualTo("1.2");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
@@ -62,8 +71,10 @@ public class ConfigTest {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void shouldSupportBooleanValue() throws Exception {
+    public void shouldSupportBooleanValue() {
+
         Config config = Config.of("foo", true);
+
         assertThat(config.getValue()).isEqualTo("true");
         assertThatThrownBy(config::getInteger).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(config::getLong).isInstanceOf(NumberFormatException.class);
@@ -72,7 +83,7 @@ public class ConfigTest {
     }
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         Config eqConfig1 = Config.of("1", null);
         Config eqConfig2 = Config.of("1", null);

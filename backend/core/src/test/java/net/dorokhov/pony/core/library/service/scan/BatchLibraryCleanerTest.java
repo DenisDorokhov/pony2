@@ -22,6 +22,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
@@ -62,14 +63,14 @@ public class BatchLibraryCleanerTest {
     private PlatformTransactionManager transactionManager = transactionManager();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         batchLibraryCleaner = new BatchLibraryCleaner(libraryCleaner, 
                 songRepository, albumRepository, artistRepository, genreRepository, 
                 artworkRepository, artworkStorage, logService, 1, transactionManager);
     }
 
     @Test
-    public void shouldCleanNotExistingSongs() throws Exception {
+    public void shouldCleanNotExistingSongs() throws IOException {
 
         File file1 = tempFolder.newFile();
         File file2 = tempFolder.newFile();
@@ -115,7 +116,7 @@ public class BatchLibraryCleanerTest {
     }
 
     @Test
-    public void shouldCleanNotExistingArtworks() throws Exception {
+    public void shouldCleanNotExistingArtworks() throws IOException {
 
         File file1 = tempFolder.newFile();
         File file2 = tempFolder.newFile();
@@ -178,7 +179,7 @@ public class BatchLibraryCleanerTest {
     }
 
     @Test
-    public void shouldNotFailSongsCleanupOnObserverException() throws Exception {
+    public void shouldNotFailSongsCleanupOnObserverException() {
         when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(song())));
         batchLibraryCleaner.cleanSongs(emptyList(), (itemsComplete, itemsTotal) -> {
             throw new RuntimeException();
@@ -186,7 +187,7 @@ public class BatchLibraryCleanerTest {
     }
 
     @Test
-    public void shouldNotFailArtworksCleanupOnObserverException() throws Exception {
+    public void shouldNotFailArtworksCleanupOnObserverException() {
         when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(artwork())));
         batchLibraryCleaner.cleanArtworks(emptyList(), (itemsComplete, itemsTotal) -> {
             throw new RuntimeException();

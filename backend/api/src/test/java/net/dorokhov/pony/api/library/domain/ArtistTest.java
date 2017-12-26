@@ -1,16 +1,15 @@
 package net.dorokhov.pony.api.library.domain;
 
-import java.util.Arrays;
-
-import net.dorokhov.pony.api.library.domain.Artist;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ArtistTest {
 
     @Test
-    public void shouldSort() throws Exception {
+    public void shouldSort() {
         
         Artist artist1 = Artist.builder().name("1").build();
         Artist artist2 = Artist.builder().name("2").build();
@@ -23,7 +22,7 @@ public class ArtistTest {
     }
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
         
         Artist eqArtist1 = Artist.builder().id(1L).build();
         Artist eqArtist2 = Artist.builder().id(1L).build();

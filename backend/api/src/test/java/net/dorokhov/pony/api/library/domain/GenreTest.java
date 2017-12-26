@@ -1,6 +1,5 @@
 package net.dorokhov.pony.api.library.domain;
 
-import net.dorokhov.pony.api.library.domain.Genre;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -10,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GenreTest {
 
     @Test
-    public void shouldSort() throws Exception {
+    public void shouldSort() {
 
         Genre genre1 = Genre.builder().name("1").build();
         Genre genre2 = Genre.builder().name("2").build();
@@ -23,7 +22,7 @@ public class GenreTest {
     }
     
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
         
         Genre eqGenre1 = Genre.builder().id(1L).build();
         Genre eqGenre2 = Genre.builder().id(1L).build();

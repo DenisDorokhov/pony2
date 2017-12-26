@@ -1,6 +1,7 @@
 package net.dorokhov.pony.core.library.service;
 
 import net.dorokhov.pony.api.config.service.ConfigService;
+import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony.core.NoOpTaskExecutor;
 import net.dorokhov.pony.api.library.domain.ScanJob;
 import net.dorokhov.pony.api.library.domain.ScanJobProgress;
@@ -55,23 +56,24 @@ public class ScanJobServiceImplProgressTest {
     private final PlatformTransactionManager transactionManager = transactionManager();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         initSynchronization();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         clearSynchronization();
     }
 
     @Test
-    public void shouldGetCurrentScanJobProgress() throws Exception {
+    public void shouldGetCurrentScanJobProgress() throws ConcurrentScanException {
 
         assertThat(scanJobService.getCurrentScanJobProgress()).isNull();
 
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
 
         scanJobService.startScanJob();
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         assertThat(scanJobService.getCurrentScanJobProgress()).isNotNull();
@@ -80,7 +82,7 @@ public class ScanJobServiceImplProgressTest {
     }
 
     @Test
-    public void shouldGetScanJobProgressById() throws Exception {
+    public void shouldGetScanJobProgressById() throws ConcurrentScanException {
 
         assertThat(scanJobService.getScanJobProgress(1L)).isNull();
 
@@ -91,6 +93,7 @@ public class ScanJobServiceImplProgressTest {
         when(scanJobRepository.findOne(2L)).thenReturn(scanJobBuilder(FULL).id(2L).build());
 
         scanJobService.startScanJob();
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         ScanJobProgress currentScanJobProgress = scanJobService.getScanJobProgress(1L);

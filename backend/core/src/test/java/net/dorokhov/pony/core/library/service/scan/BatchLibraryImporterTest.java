@@ -54,7 +54,7 @@ public class BatchLibraryImporterTest {
     private final PlatformTransactionManager transactionManager = transactionManager();
 
     @Test
-    public void shouldReadAndImport() throws Exception {
+    public void shouldReadAndImport() throws IOException {
         
         AudioNode audioNodeToImport1 = audioNode();
         AudioNode audioNodeToImport2 = audioNode();
@@ -84,7 +84,7 @@ public class BatchLibraryImporterTest {
     }
 
     @Test
-    public void shouldNotImportWhenReadingFailed() throws Exception {
+    public void shouldNotImportWhenReadingFailed() throws IOException {
         
         AudioNode audioNodeToImport1 = audioNode();
         AudioNode audioNodeToImport2 = audioNode();
@@ -107,7 +107,7 @@ public class BatchLibraryImporterTest {
     }
 
     @Test
-    public void shouldWriteAndImport() throws Exception {
+    public void shouldWriteAndImport() throws IOException {
 
         WriteAndImportCommand command1 = new WriteAndImportCommand(audioNode(), writableAudioData());
         WriteAndImportCommand command2 = new WriteAndImportCommand(audioNode(), writableAudioData());
@@ -128,7 +128,7 @@ public class BatchLibraryImporterTest {
     }
 
     @Test
-    public void shouldNotImportWhenWritingFailed() throws Exception {
+    public void shouldNotImportWhenWritingFailed() throws IOException {
 
         WriteAndImportCommand command1 = new WriteAndImportCommand(audioNode(), writableAudioData());
         WriteAndImportCommand command2 = new WriteAndImportCommand(audioNode(), writableAudioData());
@@ -148,7 +148,7 @@ public class BatchLibraryImporterTest {
     }
 
     @Test
-    public void shouldNotFailReadAndImportOnObserverException() throws Exception {
+    public void shouldNotFailReadAndImportOnObserverException() throws IOException {
 
         AudioNode audioNode = audioNode();
         when(batchLibraryImportPlanner.plan(any())).thenReturn(new Plan(ImmutableList.of(audioNode), emptyList()));
@@ -161,7 +161,7 @@ public class BatchLibraryImporterTest {
     }
 
     @Test
-    public void shouldNotFailWriteAndImportOnObserverException() throws Exception {
+    public void shouldNotFailWriteAndImportOnObserverException() throws IOException {
 
         WriteAndImportCommand command = new WriteAndImportCommand(audioNode(), writableAudioData());
         when(audioTagger.write(any(), any())).thenReturn(readableAudioData());

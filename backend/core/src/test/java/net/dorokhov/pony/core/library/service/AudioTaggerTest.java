@@ -1,8 +1,5 @@
 package net.dorokhov.pony.core.library.service;
 
-import java.io.File;
-import java.io.IOException;
-
 import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.FileType;
 import net.dorokhov.pony.api.library.domain.ReadableAudioData;
@@ -19,13 +16,16 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import java.io.File;
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AudioTaggerTest {
-    
+
     private static final Resource FILE_EMPTY = new ClassPathResource("audio/empty.mp3");
     private static final Resource FILE_ID3V1 = new ClassPathResource("audio/id3v1.mp3");
     private static final Resource FILE_ID3V1_EMPTY = new ClassPathResource("audio/id3v1-empty.mp3");
@@ -34,36 +34,42 @@ public class AudioTaggerTest {
     private static final Resource FILE_ID3V2_EMPTY = new ClassPathResource("audio/id3v2-empty.mp3");
     private static final Resource FILE_ID3V2_UNICODE = new ClassPathResource("audio/id3v2-unicode.mp3");
     private static final Resource FILE_ARTWORK = new ClassPathResource("image.png");
-    
+
     private static final FileType FILE_TYPE_MP3 = FileType.of("audio/mpeg", "mp3");
     private static final FileType FILE_TYPE_PNG = FileType.of("image/png", "png");
 
     @Rule
     public final TemporaryFolder tempFolder = new TemporaryFolder();
-    
+
     @InjectMocks
     private AudioTagger audioTagger;
-    
+
     @Mock
     private FileTypeResolver fileTypeResolver;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException {
         when(fileTypeResolver.resolve((File) any())).thenReturn(FileType.of("audio/mpeg", "mp3"));
         when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FileType.of("image/png", "png"));
     }
 
     @Test
-    public void shouldReadEmptyMp3() throws Exception {
+    public void shouldReadEmptyMp3() throws IOException {
+
         File file = FILE_EMPTY.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkEmptyMp3(file, data);
     }
 
     @Test
-    public void shouldReadId3V1Mp3() throws Exception {
+    public void shouldReadId3V1Mp3() throws IOException {
+
         File file = FILE_ID3V1.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkMp3File(file, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -79,37 +85,52 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldReadEmptyId3V1Mp3() throws Exception {
+    public void shouldReadEmptyId3V1Mp3() throws IOException {
+
         File file = FILE_ID3V1_EMPTY.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkEmptyMp3(file, data);
     }
 
     @Test
-    public void shouldReadId3V1Id3V2Mp3() throws Exception {
+    public void shouldReadId3V1Id3V2Mp3() throws IOException {
+
         File file = FILE_ID3V1_ID3V2.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkId3V2Mp3(file, data);
     }
 
     @Test
-    public void shouldReadId3V2Mp3() throws Exception {
+    public void shouldReadId3V2Mp3() throws IOException {
+
         File file = FILE_ID3V2.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkId3V2Mp3(file, data);
     }
-    
+
     @Test
-    public void shouldReadEmptyId3V2Mp3() throws Exception {
+    public void shouldReadEmptyId3V2Mp3() throws IOException {
+
         File file = FILE_ID3V2_EMPTY.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkEmptyMp3(file, data);
     }
 
     @Test
-    public void shouldReadId3V2Unicode() throws Exception {
+    public void shouldReadId3V2Unicode() throws IOException {
+
         File file = FILE_ID3V2_UNICODE.getFile();
+
         ReadableAudioData data = audioTagger.read(file);
+
         checkMp3File(file, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -125,12 +146,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3DiscNumber() throws Exception {
+    public void shouldWriteMp3DiscNumber() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .discNumber(1)
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(1);
         assertThat(data.getDiscCount()).isNull();
@@ -144,14 +168,17 @@ public class AudioTaggerTest {
         assertThat(data.getGenre()).isNull();
         assertThat(data.getEmbeddedArtwork()).isNull();
     }
-    
+
     @Test
-    public void shouldWriteMp3DiscCount() throws Exception {
+    public void shouldWriteMp3DiscCount() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .discCount(1)
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isEqualTo(1);
@@ -167,12 +194,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3TrackNumber() throws Exception {
+    public void shouldWriteMp3TrackNumber() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .trackNumber(1)
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -188,12 +218,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3TrackCount() throws Exception {
+    public void shouldWriteMp3TrackCount() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .trackCount(1)
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -209,12 +242,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3Title() throws Exception {
+    public void shouldWriteMp3Title() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .title("значение")
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -230,12 +266,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3Artist() throws Exception {
+    public void shouldWriteMp3Artist() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .artist("значение")
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -251,12 +290,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3AlbumArtist() throws Exception {
+    public void shouldWriteMp3AlbumArtist() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .albumArtist("значение")
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -270,14 +312,17 @@ public class AudioTaggerTest {
         assertThat(data.getGenre()).isNull();
         assertThat(data.getEmbeddedArtwork()).isNull();
     }
-    
+
     @Test
-    public void shouldWriteMp3Album() throws Exception {
+    public void shouldWriteMp3Album() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .album("значение")
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -293,12 +338,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3Year() throws Exception {
+    public void shouldWriteMp3Year() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .year(1986)
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -314,12 +362,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3Genre() throws Exception {
+    public void shouldWriteMp3Genre() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .genre("значение")
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -335,12 +386,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3Artwork() throws Exception {
+    public void shouldWriteMp3Artwork() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .artworkFile(FILE_ARTWORK.getFile())
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isNull();
@@ -356,7 +410,8 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldWriteMp3All() throws Exception {
+    public void shouldWriteMp3All() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_EMPTY);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .discNumber(2)
@@ -371,17 +426,22 @@ public class AudioTaggerTest {
                 .genre("Heavy Metal")
                 .artworkFile(FILE_ARTWORK.getFile())
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkId3V2Mp3(writeToFile, data);
     }
 
     @Test
-    public void shouldDeleteMp3DiscNumber() throws Exception {
+    public void shouldDeleteMp3DiscNumber() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearDiscNumber()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isNull();
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -398,12 +458,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3DiscCount() throws Exception {
+    public void shouldDeleteMp3DiscCount() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearDiscCount()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isNull();
@@ -420,12 +483,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3TrackNumber() throws Exception {
+    public void shouldDeleteMp3TrackNumber() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearTrackNumber()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -442,12 +508,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3TrackCount() throws Exception {
+    public void shouldDeleteMp3TrackCount() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearTrackCount()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -464,12 +533,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3Title() throws Exception {
+    public void shouldDeleteMp3Title() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearTitle()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -486,12 +558,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3Artist() throws Exception {
+    public void shouldDeleteMp3Artist() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearArtist()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -508,12 +583,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3AlbumArtist() throws Exception {
+    public void shouldDeleteMp3AlbumArtist() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearAlbumArtist()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -530,12 +608,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3Album() throws Exception {
+    public void shouldDeleteMp3Album() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearAlbum()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -552,12 +633,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3Year() throws Exception {
+    public void shouldDeleteMp3Year() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearYear()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -574,12 +658,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3Genre() throws Exception {
+    public void shouldDeleteMp3Genre() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearGenre()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -596,12 +683,15 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3Artwork() throws Exception {
+    public void shouldDeleteMp3Artwork() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearArtworkFile()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkMp3File(writeToFile, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
         assertThat(data.getDiscCount()).isEqualTo(3);
@@ -617,7 +707,8 @@ public class AudioTaggerTest {
     }
 
     @Test
-    public void shouldDeleteMp3All() throws Exception {
+    public void shouldDeleteMp3All() throws IOException {
+
         File writeToFile = copyToTempFile(FILE_ID3V2);
         WritableAudioData dataWritable = WritableAudioData.builder()
                 .clearDiscNumber()
@@ -632,10 +723,12 @@ public class AudioTaggerTest {
                 .clearGenre()
                 .clearArtworkFile()
                 .build();
+
         ReadableAudioData data = audioTagger.write(writeToFile, dataWritable);
+
         checkEmptyMp3(writeToFile, data);
     }
-    
+
     private File copyToTempFile(Resource resource) throws IOException {
         File writeToFile = tempFolder.newFile("test.mp3");
         Files.copy(resource.getFile(), writeToFile);
@@ -656,7 +749,7 @@ public class AudioTaggerTest {
         assertThat(data.getGenre()).isNull();
         assertThat(data.getEmbeddedArtwork()).isNull();
     }
-    
+
     private void checkId3V2Mp3(File file, ReadableAudioData data) {
         checkMp3File(file, data);
         assertThat(data.getDiscNumber()).isEqualTo(2);
@@ -672,7 +765,7 @@ public class AudioTaggerTest {
         assertThat(data.getEmbeddedArtwork()).isNotNull();
         checkArtwork(data);
     }
-    
+
     private void checkMp3File(File file, ReadableAudioData data) {
         assertThat(data.getPath()).isEqualTo(file.getAbsolutePath());
         assertThat(data.getFileType()).isEqualTo(FILE_TYPE_MP3);
@@ -681,7 +774,7 @@ public class AudioTaggerTest {
         assertThat(data.getBitRate()).isEqualTo(128);
         assertThat(data.isBitRateVariable()).isFalse();
     }
-    
+
     private void checkArtwork(ReadableAudioData data) {
         ReadableAudioData.EmbeddedArtwork embeddedArtwork = data.getEmbeddedArtwork();
         if (embeddedArtwork != null) {

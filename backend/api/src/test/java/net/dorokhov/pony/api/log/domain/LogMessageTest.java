@@ -1,16 +1,15 @@
 package net.dorokhov.pony.api.log.domain;
 
-import java.time.LocalDateTime;
-
-import net.dorokhov.pony.api.log.domain.LogMessage;
 import org.junit.Test;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LogMessageTest {
 
     @Test
-    public void shouldSupportEqualityAndHashCode() throws Exception {
+    public void shouldSupportEqualityAndHashCode() {
 
         LogMessage eqLogMessage1 = logMessageBuilder().id(1L).build();
         LogMessage eqLogMessage2 = logMessageBuilder().id(1L).build();

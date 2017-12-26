@@ -41,14 +41,14 @@ public class BatchLibraryArtworkFinderTest {
     private PlatformTransactionManager transactionManager = transactionManager();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         batchLibraryArtworkFinder = new BatchLibraryArtworkFinder(libraryArtworkFinder, 
                 genreRepository, artistRepository, albumRepository,
                 1, transactionManager);
     }
 
     @Test
-    public void shouldFindAllArtworks() throws Exception {
+    public void shouldFindAllArtworks() {
         
         when(albumRepository.countByArtworkId(null)).thenReturn(1L);
         when(artistRepository.countByArtworkId(null)).thenReturn(1L);
@@ -79,7 +79,7 @@ public class BatchLibraryArtworkFinderTest {
     }
 
     @Test
-    public void shouldNotFailOnObserverException() throws Exception {
+    public void shouldNotFailOnObserverException() {
 
         when(albumRepository.countByArtworkId(null)).thenReturn(0L);
         when(artistRepository.countByArtworkId(null)).thenReturn(0L);

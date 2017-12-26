@@ -1,9 +1,6 @@
 package net.dorokhov.pony.core.library.service.filetree.domain;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony.core.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.FolderNode;
-import net.dorokhov.pony.core.library.service.filetree.domain.ImageNode;
 import org.junit.Test;
 
 import java.util.List;
@@ -16,7 +13,7 @@ import static org.mockito.Mockito.when;
 public class FolderNodeTest {
 
     @Test
-    public void shouldGetChildImagesRecursively() throws Exception {
+    public void shouldGetChildImagesRecursively() {
 
         FolderNode folder1_1_1 = mock(FolderNode.class);
         ImageNode image1_1_1_1 = mock(ImageNode.class);
@@ -44,11 +41,12 @@ public class FolderNodeTest {
         when(folder1.getChildImagesRecursively()).thenCallRealMethod();
 
         List<ImageNode> imageNodes = folder1.getChildImagesRecursively();
+
         assertThat(imageNodes).containsExactlyInAnyOrder(image1_1_1_1, image1_1_1, image1_2_1, image1_1, image1_2);
     }
 
     @Test
-    public void shouldGetChildAudiosRecursively() throws Exception {
+    public void shouldGetChildAudiosRecursively() {
 
         FolderNode folder1_1_1 = mock(FolderNode.class);
         AudioNode audio1_1_1_1 = mock(AudioNode.class);
@@ -76,6 +74,7 @@ public class FolderNodeTest {
         when(folder1.getChildAudiosRecursively()).thenCallRealMethod();
 
         List<AudioNode> AudioNodes = folder1.getChildAudiosRecursively();
+
         assertThat(AudioNodes).containsExactlyInAnyOrder(audio1_1_1_1, audio1_1_1, audio1_2_1, audio1_1, audio1_2);
     }
 }

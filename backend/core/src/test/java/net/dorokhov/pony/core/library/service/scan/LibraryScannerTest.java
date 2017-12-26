@@ -66,19 +66,19 @@ public class LibraryScannerTest {
     private BatchLibraryArtworkFinder batchLibraryArtworkFinder;
 
     @Captor
-    ArgumentCaptor<List<WriteAndImportCommand>> writeAndImportCommandsCaptor;
+    private ArgumentCaptor<List<WriteAndImportCommand>> writeAndImportCommandsCaptor;
 
     @Rule
     public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         libraryScanner = new LibraryScanner(logService, songRepository, fileTreeScanner, 
                 scanResultCalculator, batchLibraryCleaner, batchLibraryImporter, batchLibraryArtworkFinder, 1);
     }
 
     @Test
-    public void shouldScan() throws Exception {
+    public void shouldScan() throws IOException {
 
         FolderNode folderNode = mock(FolderNode.class);
         when(fileTreeScanner.scanFolder(any())).thenReturn(folderNode);
@@ -163,7 +163,7 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldEdit() throws Exception {
+    public void shouldEdit() throws IOException, SongNotFoundException {
 
         File file1 = tempFolder.newFile();
         File file2 = tempFolder.newFile();
@@ -235,21 +235,25 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldFailScanIfFileNotFound() throws Exception {
+    public void shouldFailScanIfFileNotFound() {
+
         File file = new File("notExistingFile");
+
         assertThatThrownBy(() -> libraryScanner.scan(ImmutableList.of(file), null))
                 .isInstanceOf(FileNotFoundException.class);
     }
 
     @Test
-    public void shouldFailScanIfFileIsNotDirectory() throws Exception {
+    public void shouldFailScanIfFileIsNotDirectory() throws IOException {
+
         File file = tempFolder.newFile("someFile");
+
         assertThatThrownBy(() -> libraryScanner.scan(ImmutableList.of(file), null))
                 .isInstanceOf(IOException.class);
     }
 
     @Test
-    public void shouldFailScanOnUnexpectedException() throws Exception {
+    public void shouldFailScanOnUnexpectedException() {
 
         Exception calculationException = new RuntimeException();
         when(scanResultCalculator.calculateAndSave(any())).thenThrow(calculationException);
@@ -262,35 +266,41 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldFailEditIfSongNotFound() throws Exception {
+    public void shouldFailEditIfSongNotFound() {
+
         when(songRepository.findOne((Long) any())).thenReturn(null);
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
+
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOfSatisfying(SongNotFoundException.class, e -> 
                         assertThat(e.getSongId()).isEqualTo(1L));
     }
 
     @Test
-    public void shouldFailEditIfFileNotFound() throws Exception {
+    public void shouldFailEditIfFileNotFound() {
+
         when(songRepository.findOne((Long) any())).thenReturn(song());
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
+
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(FileNotFoundException.class);
     }
 
     @Test
-    public void shouldFailEditIfFileIsNotSong() throws Exception {
+    public void shouldFailEditIfFileIsNotSong() throws IOException {
+
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(mock(ImageNode.class));
         when(songRepository.findOne((Long) any())).thenReturn(songBuilder()
                 .path(tempFolder.newFile().getAbsolutePath())
                 .build());
         EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
+
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(IOException.class);
     }
 
     @Test
-    public void shouldFailEditOnUnexpectedException() throws Exception {
+    public void shouldFailEditOnUnexpectedException() throws IOException {
 
         AudioNode audioNode = mock(AudioNode.class);
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(audioNode);
@@ -311,7 +321,7 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldNotFailWhenObserverThrowsException() throws Exception {
+    public void shouldNotFailWhenObserverThrowsException() throws IOException {
         libraryScanner.scan(ImmutableList.of(tempFolder.getRoot()), scanProgress -> {
             throw new RuntimeException();
         });

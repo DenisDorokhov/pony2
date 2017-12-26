@@ -45,7 +45,7 @@ public abstract class AbstractLibraryImporterTest {
     protected LogService logService;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         when(genreRepository.save((Genre) any())).then(returnsFirstArg());
         when(artistRepository.save((Artist) any())).then(returnsFirstArg());
         when(albumRepository.save((Album) any())).then(returnsFirstArg());

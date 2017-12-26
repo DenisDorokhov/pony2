@@ -31,14 +31,14 @@ public class ScanJobInterruptionRunnerTest {
 
     @InjectMocks
     private ScanJobInterruptionRunner scanJobInterruptionRunner;
-    
+
     @Mock
     private ScanJobRepository scanJobRepository;
     @Mock
     private LogService logService;
 
     @Test
-    public void shouldMarkCurrentJobsAsInterrupted() throws Exception {
+    public void shouldMarkCurrentJobsAsInterrupted() {
 
         Pageable firstPageable = new PageRequest(0, 2);
 
@@ -59,15 +59,18 @@ public class ScanJobInterruptionRunnerTest {
 
         savedScanJob.getAllValues().forEach(scanJob -> assertThat(scanJob.getStatus())
                 .isSameAs(ScanJob.Status.INTERRUPTED));
-        
+
         verify(logService).warn(any(), any(), any());
     }
 
     @Test
-    public void shouldMarkCurrentJobsAsInterruptedOnStartup() throws Exception {
+    public void shouldMarkCurrentJobsAsInterruptedOnStartup() {
+
         when(scanJobRepository.findByStatusIn(any(), any())).thenReturn(new PageImpl<>(emptyList()));
         ScanJobInterruptionRunner spy = Mockito.spy(scanJobInterruptionRunner);
+
         spy.run(new DefaultApplicationArguments(new String[0]));
+
         verify(spy).markCurrentJobsAsInterrupted();
     }
 

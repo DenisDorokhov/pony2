@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +30,7 @@ public class CachingImageNodeTest {
     private ImageSizeReader imageSizeReader;
 
     @Test
-    public void shouldCacheFileType() throws Exception {
+    public void shouldCacheFileType() throws IOException {
 
         FileType fileType = FileType.of("text/plan", "txt");
         when(fileTypeResolver.resolve((File) any())).thenReturn(fileType);
@@ -37,6 +38,7 @@ public class CachingImageNodeTest {
                 fileTypeResolver, checksumCalculator, imageSizeReader);
 
         FileType result = imageNode.getFileType();
+
         assertThat(result).isSameAs(fileType);
         verify(fileTypeResolver, times(1)).resolve((File) any());
 
@@ -45,7 +47,7 @@ public class CachingImageNodeTest {
     }
 
     @Test
-    public void shouldCacheChecksum() throws Exception {
+    public void shouldCacheChecksum() throws IOException {
 
         String checksum = "someChecksum";
         when(checksumCalculator.calculate((File) any())).thenReturn(checksum);
@@ -53,6 +55,7 @@ public class CachingImageNodeTest {
                 fileTypeResolver, checksumCalculator, imageSizeReader);
 
         String result = imageNode.getChecksum();
+
         assertThat(result).isSameAs(checksum);
         verify(checksumCalculator, times(1)).calculate((File) any());
 
@@ -61,7 +64,7 @@ public class CachingImageNodeTest {
     }
 
     @Test
-    public void shouldCacheImageSize() throws Exception {
+    public void shouldCacheImageSize() throws IOException {
 
         ImageSize imageSize = ImageSize.of(100, 100);
         when(imageSizeReader.read((File) any())).thenReturn(imageSize);
@@ -69,6 +72,7 @@ public class CachingImageNodeTest {
                 fileTypeResolver, checksumCalculator, imageSizeReader);
 
         ImageSize result = imageNode.getImageSize();
+
         assertThat(result).isSameAs(imageSize);
         verify(imageSizeReader, times(1)).read((File) any());
 

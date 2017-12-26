@@ -23,16 +23,16 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserDetailsServiceImplTest {
-    
+
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
-    
+
     @Mock
     private UserService userService;
 
     @Test
-    public void shouldLoadUser() throws Exception {
-        
+    public void shouldLoadUser() {
+
         User user = User.builder()
                 .name("someName")
                 .email("someEmail")
@@ -40,9 +40,9 @@ public class UserDetailsServiceImplTest {
                 .addRoles(User.Role.USER, User.Role.ADMIN)
                 .build();
         when(userService.getByEmail(any())).thenReturn(user);
-        
+
         UserDetails userDetails = userDetailsService.loadUserByUsername("someEmail");
-        
+
         assertThat(userDetails).isInstanceOf(UserDetailsImpl.class);
         assertThat(userDetails.getUsername()).isEqualTo("someEmail");
         assertThat(userDetails.getPassword()).isEqualTo("somePassword");
@@ -60,8 +60,10 @@ public class UserDetailsServiceImplTest {
     }
 
     @Test
-    public void shouldSupportUserNotFound() throws Exception {
+    public void shouldSupportUserNotFound() {
+
         when(userService.getByEmail(any())).thenReturn(null);
+
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("someEmail")).isInstanceOf(UsernameNotFoundException.class);
     }
 }

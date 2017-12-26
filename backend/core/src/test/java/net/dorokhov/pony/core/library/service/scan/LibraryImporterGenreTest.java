@@ -16,34 +16,42 @@ public class LibraryImporterGenreTest extends AbstractLibraryImporterTest {
     private ArgumentCaptor<Genre> genreCaptor;
 
     @Test
-    public void shouldCreateGenre() throws Exception {
+    public void shouldCreateGenre() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
+
         verify(genreRepository).save(genreCaptor.capture());
         assertThat(genreCaptor.getValue()).satisfies(genre ->
                 assertThat(genre.getName()).isEqualTo("someValue"));
     }
 
     @Test
-    public void shouldUpdateGenreIfNameChanged() throws Exception {
+    public void shouldUpdateGenreIfNameChanged() {
+
         Genre existingGenre = Genre.builder().name("somevalue").build();
         when(genreRepository.findByName(any())).thenReturn(existingGenre);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
+
         verify(genreRepository).save(genreCaptor.capture());
         assertThat(genreCaptor.getValue()).satisfies(genre ->
                 assertThat(genre.getName()).isEqualTo("someValue"));
     }
 
     @Test
-    public void shouldSkipGenreIfNothingChanged() throws Exception {
+    public void shouldSkipGenreIfNothingChanged() {
+
         Genre existingGenre = Genre.builder().name("someValue").build();
         when(genreRepository.findByName(any())).thenReturn(existingGenre);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .genre("someValue")
                 .build());
+
         verify(genreRepository, never()).save((Genre) any());
     }
 }

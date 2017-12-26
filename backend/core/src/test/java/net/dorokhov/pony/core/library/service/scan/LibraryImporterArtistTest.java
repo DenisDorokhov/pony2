@@ -16,46 +16,57 @@ public class LibraryImporterArtistTest extends AbstractLibraryImporterTest {
     private ArgumentCaptor<Artist> artistCaptor;
 
     @Test
-    public void shouldCreateArtist() throws Exception {
+    public void shouldCreateArtist() {
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
+
         verify(artistRepository).save(artistCaptor.capture());
         assertThat(artistCaptor.getValue()).satisfies(artist ->
                 assertThat(artist.getName()).isEqualTo("someValue"));
     }
 
     @Test
-    public void shouldUpdateArtistIfNameChanged() throws Exception {
+    public void shouldUpdateArtistIfNameChanged() {
+
         Artist existingArtist = Artist.builder().name("somevalue").build();
         when(artistRepository.findByName(any())).thenReturn(existingArtist);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
+
         verify(artistRepository).save(artistCaptor.capture());
         assertThat(artistCaptor.getValue()).satisfies(artist ->
                 assertThat(artist.getName()).isEqualTo("someValue"));
     }
 
     @Test
-    public void shouldUpdateArtistIfAlbumArtistChanged() throws Exception {
+    public void shouldUpdateArtistIfAlbumArtistChanged() {
+
         Artist existingArtist = Artist.builder().name("somevalue").build();
         when(artistRepository.findByName(any())).thenReturn(existingArtist);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .albumArtist("someValue")
                 .build());
+
         verify(artistRepository).save(artistCaptor.capture());
         assertThat(artistCaptor.getValue()).satisfies(artist ->
                 assertThat(artist.getName()).isEqualTo("someValue"));
     }
 
     @Test
-    public void shouldSkipArtistIfNothingChanged() throws Exception {
+    public void shouldSkipArtistIfNothingChanged() {
+
         Artist existingArtist = Artist.builder().name("someValue").build();
         when(artistRepository.findByName(any())).thenReturn(existingArtist);
+
         libraryImporter.importAudioData(audioNode(), readableAudioDataBuilder()
                 .artist("someValue")
                 .build());
+
         verify(artistRepository, never()).save((Artist) any());
     }
 }

@@ -1,10 +1,5 @@
 package net.dorokhov.pony.core.library.service.artwork;
 
-import java.io.File;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.function.Supplier;
-
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.Artwork;
@@ -33,18 +28,19 @@ import org.springframework.core.io.Resource;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.function.Supplier;
+
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization;
-import static org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations;
-import static org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization;
+import static org.mockito.Mockito.*;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArtworkStorageTest {
@@ -76,7 +72,7 @@ public class ArtworkStorageTest {
     private ArtworkStorage artworkStorage;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         artworkFolder = new File(tempFolder.getRoot(), "some/nested/path");
         artworkStorage = new ArtworkStorage(artworkRepository, 
                 fileTypeResolver, checksumCalculator, thumbnailGenerator, artworkFolder, 
@@ -86,22 +82,25 @@ public class ArtworkStorageTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         clearSynchronization();
     }
 
     @Test
-    public void shouldGetArtworkFile() throws Exception {
+    public void shouldGetArtworkFile() {
+
         Artwork artwork = artwork();
         when(artworkRepository.findOne((Long) any())).thenReturn(artwork);
+
         ArtworkFiles artworkFiles = artworkStorage.getArtworkFile(1L);
+
         assertThat(artworkFiles).isNotNull();
         assertThat(artworkFiles.getLargeFile()).isEqualTo(new File(artworkFolder, PATH_LARGE));
         assertThat(artworkFiles.getSmallFile()).isEqualTo(new File(artworkFolder, PATH_SMALL));
     }
 
     @Test
-    public void shouldGetOrSaveByteSourceArtwork() throws Exception {
+    public void shouldGetOrSaveByteSourceArtwork() throws IOException {
 
         when(checksumCalculator.calculate((byte[]) any())).thenReturn(CHECKSUM);
         when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FILE_TYPE);
@@ -109,11 +108,12 @@ public class ArtworkStorageTest {
         
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
         ByteSourceArtworkStorageCommand command = new ByteSourceArtworkStorageCommand(sourceUri(), ByteSource.wrap(bytes));
+
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
-    public void shouldGetOrSaveFileArtwork() throws Exception {
+    public void shouldGetOrSaveFileArtwork() throws IOException {
 
         when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
         when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
@@ -121,11 +121,12 @@ public class ArtworkStorageTest {
         
         File file = RESOURCE.getFile();
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), file);
+
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
-    public void shouldGetOrSaveImageNodeArtwork() throws Exception {
+    public void shouldGetOrSaveImageNodeArtwork() throws IOException {
 
         when(artworkRepository.save((Artwork) any())).then(returnsFirstArg());
         
@@ -134,11 +135,12 @@ public class ArtworkStorageTest {
         when(imageNode.getFileType()).thenReturn(FileType.of("image/png", "png"));
         when(imageNode.getChecksum()).thenReturn(CHECKSUM);
         ImageNodeArtworkStorageCommand command = new ImageNodeArtworkStorageCommand(sourceUri(), imageNode);
+
         checkGetAndSaveArtwork(rethrow(() -> artworkStorage.getOrSave(command)));
     }
 
     @Test
-    public void shouldDeleteCreatedFilesOnRollback() throws Exception {
+    public void shouldDeleteCreatedFilesOnRollback() throws IOException {
 
         when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
         when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
@@ -161,7 +163,7 @@ public class ArtworkStorageTest {
     }
 
     @Test
-    public void shouldDelete() throws Exception {
+    public void shouldDelete() throws IOException {
         
         File largeImageFile = new File(artworkFolder, PATH_LARGE);
         File smallImageFile = new File(artworkFolder, PATH_SMALL);
@@ -172,8 +174,11 @@ public class ArtworkStorageTest {
 
         Artwork artwork = artwork();
         when(artworkRepository.findOne((Long) any())).thenReturn(artwork);
+
         artworkStorage.delete(5L);
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+
         verify(artworkRepository).delete(artwork);
         
         assertThat(largeImageFile).doesNotExist();
@@ -181,14 +186,17 @@ public class ArtworkStorageTest {
     }
 
     @Test
-    public void shouldIgnoreNotExistingFilesWhenDeleting() throws Exception {
+    public void shouldIgnoreNotExistingFilesWhenDeleting() {
+
         Artwork artwork = artwork();
         when(artworkRepository.findOne((Long) any())).thenReturn(artwork);
+
         artworkStorage.delete(5L);
+
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
 
-    private void checkGetAndSaveArtwork(Supplier<ArtworkFiles> doGetAndSave) throws Exception {
+    private void checkGetAndSaveArtwork(Supplier<ArtworkFiles> doGetAndSave) throws IOException {
 
         ArgumentCaptor<Artwork> savedArtwork = ArgumentCaptor.forClass(Artwork.class);
 
@@ -206,7 +214,9 @@ public class ArtworkStorageTest {
         checkSavedArtwork(savedArtwork.getValue());
 
         when(artworkRepository.findByChecksumAndSourceUriScheme(any(), any())).thenReturn(artworkFiles.getArtwork());
+
         doGetAndSave.get();
+
         verify(artworkRepository, times(1)).save(savedArtwork.capture());
     }
     
