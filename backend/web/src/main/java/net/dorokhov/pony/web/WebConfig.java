@@ -49,7 +49,7 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                      PasswordEncoder passwordEncoder,
                      SecurityContextRepository securityContextRepository,
                      AuthenticationEntryPoint authenticationEntryPoint,
-                     AccessDeniedHandler accessDeniedHandler, 
+                     AccessDeniedHandler accessDeniedHandler,
                      AuthenticationSuccessHandler authenticationSuccessHandler,
                      AuthenticationFailureHandlerImpl authenticationFailureHandler,
                      LogoutSuccessHandler logoutSuccessHandler) {
@@ -68,30 +68,28 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(new ApiInfo(
                         "Pony - Music Streamer",
-                        "Pony is an open source music streaming server written in Java. " 
-                                + "This project was originally started as a playground for development of my skills in Java and modern web interfaces. " 
-                                + "Later it turned into something that I really like to use myself. " 
+                        "Pony is an open source music streaming server written in Java. "
+                                + "This project was originally started as a playground for development of my skills in Java and modern web interfaces. "
+                                + "Later it turned into something that I really like to use myself. "
                                 + "If you have an MP3 collection that you want to listen in your web browser, then probably it's a project for you.",
                         null,
                         null,
                         new Contact(
-                                "Denis Dorokhov", 
-                                "https://github.com/DenisDorokhov/pony2", 
+                                "Denis Dorokhov",
+                                "https://github.com/DenisDorokhov/pony2",
                                 null
                         ),
                         null,
-                        null, 
+                        null,
                         emptyList()
                 ))
                 .useDefaultResponseMessages(false)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(WebConfig.class.getPackage().getName()))
                 .build()
-                .securitySchemes(newArrayList(apiKey()));
-    }
-    
-    private ApiKey apiKey() {
-        return new ApiKey("token", "Authorization", "header");
+                .securitySchemes(newArrayList(
+                        new ApiKey("token", "Authorization", "header")
+                ));
     }
 
     @Override
@@ -108,10 +106,10 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(STATELESS)
 
                 .and()
-                
+
                 .securityContext()
                 .securityContextRepository(securityContextRepository)
-                
+
                 .and()
 
                 .exceptionHandling()
@@ -128,14 +126,14 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                 .failureHandler(authenticationFailureHandler)
 
                 .and()
-                
+
                 .logout()
                 .logoutRequestMatcher(
                         new AntPathRequestMatcher(
                                 "/api/authentication",
                                 HttpMethod.DELETE.name()))
                 .logoutSuccessHandler(logoutSuccessHandler)
-                
+
                 .and()
 
                 .authorizeRequests()
