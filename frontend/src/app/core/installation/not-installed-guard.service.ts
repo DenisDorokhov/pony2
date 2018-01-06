@@ -6,7 +6,7 @@ import 'rxjs/add/operator/do';
 import {InstallationService} from './installation.service';
 
 @Injectable()
-export class InstallationGuard implements CanLoad {
+export class NotInstalledGuardService implements CanLoad {
 
   constructor(private installationService: InstallationService,
               private router: Router) {
@@ -14,11 +14,11 @@ export class InstallationGuard implements CanLoad {
 
   canLoad(): Observable<boolean> {
     return this.installationService.getInstallationStatus()
-      .map(installationStatus => installationStatus.installed)
-      .do(installed => {
-        if (!installed) {
-          this.router.navigate(['/install']);
+      .do(installationStatus => {
+        if (installationStatus.installed) {
+          this.router.navigate(['/'], {skipLocationChange: true});
         }
-      });
+      })
+      .map(installationStatus => !installationStatus.installed);
   }
 }

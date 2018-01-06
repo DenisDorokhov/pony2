@@ -1,7 +1,8 @@
 import {NgModule} from '@angular/core';
 import {HttpClientModule} from '@angular/common/http';
 import {InstallationService} from './installation/installation.service';
-import {InstallationGuard} from './installation/installation-guard.service';
+import {InstalledGuardService} from './installation/installed-guard.service';
+import {NotInstalledGuardService} from './installation/not-installed-guard.service';
 
 @NgModule({
   imports: [
@@ -9,7 +10,8 @@ import {InstallationGuard} from './installation/installation-guard.service';
   ],
   providers: [
     InstallationService,
-    InstallationGuard,
+    InstalledGuardService,
+    NotInstalledGuardService,
   ]
 })
 export class CoreModule {
