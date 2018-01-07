@@ -8,6 +8,7 @@ export class ErrorDirective implements OnChanges {
 
   @Input() ponyError: ErrorDto;
   @Input() ponyErrorField: string;
+  @Input() ponyIgnoredErrorCodes: string[];
 
   private errorMessageElement: HTMLElement;
 
@@ -18,21 +19,53 @@ export class ErrorDirective implements OnChanges {
     this.clearState();
     const errorMessages = this.fetchErrorMessages().sort();
     if (errorMessages.length > 0) {
-      this.renderer.addClass(this.elementRef.nativeElement, 'has-error');
-      if (errorMessages.length > 1) {
-        this.errorMessageElement = document.createElement('ul');
-        errorMessages.forEach(message => {
-          const itemElement = document.createElement('li');
-          itemElement.textContent = message;
-          this.renderer.appendChild(this.errorMessageElement, itemElement);
-        });
-      } else {
-        this.errorMessageElement = document.createElement('span');
-        this.errorMessageElement.textContent = errorMessages[0];
+      if (this.ponyErrorField) {
+        if (errorMessages.length > 1) {
+          this.showFieldErrorList(errorMessages);
+        } else {
+          this.showFieldError(errorMessages[0]);
+        }
+      } else if (!this.ponyIgnoredErrorCodes || this.ponyIgnoredErrorCodes.indexOf(this.ponyError.code) < 0) {
+        this.showGeneralErrorList(errorMessages);
       }
-      this.renderer.addClass(this.errorMessageElement, 'help-block');
-      this.renderer.appendChild(this.elementRef.nativeElement, this.errorMessageElement);
     }
+  }
+
+  private showFieldErrorList(errorMessages: string[]) {
+    this.renderer.addClass(this.elementRef.nativeElement, 'has-error');
+    this.errorMessageElement = document.createElement('ul');
+    errorMessages.forEach(message => {
+      const itemElement = document.createElement('li');
+      itemElement.textContent = message;
+      this.renderer.appendChild(this.errorMessageElement, itemElement);
+    });
+    this.renderer.addClass(this.errorMessageElement, 'help-block');
+    this.renderer.appendChild(this.elementRef.nativeElement, this.errorMessageElement);
+  }
+
+  private showFieldError(errorMessage: string) {
+    this.renderer.addClass(this.elementRef.nativeElement, 'has-error');
+    this.errorMessageElement = document.createElement('span');
+    this.errorMessageElement.textContent = errorMessage;
+    this.renderer.addClass(this.errorMessageElement, 'help-block');
+    this.renderer.appendChild(this.elementRef.nativeElement, this.errorMessageElement);
+  }
+
+  private showGeneralErrorList(errorMessages: string[]) {
+    this.errorMessageElement = document.createElement('div');
+    this.renderer.addClass(this.errorMessageElement, 'alert');
+    this.renderer.addClass(this.errorMessageElement, 'alert-danger');
+    const headerElement = document.createElement('strong');
+    headerElement.textContent = 'Errors';
+    this.renderer.appendChild(this.errorMessageElement, headerElement);
+    const listElement = document.createElement('ul');
+    errorMessages.forEach(message => {
+      const itemElement = document.createElement('li');
+      itemElement.textContent = message;
+      this.renderer.appendChild(listElement, itemElement);
+    });
+    this.renderer.appendChild(this.errorMessageElement, listElement);
+    this.renderer.insertBefore(this.elementRef.nativeElement, this.errorMessageElement, this.elementRef.nativeElement.children[0]);
   }
 
   private clearState() {

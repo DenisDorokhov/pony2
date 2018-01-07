@@ -7,7 +7,8 @@
       <h3 class="panel-title">Installation</h3>
     </div>
     <div class="panel-body">
-      <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
+      <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate
+            [ponyError]="error" [ponyIgnoredErrorCodes]="['VALIDATION']">
 
         <div class="form-group" formArrayName="libraryFolders">
           <label class="control-label">Library folders:</label>

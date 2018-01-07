@@ -30,7 +30,7 @@ export class ErrorDto {
   fieldViolations: FieldViolation[];
 
   static fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
-    if (error.error) {
+    if (typeof error.error === 'object') {
       return <ErrorDto>error.error;
     } else {
       return <ErrorDto>{code: Code.UNEXPECTED, message: 'Unexpected error occurred.'};
