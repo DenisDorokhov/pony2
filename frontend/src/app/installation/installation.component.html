@@ -53,7 +53,8 @@
                  placeholder="Enter password">
         </div>
 
-        <div class="form-group">
+        <div class="form-group"
+             [ponyError]="error" ponyErrorField="repeatAdminPassword">
           <label for="repeatAdminPassword" class="control-label">Repeat admin password:</label>
           <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
                  placeholder="Repeat password">
@@ -62,7 +63,7 @@
         <div class="form-group"
              [ponyError]="error" ponyErrorField="installationSecret">
           <label for="installationSecret" class="control-label">Installation secret:</label>
-          <input id="installationSecret" formControlName="installationSecret" type="text" class="form-control"
+          <input id="installationSecret" formControlName="installationSecret" type="password" class="form-control"
                  placeholder="Get from file ~/pony2/installationSecret">
         </div>
 

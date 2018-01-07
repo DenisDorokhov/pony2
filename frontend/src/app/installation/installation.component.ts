@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
+import {Router} from '@angular/router';
 import {ErrorDto} from '../core/error.dto';
 import {InstallationCommandDto} from '../core/installation-command.dto';
 import {InstallationService} from '../core/installation.service';
@@ -19,7 +20,8 @@ export class InstallationComponent {
   }
 
   constructor(private installationService: InstallationService,
-              private formBuilder: FormBuilder) {
+              private formBuilder: FormBuilder,
+              private router: Router) {
     this.installationForm = formBuilder.group({
       installationSecret: '',
       libraryFolders: formBuilder.array([
@@ -46,6 +48,7 @@ export class InstallationComponent {
       installation => {
         console.log('Version ' + installation.version + ' has been installed.');
         this.error = null;
+        this.router.navigate(['/'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
         if (error.code === ErrorDto.Code.VALIDATION) {

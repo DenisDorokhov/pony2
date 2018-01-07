@@ -2,6 +2,8 @@ package net.dorokhov.pony.web.domain;
 
 import net.dorokhov.pony.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony.web.validation.InstallationSecret;
+import net.dorokhov.pony.web.validation.RepeatPassword;
+import net.dorokhov.pony.web.validation.RepeatPasswordValue;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -11,6 +13,7 @@ import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RepeatPassword
 public final class InstallationCommandDto {
 
     @InstallationSecret
@@ -31,16 +34,22 @@ public final class InstallationCommandDto {
 
     @NotBlank
     @Size(min = 6, max = 255)
+    @RepeatPasswordValue
     private final String adminPassword;
+
+    @RepeatPasswordValue(constraintViolationField = true)
+    private final String repeatAdminPassword;
 
     public InstallationCommandDto(String installationSecret,
                                   List<LibraryFolderDto> libraryFolders,
-                                  String adminName, String adminEmail, String adminPassword) {
+                                  String adminName, String adminEmail, 
+                                  String adminPassword, String repeatAdminPassword) {
         this.installationSecret = installationSecret;
         this.libraryFolders = libraryFolders;
         this.adminName = adminName;
         this.adminEmail = adminEmail;
         this.adminPassword = adminPassword;
+        this.repeatAdminPassword = repeatAdminPassword;
     }
 
     public String getInstallationSecret() {
@@ -61,6 +70,10 @@ public final class InstallationCommandDto {
 
     public String getAdminPassword() {
         return adminPassword;
+    }
+
+    public String getRepeatAdminPassword() {
+        return repeatAdminPassword;
     }
 
     public InstallationCommand convert() {

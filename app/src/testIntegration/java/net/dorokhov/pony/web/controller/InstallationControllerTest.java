@@ -54,8 +54,8 @@ public class InstallationControllerTest extends IntegrationTest {
                 emptyList(),
                 "Foo Bar",
                 "foo@bar.com",
-                "somePassword"
-        );
+                "somePassword",
+                "somePassword");
 
         ResponseEntity<InstallationDto> installationResponse = restTemplate.postForEntity("/api/installation", command, InstallationDto.class);
 
@@ -96,18 +96,25 @@ public class InstallationControllerTest extends IntegrationTest {
                 ImmutableList.of(LibraryFolderDto.of(new File("notExistingFile"))),
                 " ",
                 "invalidEmail",
-                " "
-        );
+                " ",
+                "notMatchingPassword");
 
         ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
             assertThat(error.getCode()).isSameAs(Code.VALIDATION);
-            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(5);
+            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(6);
             assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("installationSecret", "libraryFolders[0].path", "adminName", "adminEmail", "adminPassword");
+                    .containsExactlyInAnyOrder(
+                            "installationSecret", 
+                            "libraryFolders[0].path", 
+                            "adminName", 
+                            "adminEmail", 
+                            "adminPassword",
+                            "repeatAdminPassword"
+                    );
         });
     }
 
@@ -119,8 +126,8 @@ public class InstallationControllerTest extends IntegrationTest {
                 emptyList(),
                 "Foo Bar",
                 "foo@bar.com",
-                "somePassword"
-        );
+                "somePassword",
+                "somePassword");
         restTemplate.postForEntity("/api/installation", command, Void.class);
 
         ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);

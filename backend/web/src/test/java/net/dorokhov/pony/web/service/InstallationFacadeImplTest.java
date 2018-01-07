@@ -91,7 +91,7 @@ public class InstallationFacadeImplTest {
                 .build();
         when(installationService.install(any())).thenReturn(installation);
         InstallationCommandDto command = new InstallationCommandDto("someSecret", emptyList(),
-                "Foo Bar", "foo@bar.com", "somePassword");
+                "Foo Bar", "foo@bar.com", "somePassword", "somePassword");
 
         assertThat(installationServiceFacade.install(command)).satisfies(installationDto ->
                 assertThat(installationDto.getVersion()).isEqualTo("2.0"));
@@ -102,7 +102,7 @@ public class InstallationFacadeImplTest {
 
         when(installationSecretManager.fetchInstallationSecret()).thenReturn("someSecret");
         InstallationCommandDto command = new InstallationCommandDto("invalidSecret", emptyList(),
-                "Foo Bar", "foo@bar.com", "somePassword");
+                "Foo Bar", "foo@bar.com", "somePassword", "somePassword");
 
         assertThatThrownBy(() -> installationServiceFacade.install(command)).isInstanceOf(InvalidInstallationSecretException.class);
     }

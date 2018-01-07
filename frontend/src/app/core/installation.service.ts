@@ -28,6 +28,7 @@ export class InstallationService {
 
   install(installationCommand: InstallationCommandDto): Observable<InstallationDto> {
     return this.httpClient.post<InstallationDto>('/api/installation', installationCommand)
+      .do(installation => this.installationStatus = undefined)
       .catch(ErrorDto.observableFromHttpErrorResponse);
   }
 }
