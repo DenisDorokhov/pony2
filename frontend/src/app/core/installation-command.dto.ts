@@ -1,6 +1,11 @@
-import {LibraryFolder} from './library-folder.model';
+class LibraryFolder {
+  path: string;
+}
 
-export class InstallationCommand {
+export class InstallationCommandDto {
+
+  static LibraryFolder = LibraryFolder;
+
   installationSecret: string;
   libraryFolders: [LibraryFolder];
   adminName: string;

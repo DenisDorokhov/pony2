@@ -1,12 +1,12 @@
-import {CanLoad, Router} from '@angular/router';
 import {Injectable} from '@angular/core';
-import {Observable} from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import {CanLoad, Router} from '@angular/router';
 import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/map';
+import {Observable} from 'rxjs/Observable';
 import {InstallationService} from './installation.service';
 
 @Injectable()
-export class NotInstalledGuardService implements CanLoad {
+export class NotInstalledGuard implements CanLoad {
 
   constructor(private installationService: InstallationService,
               private router: Router) {

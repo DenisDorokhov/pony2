@@ -9,17 +9,10 @@
     <div class="panel-body">
       <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
 
-        <div class="form-group">
-          <label for="installationSecret" class="center-block">Installation secret:</label>
-          <input id="installationSecret" formControlName="installationSecret" type="text" class="form-control"
-                 placeholder="Enter installation secret">
-          <p class="help-block">Must be taken from file <b>~/pony2/installationSecret</b>.</p>
-        </div>
-
         <div class="form-group" formArrayName="libraryFolders">
           <label class="center-block">Library folders:</label>
           <div class="input-group" *ngFor="let libraryFolder of libraryFolders.controls; let i = index;" [formGroupName]="i">
-            <input formControlName="path" type="text" class="form-control"
+            <input ponyAutoFocus formControlName="path" type="text" class="form-control"
                    placeholder="Enter full folder path">
             <span class="input-group-btn">
                 <button type="button" class="btn btn-default add"
@@ -58,6 +51,13 @@
           <label for="repeatAdminPassword" class="center-block">Repeat admin password:</label>
           <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
                  placeholder="Repeat password">
+        </div>
+
+        <div class="form-group">
+          <label for="installationSecret" class="center-block">Installation secret:</label>
+          <input id="installationSecret" formControlName="installationSecret" type="text" class="form-control"
+                 placeholder="Enter installation secret">
+          <p class="help-block">Must be taken from file <b>~/pony2/installationSecret</b>.</p>
         </div>
 
         <button type="submit" class="btn btn-primary">Install</button>

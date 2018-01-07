@@ -1,7 +1,8 @@
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
-import {InstallationCommand} from './installation-command.model';
-import {LibraryFolder} from './library-folder.model';
+import {ErrorDto} from '../core/error-dto.model';
+import {InstallationCommandDto} from '../core/installation-command.dto';
+import {InstallationService} from '../core/installation.service';
 
 @Component({
   selector: 'pony-installation',
@@ -16,7 +17,8 @@ export class InstallationComponent {
     return this.installationForm.get('libraryFolders') as FormArray;
   }
 
-  constructor(private formBuilder: FormBuilder) {
+  constructor(private installationService: InstallationService,
+              private formBuilder: FormBuilder) {
     this.installationForm = formBuilder.group({
       installationSecret: '',
       libraryFolders: formBuilder.array([
@@ -38,18 +40,18 @@ export class InstallationComponent {
   }
 
   install() {
-    const installationCommand = this.buildInstallationCommand();
-    console.log('To be implemented.');
-  }
-
-  private buildInstallationCommand(): InstallationCommand {
-    const formValue = this.installationForm.value;
-    return <InstallationCommand>{
-      installationSecret: formValue.installationSecret,
-      libraryFolders: formValue.libraryFolders.map(value => <LibraryFolder>{path: value.path}),
-      adminName: formValue.adminName,
-      adminEmail: formValue.adminEmail,
-      adminPassword: formValue.adminPassword,
-    };
+    const installationCommand = <InstallationCommandDto>this.installationForm.value;
+    this.installationService.install(installationCommand).subscribe(
+      installation => {
+        console.log('Version ' + installation.version + ' has been installed.');
+      },
+      (error: ErrorDto) => {
+        if (error.code === ErrorDto.Code.VALIDATION) {
+          console.log('Validation failed.');
+        } else {
+          console.log('Installation failed.');
+        }
+      }
+    );
   }
 }

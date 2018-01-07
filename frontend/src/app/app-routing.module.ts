@@ -1,12 +1,12 @@
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
-import {InstalledGuardService} from './core/installation/installed-guard.service';
-import {NotInstalledGuardService} from './core/installation/not-installed-guard.service';
+import {InstalledGuard} from './core/installed-guard.service';
+import {NotInstalledGuard} from './core/not-installed-guard.service';
 
 const routes: Routes = [
   {path: '', redirectTo: 'library', pathMatch: 'full'},
-  {path: 'install', loadChildren: './installation/installation.module#InstallationModule', canLoad: [NotInstalledGuardService]},
-  {path: 'library', loadChildren: './library/library.module#LibraryModule', canLoad: [InstalledGuardService]},
+  {path: 'install', loadChildren: './installation/installation.module#InstallationModule', canLoad: [NotInstalledGuard]},
+  {path: 'library', loadChildren: './library/library.module#LibraryModule', canLoad: [InstalledGuard]},
 ];
 
 @NgModule({
