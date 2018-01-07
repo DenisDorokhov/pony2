@@ -7,7 +7,7 @@ export class InstallationCommandDto {
   static LibraryFolder = LibraryFolder;
 
   installationSecret: string;
-  libraryFolders: [LibraryFolder];
+  libraryFolders: LibraryFolder[];
   adminName: string;
   adminEmail: string;
   adminPassword: string;

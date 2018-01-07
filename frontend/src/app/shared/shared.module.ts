@@ -1,16 +1,19 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {AutoFocusDirective} from './auto-focus.directive';
+import { ErrorDirective } from './error.directive';
 
 @NgModule({
   imports: [
-    CommonModule
+    CommonModule,
   ],
   exports: [
-    AutoFocusDirective
+    AutoFocusDirective,
+    ErrorDirective,
   ],
   declarations: [
-    AutoFocusDirective
+    AutoFocusDirective,
+    ErrorDirective,
   ]
 })
 export class SharedModule { }

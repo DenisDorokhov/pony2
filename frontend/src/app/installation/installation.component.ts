@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
-import {ErrorDto} from '../core/error-dto.model';
+import {ErrorDto} from '../core/error.dto';
 import {InstallationCommandDto} from '../core/installation-command.dto';
 import {InstallationService} from '../core/installation.service';
 
@@ -12,6 +12,7 @@ import {InstallationService} from '../core/installation.service';
 export class InstallationComponent {
 
   installationForm: FormGroup;
+  error: ErrorDto;
 
   get libraryFolders(): FormArray {
     return this.installationForm.get('libraryFolders') as FormArray;
@@ -44,6 +45,7 @@ export class InstallationComponent {
     this.installationService.install(installationCommand).subscribe(
       installation => {
         console.log('Version ' + installation.version + ' has been installed.');
+        this.error = null;
       },
       (error: ErrorDto) => {
         if (error.code === ErrorDto.Code.VALIDATION) {
@@ -51,6 +53,7 @@ export class InstallationComponent {
         } else {
           console.log('Installation failed.');
         }
+        this.error = error;
       }
     );
   }

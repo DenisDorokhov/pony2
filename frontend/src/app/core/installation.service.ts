@@ -4,7 +4,7 @@ import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/catch';
 import {Observable} from 'rxjs/Observable';
-import {ErrorDto} from './error-dto.model';
+import {ErrorDto} from './error.dto';
 import {InstallationCommandDto} from './installation-command.dto';
 import {InstallationStatusDto} from './installation-status.dto';
 import {InstallationDto} from './installation.dto';

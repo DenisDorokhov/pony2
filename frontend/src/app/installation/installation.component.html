@@ -9,8 +9,9 @@
     <div class="panel-body">
       <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
 
-        <div class="form-group" formArrayName="libraryFolders">
-          <label class="center-block">Library folders:</label>
+        <div class="form-group" formArrayName="libraryFolders"
+             [ponyError]="error" ponyErrorField="libraryFolders">
+          <label class="control-label">Library folders:</label>
           <div class="input-group" *ngFor="let libraryFolder of libraryFolders.controls; let i = index;" [formGroupName]="i">
             <input ponyAutoFocus formControlName="path" type="text" class="form-control"
                    placeholder="Enter full folder path">
@@ -29,35 +30,38 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="adminName" class="center-block">Admin name:</label>
+        <div class="form-group"
+             [ponyError]="error" ponyErrorField="adminName">
+          <label for="adminName" class="control-label">Admin name:</label>
           <input id="adminName" formControlName="adminName" type="text" class="form-control"
                  placeholder="Enter name">
         </div>
 
-        <div class="form-group">
-          <label for="adminEmail" class="center-block">Admin email:</label>
+        <div class="form-group"
+             [ponyError]="error" ponyErrorField="adminEmail">
+          <label for="adminEmail" class="control-label">Admin email:</label>
           <input id="adminEmail" formControlName="adminEmail" type="text" class="form-control"
                  placeholder="Enter email">
         </div>
 
-        <div class="form-group">
-          <label for="adminPassword" class="center-block">Admin password:</label>
+        <div class="form-group"
+             [ponyError]="error" ponyErrorField="adminPassword">
+          <label for="adminPassword" class="control-label">Admin password:</label>
           <input id="adminPassword" formControlName="adminPassword" type="password" class="form-control"
                  placeholder="Enter password">
         </div>
 
         <div class="form-group">
-          <label for="repeatAdminPassword" class="center-block">Repeat admin password:</label>
+          <label for="repeatAdminPassword" class="control-label">Repeat admin password:</label>
           <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
                  placeholder="Repeat password">
         </div>
 
-        <div class="form-group">
-          <label for="installationSecret" class="center-block">Installation secret:</label>
+        <div class="form-group"
+             [ponyError]="error" ponyErrorField="installationSecret">
+          <label for="installationSecret" class="control-label">Installation secret:</label>
           <input id="installationSecret" formControlName="installationSecret" type="text" class="form-control"
-                 placeholder="Enter installation secret">
-          <p class="help-block">Must be taken from file <b>~/pony2/installationSecret</b>.</p>
+                 placeholder="Get from file ~/pony2/installationSecret">
         </div>
 
         <button type="submit" class="btn btn-primary">Install</button>

@@ -16,7 +16,7 @@ class FieldViolation {
   field: string;
   code: string;
   message: string;
-  arguments: [string];
+  arguments: string[];
 }
 
 export class ErrorDto {
@@ -26,8 +26,8 @@ export class ErrorDto {
 
   code: Code;
   message: string;
-  arguments: [string];
-  fieldViolations: [FieldViolation];
+  arguments: string[];
+  fieldViolations: FieldViolation[];
 
   static fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
     if (error.error) {
