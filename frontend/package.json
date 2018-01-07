@@ -5,8 +5,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --live-reload false --proxy-config proxy.conf.json --progress=false",
-    "build": "ng build --prod --progress=false",
-    "buildDev": "ng build --progress=false",
+    "build": "ng build --aot=true --progress=false --prod",
+    "buildDev": "ng build --aot=true --progress=false",
     "test": "ng test --single-run --progress=false",
     "lint": "ng lint --type-check",
     "e2e": "ng e2e --progress=false"
