@@ -9,24 +9,26 @@
     <div class="panel-body">
       <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
 
-        <div class="form-group" formArrayName="libraryFolders"
-             [ponyError]="error" ponyErrorField="libraryFolders">
+        <div class="form-group" formArrayName="libraryFolders">
           <label class="control-label">Library folders:</label>
-          <div class="input-group" *ngFor="let libraryFolder of libraryFolders.controls; let i = index;" [formGroupName]="i">
-            <input ponyAutoFocus formControlName="path" type="text" class="form-control"
-                   placeholder="Enter full folder path">
-            <span class="input-group-btn">
-                <button type="button" class="btn btn-default add"
-                        [disabled]="libraryFolders.controls.length >= 5"
-                        (click)="addLibraryFolder()">
-                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                </button>
-                <button type="button" class="btn btn-default remove"
-                        [disabled]="libraryFolders.controls.length <= 1"
-                        (click)="removeLibraryFolder(i)">
-                    <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
-                </button>
-            </span>
+          <div *ngFor="let libraryFolder of libraryFolders.controls; let i = index;" [formGroupName]="i"
+               [ponyError]="error" [ponyErrorField]="'libraryFolders[' + i + '].path'">
+            <div class="input-group">
+              <input ponyAutoFocus formControlName="path" type="text" class="form-control"
+                     placeholder="Enter full folder path">
+              <span class="input-group-btn">
+                  <button type="button" class="btn btn-default add"
+                          [disabled]="libraryFolders.controls.length >= 5"
+                          (click)="addLibraryFolder()">
+                      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="btn btn-default remove"
+                          [disabled]="libraryFolders.controls.length <= 1"
+                          (click)="removeLibraryFolder(i)">
+                      <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                  </button>
+              </span>
+            </div>
           </div>
         </div>
 

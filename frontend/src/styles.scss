@@ -1,5 +1,11 @@
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
+// Hide button focus (looks ugly in some operating systems.
 * {
   outline: none !important;
+}
+
+// Hide disabled button icon (looks ugly).
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+  pointer-events: none;
 }

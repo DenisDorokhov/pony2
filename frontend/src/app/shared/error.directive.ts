@@ -16,7 +16,7 @@ export class ErrorDirective implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     this.clearState();
-    const errorMessages = this.fetchErrorMessages();
+    const errorMessages = this.fetchErrorMessages().sort();
     if (errorMessages.length > 0) {
       this.renderer.addClass(this.elementRef.nativeElement, 'has-error');
       if (errorMessages.length > 1) {
@@ -44,7 +44,6 @@ export class ErrorDirective implements OnChanges {
   }
 
   private fetchErrorMessages(): string[] {
-    const errorMessages: string[] = [];
     if (this.ponyErrorField) {
       if (this.ponyError && this.ponyError.fieldViolations) {
         return this.ponyError.fieldViolations
