@@ -7,66 +7,64 @@
       <h3 class="panel-title">Installation</h3>
     </div>
     <div class="panel-body">
-      <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate
-            [ponyError]="error" [ponyIgnoredErrorCodes]="['VALIDATION']">
+      <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
+
+        <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
 
         <div class="form-group" formArrayName="libraryFolders">
-          <label class="control-label">Library folders:</label>
-          <div *ngFor="let libraryFolder of libraryFolders.controls; let i = index;" [formGroupName]="i"
-               [ponyError]="error" [ponyErrorField]="'libraryFolders[' + i + '].path'">
+          <span [class.has-error]="fieldHasViolation(error, 'libraryFolders')">
+            <label class="control-label">Library folders:</label>
+          </span>
+          <pony-field-error-container *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
+                                      [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
             <div class="input-group">
               <input ponyAutoFocus formControlName="path" type="text" class="form-control"
                      placeholder="Enter full folder path">
               <span class="input-group-btn">
-                  <button type="button" class="btn btn-default add"
-                          [disabled]="libraryFolders.controls.length >= 5"
-                          (click)="addLibraryFolder()">
-                      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                  </button>
-                  <button type="button" class="btn btn-default remove"
-                          [disabled]="libraryFolders.controls.length <= 1"
-                          (click)="removeLibraryFolder(i)">
-                      <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
-                  </button>
+                <button type="button" class="btn btn-default add"
+                        [disabled]="libraryFolders.controls.length >= 5"
+                        (click)="addLibraryFolder()">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-default remove"
+                        [disabled]="libraryFolders.controls.length <= 1"
+                        (click)="removeLibraryFolder(i)">
+                    <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                </button>
               </span>
             </div>
-          </div>
+          </pony-field-error-container>
         </div>
 
-        <div class="form-group"
-             [ponyError]="error" ponyErrorField="adminName">
+        <pony-field-error-container class="form-group" [error]="error" [field]="'adminName'">
           <label for="adminName" class="control-label">Admin name:</label>
           <input id="adminName" formControlName="adminName" type="text" class="form-control"
                  placeholder="Enter name">
-        </div>
+        </pony-field-error-container>
 
-        <div class="form-group"
-             [ponyError]="error" ponyErrorField="adminEmail">
+        <pony-field-error-container class="form-group" [error]="error" [field]="'adminEmail'">
           <label for="adminEmail" class="control-label">Admin email:</label>
           <input id="adminEmail" formControlName="adminEmail" type="text" class="form-control"
                  placeholder="Enter email">
-        </div>
+        </pony-field-error-container>
 
-        <div class="form-group"
-             [ponyError]="error" ponyErrorField="adminPassword">
+        <pony-field-error-container class="form-group" [error]="error" [field]="'adminPassword'">
           <label for="adminPassword" class="control-label">Admin password:</label>
           <input id="adminPassword" formControlName="adminPassword" type="password" class="form-control"
                  placeholder="Enter password">
-        </div>
+        </pony-field-error-container>
 
-        <div class="form-group"
-             [ponyError]="error" ponyErrorField="repeatAdminPassword">
+        <pony-field-error-container class="form-group" [error]="error" [field]="'repeatAdminPassword'">
           <label for="repeatAdminPassword" class="control-label">Repeat admin password:</label>
           <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
                  placeholder="Repeat password">
-        </div>
+        </pony-field-error-container>
 
-        <div class="form-group"
-             [ponyError]="error" ponyErrorField="installationSecret">
+        <pony-field-error-container class="form-group" [error]="error" [field]="'installationSecret'">
           <label for="installationSecret" class="control-label">Installation secret:</label>
           <input id="installationSecret" formControlName="installationSecret" type="password" class="form-control"
                  placeholder="Get from file ~/pony2/installationSecret">
-        </div>
+        </pony-field-error-container>
 
         <button type="submit" class="btn btn-primary">Install</button>
 

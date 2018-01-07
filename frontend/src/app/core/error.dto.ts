@@ -29,6 +29,16 @@ export class ErrorDto {
   arguments: string[];
   fieldViolations: FieldViolation[];
 
+  static fieldHasViolation(error: ErrorDto, fieldRegex: string): boolean {
+    if (!error) {
+      return false;
+    }
+    const regex = new RegExp(fieldRegex);
+    return error.fieldViolations
+      .filter(fieldViolation => regex.test(fieldViolation.field))
+      .length > 0;
+  }
+
   static fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
     if (typeof error.error === 'object') {
       return <ErrorDto>error.error;

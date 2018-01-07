@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --proxy-config proxy.conf.json --progress=false",
+    "start": "ng serve --live-reload false --proxy-config proxy.conf.json --progress=false",
     "build": "ng build --prod --progress=false",
     "buildDev": "ng build --progress=false",
     "test": "ng test --single-run --progress=false",

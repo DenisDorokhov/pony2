@@ -1,7 +1,8 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {AutoFocusDirective} from './auto-focus.directive';
-import { ErrorDirective } from './error.directive';
+import {ErrorContainerComponent} from './error-container.component';
+import {ErrorComponent} from './error.component';
 
 @NgModule({
   imports: [
@@ -9,11 +10,13 @@ import { ErrorDirective } from './error.directive';
   ],
   exports: [
     AutoFocusDirective,
-    ErrorDirective,
+    ErrorContainerComponent,
+    ErrorComponent,
   ],
   declarations: [
     AutoFocusDirective,
-    ErrorDirective,
+    ErrorContainerComponent,
+    ErrorComponent,
   ]
 })
 export class SharedModule { }

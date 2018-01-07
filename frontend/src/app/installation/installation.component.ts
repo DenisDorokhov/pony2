@@ -15,6 +15,8 @@ export class InstallationComponent {
   installationForm: FormGroup;
   error: ErrorDto;
 
+  fieldHasViolation = ErrorDto.fieldHasViolation;
+
   get libraryFolders(): FormArray {
     return this.installationForm.get('libraryFolders') as FormArray;
   }
