@@ -1,15 +1,5 @@
 package net.dorokhov.pony.core.library.service.artwork;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.UUID;
-import java.util.function.Supplier;
-import javax.annotation.Nullable;
-
 import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.Artwork;
 import net.dorokhov.pony.api.library.domain.ArtworkFiles;
@@ -28,6 +18,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+
+import javax.annotation.Nullable;
+import java.io.*;
+import java.net.URI;
+import java.util.UUID;
+import java.util.function.Supplier;
 
 import static net.dorokhov.pony.common.RethrowingLambdas.rethrow;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
@@ -83,11 +79,7 @@ public class ArtworkStorage {
             return doGetOrSave(command.getSourceUri(),
                     () -> checksumCalculator.calculate(content),
                     () -> fileTypeResolver.resolve(content),
-                    rethrow(() -> {
-                        try (ByteArrayInputStream stream = new ByteArrayInputStream(content)) {
-                            return stream;
-                        }
-                    }));
+                    () -> new ByteArrayInputStream(content));
         }
     }
 
@@ -98,11 +90,7 @@ public class ArtworkStorage {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> checksumCalculator.calculate(file)),
                     rethrow(() -> fileTypeResolver.resolve(file)),
-                    rethrow(() -> {
-                        try (FileInputStream stream = new FileInputStream(file)) {
-                            return stream;
-                        }
-                    }));
+                    rethrow(() -> new FileInputStream(file)));
         }
     }
 
@@ -112,11 +100,7 @@ public class ArtworkStorage {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> command.getImageNode().getChecksum()),
                     rethrow(() -> command.getImageNode().getFileType()),
-                    rethrow(() -> {
-                        try (FileInputStream stream = new FileInputStream(command.getImageNode().getFile())) {
-                            return stream;
-                        }
-                    }));
+                    rethrow(() -> new FileInputStream(command.getImageNode().getFile())));
         }
     }
 
@@ -169,8 +153,12 @@ public class ArtworkStorage {
         Files.createParentDirs(smallImageFile);
         Files.createParentDirs(largeImageFile);
 
-        thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeSmall, smallImageFile);
-        thumbnailGenerator.generateThumbnail(streamSupplier.get(), artworkSizeLarge, largeImageFile);
+        try (InputStream stream = streamSupplier.get()) {
+            thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, smallImageFile);
+        }
+        try (InputStream stream = streamSupplier.get()) {
+            thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, largeImageFile);
+        }
 
         artwork = artworkRepository.save(Artwork.builder()
                 .mimeType(fileType.getMimeType())
