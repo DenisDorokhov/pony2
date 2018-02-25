@@ -117,6 +117,9 @@ public class ScanResultCalculatorTest {
 
         when(scanResultRepository.save((ScanResult) any())).then(returnsFirstArg());
 
+        File targetFile1 = new File("/targetFile1");
+        File targetFile2 = new File("/targetFile2");
+        File failedFile = new File("/failedFile");
         ScanResult scanResult = scanResultCalculator.calculateAndSave(rethrow(() -> {
             Thread.sleep(100);
             return new ScanResultCalculator.AudioFileProcessingResult() {
@@ -128,13 +131,13 @@ public class ScanResultCalculatorTest {
                 @Override
                 @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
                 public List<File> getTargetFiles() {
-                    return ImmutableList.of(new File("/file1"), new File("/file2"));
+                    return ImmutableList.of(targetFile1, targetFile2);
                 }
 
                 @Override
                 @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
                 public List<File> getFailedFiles() {
-                    return ImmutableList.of(new File("/file3"));
+                    return ImmutableList.of(failedFile);
                 }
 
                 @Override
@@ -147,8 +150,8 @@ public class ScanResultCalculatorTest {
         verify(scanResultRepository).save((ScanResult) any());
 
         assertThat(scanResult.getScanType()).isSameAs(ScanType.FULL);
-        assertThat(scanResult.getTargetPaths()).containsExactly("/file1", "/file2");
-        assertThat(scanResult.getFailedPaths()).containsExactly("/file3");
+        assertThat(scanResult.getTargetPaths()).containsExactly(targetFile1.getAbsolutePath(), targetFile2.getAbsolutePath());
+        assertThat(scanResult.getFailedPaths()).containsExactly(failedFile.getAbsolutePath());
         assertThat(scanResult.getProcessedAudioFileCount()).isEqualTo(20);
         assertThat(scanResult.getDuration()).isGreaterThanOrEqualTo(100L);
         assertThat(scanResult.getSongSize()).isEqualTo(123L);

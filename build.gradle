@@ -9,7 +9,8 @@ subprojects {
     }
 
     tasks.withType(JavaCompile) {
-        options.compilerArgs << "-parameters" << "-Xlint:unchecked" << "-Xlint:deprecation"
+        options.compilerArgs << '-parameters' << '-Xlint:unchecked' << '-Xlint:deprecation'
+        options.encoding = 'UTF-8'
     }
 
     test {

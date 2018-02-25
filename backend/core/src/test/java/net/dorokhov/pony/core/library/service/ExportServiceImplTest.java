@@ -198,8 +198,8 @@ public class ExportServiceImplTest {
                     .map(Path::toString)
                     .collect(Collectors.toList());
             assertThat(paths).containsExactly(
-                    UNKNOWN_ARTIST + "/" + UNKNOWN_ALBUM + "/song1.mp3",
-                    UNKNOWN_ARTIST + "/" + UNKNOWN_ALBUM + "/song1 (1).mp3"
+                    UNKNOWN_ARTIST + File.separator + UNKNOWN_ALBUM + File.separator + "song1.mp3",
+                    UNKNOWN_ARTIST + File.separator + UNKNOWN_ALBUM + File.separator + "song1 (1).mp3"
             );
         });
     }
@@ -316,7 +316,12 @@ public class ExportServiceImplTest {
         }
 
         assertThat(getFileListFromZip(targetFile))
-                .contains("song1.mp3", "foo/song2.mp3", "foo/bar/song3.mp3", "foo/bar/song4.mp3");
+                .contains(
+                        "song1.mp3",
+                        "foo" + File.separator + "song2.mp3",
+                        "foo" + File.separator + "bar" + File.separator + "song3.mp3",
+                        "foo" + File.separator + "bar" + File.separator + "song4.mp3"
+                );
     }
 
     private void checkSongExportBundle(ExportBundle exportBundle, Consumer<Mp3Content> contentChecker) {

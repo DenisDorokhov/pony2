@@ -1,6 +1,7 @@
 package net.dorokhov.pony.core.library.service.scan;
 
 import java.io.File;
+import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -127,7 +128,8 @@ public class BatchLibraryCleaner {
 
         Set<String> existingImagePaths = existingImageNodes.stream()
                 .map(ImageNode::getFile)
-                .map(File::getAbsolutePath)
+                .map(File::toURI)
+                .map(URI::getPath)
                 .collect(Collectors.toSet());
 
         List<Long> artworksToDelete = transactionTemplate.execute(status -> {
