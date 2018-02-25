@@ -12,6 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
@@ -95,8 +96,8 @@ public class ScanTestPlanExecutor {
         verifySongs(context);
     }
     
-    public void clean() throws IOException {
-        java.nio.file.Files.delete(rootFolder.toPath());
+    public void clean() {
+        FileSystemUtils.deleteRecursively(rootFolder);
     }
 
     private void writeAudioData(File file, ScanTestPlan.SongToGenerate songToGenerate) throws IOException {
