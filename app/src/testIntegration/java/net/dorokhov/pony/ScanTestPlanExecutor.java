@@ -81,7 +81,8 @@ public class ScanTestPlanExecutor {
             writeAudioData(targetFile, songToGenerate);
         }
         for (String filePath : scanTestPlan.getFilePathsToDelete()) {
-            new File(rootFolder, filePath).delete();
+            File file = new File(rootFolder, filePath);
+            java.nio.file.Files.delete(file.toPath());
         }
         return new Context(scanTestPlan, rootFolder);
     }
@@ -94,8 +95,8 @@ public class ScanTestPlanExecutor {
         verifySongs(context);
     }
     
-    public void clean() {
-        rootFolder.delete();
+    public void clean() throws IOException {
+        java.nio.file.Files.delete(rootFolder.toPath());
     }
 
     private void writeAudioData(File file, ScanTestPlan.SongToGenerate songToGenerate) throws IOException {
@@ -272,11 +273,14 @@ public class ScanTestPlanExecutor {
     }
 
     private URI expectedArtworkPathToUri(String artworkPath, Context context) {
-        String[] parts = artworkPath.split(":");
-        assertThat(parts).hasSize(2);
+        URI artworkUri = UriComponentsBuilder
+                .fromUriString(artworkPath)
+                .build()
+                .toUri();
         return UriComponentsBuilder
-                .fromPath(new File(context.getRootFolder(), parts[1]).getAbsolutePath())
-                .scheme(parts[0])
-                .build().toUri();
+                .fromPath(new File(context.getRootFolder(), artworkUri.getPath()).getAbsolutePath())
+                .scheme(artworkUri.getScheme())
+                .build()
+                .toUri();
     }
 }

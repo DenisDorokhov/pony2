@@ -41,9 +41,9 @@
       },
       {
         "name": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
         "songPaths": [
-          "Hard Times/1986 - Very First/01 - Why me?.mp3",
+          "Hard Times/1986 - Very First/01 - Why me.mp3",
           "Hard Times/1986 - Very First/02 - I don't know.mp3",
           "Hard Times/1986 - Very First/03 - About love.mp3",
           "Hard Times/1986 - Very First/04 - About death.mp3",
@@ -98,14 +98,14 @@
       },
       {
         "name": "Hard Times",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
         "albums": [
           {
             "name": "Very First",
             "year": 1986,
-            "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3",
+            "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
             "songPaths": [
-              "Hard Times/1986 - Very First/01 - Why me?.mp3",
+              "Hard Times/1986 - Very First/01 - Why me.mp3",
               "Hard Times/1986 - Very First/02 - I don't know.mp3",
               "Hard Times/1986 - Very First/03 - About love.mp3",
               "Hard Times/1986 - Very First/04 - About death.mp3",
@@ -160,7 +160,7 @@
       },
 
       {
-        "path": "Hard Times/1986 - Very First/01 - Why me?.mp3",
+        "path": "Hard Times/1986 - Very First/01 - Why me.mp3",
         "mimeType": "audio/mpeg",
         "fileExtension": "mp3",
         "discNumber": 1,
@@ -173,7 +173,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/02 - I don't know.mp3",
@@ -189,7 +189,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/03 - About love.mp3",
@@ -205,7 +205,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/04 - About death.mp3",
@@ -221,7 +221,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/05 - About dirty things.mp3",
@@ -237,7 +237,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/06 - About chicks.mp3",
@@ -253,7 +253,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/07 - Some politics.mp3",
@@ -269,7 +269,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/08 - Suicide.mp3",
@@ -285,7 +285,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/09 - My little pony.mp3",
@@ -301,7 +301,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3",
@@ -317,7 +317,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
 
       {

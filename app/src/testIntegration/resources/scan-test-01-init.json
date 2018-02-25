@@ -23,7 +23,7 @@
     },
     
     {
-      "path": "Hard Times/1986 - Very First/01 - Why me?.mp3",
+      "path": "Hard Times/1986 - Very First/01 - Why me.mp3",
       "discNumber": 1,
       "discCount": 1,
       "trackNumber": 1,
@@ -480,9 +480,9 @@
       },
       {
         "name": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
         "songPaths": [
-          "Hard Times/1986 - Very First/01 - Why me?.mp3",
+          "Hard Times/1986 - Very First/01 - Why me.mp3",
           "Hard Times/1986 - Very First/02 - I don't know.mp3",
           "Hard Times/1986 - Very First/03 - About love.mp3",
           "Hard Times/1986 - Very First/04 - About death.mp3",
@@ -496,7 +496,7 @@
       },
       {
         "name": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
         "songPaths": [
           "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
           "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
@@ -514,7 +514,7 @@
       },
       {
         "name": "Engineering realism",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
         "songPaths": [
           "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
           "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3"
@@ -522,7 +522,7 @@
       },
       {
         "name": "Pessimistic realistic rock",
-        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
         "songPaths": [
           "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
           "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
@@ -547,14 +547,14 @@
       },
       {
         "name": "Hard Times",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
         "albums": [
           {
             "name": "Very First",
             "year": 1986,
-            "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3",
+            "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
             "songPaths": [
-              "Hard Times/1986 - Very First/01 - Why me?.mp3",
+              "Hard Times/1986 - Very First/01 - Why me.mp3",
               "Hard Times/1986 - Very First/02 - I don't know.mp3",
               "Hard Times/1986 - Very First/03 - About love.mp3",
               "Hard Times/1986 - Very First/04 - About death.mp3",
@@ -569,7 +569,7 @@
           {
             "name": "Best Ever And Forever",
             "year": 2000,
-            "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png",
+            "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
             "songPaths": [
               "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
               "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
@@ -591,12 +591,12 @@
       },
       {
         "name": "Bad Music",
-        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
         "albums": [
           {
             "name": "Worse Than Ever",
             "year": 1991,
-            "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+            "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
             "songPaths": [
               "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
               "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
@@ -626,7 +626,7 @@
       },
 
       {
-        "path": "Hard Times/1986 - Very First/01 - Why me?.mp3",
+        "path": "Hard Times/1986 - Very First/01 - Why me.mp3",
         "mimeType": "audio/mpeg",
         "fileExtension": "mp3",
         "discNumber": 1,
@@ -639,7 +639,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/02 - I don't know.mp3",
@@ -655,7 +655,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/03 - About love.mp3",
@@ -671,7 +671,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/04 - About death.mp3",
@@ -687,7 +687,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/05 - About dirty things.mp3",
@@ -703,7 +703,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/06 - About chicks.mp3",
@@ -719,7 +719,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/07 - Some politics.mp3",
@@ -735,7 +735,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/08 - Suicide.mp3",
@@ -751,7 +751,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/09 - My little pony.mp3",
@@ -767,7 +767,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
       {
         "path": "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3",
@@ -783,7 +783,7 @@
         "album": "Very First",
         "year": 1986,
         "genre": "Crazy Metal",
-        "artworkPath": "embedded:Hard Times/1986 - Very First/01 - Why me?.mp3"
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
       },
 
       {
@@ -800,7 +800,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
@@ -816,7 +816,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/03 - Hangover.mp3",
@@ -832,7 +832,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/04 - Your music is junk.mp3",
@@ -848,7 +848,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/05 - Beer.mp3",
@@ -864,7 +864,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/06 - Vodka.mp3",
@@ -880,7 +880,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/07 - Drugs.mp3",
@@ -896,7 +896,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/08 - Sex.mp3",
@@ -912,7 +912,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/09 - Violence.mp3",
@@ -928,7 +928,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
@@ -944,7 +944,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
@@ -960,7 +960,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3",
@@ -976,7 +976,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Beer Rock",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
 
       {
@@ -993,7 +993,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Engineering realism",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
       {
         "path": "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3",
@@ -1009,7 +1009,7 @@
         "album": "Best Ever And Forever",
         "year": 2000,
         "genre": "Engineering realism",
-        "artworkPath": "file:Hard Times/2000 - Best Ever And Forever/cover.png"
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
       },
 
       {
@@ -1026,7 +1026,7 @@
         "album": "Worse Than Ever",
         "year": 1991,
         "genre": "Pessimistic realistic rock",
-        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
       },
       {
         "path": "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
@@ -1042,7 +1042,7 @@
         "album": "Worse Than Ever",
         "year": 1991,
         "genre": "Pessimistic realistic rock",
-        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
       },
       {
         "path": "Bad Music/1991 - Worse than ever/03 - No functional tests.mp3",
@@ -1058,7 +1058,7 @@
         "album": "Worse Than Ever",
         "year": 1991,
         "genre": "Pessimistic realistic rock",
-        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
       },
       {
         "path": "Bad Music/1991 - Worse than ever/04 - No quality.mp3",
@@ -1074,7 +1074,7 @@
         "album": "Worse Than Ever",
         "year": 1991,
         "genre": "Pessimistic realistic rock",
-        "artworkPath": "embedded:Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
       }
     ]
   }

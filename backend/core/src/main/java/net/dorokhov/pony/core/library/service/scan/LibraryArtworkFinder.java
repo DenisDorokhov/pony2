@@ -59,7 +59,12 @@ public class LibraryArtworkFinder {
     public ArtworkFiles findAndSaveFileArtwork(AudioNode audioNode) throws IOException {
         ImageNode artwork = artworkFileFinder.findArtwork(audioNode);
         if (artwork != null) {
-            return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(artwork.getFile().toURI(), artwork));
+            return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(
+                    UriComponentsBuilder.fromPath(artwork.getFile().getAbsolutePath())
+                            .scheme(Artwork.SOURCE_URI_SCHEME_FILE)
+                            .build()
+                            .toUri(),
+                    artwork));
         } else {
             return null;
         }
