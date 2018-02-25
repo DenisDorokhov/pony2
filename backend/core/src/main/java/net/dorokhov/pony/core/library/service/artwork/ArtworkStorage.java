@@ -83,7 +83,11 @@ public class ArtworkStorage {
             return doGetOrSave(command.getSourceUri(),
                     () -> checksumCalculator.calculate(content),
                     () -> fileTypeResolver.resolve(content),
-                    () -> new ByteArrayInputStream(content));
+                    rethrow(() -> {
+                        try (ByteArrayInputStream stream = new ByteArrayInputStream(content)) {
+                            return stream;
+                        }
+                    }));
         }
     }
 
@@ -94,7 +98,11 @@ public class ArtworkStorage {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> checksumCalculator.calculate(file)),
                     rethrow(() -> fileTypeResolver.resolve(file)),
-                    rethrow(() -> new FileInputStream(file)));
+                    rethrow(() -> {
+                        try (FileInputStream stream = new FileInputStream(file)) {
+                            return stream;
+                        }
+                    }));
         }
     }
 
@@ -104,7 +112,11 @@ public class ArtworkStorage {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> command.getImageNode().getChecksum()),
                     rethrow(() -> command.getImageNode().getFileType()),
-                    rethrow(() -> new FileInputStream(command.getImageNode().getFile())));
+                    rethrow(() -> {
+                        try (FileInputStream stream = new FileInputStream(command.getImageNode().getFile())) {
+                            return stream;
+                        }
+                    }));
         }
     }
 
