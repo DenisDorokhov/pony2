@@ -6,6 +6,6 @@ env:
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 dist: trusty
-sudo: false
+sudo: required
 addons:
   chrome: stable
