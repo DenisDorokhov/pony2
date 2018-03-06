@@ -4,7 +4,7 @@
   </div>
   <div class="panel panel-default">
     <div class="panel-heading">
-      <h3 class="panel-title">Installation</h3>
+      <h3 class="panel-title">{{ 'installation.mainHeader' | translate }}</h3>
     </div>
     <div class="panel-body">
       <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
@@ -13,13 +13,13 @@
 
         <div class="form-group" formArrayName="libraryFolders">
           <span [class.has-error]="fieldHasViolation(error, 'libraryFolders')">
-            <label class="control-label">Library folders:</label>
+            <label class="control-label">{{ 'installation.libraryFoldersLabel' | translate }}</label>
           </span>
-          <pony-field-error-container *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
-                                      [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
+          <pony-error-container *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
+                                [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
             <div class="input-group">
               <input ponyAutoFocus formControlName="path" type="text" class="form-control"
-                     placeholder="Enter full folder path">
+                     [placeholder]="'installation.libraryFoldersPlaceholder' | translate">
               <span class="input-group-btn">
                 <button type="button" class="btn btn-default add"
                         [disabled]="libraryFolders.controls.length >= 5"
@@ -33,40 +33,40 @@
                 </button>
               </span>
             </div>
-          </pony-field-error-container>
+          </pony-error-container>
         </div>
 
-        <pony-field-error-container class="form-group" [error]="error" [field]="'adminName'">
-          <label for="adminName" class="control-label">Admin name:</label>
+        <pony-error-container class="form-group" [error]="error" [field]="'adminName'">
+          <label for="adminName" class="control-label">{{ 'installation.adminNameLabel' | translate }}</label>
           <input id="adminName" formControlName="adminName" type="text" class="form-control"
-                 placeholder="Enter name">
-        </pony-field-error-container>
+                 [placeholder]="'installation.adminNamePlaceholder' | translate">
+        </pony-error-container>
 
-        <pony-field-error-container class="form-group" [error]="error" [field]="'adminEmail'">
-          <label for="adminEmail" class="control-label">Admin email:</label>
+        <pony-error-container class="form-group" [error]="error" [field]="'adminEmail'">
+          <label for="adminEmail" class="control-label">{{ 'installation.adminEmailLabel' | translate }}</label>
           <input id="adminEmail" formControlName="adminEmail" type="text" class="form-control"
-                 placeholder="Enter email">
-        </pony-field-error-container>
+                 [placeholder]="'installation.adminEmailPlaceholder' | translate">
+        </pony-error-container>
 
-        <pony-field-error-container class="form-group" [error]="error" [field]="'adminPassword'">
-          <label for="adminPassword" class="control-label">Admin password:</label>
+        <pony-error-container class="form-group" [error]="error" [field]="'adminPassword'">
+          <label for="adminPassword" class="control-label">{{ 'installation.adminPasswordLabel' | translate }}</label>
           <input id="adminPassword" formControlName="adminPassword" type="password" class="form-control"
-                 placeholder="Enter password">
-        </pony-field-error-container>
+                 [placeholder]="'installation.adminPasswordLabel' | translate">
+        </pony-error-container>
 
-        <pony-field-error-container class="form-group" [error]="error" [field]="'repeatAdminPassword'">
-          <label for="repeatAdminPassword" class="control-label">Repeat admin password:</label>
+        <pony-error-container class="form-group" [error]="error" [field]="'repeatAdminPassword'">
+          <label for="repeatAdminPassword" class="control-label">{{ 'installation.repeatAdminPasswordLabel' | translate }}</label>
           <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
-                 placeholder="Repeat password">
-        </pony-field-error-container>
+                 [placeholder]="'installation.repeatAdminPasswordPlaceholder' | translate">
+        </pony-error-container>
 
-        <pony-field-error-container class="form-group" [error]="error" [field]="'installationSecret'">
-          <label for="installationSecret" class="control-label">Installation secret:</label>
+        <pony-error-container class="form-group" [error]="error" [field]="'installationSecret'">
+          <label for="installationSecret" class="control-label">{{ 'installation.installationSecretLabel' | translate }}</label>
           <input id="installationSecret" formControlName="installationSecret" type="password" class="form-control"
-                 placeholder="Get from file ~/pony2/installationSecret">
-        </pony-field-error-container>
+                 [placeholder]="'installation.installationSecretPlaceholder' | translate">
+        </pony-error-container>
 
-        <button type="submit" class="btn btn-primary">Install</button>
+        <button type="submit" class="btn btn-primary">{{ 'installation.installButton' | translate }}</button>
 
       </form>
     </div>

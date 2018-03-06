@@ -2,7 +2,7 @@ import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {ErrorDto} from '../core/error.dto';
 
 @Component({
-  selector: 'pony-field-error-container',
+  selector: 'pony-error-container',
   templateUrl: './error-container.component.html',
 })
 export class ErrorContainerComponent implements OnChanges {
