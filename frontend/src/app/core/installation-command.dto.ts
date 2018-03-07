@@ -1,14 +1,13 @@
-class LibraryFolder {
-  path: string;
-}
-
 export class InstallationCommandDto {
-
-  static LibraryFolder = LibraryFolder;
-
   installationSecret: string;
-  libraryFolders: LibraryFolder[];
+  libraryFolders: InstallationCommandDto[];
   adminName: string;
   adminEmail: string;
   adminPassword: string;
+}
+
+export namespace InstallationCommandDto {
+  export class LibraryFolder {
+    path: string;
+  }
 }

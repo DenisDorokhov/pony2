@@ -1,6 +1,7 @@
 import {HttpClientModule} from '@angular/common/http';
 import {APP_INITIALIZER, NgModule} from '@angular/core';
 import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
+import {ErrorTranslationService} from './error-translation.service';
 import {InitializerService} from './initializer.service';
 import {InstallationService} from './installation.service';
 import {InstalledGuard} from './installed-guard.service';
@@ -23,6 +24,7 @@ export function initialize(initializerService: InitializerService) {
   ],
   providers: [
     InstallationService,
+    ErrorTranslationService,
     InstalledGuard,
     NotInstalledGuard,
     InitializerService,

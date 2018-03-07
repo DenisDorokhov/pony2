@@ -1,4 +1,4 @@
-const translation = {
+export default {
   installation: {
     mainHeader: 'Installation',
     libraryFoldersLabel: 'Library Folders:',
@@ -18,6 +18,10 @@ const translation = {
   shared: {
     errorsHeader: 'Errors',
   },
+  fieldViolation: {
+    // Localized field violation messages can be defined here (code-message pairs).
+  },
+  error: {
+    // Localized error messages can be defined here (code-message pairs).
+  }
 };
-
-export default translation;

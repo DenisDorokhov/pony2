@@ -1,33 +1,12 @@
 import {HttpErrorResponse} from '@angular/common/http';
 import {Observable} from 'rxjs/Observable';
 
-enum Code {
-  UNEXPECTED = 'UNEXPECTED',
-  BAD_REQUEST = 'BAD_RESULT',
-  AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED',
-  ACCESS_DENIED = 'ACCESS_DENIED',
-  VALIDATION = 'VALIDATION',
-  NOT_FOUND = 'NOT_FOUND',
-  MAX_UPLOAD_SIZE_EXCEEDED = 'MAX_UPLOAD_SIZE_EXCEEDED',
-  CONCURRENT_SCAN = 'CONCURRENT_SCAN',
-}
-
-class FieldViolation {
-  field: string;
-  code: string;
-  message: string;
-  arguments: string[];
-}
-
 export class ErrorDto {
 
-  static Code = Code;
-  static FieldViolation = FieldViolation;
-
-  code: Code;
+  code: ErrorDto.Code;
   message: string;
   arguments: string[];
-  fieldViolations: FieldViolation[];
+  fieldViolations: ErrorDto.FieldViolation[];
 
   static fieldHasViolation(error: ErrorDto, fieldRegex: string): boolean {
     if (!error) {
@@ -43,11 +22,32 @@ export class ErrorDto {
     if (typeof error.error === 'object') {
       return <ErrorDto>error.error;
     } else {
-      return <ErrorDto>{code: Code.UNEXPECTED, message: 'Unexpected error occurred.'};
+      return <ErrorDto>{code: ErrorDto.Code.UNEXPECTED, message: 'Unexpected error occurred.'};
     }
   }
 
   static observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<any> {
     return Observable.throw(ErrorDto.fromHttpErrorResponse(error));
+  }
+}
+
+export namespace ErrorDto {
+
+  export enum Code {
+    UNEXPECTED = 'UNEXPECTED',
+    BAD_REQUEST = 'BAD_RESULT',
+    AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED',
+    ACCESS_DENIED = 'ACCESS_DENIED',
+    VALIDATION = 'VALIDATION',
+    NOT_FOUND = 'NOT_FOUND',
+    MAX_UPLOAD_SIZE_EXCEEDED = 'MAX_UPLOAD_SIZE_EXCEEDED',
+    CONCURRENT_SCAN = 'CONCURRENT_SCAN',
+  }
+
+  export class FieldViolation {
+    field: string;
+    code: string;
+    message: string;
+    arguments: string[];
   }
 }

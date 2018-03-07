@@ -1,4 +1,5 @@
 import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
+import {ErrorTranslationService} from '../core/error-translation.service';
 import {ErrorDto} from '../core/error.dto';
 
 @Component({
@@ -12,6 +13,9 @@ export class ErrorContainerComponent implements OnChanges {
 
   errorMessages: string[];
 
+  constructor(private errorTranslationService: ErrorTranslationService) {
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     this.errorMessages = this.fetchErrorMessages().sort();
   }
@@ -21,10 +25,10 @@ export class ErrorContainerComponent implements OnChanges {
       if (this.error && this.error.fieldViolations) {
         return this.error.fieldViolations
           .filter(fieldViolation => fieldViolation.field === this.field)
-          .map(fieldViolation => fieldViolation.message);
+          .map(fieldViolation => this.errorTranslationService.translateFieldViolation(fieldViolation));
       }
     } else if (this.error && this.error.message) {
-      return [this.error.message];
+      return [this.errorTranslationService.translateError(this.error)];
     }
     return [];
   }

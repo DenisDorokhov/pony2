@@ -1,5 +1,6 @@
 package net.dorokhov.pony.web.controller.common;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.web.controller.exception.BadRequestException;
 import net.dorokhov.pony.web.domain.ErrorDto;
@@ -54,7 +55,12 @@ public interface ErrorHandlingController {
                         errorArguments.add(argument.toString());
                     }
                 }
-                fieldViolations.add(new ErrorDto.FieldViolation(fieldError.getField(), fieldError.getCode(), fieldError.getDefaultMessage(), errorArguments));
+                fieldViolations.add(new ErrorDto.FieldViolation(
+                        fieldError.getField(),
+                        CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, fieldError.getCode()), 
+                        fieldError.getDefaultMessage(), 
+                        errorArguments
+                ));
             }
             return new ErrorDto(Code.VALIDATION, "Invalid request, check field violations.", fieldViolations);
         }
