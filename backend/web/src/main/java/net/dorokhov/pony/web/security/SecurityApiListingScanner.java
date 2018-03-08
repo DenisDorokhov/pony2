@@ -1,11 +1,10 @@
 package net.dorokhov.pony.web.security;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.collect.ImmutableSet;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
+import net.dorokhov.pony.web.domain.ErrorDto;
+import net.dorokhov.pony.web.domain.UserDto;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import springfox.documentation.builders.OperationBuilder;
@@ -18,9 +17,11 @@ import springfox.documentation.spi.service.ApiListingScannerPlugin;
 import springfox.documentation.spi.service.contexts.DocumentationContext;
 import springfox.documentation.spring.web.readers.operation.CachingOperationNameGenerator;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Collections.*;
 
 @Component
 public class SecurityApiListingScanner implements ApiListingScannerPlugin {
@@ -54,8 +55,20 @@ public class SecurityApiListingScanner implements ApiListingScannerPlugin {
                                                         .build()
                                         ))
                                         .responseMessages(ImmutableSet.of(
-                                                new ResponseMessage(200, "User has been logged in.", null, emptyMap(), emptyList()),
-                                                new ResponseMessage(401, "Authentication failed.", null, emptyMap(), emptyList())
+                                                new ResponseMessage(
+                                                        200, 
+                                                        "User has been logged in.", 
+                                                        new ModelRef(AuthenticationDto.class.getSimpleName()), 
+                                                        emptyMap(), 
+                                                        emptyList()
+                                                ),
+                                                new ResponseMessage(
+                                                        401, 
+                                                        "Authentication failed.", 
+                                                        new ModelRef(ErrorDto.class.getSimpleName()), 
+                                                        emptyMap(), 
+                                                        emptyList()
+                                                )
                                         ))
                                         .build(),
                                 new OperationBuilder(new CachingOperationNameGenerator())
@@ -64,8 +77,20 @@ public class SecurityApiListingScanner implements ApiListingScannerPlugin {
                                         .method(HttpMethod.DELETE)
                                         .summary("Log user out.")
                                         .responseMessages(ImmutableSet.of(
-                                                new ResponseMessage(200, "User has been logged out.", null, emptyMap(), emptyList()),
-                                                new ResponseMessage(401, "Authentication failed.", null, emptyMap(), emptyList())
+                                                new ResponseMessage(
+                                                        200, 
+                                                        "User has been logged out.",
+                                                        new ModelRef(UserDto.class.getSimpleName()), 
+                                                        emptyMap(), 
+                                                        emptyList()
+                                                ),
+                                                new ResponseMessage(
+                                                        401, 
+                                                        "Authentication failed.",
+                                                        new ModelRef(ErrorDto.class.getSimpleName()), 
+                                                        emptyMap(), 
+                                                        emptyList()
+                                                )
                                         ))
                                         .build()
                         ), 

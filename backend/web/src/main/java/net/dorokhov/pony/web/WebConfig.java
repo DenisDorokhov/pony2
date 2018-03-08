@@ -1,5 +1,7 @@
 package net.dorokhov.pony.web;
 
+import com.fasterxml.classmate.TypeResolver;
+import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.security.handler.AuthenticationFailureHandlerImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,6 +85,7 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                         null,
                         emptyList()
                 ))
+                .additionalModels(new TypeResolver().resolve(AuthenticationDto.class))
                 .useDefaultResponseMessages(false)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(WebConfig.class.getPackage().getName()))
