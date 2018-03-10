@@ -1,6 +1,6 @@
 import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {ErrorTranslationService} from '../core/error-translation.service';
-import {ErrorDto} from '../core/error.dto';
+import {ErrorTranslationService} from '../core/common/error-translation.service';
+import {ErrorDto} from '../core/common/error.dto';
 
 @Component({
   selector: 'pony-error-container',

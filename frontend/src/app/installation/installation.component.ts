@@ -1,9 +1,9 @@
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
-import {ErrorDto} from '../core/error.dto';
-import {InstallationCommandDto} from '../core/installation-command.dto';
-import {InstallationService} from '../core/installation.service';
+import {ErrorDto} from '../core/common/error.dto';
+import {InstallationCommandDto} from '../core/installation/installation-command.dto';
+import {InstallationService} from '../core/installation/installation.service';
 
 @Component({
   selector: 'pony-installation',
@@ -48,7 +48,7 @@ export class InstallationComponent {
     const installationCommand = <InstallationCommandDto>this.installationForm.value;
     this.installationService.install(installationCommand).subscribe(
       installation => {
-        console.log('Version ' + installation.version + ' has been installed.');
+        console.log(`Version ${installation.version} has been installed.`);
         this.error = null;
         this.router.navigate(['/'], {replaceUrl: true});
       },

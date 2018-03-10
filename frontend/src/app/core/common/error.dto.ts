@@ -9,20 +9,26 @@ export class ErrorDto {
   fieldViolations: ErrorDto.FieldViolation[];
 
   static fieldHasViolation(error: ErrorDto, fieldRegex: string): boolean {
-    if (!error) {
+    if (error) {
+      const regex = new RegExp(fieldRegex);
+      return error.fieldViolations
+        .filter(fieldViolation => fieldViolation ? regex.test(fieldViolation.field) : false)
+        .length > 0;
+    } else {
       return false;
     }
-    const regex = new RegExp(fieldRegex);
-    return error.fieldViolations
-      .filter(fieldViolation => regex.test(fieldViolation.field))
-      .length > 0;
   }
 
   static fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
     if (typeof error.error === 'object') {
       return <ErrorDto>error.error;
     } else {
-      return <ErrorDto>{code: ErrorDto.Code.UNEXPECTED, message: 'Unexpected error occurred.'};
+      return <ErrorDto>{
+        code: ErrorDto.Code.UNEXPECTED,
+        message: 'Unexpected error occurred.',
+        arguments: [],
+        fieldViolations: [],
+      };
     }
   }
 

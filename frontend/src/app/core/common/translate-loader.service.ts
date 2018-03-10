@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {TranslateLoader} from '@ngx-translate/core';
 import {Observable} from 'rxjs/Observable';
-import translationEn from '../translation/en';
+import translationEn from '../../translation/en';
 
 @Injectable()
 export class TranslateLoaderService implements TranslateLoader {

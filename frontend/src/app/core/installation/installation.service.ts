@@ -4,7 +4,7 @@ import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/catch';
 import {Observable} from 'rxjs/Observable';
-import {ErrorDto} from './error.dto';
+import {ErrorDto} from '../common/error.dto';
 import {InstallationCommandDto} from './installation-command.dto';
 import {InstallationStatusDto} from './installation-status.dto';
 import {InstallationDto} from './installation.dto';
@@ -18,11 +18,12 @@ export class InstallationService {
   }
 
   getInstallationStatus(): Observable<InstallationStatusDto> {
-    if (this.installationStatus != null) {
+    if (this.installationStatus) {
       return Observable.of(this.installationStatus);
     } else {
       return this.httpClient.get<InstallationStatusDto>('/api/installation/status')
-        .do(installationStatus => this.installationStatus = installationStatus);
+        .do(installationStatus => this.installationStatus = installationStatus)
+        .catch(ErrorDto.observableFromHttpErrorResponse);
     }
   }
 

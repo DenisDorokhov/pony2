@@ -15,6 +15,12 @@ export default {
     installationSecretPlaceholder: 'Get from file ~/pony2/installationSecret',
     installButton: 'Install',
   },
+  login: {
+    mainHeader: 'Sign In',
+    emailLabel: 'Email:',
+    passwordLabel: 'Password:',
+    loginButton: 'Login',
+  },
   shared: {
     errorsHeader: 'Errors',
   },

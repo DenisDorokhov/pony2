@@ -1,18 +1,18 @@
 import {NgModule} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
 import {SharedModule} from '../shared/shared.module';
-import {InstallationRoutingModule} from './installation-routing.module';
-import {InstallationComponent} from './installation.component';
+import {LoginRoutingModule} from './login-routing.module';
+import {LoginComponent} from './login.component';
 
 @NgModule({
   imports: [
     ReactiveFormsModule,
-    InstallationRoutingModule,
+    LoginRoutingModule,
     SharedModule,
   ],
   declarations: [
-    InstallationComponent,
+    LoginComponent,
   ]
 })
-export class InstallationModule {
+export class LoginModule {
 }

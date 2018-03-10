@@ -58,7 +58,7 @@ public class ApiTemplate {
     }
 
     public <T> HttpEntity<T> createCookieRequest(T request, String token, HttpHeaders headers) {
-        headers.add("Cookie", "PONY_TOKEN=" + token);
+        headers.add("Cookie", "pony2.token=" + token);
         return new HttpEntity<>(request, headers);
     }
 }

@@ -11,6 +11,7 @@ import {ErrorComponent} from './error.component';
     TranslateModule,
   ],
   exports: [
+    CommonModule,
     AutoFocusDirective,
     ErrorContainerComponent,
     ErrorComponent,
