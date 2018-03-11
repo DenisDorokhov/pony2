@@ -21,6 +21,16 @@ export default {
     passwordLabel: 'Password:',
     loginButton: 'Login',
   },
+  library: {
+    toolbar: {
+      refreshButton: 'Refresh',
+      systemButton: 'System',
+      settingsButton: 'Settings',
+      scanningButton: 'Scanning',
+      logButton: 'Log',
+      usersButton: 'Users',
+    }
+  },
   shared: {
     errorsHeader: 'Errors',
   },

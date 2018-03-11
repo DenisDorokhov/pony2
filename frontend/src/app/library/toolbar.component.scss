@@ -1,0 +1,12 @@
+.toolbar-container {
+  text-align: right;
+
+  .toolbar-dropdown {
+    width: 100%;
+    min-width: 100%;
+
+    a {
+      cursor: pointer;
+    }
+  }
+}
