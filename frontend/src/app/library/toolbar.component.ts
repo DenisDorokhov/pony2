@@ -27,7 +27,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   signOut() {
-    console.log('Signing out.');
+    console.log('Signing out...');
+    this.authenticationService.logout().subscribe();
   }
 
   openSettings() {

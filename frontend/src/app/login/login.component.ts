@@ -3,7 +3,7 @@ import {FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
 import {ErrorDto} from '../core/common/error.dto';
 import {AuthenticationService} from '../core/user/authentication.service';
-import {Credentials} from '../core/user/credentials.model';
+import {Credentials} from '../core/user/authentication.service';
 
 @Component({
   selector: 'pony-login',
