@@ -50,7 +50,7 @@ export class InstallationComponent {
       installation => {
         console.log(`Version ${installation.version} has been installed.`);
         this.error = null;
-        this.router.navigate(['/login'], {skipLocationChange: true});
+        this.router.navigate(['/login'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
         if (error.code === ErrorDto.Code.VALIDATION) {

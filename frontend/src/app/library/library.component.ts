@@ -19,7 +19,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
     this.loggedOutSubscription = this.authenticationService.loggedOut.subscribe(
       user => {
         console.log(`User ${user.email} has been logged out.`);
-        this.router.navigate(['/login'], {skipLocationChange: true});
+        this.router.navigate(['/login'], {replaceUrl: true});
       }
     );
   }

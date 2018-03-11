@@ -30,7 +30,7 @@ export class LoginComponent {
       user => {
         console.log(`User ${user.email} has been authenticated.`);
         this.error = null;
-        this.router.navigate(['/'], {replaceUrl: true});
+        this.router.navigate(['/library'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
         console.log('Authentication failed.');

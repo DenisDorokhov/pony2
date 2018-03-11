@@ -18,7 +18,7 @@ export class InstalledGuard implements CanLoad {
     return this.installationService.getInstallationStatus()
       .do(installationStatus => {
         if (!installationStatus.installed) {
-          this.router.navigate(['/install'], {skipLocationChange: true});
+          this.router.navigate(['/install'], {replaceUrl: true});
         }
       })
       .map(installationStatus => installationStatus.installed);
