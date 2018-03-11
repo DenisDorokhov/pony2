@@ -15,7 +15,7 @@ export class NotAuthenticatedGuard implements CanLoad {
     if (!this.authenticationService.isAuthenticated) {
       return true;
     } else {
-      this.router.navigate(['/'], {skipLocationChange: true});
+      this.router.navigate(['/library'], {replaceUrl: true});
       return false;
     }
   }

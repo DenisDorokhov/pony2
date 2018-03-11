@@ -18,7 +18,7 @@ export class NotInstalledGuard implements CanLoad {
     return this.installationService.getInstallationStatus()
       .do(installationStatus => {
         if (installationStatus.installed) {
-          this.router.navigate(['/'], {skipLocationChange: true});
+          this.router.navigate(['/library'], {replaceUrl: true});
         }
       })
       .map(installationStatus => !installationStatus.installed);
