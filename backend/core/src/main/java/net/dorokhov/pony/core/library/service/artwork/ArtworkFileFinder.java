@@ -59,6 +59,7 @@ public class ArtworkFileFinder {
             return childFolders.stream()
                     .filter(this::isFolderArtwork)
                     .map(this::fetchArtworkFromFolder)
+                    .filter(Objects::nonNull)
                     .findFirst()
                     .orElseGet(() ->
                             childFolders.stream()

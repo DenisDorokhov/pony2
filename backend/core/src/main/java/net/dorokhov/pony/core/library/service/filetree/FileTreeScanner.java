@@ -13,6 +13,8 @@ import net.dorokhov.pony.core.library.service.AudioTagger;
 import net.dorokhov.pony.core.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony.core.library.service.file.FileTypeResolver;
 import net.dorokhov.pony.core.library.service.image.ImageSizeReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -83,6 +85,8 @@ public class FileTreeScanner {
 
     private class Visitor extends SimpleFileVisitor<Path> {
         
+        private final Logger logger = LoggerFactory.getLogger(getClass());
+        
         private final Stack<MutableFolderNode> folderStack = new Stack<>();
         
         private FolderNode root;
@@ -92,7 +96,7 @@ public class FileTreeScanner {
         }
 
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             MutableFolderNode parentFolder = root != null ? folderStack.peek() : null;
             MutableFolderNode folderNode = new MutableFolderNode(dir.toFile(), parentFolder);
             if (parentFolder != null) {
@@ -102,6 +106,7 @@ public class FileTreeScanner {
             if (root == null) {
                 root = folderNode;
             }
+            logger.debug("Visiting folder {}...", dir);
             return FileVisitResult.CONTINUE;
         }
 
@@ -118,7 +123,7 @@ public class FileTreeScanner {
         }
 
         @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
             folderStack.pop();
             return FileVisitResult.CONTINUE;
         }
