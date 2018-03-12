@@ -1,6 +1,7 @@
 package net.dorokhov.pony.core.library.service.file;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.FileType;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.Metadata;
@@ -17,11 +18,35 @@ import java.util.Map;
 @Component
 public class FileTypeResolver {
     
+    private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
+    private static final Map<String, String> EXTENSION_TO_MIME_TYPE = ImmutableMap.<String, String>builder()
+            .put("jpg", "image/jpeg")
+		    .put("jpeg", "image/jpeg")
+		    .put("png", "image/png")
+		    .put("mp3", "audio/mpeg")
+            .build();
     private static final Map<String, String> EXTENSION_TO_CORRECTION = ImmutableMap.of(".mpga", ".mp3");
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    public FileType resolve(InputStream stream) throws IOException {
+    public FileType resolve(File file) throws IOException {
+        String extension = Files.getFileExtension(file.getName());
+        String mimeType = EXTENSION_TO_MIME_TYPE.get(extension);
+        if (mimeType == null) {
+            mimeType = DEFAULT_MIME_TYPE;
+        }
+        return new FileType(mimeType, extension);
+    }
+    
+    public FileType resolve(byte[] content) {
+        try (InputStream stream = new ByteArrayInputStream(content)) {
+            return resolve(stream);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private FileType resolve(InputStream stream) throws IOException {
         try (InputStream bufferedStream = new BufferedInputStream(stream)) {
 
             TikaConfig config = TikaConfig.getDefaultConfig();
@@ -33,22 +58,8 @@ public class FileTypeResolver {
                 return FileType.of(mimeType.toString(), extension);
             } catch (MimeTypeException e) {
                 logger.debug("Could not resolve mime type.", e);
-                return FileType.of("application/octet-stream", "bin");
+                return FileType.of(DEFAULT_MIME_TYPE, "bin");
             }
-        }
-    }
-    
-    public FileType resolve(File file) throws IOException {
-        try (InputStream stream = new FileInputStream(file)) {
-            return resolve(stream);
-        }
-    }
-    
-    public FileType resolve(byte[] content) {
-        try (InputStream stream = new ByteArrayInputStream(content)) {
-            return resolve(stream);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
         }
     }
     

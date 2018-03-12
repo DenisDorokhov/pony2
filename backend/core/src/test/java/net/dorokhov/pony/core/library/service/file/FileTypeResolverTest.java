@@ -19,13 +19,6 @@ public class FileTypeResolverTest {
     private FileTypeResolver fileTypeResolver = new FileTypeResolver();
 
     @Test
-    public void shouldResolveImageInputStream() throws IOException {
-        try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            checkImageFileType(fileTypeResolver.resolve(stream));
-        }
-    }
-
-    @Test
     public void shouldResolveImageFile() throws IOException {
         checkImageFileType(fileTypeResolver.resolve(IMAGE_RESOURCE.getFile()));
     }
@@ -38,7 +31,7 @@ public class FileTypeResolverTest {
     }
     
     @Test
-    public void shouldResolveMp3() throws IOException {
+    public void shouldResolveMp3File() throws IOException {
 
         File file = new ClassPathResource("audio/empty.mp3").getFile();
 
@@ -46,6 +39,17 @@ public class FileTypeResolverTest {
 
         assertThat(fileType.getMimeType()).isEqualTo("audio/mpeg");
         assertThat(fileType.getFileExtension()).isEqualTo("mp3");
+    }
+
+    @Test
+    public void shouldResolveUnknownFile() throws IOException {
+
+        File file = new ClassPathResource("test.txt").getFile();
+
+        FileType fileType = fileTypeResolver.resolve(file);
+
+        assertThat(fileType.getMimeType()).isEqualTo("application/octet-stream");
+        assertThat(fileType.getFileExtension()).isEqualTo("txt");
     }
 
     @Test
