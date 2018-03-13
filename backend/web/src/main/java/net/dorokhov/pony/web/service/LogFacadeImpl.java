@@ -4,6 +4,7 @@ import net.dorokhov.pony.api.log.domain.LogMessage.Level;
 import net.dorokhov.pony.api.log.service.LogService;
 import net.dorokhov.pony.web.domain.LogMessagePageDto;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +24,13 @@ public class LogFacadeImpl implements LogFacade {
     @Override
     @Transactional(readOnly = true)
     public LogMessagePageDto getLog(Level minLevel, int pageIndex) {
-        return LogMessagePageDto.of(logService.getByType(minLevel, new PageRequest(pageIndex, PAGE_SIZE)));
+        return LogMessagePageDto.of(logService.getByType(minLevel, new PageRequest(pageIndex, PAGE_SIZE, Sort.Direction.DESC, "date")));
     }
     
     @Override
     @Transactional(readOnly = true)
     public LogMessagePageDto getLog(Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex) {
         return LogMessagePageDto.of(logService.getByTypeAndDate(minLevel, minDate, maxDate,
-                new PageRequest(pageIndex, PAGE_SIZE)));
+                new PageRequest(pageIndex, PAGE_SIZE, Sort.Direction.DESC, "date")));
     }
 }
