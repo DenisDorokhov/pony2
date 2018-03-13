@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 
@@ -208,34 +209,68 @@ public class AudioTagger {
         return tagToAudioData(audioFile, fileType);
     }
 
-    private String parseString(Tag tag, FieldKey key) {
-        return tag != null ? Strings.emptyToNull(tag.getFirst(key).trim()) : null;
+    private ReadableAudioData tagToAudioData(AudioFile audioFile, FileType fileType) {
+        AudioHeader audioHeader = audioFile.getAudioHeader();
+        return ReadableAudioData.builder()
+                .path(audioFile.getFile().getAbsolutePath())
+                .fileType(fileType)
+                .size(audioFile.getFile().length())
+                .duration(audioHeader.getTrackLength())
+                .bitRate(audioHeader.getBitRateAsNumber())
+                .bitRateVariable(audioHeader.isVariableBitRate())
+                .discNumber(parseInteger(audioFile, FieldKey.DISC_NO)).discCount(parseInteger(audioFile, FieldKey.DISC_TOTAL))
+                .trackNumber(parseInteger(audioFile, FieldKey.TRACK)).trackCount(parseInteger(audioFile, FieldKey.TRACK_TOTAL))
+                .title(parseString(audioFile, FieldKey.TITLE))
+                .artist(parseString(audioFile, FieldKey.ARTIST))
+                .albumArtist(parseString(audioFile, FieldKey.ALBUM_ARTIST))
+                .album(parseString(audioFile, FieldKey.ALBUM))
+                .year(parseInteger(audioFile, FieldKey.YEAR))
+                .genre(parseGenre(audioFile))
+                .embeddedArtwork(parseArtwork(audioFile))
+                .build();
     }
 
-    private Integer parseInteger(Tag tag, FieldKey key) {
-        if (tag != null) {
-            Integer value = Ints.tryParse(tag.getFirst(key).trim());
-            if (value != null && value > 0) {
-                return value;
-            }
-        }
-        return null;
-    }
-
-    private String parseGenre(Tag tag) {
-        if (tag != null) {
-            Integer type = parseInteger(tag, FieldKey.GENRE);
-            if (type != null) {
-                String value = GenreTypes.getInstanceOf().getValueForId(type);
-                return value != null ? value : parseString(tag, FieldKey.GENRE);
-            } else {
-                return parseString(tag, FieldKey.GENRE);
-            }
-        }
-        return null;
+    private String parseString(AudioFile audioFile, FieldKey key) {
+        return Strings.emptyToNull(getFirstFromTagByKey(audioFile, key));
     }
     
-    private ReadableAudioData.EmbeddedArtwork parseArtwork(Tag tag) {
+    @Nullable
+    private String getFirstFromTagByKey(AudioFile audioFile, FieldKey key) {
+        Tag tag = audioFile.getTag();
+        if (tag != null) {
+            try {
+                String value = tag.getFirst(key);
+                return value != null ? value.trim() : null;
+            } catch (Exception e) {
+                logger.debug("Could not fetch tag '{}' from file '{}'.", key, audioFile.getFile().getAbsolutePath(), e);
+            }
+        }
+        return null;
+    }
+
+    private Integer parseInteger(AudioFile audioFile, FieldKey key) {
+        String stringValue = getFirstFromTagByKey(audioFile, key);
+        if (stringValue != null) {
+            Integer intValue = Ints.tryParse(stringValue);
+            if (intValue != null && intValue > 0) {
+                return intValue;
+            }
+        }
+        return null;
+    }
+
+    private String parseGenre(AudioFile audioFile) {
+        Integer type = parseInteger(audioFile, FieldKey.GENRE);
+        if (type != null) {
+            String value = GenreTypes.getInstanceOf().getValueForId(type);
+            return value != null ? value : parseString(audioFile, FieldKey.GENRE);
+        } else {
+            return parseString(audioFile, FieldKey.GENRE);
+        }
+    }
+
+    private ReadableAudioData.EmbeddedArtwork parseArtwork(AudioFile audioFile) {
+        Tag tag = audioFile.getTag();
         if (tag != null) {
             Artwork artwork = tag.getFirstArtwork();
             if (artwork != null && artwork.getBinaryData() != null) {
@@ -248,27 +283,5 @@ public class AudioTagger {
             }
         }
         return null;
-    }
-    
-    private ReadableAudioData tagToAudioData(AudioFile audioFile, FileType fileType) {
-        AudioHeader audioHeader = audioFile.getAudioHeader();
-        Tag tag = audioFile.getTag();
-        return ReadableAudioData.builder()
-                .path(audioFile.getFile().getAbsolutePath())
-                .fileType(fileType)
-                .size(audioFile.getFile().length())
-                .duration(audioHeader.getTrackLength())
-                .bitRate(audioHeader.getBitRateAsNumber())
-                .bitRateVariable(audioHeader.isVariableBitRate())
-                .discNumber(parseInteger(tag, FieldKey.DISC_NO)).discCount(parseInteger(tag, FieldKey.DISC_TOTAL))
-                .trackNumber(parseInteger(tag, FieldKey.TRACK)).trackCount(parseInteger(tag, FieldKey.TRACK_TOTAL))
-                .title(parseString(tag, FieldKey.TITLE))
-                .artist(parseString(tag, FieldKey.ARTIST))
-                .albumArtist(parseString(tag, FieldKey.ALBUM_ARTIST))
-                .album(parseString(tag, FieldKey.ALBUM))
-                .year(parseInteger(tag, FieldKey.YEAR))
-                .genre(parseGenre(tag))
-                .embeddedArtwork(parseArtwork(tag))
-                .build();
     }
 }
