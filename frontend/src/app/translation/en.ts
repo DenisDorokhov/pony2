@@ -29,10 +29,13 @@ export default {
       scanningButton: 'Scanning',
       logButton: 'Log',
       usersButton: 'Users',
-    }
+    },
+    noMusicLabel: 'Your library is empty :-(',
   },
   shared: {
     errorsHeader: 'Errors',
+    loadingIndicatorLabel: 'Loading...',
+    errorIndicatorLabel: 'Loading failed!',
   },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).

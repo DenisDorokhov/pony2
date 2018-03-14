@@ -1,0 +1,14 @@
+<div class="panel panel-default">
+  <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
+  <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
+                             [message]="'library.noMusicLabel' | translate">
+  </pony-no-content-indicator>
+  <div class="list-container" *ngIf="loadingState === LoadingState.LOADED">
+    <div class="list-group">
+      <a *ngFor="let artist of artists" class="list-group-item" title="{{ artist.name }}">
+        <div class="artist-name">{{ artist.name }}</div>
+      </a>
+    </div>
+  </div>
+</div>

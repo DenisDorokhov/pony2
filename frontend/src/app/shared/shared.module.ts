@@ -3,7 +3,10 @@ import {NgModule} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {AutoFocusDirective} from './auto-focus.directive';
 import {ErrorContainerComponent} from './error-container.component';
+import {ErrorIndicatorComponent} from './error-indicator.component';
 import {ErrorComponent} from './error.component';
+import {LoadingIndicatorComponent} from './loading-indicator.component';
+import {NoContentIndicatorComponent} from './no-content-indicator.component';
 
 @NgModule({
   imports: [
@@ -16,11 +19,17 @@ import {ErrorComponent} from './error.component';
     ErrorContainerComponent,
     ErrorComponent,
     TranslateModule,
+    LoadingIndicatorComponent,
+    ErrorIndicatorComponent,
+    NoContentIndicatorComponent,
   ],
   declarations: [
     AutoFocusDirective,
     ErrorContainerComponent,
     ErrorComponent,
+    LoadingIndicatorComponent,
+    ErrorIndicatorComponent,
+    NoContentIndicatorComponent,
   ]
 })
 export class SharedModule { }

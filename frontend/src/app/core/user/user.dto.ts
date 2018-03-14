@@ -1,4 +1,7 @@
 export class UserDto {
+  id: number;
+  creationDate: Date;
+  updateDate: Date;
   name: string;
   email: string;
   role: UserDto.Role;

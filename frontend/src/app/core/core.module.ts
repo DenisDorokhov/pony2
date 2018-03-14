@@ -8,6 +8,7 @@ import {TranslateLoaderService} from './common/translate-loader.service';
 import {InstallationService} from './installation/installation.service';
 import {InstalledGuard} from './installation/installed-guard.service';
 import {NotInstalledGuard} from './installation/not-installed-guard.service';
+import {LibraryService} from './library/library.service';
 import {AuthenticatedGuard} from './user/authenticated-guard.service';
 import {AuthenticationService} from './user/authentication.service';
 import {NotAuthenticatedGuard} from './user/not-authenticated-guard.service';
@@ -39,6 +40,7 @@ export function initialize(initializerService: InitializerService) {
     AuthenticationService,
     AuthenticatedGuard,
     NotAuthenticatedGuard,
+    LibraryService,
     {
       provide: APP_INITIALIZER,
       useFactory: initialize,

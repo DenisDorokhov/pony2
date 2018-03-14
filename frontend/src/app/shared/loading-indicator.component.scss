@@ -1,0 +1,15 @@
+.loading-indicator-container {
+  margin-top: 2em;
+  text-align: center;
+
+  img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+
+  span {
+    position: relative;
+    top: 1px;
+  }
+}
