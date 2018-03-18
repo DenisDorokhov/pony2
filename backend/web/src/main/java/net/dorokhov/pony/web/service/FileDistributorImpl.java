@@ -3,7 +3,6 @@ package net.dorokhov.pony.web.service;
 import com.google.common.base.Charsets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.web.domain.FileDistribution;
-import net.dorokhov.pony.web.service.FileDistributor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriUtils;
 
@@ -27,164 +26,168 @@ public class FileDistributorImpl implements FileDistributor {
     @Override
     public void distribute(FileDistribution distribution, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try (FileInputStream inputStream = new FileInputStream(distribution.getFile())) {
+            doDistribute(distribution, request, response, inputStream);
+        }
+    }
 
-            long length = distribution.getFile().length();
-            long lastModified = distribution.getModificationDate()
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
+    private void doDistribute(FileDistribution distribution, HttpServletRequest request, HttpServletResponse response, FileInputStream inputStream) throws IOException {
 
-            // Validate request headers for caching ---------------------------------------------------
+        long length = distribution.getFile().length();
+        long lastModified = distribution.getModificationDate()
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
 
-            // If-None-Match header should contain "*" or ETag. If so, then return 304.
-            String ifNoneMatch = request.getHeader("If-None-Match");
-            if (ifNoneMatch != null && matches(ifNoneMatch, distribution.getName())) {
-                response.setHeader("ETag", distribution.getName()); // Required in 304.
-                response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+        // Validate request headers for caching ---------------------------------------------------
+
+        // If-None-Match header should contain "*" or ETag. If so, then return 304.
+        String ifNoneMatch = request.getHeader("If-None-Match");
+        if (ifNoneMatch != null && matches(ifNoneMatch, distribution.getName())) {
+            response.setHeader("ETag", distribution.getName()); // Required in 304.
+            response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+            return;
+        }
+
+        // If-Modified-Since header should be greater than LastModified. If so, then return 304.
+        // This header is ignored if any If-None-Match header is specified.
+        long ifModifiedSince = request.getDateHeader("If-Modified-Since");
+        if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
+            response.setHeader("ETag", distribution.getName()); // Required in 304.
+            response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+            return;
+        }
+
+        // Validate request headers for resume ----------------------------------------------------
+
+        // If-Match header should contain "*" or ETag. If not, then return 412.
+        String ifMatch = request.getHeader("If-Match");
+        if (ifMatch != null && !matches(ifMatch, distribution.getName())) {
+            response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
+            return;
+        }
+
+        // If-Unmodified-Since header should be greater than LastModified. If not, then return 412.
+        long ifUnmodifiedSince = request.getDateHeader("If-Unmodified-Since");
+        if (ifUnmodifiedSince != -1 && ifUnmodifiedSince + 1000 <= lastModified) {
+            response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
+            return;
+        }
+
+        // Validate and process range -------------------------------------------------------------
+
+        // Prepare some variables. The full Range represents the complete file.
+        Range full = new Range(0, length - 1, length);
+        List<Range> ranges = new ArrayList<>();
+
+        // Validate and process Range and If-Range headers.
+        String range = request.getHeader("Range");
+        if (range != null) {
+
+            // Range header should match format "bytes=n-n,n-n,n-n...". If not, then return 416.
+            if (!range.matches("^bytes=\\d*-\\d*(,\\d*-\\d*)*$")) {
+                response.setHeader("Content-Range", "bytes */" + length); // Required in 416.
+                response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
                 return;
             }
 
-            // If-Modified-Since header should be greater than LastModified. If so, then return 304.
-            // This header is ignored if any If-None-Match header is specified.
-            long ifModifiedSince = request.getDateHeader("If-Modified-Since");
-            if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
-                response.setHeader("ETag", distribution.getName()); // Required in 304.
-                response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
-                return;
-            }
-
-            // Validate request headers for resume ----------------------------------------------------
-
-            // If-Match header should contain "*" or ETag. If not, then return 412.
-            String ifMatch = request.getHeader("If-Match");
-            if (ifMatch != null && !matches(ifMatch, distribution.getName())) {
-                response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
-                return;
-            }
-
-            // If-Unmodified-Since header should be greater than LastModified. If not, then return 412.
-            long ifUnmodifiedSince = request.getDateHeader("If-Unmodified-Since");
-            if (ifUnmodifiedSince != -1 && ifUnmodifiedSince + 1000 <= lastModified) {
-                response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
-                return;
-            }
-
-            // Validate and process range -------------------------------------------------------------
-
-            // Prepare some variables. The full Range represents the complete file.
-            Range full = new Range(0, length - 1, length);
-            List<Range> ranges = new ArrayList<>();
-
-            // Validate and process Range and If-Range headers.
-            String range = request.getHeader("Range");
-            if (range != null) {
-
-                // Range header should match format "bytes=n-n,n-n,n-n...". If not, then return 416.
-                if (!range.matches("^bytes=\\d*-\\d*(,\\d*-\\d*)*$")) {
-                    response.setHeader("Content-Range", "bytes */" + length); // Required in 416.
-                    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                    return;
-                }
-
-                String ifRange = request.getHeader("If-Range");
-                if (ifRange != null && !ifRange.equals(distribution.getName())) {
-                    try {
-                        long ifRangeTime = request.getDateHeader("If-Range"); // Throws IAE if invalid.
-                        if (ifRangeTime != -1) {
-                            ranges.add(full);
-                        }
-                    } catch (IllegalArgumentException ignore) {
+            String ifRange = request.getHeader("If-Range");
+            if (ifRange != null && !ifRange.equals(distribution.getName())) {
+                try {
+                    long ifRangeTime = request.getDateHeader("If-Range"); // Throws IAE if invalid.
+                    if (ifRangeTime != -1) {
                         ranges.add(full);
                     }
-                }
-
-                // If any valid If-Range header, then process each part of byte range.
-                if (ranges.isEmpty()) {
-                    for (String part : range.substring(6).split(",")) {
-                        // Assuming a file with length of 100, the following examples returns bytes at:
-                        // 50-80 (50 to 80), 40- (40 to length=100), -20 (length-20=80 to length=100).
-                        long start = subLong(part, 0, part.indexOf("-"));
-                        long end = subLong(part, part.indexOf("-") + 1, part.length());
-                        if (start == -1) {
-                            start = length - end;
-                            end = length - 1;
-                        } else if (end == -1 || end > length - 1) {
-                            end = length - 1;
-                        }
-                        // Check if Range is syntactically valid. If not, then return 416.
-                        if (start > end) {
-                            response.setHeader("Content-Range", "bytes */" + length); // Required in 416.
-                            response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                            return;
-                        }
-                        // Add range.
-                        ranges.add(new Range(start, end, length));
-                    }
+                } catch (IllegalArgumentException ignore) {
+                    ranges.add(full);
                 }
             }
 
-            // Prepare and initialize response --------------------------------------------------------
-
-            // Get content type by file name and set content disposition.
-            String disposition = "inline";
-
-            if (!distribution.getMimeType().startsWith("image")) {
-                // Else, expect for images, determine content disposition. If content type is supported by
-                // the browser, then set to inline, else attachment which will pop a 'save as' dialogue.
-                String accept = request.getHeader("Accept");
-                disposition = accept != null && accepts(accept, distribution.getMimeType())
-                        ? "inline" : "attachment";
-            }
-
-            // Initialize response.
-            response.reset();
-            response.setBufferSize(BUFFER_SIZE);
-            response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(distribution.getName(), Charsets.UTF_8.name()) + "\"");
-            response.setHeader("Accept-Ranges", "bytes");
-            response.setHeader("ETag", distribution.getName());
-            response.setDateHeader("Last-Modified", lastModified);
-            response.setDateHeader("Expires", System.currentTimeMillis() + EXPIRE_TIME);
-
-            // Send requested file (part(s)) to client ------------------------------------------------
-            try (
-                    BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                    OutputStream output = response.getOutputStream()
-            ) {
-                if (ranges.isEmpty() || ranges.get(0) == full) {
-                    // Return full file.
-                    response.setContentType(distribution.getMimeType());
-                    response.setHeader("Content-Range", "bytes " + full.start + "-" + full.end + "/" + full.total);
-                    response.setHeader("Content-Length", String.valueOf(full.length));
-                    copy(bufferedInputStream, output, length, full.start, full.length);
-                } else if (ranges.size() == 1) {
-                    // Return single part of file.
-                    Range r = ranges.get(0);
-                    response.setContentType(distribution.getMimeType());
-                    response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
-                    response.setHeader("Content-Length", String.valueOf(r.length));
-                    response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-                    // Copy single part range.
-                    copy(bufferedInputStream, output, length, r.start, r.length);
-                } else {
-                    // Return multiple parts of file.
-                    response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BYTERANGES);
-                    response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-                    // Cast back to ServletOutputStream to get the easy println methods.
-                    ServletOutputStream servletOutputStream = (ServletOutputStream) output;
-                    // Copy multi part range.
-                    for (Range r : ranges) {
-                        // Add multipart boundary and header fields for every range.
-                        servletOutputStream.println();
-                        servletOutputStream.println("--" + MULTIPART_BYTERANGES);
-                        servletOutputStream.println("Content-Type: " + distribution.getMimeType());
-                        servletOutputStream.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
-                        // Copy single part range of multi part range.
-                        copy(bufferedInputStream, output, length, r.start, r.length);
+            // If any valid If-Range header, then process each part of byte range.
+            if (ranges.isEmpty()) {
+                for (String part : range.substring(6).split(",")) {
+                    // Assuming a file with length of 100, the following examples returns bytes at:
+                    // 50-80 (50 to 80), 40- (40 to length=100), -20 (length-20=80 to length=100).
+                    long start = subLong(part, 0, part.indexOf("-"));
+                    long end = subLong(part, part.indexOf("-") + 1, part.length());
+                    if (start == -1) {
+                        start = length - end;
+                        end = length - 1;
+                    } else if (end == -1 || end > length - 1) {
+                        end = length - 1;
                     }
-                    // End with multipart boundary.
+                    // Check if Range is syntactically valid. If not, then return 416.
+                    if (start > end) {
+                        response.setHeader("Content-Range", "bytes */" + length); // Required in 416.
+                        response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                        return;
+                    }
+                    // Add range.
+                    ranges.add(new Range(start, end, length));
+                }
+            }
+        }
+
+        // Prepare and initialize response --------------------------------------------------------
+
+        // Get content type by file name and set content disposition.
+        String disposition = "inline";
+
+        if (!distribution.getMimeType().startsWith("image")) {
+            // Else, expect for images, determine content disposition. If content type is supported by
+            // the browser, then set to inline, else attachment which will pop a 'save as' dialogue.
+            String accept = request.getHeader("Accept");
+            disposition = accept != null && accepts(accept, distribution.getMimeType())
+                    ? "inline" : "attachment";
+        }
+
+        // Initialize response.
+        response.reset();
+        response.setBufferSize(BUFFER_SIZE);
+        response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(distribution.getName(), Charsets.UTF_8.name()) + "\"");
+        response.setHeader("Accept-Ranges", "bytes");
+        response.setHeader("ETag", distribution.getName());
+        response.setDateHeader("Last-Modified", lastModified);
+        response.setDateHeader("Expires", System.currentTimeMillis() + EXPIRE_TIME);
+
+        // Send requested file (part(s)) to client ------------------------------------------------
+        try (
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+                OutputStream output = response.getOutputStream()
+        ) {
+            if (ranges.isEmpty() || ranges.get(0) == full) {
+                // Return full file.
+                response.setContentType(distribution.getMimeType());
+                response.setHeader("Content-Range", "bytes " + full.start + "-" + full.end + "/" + full.total);
+                response.setHeader("Content-Length", String.valueOf(full.length));
+                copy(bufferedInputStream, output, length, full.start, full.length);
+            } else if (ranges.size() == 1) {
+                // Return single part of file.
+                Range r = ranges.get(0);
+                response.setContentType(distribution.getMimeType());
+                response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
+                response.setHeader("Content-Length", String.valueOf(r.length));
+                response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+                // Copy single part range.
+                copy(bufferedInputStream, output, length, r.start, r.length);
+            } else {
+                // Return multiple parts of file.
+                response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BYTERANGES);
+                response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+                // Cast back to ServletOutputStream to get the easy println methods.
+                ServletOutputStream servletOutputStream = (ServletOutputStream) output;
+                // Copy multi part range.
+                for (Range r : ranges) {
+                    // Add multipart boundary and header fields for every range.
                     servletOutputStream.println();
-                    servletOutputStream.println("--" + MULTIPART_BYTERANGES + "--");
+                    servletOutputStream.println("--" + MULTIPART_BYTERANGES);
+                    servletOutputStream.println("Content-Type: " + distribution.getMimeType());
+                    servletOutputStream.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
+                    // Copy single part range of multi part range.
+                    copy(bufferedInputStream, output, length, r.start, r.length);
                 }
+                // End with multipart boundary.
+                servletOutputStream.println();
+                servletOutputStream.println("--" + MULTIPART_BYTERANGES + "--");
             }
         }
     }

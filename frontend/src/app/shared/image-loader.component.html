@@ -1,0 +1,7 @@
+<div class="image-loader-container">
+  <img #image [style.visibility]="state === State.LOADED ? 'visible' : 'hidden'"
+       class="loaded">
+  <img [hidden]="state !== State.EMPTY" src="./assets/unknown.png">
+  <img [hidden]="state !== State.PENDING && state !== State.LOADING" src="./assets/spinner.gif">
+  <img [hidden]="state !== State.ERROR" src="./assets/error.png">
+</div>

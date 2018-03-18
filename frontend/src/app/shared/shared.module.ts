@@ -5,6 +5,7 @@ import {AutoFocusDirective} from './auto-focus.directive';
 import {ErrorContainerComponent} from './error-container.component';
 import {ErrorIndicatorComponent} from './error-indicator.component';
 import {ErrorComponent} from './error.component';
+import {ImageLoaderComponent} from './image-loader.component';
 import {LoadingIndicatorComponent} from './loading-indicator.component';
 import {NoContentIndicatorComponent} from './no-content-indicator.component';
 
@@ -22,6 +23,7 @@ import {NoContentIndicatorComponent} from './no-content-indicator.component';
     LoadingIndicatorComponent,
     ErrorIndicatorComponent,
     NoContentIndicatorComponent,
+    ImageLoaderComponent,
   ],
   declarations: [
     AutoFocusDirective,
@@ -30,6 +32,8 @@ import {NoContentIndicatorComponent} from './no-content-indicator.component';
     LoadingIndicatorComponent,
     ErrorIndicatorComponent,
     NoContentIndicatorComponent,
+    ImageLoaderComponent,
   ]
 })
-export class SharedModule { }
+export class SharedModule {
+}
