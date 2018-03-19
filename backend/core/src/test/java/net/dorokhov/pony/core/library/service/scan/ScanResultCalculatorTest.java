@@ -121,7 +121,7 @@ public class ScanResultCalculatorTest {
         File targetFile2 = new File("/targetFile2");
         File failedFile = new File("/failedFile");
         ScanResult scanResult = scanResultCalculator.calculateAndSave(rethrow(() -> {
-            Thread.sleep(100);
+            Thread.sleep(150);
             return new ScanResultCalculator.AudioFileProcessingResult() {
                 @Override
                 public ScanType getScanType() {
@@ -153,7 +153,7 @@ public class ScanResultCalculatorTest {
         assertThat(scanResult.getTargetPaths()).containsExactly(targetFile1.getAbsolutePath(), targetFile2.getAbsolutePath());
         assertThat(scanResult.getFailedPaths()).containsExactly(failedFile.getAbsolutePath());
         assertThat(scanResult.getProcessedAudioFileCount()).isEqualTo(20);
-        assertThat(scanResult.getDuration()).isGreaterThanOrEqualTo(100L);
+        assertThat(scanResult.getDuration()).isBetween(100L, 200L);
         assertThat(scanResult.getSongSize()).isEqualTo(123L);
         assertThat(scanResult.getArtworkSize()).isEqualTo(300L);
         assertThat(scanResult.getGenreCount()).isEqualTo(2);
