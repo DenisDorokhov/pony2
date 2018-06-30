@@ -5,7 +5,7 @@
                              [message]="'library.noMusicLabel' | translate">
   </pony-no-content-indicator>
   <div *ngIf="loadingState === LoadingState.LOADED"
-       class="list-container" scrolling>
+       class="list-container" data-image-loader-scroller>
     <div class="list-group">
       <a *ngFor="let artist of artists" class="list-group-item" title="{{ artist.name }}">
         <pony-image-loader [url]="artist.artwork ? '/api/file/artwork/small/' + artist.artwork : undefined"></pony-image-loader>
