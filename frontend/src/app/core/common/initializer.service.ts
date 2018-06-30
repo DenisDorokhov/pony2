@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
-import {Observable} from 'rxjs/Observable';
+import {EMPTY} from 'rxjs';
 import {InstallationService} from '../installation/installation.service';
 import {AuthenticationService} from '../user/authentication.service';
 import 'rxjs/add/operator/mergeMap';
@@ -24,9 +24,9 @@ export class InitializerService {
       .flatMap(installationStatus => {
         if (installationStatus.installed) {
           return this.authenticationService.authenticate()
-            .catch(() => Observable.empty());
+            .catch(() => EMPTY);
         } else {
-          return Observable.empty();
+          return EMPTY;
         }
       })
       .toPromise();

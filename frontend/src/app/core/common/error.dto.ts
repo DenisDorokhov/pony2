@@ -1,5 +1,6 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {Observable} from 'rxjs/Observable';
+import {throwError} from 'rxjs';
+import {Observable} from 'rxjs';
 
 export class ErrorDto {
 
@@ -32,8 +33,8 @@ export class ErrorDto {
     }
   }
 
-  static observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<any> {
-    return Observable.throw(ErrorDto.fromHttpErrorResponse(error));
+  static observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<never> {
+    return throwError(ErrorDto.fromHttpErrorResponse(error));
   }
 }
 
