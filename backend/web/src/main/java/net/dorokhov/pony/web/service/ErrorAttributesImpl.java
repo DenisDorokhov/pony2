@@ -11,6 +11,9 @@ import org.springframework.web.context.request.RequestAttributes;
 import javax.servlet.ServletException;
 import java.util.Map;
 
+import static javax.servlet.RequestDispatcher.ERROR_STATUS_CODE;
+import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
+
 @Component
 public class ErrorAttributesImpl extends DefaultErrorAttributes {
     
@@ -26,7 +29,7 @@ public class ErrorAttributesImpl extends DefaultErrorAttributes {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes, boolean includeStackTrace) {
         ErrorDto error;
-        Integer status = (Integer) requestAttributes.getAttribute("javax.servlet.error.status_code", RequestAttributes.SCOPE_REQUEST);
+        Integer status = (Integer) requestAttributes.getAttribute(ERROR_STATUS_CODE, SCOPE_REQUEST);
         if (status == 404) {
             error = new ErrorDto(ErrorDto.Code.NOT_FOUND, "The requested resource is not available.");
         } else {
@@ -36,7 +39,7 @@ public class ErrorAttributesImpl extends DefaultErrorAttributes {
                     throwable = throwable.getCause();
                 }
             }
-            logger.error("Unexpected error occurred.", throwable);
+            logger.error("Unexpected error of status {} occurred.", status, throwable);
             error = ErrorDto.unexpected();
         }
         return objectMapper.convertValue(error, Map.class);
