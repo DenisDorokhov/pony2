@@ -5,7 +5,7 @@ import {LoadingState} from '../core/common/loading-state';
 import {AlbumSongsDto} from '../core/library/album-songs.dto';
 import {ArtistSongsDto} from '../core/library/artist-songs.dto';
 import {ArtistDto} from '../core/library/artist.dto';
-import {LibraryService} from '../core/library/library.service';
+import {LibraryService, LibraryState} from '../core/library/library.service';
 
 @Component({
   selector: 'pony-album-list',
@@ -21,6 +21,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   private selectedArtistSubscription: Subscription;
   private artistSongsSubscription: Subscription;
+  private libraryStateSubscription: Subscription;
 
   private static compareAlbumSongs(albumSongs1: AlbumSongsDto, albumSongs2: AlbumSongsDto): number {
     if (albumSongs1.album.year < albumSongs2.album.year) {
@@ -37,11 +38,22 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.selectedArtistSubscription = this.libraryService.selectedArtist
-      .subscribe(artist => this.loadArtistSongs(artist));
+      .subscribe(artist => {
+        if (artist) {
+          this.loadArtistSongs(artist);
+        }
+      });
+    this.libraryStateSubscription = this.libraryService.libraryState
+      .subscribe(libraryState => {
+        if (libraryState === LibraryState.EMPTY) {
+          this.loadingState = LoadingState.EMPTY;
+        }
+      });
   }
 
   ngOnDestroy(): void {
     this.selectedArtistSubscription.unsubscribe();
+    this.libraryStateSubscription.unsubscribe();
   }
 
   private loadArtistSongs(artist: ArtistDto) {

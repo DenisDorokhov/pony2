@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/loading-state';
 import {ArtistDto} from '../core/library/artist.dto';
-import {LibraryService} from '../core/library/library.service';
+import {LibraryService, LibraryState} from '../core/library/library.service';
 
 @Component({
   selector: 'pony-artist-list',
@@ -18,6 +18,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   selectedArtist: number;
 
+  private artistsSubscription: Subscription;
   private selectedArtistSubscription: Subscription;
 
   constructor(private libraryService: LibraryService) {
@@ -26,7 +27,11 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadArtists();
     this.selectedArtistSubscription = this.libraryService.selectedArtist
-      .subscribe(artist => this.selectedArtist = artist.id);
+      .subscribe(artist => {
+        if (artist) {
+          this.selectedArtist = artist.id;
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -40,7 +45,11 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   private loadArtists() {
     console.log('Loading artists...');
-    this.libraryService.getArtists()
+    this.loadingState = LoadingState.LOADING;
+    if (this.artistsSubscription) {
+      this.artistsSubscription.unsubscribe();
+    }
+    this.artistsSubscription = this.libraryService.getArtists()
       .subscribe(
         artists => {
           this.artists = artists;
@@ -53,6 +62,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
           } else {
             this.loadingState = LoadingState.EMPTY;
             console.log(`No artists found.`);
+            this.libraryService.deselectArtist();
           }
         },
         error => {

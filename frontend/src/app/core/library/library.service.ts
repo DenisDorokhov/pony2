@@ -1,22 +1,31 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
+import 'rxjs-compat/add/operator/distinctUntilChanged';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Observable} from 'rxjs/Observable';
-import {Subject} from 'rxjs/Subject';
 import {ErrorDto} from '../common/error.dto';
 import {ArtistSongsDto} from './artist-songs.dto';
 import {ArtistDto} from './artist.dto';
 
+export enum LibraryState {
+  UNKNOWN,
+  NON_EMPTY,
+  EMPTY,
+}
+
 @Injectable()
 export class LibraryService {
 
-  private selectedArtistSubject = new Subject<ArtistDto>();
+  private selectedArtistSubject = new BehaviorSubject<ArtistDto>(undefined);
+  private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
 
   constructor(private httpClient: HttpClient) {
   }
 
   getArtists(): Observable<ArtistDto[]> {
     return this.httpClient.get<ArtistDto[]>('/api/library/artists')
-      .catch(ErrorDto.observableFromHttpErrorResponse);
+      .catch(ErrorDto.observableFromHttpErrorResponse)
+      .do(artists => this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY));
   }
 
   getArtistSongs(artist: number): Observable<ArtistSongsDto> {
@@ -25,10 +34,20 @@ export class LibraryService {
   }
 
   get selectedArtist(): Observable<ArtistDto> {
-    return this.selectedArtistSubject.asObservable();
+    return this.selectedArtistSubject.asObservable()
+      .distinctUntilChanged();
   }
 
   selectArtist(artist: ArtistDto) {
     this.selectedArtistSubject.next(artist);
+  }
+
+  deselectArtist() {
+    this.selectedArtistSubject.next(undefined);
+  }
+
+  get libraryState(): Observable<LibraryState> {
+    return this.libraryStateSubject.asObservable()
+      .distinctUntilChanged();
   }
 }
