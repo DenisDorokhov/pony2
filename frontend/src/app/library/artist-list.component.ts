@@ -1,4 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/loading-state';
 import {ArtistDto} from '../core/library/artist.dto';
 import {LibraryService} from '../core/library/library.service';
@@ -8,18 +9,33 @@ import {LibraryService} from '../core/library/library.service';
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
 })
-export class ArtistListComponent implements OnInit {
+export class ArtistListComponent implements OnInit, OnDestroy {
 
   LoadingState = LoadingState;
 
   loadingState = LoadingState.LOADING;
   artists: ArtistDto[] = [];
 
+  selectedArtist: number;
+
+  private selectedArtistSubscription: Subscription;
+
   constructor(private libraryService: LibraryService) {
   }
 
   ngOnInit(): void {
     this.loadArtists();
+    this.selectedArtistSubscription = this.libraryService.selectedArtist
+      .subscribe(artist => this.selectedArtist = artist.id);
+  }
+
+  ngOnDestroy(): void {
+    this.selectedArtistSubscription.unsubscribe();
+  }
+
+  selectArtist(artist: ArtistDto) {
+    console.log(`Selecting artist ${artist.id} -> '${artist.name}'.`);
+    this.libraryService.selectArtist(artist);
   }
 
   private loadArtists() {
@@ -31,6 +47,9 @@ export class ArtistListComponent implements OnInit {
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
             console.log(`${artists.length} artists loaded.`);
+            if (!this.selectedArtist) {
+              this.libraryService.selectArtist(artists[0]);
+            }
           } else {
             this.loadingState = LoadingState.EMPTY;
             console.log(`No artists found.`);

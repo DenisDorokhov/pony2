@@ -1,0 +1,8 @@
+<div class="album-container">
+  <pony-image-loader [url]="albumSongs.album.artwork ? '/api/file/artwork/large/' + albumSongs.album.artwork : undefined"></pony-image-loader>
+  <div class="song-list-container">
+    <h4>{{ albumSongs.album.name }} <small>{{ albumSongs.album.year }}</small></h4>
+    <pony-song-list *ngFor="let songList of songLists" [caption]="songList.caption" [songs]="songList.songs">
+    </pony-song-list>
+  </div>
+</div>

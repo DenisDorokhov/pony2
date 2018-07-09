@@ -1,7 +1,7 @@
 # pony2
 
 [![Build Status](https://travis-ci.org/DenisDorokhov/pony2.svg?branch=master)](https://travis-ci.org/DenisDorokhov/pony2)
-[![Code Coverage](https://img.shields.io/codecov/c/github/DenisDorokhov/pony2.svg)](https://codecov.io/github/DenisDorokhov/pony2)
+[![codecov](https://codecov.io/gh/DenisDorokhov/pony2/branch/master/graph/badge.svg)](https://codecov.io/gh/DenisDorokhov/pony2)
 
 ## Running in development mode
 

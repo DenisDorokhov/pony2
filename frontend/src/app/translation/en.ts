@@ -31,6 +31,9 @@ export default {
       usersButton: 'Users',
     },
     noMusicLabel: 'Your library is empty :-(',
+    album: {
+      discLabel: 'Disc {{discNumber}}'
+    }
   },
   shared: {
     errorsHeader: 'Errors',
