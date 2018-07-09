@@ -171,6 +171,40 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldGetSong() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        
+        ResponseEntity<SongDetailsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/song/{songId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto.class, song1_1_1.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(songDetails -> {
+            checkArtistDto(songDetails.getAlbum().getArtist(), artist1);
+            checkAlbumDto(songDetails.getAlbum().getAlbum(), album1_1);
+            checkSongDto(songDetails.getSong(), song1_1_1);
+        });
+    }
+
+    @Test
+    public void shouldFailGettingSongIfSongIsNotFound() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/song/1000", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Song");
+            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
+    }
+
+    @Test
     public void shouldGetArtists() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();

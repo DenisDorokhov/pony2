@@ -6,6 +6,8 @@ import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import java.util.List;
 
 public interface LibraryFacade {
+    
+    SongDetailsDto getSong(Long songId) throws ObjectNotFoundException;
 
     List<ArtistDto> getArtists();
 

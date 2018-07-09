@@ -32,6 +32,15 @@ public class LibraryController implements ErrorHandlingController {
         this.libraryFacade = libraryFacade;
         this.scanFacade = scanFacade;
     }
+    
+    @GetMapping("/song/{songId}")
+    @ApiOperation("Get song by ID.")
+    @ApiResponses({
+            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested song not found.", response = ErrorDto.class),
+    })
+    public SongDetailsDto getSong(@PathVariable Long songId) throws ObjectNotFoundException {
+        return libraryFacade.getSong(songId);
+    }
 
     @GetMapping("/artists")
     @ApiOperation("Get list of artists.")

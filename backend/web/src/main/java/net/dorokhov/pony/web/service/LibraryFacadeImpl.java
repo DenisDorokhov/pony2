@@ -31,6 +31,16 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
+    public SongDetailsDto getSong(Long songId) throws ObjectNotFoundException {
+        Song song = libraryService.getSongById(songId);
+        if (song == null) {
+            throw new ObjectNotFoundException(Song.class, songId);
+        }
+        return SongDetailsDto.of(song);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ArtistDto> getArtists() {
         return libraryService.getArtists().stream()
                 .sorted()
