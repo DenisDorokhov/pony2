@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/loading-state';
 import {ArtistDto} from '../core/library/artist.dto';
-import {LibraryService, LibraryState} from '../core/library/library.service';
+import {LibraryService} from '../core/library/library.service';
 
 @Component({
   selector: 'pony-artist-list',
@@ -63,6 +63,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
             this.loadingState = LoadingState.EMPTY;
             console.log(`No artists found.`);
             this.libraryService.deselectArtist();
+            this.libraryService.deselectSong();
           }
         },
         error => {

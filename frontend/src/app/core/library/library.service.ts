@@ -6,6 +6,7 @@ import {Observable} from 'rxjs/Observable';
 import {ErrorDto} from '../common/error.dto';
 import {ArtistSongsDto} from './artist-songs.dto';
 import {ArtistDto} from './artist.dto';
+import {SongDto} from './song.dto';
 
 export enum LibraryState {
   UNKNOWN,
@@ -16,10 +17,16 @@ export enum LibraryState {
 @Injectable()
 export class LibraryService {
 
-  private selectedArtistSubject = new BehaviorSubject<ArtistDto>(undefined);
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
+  private selectedArtistSubject = new BehaviorSubject<ArtistDto>(undefined);
+  private selectedSongSubject = new BehaviorSubject<SongDto>(undefined);
 
   constructor(private httpClient: HttpClient) {
+  }
+
+  get libraryState(): Observable<LibraryState> {
+    return this.libraryStateSubject.asObservable()
+      .distinctUntilChanged();
   }
 
   getArtists(): Observable<ArtistDto[]> {
@@ -46,8 +53,16 @@ export class LibraryService {
     this.selectedArtistSubject.next(undefined);
   }
 
-  get libraryState(): Observable<LibraryState> {
-    return this.libraryStateSubject.asObservable()
+  get selectedSong(): Observable<SongDto> {
+    return this.selectedSongSubject.asObservable()
       .distinctUntilChanged();
+  }
+
+  selectSong(song: SongDto) {
+    this.selectedSongSubject.next(song);
+  }
+
+  deselectSong() {
+    this.selectedSongSubject.next(undefined);
   }
 }

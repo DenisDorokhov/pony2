@@ -1,4 +1,6 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, OnDestroy, OnInit} from '@angular/core';
+import {Subscription} from 'rxjs/Subscription';
+import {LibraryService} from '../core/library/library.service';
 import {SongDto} from '../core/library/song.dto';
 
 @Component({
@@ -6,15 +8,36 @@ import {SongDto} from '../core/library/song.dto';
   templateUrl: './song.component.html',
   styleUrls: ['./song.component.scss']
 })
-export class SongComponent {
+export class SongComponent implements OnInit, OnDestroy {
 
   @Input() song: SongDto;
+  @Input() showArtist = false;
+
+  selected = false;
+
+  private selectedSongSubscription: Subscription;
+
+  constructor(private libraryService: LibraryService) {
+  }
+
+  ngOnInit(): void {
+    this.selectedSongSubscription = this.libraryService.selectedSong.subscribe(song => {
+      this.selected = song && song.id === this.song.id;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.selectedSongSubscription.unsubscribe();
+  }
+
+  select() {
+    this.libraryService.selectSong(this.song);
+  }
 
   durationInMinutes(): string {
     const minutes = Math.floor(this.song.duration / 60);
     const seconds = this.song.duration - minutes * 60;
-    let buf = '';
-    buf += minutes + ':';
+    let buf = minutes + ':';
     if (seconds <= 9) {
       buf += '0';
     }

@@ -9,4 +9,5 @@ import {SongDto} from '../core/library/song.dto';
 export class SongListComponent {
   @Input() caption: string;
   @Input() songs: SongDto[];
+  @Input() showArtist: boolean;
 }

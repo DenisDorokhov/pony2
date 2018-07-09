@@ -1,4 +1,5 @@
-<div class="song-container">
+<div [class.selected]="selected" [class.withArtist]="showArtist" (click)="select()"
+     tabindex="0" class="song-container">
   <div class="track-number">{{ song.trackNumber }}</div>
   <div class="duration">{{ durationInMinutes() }}</div>
   <div class="title">{{ song.name }}</div>

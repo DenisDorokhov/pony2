@@ -1,9 +1,11 @@
 import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {AlbumSongsDto} from '../core/library/album-songs.dto';
+import {ArtistDto} from '../core/library/artist.dto';
 import {SongDto} from '../core/library/song.dto';
 
 class Disc {
   discNumber: number;
+  showArtist: boolean;
   songs: SongDto[];
 }
 
@@ -14,6 +16,7 @@ class Disc {
 })
 export class AlbumComponent implements OnChanges {
 
+  @Input() artist: ArtistDto;
   @Input() albumSongs: AlbumSongsDto;
 
   discs: Disc[];
@@ -42,7 +45,19 @@ export class AlbumComponent implements OnChanges {
     }
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
+  private static nullSafeNormalizedEquals(value1: string, value2: string): boolean {
+    if (value1 == null && value2 == null) {
+      return true;
+    }
+    if (value1 == null || value2 == null) {
+      return false;
+    }
+    const normalizedValue1 = value1.trim().toLowerCase();
+    const normalizedValue2 = value2.trim().toLowerCase();
+    return normalizedValue1 === normalizedValue2;
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
     this.splitAlbumsIntoDiscs();
   }
 
@@ -67,6 +82,12 @@ export class AlbumComponent implements OnChanges {
       }
       disc.songs = discSongs;
       disc.songs.sort(AlbumComponent.compareSongs);
+      disc.showArtist = false;
+      disc.songs.forEach(song => {
+        if (!disc.showArtist) {
+          disc.showArtist = !AlbumComponent.nullSafeNormalizedEquals(song.artistName, this.artist.name);
+        }
+      });
       this.discs.push(disc);
     });
     this.discs.sort(AlbumComponent.compareDiscs);

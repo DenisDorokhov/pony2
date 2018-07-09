@@ -11,7 +11,9 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-body album-list-container" data-image-loader-scroller>
     <div class="album-list-container album-list-scroller">
-      <pony-album *ngFor="let album of artistSongs.albums" [albumSongs]="album"></pony-album>
+      <pony-album *ngFor="let album of artistSongs.albums"
+                  [artist]="artistSongs.artist" [albumSongs]="album">
+      </pony-album>
     </div>
   </div>
 </div>

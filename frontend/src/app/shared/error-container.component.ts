@@ -16,7 +16,7 @@ export class ErrorContainerComponent implements OnChanges {
   constructor(private errorTranslationService: ErrorTranslationService) {
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
+  ngOnChanges(changes: SimpleChanges) {
     this.errorMessages = this.fetchErrorMessages().sort();
   }
 
