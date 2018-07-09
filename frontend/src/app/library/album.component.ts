@@ -1,10 +1,9 @@
 import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {TranslateService} from '@ngx-translate/core';
 import {AlbumSongsDto} from '../core/library/album-songs.dto';
 import {SongDto} from '../core/library/song.dto';
 
-class SongList {
-  caption: string;
+class Disc {
+  discNumber: number;
   songs: SongDto[];
 }
 
@@ -17,9 +16,30 @@ export class AlbumComponent implements OnChanges {
 
   @Input() albumSongs: AlbumSongsDto;
 
-  songLists: SongList[];
+  discs: Disc[];
 
-  constructor(private translateService: TranslateService) {
+  private static compareSongs(song1: SongDto, song2: SongDto): number {
+    if (song1.trackNumber > song2.trackNumber) {
+      return 1;
+    }
+    if (song1.trackNumber < song2.trackNumber) {
+      return -1;
+    }
+    if (song1.name > song2.name) {
+      return 1;
+    }
+    if (song1.name < song2.name) {
+      return -1;
+    }
+    return 0;
+  }
+
+  private static compareDiscs(disc1: Disc, disc2: Disc) {
+    if (disc1.discNumber > disc2.discNumber) {
+      return 1;
+    } else {
+      return -1;
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -39,14 +59,16 @@ export class AlbumComponent implements OnChanges {
       discToSongs.set(discNumber, discSongs);
     });
 
-    this.songLists = [];
+    this.discs = [];
     discToSongs.forEach((discSongs, discNumber) => {
-      const songList = new SongList();
+      const disc = new Disc();
       if (discNumber !== 1 || discToSongs.size !== 1) {
-        songList.caption = this.translateService.instant('library.album.discLabel', {discNumber: discNumber});
+        disc.discNumber = discNumber;
       }
-      songList.songs = discSongs;
-      this.songLists.push(songList);
+      disc.songs = discSongs;
+      disc.songs.sort(AlbumComponent.compareSongs);
+      this.discs.push(disc);
     });
+    this.discs.sort(AlbumComponent.compareDiscs);
   }
 }

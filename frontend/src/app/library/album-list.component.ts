@@ -2,6 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import 'rxjs/add/operator/do';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/loading-state';
+import {AlbumSongsDto} from '../core/library/album-songs.dto';
 import {ArtistSongsDto} from '../core/library/artist-songs.dto';
 import {ArtistDto} from '../core/library/artist.dto';
 import {LibraryService} from '../core/library/library.service';
@@ -20,6 +21,16 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   private selectedArtistSubscription: Subscription;
   private artistSongsSubscription: Subscription;
+
+  private static compareAlbumSongs(albumSongs1: AlbumSongsDto, albumSongs2: AlbumSongsDto): number {
+    if (albumSongs1.album.year < albumSongs2.album.year) {
+      return 1;
+    }
+    if (albumSongs1.album.year > albumSongs2.album.year) {
+      return -1;
+    }
+    return 0;
+  }
 
   constructor(private libraryService: LibraryService) {
   }
@@ -43,6 +54,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
       .subscribe(
         artistSongs => {
           this.artistSongs = artistSongs;
+          this.artistSongs.albums.sort(AlbumListComponent.compareAlbumSongs);
           this.loadingState = LoadingState.LOADED;
           console.log(`${artistSongs.albums.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
