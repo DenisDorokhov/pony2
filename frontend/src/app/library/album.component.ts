@@ -61,6 +61,10 @@ export class AlbumComponent implements OnChanges {
     this.splitAlbumsIntoDiscs();
   }
 
+  download() {
+    window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', "");
+  }
+
   private splitAlbumsIntoDiscs() {
 
     const discToSongs = new Map<number, SongDto[]>();
