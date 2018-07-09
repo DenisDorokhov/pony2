@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.annotation.Nullable;
@@ -138,13 +139,13 @@ public class Artwork implements Serializable {
 
     @Override
     public String toString() {
-        return "Artwork{" +
-                "id=" + id +
-                ", mimeType='" + mimeType + '\'' +
-                ", checksum='" + checksum + '\'' +
-                ", sourceUri=" + sourceUri +
-                ", sourceUriScheme=" + sourceUriScheme +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("mimeType", mimeType)
+                .add("checksum", checksum)
+                .add("sourceUri", sourceUri)
+                .add("sourceUriScheme", sourceUriScheme)
+                .toString();
     }
 
     public static Builder builder() {

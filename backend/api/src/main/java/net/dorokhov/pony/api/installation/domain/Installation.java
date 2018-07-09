@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.installation.domain;
 
+import com.google.common.base.MoreObjects;
 import net.dorokhov.pony.api.common.BaseEntity;
 
 import javax.annotation.Nullable;
@@ -36,12 +37,12 @@ public class Installation extends BaseEntity<Long> implements Serializable {
 
     @Override
     public String toString() {
-        return "Installation{" +
-                "id=" + id +
-                ", version='" + version + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("version", version)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

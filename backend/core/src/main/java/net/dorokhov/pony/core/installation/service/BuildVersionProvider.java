@@ -1,5 +1,6 @@
 package net.dorokhov.pony.core.installation.service;
 
+import com.google.common.base.MoreObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,10 +54,10 @@ public class BuildVersionProvider {
 
         @Override
         public String toString() {
-            return "BuildVersion{" +
-                    "version='" + version + '\'' +
-                    ", date=" + date +
-                    '}';
+            return MoreObjects.toStringHelper(this)
+                    .add("version", version)
+                    .add("date", date)
+                    .toString();
         }
     }
 }

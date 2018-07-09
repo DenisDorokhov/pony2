@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.log.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.common.JsonAttributeConverter;
@@ -112,13 +113,13 @@ public class LogMessage implements Serializable {
 
     @Override
     public String toString() {
-        return "LogMessage{" +
-                "id=" + id +
-                ", level=" + level +
-                ", text='" + text + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("level", level)
+                .add("text", text)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

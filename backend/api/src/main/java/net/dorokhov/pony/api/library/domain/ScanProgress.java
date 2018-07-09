@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -51,12 +52,12 @@ public final class ScanProgress {
 
         @Override
         public String toString() {
-            return "Step{" +
-                    "name=" + name() +
-                    ", scanType=" + scanType +
-                    ", stepNumber=" + stepNumber +
-                    ", totalSteps=" + totalSteps +
-                    '}';
+            return MoreObjects.toStringHelper(this)
+                    .add("name", name())
+                    .add("scanType", scanType)
+                    .add("stepNumber", stepNumber)
+                    .add("totalSteps", totalSteps)
+                    .toString();
         }
     }
     
@@ -99,10 +100,10 @@ public final class ScanProgress {
 
         @Override
         public String toString() {
-            return "Value{" +
-                    "itemsComplete=" + itemsComplete +
-                    ", itemsTotal=" + itemsTotal +
-                    '}';
+            return MoreObjects.toStringHelper(this)
+                    .add("itemsComplete", itemsComplete)
+                    .add("itemsTotal", itemsTotal)
+                    .toString();
         }
 
         public static Value of(long itemsComplete, long itemsTotal) {
@@ -135,10 +136,10 @@ public final class ScanProgress {
 
     @Override
     public String toString() {
-        return "ScanProgress{" +
-                "step=" + step +
-                ", files=" + files +
-                ", value=" + value +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("step", step)
+                .add("files", files)
+                .add("value", value)
+                .toString();
     }
 }

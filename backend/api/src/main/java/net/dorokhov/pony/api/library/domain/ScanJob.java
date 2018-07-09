@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
 import net.dorokhov.pony.api.common.BaseEntity;
 import net.dorokhov.pony.api.log.domain.LogMessage;
 
@@ -69,15 +70,15 @@ public class ScanJob extends BaseEntity<Long> {
 
     @Override
     public String toString() {
-        return "ScanJob{" +
-                "id=" + id +
-                ", creationDate=" + creationDate +
-                ", updateDate=" + updateDate +
-                ", scanType=" + scanType +
-                ", status=" + status +
-                ", logMessage=" + logMessage +
-                ", scanResult=" + scanResult +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
+                .add("scanType", scanType)
+                .add("status", status)
+                .add("logMessage", logMessage)
+                .add("scanResult", scanResult)
+                .toString();
     }
 
     public static Builder builder() {

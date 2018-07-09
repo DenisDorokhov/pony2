@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -69,13 +70,13 @@ public class Genre extends SearchableEntity<Long> implements Comparable<Genre>, 
 
     @Override
     public String toString() {
-        return "Genre{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", artwork=" + artwork +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("name", name)
+                .add("artwork", artwork)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

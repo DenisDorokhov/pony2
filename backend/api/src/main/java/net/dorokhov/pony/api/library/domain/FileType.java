@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -55,12 +56,12 @@ public final class FileType implements Serializable {
 
     @Override
     public String toString() {
-        return "FileType{" +
-                "mimeType='" + mimeType + '\'' +
-                ", fileExtension='" + fileExtension + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("mimeType", mimeType)
+                .add("fileExtension", fileExtension)
+                .toString();
     }
-    
+
     public static FileType of(String mimeType, String fileExtension) {
         return new FileType(mimeType, fileExtension);
     }

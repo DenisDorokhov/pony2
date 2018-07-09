@@ -1,5 +1,7 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
+
 import javax.annotation.Nullable;
 
 public final class ScanJobProgress {
@@ -23,9 +25,9 @@ public final class ScanJobProgress {
 
     @Override
     public String toString() {
-        return "ScanJobProgress{" +
-                "scanJob=" + scanJob +
-                ", scanProgress=" + scanProgress +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("scanJob", scanJob)
+                .add("scanProgress", scanProgress)
+                .toString();
     }
 }

@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.library.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
@@ -99,15 +100,15 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
 
     @Override
     public String toString() {
-        return "Album{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", year=" + year +
-                ", artwork=" + artwork +
-                ", artist=" + artist +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("name", name)
+                .add("year", year)
+                .add("artwork", artwork)
+                .add("artist", artist)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

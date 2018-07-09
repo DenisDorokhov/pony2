@@ -1,5 +1,6 @@
 package net.dorokhov.pony.core.library.service.image.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -44,12 +45,12 @@ public final class ImageSize {
 
     @Override
     public String toString() {
-        return "ImageSize{" +
-                "width=" + width +
-                ", height=" + height +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("width", width)
+                .add("height", height)
+                .toString();
     }
-    
+
     public static ImageSize of(int width, int height) {
         return new ImageSize(width, height);
     }

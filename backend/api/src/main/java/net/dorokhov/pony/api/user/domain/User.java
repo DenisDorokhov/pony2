@@ -1,5 +1,6 @@
 package net.dorokhov.pony.api.user.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony.api.common.BaseEntity;
 import org.hibernate.annotations.Cache;
@@ -78,14 +79,14 @@ public class User extends BaseEntity<Long> implements Serializable {
 
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", roles=" + roles +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("name", name)
+                .add("email", email)
+                .add("roles", roles)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

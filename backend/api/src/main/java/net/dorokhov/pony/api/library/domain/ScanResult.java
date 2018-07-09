@@ -1,23 +1,15 @@
 package net.dorokhov.pony.api.library.domain;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import javax.annotation.Nullable;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.common.JsonAttributeConverter;
+
+import javax.annotation.Nullable;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
@@ -314,36 +306,36 @@ public class ScanResult {
 
     @Override
     public String toString() {
-        return "ScanResult{" +
-                "id=" + id +
-                ", date=" + date +
-                ", scanType=" + scanType +
-                ", targetPaths=" + targetPaths +
-                ", failedPaths=" + failedPaths +
-                ", duration=" + duration +
-                ", songSize=" + songSize +
-                ", artworkSize=" + artworkSize +
-                ", genreCount=" + genreCount +
-                ", artistCount=" + artistCount +
-                ", albumCount=" + albumCount +
-                ", songCount=" + songCount +
-                ", artworkCount=" + artworkCount +
-                ", processedAudioFileCount=" + processedAudioFileCount +
-                ", createdArtistCount=" + createdArtistCount +
-                ", updatedArtistCount=" + updatedArtistCount +
-                ", deletedArtistCount=" + deletedArtistCount +
-                ", createdAlbumCount=" + createdAlbumCount +
-                ", updatedAlbumCount=" + updatedAlbumCount +
-                ", deletedAlbumCount=" + deletedAlbumCount +
-                ", createdGenreCount=" + createdGenreCount +
-                ", updatedGenreCount=" + updatedGenreCount +
-                ", deletedGenreCount=" + deletedGenreCount +
-                ", createdSongCount=" + createdSongCount +
-                ", updatedSongCount=" + updatedSongCount +
-                ", deletedSongCount=" + deletedSongCount +
-                ", createdArtworkCount=" + createdArtworkCount +
-                ", deletedArtworkCount=" + deletedArtworkCount +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("date", date)
+                .add("scanType", scanType)
+                .add("targetPaths", targetPaths)
+                .add("failedPaths", failedPaths)
+                .add("processedAudioFileCount", processedAudioFileCount)
+                .add("duration", duration)
+                .add("songSize", songSize)
+                .add("artworkSize", artworkSize)
+                .add("genreCount", genreCount)
+                .add("artistCount", artistCount)
+                .add("albumCount", albumCount)
+                .add("songCount", songCount)
+                .add("artworkCount", artworkCount)
+                .add("createdArtistCount", createdArtistCount)
+                .add("updatedArtistCount", updatedArtistCount)
+                .add("deletedArtistCount", deletedArtistCount)
+                .add("createdAlbumCount", createdAlbumCount)
+                .add("updatedAlbumCount", updatedAlbumCount)
+                .add("deletedAlbumCount", deletedAlbumCount)
+                .add("createdGenreCount", createdGenreCount)
+                .add("updatedGenreCount", updatedGenreCount)
+                .add("deletedGenreCount", deletedGenreCount)
+                .add("createdSongCount", createdSongCount)
+                .add("updatedSongCount", updatedSongCount)
+                .add("deletedSongCount", deletedSongCount)
+                .add("createdArtworkCount", createdArtworkCount)
+                .add("deletedArtworkCount", deletedArtworkCount)
+                .toString();
     }
 
     public static Builder builder() {

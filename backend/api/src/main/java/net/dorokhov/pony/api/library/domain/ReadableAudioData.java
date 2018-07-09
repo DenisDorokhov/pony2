@@ -1,9 +1,10 @@
 package net.dorokhov.pony.api.library.domain;
 
-import java.io.File;
-import javax.annotation.Nullable;
-
+import com.google.common.base.MoreObjects;
 import com.google.common.io.ByteSource;
+
+import javax.annotation.Nullable;
+import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -63,27 +64,27 @@ public final class ReadableAudioData extends AbstractAudioData {
 
     @Override
     public String toString() {
-        return "ReadableAudioData{" +
-                "path='" + path + '\'' +
-                ", fileType=" + fileType +
-                ", size=" + size +
-                ", duration=" + duration +
-                ", bitRate=" + bitRate +
-                ", bitRateVariable=" + bitRateVariable +
-                ", embeddedArtwork=" + embeddedArtwork +
-                ", discNumber=" + discNumber +
-                ", discCount=" + discCount +
-                ", trackNumber=" + trackNumber +
-                ", trackCount=" + trackCount +
-                ", title='" + title + '\'' +
-                ", artist='" + artist + '\'' +
-                ", albumArtist='" + albumArtist + '\'' +
-                ", album='" + album + '\'' +
-                ", year=" + year +
-                ", genre='" + genre + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("path", path)
+                .add("fileType", fileType)
+                .add("size", size)
+                .add("duration", duration)
+                .add("bitRate", bitRate)
+                .add("bitRateVariable", bitRateVariable)
+                .add("embeddedArtwork", embeddedArtwork)
+                .add("discNumber", discNumber)
+                .add("discCount", discCount)
+                .add("trackNumber", trackNumber)
+                .add("trackCount", trackCount)
+                .add("title", title)
+                .add("artist", artist)
+                .add("albumArtist", albumArtist)
+                .add("album", album)
+                .add("year", year)
+                .add("genre", genre)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }
@@ -109,9 +110,9 @@ public final class ReadableAudioData extends AbstractAudioData {
 
         @Override
         public String toString() {
-            return "EmbeddedArtwork{" +
-                    "fileType=" + fileType +
-                    '}';
+            return MoreObjects.toStringHelper(this)
+                    .add("fileType", fileType)
+                    .toString();
         }
     }
     

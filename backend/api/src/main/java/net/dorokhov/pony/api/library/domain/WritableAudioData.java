@@ -1,7 +1,9 @@
 package net.dorokhov.pony.api.library.domain;
 
-import java.io.File;
+import com.google.common.base.MoreObjects;
+
 import javax.annotation.Nullable;
+import java.io.File;
 
 public final class WritableAudioData extends AbstractAudioData {
 
@@ -90,32 +92,32 @@ public final class WritableAudioData extends AbstractAudioData {
 
     @Override
     public String toString() {
-        return "WritableAudioData{" +
-                "writeDiscNumber=" + writeDiscNumber +
-                ", writeDiscCount=" + writeDiscCount +
-                ", writeTrackNumber=" + writeTrackNumber +
-                ", writeTrackCount=" + writeTrackCount +
-                ", writeTitle=" + writeTitle +
-                ", writeArtist=" + writeArtist +
-                ", writeAlbumArtist=" + writeAlbumArtist +
-                ", writeAlbum=" + writeAlbum +
-                ", writeYear=" + writeYear +
-                ", writeGenre=" + writeGenre +
-                ", writeArtwork=" + writeArtwork +
-                ", artworkFile=" + artworkFile +
-                ", discNumber=" + discNumber +
-                ", discCount=" + discCount +
-                ", trackNumber=" + trackNumber +
-                ", trackCount=" + trackCount +
-                ", title='" + title + '\'' +
-                ", artist='" + artist + '\'' +
-                ", albumArtist='" + albumArtist + '\'' +
-                ", album='" + album + '\'' +
-                ", year=" + year +
-                ", genre='" + genre + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("writeDiscNumber", writeDiscNumber)
+                .add("writeDiscCount", writeDiscCount)
+                .add("writeTrackNumber", writeTrackNumber)
+                .add("writeTrackCount", writeTrackCount)
+                .add("writeTitle", writeTitle)
+                .add("writeArtist", writeArtist)
+                .add("writeAlbumArtist", writeAlbumArtist)
+                .add("writeAlbum", writeAlbum)
+                .add("writeYear", writeYear)
+                .add("writeGenre", writeGenre)
+                .add("writeArtwork", writeArtwork)
+                .add("artworkFile", artworkFile)
+                .add("discNumber", discNumber)
+                .add("discCount", discCount)
+                .add("trackNumber", trackNumber)
+                .add("trackCount", trackCount)
+                .add("title", title)
+                .add("artist", artist)
+                .add("albumArtist", albumArtist)
+                .add("album", album)
+                .add("year", year)
+                .add("genre", genre)
+                .toString();
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }

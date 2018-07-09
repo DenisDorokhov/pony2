@@ -1,18 +1,13 @@
 package net.dorokhov.pony.api.config.domain;
 
+import com.google.common.base.MoreObjects;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import javax.annotation.Nullable;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import javax.annotation.Nullable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -117,10 +112,10 @@ public class Config implements Serializable {
 
     @Override
     public String toString() {
-        return "Config{" +
-                "id='" + id + '\'' +
-                ", value='" + value + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("value", value)
+                .toString();
     }
 
     public static Config of(String id, String value) {
