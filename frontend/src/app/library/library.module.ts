@@ -7,6 +7,7 @@ import {ArtistListComponent} from './artist-list.component';
 import {LibraryRoutingModule} from './library-routing.module';
 import {LibraryComponent} from './library.component';
 import {SongListComponent} from './song-list.component';
+import {SongComponent} from './song.component';
 import {ToolbarComponent} from './toolbar.component';
 
 @NgModule({
@@ -23,6 +24,7 @@ import {ToolbarComponent} from './toolbar.component';
     AlbumListComponent,
     AlbumComponent,
     SongListComponent,
+    SongComponent
   ]
 })
 export class LibraryModule {

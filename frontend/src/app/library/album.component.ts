@@ -31,12 +31,12 @@ export class AlbumComponent implements OnChanges {
     const discToSongs = new Map<number, SongDto[]>();
     this.albumSongs.songs.forEach(song => {
       const discNumber = song.discNumber && song.discNumber !== 0 ? song.discNumber : 1;
-      let discSongs = discToSongs[discNumber];
+      let discSongs = discToSongs.get(discNumber);
       if (!discSongs) {
         discSongs = [];
-        discToSongs.set(discNumber, discSongs);
       }
       discSongs.push(song);
+      discToSongs.set(discNumber, discSongs);
     });
 
     this.songLists = [];

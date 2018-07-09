@@ -10,6 +10,7 @@
 
   .song-list-container {
     margin-left: 150px;
+    margin-bottom: 50px;
 
     h4 {
       margin-top: 0;
@@ -19,6 +20,13 @@
   }
 }
 
-:host:last-child pony-image-loader {
-  margin-bottom: 0;
+:host:last-child {
+
+  pony-image-loader {
+    margin-bottom: 0;
+  }
+
+  .song-list-container {
+    margin-bottom: 0;
+  }
 }
