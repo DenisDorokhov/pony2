@@ -34,7 +34,7 @@ export class SongComponent implements OnInit, OnDestroy {
     this.libraryService.selectSong(this.song);
   }
 
-  durationInMinutes(): string {
+  get durationInMinutes(): string {
     const minutes = Math.floor(this.song.duration / 60);
     const seconds = this.song.duration - minutes * 60;
     let buf = minutes + ':';

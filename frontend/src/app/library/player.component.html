@@ -1,0 +1,28 @@
+<div class="player-container">
+
+  <button type="button" class="btn btn-default backward">
+    <i class="fa fa-fast-backward"></i>
+  </button>
+  <button type="button" class="btn btn-default btn-lg play">
+    <i class="fa fa-play"></i>
+  </button>
+  <button type="button" class="btn btn-default forward">
+    <i class="fa fa-fast-forward"></i>
+  </button>
+
+  <div class="title-container" tabindex="0">
+    <div class="title-border">
+      <span class="title">{{ 'Pony - Music Streamer' | translate }}</span>
+    </div>
+  </div>
+
+  <div class="progress" (click)="seek($event)">
+    <div class="progress-bar progress-bar-info" [style.width]="(progress * 100) + '%'"></div>
+  </div>
+
+  <div class="time">{{ timeInMinutes }}</div>
+  <div class="duration">{{ durationInMinutes }}</div>
+
+  <pony-image-loader [url]="undefined"></pony-image-loader>
+
+</div>

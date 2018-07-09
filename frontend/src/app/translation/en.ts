@@ -35,6 +35,10 @@ export default {
       discLabel: 'Disc {{discNumber}}'
     }
   },
+  player: {
+    noSongTitle: 'Pony - Music Streamer',
+    songTitle: '{{ artistName }} - {{ albumTitle }}'
+  },
   shared: {
     errorsHeader: 'Errors',
     loadingIndicatorLabel: 'Loading...',

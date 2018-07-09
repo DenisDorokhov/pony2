@@ -62,7 +62,7 @@ export class AlbumComponent implements OnChanges {
   }
 
   download() {
-    window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', "");
+    window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', '');
   }
 
   private splitAlbumsIntoDiscs() {
