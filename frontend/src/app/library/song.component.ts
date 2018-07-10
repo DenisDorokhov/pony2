@@ -1,7 +1,7 @@
 import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {LibraryService} from '../core/library/library.service';
-import {SongDto} from '../core/library/song.dto';
+import {Song} from '../core/library/song.model';
 
 @Component({
   selector: 'pony-song',
@@ -10,7 +10,7 @@ import {SongDto} from '../core/library/song.dto';
 })
 export class SongComponent implements OnInit, OnDestroy {
 
-  @Input() song: SongDto;
+  @Input() song: Song;
   @Input() showArtist = false;
 
   selected = false;

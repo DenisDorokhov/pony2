@@ -1,12 +1,11 @@
 import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {AlbumSongsDto} from '../core/library/album-songs.dto';
-import {ArtistDto} from '../core/library/artist.dto';
-import {SongDto} from '../core/library/song.dto';
+import {AlbumSongs} from '../core/library/album-songs.model';
+import {Song} from '../core/library/song.model';
 
 class Disc {
   discNumber: number;
   showArtist: boolean;
-  songs: SongDto[];
+  songs: Song[];
 }
 
 @Component({
@@ -16,12 +15,11 @@ class Disc {
 })
 export class AlbumComponent implements OnChanges {
 
-  @Input() artist: ArtistDto;
-  @Input() albumSongs: AlbumSongsDto;
+  @Input() albumSongs: AlbumSongs;
 
   discs: Disc[];
 
-  private static compareSongs(song1: SongDto, song2: SongDto): number {
+  private static compareSongs(song1: Song, song2: Song): number {
     if (song1.trackNumber > song2.trackNumber) {
       return 1;
     }
@@ -67,7 +65,7 @@ export class AlbumComponent implements OnChanges {
 
   private splitAlbumsIntoDiscs() {
 
-    const discToSongs = new Map<number, SongDto[]>();
+    const discToSongs = new Map<number, Song[]>();
     this.albumSongs.songs.forEach(song => {
       const discNumber = song.discNumber && song.discNumber !== 0 ? song.discNumber : 1;
       let discSongs = discToSongs.get(discNumber);
@@ -89,7 +87,7 @@ export class AlbumComponent implements OnChanges {
       disc.showArtist = false;
       disc.songs.forEach(song => {
         if (!disc.showArtist) {
-          disc.showArtist = !AlbumComponent.nullSafeNormalizedEquals(song.artistName, this.artist.name);
+          disc.showArtist = !AlbumComponent.nullSafeNormalizedEquals(song.artistName, this.albumSongs.album.artist.name);
         }
       });
       this.discs.push(disc);

@@ -1,7 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/loading-state';
-import {ArtistDto} from '../core/library/artist.dto';
+import {Artist} from '../core/library/artist.model';
 import {LibraryService} from '../core/library/library.service';
 
 @Component({
@@ -14,7 +14,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   LoadingState = LoadingState;
 
   loadingState = LoadingState.LOADING;
-  artists: ArtistDto[] = [];
+  artists: Artist[] = [];
 
   selectedArtist: number;
 
@@ -38,7 +38,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.selectedArtistSubscription.unsubscribe();
   }
 
-  selectArtist(artist: ArtistDto) {
+  selectArtist(artist: Artist) {
     console.log(`Selecting artist ${artist.id} -> '${artist.name}'.`);
     this.libraryService.selectArtist(artist);
   }

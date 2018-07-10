@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {SongDto} from '../core/library/song.dto';
+import {Song} from '../core/library/song.model';
 
 @Component({
   selector: 'pony-song-list',
@@ -8,6 +8,6 @@ import {SongDto} from '../core/library/song.dto';
 })
 export class SongListComponent {
   @Input() caption: string;
-  @Input() songs: SongDto[];
+  @Input() songs: Song[];
   @Input() showArtist: boolean;
 }
