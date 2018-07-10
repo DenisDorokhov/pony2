@@ -1,18 +1,18 @@
 package net.dorokhov.pony.web.controller;
 
 import net.dorokhov.pony.ApiTemplate;
+import net.dorokhov.pony.BlockingScanJobServiceObserver;
 import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.api.library.domain.*;
-import net.dorokhov.pony.BlockingScanJobServiceObserver;
+import net.dorokhov.pony.api.library.service.ScanJobService;
 import net.dorokhov.pony.api.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony.test.SongFixtures;
 import net.dorokhov.pony.core.library.repository.AlbumRepository;
 import net.dorokhov.pony.core.library.repository.ArtistRepository;
 import net.dorokhov.pony.core.library.repository.GenreRepository;
 import net.dorokhov.pony.core.library.repository.SongRepository;
-import net.dorokhov.pony.api.library.service.ScanJobService;
 import net.dorokhov.pony.core.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony.core.library.service.artwork.command.FileArtworkStorageCommand;
+import net.dorokhov.pony.test.SongFixtures;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
 import org.junit.Test;
@@ -171,36 +171,28 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetSong() {
+    public void shouldGetSongs() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         
-        ResponseEntity<SongDetailsDto> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/song/{songId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto.class, song1_1_1.getId());
+                apiTemplate.createHeaderRequest(authentication.getToken()), 
+                SongDetailsDto[].class, song1_1_1.getId() + "," + song2_1_1.getId() + "," + 1000L);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(songDetails -> {
-            checkArtistDto(songDetails.getAlbum().getArtist(), artist1);
-            checkAlbumDto(songDetails.getAlbum().getAlbum(), album1_1);
-            checkSongDto(songDetails.getSong(), song1_1_1);
-        });
-    }
-
-    @Test
-    public void shouldFailGettingSongIfSongIsNotFound() {
-
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/song/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).satisfies(error -> {
-            assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);
-            assertThat(error.getArguments().get(0)).isEqualTo("Song");
-            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        assertThat(response.getBody()).satisfies(list -> {
+            assertThat(list).hasSize(2);
+            assertThat(list[0]).satisfies(songDetailsDto -> {
+                checkArtistDto(songDetailsDto.getAlbum().getArtist(), artist1);
+                checkAlbumDto(songDetailsDto.getAlbum().getAlbum(), album1_1);
+                checkSongDto(songDetailsDto.getSong(), song1_1_1);
+            });
+            assertThat(list[1]).satisfies(songDetailsDto -> {
+                checkArtistDto(songDetailsDto.getAlbum().getArtist(), artist2);
+                checkAlbumDto(songDetailsDto.getAlbum().getAlbum(), album2_1);
+                checkSongDto(songDetailsDto.getSong(), song2_1_1);
+            });
         });
     }
 

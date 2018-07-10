@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface LibraryFacade {
     
-    SongDetailsDto getSong(Long songId) throws ObjectNotFoundException;
+    List<SongDetailsDto> getSongs(List<Long> songIds);
 
     List<ArtistDto> getArtists();
 

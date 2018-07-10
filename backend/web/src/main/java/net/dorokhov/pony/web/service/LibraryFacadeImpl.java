@@ -1,19 +1,16 @@
 package net.dorokhov.pony.web.service;
 
-import net.dorokhov.pony.api.library.domain.Album;
-import net.dorokhov.pony.api.library.domain.Artist;
-import net.dorokhov.pony.api.library.domain.Genre;
-import net.dorokhov.pony.api.library.domain.Song;
-import net.dorokhov.pony.api.library.service.LibraryService;
-import net.dorokhov.pony.api.library.domain.LibrarySearchQuery;
+import net.dorokhov.pony.api.library.domain.*;
 import net.dorokhov.pony.api.library.service.LibrarySearchService;
+import net.dorokhov.pony.api.library.service.LibraryService;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class LibraryFacadeImpl implements LibraryFacade {
@@ -31,12 +28,10 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public SongDetailsDto getSong(Long songId) throws ObjectNotFoundException {
-        Song song = libraryService.getSongById(songId);
-        if (song == null) {
-            throw new ObjectNotFoundException(Song.class, songId);
-        }
-        return SongDetailsDto.of(song);
+    public List<SongDetailsDto> getSongs(List<Long> songIds) {
+        return libraryService.getSongsByIds(songIds).stream()
+                .map(SongDetailsDto::of)
+                .collect(toList());
     }
 
     @Override
@@ -45,7 +40,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
         return libraryService.getArtists().stream()
                 .sorted()
                 .map(ArtistDto::of)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
@@ -64,7 +59,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
         return libraryService.getGenres().stream()
                 .sorted()
                 .map(GenreDto::of)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
@@ -92,7 +87,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
     public List<SongDetailsDto> getRandomSongs(int count) {
         return libraryService.getRandomSongs(count).stream()
                 .map(SongDetailsDto::of)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
@@ -100,7 +95,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
     public List<SongDetailsDto> getRandomSongsByAlbumId(Long albumId, int count) {
         return libraryService.getRandomSongsByAlbumId(albumId, count).stream()
                 .map(SongDetailsDto::of)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
@@ -108,7 +103,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
     public List<SongDetailsDto> getRandomSongsByArtistId(Long artistId, int count) {
         return libraryService.getRandomSongsByArtistId(artistId, count).stream()
                 .map(SongDetailsDto::of)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
@@ -116,6 +111,6 @@ public class LibraryFacadeImpl implements LibraryFacade {
     public List<SongDetailsDto> getRandomSongsByGenreId(Long genreId, int count) {
         return libraryService.getRandomSongsByGenreId(genreId, count).stream()
                 .map(SongDetailsDto::of)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 }
