@@ -14,28 +14,40 @@ node {
     yarnWorkDir = file("${project.buildDir}/yarn")
 }
 
-yarn {
-    doLast {
-        mkdir "$buildDir/resources/main/static"
-    }
+def defineBuildInputs = { TaskInputs inputs ->
+    inputs.files(fileTree('.').matching({
+        exclude 'build'
+    }))
+}
+
+def defineBuildOutputs = { TaskOutputs outputs ->
+    outputs.dir("$buildDir/angular")
 }
 
 task yarnBuild(type: YarnTask, dependsOn: 'yarn') {
+    defineBuildInputs(inputs)
+    defineBuildOutputs(outputs)
     group = 'build'
     args = ['run', 'build']
 }
 
 task yarnBuildDev(type: YarnTask, dependsOn: 'yarn') {
+    defineBuildInputs(inputs)
+    defineBuildOutputs(outputs)
     group = 'build'
     args = ['run', 'buildDev']
 }
 
 task yarnTest(type: YarnTask, dependsOn: 'yarn') {
+    defineBuildInputs(inputs)
+    defineBuildOutputs(outputs)
     group = 'test'
     args = ['run', 'test']
 }
 
 task yarnLint(type: YarnTask, dependsOn: 'yarn') {
+    defineBuildInputs(inputs)
+    defineBuildOutputs(outputs)
     group = 'check'
     args = ['run', 'lint']
 }
@@ -43,6 +55,15 @@ task yarnLint(type: YarnTask, dependsOn: 'yarn') {
 task yarnStart(type: YarnTask, dependsOn: 'yarn') {
     group = 'application'
     args = ['run', 'start']
+}
+
+jar {
+    doFirst {
+        copy {
+            from "$buildDir/angular"
+            into "$buildDir/resources/main/static"
+        }
+    }
 }
 
 if (gradle.startParameter.taskNames.contains('bootRun')) {
