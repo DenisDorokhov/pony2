@@ -14,17 +14,17 @@ public final class SearchResultDto {
 
     private final List<GenreDto> genres;
     private final List<ArtistDto> artists;
-    private final List<AlbumDetailsDto> albums;
-    private final List<SongDetailsDto> songs;
+    private final List<AlbumDetailsDto> albumDetails;
+    private final List<SongDetailsDto> songDetails;
 
-    SearchResultDto(List<GenreDto> genres,
-                    List<ArtistDto> artists,
-                    List<AlbumDetailsDto> albums,
-                    List<SongDetailsDto> songs) {
+    private SearchResultDto(List<GenreDto> genres,
+                            List<ArtistDto> artists,
+                            List<AlbumDetailsDto> albumDetails,
+                            List<SongDetailsDto> songDetails) {
         this.genres = unmodifiableList(genres);
         this.artists = unmodifiableList(artists);
-        this.albums = unmodifiableList(albums);
-        this.songs = unmodifiableList(songs);
+        this.albumDetails = unmodifiableList(albumDetails);
+        this.songDetails = unmodifiableList(songDetails);
     }
 
     public List<GenreDto> getGenres() {
@@ -35,12 +35,12 @@ public final class SearchResultDto {
         return artists;
     }
 
-    public List<AlbumDetailsDto> getAlbums() {
-        return albums;
+    public List<AlbumDetailsDto> getAlbumDetails() {
+        return albumDetails;
     }
 
-    public List<SongDetailsDto> getSongs() {
-        return songs;
+    public List<SongDetailsDto> getSongDetails() {
+        return songDetails;
     }
 
     public static SearchResultDto of(List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs) {

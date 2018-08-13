@@ -1,4 +1,4 @@
-export class InstallationCommandDto {
+export interface InstallationCommandDto {
   installationSecret: string;
   libraryFolders: InstallationCommandDto[];
   adminName: string;
@@ -7,7 +7,7 @@ export class InstallationCommandDto {
 }
 
 export namespace InstallationCommandDto {
-  export class LibraryFolder {
+  export interface LibraryFolder {
     path: string;
   }
 }

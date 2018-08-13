@@ -1,4 +1,4 @@
-export class UserDto {
+export interface UserDto {
   id: number;
   creationDate: Date;
   updateDate: Date;

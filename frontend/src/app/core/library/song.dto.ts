@@ -11,6 +11,6 @@ export class SongDto {
   trackNumber: number;
   name: string;
   artistName: string;
-  album: number;
-  genre: number;
+  albumId: number;
+  genreId: number;
 }

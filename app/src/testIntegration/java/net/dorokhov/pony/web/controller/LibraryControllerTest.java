@@ -184,13 +184,13 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getBody()).satisfies(list -> {
             assertThat(list).hasSize(2);
             assertThat(list[0]).satisfies(songDetailsDto -> {
-                checkArtistDto(songDetailsDto.getAlbum().getArtist(), artist1);
-                checkAlbumDto(songDetailsDto.getAlbum().getAlbum(), album1_1);
+                checkArtistDto(songDetailsDto.getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(songDetailsDto.getAlbumDetails().getAlbum(), album1_1);
                 checkSongDto(songDetailsDto.getSong(), song1_1_1);
             });
             assertThat(list[1]).satisfies(songDetailsDto -> {
-                checkArtistDto(songDetailsDto.getAlbum().getArtist(), artist2);
-                checkAlbumDto(songDetailsDto.getAlbum().getAlbum(), album2_1);
+                checkArtistDto(songDetailsDto.getAlbumDetails().getArtist(), artist2);
+                checkAlbumDto(songDetailsDto.getAlbumDetails().getAlbum(), album2_1);
                 checkSongDto(songDetailsDto.getSong(), song2_1_1);
             });
         });
@@ -225,7 +225,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
             checkArtistDto(artistSongs.getArtist(), artist1);
-            assertThat(artistSongs.getAlbums()).satisfies(albums -> {
+            assertThat(artistSongs.getAlbumSongs()).satisfies(albums -> {
                 //noinspection unchecked
                 assertThat(albums).hasSize(2);
                 assertThat(albums.get(0)).satisfies(album -> {
@@ -298,23 +298,23 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             assertThat(genreSongs.getPageSize()).isGreaterThan(0);
             assertThat(genreSongs.getTotalPages()).isEqualTo(1);
             checkGenreDto(genreSongs.getGenre(), genre1);
-            assertThat(genreSongs.getSongs()).satisfies(songs -> {
+            assertThat(genreSongs.getSongAlbums()).satisfies(songs -> {
                 //noinspection unchecked
                 assertThat(songs).hasSize(3);
                 assertThat(songs.get(0)).satisfies(song -> {
                     checkSongDto(song.getSong(), song1_1_1);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album1_1);
-                    checkArtistDto(song.getAlbum().getArtist(), artist1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
                 });
                 assertThat(songs.get(1)).satisfies(song -> {
                     checkSongDto(song.getSong(), song1_1_2);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album1_1);
-                    checkArtistDto(song.getAlbum().getArtist(), artist1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
                 });
                 assertThat(songs.get(2)).satisfies(song -> {
                     checkSongDto(song.getSong(), song1_2_1);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album1_2);
-                    checkArtistDto(song.getAlbum().getArtist(), artist1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_2);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
                 });
             });
         });
@@ -360,7 +360,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 checkArtistDto(artists.get(0), artist1);
                 checkArtistDto(artists.get(1), artist2);
             });
-            assertThat(searchResult.getAlbums()).satisfies(albums -> {
+            assertThat(searchResult.getAlbumDetails()).satisfies(albums -> {
                 //noinspection unchecked
                 assertThat(albums).hasSize(3);
                 assertThat(albums.get(0)).satisfies(album -> {
@@ -376,32 +376,32 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     checkAlbumDto(album.getAlbum(), album2_1);
                 });
             });
-            assertThat(searchResult.getSongs()).satisfies(songs -> {
+            assertThat(searchResult.getSongDetails()).satisfies(songs -> {
                 //noinspection unchecked
                 assertThat(songs).hasSize(4);
                 assertThat(songs.get(0)).satisfies(song -> {
                     checkSongDto(song.getSong(), song1_1_1);
                     checkGenreDto(song.getGenre(), genre1);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album1_1);
-                    checkArtistDto(song.getAlbum().getArtist(), artist1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
                 });
                 assertThat(songs.get(1)).satisfies(song -> {
                     checkSongDto(song.getSong(), song1_1_2);
                     checkGenreDto(song.getGenre(), genre1);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album1_1);
-                    checkArtistDto(song.getAlbum().getArtist(), artist1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
                 });
                 assertThat(songs.get(2)).satisfies(song -> {
                     checkSongDto(song.getSong(), song1_2_1);
                     checkGenreDto(song.getGenre(), genre1);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album1_2);
-                    checkArtistDto(song.getAlbum().getArtist(), artist1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_2);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
                 });
                 assertThat(songs.get(3)).satisfies(song -> {
                     checkSongDto(song.getSong(), song2_1_1);
                     checkGenreDto(song.getGenre(), genre2);
-                    checkAlbumDto(song.getAlbum().getAlbum(), album2_1);
-                    checkArtistDto(song.getAlbum().getArtist(), artist2);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album2_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist2);
                 });
             });
         });
@@ -599,7 +599,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getCreationDate()).isEqualTo(genre.getCreationDate());
         assertThat(dto.getUpdateDate()).isEqualTo(genre.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(genre.getName());
-        assertThat(dto.getArtwork()).isEqualTo(genre.getArtwork().getId());
+        assertThat(dto.getArtworkId()).isEqualTo(genre.getArtwork().getId());
     }
 
     @SuppressWarnings({"ConstantConditions", "Duplicates"})
@@ -608,7 +608,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getCreationDate()).isEqualTo(artist.getCreationDate());
         assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(artist.getName());
-        assertThat(dto.getArtwork()).isEqualTo(artist.getArtwork().getId());
+        assertThat(dto.getArtworkId()).isEqualTo(artist.getArtwork().getId());
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -618,8 +618,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getUpdateDate()).isEqualTo(album.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(album.getName());
         assertThat(dto.getYear()).isEqualTo(album.getYear());
-        assertThat(dto.getArtwork()).isEqualTo(album.getArtwork().getId());
-        assertThat(dto.getArtist()).isEqualTo(album.getArtist().getId());
+        assertThat(dto.getArtworkId()).isEqualTo(album.getArtwork().getId());
+        assertThat(dto.getArtistId()).isEqualTo(album.getArtist().getId());
     }
 
     private void checkSongDto(SongDto dto, Song song) {
@@ -635,7 +635,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getTrackNumber()).isEqualTo(song.getTrackNumber());
         assertThat(dto.getName()).isEqualTo(song.getName());
         assertThat(dto.getArtistName()).isEqualTo("bar");
-        assertThat(dto.getAlbum()).isEqualTo(song.getAlbum().getId());
-        assertThat(dto.getGenre()).isEqualTo(song.getGenre().getId());
+        assertThat(dto.getAlbumId()).isEqualTo(song.getAlbum().getId());
+        assertThat(dto.getGenreId()).isEqualTo(song.getGenre().getId());
     }
 }

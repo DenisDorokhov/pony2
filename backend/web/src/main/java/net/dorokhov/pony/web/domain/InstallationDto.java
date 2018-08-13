@@ -14,7 +14,7 @@ public final class InstallationDto {
 
     private final String version;
 
-    InstallationDto(LocalDateTime creationDate, @Nullable LocalDateTime updateDate, String version) {
+    private InstallationDto(LocalDateTime creationDate, @Nullable LocalDateTime updateDate, String version) {
         this.creationDate = checkNotNull(creationDate);
         this.updateDate = updateDate;
         this.version = checkNotNull(version);

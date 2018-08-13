@@ -1,6 +1,6 @@
 import {UserDto} from './user.dto';
 
-export class AuthenticationDto {
+export interface AuthenticationDto {
   user: UserDto;
   token: string;
 }

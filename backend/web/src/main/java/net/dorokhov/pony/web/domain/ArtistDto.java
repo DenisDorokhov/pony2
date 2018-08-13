@@ -8,13 +8,13 @@ import java.time.LocalDateTime;
 public final class ArtistDto extends BaseDto {
 
     private final String name;
-    private final Long artwork;
+    private final Long artworkId;
 
-    ArtistDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate, 
-              @Nullable String name, @Nullable Long artwork) {
+    private ArtistDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+                      @Nullable String name, @Nullable Long artworkId) {
         super(id, creationDate, updateDate);
         this.name = name;
-        this.artwork = artwork;
+        this.artworkId = artworkId;
     }
 
     @Nullable
@@ -23,8 +23,8 @@ public final class ArtistDto extends BaseDto {
     }
 
     @Nullable
-    public Long getArtwork() {
-        return artwork;
+    public Long getArtworkId() {
+        return artworkId;
     }
 
     public static ArtistDto of(Artist artist) {

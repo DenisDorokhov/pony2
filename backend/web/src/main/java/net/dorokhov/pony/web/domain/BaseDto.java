@@ -11,7 +11,7 @@ public class BaseDto {
     protected final LocalDateTime creationDate;
     protected final LocalDateTime updateDate;
 
-    protected BaseDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate) {
+    BaseDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate) {
         this.id = checkNotNull(id);
         this.creationDate = checkNotNull(creationDate);
         this.updateDate = updateDate;

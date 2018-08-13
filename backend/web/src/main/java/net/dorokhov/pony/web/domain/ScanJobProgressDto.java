@@ -9,7 +9,7 @@ public final class ScanJobProgressDto {
     private final ScanJobDto scanJob;
     private final ScanProgressDto scanProgress;
 
-    ScanJobProgressDto(ScanJobDto scanJob, ScanProgressDto scanProgress) {
+    private ScanJobProgressDto(ScanJobDto scanJob, ScanProgressDto scanProgress) {
         this.scanJob = checkNotNull(scanJob);
         this.scanProgress = scanProgress;
     }

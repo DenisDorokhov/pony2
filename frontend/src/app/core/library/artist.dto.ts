@@ -1,7 +1,7 @@
-export class ArtistDto {
+export interface ArtistDto {
   id: number;
   creationDate: Date;
   updateDate: Date;
   name: string;
-  artwork: number;
+  artworkId: number;
 }

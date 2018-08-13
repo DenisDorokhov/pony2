@@ -4,7 +4,7 @@ import {Artist} from './artist.model';
 export class ArtistSongs {
 
   artist: Artist;
-  albums: AlbumSongs[];
+  albumSongs: AlbumSongs[];
 
   constructor(partial?: Partial<ArtistSongs>) {
     Object.assign(this, partial);

@@ -2,40 +2,11 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {throwError} from 'rxjs';
 import {Observable} from 'rxjs';
 
-export class ErrorDto {
-
+export interface ErrorDto {
   code: ErrorDto.Code;
   message: string;
   arguments: string[];
   fieldViolations: ErrorDto.FieldViolation[];
-
-  static fieldHasViolation(error: ErrorDto, fieldRegex: string): boolean {
-    if (error) {
-      const regex = new RegExp(fieldRegex);
-      return error.fieldViolations
-        .filter(fieldViolation => fieldViolation ? regex.test(fieldViolation.field) : false)
-        .length > 0;
-    } else {
-      return false;
-    }
-  }
-
-  static fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
-    if (typeof error.error === 'object') {
-      return <ErrorDto>error.error;
-    } else {
-      return <ErrorDto>{
-        code: ErrorDto.Code.UNEXPECTED,
-        message: 'Unexpected error occurred.',
-        arguments: [],
-        fieldViolations: [],
-      };
-    }
-  }
-
-  static observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<never> {
-    return throwError(ErrorDto.fromHttpErrorResponse(error));
-  }
 }
 
 export namespace ErrorDto {
@@ -56,5 +27,33 @@ export namespace ErrorDto {
     code: string;
     message: string;
     arguments: string[];
+  }
+
+  export function fieldHasViolation(error: ErrorDto, fieldRegex: string): boolean {
+    if (error) {
+      const regex = new RegExp(fieldRegex);
+      return error.fieldViolations
+        .filter(fieldViolation => fieldViolation ? regex.test(fieldViolation.field) : false)
+        .length > 0;
+    } else {
+      return false;
+    }
+  }
+
+  export function fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
+    if (typeof error.error === 'object') {
+      return <ErrorDto>error.error;
+    } else {
+      return <ErrorDto>{
+        code: ErrorDto.Code.UNEXPECTED,
+        message: 'Unexpected error occurred.',
+        arguments: [],
+        fieldViolations: [],
+      };
+    }
+  }
+
+  export function observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<never> {
+    return throwError(ErrorDto.fromHttpErrorResponse(error));
   }
 }

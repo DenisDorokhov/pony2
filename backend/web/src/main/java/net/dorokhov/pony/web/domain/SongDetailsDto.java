@@ -7,12 +7,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class SongDetailsDto {
 
     private final SongDto song;
-    private final AlbumDetailsDto album;
+    private final AlbumDetailsDto albumDetails;
     private final GenreDto genre;
 
-    SongDetailsDto(SongDto song, AlbumDetailsDto album, GenreDto genre) {
+    private SongDetailsDto(SongDto song, AlbumDetailsDto albumDetails, GenreDto genre) {
         this.song = checkNotNull(song);
-        this.album = checkNotNull(album);
+        this.albumDetails = checkNotNull(albumDetails);
         this.genre = checkNotNull(genre);
     }
 
@@ -20,8 +20,8 @@ public final class SongDetailsDto {
         return song;
     }
 
-    public AlbumDetailsDto getAlbum() {
-        return album;
+    public AlbumDetailsDto getAlbumDetails() {
+        return albumDetails;
     }
 
     public GenreDto getGenre() {

@@ -9,7 +9,7 @@ public final class LibraryFolderDto {
     @FolderExists
     private final String path;
 
-    LibraryFolderDto(String path) {
+    private LibraryFolderDto(String path) {
         this.path = path;
     }
 

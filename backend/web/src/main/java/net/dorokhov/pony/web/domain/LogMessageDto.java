@@ -18,7 +18,7 @@ public final class LogMessageDto {
     private final List<String> arguments;
     private final String text;
 
-    LogMessageDto(Long id, LocalDateTime date, Level level, String pattern, List<String> arguments, String text) {
+    private LogMessageDto(Long id, LocalDateTime date, Level level, String pattern, List<String> arguments, String text) {
         this.id = checkNotNull(id);
         this.date = checkNotNull(date);
         this.level = checkNotNull(level);

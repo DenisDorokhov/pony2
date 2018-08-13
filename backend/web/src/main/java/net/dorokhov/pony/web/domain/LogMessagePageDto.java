@@ -12,7 +12,7 @@ public final class LogMessagePageDto extends PageDto {
 
     private final List<LogMessageDto> logMessages;
 
-    LogMessagePageDto(int pageIndex, int pageSize, int totalPages, List<LogMessageDto> logMessages) {
+    private LogMessagePageDto(int pageIndex, int pageSize, int totalPages, List<LogMessageDto> logMessages) {
         super(pageIndex, pageSize, totalPages);
         this.logMessages = unmodifiableList(logMessages);
     }

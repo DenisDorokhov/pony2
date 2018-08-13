@@ -12,7 +12,7 @@ public final class ScanJobPageDto extends PageDto {
 
     private final List<ScanJobDto> scanJobs;
 
-    ScanJobPageDto(int pageIndex, int pageSize, int totalPages, List<ScanJobDto> scanJobs) {
+    private ScanJobPageDto(int pageIndex, int pageSize, int totalPages, List<ScanJobDto> scanJobs) {
         super(pageIndex, pageSize, totalPages);
         this.scanJobs = unmodifiableList(scanJobs);
     }

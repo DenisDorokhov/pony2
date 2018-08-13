@@ -10,7 +10,7 @@
       <a *ngFor="let artist of artists"
          [class.active]="artist.id === selectedArtist" (click)="selectArtist(artist)"
          class="list-group-item" title="{{ artist.name }}">
-        <pony-image-loader [url]="artist.artwork ? '/api/file/artwork/small/' + artist.artwork : undefined"></pony-image-loader>
+        <pony-image-loader [url]="artist.artworkId ? '/api/file/artwork/small/' + artist.artworkId : undefined"></pony-image-loader>
         <div class="artist-name">{{ artist.name }}</div>
       </a>
     </div>

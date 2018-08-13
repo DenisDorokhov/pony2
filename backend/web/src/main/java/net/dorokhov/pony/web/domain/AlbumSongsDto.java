@@ -13,7 +13,7 @@ public final class AlbumSongsDto {
     private final AlbumDto album;
     private final List<SongDto> songs;
 
-    AlbumSongsDto(AlbumDto album, List<SongDto> songs) {
+    private AlbumSongsDto(AlbumDto album, List<SongDto> songs) {
         this.album = checkNotNull(album);
         this.songs = unmodifiableList(songs);
     }

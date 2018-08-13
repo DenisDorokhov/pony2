@@ -8,12 +8,12 @@ import java.time.LocalDateTime;
 public final class GenreDto extends BaseDto {
 
     private final String name;
-    private final Long artwork;
+    private final Long artworkId;
 
-    GenreDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate, @Nullable String name, @Nullable Long artwork) {
+    private GenreDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate, @Nullable String name, @Nullable Long artworkId) {
         super(id, creationDate, updateDate);
         this.name = name;
-        this.artwork = artwork;
+        this.artworkId = artworkId;
     }
 
     @Nullable
@@ -22,8 +22,8 @@ public final class GenreDto extends BaseDto {
     }
 
     @Nullable
-    public Long getArtwork() {
-        return artwork;
+    public Long getArtworkId() {
+        return artworkId;
     }
 
     public static GenreDto of(Genre genre) {

@@ -15,9 +15,9 @@ public final class ScanJobDto extends BaseDto {
     private final LogMessageDto logMessage;
     private final ScanResultDto scanResult;
 
-    ScanJobDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
-               ScanType scanType, ScanJob.Status status, @Nullable LogMessageDto logMessage,
-               @Nullable ScanResultDto scanResult) {
+    private ScanJobDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+                       ScanType scanType, ScanJob.Status status, @Nullable LogMessageDto logMessage,
+                       @Nullable ScanResultDto scanResult) {
         super(id, creationDate, updateDate);
         this.scanType = checkNotNull(scanType);
         this.status = checkNotNull(status);

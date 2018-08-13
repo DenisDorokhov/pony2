@@ -1,3 +1,3 @@
-export class InstallationStatusDto {
+export interface InstallationStatusDto {
   installed: boolean;
 }

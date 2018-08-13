@@ -1,7 +1,7 @@
 import {AlbumDto} from './album.dto';
 import {SongDto} from './song.dto';
 
-export class AlbumSongsDto {
+export interface AlbumSongsDto {
   album: AlbumDto;
   songs: SongDto[];
 }

@@ -50,15 +50,15 @@ public final class ScanResultDto {
     private final Integer createdArtworkCount;
     private final Integer deletedArtworkCount;
 
-    ScanResultDto(Long id, LocalDateTime date, ScanType scanType,
-                  List<String> targetPaths, List<String> failedPaths,
-                  Integer processedAudioFileCount, Long duration, Long songSize, Long artworkSize,
-                  Integer genreCount, Integer artistCount, Integer albumCount, Integer songCount, Integer artworkCount,
-                  Integer createdArtistCount, Integer updatedArtistCount, Integer deletedArtistCount,
-                  Integer createdAlbumCount, Integer updatedAlbumCount, Integer deletedAlbumCount,
-                  Integer createdGenreCount, Integer updatedGenreCount, Integer deletedGenreCount,
-                  Integer createdSongCount, Integer updatedSongCount, Integer deletedSongCount,
-                  Integer createdArtworkCount, Integer deletedArtworkCount) {
+    private ScanResultDto(Long id, LocalDateTime date, ScanType scanType,
+                          List<String> targetPaths, List<String> failedPaths,
+                          Integer processedAudioFileCount, Long duration, Long songSize, Long artworkSize,
+                          Integer genreCount, Integer artistCount, Integer albumCount, Integer songCount, Integer artworkCount,
+                          Integer createdArtistCount, Integer updatedArtistCount, Integer deletedArtistCount,
+                          Integer createdAlbumCount, Integer updatedAlbumCount, Integer deletedAlbumCount,
+                          Integer createdGenreCount, Integer updatedGenreCount, Integer deletedGenreCount,
+                          Integer createdSongCount, Integer updatedSongCount, Integer deletedSongCount,
+                          Integer createdArtworkCount, Integer deletedArtworkCount) {
         this.id = checkNotNull(id);
         this.date = checkNotNull(date);
         this.scanType = checkNotNull(scanType);

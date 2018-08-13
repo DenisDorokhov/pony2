@@ -11,19 +11,19 @@ import static java.util.Collections.unmodifiableList;
 public final class ArtistSongsDto {
 
     private final ArtistDto artist;
-    private final List<AlbumSongsDto> albums;
+    private final List<AlbumSongsDto> albumSongs;
 
-    ArtistSongsDto(ArtistDto artist, List<AlbumSongsDto> albums) {
+    private ArtistSongsDto(ArtistDto artist, List<AlbumSongsDto> albumSongs) {
         this.artist = checkNotNull(artist);
-        this.albums = unmodifiableList(albums);
+        this.albumSongs = unmodifiableList(albumSongs);
     }
 
     public ArtistDto getArtist() {
         return artist;
     }
 
-    public List<AlbumSongsDto> getAlbums() {
-        return albums;
+    public List<AlbumSongsDto> getAlbumSongs() {
+        return albumSongs;
     }
 
     public static ArtistSongsDto of(Artist artist) {

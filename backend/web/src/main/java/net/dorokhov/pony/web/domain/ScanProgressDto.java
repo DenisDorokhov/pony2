@@ -75,7 +75,7 @@ public final class ScanProgressDto {
     private final List<String> files;
     private final Value value;
 
-    ScanProgressDto(Step step, List<String> files, @Nullable Value value) {
+    private ScanProgressDto(Step step, List<String> files, @Nullable Value value) {
         this.step = checkNotNull(step);
         this.files = unmodifiableList(files);
         this.value = value;

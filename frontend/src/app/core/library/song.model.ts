@@ -14,8 +14,8 @@ export class Song {
   trackNumber: number;
   name: string;
   artistName: string;
-  album: Album;
-  genre: number;
+  albumId: Album;
+  genreId: number;
 
   constructor(partial?: Partial<Song>) {
     Object.assign(this, partial);

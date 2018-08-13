@@ -10,7 +10,7 @@ public final class AuthenticationDto {
 
     private final String token;
 
-    AuthenticationDto(UserDto user, String token) {
+    private AuthenticationDto(UserDto user, String token) {
         this.user = checkNotNull(user);
         this.token = checkNotNull(token);
     }

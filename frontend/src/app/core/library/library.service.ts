@@ -34,7 +34,7 @@ export class LibraryService {
       creationDate: artistDto.creationDate,
       updateDate: artistDto.updateDate,
       name: artistDto.name,
-      artwork: artistDto.artwork
+      artworkId: artistDto.artworkId
     });
   }
 
@@ -45,7 +45,7 @@ export class LibraryService {
       updateDate: albumDto.updateDate,
       name: albumDto.name,
       year: albumDto.year,
-      artwork: albumDto.artwork,
+      artwork: albumDto.artworkId,
       artist: artist
     });
   }
@@ -64,8 +64,8 @@ export class LibraryService {
       trackNumber: songDto.trackNumber,
       name: songDto.name,
       artistName: songDto.artistName,
-      album: album,
-      genre: songDto.genre
+      albumId: album,
+      genreId: songDto.genreId
     });
   }
 
@@ -81,7 +81,7 @@ export class LibraryService {
     const artist = this.artistFromDto(artistSongsDto.artist);
     return new ArtistSongs({
       artist: artist,
-      albums: artistSongsDto.albums.map(albumSongsDto => this.albumSongsFromDto(albumSongsDto, artist))
+      albumSongs: artistSongsDto.albumSongs.map(albumSongsDto => this.albumSongsFromDto(albumSongsDto, artist))
     });
   }
 

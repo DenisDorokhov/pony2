@@ -7,19 +7,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class SongAlbumDto {
 
     private final SongDto song;
-    private final AlbumDetailsDto album;
+    private final AlbumDetailsDto albumDetails;
 
-    SongAlbumDto(SongDto song, AlbumDetailsDto album) {
+    private SongAlbumDto(SongDto song, AlbumDetailsDto albumDetails) {
         this.song = checkNotNull(song);
-        this.album = checkNotNull(album);
+        this.albumDetails = checkNotNull(albumDetails);
     }
 
     public SongDto getSong() {
         return song;
     }
 
-    public AlbumDetailsDto getAlbum() {
-        return album;
+    public AlbumDetailsDto getAlbumDetails() {
+        return albumDetails;
     }
 
     public static SongAlbumDto of(Song song) {

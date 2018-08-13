@@ -9,7 +9,7 @@ public final class AlbumDetailsDto {
     private final AlbumDto album;
     private final ArtistDto artist;
 
-    AlbumDetailsDto(AlbumDto album, ArtistDto artist) {
+    private AlbumDetailsDto(AlbumDto album, ArtistDto artist) {
         this.album = checkNotNull(album);
         this.artist = checkNotNull(artist);
     }

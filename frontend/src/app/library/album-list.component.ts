@@ -66,9 +66,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
       .subscribe(
         artistSongs => {
           this.artistSongs = artistSongs;
-          this.artistSongs.albums.sort(AlbumListComponent.compareAlbumSongs);
+          this.artistSongs.albumSongs.sort(AlbumListComponent.compareAlbumSongs);
           this.loadingState = LoadingState.LOADED;
-          console.log(`${artistSongs.albums.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
+          console.log(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
         error => {
           this.loadingState = LoadingState.ERROR;

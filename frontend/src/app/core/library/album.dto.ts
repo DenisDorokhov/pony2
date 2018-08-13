@@ -1,9 +1,9 @@
-export class AlbumDto {
+export interface AlbumDto {
   id: number;
   creationDate: Date;
   updateDate: Date;
   name: string;
   year: number;
-  artwork: number;
-  artist: number;
+  artworkId: number;
+  artistId: number;
 }

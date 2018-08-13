@@ -2,11 +2,11 @@ package net.dorokhov.pony.web.domain;
 
 public abstract class PageDto {
 
-    protected final int pageIndex;
-    protected final int pageSize;
-    protected final int totalPages;
+    private final int pageIndex;
+    private final int pageSize;
+    private final int totalPages;
 
-    protected PageDto(int pageIndex, int pageSize, int totalPages) {
+    PageDto(int pageIndex, int pageSize, int totalPages) {
         this.pageIndex = pageIndex;
         this.pageSize = pageSize;
         this.totalPages = totalPages;

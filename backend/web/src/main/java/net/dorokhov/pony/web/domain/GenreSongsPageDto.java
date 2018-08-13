@@ -13,21 +13,21 @@ import static java.util.Collections.unmodifiableList;
 public class GenreSongsPageDto extends PageDto {
 
     private final GenreDto genre;
-    private final List<SongAlbumDto> songs;
+    private final List<SongAlbumDto> songAlbums;
 
-    GenreSongsPageDto(int pageIndex, int pageSize, int totalPages,
-                      GenreDto genre, List<SongAlbumDto> songs) {
+    private GenreSongsPageDto(int pageIndex, int pageSize, int totalPages,
+                              GenreDto genre, List<SongAlbumDto> songAlbums) {
         super(pageIndex, pageSize, totalPages);
         this.genre = checkNotNull(genre);
-        this.songs = unmodifiableList(songs);
+        this.songAlbums = unmodifiableList(songAlbums);
     }
 
     public GenreDto getGenre() {
         return genre;
     }
 
-    public List<SongAlbumDto> getSongs() {
-        return songs;
+    public List<SongAlbumDto> getSongAlbums() {
+        return songAlbums;
     }
 
     public static GenreSongsPageDto of(Genre genre, Page<Song> songPage) {

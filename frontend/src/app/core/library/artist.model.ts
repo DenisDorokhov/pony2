@@ -4,7 +4,7 @@ export class Artist {
   creationDate: Date;
   updateDate: Date;
   name: string;
-  artwork: number;
+  artworkId: number;
 
   constructor(partial?: Partial<Artist>) {
     Object.assign(this, partial);
