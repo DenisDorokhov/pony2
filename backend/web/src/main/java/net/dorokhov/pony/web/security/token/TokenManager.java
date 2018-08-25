@@ -31,13 +31,13 @@ public class TokenManager {
         }
     }
 
-    public String createToken(String subject) {
+    public String createAccessToken(Long userId) {
         return JWT.create()
-                .withSubject(subject)
+                .withSubject(userId.toString())
                 .sign(buildSignatureAlgorithm());
     }
 
-    public Long verifyToken(String token) throws InvalidTokenException {
+    public Long verifyAccessToken(String token) throws InvalidTokenException {
         JWTVerifier verifier = JWT.require(buildSignatureAlgorithm()).build();
         DecodedJWT jwt;
         try {
@@ -60,7 +60,7 @@ public class TokenManager {
         try {
             return Algorithm.HMAC256(tokenSecretManager.fetchTokenSecret());
         } catch (Exception e) {
-            throw new RuntimeException("Could not initialize signature algorithm.", e);
+            throw new IllegalStateException("Could not initialize signature algorithm.", e);
         }
     }
 }

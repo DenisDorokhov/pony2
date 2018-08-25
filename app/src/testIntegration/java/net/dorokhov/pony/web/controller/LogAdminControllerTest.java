@@ -35,7 +35,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
@@ -49,7 +49,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=WARN", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(this::checkEmptyLog);
@@ -63,14 +63,14 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minDate=1986-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
         
         response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minDate=3000-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(this::checkEmptyLog);
@@ -84,7 +84,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?pageIndex=1", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), LogMessagePageDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> {

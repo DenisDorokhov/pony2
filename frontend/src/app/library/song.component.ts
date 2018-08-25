@@ -1,7 +1,7 @@
 import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
+import {Song} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
-import {Song} from '../core/library/song.model';
 
 @Component({
   selector: 'pony-song',

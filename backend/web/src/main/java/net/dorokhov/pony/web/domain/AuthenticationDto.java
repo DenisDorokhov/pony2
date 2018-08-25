@@ -7,23 +7,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class AuthenticationDto {
 
     private final UserDto user;
+    private final String accessToken;
 
-    private final String token;
-
-    private AuthenticationDto(UserDto user, String token) {
+    private AuthenticationDto(UserDto user, String accessToken) {
         this.user = checkNotNull(user);
-        this.token = checkNotNull(token);
+        this.accessToken = checkNotNull(accessToken);
     }
 
     public UserDto getUser() {
         return user;
     }
 
-    public String getToken() {
-        return token;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public static AuthenticationDto of(User user, String token) {
-        return new AuthenticationDto(UserDto.of(user), token);
+    public static AuthenticationDto of(User user, String accessToken) {
+        return new AuthenticationDto(UserDto.of(user), accessToken);
     }
 }

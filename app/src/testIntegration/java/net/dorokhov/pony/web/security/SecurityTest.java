@@ -34,7 +34,7 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        assertThat(authentication.getToken()).isNotNull();
+        assertThat(authentication.getAccessToken()).isNotNull();
         assertThat(authentication.getUser()).satisfies(user -> 
                 assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
     }
@@ -61,7 +61,7 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/authentication", HttpMethod.DELETE, 
-                apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> 
@@ -98,7 +98,7 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/someResource", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).satisfies(error ->
@@ -113,7 +113,7 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.GET, 
-                apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }

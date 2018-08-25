@@ -30,7 +30,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/config", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ConfigDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ConfigDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(config -> {
@@ -50,7 +50,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/config", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(newConfig, authentication.getToken()), ConfigDto.class);
+                apiTemplate.createHeaderRequest(newConfig, authentication.getAccessToken()), ConfigDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(config -> {
@@ -69,7 +69,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/config", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(config, authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {

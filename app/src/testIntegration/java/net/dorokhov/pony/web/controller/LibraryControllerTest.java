@@ -177,7 +177,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/song/{songId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), 
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), 
                 SongDetailsDto[].class, song1_1_1.getId() + "," + song2_1_1.getId() + "," + 1000L);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -203,7 +203,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ArtistDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ArtistDto[].class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artists -> {
@@ -220,7 +220,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ArtistSongsDto.class, artist1.getId());
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
@@ -256,7 +256,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artistSongs/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -273,7 +273,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<GenreDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genres", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), GenreDto[].class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), GenreDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(genres -> {
@@ -290,7 +290,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<GenreSongsPageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genreSongs/{genreId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), GenreSongsPageDto.class, genre1.getId());
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), GenreSongsPageDto.class, genre1.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(genreSongs -> {
@@ -327,7 +327,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/genreSongs/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -344,7 +344,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SearchResultDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/search?query=foo", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SearchResultDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SearchResultDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(searchResult -> {
@@ -414,7 +414,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomSongs?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, 3);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, 3);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -428,7 +428,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomSongs?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, 1000);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, 1000);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs -> 
@@ -442,7 +442,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomAlbumSongs/{albumId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, album1_1.getId(), 3);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, album1_1.getId(), 3);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -456,7 +456,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomAlbumSongs/{albumId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, album1_1.getId(), 1000);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, album1_1.getId(), 1000);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs -> 
@@ -470,7 +470,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomArtistSongs/{artistId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, artist1.getId(), 3);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, artist1.getId(), 3);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -484,7 +484,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomArtistSongs/{artistId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, artist1.getId(), 1000);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, artist1.getId(), 1000);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs -> 
@@ -498,7 +498,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomGenreSongs/{genreId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, genre1.getId(), 3);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, genre1.getId(), 3);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -512,7 +512,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/randomGenreSongs/{genreId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), SongDetailsDto[].class, genre1.getId(), 1000);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, genre1.getId(), 1000);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs -> 
@@ -526,7 +526,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanStatusDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatus", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatusDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanStatusDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatus -> 
@@ -542,7 +542,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanStatusDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatus", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatusDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanStatusDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatus ->
@@ -562,7 +562,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanStatisticsDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatistics", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanStatisticsDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanStatisticsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatistics -> {
@@ -584,7 +584,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatistics", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {

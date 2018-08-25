@@ -30,7 +30,7 @@ public class InstallationAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<InstallationDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/installation", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), InstallationDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), InstallationDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(installationDto -> {
@@ -49,7 +49,7 @@ public class InstallationAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/installation", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {

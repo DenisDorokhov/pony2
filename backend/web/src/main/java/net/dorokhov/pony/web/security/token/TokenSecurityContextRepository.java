@@ -67,7 +67,7 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
         if (token == null) {
             throw new InvalidTokenException();
         }
-        User user = userService.getById(tokenManager.verifyToken(token));
+        User user = userService.getById(tokenManager.verifyAccessToken(token));
         if (user == null) {
             throw new InvalidTokenException();
         }

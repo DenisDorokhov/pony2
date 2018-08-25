@@ -1,7 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
-import {LoadingState} from '../core/common/loading-state';
-import {Artist} from '../core/library/artist.model';
+import {LoadingState} from '../core/common/common.model';
+import {Artist} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
 
 @Component({

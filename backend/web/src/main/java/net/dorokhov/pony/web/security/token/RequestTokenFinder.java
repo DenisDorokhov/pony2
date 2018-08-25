@@ -19,7 +19,7 @@ public class RequestTokenFinder {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public static final String TOKEN_COOKIE_NAME = "pony2.token";
+    public static final String TOKEN_COOKIE_NAME = "pony2.staticToken";
     
     private static final String TOKEN_HEADER_PREFIX = "Bearer ";
 

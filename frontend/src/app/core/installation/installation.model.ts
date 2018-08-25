@@ -1,3 +1,9 @@
+export interface InstallationDto {
+  creationDate: Date;
+  updateDate: Date;
+  version: string;
+}
+
 export interface InstallationCommandDto {
   installationSecret: string;
   libraryFolders: InstallationCommandDto[];
@@ -10,4 +16,8 @@ export namespace InstallationCommandDto {
   export interface LibraryFolder {
     path: string;
   }
+}
+
+export interface InstallationStatusDto {
+  installed: boolean;
 }

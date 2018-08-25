@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
-import {ErrorDto} from './error.dto';
+import {ErrorDto} from './common.dto';
 
 @Injectable()
 export class ErrorTranslationService {

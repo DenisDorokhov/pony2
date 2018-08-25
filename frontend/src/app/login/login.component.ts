@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
-import {ErrorDto} from '../core/common/error.dto';
+import {ErrorDto} from '../core/common/common.dto';
 import {AuthenticationService} from '../core/user/authentication.service';
 import {Credentials} from '../core/user/authentication.service';
 

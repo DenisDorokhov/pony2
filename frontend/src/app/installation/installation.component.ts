@@ -1,8 +1,8 @@
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
-import {ErrorDto} from '../core/common/error.dto';
-import {InstallationCommandDto} from '../core/installation/installation-command.dto';
+import {ErrorDto} from '../core/common/common.dto';
+import {InstallationCommandDto} from '../core/installation/installation.model';
 import {InstallationService} from '../core/installation/installation.service';
 
 @Component({

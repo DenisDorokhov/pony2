@@ -37,7 +37,7 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldLoadNonemptySecurityContext() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
-        when(tokenManager.verifyToken("someToken")).thenReturn(1L);
+        when(tokenManager.verifyAccessToken("someToken")).thenReturn(1L);
         User user = userBuilder()
                 .addRoles(User.Role.USER)
                 .build();
@@ -68,7 +68,7 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldLoadEmptySecurityContextIfTokenIsInvalid() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("invalidToken");
-        when(tokenManager.verifyToken("invalidToken")).thenThrow(new InvalidTokenException());
+        when(tokenManager.verifyAccessToken("invalidToken")).thenThrow(new InvalidTokenException());
 
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
 
@@ -79,7 +79,7 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldLoadEmptySecurityContextIfUserIsNotFound() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
-        when(tokenManager.verifyToken("someToken")).thenReturn(1L);
+        when(tokenManager.verifyAccessToken("someToken")).thenReturn(1L);
         when(userService.getById(1L)).thenReturn(null);
 
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
@@ -91,7 +91,7 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldContainContext() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
-        when(tokenManager.verifyToken("someToken")).thenReturn(1L);
+        when(tokenManager.verifyAccessToken("someToken")).thenReturn(1L);
         when(userService.getById(1L)).thenReturn(user());
 
         assertThat(tokenSecurityContextRepository.containsContext(new MockHttpServletRequest())).isTrue();

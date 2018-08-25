@@ -34,7 +34,7 @@ public class UserControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), UserDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> 
@@ -50,7 +50,7 @@ public class UserControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getToken()), UserDto.class);
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> {
@@ -73,7 +73,7 @@ public class UserControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -94,7 +94,7 @@ public class UserControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -120,7 +120,7 @@ public class UserControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {

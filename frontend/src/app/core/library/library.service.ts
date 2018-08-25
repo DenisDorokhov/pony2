@@ -3,17 +3,9 @@ import {Injectable} from '@angular/core';
 import 'rxjs-compat/add/operator/distinctUntilChanged';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Observable} from 'rxjs/Observable';
-import {ErrorDto} from '../common/error.dto';
-import {AlbumSongsDto} from './album-songs.dto';
-import {AlbumSongs} from './album-songs.model';
-import {AlbumDto} from './album.dto';
-import {Album} from './album.model';
-import {ArtistSongsDto} from './artist-songs.dto';
-import {ArtistSongs} from './artist-songs.model';
-import {ArtistDto} from './artist.dto';
-import {Artist} from './artist.model';
-import {SongDto} from './song.dto';
-import {Song} from './song.model';
+import {ErrorDto} from '../common/common.dto';
+import {ArtistSongsDto} from './library.dto';
+import {Artist, ArtistSongs, Song} from './library.model';
 
 export enum LibraryState {
   UNKNOWN,
@@ -28,63 +20,6 @@ export class LibraryService {
   private selectedArtistSubject = new BehaviorSubject<Artist>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song>(undefined);
 
-  private static artistFromDto(artistDto: ArtistDto): Artist {
-    return new Artist({
-      id: artistDto.id,
-      creationDate: artistDto.creationDate,
-      updateDate: artistDto.updateDate,
-      name: artistDto.name,
-      artworkId: artistDto.artworkId
-    });
-  }
-
-  private static albumFromDto(albumDto: AlbumDto, artist: Artist): Album {
-    return new Album({
-      id: albumDto.id,
-      creationDate: albumDto.creationDate,
-      updateDate: albumDto.updateDate,
-      name: albumDto.name,
-      year: albumDto.year,
-      artwork: albumDto.artworkId,
-      artist: artist
-    });
-  }
-
-  private static songFromDto(songDto: SongDto, album: Album): Song {
-    return new Song({
-      id: songDto.id,
-      creationDate: songDto.creationDate,
-      updateDate: songDto.updateDate,
-      mimeType: songDto.mimeType,
-      size: songDto.size,
-      duration: songDto.duration,
-      bitRate: songDto.bitRate,
-      bitRateVariable: songDto.bitRateVariable,
-      discNumber: songDto.discNumber,
-      trackNumber: songDto.trackNumber,
-      name: songDto.name,
-      artistName: songDto.artistName,
-      albumId: album,
-      genreId: songDto.genreId
-    });
-  }
-
-  private static albumSongsFromDto(albumSongsDto: AlbumSongsDto, artist: Artist) {
-    const album = this.albumFromDto(albumSongsDto.album, artist);
-    return new AlbumSongs({
-        album: album,
-        songs: albumSongsDto.songs.map(songDto => LibraryService.songFromDto(songDto, album))
-    });
-  }
-
-  private static artistSongsFromDto(artistSongsDto: ArtistSongsDto): ArtistSongs {
-    const artist = this.artistFromDto(artistSongsDto.artist);
-    return new ArtistSongs({
-      artist: artist,
-      albumSongs: artistSongsDto.albumSongs.map(albumSongsDto => this.albumSongsFromDto(albumSongsDto, artist))
-    });
-  }
-
   constructor(private httpClient: HttpClient) {
   }
 
@@ -96,14 +31,14 @@ export class LibraryService {
   getArtists(): Observable<Artist[]> {
     return this.httpClient.get<Artist[]>('/api/library/artists')
       .catch(ErrorDto.observableFromHttpErrorResponse)
-      .map(artistDtos => artistDtos.map(artistDto => LibraryService.artistFromDto(artistDto)))
+      .map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto)))
       .do(artists => this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY));
   }
 
   getArtistSongs(artist: number): Observable<ArtistSongs> {
     return this.httpClient.get<ArtistSongsDto>(`/api/library/artistSongs/${artist}`)
       .catch(ErrorDto.observableFromHttpErrorResponse)
-      .map(artistSongsDto => LibraryService.artistSongsFromDto(artistSongsDto));
+      .map(artistSongsDto => new ArtistSongs(artistSongsDto));
   }
 
   get selectedArtist(): Observable<Artist> {

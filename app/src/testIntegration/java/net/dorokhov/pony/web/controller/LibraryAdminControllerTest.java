@@ -87,7 +87,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/full", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> 
@@ -110,7 +110,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanJobPageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobPageDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobPageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanJobPage -> {
@@ -134,7 +134,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanJobDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/{scanJobId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobDto.class, scanJobId);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobDto.class, scanJobId);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(dto -> checkScanJobDto(dto, scanJobId));
@@ -147,7 +147,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -164,7 +164,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -180,7 +180,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -200,7 +200,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanJobDto> scanJobResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobs/full", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobDto.class);
 
         assertThat(scanJobResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         ScanJobDto scanJob = scanJobResponse.getBody();
@@ -219,7 +219,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<ScanJobProgressDto> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobProgressDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobProgressDto.class);
 
         assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
@@ -229,7 +229,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress/{scanJobId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getToken()), ScanJobProgressDto.class, scanJob.getId());
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobProgressDto.class, scanJob.getId());
 
         assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {

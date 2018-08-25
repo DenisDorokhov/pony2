@@ -22,7 +22,7 @@ export namespace ErrorDto {
     CONCURRENT_SCAN = 'CONCURRENT_SCAN',
   }
 
-  export class FieldViolation {
+  export interface FieldViolation {
     field: string;
     code: string;
     message: string;

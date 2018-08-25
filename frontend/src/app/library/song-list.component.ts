@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {Song} from '../core/library/song.model';
+import {Song} from '../core/library/library.model';
 
 @Component({
   selector: 'pony-song-list',

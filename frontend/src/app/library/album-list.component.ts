@@ -1,10 +1,8 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import 'rxjs/add/operator/do';
 import {Subscription} from 'rxjs/Subscription';
-import {LoadingState} from '../core/common/loading-state';
-import {AlbumSongs} from '../core/library/album-songs.model';
-import {ArtistSongs} from '../core/library/artist-songs.model';
-import {Artist} from '../core/library/artist.model';
+import {LoadingState} from '../core/common/common.model';
+import {AlbumSongs, Artist, ArtistSongs} from '../core/library/library.model';
 import {LibraryService, LibraryState} from '../core/library/library.service';
 
 @Component({

@@ -1,6 +1,5 @@
 import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {AlbumSongs} from '../core/library/album-songs.model';
-import {Song} from '../core/library/song.model';
+import {AlbumSongs, Song} from '../core/library/library.model';
 
 class Disc {
   discNumber: number;

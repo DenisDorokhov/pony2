@@ -1,10 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {EventEmitter, Injectable} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
-import {ErrorDto} from '../common/error.dto';
-import {AuthenticationDto} from './authentication.dto';
+import {ErrorDto} from '../common/common.dto';
 import {TokenStorageService} from './token-storage.service';
-import {UserDto} from './user.dto';
+import {AuthenticationDto, UserDto} from './user.dto';
 
 export class Credentials {
   email: string;
@@ -51,7 +50,7 @@ export class AuthenticationService {
   logout(): Observable<UserDto> {
     return this.httpClient.delete<UserDto>('/api/authentication')
       .do(() => {
-        this.tokenStorage.token = undefined;
+        this.tokenStorage.accessToken = undefined;
         const oldUser = this._currentUser;
         this._currentUser = undefined;
         this._loggedOut.emit(oldUser);
@@ -66,7 +65,7 @@ export class AuthenticationService {
     };
     return this.httpClient.post<AuthenticationDto>('/api/authentication', null, {params: params})
       .map(authentication => {
-        this.tokenStorage.token = authentication.token;
+        this.tokenStorage.accessToken = authentication.accessToken;
         this._currentUser = authentication.user;
         return this._currentUser;
       })

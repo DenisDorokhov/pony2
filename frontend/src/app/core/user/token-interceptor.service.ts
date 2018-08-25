@@ -11,10 +11,10 @@ export class TokenInterceptor implements HttpInterceptor {
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     let newRequest;
-    if (this.tokenStorage.token) {
+    if (this.tokenStorage.accessToken) {
       newRequest = request.clone({
         setHeaders: {
-          'Authorization': `Bearer ${this.tokenStorage.token}`
+          'Authorization': `Bearer ${this.tokenStorage.accessToken}`
         }
       });
     } else {

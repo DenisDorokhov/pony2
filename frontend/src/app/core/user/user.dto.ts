@@ -13,3 +13,8 @@ export namespace UserDto {
     ADMIN = 'ADMIN',
   }
 }
+
+export interface AuthenticationDto {
+  user: UserDto;
+  accessToken: string;
+}

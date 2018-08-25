@@ -14,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -43,11 +42,11 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                        Authentication authentication) throws IOException {
         User user = userContext.getAuthenticatedUser();
         loginDelegates.forEach(loginDelegate -> loginDelegate.onLogin(user));
         logger.debug("User '{}' has logged in.", user.getId());
-        String token = tokenManager.createToken(user.getId().toString());
+        String token = tokenManager.createAccessToken(user.getId());
         messageConverter.write(AuthenticationDto.of(user, token), MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

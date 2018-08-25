@@ -46,50 +46,39 @@ public class TokenManagerTest {
     }
 
     @Test
-    public void shouldVerifyCreatedToken() throws SecretNotFoundException, IOException, InvalidTokenException {
+    public void shouldVerifyCreatedAccessToken() throws SecretNotFoundException, IOException, InvalidTokenException {
 
         when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
 
-        String token = tokenManager.createToken("1");
+        String token = tokenManager.createAccessToken(1L);
 
         assertThat(token).isNotNull();
-        assertThat(tokenManager.verifyToken(token)).isEqualTo(1L);
+        assertThat(tokenManager.verifyAccessToken(token)).isEqualTo(1L);
     }
 
     @Test
-    public void shouldVerifyToken() throws SecretNotFoundException, IOException, InvalidTokenException {
-
-        when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
-        String token = JWT.create()
-                .withSubject("1")
-                .sign(Algorithm.HMAC256("someSecret"));
-
-        assertThat(tokenManager.verifyToken(token)).isEqualTo(1L);
-    }
-
-    @Test
-    public void shouldFailVerificationOnNotFoundSecret() throws SecretNotFoundException, IOException {
+    public void shouldFailAccessTokenVerificationOnNotFoundSecret() throws SecretNotFoundException, IOException {
 
         when(tokenSecretManager.fetchTokenSecret()).thenThrow(new SecretNotFoundException());
 
-        assertThatThrownBy(() -> tokenManager.verifyToken("someToken"));
+        assertThatThrownBy(() -> tokenManager.verifyAccessToken("someToken"));
     }
 
     @Test
-    public void shouldFailVerificationOnInvalidToken() throws SecretNotFoundException, IOException {
+    public void shouldFailAccessTokenVerificationOnInvalidToken() throws SecretNotFoundException, IOException {
 
         when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
 
-        assertThatThrownBy(() -> tokenManager.verifyToken("invalidToken")).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> tokenManager.verifyAccessToken("invalidToken")).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
-    public void shouldFailVerificationOnNoSubject() throws SecretNotFoundException, IOException {
+    public void shouldFailAccessTokenVerificationOnNoSubject() throws SecretNotFoundException, IOException {
 
         when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
         String token = JWT.create().sign(Algorithm.HMAC256("someSecret"));
 
-        assertThatThrownBy(() -> tokenManager.verifyToken(token)).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> tokenManager.verifyAccessToken(token)).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
@@ -100,6 +89,6 @@ public class TokenManagerTest {
                 .withSubject("invalidSubject")
                 .sign(Algorithm.HMAC256("someSecret"));
 
-        assertThatThrownBy(() -> tokenManager.verifyToken(token)).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> tokenManager.verifyAccessToken(token)).isInstanceOf(InvalidTokenException.class);
     }
 }
