@@ -10,6 +10,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class SongDto extends BaseDto {
 
     private final String mimeType;
+    private final String fileExtension;
+
     private final Long size;
     private final Long duration;
 
@@ -28,13 +30,14 @@ public final class SongDto extends BaseDto {
     private final Long genreId;
 
     private SongDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
-                    String mimeType, Long size, Long duration,
+                    String mimeType, String fileExtension, Long size, Long duration,
                     Long bitRate, Boolean bitRateVariable,
                     @Nullable Integer discNumber, @Nullable Integer trackNumber,
                     @Nullable String name, @Nullable String artistName,
                     Long albumId, Long genreId) {
         super(id, creationDate, updateDate);
         this.mimeType = checkNotNull(mimeType);
+        this.fileExtension = checkNotNull(fileExtension);
         this.size = checkNotNull(size);
         this.duration = checkNotNull(duration);
         this.bitRate = checkNotNull(bitRate);
@@ -49,6 +52,10 @@ public final class SongDto extends BaseDto {
 
     public String getMimeType() {
         return mimeType;
+    }
+
+    public String getFileExtension() {
+        return fileExtension;
     }
 
     public Long getSize() {
@@ -97,7 +104,8 @@ public final class SongDto extends BaseDto {
 
     public static SongDto of(Song song) {
         return new SongDto(song.getId(), song.getCreationDate(), song.getUpdateDate(),
-                song.getFileType().getMimeType(), song.getSize(), song.getDuration(),
+                song.getFileType().getMimeType(), song.getFileType().getFileExtension(), 
+                song.getSize(), song.getDuration(),
                 song.getBitRate(), song.isBitRateVariable(),
                 song.getDiscNumber(), song.getTrackNumber(),
                 song.getName(),

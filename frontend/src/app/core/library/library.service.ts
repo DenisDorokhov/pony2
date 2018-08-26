@@ -17,8 +17,9 @@ export enum LibraryState {
 export class LibraryService {
 
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
-  private selectedArtistSubject = new BehaviorSubject<Artist>(undefined);
-  private selectedSongSubject = new BehaviorSubject<Song>(undefined);
+  private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
+  private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
+  private songPlaybackRequestSubject = new BehaviorSubject<Song | undefined>(undefined);
 
   constructor(private httpClient: HttpClient) {
   }
@@ -41,7 +42,7 @@ export class LibraryService {
       .map(artistSongsDto => new ArtistSongs(artistSongsDto));
   }
 
-  get selectedArtist(): Observable<Artist> {
+  get selectedArtist(): Observable<Artist | undefined> {
     return this.selectedArtistSubject.asObservable()
       .distinctUntilChanged();
   }
@@ -54,7 +55,7 @@ export class LibraryService {
     this.selectedArtistSubject.next(undefined);
   }
 
-  get selectedSong(): Observable<Song> {
+  get selectedSong(): Observable<Song | undefined> {
     return this.selectedSongSubject.asObservable()
       .distinctUntilChanged();
   }
@@ -65,5 +66,14 @@ export class LibraryService {
 
   deselectSong() {
     this.selectedSongSubject.next(undefined);
+  }
+
+  get songPlaybackRequest(): Observable<Song | undefined> {
+    return this.songPlaybackRequestSubject.asObservable()
+      .distinctUntilChanged();
+  }
+
+  requestSongPlayback(song: Song) {
+    this.songPlaybackRequestSubject.next(song);
   }
 }

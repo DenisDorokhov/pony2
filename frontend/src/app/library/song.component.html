@@ -1,4 +1,5 @@
-<div [class.selected]="selected" [class.withArtist]="showArtist" (click)="select()"
+<div [class.selected]="selected" [class.withArtist]="showArtist" 
+     (click)="select()" (dblclick)="play()"
      tabindex="0" class="song-container">
   <div class="track-number">{{ song.trackNumber }}</div>
   <div class="duration">{{ durationInMinutes }}</div>

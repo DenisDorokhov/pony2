@@ -24,7 +24,9 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/howler/dist/howler.core.min.js"
+            ]
           },
           "configurations": {
             "production": {

@@ -4,24 +4,27 @@ export class Song {
 
   id: number;
   creationDate: Date;
-  updateDate: Date;
+  updateDate: Date | undefined;
   mimeType: string;
+  fileExtension: string;
   size: number;
   duration: number;
   bitRate: number;
   bitRateVariable: boolean;
-  discNumber: number;
-  trackNumber: number;
-  name: string;
-  artistName: string;
-  album: Album;
+  discNumber: number | undefined;
+  trackNumber: number | undefined;
+  name: string | undefined;
+  artistName: string | undefined;
   genreId: number;
+  album: Album;
+  audioUrl: string;
 
   constructor(songDto: SongDto, album: Album) {
     this.id = songDto.id;
     this.creationDate = songDto.creationDate;
     this.updateDate = songDto.updateDate;
     this.mimeType = songDto.mimeType;
+    this.fileExtension = songDto.fileExtension;
     this.size = songDto.size;
     this.duration = songDto.duration;
     this.bitRate = songDto.bitRate;
@@ -30,8 +33,9 @@ export class Song {
     this.trackNumber = songDto.trackNumber;
     this.name = songDto.name;
     this.artistName = songDto.artistName;
-    this.album = album;
     this.genreId = songDto.genreId;
+    this.album = album;
+    this.audioUrl = '/api/file/audio/' + this.id;
   }
 }
 
@@ -39,11 +43,13 @@ export class Album {
 
   id: number;
   creationDate: Date;
-  updateDate: Date;
-  name: string;
-  year: number;
-  artworkId: number;
+  updateDate: Date | undefined;
+  name: string | undefined;
+  year: number | undefined;
+  artworkId: number | undefined;
   artist: Artist;
+  smallArtworkUrl: string | undefined;
+  largeArtworkUrl: string | undefined;
 
   constructor(albumDto: AlbumDto, artist: Artist) {
     this.id = albumDto.id;
@@ -52,6 +58,8 @@ export class Album {
     this.name = albumDto.name;
     this.year = albumDto.year;
     this.artworkId = albumDto.artworkId;
+    this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
+    this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.artist = artist;
   }
 }
@@ -72,9 +80,11 @@ export class Artist {
 
   id: number;
   creationDate: Date;
-  updateDate: Date;
-  name: string;
-  artworkId: number;
+  updateDate: Date | undefined;
+  name: string | undefined;
+  artworkId: number | undefined;
+  smallArtworkUrl: string | undefined;
+  largeArtworkUrl: string | undefined;
 
   constructor(artistDto: ArtistDto) {
     this.id = artistDto.id;
@@ -82,6 +92,8 @@ export class Artist {
     this.updateDate = artistDto.updateDate;
     this.name = artistDto.name;
     this.artworkId = artistDto.artworkId;
+    this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
+    this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
   }
 }
 

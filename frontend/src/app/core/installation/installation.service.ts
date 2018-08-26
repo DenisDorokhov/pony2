@@ -5,12 +5,12 @@ import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/catch';
 import {Observable} from 'rxjs/Observable';
 import {ErrorDto} from '../common/common.dto';
-import {InstallationCommandDto, InstallationDto, InstallationStatusDto} from './installation.model';
+import {InstallationCommandDto, InstallationDto, InstallationStatusDto} from './installation.dto';
 
 @Injectable()
 export class InstallationService {
 
-  private installationStatus: InstallationStatusDto;
+  private installationStatus: InstallationStatusDto | undefined;
 
   constructor(private httpClient: HttpClient) {
   }

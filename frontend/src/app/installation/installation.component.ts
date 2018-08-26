@@ -2,7 +2,7 @@ import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
 import {ErrorDto} from '../core/common/common.dto';
-import {InstallationCommandDto} from '../core/installation/installation.model';
+import {InstallationCommandDto} from '../core/installation/installation.dto';
 import {InstallationService} from '../core/installation/installation.service';
 
 @Component({
@@ -54,9 +54,9 @@ export class InstallationComponent {
       },
       (error: ErrorDto) => {
         if (error.code === ErrorDto.Code.VALIDATION) {
-          console.log('Validation failed.');
+          console.error('Validation failed.');
         } else {
-          console.log('Installation failed.');
+          console.error(`Installation failed: "${error.message}".`);
         }
         this.error = error;
       }

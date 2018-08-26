@@ -68,7 +68,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         },
         error => {
           this.loadingState = LoadingState.ERROR;
-          console.log(`Could not load artists: "${error.message}".`);
+          console.error(`Could not load artists: "${error.message}".`);
         }
       );
   }

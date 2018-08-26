@@ -13,7 +13,7 @@ export class Credentials {
 @Injectable()
 export class AuthenticationService {
 
-  private _currentUser: UserDto;
+  private _currentUser: UserDto | undefined;
 
   private _authenticated = new EventEmitter<UserDto>();
   private _loggedOut = new EventEmitter<UserDto>();
@@ -25,7 +25,7 @@ export class AuthenticationService {
     return this._currentUser !== undefined;
   }
 
-  get currentUser(): UserDto {
+  get currentUser(): UserDto | undefined {
     return this._currentUser;
   }
 

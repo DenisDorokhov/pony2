@@ -18,22 +18,26 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   readonly State = ImageLoaderComponentState;
 
-  state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
+  private _state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
 
   @ViewChild('image') imageElement: ElementRef;
 
-  private _url: string;
+  private _url: string | undefined;
 
-  private intersectionSubscription: Subscription;
+  private intersectionSubscription: Subscription | undefined;
+
+  get state(): ImageLoaderComponentState {
+    return this._state;
+  }
 
   @Input()
-  get url(): string {
+  get url(): string | undefined {
     return this._url;
   }
 
-  set url(url: string) {
+  set url(url: string | undefined) {
     this._url = url;
-    this.state = url ? ImageLoaderComponentState.PENDING : ImageLoaderComponentState.EMPTY;
+    this._state = url ? ImageLoaderComponentState.PENDING : ImageLoaderComponentState.EMPTY;
   }
 
   constructor(private ngZone: NgZone) {
@@ -65,14 +69,14 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   onLoaded() {
-    this.state = ImageLoaderComponentState.LOADED;
+    this._state = ImageLoaderComponentState.LOADED;
   }
 
   onError() {
-    this.state = ImageLoaderComponentState.ERROR;
+    this._state = ImageLoaderComponentState.ERROR;
   }
 
-  private findScroller(): HTMLElement {
+  private findScroller(): HTMLElement | undefined {
     let currentParent: HTMLElement = this.imageElement.nativeElement.parentElement;
     while (currentParent) {
       if (currentParent.hasAttribute('data-image-loader-scroller')) {
@@ -100,7 +104,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   private startLoading() {
     this.ngZone.run(() => {
       this.imageElement.nativeElement.setAttribute('src', this.url);
-      this.state = ImageLoaderComponentState.LOADING;
+      this._state = ImageLoaderComponentState.LOADING;
     });
   }
 }

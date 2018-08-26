@@ -33,7 +33,7 @@ export class LoginComponent {
         this.router.navigate(['/library'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
-        console.log('Authentication failed.');
+        console.error(`Authentication failed: "${error.message}".`);
         this.error = error;
       }
     );

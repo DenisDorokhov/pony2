@@ -73,7 +73,7 @@ public class ExportServiceImpl implements ExportService {
 
         List<Song> songList = songRepository.findByAlbumId(id,
                 new Sort("discNumber", "trackNumber", "name"));
-        if (songList.size() == 0) {
+        if (songList.isEmpty()) {
             return null;
         }
 
@@ -91,7 +91,7 @@ public class ExportServiceImpl implements ExportService {
 
         List<Song> songList = songRepository.findByAlbumArtistId(id,
                 new Sort("album.year", "album.name", "discNumber", "trackNumber", "name"));
-        if (songList.size() == 0) {
+        if (songList.isEmpty()) {
             return null;
         }
 

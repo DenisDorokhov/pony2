@@ -2,8 +2,10 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import 'rxjs/add/operator/do';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/common.model';
-import {AlbumSongs, Artist, ArtistSongs} from '../core/library/library.model';
+import {AlbumSongs, Artist, ArtistSongs, Song} from '../core/library/library.model';
 import {LibraryService, LibraryState} from '../core/library/library.service';
+import {PlaybackService} from '../core/library/playback.service';
+import {StaticPlaylistService} from '../core/library/playlist.service';
 
 @Component({
   selector: 'pony-album-list',
@@ -20,6 +22,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   private selectedArtistSubscription: Subscription;
   private artistSongsSubscription: Subscription;
   private libraryStateSubscription: Subscription;
+  private songPlaybackRequestSubscription: Subscription;
 
   private static compareAlbumSongs(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
     if (albumSongs1.album.year < albumSongs2.album.year) {
@@ -31,7 +34,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     return 0;
   }
 
-  constructor(private libraryService: LibraryService) {
+  constructor(private libraryService: LibraryService, private playbackService: PlaybackService) {
   }
 
   ngOnInit(): void {
@@ -47,11 +50,24 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.loadingState = LoadingState.EMPTY;
         }
       });
+    this.songPlaybackRequestSubscription = this.libraryService.songPlaybackRequest
+      .subscribe(song => {
+        if (song && this.artistSongs) {
+          console.log(`Starting playback of artist '${song.album.artist.id} -> ${song.album.artist.name}'.`);
+          const songs: Song[] = [];
+          this.artistSongs.albumSongs.forEach(albumSongs =>
+            albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
+          this.playbackService.playlistService = new StaticPlaylistService(songs);
+          this.playbackService.playlistService.switchToSong(song.id);
+          this.playbackService.play();
+        }
+      });
   }
 
   ngOnDestroy(): void {
     this.selectedArtistSubscription.unsubscribe();
     this.libraryStateSubscription.unsubscribe();
+    this.songPlaybackRequestSubscription.unsubscribe();
   }
 
   private loadArtistSongs(artist: Artist) {
@@ -70,7 +86,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
         },
         error => {
           this.loadingState = LoadingState.ERROR;
-          console.log(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
+          console.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
       );
   }

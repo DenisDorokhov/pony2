@@ -627,6 +627,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getCreationDate()).isEqualTo(song.getCreationDate());
         assertThat(dto.getUpdateDate()).isEqualTo(song.getUpdateDate());
         assertThat(dto.getMimeType()).isEqualTo(song.getFileType().getMimeType());
+        assertThat(dto.getFileExtension()).isEqualTo(song.getFileType().getFileExtension());
         assertThat(dto.getSize()).isEqualTo(song.getSize());
         assertThat(dto.getDuration()).isEqualTo(song.getDuration());
         assertThat(dto.getBitRate()).isEqualTo(song.getBitRate());
