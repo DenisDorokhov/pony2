@@ -3,14 +3,13 @@ import {Observable} from 'rxjs/Observable';
 import {Song} from './library.model';
 
 export interface PlaylistService {
+
   readonly songs: Song[];
   readonly currentSong: Observable<Song | undefined>;
   readonly currentSongIndex: number;
 
   switchToSong(songId: number): Song | undefined;
-
   switchToNextSong(): Observable<Song | undefined>;
-
   switchToPreviousSong(): Song | undefined;
 }
 

@@ -11,7 +11,7 @@
          [class.active]="artist.id === selectedArtist" (click)="selectArtist(artist)"
          class="list-group-item" title="{{ artist.name }}">
         <pony-image-loader [url]="artist.artworkId ? '/api/file/artwork/small/' + artist.artworkId : undefined"></pony-image-loader>
-        <div class="artist-name">{{ artist.name }}</div>
+        <div class="artist-name">{{ artist.name ? artist.name : ('library.artist.unknownLabel' | translate) }}</div>
       </a>
     </div>
   </div>

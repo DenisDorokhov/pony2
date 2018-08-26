@@ -37,6 +37,25 @@ export class Song {
     this.album = album;
     this.audioUrl = '/api/file/audio/' + this.id;
   }
+
+  get durationInMinutes(): string {
+    return this.formatSecondsInMinutes(this.duration);
+  }
+
+  relativeDurationInMinutes(progress: number) {
+    return this.formatSecondsInMinutes(this.duration * progress);
+  }
+
+  private formatSecondsInMinutes(time: number): string {
+    const minutes = Math.floor(time / 60);
+    const seconds = time - minutes * 60;
+    let buf = minutes + ':';
+    if (seconds <= 9) {
+      buf += '0';
+    }
+    buf += Math.floor(seconds);
+    return buf;
+  }
 }
 
 export class Album {

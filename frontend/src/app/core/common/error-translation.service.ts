@@ -8,15 +8,15 @@ export class ErrorTranslationService {
   constructor(private translateService: TranslateService) {
   }
 
-  translateError(error: ErrorDto) {
+  translateError(error: ErrorDto): any {
     return this.translate('error.' + error.code, error.arguments, error.message);
   }
 
-  translateFieldViolation(fieldViolation: ErrorDto.FieldViolation) {
+  translateFieldViolation(fieldViolation: ErrorDto.FieldViolation): any {
     return this.translate('fieldViolation.' + fieldViolation.code, fieldViolation.arguments, fieldViolation.message);
   }
 
-  private translate(key: string, params: string[], fallback: string) {
+  private translate(key: string, params: string[], fallback: string): string | any {
     const translation = this.translateService.instant(key, params);
     return translation !== key ? translation : fallback;
   }

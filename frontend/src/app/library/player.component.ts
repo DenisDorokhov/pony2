@@ -1,4 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
+import {TranslateService} from '@ngx-translate/core';
 import {Subscription} from 'rxjs/Subscription';
 import {Song} from '../core/library/library.model';
 import {PlaybackService, PlaybackState} from '../core/library/playback.service';
@@ -11,26 +12,24 @@ import {PlaylistService} from '../core/library/playlist.service';
 })
 export class PlayerComponent implements OnInit, OnDestroy {
 
-  song: Song | undefined;
-  playbackState: PlaybackState;
+  songTitle: string;
+  artworkUrl: string | undefined;
   isPauseAvailable = false;
-  progress = 0.0; // 0.0 - 1.0.
 
+  progress = 0.0; // 0.0 - 1.0.
+  currentTime: string;
+  duration: string;
+
+  private song: Song | undefined;
   private playlistService: PlaylistService | undefined;
+  private playbackState: PlaybackState;
 
   private currentSongSubscription: Subscription | undefined;
   private playlistServiceSubscription: Subscription;
   private playbackStateSubscription: Subscription;
+  private currentSongProgressSubscription: Subscription;
 
-  constructor(private playbackService: PlaybackService) {
-  }
-
-  get timeInMinutes(): string {
-    return '00:00';
-  }
-
-  get durationInMinutes(): string {
-    return '00:00';
+  constructor(private playbackService: PlaybackService, private translateService: TranslateService) {
   }
 
   ngOnInit(): void {
@@ -38,6 +37,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.updatePlaylistService(playlistService));
     this.playbackStateSubscription = this.playbackService.currentState.subscribe(state =>
       this.updatePlaybackState(state));
+    this.currentSongProgressSubscription = this.playbackService.currentSongProgress
+      .subscribe(progress => this.updateProgress(progress));
   }
 
   ngOnDestroy(): void {
@@ -60,17 +61,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   switchToNextSong() {
-    this.playlistService.switchToNextSong().subscribe((song) => {
-      if (song) {
-        this.playbackService.play();
-      }
-    });
+    this.playlistService.switchToNextSong().subscribe();
   }
 
   seek(event: MouseEvent) {
     const progressBar = event.currentTarget as Element;
     const progressBarRect = progressBar.getBoundingClientRect();
-    this.progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
+    const progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
+    this.playbackService.seek(progress);
   }
 
   private updatePlaylistService(playlistService: PlaylistService) {
@@ -78,12 +76,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.currentSongSubscription.unsubscribe();
     }
     this.playlistService = playlistService;
-    this.updateSong(undefined);
     if (playlistService) {
       this.currentSongSubscription = playlistService.currentSong.subscribe(song => {
         this.updateSong(song);
       });
-      this.playbackService.play();
+    } else {
+      this.updateSong(undefined);
     }
   }
 
@@ -97,6 +95,26 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   private updateSong(song: Song) {
     this.song = song;
-    // TODO: implement
+    if (song) {
+      let artistName = song ? song.artistName : undefined;
+      let songName = song ? song.name : undefined;
+      if (!artistName) {
+        artistName = this.translateService.instant('library.artist.unknownLabel');
+      }
+      if (!songName) {
+        songName = this.translateService.instant('library.song.unknownLabel');
+      }
+      this.songTitle = this.translateService.instant('player.songTitle', {artistName, songName});
+      this.artworkUrl = song.album.largeArtworkUrl;
+    } else {
+      this.songTitle = this.translateService.instant('player.noSongTitle');
+      this.artworkUrl = undefined;
+    }
+  }
+
+  private updateProgress(progress: number) {
+    this.progress = progress;
+    this.currentTime = this.song ? this.song.relativeDurationInMinutes(this.progress) : '0:00';
+    this.duration = this.song ? this.song.durationInMinutes : '0:00';
   }
 }

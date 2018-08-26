@@ -14,6 +14,7 @@ export class SongComponent implements OnInit, OnDestroy {
   @Input() showArtist = false;
 
   selected = false;
+  duration: string;
 
   private selectedSongSubscription: Subscription;
 
@@ -24,6 +25,7 @@ export class SongComponent implements OnInit, OnDestroy {
     this.selectedSongSubscription = this.libraryService.selectedSong.subscribe(song => {
       this.selected = song && song.id === this.song.id;
     });
+    this.duration = this.song.durationInMinutes;
   }
 
   ngOnDestroy(): void {
@@ -36,16 +38,5 @@ export class SongComponent implements OnInit, OnDestroy {
 
   play() {
     this.libraryService.requestSongPlayback(this.song);
-  }
-
-  get durationInMinutes(): string {
-    const minutes = Math.floor(this.song.duration / 60);
-    const seconds = this.song.duration - minutes * 60;
-    let buf = minutes + ':';
-    if (seconds <= 9) {
-      buf += '0';
-    }
-    buf += seconds;
-    return buf;
   }
 }

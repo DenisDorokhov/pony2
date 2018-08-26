@@ -15,15 +15,7 @@
 
   <div class="title-container" tabindex="0">
     <div class="title-border">
-      <span class="title">
-        {{
-        song 
-        ? 
-        ('player.songTitle' | translate:{artistName: song.artistName, songName: song.name}) 
-        : 
-        ('player.noSongTitle' | translate) 
-        }}
-      </span>
+      <span class="title">{{ songTitle }}</span>
     </div>
   </div>
 
@@ -31,9 +23,9 @@
     <div class="progress-bar progress-bar-info" [style.width]="(progress * 100) + '%'"></div>
   </div>
 
-  <div class="time">{{ timeInMinutes }}</div>
-  <div class="duration">{{ durationInMinutes }}</div>
+  <div class="time">{{ currentTime }}</div>
+  <div class="duration">{{ duration }}</div>
 
-  <pony-image-loader [url]="undefined"></pony-image-loader>
+  <pony-image-loader [url]="artworkUrl"></pony-image-loader>
 
 </div>

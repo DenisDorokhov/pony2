@@ -32,7 +32,14 @@ export default {
     },
     noMusicLabel: 'Your library is empty :-(',
     album: {
-      discLabel: 'Disc {{discNumber}}'
+      discLabel: 'Disc {{discNumber}}',
+      unknownLabel: 'Unknown'
+    },
+    artist: {
+      unknownLabel: 'Unknown'
+    },
+    song: {
+      unknownLabel: 'Unknown'
     }
   },
   player: {

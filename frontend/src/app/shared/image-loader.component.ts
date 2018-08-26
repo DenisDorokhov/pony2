@@ -18,26 +18,30 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   readonly State = ImageLoaderComponentState;
 
-  private _state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
+  state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
 
   @ViewChild('image') imageElement: ElementRef;
 
-  private _url: string | undefined;
+  private _url: string;
 
+  private isIntersecting = false;
   private intersectionSubscription: Subscription | undefined;
 
-  get state(): ImageLoaderComponentState {
-    return this._state;
-  }
-
   @Input()
-  get url(): string | undefined {
+  get url(): string {
     return this._url;
   }
 
-  set url(url: string | undefined) {
+  set url(url: string) {
     this._url = url;
-    this._state = url ? ImageLoaderComponentState.PENDING : ImageLoaderComponentState.EMPTY;
+    if (url) {
+      this.state = ImageLoaderComponentState.PENDING;
+      if (this.isIntersecting) {
+        this.startLoading();
+      }
+    } else {
+      this.state = ImageLoaderComponentState.EMPTY;
+    }
   }
 
   constructor(private ngZone: NgZone) {
@@ -52,11 +56,13 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
       };
       this.intersectionSubscription = this.createIntersectionObservable(intersectionOptions)
         .debounce(() => timer(50))
-        .filter(entry => entry.isIntersecting)
+        .filter(entry => {
+          this.isIntersecting = entry.isIntersecting;
+          return entry.isIntersecting;
+        })
         .subscribe(() => {
           if (this.state === ImageLoaderComponentState.PENDING) {
             this.startLoading();
-            this.intersectionSubscription.unsubscribe();
           }
         });
     });
@@ -69,14 +75,14 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   onLoaded() {
-    this._state = ImageLoaderComponentState.LOADED;
+    this.state = ImageLoaderComponentState.LOADED;
   }
 
   onError() {
-    this._state = ImageLoaderComponentState.ERROR;
+    this.state = ImageLoaderComponentState.ERROR;
   }
 
-  private findScroller(): HTMLElement | undefined {
+  private findScroller(): HTMLElement {
     let currentParent: HTMLElement = this.imageElement.nativeElement.parentElement;
     while (currentParent) {
       if (currentParent.hasAttribute('data-image-loader-scroller')) {
@@ -88,7 +94,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     return undefined;
   }
 
-  private createIntersectionObservable(intersectionOptions: any) {
+  private createIntersectionObservable(intersectionOptions: any): Observable<IntersectionObserverEntry> {
     return Observable.create(subscriber => {
       const intersectionObserver = new IntersectionObserver(
         (entries) => subscriber.next(entries[0]),
@@ -104,7 +110,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   private startLoading() {
     this.ngZone.run(() => {
       this.imageElement.nativeElement.setAttribute('src', this.url);
-      this._state = ImageLoaderComponentState.LOADING;
+      this.state = ImageLoaderComponentState.LOADING;
     });
   }
 }
