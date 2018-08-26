@@ -37,7 +37,7 @@ export default {
   },
   player: {
     noSongTitle: 'Pony - Music Streamer',
-    songTitle: '{{ artistName }} - {{ albumTitle }}'
+    songTitle: '{{ artistName }} - {{ songName }}'
   },
   shared: {
     errorsHeader: 'Errors',

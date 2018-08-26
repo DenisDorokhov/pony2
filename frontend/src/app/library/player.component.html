@@ -1,18 +1,29 @@
 <div class="player-container">
 
-  <button type="button" class="btn btn-default backward">
+  <button type="button" class="btn btn-default backward" 
+          (click)="switchToPreviousSong()">
     <i class="fa fa-fast-backward"></i>
   </button>
-  <button type="button" class="btn btn-default btn-lg play">
-    <i class="fa fa-play"></i>
+  <button type="button" class="btn btn-default btn-lg play" 
+          (click)="playOrPause()">
+    <i [class]="isPauseAvailable ? 'fa fa-pause' : 'fa fa-play'"></i>
   </button>
-  <button type="button" class="btn btn-default forward">
+  <button type="button" class="btn btn-default forward" 
+          (click)="switchToNextSong()">
     <i class="fa fa-fast-forward"></i>
   </button>
 
   <div class="title-container" tabindex="0">
     <div class="title-border">
-      <span class="title">{{ 'Pony - Music Streamer' | translate }}</span>
+      <span class="title">
+        {{
+        song 
+        ? 
+        ('player.songTitle' | translate:{artistName: song.artistName, songName: song.name}) 
+        : 
+        ('player.noSongTitle' | translate) 
+        }}
+      </span>
     </div>
   </div>
 

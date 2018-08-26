@@ -5,15 +5,19 @@ import {Song} from './library.model';
 export interface PlaylistService {
   readonly songs: Song[];
   readonly currentSong: Observable<Song | undefined>;
+  readonly currentSongIndex: number;
+
   switchToSong(songId: number): Song | undefined;
+
   switchToNextSong(): Observable<Song | undefined>;
+
   switchToPreviousSong(): Song | undefined;
 }
 
 export class StaticPlaylistService implements PlaylistService {
 
   private currentSongSubject = new BehaviorSubject<Song | undefined>(undefined);
-  private currentSongIndex = -1;
+  private _currentSongIndex = -1;
 
   constructor(private _songs: Song[]) {
     if (this._songs.length > 0) {
@@ -30,6 +34,10 @@ export class StaticPlaylistService implements PlaylistService {
       .distinctUntilChanged();
   }
 
+  get currentSongIndex(): number {
+    return this._currentSongIndex;
+  }
+
   switchToSong(songId: number): Song | undefined {
     const targetIndex = this._songs.findIndex(song => song.id === songId);
     if (targetIndex >= 0) {
@@ -43,8 +51,8 @@ export class StaticPlaylistService implements PlaylistService {
     if (this._songs.length === 0) {
       return undefined;
     }
-    if (this._songs.length < this.currentSongIndex - 1) {
-      return Observable.of(this.switchToIndex(this.currentSongIndex + 1));
+    if (this._currentSongIndex + 1 < this._songs.length) {
+      return Observable.of(this.switchToIndex(this._currentSongIndex + 1));
     } else {
       return undefined;
     }
@@ -54,8 +62,8 @@ export class StaticPlaylistService implements PlaylistService {
     if (this._songs.length === 0) {
       return undefined;
     }
-    if (this.currentSongIndex > 0) {
-      return this.switchToIndex(this.currentSongIndex - 1);
+    if (this._currentSongIndex > 0) {
+      return this.switchToIndex(this._currentSongIndex - 1);
     } else {
       return undefined;
     }
@@ -64,7 +72,7 @@ export class StaticPlaylistService implements PlaylistService {
   private switchToIndex(index: number): Song {
     const song = this._songs[index];
     this.currentSongSubject.next(song);
-    this.currentSongIndex = index;
+    this._currentSongIndex = index;
     return song;
   }
 }

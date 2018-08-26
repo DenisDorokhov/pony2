@@ -53,13 +53,15 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.songPlaybackRequestSubscription = this.libraryService.songPlaybackRequest
       .subscribe(song => {
         if (song && this.artistSongs) {
+
           console.log(`Starting playback of artist '${song.album.artist.id} -> ${song.album.artist.name}'.`);
           const songs: Song[] = [];
           this.artistSongs.albumSongs.forEach(albumSongs =>
             albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
-          this.playbackService.playlistService = new StaticPlaylistService(songs);
-          this.playbackService.playlistService.switchToSong(song.id);
-          this.playbackService.play();
+
+          const playlistService = new StaticPlaylistService(songs);
+          playlistService.switchToSong(song.id);
+          this.playbackService.playlistService = playlistService;
         }
       });
   }
