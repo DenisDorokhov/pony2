@@ -4,6 +4,7 @@ import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {CookieModule} from 'ngx-cookie';
 import {ErrorTranslationService} from './common/error-translation.service';
 import {InitializerService} from './common/initializer.service';
+import {NotificationService} from './common/notification.service';
 import {TranslateLoaderService} from './common/translate-loader.service';
 import {InstallationService} from './installation/installation.service';
 import {InstalledGuard} from './installation/installed-guard.service';
@@ -43,6 +44,7 @@ export function initialize(initializerService: InitializerService) {
     NotAuthenticatedGuard,
     LibraryService,
     PlaybackService,
+    NotificationService,
     {
       provide: APP_INITIALIZER,
       useFactory: initialize,

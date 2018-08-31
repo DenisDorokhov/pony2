@@ -201,6 +201,8 @@ export class PlaybackService {
     if (this.lastPlaybackEvent.state !== PlaybackState.STOPPED) {
       if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
         this.audioPlayer.pause();
+      } else if (this.lastPlaybackEvent.state === PlaybackState.ERROR) {
+        this.audioPlayer.play(this.lastPlaybackEvent.song);
       } else {
         this.audioPlayer.play();
       }

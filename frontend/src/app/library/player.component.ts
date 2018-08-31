@@ -1,6 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription} from 'rxjs/Subscription';
+import {NotificationService, NotificationType} from '../core/common/notification.service';
 import {Song} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
 import {PlaybackEvent, PlaybackService, PlaybackState} from '../core/library/playback.service';
@@ -15,8 +16,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   songTitle: string;
   artworkUrl: string | undefined;
   isPlaying = false;
-  isPreviousSongAvailable = false;
-  isNextSongAvailable = false;
+  hasPreviousSong = false;
+  hasNextSong = false;
   progress = 0.0; // 0.0 - 1.0.
   formattedProgress: string;
   formattedDuration: string;
@@ -27,7 +28,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   constructor(
     private playbackService: PlaybackService,
     private libraryService: LibraryService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private notificationService: NotificationService,
   ) {
   }
 
@@ -79,11 +81,17 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.progress = playbackEvent.progress || 0;
     this.formattedProgress = playbackEvent.song ? playbackEvent.song.relativeDurationInMinutes(this.progress) : '0:00';
     this.formattedDuration = playbackEvent.song ? playbackEvent.song.durationInMinutes : '0:00';
+    if (playbackEvent.state === PlaybackState.ERROR) {
+      this.notificationService.showNotification({
+        text: this.translateService.instant('player.playbackFailed'),
+        type: NotificationType.ERROR
+      });
+    }
   }
 
   private handleSongSwitch(song: Song) {
-    this.isPreviousSongAvailable = this.playbackService.hasPreviousSong();
-    this.isNextSongAvailable = this.playbackService.hasNextSong();
+    this.hasPreviousSong = this.playbackService.hasPreviousSong();
+    this.hasNextSong = this.playbackService.hasNextSong();
     if (song) {
       let artistName = song ? song.artistName : undefined;
       let songName = song ? song.name : undefined;

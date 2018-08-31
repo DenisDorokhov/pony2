@@ -44,7 +44,8 @@ export default {
   },
   player: {
     noSongTitle: 'Pony - Music Streamer',
-    songTitle: '{{ artistName }} - {{ songName }}'
+    songTitle: '{{ artistName }} - {{ songName }}',
+    playbackFailed: 'Playback failed.',
   },
   shared: {
     errorsHeader: 'Errors',

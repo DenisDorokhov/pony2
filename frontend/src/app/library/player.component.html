@@ -1,7 +1,7 @@
 <div class="player-container">
 
   <button type="button" class="btn btn-default backward" 
-          (click)="switchToPreviousSong()" [disabled]="!isPreviousSongAvailable">
+          (click)="switchToPreviousSong()" [disabled]="!hasPreviousSong">
     <i class="fa fa-fast-backward"></i>
   </button>
   <button type="button" class="btn btn-default btn-lg play" 
@@ -9,7 +9,7 @@
     <i [class]="isPlaying ? 'fa fa-pause' : 'fa fa-play'"></i>
   </button>
   <button type="button" class="btn btn-default forward" 
-          (click)="switchToNextSong()" [disabled]="!isNextSongAvailable">
+          (click)="switchToNextSong()" [disabled]="!hasNextSong">
     <i class="fa fa-fast-forward"></i>
   </button>
 
