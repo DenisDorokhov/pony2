@@ -22,9 +22,10 @@ export class SongComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.selectedSongSubscription = this.libraryService.selectedSong.subscribe(song => {
-      this.selected = song && song.id === this.song.id;
-    });
+    this.selectedSongSubscription = this.libraryService.observeSelectedSong()
+      .subscribe(song => {
+        this.selected = song && song.id === this.song.id;
+      });
     this.duration = this.song.durationInMinutes;
   }
 

@@ -5,7 +5,7 @@ import {LoadingState} from '../core/common/common.model';
 import {AlbumSongs, Artist, ArtistSongs, Song} from '../core/library/library.model';
 import {LibraryService, LibraryState} from '../core/library/library.service';
 import {PlaybackService} from '../core/library/playback.service';
-import {StaticPlaylistService} from '../core/library/playlist.service';
+import {StaticPlaylist} from '../core/library/playlist.model';
 
 @Component({
   selector: 'pony-album-list',
@@ -38,30 +38,31 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.selectedArtistSubscription = this.libraryService.selectedArtist
+    this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         if (artist) {
           this.loadArtistSongs(artist);
         }
       });
-    this.libraryStateSubscription = this.libraryService.libraryState
+    this.libraryStateSubscription = this.libraryService.observeLibraryState()
       .subscribe(libraryState => {
         if (libraryState === LibraryState.EMPTY) {
           this.loadingState = LoadingState.EMPTY;
         }
       });
-    this.songPlaybackRequestSubscription = this.libraryService.songPlaybackRequest
+    this.songPlaybackRequestSubscription = this.libraryService.observeSongPlaybackRequest()
       .subscribe(song => {
-        if (song && this.artistSongs) {
+        if (this.artistSongs) {
 
-          console.log(`Starting playback of artist '${song.album.artist.id} -> ${song.album.artist.name}'.`);
           const songs: Song[] = [];
           this.artistSongs.albumSongs.forEach(albumSongs =>
             albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
 
-          const playlistService = new StaticPlaylistService(songs);
-          playlistService.switchToSong(song.id);
-          this.playbackService.playlistService = playlistService;
+          const playlist = new StaticPlaylist(songs);
+          if (song) {
+            playlist.switchToSong(song.id);
+          }
+          this.playbackService.switchPlaylist(playlist);
         }
       });
   }

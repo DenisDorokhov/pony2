@@ -1,5 +1,5 @@
 <div class="album-container">
-  <pony-image-loader [url]="albumSongs.album.artworkId ? '/api/file/artwork/large/' + albumSongs.album.artworkId : undefined"></pony-image-loader>
+  <pony-image-loader [url]="albumSongs.album.largeArtworkUrl"></pony-image-loader>
   <div class="song-list-container">
     <h4>
       {{ albumSongs.album.name ? albumSongs.album.name : ('library.album.unknownLabel' | translate) }}

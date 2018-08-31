@@ -3,6 +3,7 @@ import {Injectable} from '@angular/core';
 import 'rxjs-compat/add/operator/distinctUntilChanged';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
 import {ErrorDto} from '../common/common.dto';
 import {ArtistSongsDto} from './library.dto';
 import {Artist, ArtistSongs, Song} from './library.model';
@@ -19,12 +20,16 @@ export class LibraryService {
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
-  private songPlaybackRequestSubject = new BehaviorSubject<Song | undefined>(undefined);
+  private songPlaybackRequestSubject = new Subject<Song | undefined>();
 
   constructor(private httpClient: HttpClient) {
   }
 
-  get libraryState(): Observable<LibraryState> {
+  get libraryState(): LibraryState {
+    return this.libraryStateSubject.value;
+  }
+
+  observeLibraryState(): Observable<LibraryState> {
     return this.libraryStateSubject.asObservable()
       .distinctUntilChanged();
   }
@@ -42,9 +47,21 @@ export class LibraryService {
       .map(artistSongsDto => new ArtistSongs(artistSongsDto));
   }
 
-  get selectedArtist(): Observable<Artist | undefined> {
+  get selectedArtist(): Artist | undefined {
+    return this.selectedArtistSubject.value;
+  }
+
+  observeSelectedArtist(): Observable<Artist | undefined> {
     return this.selectedArtistSubject.asObservable()
-      .distinctUntilChanged();
+      .distinctUntilChanged((artist1, artist2) => {
+        if (artist1 === artist2) {
+          return true;
+        }
+        if (!artist1 || !artist2) {
+          return false;
+        }
+        return artist1.id === artist2.id;
+      });
   }
 
   selectArtist(artist: Artist) {
@@ -55,9 +72,21 @@ export class LibraryService {
     this.selectedArtistSubject.next(undefined);
   }
 
-  get selectedSong(): Observable<Song | undefined> {
+  get selectedSong(): Song | undefined {
+    return this.selectedSongSubject.value;
+  }
+
+  observeSelectedSong(): Observable<Song | undefined> {
     return this.selectedSongSubject.asObservable()
-      .distinctUntilChanged();
+      .distinctUntilChanged((song1, song2) => {
+        if (song1 === song2) {
+          return true;
+        }
+        if (!song1 || !song2) {
+          return false;
+        }
+        return song1.id === song2.id;
+      });
   }
 
   selectSong(song: Song) {
@@ -68,12 +97,12 @@ export class LibraryService {
     this.selectedSongSubject.next(undefined);
   }
 
-  get songPlaybackRequest(): Observable<Song | undefined> {
+  observeSongPlaybackRequest(): Observable<Song | undefined> {
     return this.songPlaybackRequestSubject.asObservable()
       .distinctUntilChanged();
   }
 
-  requestSongPlayback(song: Song) {
+  requestSongPlayback(song?: Song) {
     this.songPlaybackRequestSubject.next(song);
   }
 }

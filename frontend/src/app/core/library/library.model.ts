@@ -48,7 +48,7 @@ export class Song {
 
   private formatSecondsInMinutes(time: number): string {
     const minutes = Math.floor(time / 60);
-    const seconds = time - minutes * 60;
+    const seconds = Math.floor(time - minutes * 60);
     let buf = minutes + ':';
     if (seconds <= 9) {
       buf += '0';

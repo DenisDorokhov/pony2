@@ -7,7 +7,7 @@
     "start": "ng serve --live-reload false --proxy-config proxy.conf.json --progress=false",
     "build": "ng build --aot=true --progress=false --prod",
     "buildDev": "ng build --aot=true --progress=false",
-    "test": "ng test --single-run --progress=false",
+    "test": "ng test --watch=false --progress=false",
     "lint": "ng lint pony2 --type-check",
     "e2e": "ng e2e --progress=false"
   },

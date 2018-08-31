@@ -15,7 +15,6 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
-
   selectedArtist: number;
 
   private artistsSubscription: Subscription;
@@ -26,7 +25,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadArtists();
-    this.selectedArtistSubscription = this.libraryService.selectedArtist
+    this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         if (artist) {
           this.selectedArtist = artist.id;
@@ -56,7 +55,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
             console.log(`${artists.length} artists loaded.`);
-            if (!this.selectedArtist) {
+            if (!this.libraryService.selectedArtist) {
               this.libraryService.selectArtist(artists[0]);
             }
           } else {

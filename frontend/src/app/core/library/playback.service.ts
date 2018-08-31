@@ -1,14 +1,13 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Howl} from 'howler';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+import {interval, Subscription} from 'rxjs';
 import {Observable} from 'rxjs/Observable';
-import {Subscription} from 'rxjs/Subscription';
 import {Song} from './library.model';
-import {PlaylistService} from './playlist.service';
-import {interval} from 'rxjs';
+import {Playlist} from './playlist.model';
 
 export enum PlaybackState {
-  INACTIVE,
+  STOPPED,
   LOADING,
   ERROR,
   PLAYING,
@@ -16,92 +15,72 @@ export enum PlaybackState {
   ENDED,
 }
 
-@Injectable()
-export class PlaybackService {
+export class PlaybackEvent {
 
-  private _playlistService: PlaylistService;
+  readonly state: PlaybackState;
+  readonly song: Song | undefined;
+  readonly progress: number | undefined; // From 0.0 to 1.0.
 
-  private currentPlaylistServiceSubject: BehaviorSubject<PlaylistService | undefined> = new BehaviorSubject<PlaylistService>(undefined);
-  private currentPlaybackStateSubject: BehaviorSubject<PlaybackState> = new BehaviorSubject<PlaybackState>(PlaybackState.INACTIVE);
-  private currentSongProgressSubject: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  constructor(state: PlaybackState, song?: Song, progress?: number) {
+    this.state = state;
+    this.song = song;
+    this.progress = progress;
+  }
+}
 
-  private currentSongSubscription: Subscription;
+class AudioPlayer {
+
+  private playbackEventSubject: BehaviorSubject<PlaybackEvent>;
 
   private howl: Howl | undefined;
 
   constructor() {
-    interval(50)
-      .subscribe(() => this.updateSongProgress());
+    this.playbackEventSubject = new BehaviorSubject<PlaybackEvent>(new PlaybackEvent(PlaybackState.STOPPED));
+    interval(100).subscribe(() => this.fireSongProgressPlaybackEvent());
   }
 
-  get playlistService(): PlaylistService {
-    return this._playlistService;
+  get lastPlaybackEvent(): PlaybackEvent {
+    return this.playbackEventSubject.value;
   }
 
-  set playlistService(playlistService: PlaylistService) {
-    if (this._playlistService) {
-      this.currentSongSubscription.unsubscribe();
+  observePlaybackEvent(): Observable<PlaybackEvent> {
+    return this.playbackEventSubject.asObservable().distinctUntilChanged((playbackEvent1: PlaybackEvent, playbackEvent2: PlaybackEvent) => {
+      return playbackEvent1.state === playbackEvent2.state
+        && playbackEvent1.song === playbackEvent2.song
+        && playbackEvent1.progress === playbackEvent2.progress;
+    });
+  }
+
+  play(song?: Song) {
+    if (song) {
+      this.loadHowlForSong(song);
     }
-    this._playlistService = playlistService;
-    if (this._playlistService) {
-      this.currentSongSubscription = this._playlistService.currentSong.subscribe(song => {
-        if (song) {
-          this.loadHowlForSong(song);
-        } else {
-          this.unloadHowl();
-          this.currentPlaybackStateSubject.next(PlaybackState.INACTIVE);
-        }
-      });
-    } else {
-      this.unloadHowl();
-      this.currentPlaybackStateSubject.next(PlaybackState.INACTIVE);
-    }
-    this.currentPlaylistServiceSubject.next(playlistService);
-  }
-
-  get currentPlaylistService(): Observable<PlaylistService> {
-    return this.currentPlaylistServiceSubject.asObservable()
-      .distinctUntilChanged();
-  }
-
-  get currentState(): Observable<PlaybackState> {
-    return this.currentPlaybackStateSubject.asObservable()
-      .distinctUntilChanged();
-  }
-
-  get currentSongProgress(): Observable<number> {
-    return this.currentSongProgressSubject.asObservable()
-      .distinctUntilChanged();
-  }
-
-  play() {
     if (this.howl) {
-      console.log('Playback requested.');
       this.howl.play();
     } else {
-      throw new Error('Audio is not initialized. Is playlist defined?');
+      throw new Error(`Could not play: audio is not initialized. Current state: '${this.lastPlaybackEvent.state}'.`);
     }
   }
 
   pause() {
     if (this.howl) {
-      console.log('Suspending playback.');
       this.howl.pause();
     } else {
-      throw new Error('Audio is not initialized. Is playlist defined?');
+      throw new Error(`Could not pause: audio is not initialized. Current state: '${this.lastPlaybackEvent.state}'.`);
     }
   }
 
   seek(progress: number) {
     if (this.howl) {
-      const duration = this.howl.duration();
-      if (duration) {
-        this.howl.seek(progress * duration);
-
-      }
+      this.howl.seek(progress * this.lastPlaybackEvent.song.duration);
     } else {
-      throw new Error('Audio is not initialized. Is playlist defined?');
+      throw new Error(`Could not seek: audio is not initialized. Current state: '${this.lastPlaybackEvent.state}'.`);
     }
+  }
+
+  stop() {
+    this.unloadHowl();
+    this.firePlaybackEvent(PlaybackState.STOPPED);
   }
 
   private unloadHowl() {
@@ -109,46 +88,167 @@ export class PlaybackService {
       this.howl.unload();
       this.howl = undefined;
     }
-    this.currentSongProgressSubject.next(0);
   }
 
   private loadHowlForSong(song: Song) {
     this.unloadHowl();
     console.log(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
-    this.currentPlaybackStateSubject.next(PlaybackState.LOADING);
+    this.firePlaybackEvent(PlaybackState.LOADING, song);
     this.howl = new Howl(<IHowlProperties>{
       src: [song.audioUrl],
       format: [song.fileExtension],
       html5: true,
       onload: () => {
         console.log('Audio loaded.');
-        this.howl.play();
-        this.currentPlaybackStateSubject.next(PlaybackState.PLAYING);
+        this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
       onloaderror: (id, error) => {
         console.error(`Audio could not be loaded: "${error}".`);
-        this.currentPlaybackStateSubject.next(PlaybackState.ERROR);
+        this.firePlaybackEvent(PlaybackState.ERROR, song);
       },
-      onplay: () => this.currentPlaybackStateSubject.next(PlaybackState.PLAYING),
+      onplay: () => {
+        console.log('Playback started / resumed.');
+        this.firePlaybackEvent(PlaybackState.PLAYING, song, this.lastPlaybackEvent.progress);
+      },
       onplayerror: (id, error) => {
         console.error(`Playback failed: "${error}".`);
-        this.currentPlaybackStateSubject.next(PlaybackState.ERROR);
+        this.firePlaybackEvent(PlaybackState.ERROR, song, this.lastPlaybackEvent.progress);
       },
       onend: () => {
         console.log('Playback finished.');
-        this.currentPlaybackStateSubject.next(PlaybackState.ENDED);
+        this.firePlaybackEvent(PlaybackState.ENDED, song, this.lastPlaybackEvent.progress);
       },
-      onpause: () => this.currentPlaybackStateSubject.next(PlaybackState.PAUSED),
+      onpause: () => {
+        console.log('Playback paused.');
+        this.firePlaybackEvent(PlaybackState.PAUSED, song, this.lastPlaybackEvent.progress);
+      }
     });
   }
 
-  private updateSongProgress() {
-    if (this.howl) {
-      const duration = this.howl.duration();
+  private firePlaybackEvent(state: PlaybackState, song?: Song, progress?: number) {
+    this.playbackEventSubject.next(new PlaybackEvent(state, song, progress));
+  }
+
+  private fireSongProgressPlaybackEvent() {
+    if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
       const seek = this.howl.seek() as number;
-      if (duration && !isNaN(seek)) {
-        this.currentSongProgressSubject.next(seek / duration);
+      if (!isNaN(seek)) {
+        const progress = seek / this.lastPlaybackEvent.song.duration;
+        if (this.lastPlaybackEvent.progress !== progress) {
+          this.firePlaybackEvent(this.lastPlaybackEvent.state, this.lastPlaybackEvent.song, progress);
+        }
       }
+    }
+  }
+}
+
+@Injectable()
+export class PlaybackService {
+
+  private audioPlayer = new AudioPlayer();
+
+  private playlist: Playlist | undefined;
+
+  private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
+  private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
+
+  private queueSubscription: Subscription | undefined;
+  private currentSongSubscription: Subscription | undefined;
+
+  constructor() {
+    this.audioPlayer.observePlaybackEvent()
+      .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
+  }
+
+  get lastPlaybackEvent(): PlaybackEvent {
+    return this.audioPlayer.lastPlaybackEvent;
+  }
+
+  observeQueue(): Observable<Song[]> {
+    return this.queueSubject.asObservable();
+  }
+
+  observeCurrentSong(): Observable<Song | undefined> {
+    return this.currentSongSubject.asObservable();
+  }
+
+  observePlaybackEvent(): Observable<PlaybackEvent> {
+    return this.audioPlayer.observePlaybackEvent();
+  }
+
+  switchPlaylist(playlist: Playlist) {
+    if (this.queueSubscription) {
+      this.queueSubscription.unsubscribe();
+    }
+    if (this.currentSongSubscription) {
+      this.currentSongSubscription.unsubscribe();
+    }
+    this.playlist = playlist;
+    this.queueSubscription = playlist.observeQueue()
+      .subscribe(queue => this.queueSubject.next(queue));
+    this.currentSongSubscription = playlist.observeCurrentSong()
+      .subscribe(song => {
+        if (song) {
+          this.audioPlayer.play(song);
+        } else {
+          this.audioPlayer.stop();
+        }
+        this.currentSongSubject.next(song);
+      });
+  }
+
+  playOrPause() {
+    if (this.lastPlaybackEvent.state !== PlaybackState.STOPPED) {
+      if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
+        this.audioPlayer.pause();
+      } else {
+        this.audioPlayer.play();
+      }
+    }
+  }
+
+  seek(progress: number) {
+    if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
+      this.audioPlayer.seek(progress);
+    }
+  }
+
+  hasPreviousSong(): boolean {
+    return this.playlist && this.playlist.queue.length > 0;
+  }
+
+  switchToPreviousSong(): Observable<Song | undefined> {
+    const seekToBeginning = () => {
+      this.seek(0);
+      return Observable.of(this.lastPlaybackEvent.song);
+    };
+    return Observable.defer(() => {
+      if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
+        if (!this.playlist.hasPreviousSong()) {
+          return seekToBeginning();
+        }
+        if (this.lastPlaybackEvent.progress) {
+          const secondsSinceStart = Math.ceil(this.lastPlaybackEvent.progress * this.lastPlaybackEvent.song.duration);
+          if (secondsSinceStart > 3) {
+            return seekToBeginning();
+          }
+        }
+      }
+      return this.playlist.switchToPreviousSong();
+    });
+  }
+
+  hasNextSong(): boolean {
+    return this.playlist && this.playlist.hasNextSong();
+  }
+
+  switchToNextSong(): Observable<Song | undefined> {
+    return this.playlist.switchToNextSong();
+  }
+
+  private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
+    if (playbackEvent.state === PlaybackState.ENDED) {
+      this.playlist.switchToNextSong().subscribe();
     }
   }
 }

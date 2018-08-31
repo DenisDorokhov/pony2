@@ -2,8 +2,8 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription} from 'rxjs/Subscription';
 import {Song} from '../core/library/library.model';
-import {PlaybackService, PlaybackState} from '../core/library/playback.service';
-import {PlaylistService} from '../core/library/playlist.service';
+import {LibraryService} from '../core/library/library.service';
+import {PlaybackEvent, PlaybackService, PlaybackState} from '../core/library/playback.service';
 
 @Component({
   selector: 'pony-player',
@@ -14,54 +14,49 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   songTitle: string;
   artworkUrl: string | undefined;
-  isPauseAvailable = false;
-
+  isPlaying = false;
+  isPreviousSongAvailable = false;
+  isNextSongAvailable = false;
   progress = 0.0; // 0.0 - 1.0.
-  currentTime: string;
-  duration: string;
+  formattedProgress: string;
+  formattedDuration: string;
 
-  private song: Song | undefined;
-  private playlistService: PlaylistService | undefined;
-  private playbackState: PlaybackState;
+  private currentSongSubscription: Subscription;
+  private playbackEventSubscription: Subscription;
 
-  private currentSongSubscription: Subscription | undefined;
-  private playlistServiceSubscription: Subscription;
-  private playbackStateSubscription: Subscription;
-  private currentSongProgressSubscription: Subscription;
-
-  constructor(private playbackService: PlaybackService, private translateService: TranslateService) {
+  constructor(
+    private playbackService: PlaybackService,
+    private libraryService: LibraryService,
+    private translateService: TranslateService
+  ) {
   }
 
   ngOnInit(): void {
-    this.playlistServiceSubscription = this.playbackService.currentPlaylistService.subscribe(playlistService =>
-      this.updatePlaylistService(playlistService));
-    this.playbackStateSubscription = this.playbackService.currentState.subscribe(state =>
-      this.updatePlaybackState(state));
-    this.currentSongProgressSubscription = this.playbackService.currentSongProgress
-      .subscribe(progress => this.updateProgress(progress));
+    this.currentSongSubscription = this.playbackService.observeCurrentSong()
+      .subscribe(song => this.handleSongSwitch(song));
+    this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
+      .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
   }
 
   ngOnDestroy(): void {
-    this.playbackStateSubscription.unsubscribe();
-    this.playlistServiceSubscription.unsubscribe();
+    this.playbackEventSubscription.unsubscribe();
+    this.currentSongSubscription.unsubscribe();
   }
 
   switchToPreviousSong() {
-    // TODO: implement
+    this.playbackService.switchToPreviousSong().subscribe();
   }
 
   playOrPause() {
-    if (this.playbackState !== PlaybackState.INACTIVE) {
-      if (this.playbackState === PlaybackState.PLAYING) {
-        this.playbackService.pause();
-      } else {
-        this.playbackService.play();
-      }
+    if (this.playbackService.lastPlaybackEvent.state === PlaybackState.STOPPED) {
+      this.libraryService.requestSongPlayback(this.libraryService.selectedSong);
+    } else {
+      this.playbackService.playOrPause();
     }
   }
 
   switchToNextSong() {
-    this.playlistService.switchToNextSong().subscribe();
+    this.playbackService.switchToNextSong().subscribe();
   }
 
   seek(event: MouseEvent) {
@@ -71,30 +66,24 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.playbackService.seek(progress);
   }
 
-  private updatePlaylistService(playlistService: PlaylistService) {
-    if (this.currentSongSubscription) {
-      this.currentSongSubscription.unsubscribe();
-    }
-    this.playlistService = playlistService;
-    if (playlistService) {
-      this.currentSongSubscription = playlistService.currentSong.subscribe(song => {
-        this.updateSong(song);
-      });
-    } else {
-      this.updateSong(undefined);
+  selectCurrentSong() {
+    const song = this.playbackService.lastPlaybackEvent.song;
+    if (song) {
+      this.libraryService.selectArtist(song.album.artist);
+      this.libraryService.selectSong(song);
     }
   }
 
-  private updatePlaybackState(state: PlaybackState) {
-    this.playbackState = state;
-    this.isPauseAvailable = this.playbackState === PlaybackState.LOADING || this.playbackState === PlaybackState.PLAYING;
-    if (this.playbackState === PlaybackState.ENDED) {
-      this.switchToNextSong();
-    }
+  private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
+    this.isPlaying = playbackEvent.state === PlaybackState.LOADING || playbackEvent.state === PlaybackState.PLAYING;
+    this.progress = playbackEvent.progress || 0;
+    this.formattedProgress = playbackEvent.song ? playbackEvent.song.relativeDurationInMinutes(this.progress) : '0:00';
+    this.formattedDuration = playbackEvent.song ? playbackEvent.song.durationInMinutes : '0:00';
   }
 
-  private updateSong(song: Song) {
-    this.song = song;
+  private handleSongSwitch(song: Song) {
+    this.isPreviousSongAvailable = this.playbackService.hasPreviousSong();
+    this.isNextSongAvailable = this.playbackService.hasNextSong();
     if (song) {
       let artistName = song ? song.artistName : undefined;
       let songName = song ? song.name : undefined;
@@ -110,11 +99,5 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.songTitle = this.translateService.instant('player.noSongTitle');
       this.artworkUrl = undefined;
     }
-  }
-
-  private updateProgress(progress: number) {
-    this.progress = progress;
-    this.currentTime = this.song ? this.song.relativeDurationInMinutes(this.progress) : '0:00';
-    this.duration = this.song ? this.song.durationInMinutes : '0:00';
   }
 }
