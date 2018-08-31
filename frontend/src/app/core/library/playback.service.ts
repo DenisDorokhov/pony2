@@ -1,4 +1,5 @@
 import {Injectable} from '@angular/core';
+import {TranslateService} from '@ngx-translate/core';
 import {Howl} from 'howler';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {interval, Subscription} from 'rxjs';
@@ -146,6 +147,7 @@ class AudioPlayer {
 export class PlaybackService {
 
   private audioPlayer = new AudioPlayer();
+  private unity = new window['UnityMusicShim']();
 
   private playlist: Playlist | undefined;
 
@@ -155,9 +157,20 @@ export class PlaybackService {
   private queueSubscription: Subscription | undefined;
   private currentSongSubscription: Subscription | undefined;
 
-  constructor() {
+  constructor(private translateService: TranslateService) {
     this.audioPlayer.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
+    this.unity.setSupports({
+      playpause: true,
+      next: true,
+      previous: true,
+    });
+    this.unity.setCallbackObject({
+      play: () => this.playOrPause(),
+      pause: () => this.playOrPause(),
+      next: () => this.switchToNextSong().subscribe(),
+      previous: () => this.switchToPreviousSong().subscribe()
+    });
   }
 
   get lastPlaybackEvent(): PlaybackEvent {
@@ -251,6 +264,27 @@ export class PlaybackService {
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
       this.playlist.switchToNextSong().subscribe();
+    }
+    if (
+      playbackEvent.state === PlaybackState.LOADING
+      || playbackEvent.state === PlaybackState.PLAYING
+      || playbackEvent.state === PlaybackState.PAUSED
+    ) {
+      let artistName = playbackEvent.song ? playbackEvent.song.artistName : undefined;
+      let songName = playbackEvent.song ? playbackEvent.song.name : undefined;
+      if (!artistName) {
+        artistName = this.translateService.instant('library.artist.unknownLabel');
+      }
+      if (!songName) {
+        songName = this.translateService.instant('library.song.unknownLabel');
+      }
+      const artworkUrl = playbackEvent.song ? playbackEvent.song.album.largeArtworkUrl : undefined;
+      this.unity.sendState({
+        playing: playbackEvent.state === PlaybackState.PLAYING,
+        title: songName,
+        artist: artistName,
+        albumArt: artworkUrl ? location.protocol + '//' + location.host + artworkUrl : undefined,
+      });
     }
   }
 }

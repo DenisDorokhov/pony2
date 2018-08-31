@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import * as Noty from "noty";
+import * as Noty from 'noty';
 
 export enum NotificationType {
   SUCCESS,
@@ -9,13 +9,13 @@ export enum NotificationType {
 
 export interface NotificationOptions {
   text: string;
-  type: NotificationType,
-  sticky?: boolean,
+  type: NotificationType;
+  sticky?: boolean;
 }
 
 @Injectable()
 export class NotificationService {
-  
+
   showNotification(notificationOptions: NotificationOptions) {
     let notyType: string;
     switch (notificationOptions.type) {
