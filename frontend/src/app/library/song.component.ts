@@ -1,8 +1,9 @@
-import {Component, Input, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {Song} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
 import {PlaybackService, PlaybackState} from '../core/library/playback.service';
+import {ScrollingUtils} from '../shared/scrolling.utils';
 
 @Component({
   selector: 'pony-song',
@@ -16,11 +17,14 @@ export class SongComponent implements OnInit, OnDestroy {
   @Input() song: Song;
   @Input() showArtist = false;
 
+  @ViewChild('container') containerElement: ElementRef;
+
   selected = false;
   duration: string;
   playbackState: PlaybackState | undefined;
 
   private selectedSongSubscription: Subscription;
+  private scrollToSongRequestSubscription: Subscription;
   private playbackEventSubscription: Subscription;
 
   constructor(
@@ -33,6 +37,15 @@ export class SongComponent implements OnInit, OnDestroy {
     this.selectedSongSubscription = this.libraryService.observeSelectedSong()
       .subscribe(song => {
         this.selected = song && song.id === this.song.id;
+        if (this.selected) {
+          this.scrollToCurrentSong();
+        }
+      });
+    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
+      .subscribe(song => {
+        if (song.id === this.song.id) {
+          this.scrollToCurrentSong();
+        }
       });
     this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => {
@@ -47,6 +60,7 @@ export class SongComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.selectedSongSubscription.unsubscribe();
+    this.scrollToSongRequestSubscription.unsubscribe();
     this.playbackEventSubscription.unsubscribe();
   }
 
@@ -56,5 +70,11 @@ export class SongComponent implements OnInit, OnDestroy {
 
   play() {
     this.libraryService.requestSongPlayback(this.song);
+  }
+  
+  private scrollToCurrentSong() {
+    window.requestAnimationFrame(() => {
+      ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+    });
   }
 }

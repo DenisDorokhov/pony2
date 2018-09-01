@@ -21,6 +21,7 @@ export class LibraryService {
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
+  private scrollToSongRequestSubject = new Subject<Song>();
 
   constructor(private httpClient: HttpClient) {
   }
@@ -104,5 +105,13 @@ export class LibraryService {
 
   requestSongPlayback(song?: Song) {
     this.songPlaybackRequestSubject.next(song);
+  }
+  
+  observeScrollToSongRequest(): Observable<Song> {
+    return this.scrollToSongRequestSubject.asObservable();
+  }
+  
+  requestScrollToSong(song: Song) {
+    this.scrollToSongRequestSubject.next(song);
   }
 }
