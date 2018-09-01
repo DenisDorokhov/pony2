@@ -29,6 +29,9 @@ public class FileFacadeImpl implements FileFacade {
             throw new ObjectNotFoundException(Song.class, songId);
         }
         File file = song.getFile();
+        if (!file.exists()) {
+            throw new ObjectNotFoundException(Song.class, songId);
+        }
         return new FileDistribution(file, file.getName(), song.getFileType().getMimeType(),
                 song.getUpdateDate() != null ? song.getUpdateDate() : song.getCreationDate());
     }

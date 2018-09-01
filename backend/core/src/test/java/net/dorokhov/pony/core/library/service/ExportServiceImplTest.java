@@ -50,8 +50,9 @@ public class ExportServiceImplTest {
     private SongRepository songRepository;
 
     @Test
-    public void shouldExportSong() {
+    public void shouldExportSong() throws IOException {
 
+        File songFile = SONG_RESOURCE.getFile();
         Song song = songBuilder()
                 .album(Album.builder()
                         .artist(Artist.builder()
@@ -61,7 +62,7 @@ public class ExportServiceImplTest {
                         .build())
                 .name("someSong")
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path("foo/bar.mp3")
+                .path(songFile.getPath())
                 .build();
         when(songRepository.findOne((Long) any())).thenReturn(song);
 
@@ -70,11 +71,13 @@ public class ExportServiceImplTest {
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
-                assertThat(mp3Content.getFile()).isEqualTo(new File("foo/bar.mp3")));
+                assertThat(mp3Content.getFile()).isEqualTo(songFile));
     }
 
     @Test
-    public void shouldExportSongWithoutName() {
+    public void shouldExportSongWithoutName() throws IOException {
+        
+        File songFile = SONG_RESOURCE.getFile();
 
         Song song = songBuilder()
                 .album(Album.builder()
@@ -83,20 +86,22 @@ public class ExportServiceImplTest {
                         .build())
                 .name(null)
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path("foo/bar.mp3")
+                .path(songFile.getPath())
                 .build();
         when(songRepository.findOne((Long) any())).thenReturn(song);
 
         ExportBundle exportBundle = exportService.exportSong(1L);
 
         assertThat(exportBundle).isNotNull();
-        assertThat(exportBundle.getFileName()).isEqualTo("bar.mp3");
+        assertThat(exportBundle.getFileName()).isEqualTo(songFile.getName());
         checkSongExportBundle(exportBundle, mp3Content ->
-                assertThat(mp3Content.getFile()).isEqualTo(new File("foo/bar.mp3")));
+                assertThat(mp3Content.getFile()).isEqualTo(songFile));
     }
 
     @Test
-    public void shouldExportSongWithUnknownArtist() {
+    public void shouldExportSongWithUnknownArtist() throws IOException {
+
+        File songFile = SONG_RESOURCE.getFile();
 
         Song song = songBuilder()
                 .album(Album.builder()
@@ -105,7 +110,7 @@ public class ExportServiceImplTest {
                         .build())
                 .name("someSong")
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path("foo/bar.mp3")
+                .path(songFile.getPath())
                 .build();
         when(songRepository.findOne((Long) any())).thenReturn(song);
 
@@ -114,11 +119,16 @@ public class ExportServiceImplTest {
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someSong.mp3");
         checkSongExportBundle(exportBundle, mp3Content ->
-                assertThat(mp3Content.getFile()).isEqualTo(new File("foo/bar.mp3")));
+                assertThat(mp3Content.getFile()).isEqualTo(songFile));
     }
 
     @Test
-    public void shouldExportAlbum() {
+    public void shouldExportAlbum() throws IOException {
+        
+        File songFile1 = tempFolder.newFile("song1.mp3");
+        File songFile2 = tempFolder.newFile("song2.mp3");
+        File songFile3 = tempFolder.newFile("song3.mp3");
+        File songFile4 = new File("notExistingFile.mp3");
 
         Song song1 = songBuilder()
                 .album(Album.builder()
@@ -132,21 +142,27 @@ public class ExportServiceImplTest {
                 .trackNumber(1)
                 .name("song1")
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path("foo/song1.mp3")
+                .path(songFile1.getPath())
                 .build();
         Song song2 = Song.builder(song1)
                 .name("song2")
                 .discNumber(null)
                 .trackNumber(12)
-                .path("foo/song2.mp3")
+                .path(songFile2.getPath())
                 .build();
         Song song3 = Song.builder(song1)
                 .name("song3")
                 .discNumber(2)
                 .trackNumber(null)
-                .path("foo/song3.mp3")
+                .path(songFile3.getPath())
                 .build();
-        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3));
+        Song song4 = Song.builder(song1)
+                .name("song4")
+                .discNumber(null)
+                .trackNumber(null)
+                .path(songFile4.getPath())
+                .build();
+        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
         ExportBundle exportBundle = exportService.exportAlbum(1L);
 
@@ -157,9 +173,9 @@ public class ExportServiceImplTest {
                     .map(ExportServiceImpl.ZipEntry::getFile)
                     .collect(Collectors.toList()))
                     .containsExactly(
-                            new File("foo/song1.mp3"),
-                            new File("foo/song2.mp3"),
-                            new File("foo/song3.mp3")
+                            songFile1,
+                            songFile2,
+                            songFile3
                     );
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getPath)
@@ -173,7 +189,9 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldExportAlbumWithoutName() {
+    public void shouldExportAlbumWithoutName() throws IOException {
+        
+        File songFile1 = tempFolder.newFile("song1.mp3");
 
         Song song1 = songBuilder()
                 .album(Album.builder()
@@ -184,7 +202,7 @@ public class ExportServiceImplTest {
                 .trackNumber(null)
                 .name(null)
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path("foo/song1.mp3")
+                .path(songFile1.getPath())
                 .build();
         Song song2 = Song.builder(song1).build();
         when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2));
@@ -205,7 +223,12 @@ public class ExportServiceImplTest {
     }
 
     @Test
-    public void shouldExportArtist() {
+    public void shouldExportArtist() throws IOException {
+        
+        File songFile1 = tempFolder.newFile("song1.mp3");
+        File songFile2 = tempFolder.newFile("song2.mp3");
+        File songFile3 = tempFolder.newFile("song3.mp3");
+        File songFile4 = new File("notExistingSong.mp3");
 
         Artist artist = Artist.builder()
                 .name("someArtist")
@@ -221,12 +244,12 @@ public class ExportServiceImplTest {
                 .trackNumber(1)
                 .name("song1")
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path("foo/song1.mp3")
+                .path(songFile1.getPath())
                 .build();
         Song song2 = Song.builder(song1)
                 .name("song2")
                 .trackNumber(12)
-                .path("foo/song2.mp3")
+                .path(songFile2.getPath())
                 .build();
         Song song3 = Song.builder(song1)
                 .album(Album.builder()
@@ -236,9 +259,13 @@ public class ExportServiceImplTest {
                         .build())
                 .name("song3")
                 .trackNumber(1)
-                .path("foo/song3.mp3")
+                .path(songFile3.getPath())
                 .build();
-        when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3));
+        Song song4 = Song.builder(song1)
+                .name("song4")
+                .path(songFile4.getPath())
+                .build();
+        when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
         ExportBundle exportBundle = exportService.exportArtist(1L);
 
@@ -248,11 +275,7 @@ public class ExportServiceImplTest {
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getFile)
                     .collect(Collectors.toList()))
-                    .containsExactly(
-                            new File("foo/song1.mp3"),
-                            new File("foo/song2.mp3"),
-                            new File("foo/song3.mp3")
-                    );
+                    .containsExactly(songFile1, songFile2, songFile3);
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getPath)
                     .collect(Collectors.toList()))
@@ -266,6 +289,28 @@ public class ExportServiceImplTest {
 
     @Test
     public void shouldReturnNullIfSongNotFound() {
+
+        when(songRepository.findOne((Long) any())).thenReturn(null);
+        
+        assertThat(exportService.exportSong(1L)).isNull();
+    }
+
+    @Test
+    public void shouldReturnNullIfSongFileNotFound() {
+
+        Song song = songBuilder()
+                .album(Album.builder()
+                        .artist(Artist.builder()
+                                .name("someArtist")
+                                .build())
+                        .name("someAlbum")
+                        .build())
+                .name("someSong")
+                .fileType(FileType.of("audio/mpeg", "mp3"))
+                .path("foo/bar.mp3")
+                .build();
+        when(songRepository.findOne((Long) any())).thenReturn(song);
+        
         assertThat(exportService.exportSong(1L)).isNull();
     }
 

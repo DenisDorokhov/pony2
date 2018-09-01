@@ -3,7 +3,6 @@ package net.dorokhov.pony.web.controller;
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
 import net.dorokhov.pony.api.library.domain.*;
-import net.dorokhov.pony.test.SongFixtures;
 import net.dorokhov.pony.core.library.repository.AlbumRepository;
 import net.dorokhov.pony.core.library.repository.ArtistRepository;
 import net.dorokhov.pony.core.library.repository.GenreRepository;
@@ -11,6 +10,7 @@ import net.dorokhov.pony.core.library.repository.SongRepository;
 import net.dorokhov.pony.core.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony.core.library.service.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony.core.library.service.file.FileTypeResolver;
+import net.dorokhov.pony.test.SongFixtures;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
 import org.junit.Test;
@@ -22,6 +22,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -32,7 +34,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
     private static final Resource AUDIO_RESOURCE = new ClassPathResource("empty.mp3");
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
-    
+
     @Autowired
     private ApiTemplate apiTemplate;
     
@@ -52,6 +54,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
     private Album album;
     private Song song;
     private ArtworkFiles artworkFiles;
+    private File songFile;
 
     @Override
     public void setUp() throws Exception {
@@ -63,11 +66,13 @@ public class FileControllerTest extends InstallingIntegrationTest {
                 .artist(artist)
                 .artwork(artworkFiles.getArtwork())
                 .build());
+        songFile = tempFolder.newFile(AUDIO_RESOURCE.getFilename());
+        Files.copy(AUDIO_RESOURCE.getFile().toPath(), new FileOutputStream(songFile));
         song = songRepository.save(SongFixtures.songBuilder()
                 .genre(genre)
                 .album(album)
                 .fileType(FileType.of("audio/mpeg", "mp3"))
-                .path(AUDIO_RESOURCE.getFile().getAbsolutePath())
+                .path(songFile.getAbsolutePath())
                 .artwork(artworkFiles.getArtwork())
                 .build());
     }
@@ -75,7 +80,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldServeAudio() throws IOException {
 
-        byte[] expectedContents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
+        byte[] expectedContents = Files.readAllBytes(songFile.toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/{id}", HttpMethod.GET, 
@@ -88,7 +93,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldServeByteRangeAudio() throws IOException {
 
-        byte[] contents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
+        byte[] contents = Files.readAllBytes(songFile.toPath());
         byte[] expectedContents = Arrays.copyOfRange(contents, 1024, 2048);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Range", "bytes=1024-2047");
@@ -104,7 +109,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldReportNotFoundAudio() {
+    public void shouldReportNotFoundAudioForNotFoundSong() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -116,6 +121,24 @@ public class FileControllerTest extends InstallingIntegrationTest {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
             assertThat(error.getArguments().get(0)).isEqualTo("Song");
             assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
+    }
+
+    @Test
+    public void shouldReportNotFoundAudioForNotFoundSongFile() {
+
+        assertThat(songFile.delete()).isTrue();
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/{id}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getAccessToken()), ErrorDto.class, song.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Song");
+            assertThat(error.getArguments().get(1)).isEqualTo(song.getId().toString());
         });
     }
 
@@ -180,7 +203,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldExportSong() throws IOException {
 
-        byte[] expectedContents = Files.readAllBytes(AUDIO_RESOURCE.getFile().toPath());
+        byte[] expectedContents = Files.readAllBytes(songFile.toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/{songId}", HttpMethod.GET,
@@ -193,7 +216,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldReportNotFoundExportingSong() {
+    public void shouldReportNotFoundExportingSongForNotFoundSong() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -205,6 +228,24 @@ public class FileControllerTest extends InstallingIntegrationTest {
             assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
             assertThat(error.getArguments().get(0)).isEqualTo("Song");
             assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        });
+    }
+
+    @Test
+    public void shouldReportNotFoundExportingSongForNotFoundSongFile() {
+        
+        assertThat(songFile.delete()).isTrue();
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/{songId}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getAccessToken()), ErrorDto.class, song.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+            assertThat(error.getArguments().get(0)).isEqualTo("Song");
+            assertThat(error.getArguments().get(1)).isEqualTo(song.getId().toString());
         });
     }
 

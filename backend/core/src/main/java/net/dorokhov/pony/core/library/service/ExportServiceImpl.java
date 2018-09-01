@@ -50,6 +50,10 @@ public class ExportServiceImpl implements ExportService {
         if (song == null) {
             return null;
         }
+        File file = song.getFile();
+        if (!file.exists()) {
+            return null;
+        }
 
         String baseName;
         if (song.getName() != null) {
@@ -63,7 +67,7 @@ public class ExportServiceImpl implements ExportService {
         } else {
             baseName = Files.getNameWithoutExtension(song.getPath());
         }
-        return buildExportBundle(FilenameUtils.normalize(baseName), song.getFileType(), new Mp3Content(song.getFile()));
+        return buildExportBundle(FilenameUtils.normalize(baseName), song.getFileType(), new Mp3Content(file));
     }
 
     @Override
@@ -145,6 +149,10 @@ public class ExportServiceImpl implements ExportService {
 
         ImmutableList.Builder<ZipEntry> builder = ImmutableList.builder();
         for (Song song : songList) {
+            File file = song.getFile();
+            if (!file.exists()) {
+                continue;
+            }
             String currentArtistFileName = buildArtistFileName(song.getAlbum().getArtist());
             String currentAlbumFileName = buildAlbumFileName(song.getAlbum());
             Path path = Paths.get(currentArtistFileName, currentAlbumFileName);
@@ -154,7 +162,7 @@ public class ExportServiceImpl implements ExportService {
                 path = path.resolve("CD" + discNumber);
             }
             path = path.resolve(buildSongFileName(song));
-            builder.add(buildUniqueZipEntry(song.getFile(), path, builder.build()));
+            builder.add(buildUniqueZipEntry(file, path, builder.build()));
         }
         return builder.build();
     }
