@@ -1,8 +1,9 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/common.model';
 import {Artist} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
+import {ScrollingUtils} from '../shared/scrolling.utils';
 
 @Component({
   selector: 'pony-artist-list',
@@ -12,6 +13,8 @@ import {LibraryService} from '../core/library/library.service';
 export class ArtistListComponent implements OnInit, OnDestroy {
 
   LoadingState = LoadingState;
+  
+  @ViewChildren('artistElements') artistElements: QueryList<ElementRef>;
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
@@ -19,6 +22,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   private artistsSubscription: Subscription;
   private selectedArtistSubscription: Subscription;
+  private scrollToSongRequestSubscription: Subscription;
 
   constructor(private libraryService: LibraryService) {
   }
@@ -29,6 +33,18 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       .subscribe(artist => {
         if (artist) {
           this.selectedArtist = artist.id;
+        }
+      });
+    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
+      .subscribe(song => {
+        const artistIndex = this.artists.findIndex(artist => {
+          return artist.id === song.album.artist.id;
+        });
+        if (artistIndex >= 0) {
+          const scrollToElement = this.artistElements.toArray()[artistIndex];
+          window.requestAnimationFrame(() => {
+            ScrollingUtils.scrollIntoElement(scrollToElement.nativeElement);
+          });
         }
       });
   }
