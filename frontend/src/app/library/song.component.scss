@@ -21,6 +21,10 @@
     text-align: right;
     color: #909090;
     
+    .fa {
+      color: #333333;
+    }
+    
     .fa-volume-off {
       padding-right: 7px;
     }
@@ -77,5 +81,9 @@
 
   .track-number, .title, .artist, .duration {
     color: white;
+    
+    .fa {
+      color: white;
+    }
   }
 }
