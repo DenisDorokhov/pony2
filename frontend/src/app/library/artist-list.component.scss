@@ -17,41 +17,6 @@
     .list-group {
       height: 100%;
       margin: 0;
-
-      .list-group-item:first-child {
-        border-top-width: 0;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-      }
-      .list-group-item:last-child {
-        border-bottom-width: 0;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-      }
-      .list-group-item {
-        border-left-width: 0;
-        border-right-width: 0;
-        padding: 10px;
-        -moz-user-select: none;
-        -webkit-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        cursor: pointer;
-
-        pony-image-loader {
-          float: left;
-          width: 50px;
-          height: 50px;
-        }
-
-        .artist-name {
-          line-height: 50px;
-          margin-left: 60px;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          overflow: hidden;
-        }
-      }
     }
   }
 }

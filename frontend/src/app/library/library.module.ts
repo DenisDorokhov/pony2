@@ -4,6 +4,7 @@ import {SharedModule} from '../shared/shared.module';
 import {AlbumListComponent} from './album-list.component';
 import {AlbumComponent} from './album.component';
 import {ArtistListComponent} from './artist-list.component';
+import {ArtistComponent} from './artist.component';
 import {LibraryRoutingModule} from './library-routing.module';
 import {LibraryComponent} from './library.component';
 import {PlayerComponent} from './player.component';
@@ -22,6 +23,7 @@ import {ToolbarComponent} from './toolbar.component';
     LibraryComponent,
     ToolbarComponent,
     ArtistListComponent,
+    ArtistComponent,
     AlbumListComponent,
     AlbumComponent,
     SongListComponent,

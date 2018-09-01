@@ -7,14 +7,7 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="list-container" data-image-loader-scroller>
     <div class="list-group">
-      <a #artistElements *ngFor="let artist of artists"
-         [class.active]="artist.id === selectedArtist" (click)="selectArtist(artist)"
-         class="list-group-item" title="{{ artist.name }}">
-        <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
-        <div class="artist-name">
-          {{ artist.name ? artist.name : ('library.artist.unknownLabel' | translate) }}
-        </div>
-      </a>
+      <pony-artist *ngFor="let artist of artists" [artist]="artist"></pony-artist>
     </div>
   </div>
 </div>

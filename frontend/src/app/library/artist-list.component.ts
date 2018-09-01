@@ -1,56 +1,28 @@
-import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/common.model';
 import {Artist} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
-import {ScrollingUtils} from '../shared/scrolling.utils';
 
 @Component({
   selector: 'pony-artist-list',
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
 })
-export class ArtistListComponent implements OnInit, OnDestroy {
+export class ArtistListComponent implements OnInit {
 
   LoadingState = LoadingState;
   
-  @ViewChildren('artistElements') artistElements: QueryList<ElementRef>;
-
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
-  selectedArtist: number;
 
   private artistsSubscription: Subscription;
-  private selectedArtistSubscription: Subscription;
-  private scrollToSongRequestSubscription: Subscription;
 
   constructor(private libraryService: LibraryService) {
   }
 
   ngOnInit(): void {
     this.loadArtists();
-    this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
-      .subscribe(artist => {
-        if (artist) {
-          this.selectedArtist = artist.id;
-        }
-      });
-    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
-      .subscribe(song => {
-        const artistIndex = this.artists.findIndex(artist => {
-          return artist.id === song.album.artist.id;
-        });
-        if (artistIndex >= 0) {
-          const scrollToElement = this.artistElements.toArray()[artistIndex];
-          window.requestAnimationFrame(() => {
-            ScrollingUtils.scrollIntoElement(scrollToElement.nativeElement);
-          });
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.selectedArtistSubscription.unsubscribe();
   }
 
   selectArtist(artist: Artist) {
