@@ -20,6 +20,15 @@
     background-position: center right !important;
     text-align: right;
     color: #909090;
+    
+    &.playing {
+      background: url("../../assets/playing.png") no-repeat;
+      color: transparent !important;
+    }
+    &.paused {
+      background: url("../../assets/paused.png") no-repeat;
+      color: transparent !important;;
+    }
   }
 
   .duration {
