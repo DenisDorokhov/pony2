@@ -2,7 +2,8 @@
    [class.active]="selected" 
    (click)="select()">
   <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
-  <div class="artist-name">
+  <div class="artist-name" 
+       [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
     {{ artist.name ? artist.name : ('library.artist.unknownLabel' | translate) }}
   </div>
   <div class="playback-indicator">
