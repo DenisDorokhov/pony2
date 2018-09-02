@@ -2,6 +2,7 @@ import {Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angul
 import {Subscription} from 'rxjs';
 import {Artist} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
+import {PlaybackService, PlaybackState} from '../core/library/playback.service';
 import {ScrollingUtils} from '../shared/scrolling.utils';
 
 @Component({
@@ -10,17 +11,24 @@ import {ScrollingUtils} from '../shared/scrolling.utils';
   styleUrls: ['./artist.component.scss']
 })
 export class ArtistComponent implements OnInit, OnDestroy {
+
+  PlaybackState = PlaybackState;
   
   @Input() artist: Artist;
 
   @ViewChild('container') containerElement: ElementRef;
   
   selected = false;
+  playbackState: PlaybackState | undefined;
   
   private selectedArtistSubscription: Subscription;
   private scrollToSongRequestSubscription: Subscription;
+  private playbackEventSubscription: Subscription;
 
-  constructor(private libraryService: LibraryService) {
+  constructor(
+    private libraryService: LibraryService,
+    private playbackService: PlaybackService
+  ) {
   }
 
   ngOnInit(): void {
@@ -36,11 +44,20 @@ export class ArtistComponent implements OnInit, OnDestroy {
           });
         }
       });
+    this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
+      .subscribe(playbackEvent => {
+        if (playbackEvent.song && playbackEvent.song.album.artist.id === this.artist.id) {
+          this.playbackState = playbackEvent.state;
+        } else {
+          this.playbackState = undefined;
+        }
+      });
   }
   
   ngOnDestroy(): void {
     this.selectedArtistSubscription.unsubscribe();
     this.scrollToSongRequestSubscription.unsubscribe();
+    this.playbackEventSubscription.unsubscribe();
   }
   
   select() {

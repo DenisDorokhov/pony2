@@ -5,4 +5,8 @@
   <div class="artist-name">
     {{ artist.name ? artist.name : ('library.artist.unknownLabel' | translate) }}
   </div>
+  <div class="playback-indicator">
+    <i class="fa fa-volume-up" *ngIf="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"></i>
+    <i class="fa fa-volume-off" *ngIf="playbackState === PlaybackState.PAUSED"></i>
+  </div>
 </a>

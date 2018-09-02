@@ -32,6 +32,8 @@
   -ms-user-select: none;
   user-select: none;
   cursor: pointer;
+  clear: both;
+  height: 70px;
 
   pony-image-loader {
     float: left;
@@ -41,9 +43,17 @@
 
   .artist-name {
     line-height: 50px;
-    margin-left: 60px;
+    margin-left: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    float: left;
+    max-width: 180px;
+  }
+  
+  .playback-indicator {
+    line-height: 50px;
+    float: right;
+    width: 13px;
   }
 }
