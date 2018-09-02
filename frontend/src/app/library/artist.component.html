@@ -1,4 +1,4 @@
-<a class="list-group-item" title="{{ artist.name }}"
+<a #container class="list-group-item" title="{{ artist.name }}"
    [class.active]="selected" 
    (click)="select()">
   <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>

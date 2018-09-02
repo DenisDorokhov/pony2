@@ -1,4 +1,4 @@
-import {Component, ElementRef, Input, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
@@ -12,13 +12,15 @@ import {ScrollingUtils} from '../shared/scrolling.utils';
 export class ArtistComponent implements OnInit, OnDestroy {
   
   @Input() artist: Artist;
+
+  @ViewChild('container') containerElement: ElementRef;
   
   selected = false;
   
   private selectedArtistSubscription: Subscription;
   private scrollToSongRequestSubscription: Subscription;
 
-  constructor(private libraryService: LibraryService, private elementRef: ElementRef) {
+  constructor(private libraryService: LibraryService) {
   }
 
   ngOnInit(): void {
@@ -30,7 +32,7 @@ export class ArtistComponent implements OnInit, OnDestroy {
       .subscribe(song => {
         if (song.album.artist.id === this.artist.id) {
           window.requestAnimationFrame(() => {
-            ScrollingUtils.scrollIntoElement(this.elementRef.nativeElement);
+            ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
           });
         }
       });

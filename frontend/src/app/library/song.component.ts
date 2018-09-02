@@ -11,7 +11,7 @@ import {ScrollingUtils} from '../shared/scrolling.utils';
   styleUrls: ['./song.component.scss']
 })
 export class SongComponent implements OnInit, OnDestroy {
-  
+
   PlaybackState = PlaybackState;
 
   @Input() song: Song;
@@ -37,14 +37,14 @@ export class SongComponent implements OnInit, OnDestroy {
     this.selectedSongSubscription = this.libraryService.observeSelectedSong()
       .subscribe(song => {
         this.selected = song && song.id === this.song.id;
-        if (this.selected) {
-          this.scrollToCurrentSong();
-        }
       });
     this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {
         if (song.id === this.song.id) {
-          this.scrollToCurrentSong();
+          window.requestAnimationFrame(() => {
+            ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+          });
+          this.libraryService.finishScrollToSong();
         }
       });
     this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
@@ -70,11 +70,5 @@ export class SongComponent implements OnInit, OnDestroy {
 
   play() {
     this.libraryService.requestSongPlayback(this.song);
-  }
-  
-  private scrollToCurrentSong() {
-    window.requestAnimationFrame(() => {
-      ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-    });
   }
 }
