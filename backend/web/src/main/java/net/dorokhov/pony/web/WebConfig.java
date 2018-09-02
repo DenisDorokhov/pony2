@@ -106,19 +106,19 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
+                .headers().frameOptions().sameOrigin()
+                .and()
+                
                 .sessionManagement().sessionCreationPolicy(STATELESS)
-
                 .and()
 
                 .securityContext()
                 .securityContextRepository(securityContextRepository)
-
                 .and()
 
                 .exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
-
                 .and()
 
                 .formLogin()
@@ -127,7 +127,6 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                 .passwordParameter("password")
                 .successHandler(authenticationSuccessHandler)
                 .failureHandler(authenticationFailureHandler)
-
                 .and()
 
                 .logout()
@@ -136,7 +135,6 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
                                 "/api/authentication",
                                 HttpMethod.DELETE.name()))
                 .logoutSuccessHandler(logoutSuccessHandler)
-
                 .and()
 
                 .authorizeRequests()

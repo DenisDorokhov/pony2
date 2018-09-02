@@ -1,4 +1,4 @@
-:host(:first-child) {
+:host:first-child {
   .list-group-item {
     border-top-width: 0;
     border-top-left-radius: 4px;
@@ -6,7 +6,7 @@
   }
 }
 
-:host(:last-child) { 
+:host:last-child { 
   .list-group-item {
     border-bottom-width: 0;
     border-bottom-left-radius: 4px;

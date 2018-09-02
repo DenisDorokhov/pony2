@@ -13,12 +13,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.DefaultApplicationArguments;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -40,17 +35,9 @@ public class ScanJobInterruptionRunnerTest {
     @Test
     public void shouldMarkCurrentJobsAsInterrupted() {
 
-        Pageable firstPageable = new PageRequest(0, 2);
+        List<ScanJob> scanJobs = ImmutableList.of(scanJob(), scanJob(), scanJob());
 
-        List<Page<ScanJob>> pages = new ArrayList<>();
-        pages.add(new PageImpl<>(ImmutableList.of(scanJob(), scanJob()), firstPageable, 3));
-        pages.add(new PageImpl<>(ImmutableList.of(scanJob()), new PageRequest(1, 2), 3));
-        pages.add(new PageImpl<>(emptyList()));
-
-        when(scanJobRepository.findByStatusIn(any(), any())).then(invocation -> {
-            Pageable pageable = invocation.getArgument(1);
-            return pages.get(pageable.getPageNumber());
-        });
+        when(scanJobRepository.findByStatusIn(any())).thenReturn(scanJobs);
 
         scanJobInterruptionRunner.markCurrentJobsAsInterrupted();
 
@@ -66,7 +53,7 @@ public class ScanJobInterruptionRunnerTest {
     @Test
     public void shouldMarkCurrentJobsAsInterruptedOnStartup() {
 
-        when(scanJobRepository.findByStatusIn(any(), any())).thenReturn(new PageImpl<>(emptyList()));
+        when(scanJobRepository.findByStatusIn(any())).thenReturn(emptyList());
         ScanJobInterruptionRunner spy = Mockito.spy(scanJobInterruptionRunner);
 
         spy.run(new DefaultApplicationArguments(new String[0]));

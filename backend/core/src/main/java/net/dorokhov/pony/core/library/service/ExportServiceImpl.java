@@ -173,7 +173,7 @@ public class ExportServiceImpl implements ExportService {
                 .map(ZipEntry::getPath)
                 .map(Path::toString)
                 .collect(Collectors.toSet());
-        String extension = Files.getFileExtension(file.getName());
+        String extension = Files.getFileExtension(file.getName()).toLowerCase();
 
         int attempt = 1;
         String currentExportPath = path.toString() + "." + extension;

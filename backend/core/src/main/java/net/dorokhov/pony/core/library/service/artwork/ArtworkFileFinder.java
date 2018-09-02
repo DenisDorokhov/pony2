@@ -5,6 +5,7 @@ import com.google.common.io.Files;
 import net.dorokhov.pony.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.core.library.service.filetree.domain.FolderNode;
 import net.dorokhov.pony.core.library.service.filetree.domain.ImageNode;
+import net.dorokhov.pony.core.library.service.filetree.domain.Node;
 import net.dorokhov.pony.core.library.service.image.domain.ImageSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,20 +38,26 @@ public class ArtworkFileFinder {
 
     @Nullable
     public ImageNode findArtwork(AudioNode audioNode) {
-        FolderNode folderNode = audioNode.getParentFolder();
-        while (folderNode != null) {
-            ImageNode artwork = doFetchArtwork(folderNode);
-            if (artwork != null) {
-                return artwork;
-            } else {
-                folderNode = folderNode.getParentFolder();
+        return Optional.ofNullable(fetchArtworkFromParentFolder(audioNode))
+                .orElseGet(() -> fetchArtworkFromParentFolder(audioNode.getParentFolder()));
+    }
+    
+    @Nullable
+    private ImageNode fetchArtworkFromParentFolder(@Nullable Node node) {
+        if (node != null) {
+            FolderNode folderNode = node.getParentFolder();
+            if (folderNode != null) {
+                ImageNode artwork = fetchArtworkFromFolderTree(folderNode);
+                if (artwork != null) {
+                    return artwork;
+                }
             }
         }
         return null;
     }
 
     @Nullable
-    private ImageNode doFetchArtwork(FolderNode folderNode) {
+    private ImageNode fetchArtworkFromFolderTree(FolderNode folderNode) {
         ImageNode artwork = fetchArtworkFromFolder(folderNode);
         if (artwork != null) {
             return artwork;

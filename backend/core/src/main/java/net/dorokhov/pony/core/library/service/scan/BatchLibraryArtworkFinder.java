@@ -1,5 +1,7 @@
 package net.dorokhov.pony.core.library.service.scan;
 
+import com.google.common.collect.Lists;
+import net.dorokhov.pony.api.common.BaseEntity;
 import net.dorokhov.pony.api.library.domain.Album;
 import net.dorokhov.pony.api.library.domain.Artist;
 import net.dorokhov.pony.api.library.domain.Genre;
@@ -18,14 +20,18 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Component
 public class BatchLibraryArtworkFinder {
-    
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final LibraryArtworkFinder libraryArtworkFinder;
@@ -42,13 +48,13 @@ public class BatchLibraryArtworkFinder {
                                      AlbumRepository albumRepository,
                                      @Value("${pony.scan.artworkSearchBufferSize}") int artworkSearchBufferSize,
                                      PlatformTransactionManager transactionManager) {
-        
+
         this.libraryArtworkFinder = libraryArtworkFinder;
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.artworkSearchBufferSize = artworkSearchBufferSize;
-        
+
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
@@ -57,7 +63,7 @@ public class BatchLibraryArtworkFinder {
         long itemsTotal = albumRepository.countByArtworkId(null) +
                 artistRepository.countByArtworkId(null) +
                 genreRepository.countByArtworkId(null);
-        
+
         AtomicInteger counter = new AtomicInteger();
         findAllAlbumArtworks(() -> notifyObserver(progressObserver, counter.incrementAndGet(), itemsTotal));
         findAllArtistArtworks(() -> notifyObserver(progressObserver, counter.incrementAndGet(), itemsTotal));
@@ -65,47 +71,62 @@ public class BatchLibraryArtworkFinder {
     }
 
     private void findAllAlbumArtworks(Runnable onItemProgress) {
-        AtomicReference<Pageable> pageable = new AtomicReference<>(new PageRequest(0, artworkSearchBufferSize, new Sort("id")));
-        while (pageable.get() != null) {
-            pageable.set(transactionTemplate.execute(status -> {
-                Page<Album> albums = albumRepository.findByArtworkId(null, pageable.get());
-                for (Album album : albums) {
-                    libraryArtworkFinder.findAndSaveAlbumArtwork(album);
-                    onItemProgress.run();
-                }
-                return albums.nextPageable();
-            }));
-        }
+        walkThroughAndProcessPages(
+                pageable -> albumRepository.findByArtworkId(null, pageable),
+                albumsWithoutArtwork -> transactionTemplate.execute(status -> {
+                    List<Album> albums = albumRepository.findAll(albumsWithoutArtwork);
+                    for (Album album : albums) {
+                        libraryArtworkFinder.findAndSaveAlbumArtwork(album);
+                        onItemProgress.run();
+                    }
+                    return null;
+                })
+        );
     }
 
     private void findAllArtistArtworks(Runnable onItemProgress) {
-        AtomicReference<Pageable> pageable = new AtomicReference<>(new PageRequest(0, artworkSearchBufferSize, new Sort("id")));
-        while (pageable.get() != null) {
-            pageable.set(transactionTemplate.execute(status -> {
-                Page<Artist> artists = artistRepository.findByArtworkId(null, pageable.get());
-                for (Artist artist : artists) {
-                    libraryArtworkFinder.findAndSaveArtistArtwork(artist);
-                    onItemProgress.run();
-                }
-                return artists.nextPageable();
-            }));
-        }
+        walkThroughAndProcessPages(
+                pageable -> artistRepository.findByArtworkId(null, pageable),
+                artistsWithoutArtwork -> transactionTemplate.execute(status -> {
+                    List<Artist> artists = artistRepository.findAll(artistsWithoutArtwork);
+                    for (Artist artist : artists) {
+                        libraryArtworkFinder.findAndSaveArtistArtwork(artist);
+                        onItemProgress.run();
+                    }
+                    return null;
+                })
+        );
     }
 
     private void findAllGenreArtworks(Runnable onItemProgress) {
-        AtomicReference<Pageable> pageable = new AtomicReference<>(new PageRequest(0, artworkSearchBufferSize, new Sort("id")));
-        while (pageable.get() != null) {
-            pageable.set(transactionTemplate.execute(status -> {
-                Page<Genre> genres = genreRepository.findByArtworkId(null, pageable.get());
-                for (Genre genre : genres) {
-                    libraryArtworkFinder.findAndSaveGenreArtwork(genre);
-                    onItemProgress.run();
-                }
-                return genres.nextPageable();
-            }));
+        walkThroughAndProcessPages(
+                pageable -> genreRepository.findByArtworkId(null, pageable),
+                genresWithoutArtwork -> transactionTemplate.execute(status -> {
+                    List<Genre> genres = genreRepository.findAll(genresWithoutArtwork);
+                    for (Genre genre : genres) {
+                        libraryArtworkFinder.findAndSaveGenreArtwork(genre);
+                        onItemProgress.run();
+                    }
+                    return null;
+                })
+        );
+    }
+
+    private <T extends BaseEntity<Long>> void walkThroughAndProcessPages(Function<Pageable, Page<T>> requestExecutor, Consumer<List<Long>> responseProcessor) {
+        Pageable pageable = new PageRequest(0, artworkSearchBufferSize, new Sort("id"));
+        List<Long> responses = new ArrayList<>();
+        while (pageable != null) {
+            Page<T> responsePage = requestExecutor.apply(pageable);
+            responses.addAll(responsePage.getContent().stream()
+                    .map(BaseEntity::getId)
+                    .collect(Collectors.toList()));
+            pageable = responsePage.nextPageable();
+        }
+        for (List<Long> chunk : Lists.partition(responses, artworkSearchBufferSize)) {
+            responseProcessor.accept(chunk);
         }
     }
-    
+
     private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
         try {
             observer.onProgress(itemsComplete, itemsTotal);

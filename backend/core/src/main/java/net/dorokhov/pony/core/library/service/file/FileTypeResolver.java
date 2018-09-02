@@ -29,8 +29,8 @@ public class FileTypeResolver {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    public FileType resolve(File file) throws IOException {
-        String extension = Files.getFileExtension(file.getName());
+    public FileType resolve(File file) {
+        String extension = Files.getFileExtension(file.getName()).toLowerCase();
         String mimeType = EXTENSION_TO_MIME_TYPE.get(extension);
         if (mimeType == null) {
             mimeType = DEFAULT_MIME_TYPE;

@@ -40,6 +40,17 @@ public class FileTypeResolverTest {
         assertThat(fileType.getMimeType()).isEqualTo("audio/mpeg");
         assertThat(fileType.getFileExtension()).isEqualTo("mp3");
     }
+    
+    @Test
+    public void shouldResolveMp3FileByUpperCaseExtension() throws IOException {
+
+        File file = new ClassPathResource("audio/empty.MP3").getFile();
+
+        FileType fileType = fileTypeResolver.resolve(file);
+
+        assertThat(fileType.getMimeType()).isEqualTo("audio/mpeg");
+        assertThat(fileType.getFileExtension()).isEqualTo("mp3");
+    }
 
     @Test
     public void shouldResolveUnknownFile() throws IOException {

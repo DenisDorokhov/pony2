@@ -48,6 +48,7 @@ public class BatchLibraryArtworkFinderTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldFindAllArtworks() {
         
         when(albumRepository.countByArtworkId(null)).thenReturn(1L);
@@ -64,6 +65,13 @@ public class BatchLibraryArtworkFinderTest {
                 .thenReturn(new PageImpl<>(ImmutableList.of(artist)));
         when(genreRepository.findByArtworkId(isNull(), any()))
                 .thenReturn(new PageImpl<>(ImmutableList.of(genre)));
+        
+        when(albumRepository.findAll(any(Iterable.class)))
+                .thenReturn(ImmutableList.of(album));
+        when(artistRepository.findAll(any(Iterable.class)))
+                .thenReturn(ImmutableList.of(artist));
+        when(genreRepository.findAll(any(Iterable.class)))
+                .thenReturn(ImmutableList.of(genre));
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryArtworkFinder.findAllArtworks(observer);
@@ -79,6 +87,7 @@ public class BatchLibraryArtworkFinderTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldNotFailOnObserverException() {
 
         when(albumRepository.countByArtworkId(null)).thenReturn(0L);
@@ -93,6 +102,9 @@ public class BatchLibraryArtworkFinderTest {
                 .thenReturn(new PageImpl<>(emptyList()));
         when(genreRepository.findByArtworkId(isNull(), any()))
                 .thenReturn(new PageImpl<>(ImmutableList.of(genre)));
+
+        when(genreRepository.findAll(any(Iterable.class)))
+                .thenReturn(ImmutableList.of(genre));
 
         batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) -> {
             throw new RuntimeException();
