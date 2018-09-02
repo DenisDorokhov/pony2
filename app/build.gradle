@@ -24,6 +24,10 @@ springBoot {
     buildInfo()
 }
 
+bootRun {
+    args = ["--spring.profiles.active=dev"]
+}
+
 testSets {
     testIntegration
 }
