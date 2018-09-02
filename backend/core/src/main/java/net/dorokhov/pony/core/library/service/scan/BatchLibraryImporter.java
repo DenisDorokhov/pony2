@@ -131,7 +131,7 @@ public class BatchLibraryImporter {
             latch.await();
         } catch (InterruptedException e) {
             logger.warn("Batch audio data reading has been interrupted.", e);
-            throw new RuntimeException("Batch audio data writing has been interrupted.", e);
+            throw new RuntimeException("Batch audio data reading has been interrupted.", e);
         }
 
         return doImport(importTasks.stream()
