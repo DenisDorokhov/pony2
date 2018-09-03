@@ -16,7 +16,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loggedOutSubscription = this.authenticationService.loggedOut.subscribe(
+    this.loggedOutSubscription = this.authenticationService.observeLogout().subscribe(
       user => {
         console.log(`User ${user.email} has been logged out.`);
         this.router.navigate(['/login'], {replaceUrl: true});

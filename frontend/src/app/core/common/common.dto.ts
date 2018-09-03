@@ -56,4 +56,13 @@ export namespace ErrorDto {
   export function observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<never> {
     return throwError(ErrorDto.fromHttpErrorResponse(error));
   }
+  
+  export function authenticationFailed(): ErrorDto {
+    return {
+      "code": ErrorDto.Code.AUTHENTICATION_FAILED,
+      "message": "Authentication failed.",
+      "arguments": [],
+      "fieldViolations": []
+    };
+  }
 }

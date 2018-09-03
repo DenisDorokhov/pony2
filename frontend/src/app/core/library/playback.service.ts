@@ -4,6 +4,7 @@ import {Howl} from 'howler';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {interval, Subscription} from 'rxjs';
 import {Observable} from 'rxjs/Observable';
+import {AuthenticationService} from '../user/authentication.service';
 import {Song} from './library.model';
 import {Playlist} from './playlist.model';
 
@@ -157,7 +158,14 @@ export class PlaybackService {
   private queueSubscription: Subscription | undefined;
   private currentSongSubscription: Subscription | undefined;
 
-  constructor(private translateService: TranslateService) {
+  constructor(
+    private authenticationService: AuthenticationService, 
+    private translateService: TranslateService
+  ) {
+    this.authenticationService.observeLogout()
+      .subscribe(() => {
+        this.audioPlayer.stop();
+      });
     this.audioPlayer.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
     this.unity.setSupports({
