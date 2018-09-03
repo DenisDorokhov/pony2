@@ -20,7 +20,7 @@ export class TokenStorageService {
       this.cookieService.put(TokenStorageService.COOKIE_KEY, token);
     } else {
       localStorage.removeItem(TokenStorageService.TOKEN_KEY);
-      this.cookieService.get(TokenStorageService.COOKIE_KEY);
+      this.cookieService.remove(TokenStorageService.COOKIE_KEY);
     }
   }
 }
