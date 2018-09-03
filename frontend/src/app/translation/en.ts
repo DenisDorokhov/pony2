@@ -1,4 +1,7 @@
 export default {
+  noSongTitle: 'Pony - Music Streamer',
+  songTitlePrefix: 'Pony | ',
+  songTitleBody: '{{ artistName }} - {{ songName }} | ',
   installation: {
     mainHeader: 'Installation',
     libraryFoldersLabel: 'Library Folders:',
@@ -30,7 +33,6 @@ export default {
       logButton: 'Log',
       usersButton: 'Users',
     },
-    noMusicLabel: 'Your library is empty :-(',
     album: {
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown'
@@ -40,7 +42,8 @@ export default {
     },
     song: {
       unknownLabel: 'Unknown'
-    }
+    },
+    noMusicLabel: 'Your library is empty :-(',
   },
   player: {
     noSongTitle: 'Pony - Music Streamer',

@@ -20,6 +20,7 @@ export class InitializerService {
   initialize(): Promise<any> {
     this.translateService.setDefaultLang('en');
     this.translateService.use('en');
+    window.document.title = this.translateService.instant('noSongTitle');
     return this.installationService.getInstallationStatus()
       .flatMap(installationStatus => {
         if (installationStatus.installed) {

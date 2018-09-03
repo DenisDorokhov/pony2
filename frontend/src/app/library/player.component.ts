@@ -4,6 +4,7 @@ import {Subscription} from 'rxjs/Subscription';
 import {NotificationService, NotificationType} from '../core/common/notification.service';
 import {Song} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
+import {PageTitleService} from '../core/library/page-title.service';
 import {PlaybackEvent, PlaybackService, PlaybackState} from '../core/library/playback.service';
 
 @Component({
@@ -30,6 +31,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private libraryService: LibraryService,
     private translateService: TranslateService,
     private notificationService: NotificationService,
+    private pageTitleService: PageTitleService,
   ) {
   }
 
@@ -93,6 +95,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private handleSongSwitch(song: Song) {
     this.hasPreviousSong = this.playbackService.hasPreviousSong();
     this.hasNextSong = this.playbackService.hasNextSong();
+    this.pageTitleService.song = song;
     if (song) {
       let artistName = song ? song.artistName : undefined;
       let songName = song ? song.name : undefined;
