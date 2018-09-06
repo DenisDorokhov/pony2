@@ -1,9 +1,10 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
-import {interval, Subscription} from 'rxjs';
+import {Subscription, timer} from 'rxjs';
+import 'rxjs/add/operator/takeWhile';
 import {Song} from './library.model';
 
-class StringShifter {
+class StringScroller {
 
   private _offset = 0;
   private _result: string;
@@ -19,15 +20,19 @@ class StringShifter {
   get result(): string {
     return this._result;
   }
+  
+  willRestart(): boolean {
+    return this._offset === this.target.length;
+  }
 
-  shift(): string {
+  scroll(): string {
     do {
-      this.doShift();
+      this.doScroll();
     } while (this._result.indexOf(' ') === 0);
     return this._result;
   }
   
-  private doShift() {
+  private doScroll() {
     if (this.target.length === 0) {
       return;
     }
@@ -44,15 +49,16 @@ class StringShifter {
 @Injectable()
 export class PageTitleService {
   
+  private static readonly ANIMATION_INITIAL_DELAY = 3000;
   private static readonly ANIMATION_FRAME_DELAY = 1000;
   
   private _song: Song | undefined;
   
-  private titleShifter: StringShifter | undefined;
+  private titleShifter: StringScroller | undefined;
   private timerSubscription: Subscription | undefined;
   
   constructor(private translateService: TranslateService) {
-    this.updateSong();
+    this.startScrolling();
   }
   
   get song(): Song | undefined {
@@ -61,10 +67,10 @@ export class PageTitleService {
   
   set song(song: Song | undefined) {
     this._song = song;
-    this.updateSong();
+    this.startScrolling();
   }
   
-  private updateSong() {
+  private startScrolling() {
     this.titleShifter = undefined;
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
@@ -81,18 +87,21 @@ export class PageTitleService {
         songName = this.translateService.instant('library.song.unknownLabel');
       }
       
-      this.titleShifter = new StringShifter(this.translateService.instant(
+      this.titleShifter = new StringScroller(this.translateService.instant(
         'songTitleBody',
         { artistName, songName }
       ));
       const prefix = this.translateService.instant('songTitlePrefix');
       window.document.title = prefix + this.titleShifter.target;
       
-      this.timerSubscription = interval(PageTitleService.ANIMATION_FRAME_DELAY)
+      this.timerSubscription = timer(PageTitleService.ANIMATION_INITIAL_DELAY, PageTitleService.ANIMATION_FRAME_DELAY)
         .do(() => {
-          window.document.title = prefix + this.titleShifter.shift();
+          window.document.title = prefix + this.titleShifter.scroll();
         })
-        .subscribe();
+        .takeWhile(() => !this.titleShifter.willRestart())
+        .subscribe({
+          complete: () => this.startScrolling()
+        });
       
     } else {
       window.document.title = this.translateService.instant('noSongTitle');

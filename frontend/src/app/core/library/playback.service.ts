@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Howl} from 'howler';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
-import {interval, Subscription} from 'rxjs';
+import {interval, Subscription, timer} from 'rxjs';
 import {Observable} from 'rxjs/Observable';
 import {AuthenticationService} from '../user/authentication.service';
 import {Song} from './library.model';
@@ -144,6 +144,10 @@ class AudioPlayer {
   }
 }
 
+enum UnityRequest {
+  PLAY, PAUSE, NEXT, PREVIOUS
+}
+
 @Injectable()
 export class PlaybackService {
 
@@ -159,7 +163,7 @@ export class PlaybackService {
   private currentSongSubscription: Subscription | undefined;
 
   constructor(
-    private authenticationService: AuthenticationService, 
+    private authenticationService: AuthenticationService,
     private translateService: TranslateService
   ) {
     this.authenticationService.observeLogout()
@@ -173,12 +177,26 @@ export class PlaybackService {
       next: true,
       previous: true,
     });
-    this.unity.setCallbackObject({
-      play: () => this.playOrPause(),
-      pause: () => this.playOrPause(),
-      next: () => this.switchToNextSong().subscribe(),
-      previous: () => this.switchToPreviousSong().subscribe()
-    });
+    // Sometimes redundant media key events are generated under Mac.
+    this.observeUnityRequest()
+      .debounce(() => timer(150))
+      .subscribe(request => {
+        switch (request) {
+          case UnityRequest.PLAY:
+          case UnityRequest.PAUSE:
+            console.log('Play / pause request from sway.fm.');
+            this.playOrPause();
+            break;
+          case UnityRequest.NEXT:
+            console.log('Next song request from sway.fm.');
+            this.switchToNextSong().subscribe();
+            break;
+          case UnityRequest.PREVIOUS:
+            console.log('Previous song request from sway.fm.');
+            this.switchToPreviousSong().subscribe();
+            break;
+        }
+      });
   }
 
   get lastPlaybackEvent(): PlaybackEvent {
@@ -294,5 +312,16 @@ export class PlaybackService {
         albumArt: artworkUrl ? location.protocol + '//' + location.host + artworkUrl : undefined,
       });
     }
+  }
+
+  private observeUnityRequest(): Observable<UnityRequest> {
+    return Observable.create(subscriber => {
+      this.unity.setCallbackObject({
+        play: () => subscriber.next(UnityRequest.PLAY),
+        pause: () => subscriber.next(UnityRequest.PAUSE),
+        next: () => subscriber.next(UnityRequest.NEXT),
+        previous: () => subscriber.next(UnityRequest.PREVIOUS)
+      });
+    });
   }
 }

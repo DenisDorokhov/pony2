@@ -1,5 +1,5 @@
 export default {
-  noSongTitle: 'Pony - Music Streamer',
+  noSongTitle: 'Pony | Music Streamer',
   songTitlePrefix: 'Pony | ',
   songTitleBody: '{{ artistName }} - {{ songName }} | ',
   installation: {
