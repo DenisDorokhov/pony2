@@ -1,4 +1,5 @@
 <div class="toolbar-container">
+
   <button (click)="refresh()" type="button" class="btn btn-default">
     {{ 'library.toolbar.refreshButton' | translate }}
     <i class="fa fa-refresh"></i>
@@ -27,4 +28,21 @@
       <li><a (click)="signOut()">Sign Out</a></li>
     </ul>
   </div>
+
+  <ng-template #settingsTemplate>
+    <pony-settings [modalRef]="settingsModal"></pony-settings>
+  </ng-template>
+  <ng-template #scanningTemplate>
+    <pony-scanning [modalRef]="scanningModal"></pony-scanning>
+  </ng-template>
+  <ng-template #logTemplate>
+    <pony-log [modalRef]="logModal"></pony-log>
+  </ng-template>
+  <ng-template #userListTemplate>
+    <pony-user-list [modalRef]="userListModal"></pony-user-list>
+  </ng-template>
+  <ng-template #currentUserTemplate>
+    <pony-current-user [modalRef]="currentUserModal"></pony-current-user>
+  </ng-template>
+
 </div>

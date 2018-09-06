@@ -33,6 +33,21 @@ export default {
       logButton: 'Log',
       usersButton: 'Users',
     },
+    currentUser: {
+      header: 'My Profile',
+    },
+    log: {
+      header: 'Log',
+    },
+    scanning: {
+      header: 'Scanning',
+    },
+    settings: {
+      header: 'Settings',
+    },
+    userList: {
+      header: 'Users',
+    },
     album: {
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown'

@@ -1,4 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap';
 import {AuthenticationService} from '../core/user/authentication.service';
 import {UserDto} from '../core/user/user.dto';
 
@@ -11,7 +12,22 @@ export class ToolbarComponent implements OnInit {
 
   currentUser: UserDto;
 
-  constructor(private authenticationService: AuthenticationService) {
+  @ViewChild('settingsTemplate') settingsTemplate: TemplateRef<any>;
+  @ViewChild('scanningTemplate') scanningTemplate: TemplateRef<any>;
+  @ViewChild('logTemplate') logTemplate: TemplateRef<any>;
+  @ViewChild('userListTemplate') userListTemplate: TemplateRef<any>;
+  @ViewChild('currentUserTemplate') currentUserTemplate: TemplateRef<any>;
+  
+  settingsModal: BsModalRef;
+  scanningModal: BsModalRef;
+  logModal: BsModalRef;
+  userListModal: BsModalRef;
+  currentUserModal: BsModalRef;
+
+  constructor(
+    private authenticationService: AuthenticationService,
+    private modalService: BsModalService
+  ) {
   }
 
   ngOnInit(): void {
@@ -23,7 +39,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   openProfile() {
-    console.log('Opening profile.');
+    this.currentUserModal = this.modalService.show(this.currentUserTemplate);
   }
 
   signOut() {
@@ -32,18 +48,18 @@ export class ToolbarComponent implements OnInit {
   }
 
   openSettings() {
-    console.log('Opening settings.');
+    this.settingsModal = this.modalService.show(this.settingsTemplate);
   }
 
   openScanning() {
-    console.log('Opening scanning.');
+    this.scanningModal = this.modalService.show(this.scanningTemplate);
   }
 
   openLog() {
-    console.log('Opening log.');
+    this.logModal = this.modalService.show(this.logTemplate);
   }
 
   openUsers() {
-    console.log('Opening users.');
+    this.userListModal = this.modalService.show(this.userListTemplate);
   }
 }
