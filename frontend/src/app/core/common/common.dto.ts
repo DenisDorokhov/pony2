@@ -59,10 +59,10 @@ export namespace ErrorDto {
   
   export function authenticationFailed(): ErrorDto {
     return {
-      "code": ErrorDto.Code.AUTHENTICATION_FAILED,
-      "message": "Authentication failed.",
-      "arguments": [],
-      "fieldViolations": []
+      'code': ErrorDto.Code.AUTHENTICATION_FAILED,
+      'message': 'Authentication failed.',
+      'arguments': [],
+      'fieldViolations': []
     };
   }
 }

@@ -3,52 +3,41 @@ import {TranslateService} from '@ngx-translate/core';
 import {interval, Subscription} from 'rxjs';
 import {Song} from './library.model';
 
-export class TitleScroller {
+class StringShifter {
 
+  private _offset = 0;
   private _result: string;
-
-  private _offset: number;
-  private _normalizedOffset: number;
-
+  
   constructor(public readonly target: string) {
-    this.offset = 0;
+    this._result = target;
   }
 
   get offset(): number {
     return this._offset;
   }
 
-  set offset(offset: number) {
-    this._offset = offset;
-    this._normalizedOffset = this.normalizeOffset(offset);
-    this.updateResult();
-  }
-
-  get normalizedOffset(): number {
-    return this._normalizedOffset;
-  }
-
   get result(): string {
     return this._result;
   }
 
-  private normalizeOffset(offset: number): number {
-    let normalizedOffset = offset;
-    if (normalizedOffset > 0) { // 1.13 -> 0.13
-      normalizedOffset = normalizedOffset - Math.floor(normalizedOffset);
-    } else if (normalizedOffset < 0) { // -1.13 -> 0.87
-      normalizedOffset = -offset;
-      normalizedOffset = normalizedOffset - Math.floor(normalizedOffset);
-      normalizedOffset = 1 - normalizedOffset;
-    }
-    return normalizedOffset;
+  shift(): string {
+    do {
+      this.doShift();
+    } while (this._result.indexOf(' ') === 0);
+    return this._result;
   }
-
-  private updateResult() {
-    const characterOffset = Math.round(this.normalizedOffset * this.target.length);
-    const beginning = this.target.substring(characterOffset);
-    const ending = this.target.substring(0, characterOffset);
-    this._result = beginning + ending;
+  
+  private doShift() {
+    if (this.target.length === 0) {
+      return;
+    }
+    if (this._offset === this.target.length) {
+      this._offset = 0;
+    }
+    this._offset++;
+    const prefix = this.target.substring(0, this._offset);
+    const suffix = this.target.substring(this._offset);
+    this._result = suffix + prefix;
   }
 }
 
@@ -59,7 +48,7 @@ export class PageTitleService {
   
   private _song: Song | undefined;
   
-  private titleScroller: TitleScroller | undefined;
+  private titleShifter: StringShifter | undefined;
   private timerSubscription: Subscription | undefined;
   
   constructor(private translateService: TranslateService) {
@@ -76,7 +65,7 @@ export class PageTitleService {
   }
   
   private updateSong() {
-    this.titleScroller = undefined;
+    this.titleShifter = undefined;
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
       this.timerSubscription = undefined;
@@ -92,45 +81,21 @@ export class PageTitleService {
         songName = this.translateService.instant('library.song.unknownLabel');
       }
       
-      this.titleScroller = new TitleScroller(this.translateService.instant(
+      this.titleShifter = new StringShifter(this.translateService.instant(
         'songTitleBody',
         { artistName, songName }
       ));
       const prefix = this.translateService.instant('songTitlePrefix');
-      window.document.title = prefix + this.titleScroller.result;
+      window.document.title = prefix + this.titleShifter.target;
       
-      // noinspection JSDeprecatedSymbols
       this.timerSubscription = interval(PageTitleService.ANIMATION_FRAME_DELAY)
         .do(() => {
-
-          // Spaces are automatically trimmed and united by the browser, here we avoid animation pause of repeating spaces.
-          let body = this.titleScroller.result;
-          const numberOfStartingSpaces = this.getNumberOfStartingChars(body, ' ');
-          let stepsCount = 1;
-          if (prefix.endsWith(" ") && numberOfStartingSpaces > 0) {
-            body = body.trim();
-            stepsCount += numberOfStartingSpaces;
-          }
-
-          window.document.title = prefix + body;
-          this.titleScroller.offset = this.titleScroller.normalizedOffset + stepsCount * (1.0 / this.titleScroller.target.length);
+          window.document.title = prefix + this.titleShifter.shift();
         })
         .subscribe();
       
     } else {
       window.document.title = this.translateService.instant('noSongTitle');
     }
-  }
-
-  private getNumberOfStartingChars(source: string, char: string): number {
-    let result = 0;
-    for (let i = 0; i < source.length; i++) {
-      if (source.charAt(i) === char) {
-        result++;
-      } else {
-        return result;
-      }
-    }
-    return result;
   }
 }
