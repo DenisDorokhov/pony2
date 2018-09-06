@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription} from 'rxjs/Subscription';
 import {NotificationService, NotificationType} from '../core/common/notification.service';
@@ -76,6 +76,13 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.libraryService.selectArtist(song.album.artist);
       this.libraryService.selectSong(song);
       this.libraryService.startScrollToSong(song);
+    }
+  }
+  
+  @HostListener('window:beforeunload', ['$event'])
+  confirmWindowClosing(event: Event) {
+    if (this.isPlaying) {
+      event.returnValue = this.translateService.instant('player.windowCloseConfirmation');
     }
   }
 
