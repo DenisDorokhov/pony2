@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component} from '@angular/core';
 import {BsModalRef} from 'ngx-bootstrap';
 
 @Component({
@@ -7,5 +7,6 @@ import {BsModalRef} from 'ngx-bootstrap';
   styleUrls: ['./scanning.component.scss']
 })
 export class ScanningComponent {
-  @Input() modalRef: BsModalRef;
+  constructor(public readonly modalRef: BsModalRef) {
+  }
 }

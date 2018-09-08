@@ -40,6 +40,13 @@ import {UserListComponent} from './user-list.component';
     ScanningComponent,
     SettingsComponent,
     UserListComponent,
+  ],
+  entryComponents: [
+    CurrentUserComponent,
+    LogComponent,
+    ScanningComponent,
+    SettingsComponent,
+    UserListComponent,
   ]
 })
 export class LibraryModule {

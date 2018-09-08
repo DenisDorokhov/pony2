@@ -1,7 +1,12 @@
 import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
-import {BsModalRef, BsModalService} from 'ngx-bootstrap';
+import {BsModalService} from 'ngx-bootstrap';
 import {AuthenticationService} from '../core/user/authentication.service';
 import {UserDto} from '../core/user/user.dto';
+import {CurrentUserComponent} from './current-user.component';
+import {LogComponent} from './log.component';
+import {ScanningComponent} from './scanning.component';
+import {SettingsComponent} from './settings.component';
+import {UserListComponent} from './user-list.component';
 
 @Component({
   selector: 'pony-toolbar',
@@ -17,12 +22,6 @@ export class ToolbarComponent implements OnInit {
   @ViewChild('logTemplate') logTemplate: TemplateRef<any>;
   @ViewChild('userListTemplate') userListTemplate: TemplateRef<any>;
   @ViewChild('currentUserTemplate') currentUserTemplate: TemplateRef<any>;
-  
-  settingsModal: BsModalRef;
-  scanningModal: BsModalRef;
-  logModal: BsModalRef;
-  userListModal: BsModalRef;
-  currentUserModal: BsModalRef;
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -39,7 +38,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   openProfile() {
-    this.currentUserModal = this.modalService.show(this.currentUserTemplate);
+    this.modalService.show(CurrentUserComponent);
   }
 
   signOut() {
@@ -48,18 +47,18 @@ export class ToolbarComponent implements OnInit {
   }
 
   openSettings() {
-    this.settingsModal = this.modalService.show(this.settingsTemplate);
+    this.modalService.show(SettingsComponent);
   }
 
   openScanning() {
-    this.scanningModal = this.modalService.show(this.scanningTemplate);
+    this.modalService.show(ScanningComponent);
   }
 
   openLog() {
-    this.logModal = this.modalService.show(this.logTemplate);
+    this.modalService.show(LogComponent);
   }
 
   openUsers() {
-    this.userListModal = this.modalService.show(this.userListTemplate);
+    this.modalService.show(UserListComponent);
   }
 }
