@@ -25,11 +25,6 @@ export class ArtistListComponent implements OnInit {
     this.loadArtists();
   }
 
-  selectArtist(artist: Artist) {
-    console.log(`Selecting artist ${artist.id} -> '${artist.name}'.`);
-    this.libraryService.selectArtist(artist);
-  }
-
   private loadArtists() {
     console.log('Loading artists...');
     this.loadingState = LoadingState.LOADING;
@@ -44,7 +39,7 @@ export class ArtistListComponent implements OnInit {
             this.loadingState = LoadingState.LOADED;
             console.log(`${artists.length} artists loaded.`);
             if (!this.libraryService.selectedArtist) {
-              this.libraryService.selectArtist(artists[0]);
+              this.libraryService.selectDefaultArtist(artists);
             }
           } else {
             this.loadingState = LoadingState.EMPTY;

@@ -17,6 +17,8 @@ export enum LibraryState {
 @Injectable()
 export class LibraryService {
 
+  private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
+
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
@@ -64,9 +66,23 @@ export class LibraryService {
         return artist1.id === artist2.id;
       });
   }
+  
+  selectDefaultArtist(artists: Artist[]) {
+    if (artists.length > 0) {
+      const defaultArtistId = this.loadDefaultArtistId();
+      let defaultArtist = artists
+        .find(artist => artist.id === defaultArtistId);
+      if (defaultArtist) {
+        this.selectArtist(defaultArtist);
+      } else {
+        this.selectArtist(artists[0]);
+      }
+    }
+  }
 
   selectArtist(artist: Artist) {
     this.selectedArtistSubject.next(artist);
+    this.storeDefaultArtistId(artist ? artist.id : undefined);
   }
 
   deselectArtist() {
@@ -118,5 +134,19 @@ export class LibraryService {
   
   finishScrollToSong() {
     this.scrollToSongRequestSubject.next(undefined);
+  }
+  
+  private loadDefaultArtistId(): number | undefined {
+    const value = window.localStorage.getItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
+    return value ? parseInt(value) : undefined;
+  }
+  
+  private storeDefaultArtistId(artistId: number) {
+    const value = artistId ? artistId.toString() : undefined;
+    if (value) {
+      window.localStorage.setItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY, value);
+    } else {
+      window.localStorage.removeItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
+    }
   }
 }

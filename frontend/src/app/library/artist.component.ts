@@ -34,7 +34,7 @@ export class ArtistComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
-        this.selected = artist.id === this.artist.id;
+        this.selected = artist && artist.id === this.artist.id;
       });
     this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {
