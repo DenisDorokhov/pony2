@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {AlertModule, BsDropdownModule, ModalModule} from 'ngx-bootstrap';
+import {BsDropdownModule, ModalModule} from 'ngx-bootstrap';
 import {SharedModule} from '../shared/shared.module';
 import {AlbumListComponent} from './album-list.component';
 import {AlbumComponent} from './album.component';
@@ -21,7 +21,6 @@ import {UserListComponent} from './user-list.component';
   imports: [
     LibraryRoutingModule,
     SharedModule,
-    AlertModule.forRoot(),
     BsDropdownModule.forRoot(),
     ModalModule.forRoot(),
   ],
