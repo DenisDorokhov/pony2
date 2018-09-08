@@ -35,13 +35,14 @@ export class ArtistComponent implements OnInit, OnDestroy {
     this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         this.selected = artist && artist.id === this.artist.id;
+        if (this.selected) {
+          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+        }
       });
     this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {
         if (song.album.artist.id === this.artist.id) {
-          window.requestAnimationFrame(() => {
-            ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-          });
+          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
         }
       });
     this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
