@@ -70,7 +70,7 @@ export class LibraryService {
   selectDefaultArtist(artists: Artist[]) {
     if (artists.length > 0) {
       const defaultArtistId = this.loadDefaultArtistId();
-      let defaultArtist = artists
+      const defaultArtist = artists
         .find(artist => artist.id === defaultArtistId);
       if (defaultArtist) {
         this.selectArtist(defaultArtist);
@@ -138,7 +138,7 @@ export class LibraryService {
   
   private loadDefaultArtistId(): number | undefined {
     const value = window.localStorage.getItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
-    return value ? parseInt(value) : undefined;
+    return value ? parseInt(value, 10) : undefined;
   }
   
   private storeDefaultArtistId(artistId: number) {
