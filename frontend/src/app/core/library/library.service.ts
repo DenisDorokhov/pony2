@@ -23,6 +23,7 @@ export class LibraryService {
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
+  private scrollToArtistRequestSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private scrollToSongRequestSubject = new BehaviorSubject<Song | undefined>(undefined);
 
   constructor(private httpClient: HttpClient) {
@@ -67,17 +68,20 @@ export class LibraryService {
       });
   }
   
-  selectDefaultArtist(artists: Artist[]) {
+  selectDefaultArtist(artists: Artist[]): Artist | undefined {
     if (artists.length > 0) {
       const defaultArtistId = this.loadDefaultArtistId();
       const defaultArtist = artists
         .find(artist => artist.id === defaultArtistId);
       if (defaultArtist) {
         this.selectArtist(defaultArtist);
+        return defaultArtist;
       } else {
         this.selectArtist(artists[0]);
+        return artists[0];
       }
     }
+    return undefined;
   }
 
   selectArtist(artist: Artist) {
@@ -121,6 +125,19 @@ export class LibraryService {
 
   requestSongPlayback(song?: Song) {
     this.songPlaybackRequestSubject.next(song);
+  }
+  
+  observeScrollToArtistRequest(): Observable<Artist> {
+    return this.scrollToArtistRequestSubject.asObservable()
+      .filter(artist => artist !== undefined);
+  }
+  
+  startScrollToArtist(artist: Artist) {
+    this.scrollToArtistRequestSubject.next(artist);
+  }
+  
+  finishScrollToArtist() {
+    this.scrollToArtistRequestSubject.next(undefined);
   }
   
   observeScrollToSongRequest(): Observable<Song> {

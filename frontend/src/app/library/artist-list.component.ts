@@ -39,7 +39,10 @@ export class ArtistListComponent implements OnInit {
             this.loadingState = LoadingState.LOADED;
             console.log(`${artists.length} artists loaded.`);
             if (!this.libraryService.selectedArtist) {
-              this.libraryService.selectDefaultArtist(artists);
+              const selectedArtist = this.libraryService.selectDefaultArtist(artists);
+              if (selectedArtist) {
+                this.libraryService.startScrollToArtist(selectedArtist);
+              }
             }
           } else {
             this.loadingState = LoadingState.EMPTY;

@@ -37,9 +37,6 @@ export class SongComponent implements OnInit, OnDestroy {
     this.selectedSongSubscription = this.libraryService.observeSelectedSong()
       .subscribe(song => {
         this.selected = song && song.id === this.song.id;
-        if (this.selected) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-        }
       });
     this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {

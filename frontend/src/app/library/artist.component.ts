@@ -22,6 +22,7 @@ export class ArtistComponent implements OnInit, OnDestroy {
   playbackState: PlaybackState | undefined;
   
   private selectedArtistSubscription: Subscription;
+  private scrollToArtistRequestSubscription: Subscription;
   private scrollToSongRequestSubscription: Subscription;
   private playbackEventSubscription: Subscription;
 
@@ -35,8 +36,12 @@ export class ArtistComponent implements OnInit, OnDestroy {
     this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         this.selected = artist && artist.id === this.artist.id;
-        if (this.selected) {
+      });
+    this.scrollToArtistRequestSubscription = this.libraryService.observeScrollToArtistRequest()
+      .subscribe(artist => {
+        if (artist.id === this.artist.id) {
           ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+          this.libraryService.finishScrollToArtist();
         }
       });
     this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
