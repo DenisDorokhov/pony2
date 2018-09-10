@@ -1,8 +1,11 @@
 package net.dorokhov.pony.core.library.service.file;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 import net.dorokhov.pony.api.library.domain.FileType;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -15,8 +18,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FileTypeResolverTest {
     
     private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
+    private static final Resource AUDIO_RESOURCE = new ClassPathResource("audio/empty.mp3");
     
     private FileTypeResolver fileTypeResolver = new FileTypeResolver();
+
+    @Rule
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void shouldResolveImageFile() throws IOException {
@@ -33,7 +40,7 @@ public class FileTypeResolverTest {
     @Test
     public void shouldResolveMp3File() throws IOException {
 
-        File file = new ClassPathResource("audio/empty.mp3").getFile();
+        File file = AUDIO_RESOURCE.getFile();
 
         FileType fileType = fileTypeResolver.resolve(file);
 
@@ -44,7 +51,8 @@ public class FileTypeResolverTest {
     @Test
     public void shouldResolveMp3FileByUpperCaseExtension() throws IOException {
 
-        File file = new ClassPathResource("audio/empty.MP3").getFile();
+        File file = tempFolder.newFile("empty.MP3");
+        Files.copy(AUDIO_RESOURCE.getFile(), file);
 
         FileType fileType = fileTypeResolver.resolve(file);
 
