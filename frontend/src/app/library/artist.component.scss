@@ -43,15 +43,16 @@
 
   .artist-name {
     line-height: 50px;
-    margin-left: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
     float: left;
-    max-width: 190px;
+    position: absolute;
+    left: 68px;
+    right: 10px;
     
     &.playing {
-      max-width: 180px;
+      right: 33px;
     }
   }
   
