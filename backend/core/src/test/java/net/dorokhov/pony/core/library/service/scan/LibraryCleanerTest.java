@@ -47,17 +47,17 @@ public class LibraryCleanerTest {
     @Test
     public void shouldDeleteArtistIfUnused() {
 
-        Artist artist1 = Artist.builder().id(1L).build();
-        Artist artist2 = Artist.builder().id(2L).build();
+        Artist artist1 = Artist.builder().id("1").build();
+        Artist artist2 = Artist.builder().id("2").build();
 
-        when(albumRepository.countByArtistId(1L)).thenReturn(0L);
-        when(albumRepository.countByArtistId(2L)).thenReturn(1L);
+        when(albumRepository.countByArtistId("1")).thenReturn(0L);
+        when(albumRepository.countByArtistId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist1)).isTrue();
-        verify(artistRepository).delete(1L);
+        verify(artistRepository).delete("1");
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist2)).isFalse();
-        verify(artistRepository, never()).delete(2L);
+        verify(artistRepository, never()).delete("2");
     }
 
     @Test
@@ -65,56 +65,56 @@ public class LibraryCleanerTest {
 
         Artist artist = Artist.builder().build();
 
-        Album album1 = Album.builder().id(1L).artist(artist).build();
-        Album album2 = Album.builder().id(2L).artist(artist).build();
+        Album album1 = Album.builder().id("1").artist(artist).build();
+        Album album2 = Album.builder().id("2").artist(artist).build();
 
-        when(songRepository.countByAlbumId(1L)).thenReturn(0L);
-        when(songRepository.countByAlbumId(2L)).thenReturn(1L);
+        when(songRepository.countByAlbumId("1")).thenReturn(0L);
+        when(songRepository.countByAlbumId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album1)).isTrue();
-        verify(albumRepository).delete(1L);
+        verify(albumRepository).delete("1");
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album2)).isFalse();
-        verify(albumRepository, never()).delete(2L);
+        verify(albumRepository, never()).delete("2");
     }
 
     @Test
     public void shouldDeleteGenreIfUnused() {
 
-        Genre genre1 = Genre.builder().id(1L).build();
-        Genre genre2 = Genre.builder().id(2L).build();
+        Genre genre1 = Genre.builder().id("1").build();
+        Genre genre2 = Genre.builder().id("2").build();
 
-        when(songRepository.countByGenreId(1L)).thenReturn(0L);
-        when(songRepository.countByGenreId(2L)).thenReturn(1L);
+        when(songRepository.countByGenreId("1")).thenReturn(0L);
+        when(songRepository.countByGenreId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteGenreIfUnused(genre1)).isTrue();
-        verify(genreRepository).delete(1L);
+        verify(genreRepository).delete("1");
 
         assertThat(libraryCleaner.deleteGenreIfUnused(genre2)).isFalse();
-        verify(genreRepository, never()).delete(2L);
+        verify(genreRepository, never()).delete("2");
     }
 
     @Test
     public void shouldDeleteArtworkIfUnused() {
 
-        Artwork artwork1 = artworkBuilder().id(1L).build();
-        Artwork artwork2 = artworkBuilder().id(2L).build();
+        Artwork artwork1 = artworkBuilder().id("1").build();
+        Artwork artwork2 = artworkBuilder().id("2").build();
 
-        when(songRepository.countByArtworkId(1L)).thenReturn(0L);
-        when(songRepository.countByArtworkId(2L)).thenReturn(1L);
+        when(songRepository.countByArtworkId("1")).thenReturn(0L);
+        when(songRepository.countByArtworkId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtworkIfUnused(artwork1)).isTrue();
-        verify(songRepository).clearArtworkByArtworkId(1L);
-        verify(albumRepository).clearArtworkByArtworkId(1L);
-        verify(artistRepository).clearArtworkByArtworkId(1L);
-        verify(genreRepository).clearArtworkByArtworkId(1L);
-        verify(artworkStorage).delete(1L);
+        verify(songRepository).clearArtworkByArtworkId("1");
+        verify(albumRepository).clearArtworkByArtworkId("1");
+        verify(artistRepository).clearArtworkByArtworkId("1");
+        verify(genreRepository).clearArtworkByArtworkId("1");
+        verify(artworkStorage).delete("1");
 
         assertThat(libraryCleaner.deleteArtworkIfUnused(artwork2)).isFalse();
-        verify(songRepository, never()).clearArtworkByArtworkId(2L);
-        verify(albumRepository, never()).clearArtworkByArtworkId(2L);
-        verify(artistRepository, never()).clearArtworkByArtworkId(2L);
-        verify(genreRepository, never()).clearArtworkByArtworkId(2L);
-        verify(artworkStorage, never()).delete(2L);
+        verify(songRepository, never()).clearArtworkByArtworkId("2");
+        verify(albumRepository, never()).clearArtworkByArtworkId("2");
+        verify(artistRepository, never()).clearArtworkByArtworkId("2");
+        verify(genreRepository, never()).clearArtworkByArtworkId("2");
+        verify(artworkStorage, never()).delete("2");
     }
 }

@@ -1,26 +1,21 @@
 package net.dorokhov.pony.api.common;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import javax.annotation.Nullable;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.validation.constraints.NotNull;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.annotation.Nullable;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @MappedSuperclass
-abstract public class BaseEntity<T extends Serializable> {
+abstract public class BaseEntity {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
-    protected T id;
+    protected String id;
 
     @Column(name = "creation_date", nullable = false, updatable = false)
     @NotNull
@@ -29,7 +24,7 @@ abstract public class BaseEntity<T extends Serializable> {
     @Column(name = "update_date", insertable = false)
     protected LocalDateTime updateDate;
 
-    public T getId() {
+    public String getId() {
         return id;
     }
 

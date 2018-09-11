@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.common.JsonAttributeConverter;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
@@ -25,9 +26,10 @@ public class LogMessage implements Serializable {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
-    private Long id;
+    private String id;
 
     @Column(name = "date", nullable = false, updatable = false)
     @NotNull
@@ -63,7 +65,7 @@ public class LogMessage implements Serializable {
     }
 
     @Nullable
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -126,7 +128,7 @@ public class LogMessage implements Serializable {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime date;
         private Level level;
         private String pattern;
@@ -136,7 +138,7 @@ public class LogMessage implements Serializable {
         private Builder() {
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

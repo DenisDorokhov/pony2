@@ -15,27 +15,27 @@ public interface LibraryService {
 
     List<Artist> getArtists();
 
-    List<Song> getSongsByIds(List<Long> ids);
+    List<Song> getSongsByIds(List<String> ids);
 
-    Page<Song> getSongsByGenreId(Long genreId, int pageIndex);
-
-    @Nullable
-    Genre getGenreById(Long genreId);
+    Page<Song> getSongsByGenreId(String genreId, int pageIndex);
 
     @Nullable
-    Artist getArtistById(Long artistId);
+    Genre getGenreById(String genreId);
 
     @Nullable
-    Song getSongById(Long id);
+    Artist getArtistById(String artistId);
 
     @Nullable
-    ArtworkFiles getArtworkFilesById(Long id);
+    Song getSongById(String id);
+
+    @Nullable
+    ArtworkFiles getArtworkFilesById(String id);
 
     List<Song> getRandomSongs(int count);
 
-    List<Song> getRandomSongsByAlbumId(Long albumId, int count);
+    List<Song> getRandomSongsByAlbumId(String albumId, int count);
 
-    List<Song> getRandomSongsByArtistId(Long artistId, int count);
+    List<Song> getRandomSongsByArtistId(String artistId, int count);
 
-    List<Song> getRandomSongsByGenreId(Long genreId, int count);
+    List<Song> getRandomSongsByGenreId(String genreId, int count);
 }

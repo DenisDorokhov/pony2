@@ -12,11 +12,11 @@ public interface ScanFacade {
 
     ScanJobProgressDto getCurrentScanJobProgress() throws ObjectNotFoundException;
     
-    ScanJobProgressDto getScanJobProgress(Long scanJobId) throws ObjectNotFoundException;
+    ScanJobProgressDto getScanJobProgress(String scanJobId) throws ObjectNotFoundException;
 
     ScanJobPageDto getScanJobs(int pageIndex);
     
-    ScanJobDto getScanJob(Long scanJobId) throws ObjectNotFoundException;
+    ScanJobDto getScanJob(String scanJobId) throws ObjectNotFoundException;
 
     ScanJobDto startScanJob() throws ConcurrentScanException;
 }

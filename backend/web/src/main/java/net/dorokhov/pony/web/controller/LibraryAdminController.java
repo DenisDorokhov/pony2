@@ -61,7 +61,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested scan job is not running.", response = ErrorDto.class),
     })
-    public ScanJobProgressDto getScanJobProgress(@PathVariable Long scanJobId) throws ObjectNotFoundException {
+    public ScanJobProgressDto getScanJobProgress(@PathVariable String scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJobProgress(scanJobId);
     }
 
@@ -76,7 +76,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested scan job not found.", response = ErrorDto.class),
     })
-    public ScanJobDto getScanJob(@PathVariable Long scanJobId) throws ObjectNotFoundException {
+    public ScanJobDto getScanJob(@PathVariable String scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJob(scanJobId);
     }
 

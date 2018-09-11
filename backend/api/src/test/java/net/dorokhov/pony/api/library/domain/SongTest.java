@@ -81,9 +81,9 @@ public class SongTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        Song eqSong1 = songBuilder().id(1L).build();
-        Song eqSong2 = songBuilder().id(1L).build();
-        Song diffSong = songBuilder().id(2L).build();
+        Song eqSong1 = songBuilder().id("1").build();
+        Song eqSong2 = songBuilder().id("1").build();
+        Song diffSong = songBuilder().id("2").build();
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
@@ -101,7 +101,7 @@ public class SongTest {
         Album album = Album.builder().artist(artist).build();
         Genre genre = Genre.builder().build();
         return Song.builder()
-                .id(1L)
+                .id("1")
                 .creationDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .path("somePath")

@@ -37,7 +37,7 @@ public final class UserDto extends BaseDto {
 
     private final Role role;
 
-    private UserDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+    private UserDto(String id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
                     String name, String email, Role role) {
         super(id, creationDate, updateDate);
         this.name = checkNotNull(name);

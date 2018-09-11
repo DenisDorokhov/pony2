@@ -23,7 +23,7 @@ import static java.util.Collections.unmodifiableList;
 @Entity
 @Table(name = "artist")
 @Indexed
-public class Artist extends SearchableEntity<Long> implements Comparable<Artist>, Serializable {
+public class Artist extends SearchableEntity implements Comparable<Artist>, Serializable {
 
     @Column(name = "name")
     @Field(analyzer = @Analyzer(definition = ANALYZER))
@@ -97,7 +97,7 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String name;
@@ -116,7 +116,7 @@ public class Artist extends SearchableEntity<Long> implements Comparable<Artist>
             albums = ImmutableList.<Album>builder().addAll(artist.getAlbums());
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

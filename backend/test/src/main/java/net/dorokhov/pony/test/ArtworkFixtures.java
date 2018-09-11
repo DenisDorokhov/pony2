@@ -1,11 +1,11 @@
 package net.dorokhov.pony.test;
 
-import java.io.File;
-import java.time.LocalDateTime;
-
 import net.dorokhov.pony.api.library.domain.Artwork;
 import net.dorokhov.pony.api.library.domain.ArtworkFiles;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.File;
+import java.time.LocalDateTime;
 
 public final class ArtworkFixtures {
 
@@ -26,7 +26,7 @@ public final class ArtworkFixtures {
 
     public static Artwork.Builder artworkBuilder() {
         return Artwork.builder()
-                .id(1L)
+                .id("1")
                 .date(LocalDateTime.now())
                 .mimeType("image/png")
                 .checksum("someChecksum")

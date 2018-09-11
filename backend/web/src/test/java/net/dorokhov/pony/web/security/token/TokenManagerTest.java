@@ -50,10 +50,10 @@ public class TokenManagerTest {
 
         when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
 
-        String token = tokenManager.createAccessToken(1L);
+        String token = tokenManager.createAccessTokenForUserId("1");
 
         assertThat(token).isNotNull();
-        assertThat(tokenManager.verifyAccessToken(token)).isEqualTo(1L);
+        assertThat(tokenManager.verifyAccessTokenAndGetUserId(token)).isEqualTo("1");
     }
 
     @Test
@@ -61,7 +61,8 @@ public class TokenManagerTest {
 
         when(tokenSecretManager.fetchTokenSecret()).thenThrow(new SecretNotFoundException());
 
-        assertThatThrownBy(() -> tokenManager.verifyAccessToken("someToken"));
+        //noinspection ResultOfMethodCallIgnored
+        assertThatThrownBy(() -> tokenManager.verifyAccessTokenAndGetUserId("someToken"));
     }
 
     @Test
@@ -69,7 +70,7 @@ public class TokenManagerTest {
 
         when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
 
-        assertThatThrownBy(() -> tokenManager.verifyAccessToken("invalidToken")).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> tokenManager.verifyAccessTokenAndGetUserId("invalidToken")).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
@@ -78,17 +79,6 @@ public class TokenManagerTest {
         when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
         String token = JWT.create().sign(Algorithm.HMAC256("someSecret"));
 
-        assertThatThrownBy(() -> tokenManager.verifyAccessToken(token)).isInstanceOf(InvalidTokenException.class);
-    }
-
-    @Test
-    public void shouldFailVerificationOnInvalidSubject() throws SecretNotFoundException, IOException {
-
-        when(tokenSecretManager.fetchTokenSecret()).thenReturn("someSecret");
-        String token = JWT.create()
-                .withSubject("invalidSubject")
-                .sign(Algorithm.HMAC256("someSecret"));
-
-        assertThatThrownBy(() -> tokenManager.verifyAccessToken(token)).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> tokenManager.verifyAccessTokenAndGetUserId(token)).isInstanceOf(InvalidTokenException.class);
     }
 }

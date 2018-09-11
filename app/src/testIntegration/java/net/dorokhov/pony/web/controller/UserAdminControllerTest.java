@@ -175,25 +175,9 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUserUpdateOnInvalidId() {
-
-        UserUpdateCommandDto command = new UserUpdateCommandDto(0L, "someName", "some@email.com",
-                "somePassword", UserDto.Role.USER);
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/1000", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).satisfies(error -> 
-            assertThat(error.getCode()).isSameAs(ErrorDto.Code.BAD_REQUEST));
-    }
-
-    @Test
     public void shouldFailUserUpdateOnNotExistingUser() {
 
-        UserUpdateCommandDto command = new UserUpdateCommandDto(1000L, "someName", "some@email.com",
+        UserUpdateCommandDto command = new UserUpdateCommandDto("1000", "someName", "some@email.com",
                 "somePassword", UserDto.Role.USER);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 

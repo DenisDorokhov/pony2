@@ -104,8 +104,8 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetAllScanJobs() throws ConcurrentScanException {
 
-        Long scanJob1 = createAndFinishScanJob();
-        Long scanJob2 = createAndFinishScanJob();
+        String scanJob1 = createAndFinishScanJob();
+        String scanJob2 = createAndFinishScanJob();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ScanJobPageDto> response = apiTemplate.getRestTemplate().exchange(
@@ -129,7 +129,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetScanJobById() throws ConcurrentScanException {
 
-        Long scanJobId = createAndFinishScanJob();
+        String scanJobId = createAndFinishScanJob();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ScanJobDto> response = apiTemplate.getRestTemplate().exchange(
@@ -246,13 +246,13 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         scanTestPlanExecutor.verify(scanJob.getId(), context);
     }
 
-    private Long createAndFinishScanJob() throws ConcurrentScanException {
+    private String createAndFinishScanJob() throws ConcurrentScanException {
         ScanJob scanJob = scanJobService.startScanJob();
         await().until(() -> scanJobService.getById(scanJob.getId()).getStatus() == Status.COMPLETE);
         return scanJob.getId();
     }
 
-    private void checkScanJobDto(ScanJobDto dto, Long scanJobId) {
+    private void checkScanJobDto(ScanJobDto dto, String scanJobId) {
         getTransactionTemplate().execute(status -> {
             ScanJob scanJob = scanJobService.getById(scanJobId);
             assertThat(dto.getId()).isEqualTo(scanJob.getId());

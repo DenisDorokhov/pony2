@@ -56,13 +56,13 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getSongsByIds(List<Long> ids) {
+    public List<Song> getSongsByIds(List<String> ids) {
         return songRepository.findAll(ids);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Song> getSongsByGenreId(Long genreId, int pageIndex) {
+    public Page<Song> getSongsByGenreId(String genreId, int pageIndex) {
         return songRepository.findByGenreId(genreId, new PageRequest(pageIndex, PAGE_SIZE, 
                 new Sort("album.year", "album.name", "discNumber", "trackNumber", "name")));
     }
@@ -70,28 +70,28 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public Genre getGenreById(Long genreId) {
+    public Genre getGenreById(String genreId) {
         return genreRepository.findOne(genreId);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public Artist getArtistById(Long id) {
+    public Artist getArtistById(String id) {
         return artistRepository.findOne(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public Song getSongById(Long id) {
+    public Song getSongById(String id) {
         return songRepository.findOne(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public ArtworkFiles getArtworkFilesById(Long id) {
+    public ArtworkFiles getArtworkFilesById(String id) {
         return artworkStorage.getArtworkFile(id);
     }
 
@@ -114,7 +114,7 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getRandomSongsByAlbumId(Long albumId, int count) {
+    public List<Song> getRandomSongsByAlbumId(String albumId, int count) {
         return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
 
             @Override
@@ -131,7 +131,7 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getRandomSongsByArtistId(Long artistId, int count) {
+    public List<Song> getRandomSongsByArtistId(String artistId, int count) {
         return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
 
             @Override
@@ -148,7 +148,7 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getRandomSongsByGenreId(Long genreId, int count) {
+    public List<Song> getRandomSongsByGenreId(String genreId, int count) {
         return randomFetcher.fetch(count, new RandomFetcher.Repository<Song>() {
 
             @Override

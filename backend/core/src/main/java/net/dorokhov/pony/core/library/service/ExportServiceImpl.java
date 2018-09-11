@@ -44,7 +44,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public ExportBundle exportSong(Long id) {
+    public ExportBundle exportSong(String id) {
 
         Song song = songRepository.findOne(id);
         if (song == null) {
@@ -73,7 +73,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public ExportBundle exportAlbum(Long id) {
+    public ExportBundle exportAlbum(String id) {
 
         List<Song> songList = songRepository.findByAlbumId(id,
                 new Sort("discNumber", "trackNumber", "name"));
@@ -91,7 +91,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public ExportBundle exportArtist(Long id) {
+    public ExportBundle exportArtist(String id) {
 
         List<Song> songList = songRepository.findByAlbumArtistId(id,
                 new Sort("album.year", "album.name", "discNumber", "trackNumber", "name"));
@@ -135,7 +135,7 @@ public class ExportServiceImpl implements ExportService {
 
     private List<ZipEntry> songsToZipEntries(List<Song> songList) {
 
-        Map<Long, Integer> albumToDiscCount = new HashMap<>();
+        Map<String, Integer> albumToDiscCount = new HashMap<>();
         for (Song song : songList) {
             Integer discCount = albumToDiscCount.get(song.getAlbum().getId());
             if (song.getDiscNumber() != null && song.getDiscNumber() > 1) {

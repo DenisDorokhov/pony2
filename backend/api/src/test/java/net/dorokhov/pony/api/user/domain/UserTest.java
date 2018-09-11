@@ -9,9 +9,9 @@ public class UserTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        User eqUser1 = userBuilder().id(1L).build();
-        User eqUser2 = userBuilder().id(1L).build();
-        User diffUser = userBuilder().id(2L).build();
+        User eqUser1 = userBuilder().id("1").build();
+        User eqUser2 = userBuilder().id("1").build();
+        User diffUser = userBuilder().id("2").build();
 
         assertThat(eqUser1.hashCode()).isEqualTo(eqUser2.hashCode());
         assertThat(eqUser1.hashCode()).isNotEqualTo(diffUser.hashCode());

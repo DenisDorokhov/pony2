@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 
-public interface LogMessageRepository extends JpaRepository<LogMessage, Long> {
+public interface LogMessageRepository extends JpaRepository<LogMessage, String> {
 
     Page<LogMessage> findByLevelGreaterThanEqual(LogMessage.Level level, Pageable pageable);
     Page<LogMessage> findByLevelGreaterThanEqualAndDateBetween(LogMessage.Level level, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);

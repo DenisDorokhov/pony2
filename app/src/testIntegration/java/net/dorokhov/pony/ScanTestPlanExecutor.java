@@ -89,7 +89,7 @@ public class ScanTestPlanExecutor {
     }
 
     @Transactional(readOnly = true)
-    public void verify(Long scanJobId, Context context) {
+    public void verify(String scanJobId, Context context) {
         verifyScanJob(scanJobService.getById(scanJobId), context);
         verifyGenres(context);
         verifyArtists(context);

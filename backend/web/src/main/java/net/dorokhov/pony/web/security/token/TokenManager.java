@@ -5,9 +5,8 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.common.primitives.Longs;
-import net.dorokhov.pony.web.service.exception.SecretNotFoundException;
 import net.dorokhov.pony.web.security.token.exception.InvalidTokenException;
+import net.dorokhov.pony.web.service.exception.SecretNotFoundException;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -31,13 +30,13 @@ public class TokenManager {
         }
     }
 
-    public String createAccessToken(Long userId) {
+    public String createAccessTokenForUserId(String userId) {
         return JWT.create()
-                .withSubject(userId.toString())
+                .withSubject(userId)
                 .sign(buildSignatureAlgorithm());
     }
 
-    public Long verifyAccessToken(String token) throws InvalidTokenException {
+    public String verifyAccessTokenAndGetUserId(String token) throws InvalidTokenException {
         JWTVerifier verifier = JWT.require(buildSignatureAlgorithm()).build();
         DecodedJWT jwt;
         try {
@@ -49,11 +48,7 @@ public class TokenManager {
         if (subject == null) {
             throw new InvalidTokenException();
         }
-        Long userId = Longs.tryParse(subject);
-        if (userId == null) {
-            throw new InvalidTokenException();
-        }
-        return userId;
+        return subject;
     }
 
     private Algorithm buildSignatureAlgorithm() {

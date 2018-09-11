@@ -112,9 +112,9 @@ public class BatchLibraryArtworkFinder {
         );
     }
 
-    private <T extends BaseEntity<Long>> void walkThroughAndProcessPages(Function<Pageable, Page<T>> requestExecutor, Consumer<List<Long>> responseProcessor) {
+    private <T extends BaseEntity> void walkThroughAndProcessPages(Function<Pageable, Page<T>> requestExecutor, Consumer<List<String>> responseProcessor) {
         Pageable pageable = new PageRequest(0, artworkSearchBufferSize, new Sort("id"));
-        List<Long> responses = new ArrayList<>();
+        List<String> responses = new ArrayList<>();
         while (pageable != null) {
             Page<T> responsePage = requestExecutor.apply(pageable);
             responses.addAll(responsePage.getContent().stream()
@@ -122,7 +122,7 @@ public class BatchLibraryArtworkFinder {
                     .collect(Collectors.toList()));
             pageable = responsePage.nextPageable();
         }
-        for (List<Long> chunk : Lists.partition(responses, artworkSearchBufferSize)) {
+        for (List<String> chunk : Lists.partition(responses, artworkSearchBufferSize)) {
             responseProcessor.accept(chunk);
         }
     }

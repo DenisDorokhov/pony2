@@ -1,11 +1,11 @@
 export interface AlbumDto {
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   name: string | undefined;
   year: number | undefined;
-  artworkId: number | undefined;
-  artistId: number;
+  artworkId: string | undefined;
+  artistId: string;
 }
 
 export interface AlbumSongsDto {
@@ -14,11 +14,11 @@ export interface AlbumSongsDto {
 }
 
 export interface ArtistDto {
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   name: string | undefined;
-  artworkId: number | undefined;
+  artworkId: string | undefined;
 }
 
 export interface ArtistSongsDto {
@@ -27,7 +27,7 @@ export interface ArtistSongsDto {
 }
 
 export class SongDto {
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   mimeType: string;
@@ -40,6 +40,6 @@ export class SongDto {
   trackNumber: number | undefined;
   name: string | undefined;
   artistName: string | undefined;
-  albumId: number;
-  genreId: number;
+  albumId: string;
+  genreId: string;
 }

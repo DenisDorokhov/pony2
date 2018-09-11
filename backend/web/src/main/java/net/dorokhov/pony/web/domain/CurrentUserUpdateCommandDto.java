@@ -52,7 +52,7 @@ public final class CurrentUserUpdateCommandDto {
         return newPassword;
     }
 
-    public SafeUserUpdateCommand convert(Long userId) {
+    public SafeUserUpdateCommand convert(String userId) {
         return SafeUserUpdateCommand.builder()
                 .id(userId)
                 .name(name)

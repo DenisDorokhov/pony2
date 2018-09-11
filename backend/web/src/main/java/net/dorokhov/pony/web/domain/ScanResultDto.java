@@ -11,7 +11,7 @@ import static java.util.Collections.unmodifiableList;
 
 public final class ScanResultDto {
 
-    private final Long id;
+    private final String id;
     private final LocalDateTime date;
     
     private final ScanType scanType;
@@ -50,7 +50,7 @@ public final class ScanResultDto {
     private final Integer createdArtworkCount;
     private final Integer deletedArtworkCount;
 
-    private ScanResultDto(Long id, LocalDateTime date, ScanType scanType,
+    private ScanResultDto(String id, LocalDateTime date, ScanType scanType,
                           List<String> targetPaths, List<String> failedPaths,
                           Integer processedAudioFileCount, Long duration, Long songSize, Long artworkSize,
                           Integer genreCount, Integer artistCount, Integer albumCount, Integer songCount, Integer artworkCount,
@@ -89,7 +89,7 @@ public final class ScanResultDto {
         this.deletedArtworkCount = checkNotNull(deletedArtworkCount);
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

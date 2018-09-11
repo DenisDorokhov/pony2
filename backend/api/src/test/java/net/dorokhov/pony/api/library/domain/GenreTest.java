@@ -24,9 +24,9 @@ public class GenreTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
         
-        Genre eqGenre1 = Genre.builder().id(1L).build();
-        Genre eqGenre2 = Genre.builder().id(1L).build();
-        Genre diffGenre = Genre.builder().id(2L).build();
+        Genre eqGenre1 = Genre.builder().id("1").build();
+        Genre eqGenre2 = Genre.builder().id("1").build();
+        Genre diffGenre = Genre.builder().id("2").build();
 
         assertThat(eqGenre1.hashCode()).isEqualTo(eqGenre2.hashCode());
         assertThat(eqGenre1.hashCode()).isNotEqualTo(diffGenre.hashCode());

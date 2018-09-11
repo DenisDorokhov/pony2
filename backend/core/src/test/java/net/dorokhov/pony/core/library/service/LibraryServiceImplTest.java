@@ -69,27 +69,27 @@ public class LibraryServiceImplTest {
     public void shouldGetArtistById() {
 
         Artist artist = Artist.builder().build();
-        when(artistRepository.findOne((Long) any())).thenReturn(artist);
+        when(artistRepository.findOne((String) any())).thenReturn(artist);
 
-        assertThat(libraryService.getArtistById(1L)).isSameAs(artist);
+        assertThat(libraryService.getArtistById("1")).isSameAs(artist);
     }
 
     @Test
     public void shouldGetGenreById() {
 
         Genre genre = Genre.builder().build();
-        when(genreRepository.findOne((Long) any())).thenReturn(genre);
+        when(genreRepository.findOne((String) any())).thenReturn(genre);
 
-        assertThat(libraryService.getGenreById(1L)).isSameAs(genre);
+        assertThat(libraryService.getGenreById("1")).isSameAs(genre);
     }
 
     @Test
     public void shouldGetSongById() {
 
         Song song = song();
-        when(songRepository.findOne((Long) any())).thenReturn(song);
+        when(songRepository.findOne((String) any())).thenReturn(song);
 
-        assertThat(libraryService.getSongById(1L)).isSameAs(song);
+        assertThat(libraryService.getSongById("1")).isSameAs(song);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class LibraryServiceImplTest {
         List<Song> songs = ImmutableList.of(song(), song());
         when(songRepository.findByGenreId(any(), any())).thenReturn(new PageImpl<>(songs));
 
-        Page<Song> result = libraryService.getSongsByGenreId(1L, 0);
+        Page<Song> result = libraryService.getSongsByGenreId("1", 0);
 
         assertThat(result.getContent()).isEqualTo(songs);
     }
@@ -109,17 +109,17 @@ public class LibraryServiceImplTest {
         ArtworkFiles artworkFiles = new ArtworkFiles(artwork(), mock(File.class), mock(File.class));
         when(artworkStorage.getArtworkFile(any())).thenReturn(artworkFiles);
 
-        assertThat(libraryService.getArtworkFilesById(1L)).isSameAs(artworkFiles);
+        assertThat(libraryService.getArtworkFilesById("1")).isSameAs(artworkFiles);
     }
 
     @Test
     public void shouldGetSongsByIds() {
 
         List<Song> songs = ImmutableList.of(
-                songBuilder().id(1L).build(), songBuilder().id(2L).build());
+                songBuilder().id("1").build(), songBuilder().id("2").build());
         when(songRepository.findAll(anyIterable())).thenReturn(songs);
 
-        List<Song> result = libraryService.getSongsByIds(ImmutableList.of(1L, 2L));
+        List<Song> result = libraryService.getSongsByIds(ImmutableList.of("1", "2"));
 
         assertThat(result).isEqualTo(songs);
     }
@@ -155,10 +155,10 @@ public class LibraryServiceImplTest {
             return songs;
         });
 
-        assertThat(libraryService.getRandomSongsByAlbumId(1L, 3)).isSameAs(songs);
+        assertThat(libraryService.getRandomSongsByAlbumId("1", 3)).isSameAs(songs);
 
-        verify(songRepository).countByAlbumId(1L);
-        verify(songRepository).findByAlbumId(eq(1L), (Pageable) any());
+        verify(songRepository).countByAlbumId("1");
+        verify(songRepository).findByAlbumId(eq("1"), (Pageable) any());
     }
 
     @Test
@@ -173,10 +173,10 @@ public class LibraryServiceImplTest {
             return songs;
         });
 
-        assertThat(libraryService.getRandomSongsByArtistId(1L, 4)).isSameAs(songs);
+        assertThat(libraryService.getRandomSongsByArtistId("1", 4)).isSameAs(songs);
 
-        verify(songRepository).countByAlbumArtistId(1L);
-        verify(songRepository).findByAlbumArtistId(eq(1L), (Pageable) any());
+        verify(songRepository).countByAlbumArtistId("1");
+        verify(songRepository).findByAlbumArtistId(eq("1"), (Pageable) any());
     }
 
     @Test
@@ -192,9 +192,9 @@ public class LibraryServiceImplTest {
             return songs;
         });
 
-        assertThat(libraryService.getRandomSongsByGenreId(1L, 5)).isSameAs(songs);
+        assertThat(libraryService.getRandomSongsByGenreId("1", 5)).isSameAs(songs);
 
-        verify(songRepository).countByGenreId(1L);
-        verify(songRepository).findByGenreId(eq(1L), any());
+        verify(songRepository).countByGenreId("1");
+        verify(songRepository).findByGenreId(eq("1"), any());
     }
 }

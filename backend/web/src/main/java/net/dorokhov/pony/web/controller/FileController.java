@@ -48,7 +48,7 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested song not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> getAudio(@PathVariable Long songId,
+    public ResponseEntity<?> getAudio(@PathVariable String songId,
                                       HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getSongDistribution(songId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -59,7 +59,7 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artwork not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> getLargeArtwork(@PathVariable Long artworkId,
+    public ResponseEntity<?> getLargeArtwork(@PathVariable String artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getLargeArtworkDistribution(artworkId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -70,7 +70,7 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artwork not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> getSmallArtwork(@PathVariable Long artworkId,
+    public ResponseEntity<?> getSmallArtwork(@PathVariable String artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getSmallArtworkDistribution(artworkId), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -81,7 +81,7 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested song not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> exportSong(@PathVariable Long songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
+    public ResponseEntity<?> exportSong(@PathVariable String songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = fileFacade.exportSong(songId);
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {
@@ -95,7 +95,7 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested album not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> exportAlbum(@PathVariable Long albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
+    public ResponseEntity<?> exportAlbum(@PathVariable String albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = fileFacade.exportAlbum(albumId);
         setExportBundleHeaders(exportBundle, response);
         try (OutputStream outputStream = response.getOutputStream()) {

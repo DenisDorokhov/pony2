@@ -29,11 +29,11 @@ public interface ScanJobService {
     ScanJobProgress getCurrentScanJobProgress();
     
     @Nullable
-    ScanJobProgress getScanJobProgress(Long id);
+    ScanJobProgress getScanJobProgress(String id);
 
     Page<ScanJob> getAll(Pageable pageable);
 
-    ScanJob getById(Long id);
+    ScanJob getById(String id);
     
     @Nullable
     ScanJob getLastSuccessfulJob();

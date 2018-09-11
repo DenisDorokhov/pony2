@@ -12,7 +12,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class UnsafeUserUpdateCommand {
     
-    private final Long id;
+    private final String id;
     private final String name;
     private final String email;
     private final String newPassword;
@@ -26,7 +26,7 @@ public final class UnsafeUserUpdateCommand {
         roles = builder.roles.build();
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -53,13 +53,13 @@ public final class UnsafeUserUpdateCommand {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private String name;
         private String email;
         private String newPassword;
         private ImmutableSet.Builder<User.Role> roles = ImmutableSet.builder();
 
-        public Builder id(Long id) {
+        public Builder id(String id) {
             this.id = id;
             return this;
         }

@@ -6,7 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class SafeUserUpdateCommand {
 
-    private final Long id;
+    private final String id;
     private final String name;
     private final String email;
     private final String oldPassword;
@@ -20,7 +20,7 @@ public final class SafeUserUpdateCommand {
         newPassword = builder.newPassword;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -47,13 +47,13 @@ public final class SafeUserUpdateCommand {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private String name;
         private String email;
         private String oldPassword;
         private String newPassword;
 
-        public Builder id(Long id) {
+        public Builder id(String id) {
             this.id = id;
             return this;
         }

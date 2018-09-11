@@ -45,9 +45,9 @@ public class AlbumTest {
 
         Artist artist = new Artist();
 
-        Album eqAlbum1 = Album.builder().id(1L).artist(artist).build();
-        Album eqAlbum2 = Album.builder().id(1L).artist(artist).build();
-        Album diffAlbum = Album.builder().id(2L).artist(artist).build();
+        Album eqAlbum1 = Album.builder().id("1").artist(artist).build();
+        Album eqAlbum2 = Album.builder().id("1").artist(artist).build();
+        Album diffAlbum = Album.builder().id("2").artist(artist).build();
 
         assertThat(eqAlbum1.hashCode()).isEqualTo(eqAlbum2.hashCode());
         assertThat(eqAlbum1.hashCode()).isNotEqualTo(diffAlbum.hashCode());

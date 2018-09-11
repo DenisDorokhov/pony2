@@ -100,9 +100,9 @@ public class ScanJobServiceImplTest {
     public void shouldGetById() {
 
         ScanJob scanJob = scanJobFull();
-        when(scanJobRepository.findOne((Long) any())).thenReturn(scanJob);
+        when(scanJobRepository.findOne((String) any())).thenReturn(scanJob);
 
-        assertThat(scanJobService.getById(1L)).isSameAs(scanJob);
+        assertThat(scanJobService.getById("1")).isSameAs(scanJob);
     }
 
     @Test
@@ -194,7 +194,7 @@ public class ScanJobServiceImplTest {
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);
 
-        ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
+        ScanJob scanJobStarting = scanJobService.startEditJob(ImmutableList.of(new EditCommand("1", writableAudioData())));
         assertThat(scanJobStarting.getScanType()).isSameAs(ScanType.EDIT);
         assertThat(scanJobStarting.getStatus()).isSameAs(STARTING);
         assertThat(scanJobStarting.getLogMessage()).isNotNull();
@@ -283,7 +283,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldFailEditJobOnSongNotFoundException() throws ConcurrentScanException, IOException, SongNotFoundException {
 
-        doTestFailEditJobOnException(new SongNotFoundException(1L));
+        doTestFailEditJobOnException(new SongNotFoundException("1"));
 
         verify(logService).error(any(), any(), any());
     }
@@ -344,7 +344,7 @@ public class ScanJobServiceImplTest {
         when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
-        when(scanJobRepository.findOne((Long) any())).thenReturn(scanJobFull());
+        when(scanJobRepository.findOne((String) any())).thenReturn(scanJobFull());
         when(libraryScanner.scan(any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
@@ -375,13 +375,13 @@ public class ScanJobServiceImplTest {
 
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save((ScanJob) any())).then(returnsFirstArg());
-        when(scanJobRepository.findOne((Long) any())).thenReturn(scanJobEdit());
+        when(scanJobRepository.findOne((String) any())).thenReturn(scanJobEdit());
         when(libraryScanner.edit(any(), any(), any())).thenThrow(e);
 
         ScanJobServiceObserver observer = new ScanJobServiceObserver();
         scanJobService.addObserver(observer);
 
-        scanJobService.startEditJob(ImmutableList.of(new EditCommand(1L, writableAudioData())));
+        scanJobService.startEditJob(ImmutableList.of(new EditCommand("1", writableAudioData())));
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 

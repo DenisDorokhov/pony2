@@ -25,16 +25,15 @@ public final class SongDto extends BaseDto {
 
     private final String artistName;
 
-    private final Long albumId;
+    private final String albumId;
+    private final String genreId;
 
-    private final Long genreId;
-
-    private SongDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+    private SongDto(String id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
                     String mimeType, String fileExtension, Long size, Long duration,
                     Long bitRate, Boolean bitRateVariable,
                     @Nullable Integer discNumber, @Nullable Integer trackNumber,
                     @Nullable String name, @Nullable String artistName,
-                    Long albumId, Long genreId) {
+                    String albumId, String genreId) {
         super(id, creationDate, updateDate);
         this.mimeType = checkNotNull(mimeType);
         this.fileExtension = checkNotNull(fileExtension);
@@ -94,11 +93,11 @@ public final class SongDto extends BaseDto {
         return artistName;
     }
 
-    public Long getAlbumId() {
+    public String getAlbumId() {
         return albumId;
     }
 
-    public Long getGenreId() {
+    public String getGenreId() {
         return genreId;
     }
 

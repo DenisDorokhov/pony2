@@ -80,17 +80,17 @@ public class BatchLibraryCleanerTest {
         when(audioNode2.getFile()).thenReturn(file2);
 
         Artwork artwork = artwork();
-        Song song1 = songBuilder().id(1L).path(file1.getAbsolutePath()).build();
-        Song song2 = songBuilder().id(2L).path(file2.getAbsolutePath()).build();
-        Song song3 = songBuilder().id(3L).path("notExistingPath3").build();
-        Song song4 = songBuilder().id(4L).path("notExistingPath4").artwork(artwork).build();
-        Song song5 = songBuilder().id(5L).path("notExistingPath4").build();
+        Song song1 = songBuilder().id("1").path(file1.getAbsolutePath()).build();
+        Song song2 = songBuilder().id("2").path(file2.getAbsolutePath()).build();
+        Song song3 = songBuilder().id("3").path("notExistingPath3").build();
+        Song song4 = songBuilder().id("4").path("notExistingPath4").artwork(artwork).build();
+        Song song5 = songBuilder().id("5").path("notExistingPath4").build();
 
         when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
                 ImmutableList.of(song1, song2, song3, song4, song5)));
-        when(songRepository.findOne(3L)).thenReturn(song3);
-        when(songRepository.findOne(4L)).thenReturn(song4);
-        when(songRepository.findOne(5L)).thenReturn(null);
+        when(songRepository.findOne("3")).thenReturn(song3);
+        when(songRepository.findOne("4")).thenReturn(song4);
+        when(songRepository.findOne("5")).thenReturn(null);
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryCleaner.cleanSongs(ImmutableList.of(audioNode1, audioNode2), observer);
@@ -126,24 +126,24 @@ public class BatchLibraryCleanerTest {
         when(imageNode2.getFile()).thenReturn(file2);
 
         Artwork artwork1 = artworkBuilder()
-                .id(1L)
+                .id("1")
                 .sourceUri(file1.toURI())
                 .build();
         Artwork artwork2 = artworkBuilder()
-                .id(2L)
+                .id("2")
                 .date(LocalDateTime.now().minusDays(1))
                 .sourceUri(file2.toURI())
                 .build();
         Artwork artwork3 = artworkBuilder()
-                .id(3L)
+                .id("3")
                 .sourceUri(new File("notExistingPath3").toURI())
                 .build();
         Artwork artwork4 = artworkBuilder()
-                .id(4L)
+                .id("4")
                 .sourceUri(new File("notExistingPath4").toURI())
                 .build();
         Artwork artwork5 = artworkBuilder()
-                .id(4L)
+                .id("5")
                 .sourceUri(UriComponentsBuilder
                         .fromUriString("http://google.com/logo.png")
                         .build().toUri())
@@ -151,9 +151,9 @@ public class BatchLibraryCleanerTest {
 
         when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
                 ImmutableList.of(artwork1, artwork2, artwork3, artwork4, artwork5)));
-        when(artworkRepository.findOne(2L)).thenReturn(artwork2);
-        when(artworkRepository.findOne(3L)).thenReturn(artwork3);
-        when(artworkRepository.findOne(4L)).thenReturn(null);
+        when(artworkRepository.findOne("2")).thenReturn(artwork2);
+        when(artworkRepository.findOne("3")).thenReturn(artwork3);
+        when(artworkRepository.findOne("4")).thenReturn(null);
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryCleaner.cleanArtworks(ImmutableList.of(imageNode1, imageNode2), observer);

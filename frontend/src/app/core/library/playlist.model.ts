@@ -16,7 +16,7 @@ export interface Playlist {
   hasPreviousSong(): boolean;
 
   switchToIndex(index: number): Song;
-  switchToSong(songId: number): Song | undefined;
+  switchToSong(songId: string): Song | undefined;
   switchToNextSong(): Observable<Song | undefined>;
   switchToPreviousSong(): Observable<Song | undefined>;
 }
@@ -69,7 +69,7 @@ export class StaticPlaylist implements Playlist {
     return song;
   }
 
-  switchToSong(songId: number): Song | undefined {
+  switchToSong(songId: string): Song | undefined {
     const targetIndex = this._queue.findIndex(song => song.id === songId);
     if (targetIndex >= 0) {
       return this.switchToIndex(targetIndex);

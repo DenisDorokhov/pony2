@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Entity
 @Table(name = "song")
 @Indexed
-public class Song extends SearchableEntity<Long> implements Comparable<Song>, Serializable {
+public class Song extends SearchableEntity implements Comparable<Song>, Serializable {
 
     @Column(name = "path", nullable = false, unique = true)
     @NotNull
@@ -236,8 +236,8 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
     @Override
     public int compareTo(@Nonnull Song song) {
         return ComparisonChain.start()
-                .compare(album.getArtist(), song.album.getArtist())
-                .compare(album, song.album)
+                .compare(getAlbum().getArtist(), song.getAlbum().getArtist())
+                .compare(getAlbum(), song.getAlbum())
                 .compare(discNumber, song.discNumber, Ordering.natural().nullsLast())
                 .compare(trackNumber, song.trackNumber, Ordering.natural().nullsLast())
                 .compare(name, song.name, Ordering.natural().nullsLast())
@@ -266,7 +266,7 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String path;
@@ -317,7 +317,7 @@ public class Song extends SearchableEntity<Long> implements Comparable<Song>, Se
             genre = song.getGenre();
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 
-public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
+public interface ArtworkRepository extends JpaRepository<Artwork, String> {
 
     long countByDateGreaterThan(LocalDateTime date);
 

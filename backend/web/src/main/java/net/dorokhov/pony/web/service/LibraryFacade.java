@@ -7,23 +7,23 @@ import java.util.List;
 
 public interface LibraryFacade {
     
-    List<SongDetailsDto> getSongs(List<Long> songIds);
+    List<SongDetailsDto> getSongs(List<String> songIds);
 
     List<ArtistDto> getArtists();
 
-    ArtistSongsDto getArtistSongs(Long artistId) throws ObjectNotFoundException;
+    ArtistSongsDto getArtistSongs(String artistId) throws ObjectNotFoundException;
 
     List<GenreDto> getGenres();
 
-    GenreSongsPageDto getGenreSongs(Long genreId, int pageIndex) throws ObjectNotFoundException;
+    GenreSongsPageDto getGenreSongs(String genreId, int pageIndex) throws ObjectNotFoundException;
 
     SearchResultDto search(String query);
 
     List<SongDetailsDto> getRandomSongs(int count);
 
-    List<SongDetailsDto> getRandomSongsByAlbumId(Long albumId, int count);
+    List<SongDetailsDto> getRandomSongsByAlbumId(String albumId, int count);
 
-    List<SongDetailsDto> getRandomSongsByArtistId(Long artistId, int count);
+    List<SongDetailsDto> getRandomSongsByArtistId(String artistId, int count);
 
-    List<SongDetailsDto> getRandomSongsByGenreId(Long genreId, int count);
+    List<SongDetailsDto> getRandomSongsByGenreId(String genreId, int count);
 }

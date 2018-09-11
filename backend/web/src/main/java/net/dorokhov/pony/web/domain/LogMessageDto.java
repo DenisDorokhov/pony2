@@ -11,14 +11,14 @@ import static java.util.Collections.unmodifiableList;
 
 public final class LogMessageDto {
 
-    private final Long id;
+    private final String id;
     private final LocalDateTime date;
     private final Level level;
     private final String pattern;
     private final List<String> arguments;
     private final String text;
 
-    private LogMessageDto(Long id, LocalDateTime date, Level level, String pattern, List<String> arguments, String text) {
+    private LogMessageDto(String id, LocalDateTime date, Level level, String pattern, List<String> arguments, String text) {
         this.id = checkNotNull(id);
         this.date = checkNotNull(date);
         this.level = checkNotNull(level);
@@ -27,7 +27,7 @@ public final class LogMessageDto {
         this.text = checkNotNull(text);
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

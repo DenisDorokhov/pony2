@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import java.util.Collections;
 import java.util.List;
 
 import static org.apache.lucene.search.BooleanClause.Occur.MUST;
@@ -56,7 +57,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, String searchField) {
+    private <T extends Comparable> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, String searchField) {
 
         FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
 
@@ -75,6 +76,8 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
         
         FullTextQuery jpaQuery = fullTextEntityManager.createFullTextQuery(luceneQuery.build(), clazz);
         jpaQuery.setMaxResults(maxResults);
-        return jpaQuery.getResultList();
+        List<T> result = jpaQuery.getResultList();
+        Collections.sort(result);
+        return result;
     }
 }

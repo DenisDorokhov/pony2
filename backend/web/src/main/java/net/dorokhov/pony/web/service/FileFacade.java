@@ -6,10 +6,10 @@ import net.dorokhov.pony.web.service.exception.ObjectNotFoundException;
 
 public interface FileFacade {
 
-    FileDistribution getSongDistribution(Long songId) throws ObjectNotFoundException;
-    FileDistribution getLargeArtworkDistribution(Long artworkId) throws ObjectNotFoundException;
-    FileDistribution getSmallArtworkDistribution(Long artworkId) throws ObjectNotFoundException;
+    FileDistribution getSongDistribution(String songId) throws ObjectNotFoundException;
+    FileDistribution getLargeArtworkDistribution(String artworkId) throws ObjectNotFoundException;
+    FileDistribution getSmallArtworkDistribution(String artworkId) throws ObjectNotFoundException;
 
-    ExportBundle exportSong(Long songId) throws ObjectNotFoundException;
-    ExportBundle exportAlbum(Long albumId) throws ObjectNotFoundException;
+    ExportBundle exportSong(String songId) throws ObjectNotFoundException;
+    ExportBundle exportAlbum(String albumId) throws ObjectNotFoundException;
 }

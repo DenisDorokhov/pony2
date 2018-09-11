@@ -24,7 +24,7 @@ public final class ScanJobFixtures {
 
     public static ScanJob.Builder scanJobBuilder(ScanType scanType) {
         return ScanJob.builder()
-                .id(1L)
+                .id("1")
                 .creationDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .status(ScanJob.Status.STARTING)

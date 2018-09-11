@@ -64,7 +64,7 @@ public class ArtworkStorage {
 
     @Transactional(readOnly = true)
     @Nullable
-    public ArtworkFiles getArtworkFile(Long artworkId) {
+    public ArtworkFiles getArtworkFile(String artworkId) {
         Artwork artwork = artworkRepository.findOne(artworkId);
         if (artwork == null) {
             return null;
@@ -105,7 +105,7 @@ public class ArtworkStorage {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(String id) {
         Artwork artwork = artworkRepository.findOne(id);
         if (artwork != null) {
             File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
@@ -189,8 +189,8 @@ public class ArtworkStorage {
 
     private String buildImagePath(String name, String suffix, String extension) {
         StringBuilder builder = new StringBuilder();
-        builder.append(name.substring(0, 2)).append("/");
-        builder.append(name.substring(2, 4)).append("/");
+        builder.append(name, 0, 2).append("/");
+        builder.append(name, 2, 4).append("/");
         builder.append(name).append(".").append(suffix).append(".").append(extension);
         return builder.toString();
     }

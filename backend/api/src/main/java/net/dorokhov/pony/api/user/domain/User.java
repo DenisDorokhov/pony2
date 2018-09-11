@@ -22,7 +22,7 @@ import static org.hibernate.annotations.CacheConcurrencyStrategy.NONSTRICT_READ_
 @Table(name = "user")
 @Cacheable
 @Cache(usage = NONSTRICT_READ_WRITE, region = CACHE_REGION)
-public class User extends BaseEntity<Long> implements Serializable {
+public class User extends BaseEntity implements Serializable {
     
     public static final String CACHE_REGION = "pony.user";
 
@@ -97,7 +97,7 @@ public class User extends BaseEntity<Long> implements Serializable {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String name;
@@ -118,7 +118,7 @@ public class User extends BaseEntity<Long> implements Serializable {
             roles = ImmutableSet.<Role>builder().addAll(user.getRoles());
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

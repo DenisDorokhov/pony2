@@ -2,14 +2,14 @@ package net.dorokhov.pony.api.user.service.exception;
 
 public final class UserNotFoundException extends Exception {
     
-    private final long id;
+    private final String id;
 
-    public UserNotFoundException(Long id) {
-        super(String.format("User '%d' not found.", id));
+    public UserNotFoundException(String id) {
+        super(String.format("User '%s' not found.", id));
         this.id = id;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 }

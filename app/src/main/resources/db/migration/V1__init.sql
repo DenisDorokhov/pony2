@@ -1,6 +1,6 @@
 CREATE TABLE installation (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
@@ -10,7 +10,7 @@ CREATE TABLE installation (
 
 CREATE TABLE user (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
@@ -29,7 +29,7 @@ CREATE INDEX index_user_name_email ON user (name, email);
 
 CREATE TABLE user_role (
 
-  user_id BIGINT NOT NULL,
+  user_id CHAR(36) NOT NULL,
 
   value VARCHAR (255) NOT NULL,
 
@@ -40,7 +40,7 @@ CREATE TABLE user_role (
 
 CREATE TABLE log_message (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   date TIMESTAMP NOT NULL,
 
@@ -70,7 +70,7 @@ CREATE TABLE config (
 
 CREATE TABLE scan_result (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   date TIMESTAMP NOT NULL,
   scan_type VARCHAR (255) NOT NULL,
@@ -112,7 +112,7 @@ CREATE INDEX index_scan_result_date ON scan_result (date);
 
 CREATE TABLE scan_job (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
@@ -120,8 +120,8 @@ CREATE TABLE scan_job (
   scan_type VARCHAR (255) NOT NULL,
   status VARCHAR (255) NOT NULL,
 
-  log_message_id BIGINT,
-  scan_result_id BIGINT,
+  log_message_id CHAR(36),
+  scan_result_id CHAR(36),
 
   FOREIGN KEY (log_message_id) REFERENCES log_message (id),
   FOREIGN KEY (scan_result_id) REFERENCES scan_result (id)
@@ -131,7 +131,7 @@ CREATE INDEX index_scan_job_status ON scan_job (status);
 
 CREATE TABLE artwork (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   date TIMESTAMP NOT NULL,
 
@@ -152,14 +152,14 @@ CREATE TABLE artwork (
 
 CREATE TABLE genre (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
 
   name VARCHAR_IGNORECASE (255),
 
-  artwork_id BIGINT,
+  artwork_id CHAR(36),
 
   FOREIGN KEY (artwork_id) REFERENCES artwork (id)
 );
@@ -168,14 +168,14 @@ CREATE INDEX index_genre_name ON genre(name);
 
 CREATE TABLE artist (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
 
   name VARCHAR_IGNORECASE (255),
 
-  artwork_id BIGINT,
+  artwork_id CHAR(36),
 
   FOREIGN KEY (artwork_id) REFERENCES artwork (id)
 );
@@ -184,7 +184,7 @@ CREATE INDEX index_artist_name ON artist(name);
 
 CREATE TABLE album (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
@@ -192,9 +192,9 @@ CREATE TABLE album (
   name VARCHAR_IGNORECASE (255),
   year INT,
 
-  artwork_id BIGINT,
+  artwork_id CHAR(36),
 
-  artist_id BIGINT NOT NULL,
+  artist_id CHAR(36) NOT NULL,
 
   FOREIGN KEY (artist_id) REFERENCES artist (id),
   FOREIGN KEY (artwork_id) REFERENCES artwork (id)
@@ -205,7 +205,7 @@ CREATE INDEX index_album_artist_id_year_name ON album (artist_id, year, name);
 
 CREATE TABLE song (
 
-  id BIGINT IDENTITY,
+  id CHAR(36) PRIMARY KEY,
 
   creation_date TIMESTAMP NOT NULL,
   update_date TIMESTAMP,
@@ -234,10 +234,10 @@ CREATE TABLE song (
 
   year INT,
 
-  artwork_id BIGINT,
+  artwork_id CHAR(36),
 
-  album_id BIGINT NOT NULL,
-  genre_id BIGINT NOT NULL,
+  album_id CHAR(36) NOT NULL,
+  genre_id CHAR(36) NOT NULL,
 
   FOREIGN KEY (album_id) REFERENCES album (id),
   FOREIGN KEY (genre_id) REFERENCES genre (id),
@@ -246,4 +246,4 @@ CREATE TABLE song (
   UNIQUE (path)
 );
 
-CREATE INDEX index_song_track_number_name ON song (disc_number, track_number, name);
+CREATE INDEX index_song_disc_number_track_number_name ON song (disc_number, track_number, name);

@@ -4,10 +4,12 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony.common.JsonAttributeConverter;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,12 +19,13 @@ import static java.util.Collections.unmodifiableList;
 
 @Entity
 @Table(name = "scan_result")
-public class ScanResult {
+public class ScanResult implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "id")
-    private Long id;
+    private String id;
 
     @Column(name = "date")
     @NotNull
@@ -169,7 +172,7 @@ public class ScanResult {
         deletedArtworkCount = checkNotNull(builder.deletedArtworkCount);
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -344,7 +347,7 @@ public class ScanResult {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime date;
         private ScanType scanType;
         private ImmutableList.Builder<String> targetPaths = ImmutableList.builder();
@@ -376,7 +379,7 @@ public class ScanResult {
         private Builder() {
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

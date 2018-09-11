@@ -64,9 +64,9 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path(songFile.getPath())
                 .build();
-        when(songRepository.findOne((Long) any())).thenReturn(song);
+        when(songRepository.findOne((String) any())).thenReturn(song);
 
-        ExportBundle exportBundle = exportService.exportSong(1L);
+        ExportBundle exportBundle = exportService.exportSong("1");
 
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - someSong.mp3");
@@ -88,9 +88,9 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path(songFile.getPath())
                 .build();
-        when(songRepository.findOne((Long) any())).thenReturn(song);
+        when(songRepository.findOne((String) any())).thenReturn(song);
 
-        ExportBundle exportBundle = exportService.exportSong(1L);
+        ExportBundle exportBundle = exportService.exportSong("1");
 
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo(songFile.getName());
@@ -112,9 +112,9 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path(songFile.getPath())
                 .build();
-        when(songRepository.findOne((Long) any())).thenReturn(song);
+        when(songRepository.findOne((String) any())).thenReturn(song);
 
-        ExportBundle exportBundle = exportService.exportSong(1L);
+        ExportBundle exportBundle = exportService.exportSong("1");
 
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someSong.mp3");
@@ -164,7 +164,7 @@ public class ExportServiceImplTest {
                 .build();
         when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
-        ExportBundle exportBundle = exportService.exportAlbum(1L);
+        ExportBundle exportBundle = exportService.exportAlbum("1");
 
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist - 1986 - someAlbum.zip");
@@ -207,7 +207,7 @@ public class ExportServiceImplTest {
         Song song2 = Song.builder(song1).build();
         when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2));
 
-        ExportBundle exportBundle = exportService.exportAlbum(1L);
+        ExportBundle exportBundle = exportService.exportAlbum("1");
 
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getContent()).isInstanceOfSatisfying(ZipContent.class, zipContent -> {
@@ -267,7 +267,7 @@ public class ExportServiceImplTest {
                 .build();
         when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
-        ExportBundle exportBundle = exportService.exportArtist(1L);
+        ExportBundle exportBundle = exportService.exportArtist("1");
 
         assertThat(exportBundle).isNotNull();
         assertThat(exportBundle.getFileName()).isEqualTo("someArtist.zip");
@@ -290,9 +290,9 @@ public class ExportServiceImplTest {
     @Test
     public void shouldReturnNullIfSongNotFound() {
 
-        when(songRepository.findOne((Long) any())).thenReturn(null);
+        when(songRepository.findOne((String) any())).thenReturn(null);
         
-        assertThat(exportService.exportSong(1L)).isNull();
+        assertThat(exportService.exportSong("1")).isNull();
     }
 
     @Test
@@ -309,9 +309,9 @@ public class ExportServiceImplTest {
                 .fileType(FileType.of("audio/mpeg", "mp3"))
                 .path("foo/bar.mp3")
                 .build();
-        when(songRepository.findOne((Long) any())).thenReturn(song);
+        when(songRepository.findOne((String) any())).thenReturn(song);
         
-        assertThat(exportService.exportSong(1L)).isNull();
+        assertThat(exportService.exportSong("1")).isNull();
     }
 
     @Test
@@ -319,7 +319,7 @@ public class ExportServiceImplTest {
 
         when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(emptyList());
 
-        assertThat(exportService.exportAlbum(1L)).isNull();
+        assertThat(exportService.exportAlbum("1")).isNull();
     }
 
     @Test
@@ -327,7 +327,7 @@ public class ExportServiceImplTest {
 
         when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(emptyList());
 
-        assertThat(exportService.exportArtist(1L)).isNull();
+        assertThat(exportService.exportArtist("1")).isNull();
     }
 
     @Test

@@ -15,7 +15,7 @@ public final class ScanJobDto extends BaseDto {
     private final LogMessageDto logMessage;
     private final ScanResultDto scanResult;
 
-    private ScanJobDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+    private ScanJobDto(String id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
                        ScanType scanType, ScanJob.Status status, @Nullable LogMessageDto logMessage,
                        @Nullable ScanResultDto scanResult) {
         super(id, creationDate, updateDate);

@@ -55,7 +55,7 @@ public class ScanFacadeImpl implements ScanFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public ScanJobProgressDto getScanJobProgress(Long scanJobId) throws ObjectNotFoundException {
+    public ScanJobProgressDto getScanJobProgress(String scanJobId) throws ObjectNotFoundException {
         ScanJobProgress scanJobProgress = scanJobService.getScanJobProgress(scanJobId);
         if (scanJobProgress == null) {
             throw new ObjectNotFoundException(ScanJob.class, scanJobId);
@@ -72,7 +72,7 @@ public class ScanFacadeImpl implements ScanFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public ScanJobDto getScanJob(Long scanJobId) throws ObjectNotFoundException {
+    public ScanJobDto getScanJob(String scanJobId) throws ObjectNotFoundException {
         ScanJob scanJob = scanJobService.getById(scanJobId);
         if (scanJob == null) {
             throw new ObjectNotFoundException(ScanJob.class, scanJobId);

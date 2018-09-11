@@ -172,11 +172,11 @@ public class LibraryScannerTest {
         AudioNode audioNode2 = mock(AudioNode.class);
         when(audioNode2.getFile()).thenReturn(file2);
         when(fileTreeScanner.scanFile(eq(file1), any())).thenReturn(audioNode1);
-        when(songRepository.findOne(1L)).thenReturn(songBuilder()
+        when(songRepository.findOne("1")).thenReturn(songBuilder()
                 .path(file1.getAbsolutePath())
                 .build());
         when(fileTreeScanner.scanFile(eq(file2), any())).thenReturn(audioNode2);
-        when(songRepository.findOne(2L)).thenReturn(songBuilder()
+        when(songRepository.findOne("2")).thenReturn(songBuilder()
                 .path(file2.getAbsolutePath())
                 .build());
 
@@ -205,8 +205,8 @@ public class LibraryScannerTest {
 
         ScanObserver scanObserver = new ScanObserver();
         assertThat(libraryScanner.edit(ImmutableList.of(
-                new EditCommand(1L, WritableAudioData.builder().build()),
-                new EditCommand(2L, WritableAudioData.builder().build())
+                new EditCommand("1", WritableAudioData.builder().build()),
+                new EditCommand("2", WritableAudioData.builder().build())
         ), emptyList(), scanObserver::observe)).isSameAs(scanResultFixture);
 
         verify(batchLibraryImporter, times(2)).writeAndImport(writeAndImportCommandsCaptor.capture(), any());
@@ -268,19 +268,19 @@ public class LibraryScannerTest {
     @Test
     public void shouldFailEditIfSongNotFound() {
 
-        when(songRepository.findOne((Long) any())).thenReturn(null);
-        EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
+        when(songRepository.findOne((String) any())).thenReturn(null);
+        EditCommand command = new EditCommand("1", WritableAudioData.builder().build());
 
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOfSatisfying(SongNotFoundException.class, e -> 
-                        assertThat(e.getSongId()).isEqualTo(1L));
+                        assertThat(e.getSongId()).isEqualTo("1"));
     }
 
     @Test
     public void shouldFailEditIfFileNotFound() {
 
-        when(songRepository.findOne((Long) any())).thenReturn(song());
-        EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
+        when(songRepository.findOne((String) any())).thenReturn(song());
+        EditCommand command = new EditCommand("1", WritableAudioData.builder().build());
 
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(FileNotFoundException.class);
@@ -290,10 +290,10 @@ public class LibraryScannerTest {
     public void shouldFailEditIfFileIsNotSong() throws IOException {
 
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(mock(ImageNode.class));
-        when(songRepository.findOne((Long) any())).thenReturn(songBuilder()
+        when(songRepository.findOne((String) any())).thenReturn(songBuilder()
                 .path(tempFolder.newFile().getAbsolutePath())
                 .build());
-        EditCommand command = new EditCommand(1L, WritableAudioData.builder().build());
+        EditCommand command = new EditCommand("1", WritableAudioData.builder().build());
 
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(IOException.class);
@@ -305,7 +305,7 @@ public class LibraryScannerTest {
         AudioNode audioNode = mock(AudioNode.class);
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(audioNode);
         File file = tempFolder.newFile();
-        when(songRepository.findOne((Long) any())).thenReturn(songBuilder()
+        when(songRepository.findOne((String) any())).thenReturn(songBuilder()
                 .path(file.getAbsolutePath())
                 .build());
 
@@ -314,7 +314,7 @@ public class LibraryScannerTest {
 
         ScanObserver scanObserver = new ScanObserver();
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(
-                new EditCommand(1L, WritableAudioData.builder().build())
+                new EditCommand("1", WritableAudioData.builder().build())
         ), emptyList(), scanObserver::observe)).isSameAs(calculationException);
 
         verify(logService).error(any(), any(), any());

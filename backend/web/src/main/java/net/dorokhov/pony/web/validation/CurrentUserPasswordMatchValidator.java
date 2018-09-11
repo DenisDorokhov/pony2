@@ -28,7 +28,7 @@ public class CurrentUserPasswordMatchValidator implements ConstraintValidator<Cu
         try {
             return userService.checkUserPassword(currentUser.getId(), value);
         } catch (UserNotFoundException e) {
-            throw new IllegalStateException(String.format("Current user '%d' not found.", currentUser.getId()));
+            throw new IllegalStateException(String.format("Current user '%s' not found.", currentUser.getId()));
         }
     }
 }

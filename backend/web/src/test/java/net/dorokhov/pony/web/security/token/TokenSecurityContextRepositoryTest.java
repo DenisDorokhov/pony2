@@ -37,11 +37,11 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldLoadNonemptySecurityContext() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
-        when(tokenManager.verifyAccessToken("someToken")).thenReturn(1L);
+        when(tokenManager.verifyAccessTokenAndGetUserId("someToken")).thenReturn("1");
         User user = userBuilder()
                 .addRoles(User.Role.USER)
                 .build();
-        when(userService.getById(1L)).thenReturn(user);
+        when(userService.getById("1")).thenReturn(user);
 
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
 
@@ -68,7 +68,7 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldLoadEmptySecurityContextIfTokenIsInvalid() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("invalidToken");
-        when(tokenManager.verifyAccessToken("invalidToken")).thenThrow(new InvalidTokenException());
+        when(tokenManager.verifyAccessTokenAndGetUserId("invalidToken")).thenThrow(new InvalidTokenException());
 
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
 
@@ -79,8 +79,8 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldLoadEmptySecurityContextIfUserIsNotFound() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
-        when(tokenManager.verifyAccessToken("someToken")).thenReturn(1L);
-        when(userService.getById(1L)).thenReturn(null);
+        when(tokenManager.verifyAccessTokenAndGetUserId("someToken")).thenReturn("1");
+        when(userService.getById("1")).thenReturn(null);
 
         SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
 
@@ -91,8 +91,8 @@ public class TokenSecurityContextRepositoryTest {
     public void shouldContainContext() throws InvalidTokenException {
 
         when(requestTokenFinder.findToken(any())).thenReturn("someToken");
-        when(tokenManager.verifyAccessToken("someToken")).thenReturn(1L);
-        when(userService.getById(1L)).thenReturn(user());
+        when(tokenManager.verifyAccessTokenAndGetUserId("someToken")).thenReturn("1");
+        when(userService.getById("1")).thenReturn(user());
 
         assertThat(tokenSecurityContextRepository.containsContext(new MockHttpServletRequest())).isTrue();
     }

@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 public final class UserUpdateCommandDto {
 
     @NotNull
-    private final Long id;
+    private final String id;
 
     @NotBlank
     @Size(max = 255)
@@ -30,7 +30,7 @@ public final class UserUpdateCommandDto {
     @NotNull
     private final UserDto.Role role;
 
-    public UserUpdateCommandDto(Long id, String name, String email, @Nullable String newPassword, UserDto.Role role) {
+    public UserUpdateCommandDto(String id, String name, String email, @Nullable String newPassword, UserDto.Role role) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -38,7 +38,7 @@ public final class UserUpdateCommandDto {
         this.role = role;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

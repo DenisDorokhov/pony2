@@ -4,14 +4,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SongNotFoundException extends Exception {
     
-    private final Long songId;
+    private final String songId;
 
-    public SongNotFoundException(Long songId) {
-        super(String.format("Song '%d' not found.", songId));
+    public SongNotFoundException(String songId) {
+        super(String.format("Song '%s' not found.", songId));
         this.songId = checkNotNull(songId);
     }
 
-    public Long getSongId() {
+    public String getSongId() {
         return songId;
     }
 }

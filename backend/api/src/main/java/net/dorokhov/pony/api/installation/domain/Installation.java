@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity
 @Table(name = "installation")
-public class Installation extends BaseEntity<Long> implements Serializable {
+public class Installation extends BaseEntity implements Serializable {
 
     @Column(name = "version", nullable = false)
     @NotNull
@@ -53,7 +53,7 @@ public class Installation extends BaseEntity<Long> implements Serializable {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String version;
@@ -68,7 +68,7 @@ public class Installation extends BaseEntity<Long> implements Serializable {
             version = installation.getVersion();
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

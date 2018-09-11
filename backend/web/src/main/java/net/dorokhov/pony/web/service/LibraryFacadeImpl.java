@@ -28,7 +28,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SongDetailsDto> getSongs(List<Long> songIds) {
+    public List<SongDetailsDto> getSongs(List<String> songIds) {
         return libraryService.getSongsByIds(songIds).stream()
                 .map(SongDetailsDto::of)
                 .collect(toList());
@@ -45,7 +45,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public ArtistSongsDto getArtistSongs(Long artistId) throws ObjectNotFoundException {
+    public ArtistSongsDto getArtistSongs(String artistId) throws ObjectNotFoundException {
         Artist artist = libraryService.getArtistById(artistId);
         if (artist == null) {
             throw new ObjectNotFoundException(Artist.class, artistId);
@@ -64,7 +64,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public GenreSongsPageDto getGenreSongs(Long genreId, int pageIndex) throws ObjectNotFoundException {
+    public GenreSongsPageDto getGenreSongs(String genreId, int pageIndex) throws ObjectNotFoundException {
         Genre genre = libraryService.getGenreById(genreId);
         if (genre == null) {
             throw new ObjectNotFoundException(Genre.class, genreId);
@@ -92,7 +92,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SongDetailsDto> getRandomSongsByAlbumId(Long albumId, int count) {
+    public List<SongDetailsDto> getRandomSongsByAlbumId(String albumId, int count) {
         return libraryService.getRandomSongsByAlbumId(albumId, count).stream()
                 .map(SongDetailsDto::of)
                 .collect(toList());
@@ -100,7 +100,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SongDetailsDto> getRandomSongsByArtistId(Long artistId, int count) {
+    public List<SongDetailsDto> getRandomSongsByArtistId(String artistId, int count) {
         return libraryService.getRandomSongsByArtistId(artistId, count).stream()
                 .map(SongDetailsDto::of)
                 .collect(toList());
@@ -108,7 +108,7 @@ public class LibraryFacadeImpl implements LibraryFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SongDetailsDto> getRandomSongsByGenreId(Long genreId, int count) {
+    public List<SongDetailsDto> getRandomSongsByGenreId(String genreId, int count) {
         return libraryService.getRandomSongsByGenreId(genreId, count).stream()
                 .map(SongDetailsDto::of)
                 .collect(toList());

@@ -18,10 +18,10 @@ public interface UserFacade {
     
     List<UserDto> getAllUsers();
     
-    UserDto getUserById(Long id) throws ObjectNotFoundException;
+    UserDto getUserById(String id) throws ObjectNotFoundException;
     
     UserDto createUser(UserCreationCommandDto command) throws DuplicateEmailException;
     UserDto updateUser(UserUpdateCommandDto command) throws ObjectNotFoundException, DuplicateEmailException;
     
-    UserDto deleteUserById(Long id) throws ObjectNotFoundException;
+    UserDto deleteUserById(String id) throws ObjectNotFoundException;
 }

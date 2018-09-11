@@ -1,29 +1,13 @@
 package net.dorokhov.pony.core.library.service.scan;
 
-import java.io.File;
-import java.net.URI;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.Lists;
 import net.dorokhov.pony.api.library.domain.Artwork;
 import net.dorokhov.pony.api.library.domain.Song;
-import net.dorokhov.pony.core.library.repository.AlbumRepository;
-import net.dorokhov.pony.core.library.repository.ArtistRepository;
-import net.dorokhov.pony.core.library.repository.ArtworkRepository;
-import net.dorokhov.pony.core.library.repository.GenreRepository;
-import net.dorokhov.pony.core.library.repository.SongRepository;
+import net.dorokhov.pony.api.log.service.LogService;
+import net.dorokhov.pony.core.library.repository.*;
 import net.dorokhov.pony.core.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony.core.library.service.filetree.domain.ImageNode;
-import net.dorokhov.pony.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +19,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.io.File;
+import java.net.URI;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static net.dorokhov.pony.api.library.domain.Artwork.SOURCE_URI_SCHEME_FILE;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
@@ -87,8 +83,8 @@ public class BatchLibraryCleaner {
                 .map(File::getAbsolutePath)
                 .collect(Collectors.toSet());
 
-        List<Long> songsToDelete = transactionTemplate.execute(status -> {
-            List<Long> result = new ArrayList<>();
+        List<String> songsToDelete = transactionTemplate.execute(status -> {
+            List<String> result = new ArrayList<>();
             Pageable pageable = new PageRequest(0, cleaningBufferSize, new Sort("id"));
             while (pageable != null) {
                 Page<Song> songs = songRepository.findAll(pageable);
@@ -103,9 +99,9 @@ public class BatchLibraryCleaner {
         });
 
         AtomicInteger counter = new AtomicInteger();
-        for (List<Long> chunk : Lists.partition(songsToDelete, cleaningBufferSize)) {
+        for (List<String> chunk : Lists.partition(songsToDelete, cleaningBufferSize)) {
             transactionTemplate.execute(status -> {
-                for (Long id : chunk) {
+                for (String id : chunk) {
                     Song song = songRepository.findOne(id);
                     if (song != null) {
                         logService.debug(logger, "Deleting song '{}': file '{}' not found.", song, song.getPath());
@@ -132,8 +128,8 @@ public class BatchLibraryCleaner {
                 .map(URI::getPath)
                 .collect(Collectors.toSet());
 
-        List<Long> artworksToDelete = transactionTemplate.execute(status -> {
-            List<Long> result = new ArrayList<>();
+        List<String> artworksToDelete = transactionTemplate.execute(status -> {
+            List<String> result = new ArrayList<>();
             Pageable pageable = new PageRequest(0, cleaningBufferSize, new Sort("id"));
             while (pageable != null) {
                 Page<Artwork> artworks = artworkRepository.findAll(pageable);
@@ -158,9 +154,9 @@ public class BatchLibraryCleaner {
         });
 
         AtomicInteger counter = new AtomicInteger();
-        for (List<Long> chunk : Lists.partition(artworksToDelete, cleaningBufferSize)) {
+        for (List<String> chunk : Lists.partition(artworksToDelete, cleaningBufferSize)) {
             transactionTemplate.execute(status -> {
-                for (Long id : chunk) {
+                for (String id : chunk) {
                     Artwork artwork = artworkRepository.findOne(id);
                     if (artwork != null) {
                         logService.debug(logger, "Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());

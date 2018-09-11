@@ -291,9 +291,9 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldUpdateSongIfArtworkChanged() throws IOException {
         
-        Artwork existingArtwork = artworkBuilder().id(1L).build();
+        Artwork existingArtwork = artworkBuilder().id("1").build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(builder -> builder.artwork(existingArtwork));
-        ArtworkFiles newArtworkFiles = artworkFiles(artworkBuilder().id(2L).build());
+        ArtworkFiles newArtworkFiles = artworkFiles(artworkBuilder().id("2").build());
         when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
         
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());

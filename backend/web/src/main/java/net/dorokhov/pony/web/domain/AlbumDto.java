@@ -11,11 +11,11 @@ public final class AlbumDto extends BaseDto {
 
     private final String name;
     private final Integer year;
-    private final Long artworkId;
-    private final Long artistId;
+    private final String artworkId;
+    private final String artistId;
 
-    private AlbumDto(Long id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
-                     @Nullable String name, @Nullable Integer year, @Nullable Long artworkId, Long artistId) {
+    private AlbumDto(String id, LocalDateTime creationDate, @Nullable LocalDateTime updateDate,
+                     @Nullable String name, @Nullable Integer year, @Nullable String artworkId, String artistId) {
         super(id, creationDate, updateDate);
         this.name = name;
         this.year = year;
@@ -34,11 +34,11 @@ public final class AlbumDto extends BaseDto {
     }
 
     @Nullable
-    public Long getArtworkId() {
+    public String getArtworkId() {
         return artworkId;
     }
 
-    public Long getArtistId() {
+    public String getArtistId() {
         return artistId;
     }
 

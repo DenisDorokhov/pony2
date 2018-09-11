@@ -7,11 +7,11 @@ import javax.annotation.Nullable;
 public interface ExportService {
     
     @Nullable
-    ExportBundle exportSong(Long id);
+    ExportBundle exportSong(String id);
     
     @Nullable
-    ExportBundle exportAlbum(Long id);
+    ExportBundle exportAlbum(String id);
     
     @Nullable
-    ExportBundle exportArtist(Long id);
+    ExportBundle exportArtist(String id);
 }

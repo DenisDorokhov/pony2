@@ -100,7 +100,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional(readOnly = true)
     @Nullable
-    public ScanJobProgress getScanJobProgress(Long id) {
+    public ScanJobProgress getScanJobProgress(String id) {
         ScanJobProgress scanJobProgress = scanJobProgressReference.get();
         if (scanJobProgress != null && id.equals(scanJobProgress.getScanJob().getId())) {
             return scanJobProgress;
@@ -118,7 +118,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional(readOnly = true)
-    public ScanJob getById(Long id) {
+    public ScanJob getById(String id) {
         return scanJobRepository.findOne(id);
     }
 

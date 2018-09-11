@@ -35,7 +35,7 @@ public class LibraryController implements ErrorHandlingController {
     
     @GetMapping("/song/{songIds}")
     @ApiOperation("Get songs by IDs.")
-    public List<SongDetailsDto> getSong(@PathVariable List<Long> songIds) {
+    public List<SongDetailsDto> getSong(@PathVariable List<String> songIds) {
         return libraryFacade.getSongs(songIds);
     }
 
@@ -50,7 +50,7 @@ public class LibraryController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artist not found.", response = ErrorDto.class),
     })
-    public ArtistSongsDto getArtistSongs(@PathVariable Long artistId) throws ObjectNotFoundException {
+    public ArtistSongsDto getArtistSongs(@PathVariable String artistId) throws ObjectNotFoundException {
         return libraryFacade.getArtistSongs(artistId);
     }
 
@@ -65,7 +65,7 @@ public class LibraryController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested genre not found.", response = ErrorDto.class),
     })
-    public GenreSongsPageDto getGenreSongs(@PathVariable Long genreId, @RequestParam(defaultValue = "0") int pageIndex) throws ObjectNotFoundException {
+    public GenreSongsPageDto getGenreSongs(@PathVariable String genreId, @RequestParam(defaultValue = "0") int pageIndex) throws ObjectNotFoundException {
         return libraryFacade.getGenreSongs(genreId, pageIndex);
     }
 
@@ -83,19 +83,19 @@ public class LibraryController implements ErrorHandlingController {
 
     @GetMapping("/randomArtistSongs/{artistId}")
     @ApiOperation("Get random songs of an artist provided.")
-    public List<SongDetailsDto> getArtistRandomSongs(@PathVariable Long artistId, @RequestParam(defaultValue = "10") int count) {
+    public List<SongDetailsDto> getArtistRandomSongs(@PathVariable String artistId, @RequestParam(defaultValue = "10") int count) {
         return libraryFacade.getRandomSongsByArtistId(artistId, Math.min(count, MAX_RANDOM_COUNT));
     }
 
     @GetMapping("/randomAlbumSongs/{albumId}")
     @ApiOperation("Get random songs of an album provided.")
-    public List<SongDetailsDto> getAlbumRandomSongs(@PathVariable Long albumId, @RequestParam(defaultValue = "10") int count) {
+    public List<SongDetailsDto> getAlbumRandomSongs(@PathVariable String albumId, @RequestParam(defaultValue = "10") int count) {
         return libraryFacade.getRandomSongsByAlbumId(albumId, Math.min(count, MAX_RANDOM_COUNT));
     }
 
     @GetMapping("/randomGenreSongs/{genreId}")
     @ApiOperation("Get random songs of an genre provided.")
-    public List<SongDetailsDto> getGenreRandomSongs(@PathVariable Long genreId, @RequestParam(defaultValue = "10") int count) {
+    public List<SongDetailsDto> getGenreRandomSongs(@PathVariable String genreId, @RequestParam(defaultValue = "10") int count) {
         return libraryFacade.getRandomSongsByGenreId(genreId, Math.min(count, MAX_RANDOM_COUNT));
     }
 

@@ -18,7 +18,7 @@ public final class SongFixtures {
         Album album = Album.builder().artist(artist).build();
         Genre genre = Genre.builder().build();
         return Song.builder()
-                .id(1L)
+                .id("1")
                 .creationDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .path("somePath")

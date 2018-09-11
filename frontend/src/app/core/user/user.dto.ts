@@ -1,5 +1,5 @@
 export interface UserDto {
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   name: string;

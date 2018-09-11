@@ -24,9 +24,9 @@ public class ArtistTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
         
-        Artist eqArtist1 = Artist.builder().id(1L).build();
-        Artist eqArtist2 = Artist.builder().id(1L).build();
-        Artist diffArtist = Artist.builder().id(2L).build();
+        Artist eqArtist1 = Artist.builder().id("1").build();
+        Artist eqArtist2 = Artist.builder().id("1").build();
+        Artist diffArtist = Artist.builder().id("2").build();
         
         assertThat(eqArtist1.hashCode()).isEqualTo(eqArtist2.hashCode());
         assertThat(eqArtist1.hashCode()).isNotEqualTo(diffArtist.hashCode());

@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity
 @Table(name = "scan_job")
-public class ScanJob extends BaseEntity<Long> {
+public class ScanJob extends BaseEntity {
 
     public enum Status {
         STARTING, STARTED, COMPLETE, FAILED, INTERRUPTED
@@ -91,7 +91,7 @@ public class ScanJob extends BaseEntity<Long> {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private ScanType scanType;
         private Status status;
         private LocalDateTime creationDate;
@@ -112,7 +112,7 @@ public class ScanJob extends BaseEntity<Long> {
             this.scanResult = scanJob.getScanResult();
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

@@ -2,7 +2,7 @@ import {AlbumDto, AlbumSongsDto, ArtistDto, ArtistSongsDto, SongDto} from './lib
 
 export class Song {
 
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   mimeType: string;
@@ -15,7 +15,7 @@ export class Song {
   trackNumber: number | undefined;
   name: string | undefined;
   artistName: string | undefined;
-  genreId: number;
+  genreId: string;
   album: Album;
   audioUrl: string;
 
@@ -60,12 +60,12 @@ export class Song {
 
 export class Album {
 
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   name: string | undefined;
   year: number | undefined;
-  artworkId: number | undefined;
+  artworkId: string | undefined;
   artist: Artist;
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
@@ -97,11 +97,11 @@ export class AlbumSongs {
 
 export class Artist {
 
-  id: number;
+  id: string;
   creationDate: Date;
   updateDate: Date | undefined;
   name: string | undefined;
-  artworkId: number | undefined;
+  artworkId: string | undefined;
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
 

@@ -40,7 +40,7 @@ public class UserFacadeImpl implements UserFacade {
         try {
             return UserDto.of(userService.update(command.convert(currentUser.getId())));
         } catch (UserNotFoundException e) {
-            throw new IllegalStateException(String.format("Current user '%d' not found.", currentUser.getId()));
+            throw new IllegalStateException(String.format("Current user '%s' not found.", currentUser.getId()));
         }
     }
 
@@ -54,7 +54,7 @@ public class UserFacadeImpl implements UserFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDto getUserById(Long id) throws ObjectNotFoundException {
+    public UserDto getUserById(String id) throws ObjectNotFoundException {
         User user = userService.getById(id);
         if (user == null) {
             throw new ObjectNotFoundException(User.class, id);
@@ -80,13 +80,14 @@ public class UserFacadeImpl implements UserFacade {
 
     @Override
     @Transactional
-    public UserDto deleteUserById(Long id) throws ObjectNotFoundException {
+    public UserDto deleteUserById(String id) throws ObjectNotFoundException {
         User user = userService.getById(id);
         try {
             userService.delete(id);
         } catch (UserNotFoundException e) {
             throw new ObjectNotFoundException(User.class, id);
         }
+        //noinspection ConstantConditions
         return UserDto.of(user);
     }
 }

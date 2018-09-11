@@ -2,6 +2,7 @@ package net.dorokhov.pony.api.library.domain;
 
 import com.google.common.base.MoreObjects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
@@ -20,9 +21,10 @@ public class Artwork implements Serializable {
     public static final String SOURCE_URI_SCHEME_EMBEDDED = "embedded";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
-    private Long id;
+    private String id;
 
     @Column(name = "date", nullable = false, updatable = false)
     @NotNull
@@ -74,7 +76,7 @@ public class Artwork implements Serializable {
         sourceUriScheme = sourceUri.getScheme();
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -154,7 +156,7 @@ public class Artwork implements Serializable {
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime date;
         private String mimeType;
         private String checksum;
@@ -167,7 +169,7 @@ public class Artwork implements Serializable {
         private Builder() {
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }

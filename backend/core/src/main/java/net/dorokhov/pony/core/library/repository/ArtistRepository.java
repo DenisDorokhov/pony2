@@ -10,9 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 
-public interface ArtistRepository extends JpaRepository<Artist, Long> {
+public interface ArtistRepository extends JpaRepository<Artist, String> {
 
-    long countByArtworkId(@Nullable Long artworkId);
+    long countByArtworkId(@Nullable String artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
 
@@ -20,9 +20,9 @@ public interface ArtistRepository extends JpaRepository<Artist, Long> {
 
     Artist findByName(@Nullable String name);
 
-    Page<Artist> findByArtworkId(@Nullable Long artworkId, Pageable pageable);
+    Page<Artist> findByArtworkId(@Nullable String artworkId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Artist ar SET ar.artwork = NULL WHERE ar.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long artworkId);
+    void clearArtworkByArtworkId(String artworkId);
 }

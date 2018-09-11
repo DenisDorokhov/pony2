@@ -11,9 +11,9 @@ public class LogMessageTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        LogMessage eqLogMessage1 = logMessageBuilder().id(1L).build();
-        LogMessage eqLogMessage2 = logMessageBuilder().id(1L).build();
-        LogMessage diffLogMessage = logMessageBuilder().id(2L).build();
+        LogMessage eqLogMessage1 = logMessageBuilder().id("1").build();
+        LogMessage eqLogMessage2 = logMessageBuilder().id("1").build();
+        LogMessage diffLogMessage = logMessageBuilder().id("2").build();
 
         assertThat(eqLogMessage1.hashCode()).isEqualTo(eqLogMessage2.hashCode());
         assertThat(eqLogMessage1.hashCode()).isNotEqualTo(diffLogMessage.hashCode());
@@ -28,7 +28,7 @@ public class LogMessageTest {
     
     private LogMessage.Builder logMessageBuilder() {
         return LogMessage.builder()
-                .id(1L)
+                .id("1")
                 .date(LocalDateTime.now())
                 .type(LogMessage.Level.DEBUG)
                 .pattern("someCode")

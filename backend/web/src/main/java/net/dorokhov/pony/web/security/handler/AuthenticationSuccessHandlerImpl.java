@@ -46,7 +46,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         User user = userContext.getAuthenticatedUser();
         loginDelegates.forEach(loginDelegate -> loginDelegate.onLogin(user));
         logger.debug("User '{}' has logged in.", user.getId());
-        String token = tokenManager.createAccessToken(user.getId());
+        String token = tokenManager.createAccessTokenForUserId(user.getId());
         messageConverter.write(AuthenticationDto.of(user, token), MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

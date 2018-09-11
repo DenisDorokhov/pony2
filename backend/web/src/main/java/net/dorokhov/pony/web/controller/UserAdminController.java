@@ -46,7 +46,7 @@ public class UserAdminController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested user not found.", response = ErrorDto.class),
     })
-    public UserDto getUserById(@PathVariable Long userId) throws ObjectNotFoundException {
+    public UserDto getUserById(@PathVariable String userId) throws ObjectNotFoundException {
         return userFacade.getUserById(userId);
     }
     
@@ -65,7 +65,7 @@ public class UserAdminController implements ErrorHandlingController {
             @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested user not found.", response = ErrorDto.class),
     })
-    public UserDto updateUser(@PathVariable Long userId, @Valid @RequestBody UserUpdateCommandDto command) throws BadRequestException, ObjectNotFoundException, DuplicateEmailException {
+    public UserDto updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdateCommandDto command) throws BadRequestException, ObjectNotFoundException, DuplicateEmailException {
         if (!userId.equals(command.getId())) {
             throw new BadRequestException();
         }
@@ -78,7 +78,7 @@ public class UserAdminController implements ErrorHandlingController {
             @ApiResponse(code = BAD_REQUEST_CODE, message = "Deletion of current user not allowed.", response = ErrorDto.class),
             @ApiResponse(code = NOT_FOUND_CODE, message = "Requested user not found.", response = ErrorDto.class),
     })
-    public UserDto deleteUser(@PathVariable Long userId) throws BadRequestException, ObjectNotFoundException {
+    public UserDto deleteUser(@PathVariable String userId) throws BadRequestException, ObjectNotFoundException {
         if (userFacade.getCurrentUser().getId().equals(userId)) {
             throw new BadRequestException();
         }

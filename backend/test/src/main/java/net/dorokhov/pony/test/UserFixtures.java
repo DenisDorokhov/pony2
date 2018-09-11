@@ -13,7 +13,7 @@ public final class UserFixtures {
     
     public static User.Builder userBuilder() {
         return User.builder()
-                .id(1L)
+                .id("1")
                 .name("someName")
                 .email("someEmail")
                 .password("somePassword");

@@ -45,7 +45,7 @@ export class LibraryService {
       .do(artists => this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY));
   }
 
-  getArtistSongs(artist: number): Observable<ArtistSongs> {
+  getArtistSongs(artist: string): Observable<ArtistSongs> {
     return this.httpClient.get<ArtistSongsDto>(`/api/library/artistSongs/${artist}`)
       .catch(ErrorDto.observableFromHttpErrorResponse)
       .map(artistSongsDto => new ArtistSongs(artistSongsDto));
@@ -153,15 +153,13 @@ export class LibraryService {
     this.scrollToSongRequestSubject.next(undefined);
   }
   
-  private loadDefaultArtistId(): number | undefined {
-    const value = window.localStorage.getItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
-    return value ? parseInt(value, 10) : undefined;
+  private loadDefaultArtistId(): string | undefined {
+    return window.localStorage.getItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
   }
   
-  private storeDefaultArtistId(artistId: number) {
-    const value = artistId ? artistId.toString() : undefined;
-    if (value) {
-      window.localStorage.setItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY, value);
+  private storeDefaultArtistId(artistId: string) {
+    if (artistId) {
+      window.localStorage.setItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY, artistId);
     } else {
       window.localStorage.removeItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
     }

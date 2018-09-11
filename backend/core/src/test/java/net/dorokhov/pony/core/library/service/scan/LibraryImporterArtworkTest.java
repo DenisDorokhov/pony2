@@ -62,7 +62,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldClearAlbumArtworkIfArtworkIsDeleted() throws IOException {
 
-        Artwork existingArtwork = artworkBuilder().id(1L).build();
+        Artwork existingArtwork = artworkBuilder().id("1").build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(
                 songBuilder -> songBuilder.artwork(existingArtwork),
                 albumBuilder -> albumBuilder.artwork(existingArtwork));
@@ -79,7 +79,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldNotClearAlbumArtworkIfAlbumArtworkIsDifferent() throws IOException {
 
-        Artwork existingArtwork = artworkBuilder().id(1L).build();
+        Artwork existingArtwork = artworkBuilder().id("1").build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(
                 songBuilder -> songBuilder.artwork(existingArtwork));
         when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(null);
@@ -93,11 +93,11 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     @Test
     public void shouldNotSetAlbumArtworkIfItExists() throws IOException {
 
-        Artwork existingArtwork = artworkBuilder().id(1L).build();
+        Artwork existingArtwork = artworkBuilder().id("1").build();
         ReadableAudioData.Builder audioDataBuilder = mockExistingSong(
                 songBuilder -> songBuilder.artwork(existingArtwork),
                 albumBuilder -> albumBuilder.artwork(existingArtwork));
-        ArtworkFiles newArtworkFiles = artworkFiles(artworkBuilder().id(2L).build());
+        ArtworkFiles newArtworkFiles = artworkFiles(artworkBuilder().id("2").build());
         when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
 
         libraryImporter.importAudioData(audioNode(), audioDataBuilder.build());

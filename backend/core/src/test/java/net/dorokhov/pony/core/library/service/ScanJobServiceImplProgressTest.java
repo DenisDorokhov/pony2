@@ -84,29 +84,29 @@ public class ScanJobServiceImplProgressTest {
     @Test
     public void shouldGetScanJobProgressById() throws ConcurrentScanException {
 
-        assertThat(scanJobService.getScanJobProgress(1L)).isNull();
+        assertThat(scanJobService.getScanJobProgress("1")).isNull();
 
         when(scanJobRepository.save((ScanJob) any())).then(invocation -> {
             ScanJob scanJob = invocation.getArgument(0);
-            return ScanJob.builder(scanJob).id(1L).build();
+            return ScanJob.builder(scanJob).id("1").build();
         });
-        when(scanJobRepository.findOne(2L)).thenReturn(scanJobBuilder(FULL).id(2L).build());
+        when(scanJobRepository.findOne("2")).thenReturn(scanJobBuilder(FULL).id("2").build());
 
         scanJobService.startScanJob();
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
-        ScanJobProgress currentScanJobProgress = scanJobService.getScanJobProgress(1L);
+        ScanJobProgress currentScanJobProgress = scanJobService.getScanJobProgress("1");
         assertThat(currentScanJobProgress).isNotNull();
         assertThat(currentScanJobProgress.getScanJob()).isNotNull();
         assertThat(currentScanJobProgress.getScanProgress()).isNull();
 
-        ScanJobProgress otherScanJobProgress = scanJobService.getScanJobProgress(2L);
+        ScanJobProgress otherScanJobProgress = scanJobService.getScanJobProgress("2");
         assertThat(otherScanJobProgress).isNotNull();
         assertThat(otherScanJobProgress.getScanJob()).isNotNull();
         assertThat(otherScanJobProgress.getScanProgress()).isNull();
 
-        ScanJobProgress notExistingScanJobProgress = scanJobService.getScanJobProgress(3L);
+        ScanJobProgress notExistingScanJobProgress = scanJobService.getScanJobProgress("3");
         assertThat(notExistingScanJobProgress).isNull();
     }
 }

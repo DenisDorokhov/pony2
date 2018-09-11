@@ -12,42 +12,42 @@ import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface SongRepository extends JpaRepository<Song, Long> {
+public interface SongRepository extends JpaRepository<Song, String> {
 
-    long countByGenreId(Long genreId);
+    long countByGenreId(String genreId);
 
-    long countByAlbumId(Long albumId);
+    long countByAlbumId(String albumId);
 
-    long countByAlbumArtistId(Long artistId);
+    long countByAlbumArtistId(String artistId);
 
-    long countByArtworkId(@Nullable Long artworkId);
+    long countByArtworkId(@Nullable String artworkId);
 
     long countByCreationDateGreaterThan(LocalDateTime date);
 
     long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime creationDate, LocalDateTime updateDate);
 
-    long countByGenreIdAndArtworkNotNull(Long genreId);
+    long countByGenreIdAndArtworkNotNull(String genreId);
 
     @Query("SELECT COALESCE(SUM(s.size), 0) FROM Song s")
     long sumSize();
 
     Song findByPath(String path);
 
-    List<Song> findByAlbumId(Long albumId, Sort sort);
+    List<Song> findByAlbumId(String albumId, Sort sort);
 
-    List<Song> findByAlbumId(Long albumId, Pageable pageable);
+    List<Song> findByAlbumId(String albumId, Pageable pageable);
 
-    List<Song> findByAlbumArtistId(Long artistId, Sort sort);
+    List<Song> findByAlbumArtistId(String artistId, Sort sort);
 
-    List<Song> findByAlbumArtistId(Long artistId, Pageable pageable);
+    List<Song> findByAlbumArtistId(String artistId, Pageable pageable);
 
-    Page<Song> findByGenreId(Long genreId, Pageable pageable);
+    Page<Song> findByGenreId(String genreId, Pageable pageable);
 
-    Page<Song> findByGenreIdAndArtworkNotNull(Long genreId, Pageable pageable);
+    Page<Song> findByGenreIdAndArtworkNotNull(String genreId, Pageable pageable);
 
-    Song findFirstByAlbumIdAndArtworkNotNull(Long albumId);
+    Song findFirstByAlbumIdAndArtworkNotNull(String albumId);
 
     @Modifying
     @Query("UPDATE Song s SET s.artwork = NULL WHERE s.artwork.id = ?1")
-    void clearArtworkByArtworkId(Long artworkId);
+    void clearArtworkByArtworkId(String artworkId);
 }

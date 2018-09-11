@@ -23,7 +23,7 @@ public class FileFacadeImpl implements FileFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public FileDistribution getSongDistribution(Long songId) throws ObjectNotFoundException {
+    public FileDistribution getSongDistribution(String songId) throws ObjectNotFoundException {
         Song song = libraryService.getSongById(songId);
         if (song == null) {
             throw new ObjectNotFoundException(Song.class, songId);
@@ -38,7 +38,7 @@ public class FileFacadeImpl implements FileFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public FileDistribution getLargeArtworkDistribution(Long artworkId) throws ObjectNotFoundException {
+    public FileDistribution getLargeArtworkDistribution(String artworkId) throws ObjectNotFoundException {
         ArtworkFiles artworkFiles = getArtworkFiles(artworkId);
         Artwork artwork = artworkFiles.getArtwork();
         File file = artworkFiles.getLargeFile();
@@ -47,7 +47,7 @@ public class FileFacadeImpl implements FileFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public FileDistribution getSmallArtworkDistribution(Long artworkId) throws ObjectNotFoundException {
+    public FileDistribution getSmallArtworkDistribution(String artworkId) throws ObjectNotFoundException {
         ArtworkFiles artworkFiles = getArtworkFiles(artworkId);
         Artwork artwork = artworkFiles.getArtwork();
         File file = artworkFiles.getSmallFile();
@@ -56,7 +56,7 @@ public class FileFacadeImpl implements FileFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public ExportBundle exportSong(Long songId) throws ObjectNotFoundException {
+    public ExportBundle exportSong(String songId) throws ObjectNotFoundException {
         ExportBundle exportBundle = exportService.exportSong(songId);
         if (exportBundle == null) {
             throw new ObjectNotFoundException(Song.class, songId);
@@ -66,7 +66,7 @@ public class FileFacadeImpl implements FileFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public ExportBundle exportAlbum(Long albumId) throws ObjectNotFoundException {
+    public ExportBundle exportAlbum(String albumId) throws ObjectNotFoundException {
         ExportBundle exportBundle = exportService.exportAlbum(albumId);
         if (exportBundle == null) {
             throw new ObjectNotFoundException(Album.class, albumId);
@@ -74,7 +74,7 @@ public class FileFacadeImpl implements FileFacade {
         return exportBundle;
     }
 
-    private ArtworkFiles getArtworkFiles(Long artworkId) throws ObjectNotFoundException {
+    private ArtworkFiles getArtworkFiles(String artworkId) throws ObjectNotFoundException {
         ArtworkFiles artworkFiles = libraryService.getArtworkFilesById(artworkId);
         if (artworkFiles == null) {
             throw new ObjectNotFoundException(Artwork.class, artworkId);

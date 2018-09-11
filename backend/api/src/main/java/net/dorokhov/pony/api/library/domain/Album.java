@@ -25,7 +25,7 @@ import static java.util.Collections.unmodifiableList;
 @Entity
 @Table(name = "album")
 @Indexed
-public class Album extends SearchableEntity<Long> implements Comparable<Album>, Serializable {
+public class Album extends SearchableEntity implements Comparable<Album>, Serializable {
 
     @Column(name = "name")
     private String name;
@@ -92,7 +92,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
     @Override
     public int compareTo(@Nonnull Album album) {
         return ComparisonChain.start()
-                .compare(artist, album.artist)
+                .compare(getArtist(), album.getArtist())
                 .compare(year, album.year, Ordering.natural().nullsLast())
                 .compare(name, album.name, Ordering.natural().nullsLast())
                 .result();
@@ -119,7 +119,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
 
     public static final class Builder {
         
-        private Long id;
+        private String id;
         private LocalDateTime creationDate;
         private LocalDateTime updateDate;
         private String name;
@@ -142,7 +142,7 @@ public class Album extends SearchableEntity<Long> implements Comparable<Album>, 
             artist = album.getArtist();
         }
 
-        public Builder id(@Nullable Long id) {
+        public Builder id(@Nullable String id) {
             this.id = id;
             return this;
         }
