@@ -2,6 +2,7 @@ package net.dorokhov.pony.web;
 
 import com.fasterxml.classmate.TypeResolver;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
+import net.dorokhov.pony.web.security.WebAuthority;
 import net.dorokhov.pony.web.security.handler.AuthenticationFailureHandlerImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,8 +30,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
-import static net.dorokhov.pony.api.user.domain.User.Role.ADMIN;
-import static net.dorokhov.pony.api.user.domain.User.Role.USER;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
@@ -139,8 +138,9 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
 
                 .authorizeRequests()
                 .antMatchers("/api/installation/**").permitAll()
-                .antMatchers("/api/admin/**").hasRole(ADMIN.name())
-                .antMatchers("/api/**").hasRole(USER.name())
+                .antMatchers("/api/file/**").hasAuthority(WebAuthority.FILE_API.name())
+                .antMatchers("/api/admin/**").hasAuthority(WebAuthority.ADMIN_API.name())
+                .antMatchers("/api/**").hasAuthority(WebAuthority.USER_API.name())
                 .anyRequest().permitAll();
     }
 }

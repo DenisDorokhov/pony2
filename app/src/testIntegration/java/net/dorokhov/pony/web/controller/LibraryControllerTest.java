@@ -176,7 +176,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/song/{songId}", HttpMethod.GET,
+                "/api/library/song/{songIds}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), 
                 SongDetailsDto[].class, song1_1_1.getId() + "," + song2_1_1.getId() + "," + 1000L);
 

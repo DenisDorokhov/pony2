@@ -69,6 +69,7 @@ export class AuthenticationService {
       return this.httpClient.post<AuthenticationDto>('/api/authentication', null, {params: params})
         .map(authentication => {
           this.tokenStorage.accessToken = authentication.accessToken;
+          this.tokenStorage.staticToken = authentication.staticToken;
           this._currentUser = authentication.user;
           return this._currentUser;
         })

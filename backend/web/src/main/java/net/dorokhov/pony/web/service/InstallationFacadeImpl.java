@@ -23,20 +23,22 @@ public class InstallationFacadeImpl implements InstallationFacade {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final InstallationService installationService;
-    private final InstallationSecretManager installationSecretManager;
+    private final InstallationSecretService installationSecretService;
 
-    public InstallationFacadeImpl(InstallationService installationService,
-                                  InstallationSecretManager installationSecretManager) {
+    public InstallationFacadeImpl(
+            InstallationService installationService,
+            InstallationSecretService installationSecretService
+    ) {
         this.installationService = installationService;
-        this.installationSecretManager = installationSecretManager;
+        this.installationSecretService = installationSecretService;
     }
 
     @PostConstruct
     public void assureInstallationSecretExists() throws IOException {
         try {
-            installationSecretManager.fetchInstallationSecret();
+            installationSecretService.fetchInstallationSecret();
         } catch (SecretNotFoundException e) {
-            installationSecretManager.generateAndStoreInstallationSecret();
+            installationSecretService.generateAndStoreInstallationSecret();
         }
     }
 
@@ -59,7 +61,7 @@ public class InstallationFacadeImpl implements InstallationFacade {
     @Override
     public boolean verifyInstallationSecret(String installationSecret) {
         try {
-            return installationSecretManager.fetchInstallationSecret().equals(installationSecret);
+            return installationSecretService.fetchInstallationSecret().equals(installationSecret);
         } catch (SecretNotFoundException e) {
             logger.error("Could not find installation secret for verification.");
         } catch (IOException e) {

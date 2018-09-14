@@ -3,7 +3,7 @@ package net.dorokhov.pony.web.security.token;
 import com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.WebUtils;
 
@@ -24,25 +24,8 @@ public class RequestTokenFinder {
     private static final String TOKEN_HEADER_PREFIX = "Bearer ";
 
     @Nullable
-    public String findToken(ServletRequest request) {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String token = findTokenFromHeaders(httpRequest);
-        if (token != null) {
-            return token;
-        }
-        if (httpRequest.getMethod().equals(HttpMethod.GET.name()) 
-                && httpRequest.getServletPath().startsWith("/api/file/")) {
-            token = findTokenFromCookies(httpRequest);
-            if (token != null) {
-                return token;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    private String findTokenFromHeaders(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
+    public String findAccessToken(ServletRequest request) {
+        String header = ((HttpServletRequest) request).getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith(TOKEN_HEADER_PREFIX)) {
             return header.substring(TOKEN_HEADER_PREFIX.length());
         } else {
@@ -51,13 +34,8 @@ public class RequestTokenFinder {
     }
 
     @Nullable
-    private String findTokenFromCookies(HttpServletRequest request) {
-        return findCookie(request, TOKEN_COOKIE_NAME);
-    }
-
-    @Nullable
-    private String findCookie(HttpServletRequest request, String name) {
-        Cookie cookie = WebUtils.getCookie(request, name);
+    public String findStaticToken(ServletRequest request) {
+        Cookie cookie = WebUtils.getCookie((HttpServletRequest) request, TOKEN_COOKIE_NAME);
         if (cookie != null) {
             try {
                 return URLDecoder.decode(cookie.getValue(), Charsets.UTF_8.name());

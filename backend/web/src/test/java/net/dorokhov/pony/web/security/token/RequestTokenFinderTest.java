@@ -12,64 +12,46 @@ public class RequestTokenFinderTest {
     private RequestTokenFinder requestTokenFinder = new RequestTokenFinder();
 
     @Test
-    public void shouldFetchTokenFromHeaders() {
+    public void shouldFetchAccessTokenFromAuthorizationHeader() {
 
         MockHttpServletRequest request = mockHttpServletRequest();
         request.addHeader("Authorization", "Bearer someToken");
 
-        assertThat(requestTokenFinder.findToken(request)).isEqualTo("someToken");
+        assertThat(requestTokenFinder.findAccessToken(request)).isEqualTo("someToken");
     }
 
     @Test
-    public void shouldFetchTokenFromCookiesWhenRequestIsFileAndMethodIsGET() {
+    public void shouldFetchStaticTokenFromCookie() {
 
-        MockHttpServletRequest request = mockHttpServletRequest("GET", "/api/file/someFile");
+        MockHttpServletRequest request = mockHttpServletRequest();
         request.setCookies(new Cookie(RequestTokenFinder.TOKEN_COOKIE_NAME, "someToken"));
 
-        assertThat(requestTokenFinder.findToken(request)).isEqualTo("someToken");
+        assertThat(requestTokenFinder.findStaticToken(request)).isEqualTo("someToken");
     }
 
     @Test
-    public void shouldNotFetchTokenFromCookiesIfRequestIsNotFile() {
-
-        MockHttpServletRequest request = mockHttpServletRequest("GET", "/api/someApi");
-        request.setCookies(new Cookie(RequestTokenFinder.TOKEN_COOKIE_NAME, "someToken"));
-
-        assertThat(requestTokenFinder.findToken(request)).isNull();
-    }
-
-    @Test
-    public void shouldNotFetchTokenFromCookiesIfRequestIsFileAndRequestMethodIsNotGET() {
-
-        MockHttpServletRequest request = mockHttpServletRequest("POST", "/api/file/someFile");
-        request.setCookies(new Cookie(RequestTokenFinder.TOKEN_COOKIE_NAME, "someToken"));
-
-        assertThat(requestTokenFinder.findToken(request)).isNull();
-    }
-
-    @Test
-    public void shouldSupportNoTokenInHeaders() {
+    public void shouldSupportNoAccessTokenInAuthorizationHeader() {
 
         MockHttpServletRequest request = mockHttpServletRequest();
 
-        assertThat(requestTokenFinder.findToken(request)).isNull();
+        assertThat(requestTokenFinder.findAccessToken(request)).isNull();
     }
 
     @Test
-    public void shouldSupportNoBearerAuthorizationHeaders() {
+    public void shouldSupportNotBearerAuthorizationHeader() {
 
         MockHttpServletRequest request = mockHttpServletRequest();
         request.addHeader("Authorization", "Basic someToken");
 
-        assertThat(requestTokenFinder.findToken(request)).isNull();
+        assertThat(requestTokenFinder.findAccessToken(request)).isNull();
     }
 
     @Test
-    public void shouldSupportNoTokenInCookiesIfRequestIsFileAndMethodIsGET() {
+    public void shouldSupportNoStaticTokenInCookies() {
 
         MockHttpServletRequest request = mockHttpServletRequest("GET", "/api/file/someFile");
 
-        assertThat(requestTokenFinder.findToken(request)).isNull();
+        assertThat(requestTokenFinder.findAccessToken(request)).isNull();
     }
 
     private MockHttpServletRequest mockHttpServletRequest() {

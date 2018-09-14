@@ -1,31 +1,43 @@
 package net.dorokhov.pony.web.security.token;
 
+import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.api.user.service.UserService;
-import net.dorokhov.pony.web.security.token.exception.InvalidTokenException;
 import net.dorokhov.pony.web.security.UserDetailsImpl;
+import net.dorokhov.pony.web.security.WebAuthority;
+import net.dorokhov.pony.web.security.token.exception.InvalidTokenException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import static net.dorokhov.pony.api.user.domain.User.Role.ADMIN;
+import static net.dorokhov.pony.api.user.domain.User.Role.USER;
 
 @Component
 public class TokenSecurityContextRepository implements SecurityContextRepository {
     
     private final RequestTokenFinder requestTokenFinder;
-    private final TokenManager tokenManager;
+    private final TokenService tokenService;
     private final UserService userService;
 
-    public TokenSecurityContextRepository(RequestTokenFinder requestTokenFinder,
-                                          TokenManager tokenManager,
-                                          UserService userService) {
+    public TokenSecurityContextRepository(
+            RequestTokenFinder requestTokenFinder,
+            TokenService tokenService,
+            UserService userService
+    ) {
         this.requestTokenFinder = requestTokenFinder;
-        this.tokenManager = tokenManager;
+        this.tokenService = tokenService;
         this.userService = userService;
     }
 
@@ -48,7 +60,7 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
     @Override
     public boolean containsContext(HttpServletRequest request) {
         try {
-            loadUser(request);
+            loadAuthentication(request);
             return true;
         } catch (InvalidTokenException e) {
             return false;
@@ -56,21 +68,50 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
     }
     
     private SecurityContext loadContext(HttpServletRequest request) throws InvalidTokenException {
-        UserDetailsImpl userDetails = new UserDetailsImpl(loadUser(request));
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        securityContext.setAuthentication(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+        securityContext.setAuthentication(loadAuthentication(request));
         return securityContext;
     }
     
-    private User loadUser(HttpServletRequest request) throws InvalidTokenException {
-        String token = requestTokenFinder.findToken(request);
-        if (token == null) {
-            throw new InvalidTokenException();
+    private Authentication loadAuthentication(HttpServletRequest request) throws InvalidTokenException {
+        User user = loadUserByAccessToken(request);
+        boolean isAccessToken = user != null;
+        if (user == null) {
+            user = loadUserByStaticToken(request);
         }
-        User user = userService.getById(tokenManager.verifyAccessTokenAndGetUserId(token));
         if (user == null) {
             throw new InvalidTokenException();
         }
-        return user;
+        UserDetails userDetails = new UserDetailsImpl(user);
+        ImmutableList.Builder<GrantedAuthority> authorities = ImmutableList.<GrantedAuthority>builder()
+                .addAll(userDetails.getAuthorities())
+                .add(new SimpleGrantedAuthority(WebAuthority.FILE_API.name()));
+        if (isAccessToken) {
+            if (user.getRoles().contains(USER)) {
+                authorities.add(new SimpleGrantedAuthority(WebAuthority.USER_API.name()));
+            }
+            if (user.getRoles().contains(ADMIN)) {
+                authorities.add(new SimpleGrantedAuthority(WebAuthority.ADMIN_API.name()));
+            }
+        }
+        return new UsernamePasswordAuthenticationToken(userDetails, null, authorities.build());
+    }
+    
+    @Nullable
+    private User loadUserByAccessToken(HttpServletRequest request) throws InvalidTokenException {
+        String token = requestTokenFinder.findAccessToken(request);
+        if (token != null) {
+            return userService.getById(tokenService.verifyAccessTokenAndGetUserId(token));
+        }
+        return null;
+    }
+    
+    @Nullable
+    private User loadUserByStaticToken(HttpServletRequest request) throws InvalidTokenException {
+        String token = requestTokenFinder.findStaticToken(request);
+        if (token != null) {
+            return userService.getById(tokenService.verifyStaticTokenAndGetUserId(token));
+        }
+        return null;
     }
 }

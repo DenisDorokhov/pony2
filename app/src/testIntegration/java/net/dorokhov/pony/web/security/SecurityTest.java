@@ -3,31 +3,43 @@ package net.dorokhov.pony.web.security;
 import com.google.common.collect.ImmutableMap;
 import net.dorokhov.pony.ApiTemplate;
 import net.dorokhov.pony.InstallingIntegrationTest;
+import net.dorokhov.pony.api.library.domain.ArtworkFiles;
 import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony.api.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony.core.library.service.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.domain.ErrorDto;
+import net.dorokhov.pony.web.domain.InstallationDto;
 import net.dorokhov.pony.web.domain.UserDto;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SecurityTest extends InstallingIntegrationTest {
 
+    private static final Resource IMAGE_RESOURCE = new ClassPathResource("image.png");
+
     @Autowired
     private ApiTemplate apiTemplate;
-    
     @Autowired
     private UserService userService;
+    @Autowired
+    private ArtworkStorage artworkStorage;
+    
+    private ArtworkFiles artworkFiles;
 
     @Test
     public void shouldAuthenticate() {
@@ -40,7 +52,7 @@ public class SecurityTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailAuthenticationIfAuthenticationFails() {
+    public void shouldFailAuthenticationWithInvalidCredentials() {
 
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(ImmutableMap.of(
                 "email", "invalidEmail",
@@ -69,7 +81,7 @@ public class SecurityTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailAuthenticationIfLogoutFails() {
+    public void shouldFailAuthenticationWithInvalidAccessToken() {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/authentication", HttpMethod.DELETE,
@@ -81,7 +93,7 @@ public class SecurityTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailAuthenticationIfApiResponseRequestedWithNoAuthentication() {
+    public void shouldFailAuthenticationWithNoToken() {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().getForEntity("/api/someResource", ErrorDto.class);
 
@@ -106,7 +118,7 @@ public class SecurityTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldNotDenyUserAreaIfRoleIsUser() throws DuplicateEmailException {
+    public void shouldAccessUserAreaIfRoleIsUser() throws DuplicateEmailException {
 
         User user = createUser();
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
@@ -116,6 +128,114 @@ public class SecurityTest extends InstallingIntegrationTest {
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+
+    @Test
+    public void shouldAccessAdminAreaIfRoleIsUser() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<InstallationDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/installation", HttpMethod.GET, 
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), InstallationDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+
+    @Test
+    public void shouldAccessStaticContentIfRoleIsUser() throws IOException, DuplicateEmailException {
+
+        User user = createUser();
+        AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
+        artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
+
+        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/file/artwork/small/{artworkId}", HttpMethod.GET, 
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), byte[].class, artworkFiles.getArtwork().getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+
+    @Test
+    public void shouldAccessStaticContentIfRoleIsAdmin() throws IOException {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
+
+        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/file/artwork/small/{artworkId}", HttpMethod.GET, 
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), byte[].class, artworkFiles.getArtwork().getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+
+    @Test
+    public void shouldAccessStaticContentIfRoleIsUserAndTokenIsStatic() throws IOException, DuplicateEmailException {
+
+        User user = createUser();
+        AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
+        artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
+
+        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/file/artwork/small/{artworkId}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, artworkFiles.getArtwork().getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+
+    @Test
+    public void shouldAccessStaticContentIfRoleIsAdminAndTokenIsStatic() throws IOException {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
+
+        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/file/artwork/small/{artworkId}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, artworkFiles.getArtwork().getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+    }
+
+    @Test
+    public void shouldDenyAccessToAdminAreaIfTokenIsStatic() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/someResource", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+    }
+
+    @Test
+    public void shouldDenyAccessToUserAreaIfTokenIsStatic() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/user", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.ACCESS_DENIED));
+    }
+
+    @Test
+    public void shouldDenyAccessIfAccessTokenIsPassedInCookie() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/user", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
     
     private User createUser() throws DuplicateEmailException {

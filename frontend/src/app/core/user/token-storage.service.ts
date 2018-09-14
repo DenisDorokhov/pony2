@@ -8,10 +8,11 @@ export class TokenStorageService {
   private static readonly STATIC_TOKEN_COOKIE_KEY: string = 'pony2.staticToken';
   
   private _accessToken: string | undefined;
+  private _staticToken: string | undefined;
 
   constructor(private cookieService: CookieService) {
     this._accessToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_LOCAL_STORAGE_KEY);
-    this.synchronizeCookies();
+    this._staticToken = this.cookieService.get(TokenStorageService.STATIC_TOKEN_COOKIE_KEY);
   }
 
   get accessToken(): string {
@@ -25,14 +26,18 @@ export class TokenStorageService {
       localStorage.removeItem(TokenStorageService.ACCESS_TOKEN_LOCAL_STORAGE_KEY);
     }
     this._accessToken = accessToken;
-    this.synchronizeCookies();
   }
   
-  private synchronizeCookies() {
-    if (this._accessToken) {
-      this.cookieService.put(TokenStorageService.STATIC_TOKEN_COOKIE_KEY, this._accessToken);
+  get staticToken(): string {
+    return this._staticToken;
+  }
+  
+  set staticToken(staticToken: string) {
+    if (staticToken) {
+      this.cookieService.put(TokenStorageService.STATIC_TOKEN_COOKIE_KEY, staticToken);
     } else {
       this.cookieService.remove(TokenStorageService.STATIC_TOKEN_COOKIE_KEY);
     }
+    this._staticToken = staticToken;
   }
 }

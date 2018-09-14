@@ -9,7 +9,7 @@ import net.dorokhov.pony.api.user.domain.User.Role;
 import net.dorokhov.pony.api.user.service.UserService;
 import net.dorokhov.pony.web.domain.*;
 import net.dorokhov.pony.web.domain.ErrorDto.Code;
-import net.dorokhov.pony.web.service.InstallationSecretManager;
+import net.dorokhov.pony.web.service.InstallationSecretService;
 import net.dorokhov.pony.web.service.exception.SecretNotFoundException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class InstallationControllerTest extends IntegrationTest {
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private InstallationSecretManager installationSecretManager;
+    private InstallationSecretService installationSecretService;
     @Autowired
     private UserService userService;
     @Autowired
@@ -50,7 +50,7 @@ public class InstallationControllerTest extends IntegrationTest {
     public void shouldInstall() throws SecretNotFoundException, IOException {
 
         InstallationCommandDto command = new InstallationCommandDto(
-                installationSecretManager.fetchInstallationSecret(),
+                installationSecretService.fetchInstallationSecret(),
                 emptyList(),
                 "Foo Bar",
                 "foo@bar.com",
@@ -122,7 +122,7 @@ public class InstallationControllerTest extends IntegrationTest {
     public void shouldFailIfAlreadyInstalled() throws SecretNotFoundException, IOException {
 
         InstallationCommandDto command = new InstallationCommandDto(
-                installationSecretManager.fetchInstallationSecret(),
+                installationSecretService.fetchInstallationSecret(),
                 emptyList(),
                 "Foo Bar",
                 "foo@bar.com",

@@ -8,10 +8,12 @@ public final class AuthenticationDto {
 
     private final UserDto user;
     private final String accessToken;
+    private final String staticToken;
 
-    private AuthenticationDto(UserDto user, String accessToken) {
+    private AuthenticationDto(UserDto user, String accessToken, String staticToken) {
         this.user = checkNotNull(user);
         this.accessToken = checkNotNull(accessToken);
+        this.staticToken = checkNotNull(staticToken);
     }
 
     public UserDto getUser() {
@@ -22,7 +24,11 @@ public final class AuthenticationDto {
         return accessToken;
     }
 
-    public static AuthenticationDto of(User user, String accessToken) {
-        return new AuthenticationDto(UserDto.of(user), accessToken);
+    public String getStaticToken() {
+        return staticToken;
+    }
+
+    public static AuthenticationDto of(User user, String accessToken, String staticToken) {
+        return new AuthenticationDto(UserDto.of(user), accessToken, staticToken);
     }
 }

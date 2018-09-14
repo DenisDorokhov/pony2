@@ -18,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class LibraryServiceImpl implements LibraryService {
@@ -57,7 +60,13 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public List<Song> getSongsByIds(List<String> ids) {
-        return songRepository.findAll(ids);
+        Map<String, Song> songs = songRepository.findAll(ids).stream()
+                .collect(Collectors.toMap(Song::getId, song -> song));
+        // Preserve order.
+        return ids.stream()
+                .map(songs::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override

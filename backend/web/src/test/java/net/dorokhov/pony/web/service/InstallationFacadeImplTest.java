@@ -31,7 +31,7 @@ public class InstallationFacadeImplTest {
     @Mock
     private InstallationService installationService;
     @Mock
-    private InstallationSecretManager installationSecretManager;
+    private InstallationSecretService installationSecretService;
 
     @Test
     public void shouldGetInstallation() throws ObjectNotFoundException {
@@ -60,7 +60,7 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldVerifyInstallationSecret() throws SecretNotFoundException, IOException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenReturn("someSecret");
+        when(installationSecretService.fetchInstallationSecret()).thenReturn("someSecret");
 
         assertThat(installationServiceFacade.verifyInstallationSecret("someSecret")).isTrue();
     }
@@ -68,7 +68,7 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldNotVerifyInstallationSecretIfItCannotBeFound() throws SecretNotFoundException, IOException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenThrow(new SecretNotFoundException());
+        when(installationSecretService.fetchInstallationSecret()).thenThrow(new SecretNotFoundException());
 
         assertThat(installationServiceFacade.verifyInstallationSecret("someSecret")).isFalse();
     }
@@ -76,7 +76,7 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldNotVerifyInstallationSecretIfItCannotBeRead() throws SecretNotFoundException, IOException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenThrow(new IOException());
+        when(installationSecretService.fetchInstallationSecret()).thenThrow(new IOException());
 
         assertThat(installationServiceFacade.verifyInstallationSecret("someSecret")).isFalse();
     }
@@ -84,7 +84,7 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldInstall() throws SecretNotFoundException, IOException, AlreadyInstalledException, InvalidInstallationSecretException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenReturn("someSecret");
+        when(installationSecretService.fetchInstallationSecret()).thenReturn("someSecret");
         Installation installation = Installation.builder()
                 .creationDate(LocalDateTime.now())
                 .version("2.0")
@@ -100,7 +100,7 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldFailInstallationIfSecretIsInvalid() throws SecretNotFoundException, IOException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenReturn("someSecret");
+        when(installationSecretService.fetchInstallationSecret()).thenReturn("someSecret");
         InstallationCommandDto command = new InstallationCommandDto("invalidSecret", emptyList(),
                 "Foo Bar", "foo@bar.com", "somePassword", "somePassword");
 
@@ -110,20 +110,20 @@ public class InstallationFacadeImplTest {
     @Test
     public void shouldGenerateSecretIfItDoesNotNotExists() throws SecretNotFoundException, IOException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenThrow(new SecretNotFoundException());
+        when(installationSecretService.fetchInstallationSecret()).thenThrow(new SecretNotFoundException());
 
         installationServiceFacade.assureInstallationSecretExists();
 
-        verify(installationSecretManager).generateAndStoreInstallationSecret();
+        verify(installationSecretService).generateAndStoreInstallationSecret();
     }
 
     @Test
     public void shouldNotGenerateSecretIfItExists() throws SecretNotFoundException, IOException {
 
-        when(installationSecretManager.fetchInstallationSecret()).thenReturn("someSecret");
+        when(installationSecretService.fetchInstallationSecret()).thenReturn("someSecret");
 
         installationServiceFacade.assureInstallationSecretExists();
 
-        verify(installationSecretManager, never()).generateAndStoreInstallationSecret();
+        verify(installationSecretService, never()).generateAndStoreInstallationSecret();
     }
 }

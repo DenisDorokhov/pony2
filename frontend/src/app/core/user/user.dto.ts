@@ -17,4 +17,5 @@ export namespace UserDto {
 export interface AuthenticationDto {
   user: UserDto;
   accessToken: string;
+  staticToken: string;
 }

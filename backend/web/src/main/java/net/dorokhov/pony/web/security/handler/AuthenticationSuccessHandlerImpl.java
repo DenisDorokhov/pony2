@@ -3,7 +3,7 @@ package net.dorokhov.pony.web.security.handler;
 import net.dorokhov.pony.api.user.domain.User;
 import net.dorokhov.pony.web.domain.AuthenticationDto;
 import net.dorokhov.pony.web.security.LoginDelegate;
-import net.dorokhov.pony.web.security.token.TokenManager;
+import net.dorokhov.pony.web.security.token.TokenService;
 import net.dorokhov.pony.web.service.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,16 +25,16 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final UserContext userContext;
-    private final TokenManager tokenManager;
+    private final TokenService tokenService;
     private final MappingJackson2HttpMessageConverter messageConverter;
     private final List<LoginDelegate> loginDelegates;
 
     public AuthenticationSuccessHandlerImpl(UserContext userContext,
-                                            TokenManager tokenManager,
-                                            MappingJackson2HttpMessageConverter messageConverter, 
+                                            TokenService tokenService,
+                                            MappingJackson2HttpMessageConverter messageConverter,
                                             List<LoginDelegate> loginDelegates) {
         this.userContext = userContext;
-        this.tokenManager = tokenManager;
+        this.tokenService = tokenService;
         this.messageConverter = messageConverter;
         this.loginDelegates = loginDelegates;
     }
@@ -46,7 +46,10 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         User user = userContext.getAuthenticatedUser();
         loginDelegates.forEach(loginDelegate -> loginDelegate.onLogin(user));
         logger.debug("User '{}' has logged in.", user.getId());
-        String token = tokenManager.createAccessTokenForUserId(user.getId());
-        messageConverter.write(AuthenticationDto.of(user, token), MediaType.ALL, new ServletServerHttpResponse(response));
+        String accessToken = tokenService.generateAccessTokenForUserId(user.getId());
+        String staticToken = tokenService.generateStaticTokenForUserId(user.getId());
+        messageConverter.write(
+                AuthenticationDto.of(user, accessToken, staticToken), 
+                MediaType.ALL, new ServletServerHttpResponse(response));
     }
 }

@@ -11,19 +11,25 @@ import java.io.File;
 @Profile("test")
 @SuppressWarnings("unused")
 public class SecretFileCleaner {
-    
-    private final File tokenSecretFile;
-    private final File installationSecretFile;
 
-    public SecretFileCleaner(@Value("${pony.tokenSecret.path}") File tokenSecretFile,
-                             @Value("${pony.installationSecret.path}") File installationSecretFile) {
-        this.tokenSecretFile = tokenSecretFile;
+    private final File installationSecretFile;
+    private final File accessTokenKeyFile;
+    private final File staticTokenKeyFile;
+
+    public SecretFileCleaner(
+            @Value("${pony.installationSecret.path}") File installationSecretFile,
+            @Value("${pony.accessTokenKey.path}") File accessTokenKeyFile,
+            @Value("${pony.staticTokenKey.path}") File staticTokenKeyFile
+    ) {
+        this.accessTokenKeyFile = accessTokenKeyFile;
         this.installationSecretFile = installationSecretFile;
+        this.staticTokenKeyFile = staticTokenKeyFile;
     }
-    
+
     @PreDestroy
     public void cleanSecretFiles() {
-        tokenSecretFile.delete();
+        accessTokenKeyFile.delete();
+        staticTokenKeyFile.delete();
         installationSecretFile.delete();
     }
 }
