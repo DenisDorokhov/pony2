@@ -63,12 +63,17 @@
     bottom: 0;
     color: #909090;
   }
-  .loading-indicator {
+  .loading-indicator-container {
     position: absolute;
-    width: 15px;
-    height: 15px;
     bottom: 2px;
-    left: 328px;
+    left: 148px;
+    right: 77px;
+    text-align: center;
+    
+    .loading-indicator {
+      width: 15px;
+      height: 15px;
+    }
   }
   .duration {
     position: absolute;

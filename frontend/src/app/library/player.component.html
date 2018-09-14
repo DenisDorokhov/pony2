@@ -25,7 +25,9 @@
   </div>
 
   <div class="time">{{ formattedProgress }}</div>
-  <img [hidden]="!isLoading" class="loading-indicator" src="./assets/spinner.gif">
+  <div class="loading-indicator-container">
+    <img [hidden]="!isLoading" class="loading-indicator" src="./assets/spinner.gif">
+  </div>
   <div class="duration">{{ formattedDuration }}</div>
 
   <pony-image-loader [url]="artworkUrl"></pony-image-loader>
