@@ -184,15 +184,12 @@ export class PlaybackService {
         switch (request) {
           case UnityRequest.PLAY:
           case UnityRequest.PAUSE:
-            console.log('Play / pause request from sway.fm.');
             this.playOrPause();
             break;
           case UnityRequest.NEXT:
-            console.log('Next song request from sway.fm.');
             this.switchToNextSong().subscribe();
             break;
           case UnityRequest.PREVIOUS:
-            console.log('Previous song request from sway.fm.');
             this.switchToPreviousSong().subscribe();
             break;
         }
@@ -317,10 +314,22 @@ export class PlaybackService {
   private observeUnityRequest(): Observable<UnityRequest> {
     return Observable.create(subscriber => {
       this.unity.setCallbackObject({
-        play: () => subscriber.next(UnityRequest.PLAY),
-        pause: () => subscriber.next(UnityRequest.PAUSE),
-        next: () => subscriber.next(UnityRequest.NEXT),
-        previous: () => subscriber.next(UnityRequest.PREVIOUS)
+        play: () => {
+          console.log('Play request from sway.fm.');
+          subscriber.next(UnityRequest.PLAY);
+        },
+        pause: () => {
+          console.log('Pause request from sway.fm.');
+          subscriber.next(UnityRequest.PAUSE);
+        },
+        next: () => {
+          console.log('Next song request from sway.fm.');
+          subscriber.next(UnityRequest.NEXT);
+        },
+        previous: () => {
+          console.log('Previous song request from sway.fm.');
+          subscriber.next(UnityRequest.PREVIOUS);
+        }
       });
     });
   }

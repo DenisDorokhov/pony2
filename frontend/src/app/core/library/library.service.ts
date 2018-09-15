@@ -119,8 +119,7 @@ export class LibraryService {
   }
 
   observeSongPlaybackRequest(): Observable<Song | undefined> {
-    return this.songPlaybackRequestSubject.asObservable()
-      .distinctUntilChanged();
+    return this.songPlaybackRequestSubject.asObservable();
   }
 
   requestSongPlayback(song?: Song) {
