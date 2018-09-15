@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
+import * as Logger from 'js-logger';
 import 'rxjs/add/operator/debounce';
 import 'rxjs/add/operator/filter';
 import {Observable} from 'rxjs/Observable';
@@ -79,6 +80,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   onError() {
+    Logger.error(`Could not load image '${this._url}'.`);
     this.state = ImageLoaderComponentState.ERROR;
   }
 
