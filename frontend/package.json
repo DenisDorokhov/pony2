@@ -29,6 +29,7 @@
     "font-awesome": "^4.7.0",
     "howler": "^2.0.15",
     "intersection-observer": "^0.5.0",
+    "js-logger": "^1.4.1",
     "ngx-bootstrap": "^2.0.0-rc.0",
     "ngx-cookie": "^2.0.1",
     "noty": "^3.2.0-beta",

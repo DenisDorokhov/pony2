@@ -1,4 +1,5 @@
 import {Component, OnInit} from '@angular/core';
+import * as Logger from 'js-logger';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/common.model';
 import {Artist} from '../core/library/library.model';
@@ -26,7 +27,7 @@ export class ArtistListComponent implements OnInit {
   }
 
   private loadArtists() {
-    console.log('Loading artists...');
+    Logger.info('Loading artists...');
     this.loadingState = LoadingState.LOADING;
     if (this.artistsSubscription) {
       this.artistsSubscription.unsubscribe();
@@ -37,7 +38,7 @@ export class ArtistListComponent implements OnInit {
           this.artists = artists;
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
-            console.log(`${artists.length} artists loaded.`);
+            Logger.info(`${artists.length} artists loaded.`);
             if (!this.libraryService.selectedArtist) {
               const selectedArtist = this.libraryService.selectDefaultArtist(artists);
               if (selectedArtist) {
@@ -46,14 +47,14 @@ export class ArtistListComponent implements OnInit {
             }
           } else {
             this.loadingState = LoadingState.EMPTY;
-            console.log(`No artists found.`);
+            Logger.info(`No artists found.`);
             this.libraryService.deselectArtist();
             this.libraryService.deselectSong();
           }
         },
         error => {
           this.loadingState = LoadingState.ERROR;
-          console.error(`Could not load artists: "${error.message}".`);
+          Logger.error(`Could not load artists: "${error.message}".`);
         }
       );
   }

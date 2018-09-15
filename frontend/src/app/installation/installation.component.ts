@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
+import * as Logger from 'js-logger';
 import {ErrorDto} from '../core/common/common.dto';
 import {InstallationCommandDto} from '../core/installation/installation.dto';
 import {InstallationService} from '../core/installation/installation.service';
@@ -48,15 +49,15 @@ export class InstallationComponent {
     const installationCommand = <InstallationCommandDto>this.installationForm.value;
     this.installationService.install(installationCommand).subscribe(
       installation => {
-        console.log(`Version ${installation.version} has been installed.`);
+        Logger.info(`Version ${installation.version} has been installed.`);
         this.error = null;
         this.router.navigate(['/login'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
         if (error.code === ErrorDto.Code.VALIDATION) {
-          console.error('Validation failed.');
+          Logger.error('Validation failed.');
         } else {
-          console.error(`Installation failed: "${error.message}".`);
+          Logger.error(`Installation failed: "${error.message}".`);
         }
         this.error = error;
       }

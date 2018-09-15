@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {FormBuilder, FormGroup} from '@angular/forms';
 import {Router} from '@angular/router';
+import * as Logger from 'js-logger';
 import {ErrorDto} from '../core/common/common.dto';
 import {AuthenticationService} from '../core/user/authentication.service';
 import {Credentials} from '../core/user/authentication.service';
@@ -28,12 +29,12 @@ export class LoginComponent {
     const credentials = <Credentials>this.loginForm.value;
     this.authenticationService.authenticate(credentials).subscribe(
       user => {
-        console.log(`User ${user.email} has been authenticated.`);
+        Logger.info(`User ${user.email} has been authenticated.`);
         this.error = null;
         this.router.navigate(['/library'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
-        console.error(`Authentication failed: "${error.message}".`);
+        Logger.error(`Authentication failed: "${error.message}".`);
         this.error = error;
       }
     );

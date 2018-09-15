@@ -1,8 +1,9 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Howl} from 'howler';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+import * as Logger from 'js-logger';
 import {interval, Subscription, timer} from 'rxjs';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Observable} from 'rxjs/Observable';
 import {AuthenticationService} from '../user/authentication.service';
 import {Song} from './library.model';
@@ -94,34 +95,34 @@ class AudioPlayer {
 
   private loadHowlForSong(song: Song) {
     this.unloadHowl();
-    console.log(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
+    Logger.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
     this.firePlaybackEvent(PlaybackState.LOADING, song);
     this.howl = new Howl(<IHowlProperties>{
       src: [song.audioUrl],
       format: [song.fileExtension],
       html5: true,
       onload: () => {
-        console.log('Audio loaded.');
+        Logger.info('Audio loaded.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
       onloaderror: (id, error) => {
-        console.error(`Audio could not be loaded: "${error}".`);
+        Logger.error(`Audio could not be loaded: "${error}".`);
         this.firePlaybackEvent(PlaybackState.ERROR, song);
       },
       onplay: () => {
-        console.log('Playback started / resumed.');
+        Logger.info('Playback started / resumed.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, this.lastPlaybackEvent.progress);
       },
       onplayerror: (id, error) => {
-        console.error(`Playback failed: "${error}".`);
+        Logger.error(`Playback failed: "${error}".`);
         this.firePlaybackEvent(PlaybackState.ERROR, song, this.lastPlaybackEvent.progress);
       },
       onend: () => {
-        console.log('Playback finished.');
+        Logger.info('Playback finished.');
         this.firePlaybackEvent(PlaybackState.ENDED, song, this.lastPlaybackEvent.progress);
       },
       onpause: () => {
-        console.log('Playback paused.');
+        Logger.info('Playback paused.');
         this.firePlaybackEvent(PlaybackState.PAUSED, song, this.lastPlaybackEvent.progress);
       }
     });
@@ -315,19 +316,19 @@ export class PlaybackService {
     return Observable.create(subscriber => {
       this.unity.setCallbackObject({
         play: () => {
-          console.log('Play request from sway.fm.');
+          Logger.info('Play request from sway.fm.');
           subscriber.next(UnityRequest.PLAY);
         },
         pause: () => {
-          console.log('Pause request from sway.fm.');
+          Logger.info('Pause request from sway.fm.');
           subscriber.next(UnityRequest.PAUSE);
         },
         next: () => {
-          console.log('Next song request from sway.fm.');
+          Logger.info('Next song request from sway.fm.');
           subscriber.next(UnityRequest.NEXT);
         },
         previous: () => {
-          console.log('Previous song request from sway.fm.');
+          Logger.info('Previous song request from sway.fm.');
           subscriber.next(UnityRequest.PREVIOUS);
         }
       });

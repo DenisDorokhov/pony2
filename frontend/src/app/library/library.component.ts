@@ -1,5 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
+import * as Logger from 'js-logger';
 import {Subscription} from 'rxjs/Subscription';
 import {AuthenticationService} from '../core/user/authentication.service';
 
@@ -18,7 +19,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loggedOutSubscription = this.authenticationService.observeLogout().subscribe(
       user => {
-        console.log(`User ${user.email} has been logged out.`);
+        Logger.info(`User ${user.email} has been logged out.`);
         this.router.navigate(['/login'], {replaceUrl: true});
       }
     );

@@ -1,4 +1,5 @@
 import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import * as Logger from 'js-logger';
 import {BsModalService} from 'ngx-bootstrap';
 import {AuthenticationService} from '../core/user/authentication.service';
 import {UserDto} from '../core/user/user.dto';
@@ -34,7 +35,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   refresh() {
-    console.log('Refreshing.');
+    Logger.info('Refreshing.');
   }
 
   openProfile() {
@@ -42,7 +43,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   signOut() {
-    console.log('Signing out...');
+    Logger.info('Signing out...');
     this.authenticationService.logout().subscribe();
   }
 

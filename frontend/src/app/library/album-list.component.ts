@@ -1,5 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import 'rxjs/add/operator/do';
+import * as Logger from 'js-logger';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/common.model';
 import {AlbumSongs, Artist, ArtistSongs, Song} from '../core/library/library.model';
@@ -74,7 +75,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   private loadArtistSongs(artist: Artist) {
-    console.log(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
+    Logger.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
     this.loadingState = LoadingState.LOADING;
     if (this.artistSongsSubscription) {
       this.artistSongsSubscription.unsubscribe();
@@ -85,11 +86,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.artistSongs = artistSongs;
           this.artistSongs.albumSongs.sort(AlbumListComponent.compareAlbumSongs);
           this.loadingState = LoadingState.LOADED;
-          console.log(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
+          Logger.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
         error => {
           this.loadingState = LoadingState.ERROR;
-          console.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
+          Logger.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
       );
   }

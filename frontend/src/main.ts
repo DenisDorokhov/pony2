@@ -8,5 +8,4 @@ if (environment.production) {
 }
 
 platformBrowserDynamic().bootstrapModule(AppModule)
-  .then(() => console.log('Application started.'))
   .catch(err => console.log(err));
