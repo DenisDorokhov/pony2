@@ -15,13 +15,16 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.BAD_REQUEST_MESSAGE;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
 
 @RestController
 @RequestMapping(value = "/api/user", produces = "application/json")
 @Api(tags = "User")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
 })
 public class UserController implements ErrorHandlingController {
     
@@ -40,7 +43,7 @@ public class UserController implements ErrorHandlingController {
     @PutMapping
     @ApiOperation("Update current user.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
     })
     public UserDto updateCurrentUser(@Valid @RequestBody CurrentUserUpdateCommandDto command) throws InvalidPasswordException, DuplicateEmailException {
         return userFacade.updateCurrentUser(command);

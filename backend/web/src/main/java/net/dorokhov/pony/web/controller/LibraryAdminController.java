@@ -18,14 +18,16 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.*;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.FORBIDDEN_MESSAGE;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
 
 @RestController
 @RequestMapping(value = "/api/admin/library", produces = "application/json")
 @Api(tags = "Library Administration")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
-        @ApiResponse(code = FORBIDDEN_CODE, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_FORBIDDEN, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
 })
 public class LibraryAdminController implements ErrorHandlingController {
 
@@ -50,7 +52,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     @GetMapping("/scanJobProgress")
     @ApiOperation("Get current scan job progress.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "No scan job currently running.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "No scan job currently running.", response = ErrorDto.class),
     })
     public ScanJobProgressDto getCurrentScanJobProgress() throws ObjectNotFoundException {
         return scanFacade.getCurrentScanJobProgress();
@@ -59,7 +61,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     @GetMapping("/scanJobProgress/{scanJobId}")
     @ApiOperation("Get scan job progress by scan job ID. Used to track scan job progress which was explicitly initiated.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested scan job is not running.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested scan job is not running.", response = ErrorDto.class),
     })
     public ScanJobProgressDto getScanJobProgress(@PathVariable String scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJobProgress(scanJobId);
@@ -74,7 +76,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     @GetMapping("/scanJobs/{scanJobId}")
     @ApiOperation("Get scan job details by scan job ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested scan job not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested scan job not found.", response = ErrorDto.class),
     })
     public ScanJobDto getScanJob(@PathVariable String scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJob(scanJobId);
@@ -83,7 +85,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     @PostMapping("/scanJobs/full")
     @ApiOperation("Start full scan job.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = "Scan job is already running.", response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = "Scan job is already running.", response = ErrorDto.class),
     })
     public ScanJobDto startScanJob() throws ConcurrentScanException {
         return scanFacade.startScanJob();

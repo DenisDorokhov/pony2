@@ -17,14 +17,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.FORBIDDEN_MESSAGE;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
 
 @RestController
 @RequestMapping(value = "/api/admin/log", produces = "application/json")
 @Api(tags = "Log Administration")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
-        @ApiResponse(code = FORBIDDEN_CODE, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_FORBIDDEN, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
 })
 public class LogAdminController implements ErrorHandlingController {
 

@@ -12,14 +12,15 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.*;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.*;
 
 @RestController
 @RequestMapping(value = "/api/admin/config", produces = "application/json")
 @Api(tags = "Config Administration")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
-        @ApiResponse(code = FORBIDDEN_CODE, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_FORBIDDEN, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
 })
 public class ConfigAdminController implements ErrorHandlingController {
 
@@ -38,7 +39,7 @@ public class ConfigAdminController implements ErrorHandlingController {
     @PutMapping
     @ApiOperation("Update configuration.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
     })
     public ConfigDto saveConfig(@Valid @RequestBody ConfigDto config) {
         return configFacade.saveConfig(config);

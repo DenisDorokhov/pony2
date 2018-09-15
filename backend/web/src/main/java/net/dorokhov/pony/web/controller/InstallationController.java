@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.BAD_REQUEST_CODE;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 @RestController
 @RequestMapping(value = "/api/installation", produces = "application/json")
@@ -58,7 +58,7 @@ public class InstallationController implements ErrorHandlingController {
     @PostMapping
     @ApiOperation("Perform installation.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = "Already installed or invalid request.", response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = "Already installed or invalid request.", response = ErrorDto.class),
     })
     public InstallationDto install(@Valid @RequestBody InstallationCommandDto command) throws InvalidInstallationSecretException, AlreadyInstalledException {
         return installationFacade.install(command);

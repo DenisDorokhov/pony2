@@ -13,13 +13,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
 
 @RestController
 @RequestMapping(value = "/api/library", produces = "application/json")
 @Api(tags = "Library")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
 })
 public class LibraryController implements ErrorHandlingController {
 
@@ -48,7 +50,7 @@ public class LibraryController implements ErrorHandlingController {
     @GetMapping("/artistSongs/{artistId}")
     @ApiOperation("Get artist songs by artist ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artist not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested artist not found.", response = ErrorDto.class),
     })
     public ArtistSongsDto getArtistSongs(@PathVariable String artistId) throws ObjectNotFoundException {
         return libraryFacade.getArtistSongs(artistId);
@@ -63,7 +65,7 @@ public class LibraryController implements ErrorHandlingController {
     @GetMapping("/genreSongs/{genreId}")
     @ApiOperation("Get page of genre songs by genre ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested genre not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested genre not found.", response = ErrorDto.class),
     })
     public GenreSongsPageDto getGenreSongs(@PathVariable String genreId, @RequestParam(defaultValue = "0") int pageIndex) throws ObjectNotFoundException {
         return libraryFacade.getGenreSongs(genreId, pageIndex);
@@ -108,7 +110,7 @@ public class LibraryController implements ErrorHandlingController {
     @GetMapping("/scanStatistics")
     @ApiOperation("Get last scan statistics.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Library was never scanned.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Library was never scanned.", response = ErrorDto.class),
     })
     public ScanStatisticsDto getStatistics() throws ObjectNotFoundException {
         return scanFacade.getScanStatistics();

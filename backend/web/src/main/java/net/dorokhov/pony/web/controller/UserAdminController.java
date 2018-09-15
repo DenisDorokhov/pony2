@@ -18,14 +18,15 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.*;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.*;
 
 @RestController
 @RequestMapping(value = "/api/admin/users", produces = "application/json")
 @Api(tags = "User Administration")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
-        @ApiResponse(code = FORBIDDEN_CODE, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_FORBIDDEN, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
 })
 public class UserAdminController implements ErrorHandlingController {
     
@@ -44,7 +45,7 @@ public class UserAdminController implements ErrorHandlingController {
     @GetMapping("/{userId}")
     @ApiOperation("Get user by ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested user not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested user not found.", response = ErrorDto.class),
     })
     public UserDto getUserById(@PathVariable String userId) throws ObjectNotFoundException {
         return userFacade.getUserById(userId);
@@ -53,7 +54,7 @@ public class UserAdminController implements ErrorHandlingController {
     @PostMapping
     @ApiOperation("Create user.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
     })
     public UserDto createUser(@Valid @RequestBody UserCreationCommandDto command) throws DuplicateEmailException {
         return userFacade.createUser(command);
@@ -62,8 +63,8 @@ public class UserAdminController implements ErrorHandlingController {
     @PutMapping("/{userId}")
     @ApiOperation("Update user.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested user not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = BAD_REQUEST_MESSAGE, response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested user not found.", response = ErrorDto.class),
     })
     public UserDto updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdateCommandDto command) throws BadRequestException, ObjectNotFoundException, DuplicateEmailException {
         if (!userId.equals(command.getId())) {
@@ -75,8 +76,8 @@ public class UserAdminController implements ErrorHandlingController {
     @DeleteMapping("/{userId}")
     @ApiOperation("Delete user by ID.")
     @ApiResponses({
-            @ApiResponse(code = BAD_REQUEST_CODE, message = "Deletion of current user not allowed.", response = ErrorDto.class),
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested user not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_BAD_REQUEST, message = "Deletion of current user not allowed.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested user not found.", response = ErrorDto.class),
     })
     public UserDto deleteUser(@PathVariable String userId) throws BadRequestException, ObjectNotFoundException {
         if (userFacade.getCurrentUser().getId().equals(userId)) {

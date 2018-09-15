@@ -24,14 +24,16 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.*;
 
 @Controller
 @ResponseBody
 @RequestMapping("/api/file")
 @Api(tags = "Files")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
 })
 public class FileController implements ErrorHandlingController {
 
@@ -46,7 +48,7 @@ public class FileController implements ErrorHandlingController {
     @GetMapping(value = "/audio/{songId}", produces = {"audio/*", "application/json"})
     @ApiOperation("Get audio stream by song ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested song not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested song not found.", response = ErrorDto.class),
     })
     public ResponseEntity<?> getAudio(@PathVariable String songId,
                                       HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
@@ -57,7 +59,7 @@ public class FileController implements ErrorHandlingController {
     @GetMapping(value = "/artwork/large/{artworkId}", produces = {"image/*", "application/json"})
     @ApiOperation("Get large artwork file by artwork ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artwork not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested artwork not found.", response = ErrorDto.class),
     })
     public ResponseEntity<?> getLargeArtwork(@PathVariable String artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
@@ -68,7 +70,7 @@ public class FileController implements ErrorHandlingController {
     @GetMapping(value = "/artwork/small/{artworkId}", produces = {"image/*", "application/json"})
     @ApiOperation("Get small artwork file by artwork ID.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested artwork not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested artwork not found.", response = ErrorDto.class),
     })
     public ResponseEntity<?> getSmallArtwork(@PathVariable String artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
@@ -79,7 +81,7 @@ public class FileController implements ErrorHandlingController {
     @GetMapping(value = "/export/song/{songId}", produces = {"audio/*", "application/json"})
     @ApiOperation("Export song file by song ID. File will be returned with corresponding name within attachment content disposition.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested song not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested song not found.", response = ErrorDto.class),
     })
     public ResponseEntity<?> exportSong(@PathVariable String songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = fileFacade.exportSong(songId);
@@ -93,7 +95,7 @@ public class FileController implements ErrorHandlingController {
     @GetMapping(value = "/export/album/{albumId}", produces = {"application/zip", "application/json"})
     @ApiOperation("Export entire album by album ID. File will be returned with corresponding name within attachment content disposition.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Requested album not found.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Requested album not found.", response = ErrorDto.class),
     })
     public ResponseEntity<?> exportAlbum(@PathVariable String albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = fileFacade.exportAlbum(albumId);

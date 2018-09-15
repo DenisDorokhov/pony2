@@ -13,14 +13,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static net.dorokhov.pony.web.controller.common.ApiResponseValues.*;
+import static javax.servlet.http.HttpServletResponse.*;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.FORBIDDEN_MESSAGE;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
 
 @RestController
 @RequestMapping(value = "/api/admin/installation", produces = "application/json")
 @Api(tags = "Installation Administration")
 @ApiResponses({
-        @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
-        @ApiResponse(code = FORBIDDEN_CODE, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),
+        @ApiResponse(code = SC_FORBIDDEN, message = FORBIDDEN_MESSAGE, response = ErrorDto.class),
 })
 public class InstallationAdminController implements ErrorHandlingController {
 
@@ -33,7 +35,7 @@ public class InstallationAdminController implements ErrorHandlingController {
     @GetMapping
     @ApiOperation("Get installation details.")
     @ApiResponses({
-            @ApiResponse(code = NOT_FOUND_CODE, message = "Not installed.", response = ErrorDto.class),
+            @ApiResponse(code = SC_NOT_FOUND, message = "Not installed.", response = ErrorDto.class),
     })
     public InstallationDto getInstallation() throws ObjectNotFoundException {
         return installationFacade.getInstallation();
