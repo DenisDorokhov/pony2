@@ -31,23 +31,23 @@ public class FrontendController implements ErrorHandlingController {
     @PostMapping("/log")
     @ApiOperation("Write log messages.")
     public void log(@RequestBody List<FrontendLogCommandDto> commands, @RequestHeader(HttpHeaders.USER_AGENT) String userAgent) {
-        String message = "[{}] -> {}";
+        String message = "[{}] {} ('{}')";
         for (FrontendLogCommandDto command : commands) {
             switch (command.getLevel()) {
                 case TRACE:
-                    logger.trace(message, userAgent, command.getMessage());
+                    logger.trace(message, command.getDate(), command.getMessage(), userAgent);
                     break;
                 case DEBUG:
-                    logger.debug(message, userAgent, command.getMessage());
+                    logger.debug(message, command.getDate(), command.getMessage(), userAgent);
                     break;
                 case INFO:
-                    logger.info(message, userAgent, command.getMessage());
+                    logger.info(message, command.getDate(), command.getMessage(), userAgent);
                     break;
                 case WARN:
-                    logger.warn(message, userAgent, command.getMessage());
+                    logger.warn(message, command.getDate(), command.getMessage(), userAgent);
                     break;
                 case ERROR:
-                    logger.error(message, userAgent, command.getMessage());
+                    logger.error(message, command.getDate(), command.getMessage(), userAgent);
                     break;
             }
         }
