@@ -14,9 +14,10 @@ import javax.validation.Valid;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static net.dorokhov.pony.web.controller.common.SwaggerResponses.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/config", produces = "application/json")
+@RequestMapping(value = "/api/admin/config", produces = APPLICATION_JSON_VALUE)
 @Api(tags = "Config Administration")
 @ApiResponses({
         @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),

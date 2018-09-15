@@ -21,9 +21,10 @@ import org.springframework.web.bind.annotation.*;
 import static javax.servlet.http.HttpServletResponse.*;
 import static net.dorokhov.pony.web.controller.common.SwaggerResponses.FORBIDDEN_MESSAGE;
 import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/library", produces = "application/json")
+@RequestMapping(value = "/api/admin/library", produces = APPLICATION_JSON_VALUE)
 @Api(tags = "Library Administration")
 @ApiResponses({
         @ApiResponse(code = SC_UNAUTHORIZED, message = UNAUTHORIZED_MESSAGE, response = ErrorDto.class),

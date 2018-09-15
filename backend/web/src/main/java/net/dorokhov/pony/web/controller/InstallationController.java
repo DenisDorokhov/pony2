@@ -22,9 +22,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/installation", produces = "application/json")
+@RequestMapping(value = "/api/installation", produces = APPLICATION_JSON_VALUE)
 @Api(tags = "Installation")
 public class InstallationController implements ErrorHandlingController {
 

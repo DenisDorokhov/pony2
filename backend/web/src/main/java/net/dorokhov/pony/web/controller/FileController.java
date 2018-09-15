@@ -26,7 +26,8 @@ import java.io.OutputStream;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
-import static net.dorokhov.pony.web.controller.common.SwaggerResponses.*;
+import static net.dorokhov.pony.web.controller.common.SwaggerResponses.UNAUTHORIZED_MESSAGE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Controller
 @ResponseBody
@@ -45,7 +46,7 @@ public class FileController implements ErrorHandlingController {
         this.fileDistributor = fileDistributor;
     }
 
-    @GetMapping(value = "/audio/{songId}", produces = {"audio/*", "application/json"})
+    @GetMapping(value = "/audio/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
     @ApiOperation("Get audio stream by song ID.")
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested song not found.", response = ErrorDto.class),
@@ -56,7 +57,7 @@ public class FileController implements ErrorHandlingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/artwork/large/{artworkId}", produces = {"image/*", "application/json"})
+    @GetMapping(value = "/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
     @ApiOperation("Get large artwork file by artwork ID.")
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested artwork not found.", response = ErrorDto.class),
@@ -67,7 +68,7 @@ public class FileController implements ErrorHandlingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/artwork/small/{artworkId}", produces = {"image/*", "application/json"})
+    @GetMapping(value = "/artwork/small/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
     @ApiOperation("Get small artwork file by artwork ID.")
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested artwork not found.", response = ErrorDto.class),
@@ -78,7 +79,7 @@ public class FileController implements ErrorHandlingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/export/song/{songId}", produces = {"audio/*", "application/json"})
+    @GetMapping(value = "/export/song/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
     @ApiOperation("Export song file by song ID. File will be returned with corresponding name within attachment content disposition.")
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested song not found.", response = ErrorDto.class),
@@ -92,7 +93,7 @@ public class FileController implements ErrorHandlingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/export/album/{albumId}", produces = {"application/zip", "application/json"})
+    @GetMapping(value = "/export/album/{albumId}", produces = {"application/zip", APPLICATION_JSON_VALUE})
     @ApiOperation("Export entire album by album ID. File will be returned with corresponding name within attachment content disposition.")
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested album not found.", response = ErrorDto.class),
