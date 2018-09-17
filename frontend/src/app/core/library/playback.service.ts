@@ -133,7 +133,7 @@ class AudioPlayer {
   }
 
   private fireSongProgressPlaybackEvent() {
-    if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
+    if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
       const seek = this.howl.seek() as number;
       if (!isNaN(seek)) {
         const progress = seek / this.lastPlaybackEvent.song.duration;
