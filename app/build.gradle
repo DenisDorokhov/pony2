@@ -15,6 +15,7 @@ plugins {
 }
 
 apply plugin: 'org.springframework.boot'
+apply plugin: 'maven'
 
 jar {
     baseName = 'pony2'
@@ -22,6 +23,7 @@ jar {
 
 springBoot {
     buildInfo()
+    executable = true
 }
 
 bootRun {
@@ -43,6 +45,21 @@ testIntegration {
 // Make sure integration tests run after unit tests.
 testIntegration.mustRunAfter rootProject.subprojects.collect {
     it.tasks.getByName 'test'
+}
+
+if (project.hasProperty('releaseRepositoryUrl') && project.hasProperty('snapshotRepositoryUrl')) {
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                snapshotRepository(url: "${snapshotRepositoryUrl}") {
+                    authentication(userName: "${repositoryUser}", password: "${repositoryPassword}")
+                }
+                repository(url: "${releaseRepositoryUrl}") {
+                    authentication(userName: "${repositoryUser}", password: "${repositoryPassword}")
+                }
+            }
+        }
+    }
 }
 
 repositories {
