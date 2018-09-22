@@ -91,7 +91,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   private loadArtistSongs(artist: Artist, refreshing: boolean = false) {
     if (refreshing) {
-      Logger.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`)
+      Logger.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`);
     } else {
       Logger.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
       this.loadingState = LoadingState.LOADING;

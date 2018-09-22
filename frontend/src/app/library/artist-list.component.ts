@@ -42,7 +42,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   private loadArtists(refreshing: boolean = false) {
     if (refreshing) {
-      Logger.info('Refreshing artists...')
+      Logger.info('Refreshing artists...');
     } else {
       Logger.info('Loading artists...');
       this.loadingState = LoadingState.LOADING;
