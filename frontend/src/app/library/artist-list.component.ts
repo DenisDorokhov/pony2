@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import * as Logger from 'js-logger';
 import {Subscription} from 'rxjs/Subscription';
 import {LoadingState} from '../core/common/common.model';
@@ -10,7 +10,7 @@ import {LibraryService} from '../core/library/library.service';
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
 })
-export class ArtistListComponent implements OnInit {
+export class ArtistListComponent implements OnInit, OnDestroy {
 
   LoadingState = LoadingState;
   
@@ -18,17 +18,35 @@ export class ArtistListComponent implements OnInit {
   artists: Artist[] = [];
 
   private artistsSubscription: Subscription;
+  private refreshRequestSubscription: Subscription;
 
   constructor(private libraryService: LibraryService) {
   }
 
   ngOnInit(): void {
     this.loadArtists();
+    this.refreshRequestSubscription = this.libraryService.observeRefreshRequest()
+      .subscribe(() => {
+        this.loadArtists(true);
+      });
   }
 
-  private loadArtists() {
-    Logger.info('Loading artists...');
-    this.loadingState = LoadingState.LOADING;
+  ngOnDestroy(): void {
+    this.artistsSubscription.unsubscribe();
+    this.refreshRequestSubscription.unsubscribe();
+  }
+  
+  trackByArtistId(index: number, artist: Artist): string {
+    return artist.id;
+  }
+
+  private loadArtists(refreshing: boolean = false) {
+    if (refreshing) {
+      Logger.info('Refreshing artists...')
+    } else {
+      Logger.info('Loading artists...');
+      this.loadingState = LoadingState.LOADING;
+    }
     if (this.artistsSubscription) {
       this.artistsSubscription.unsubscribe();
     }
@@ -39,11 +57,9 @@ export class ArtistListComponent implements OnInit {
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
             Logger.info(`${artists.length} artists loaded.`);
-            if (!this.libraryService.selectedArtist) {
-              const selectedArtist = this.libraryService.selectDefaultArtist(artists);
-              if (selectedArtist) {
-                this.libraryService.startScrollToArtist(selectedArtist);
-              }
+            const selectedArtist = this.libraryService.selectDefaultArtist(artists);
+            if (selectedArtist) {
+              this.libraryService.startScrollToArtist(selectedArtist);
             }
           } else {
             this.loadingState = LoadingState.EMPTY;
@@ -53,7 +69,9 @@ export class ArtistListComponent implements OnInit {
           }
         },
         error => {
-          this.loadingState = LoadingState.ERROR;
+          if (!refreshing) {
+            this.loadingState = LoadingState.ERROR;
+          }
           Logger.error(`Could not load artists: "${error.message}".`);
         }
       );

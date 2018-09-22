@@ -74,7 +74,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   selectCurrentSong() {
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
-      this.libraryService.selectArtist(song.album.artist);
+      this.libraryService.selectArtistAndMakeDefault(song.album.artist);
       this.libraryService.selectSong(song);
       this.libraryService.startScrollToSong(song);
     }

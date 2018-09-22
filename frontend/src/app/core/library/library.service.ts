@@ -20,6 +20,7 @@ export class LibraryService {
   private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
 
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
+  private refreshRequestSubject = new Subject<void>();
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
@@ -50,6 +51,14 @@ export class LibraryService {
       .catch(ErrorDto.observableFromHttpErrorResponse)
       .map(artistSongsDto => new ArtistSongs(artistSongsDto));
   }
+  
+  requestRefresh() {
+    this.refreshRequestSubject.next();
+  }
+  
+  observeRefreshRequest(): Observable<void> {
+    return this.refreshRequestSubject.asObservable();
+  }
 
   get selectedArtist(): Artist | undefined {
     return this.selectedArtistSubject.value;
@@ -74,17 +83,17 @@ export class LibraryService {
       const defaultArtist = artists
         .find(artist => artist.id === defaultArtistId);
       if (defaultArtist) {
-        this.selectArtist(defaultArtist);
+        this.selectArtistAndMakeDefault(defaultArtist);
         return defaultArtist;
       } else {
-        this.selectArtist(artists[0]);
+        this.selectArtistAndMakeDefault(artists[0]);
         return artists[0];
       }
     }
     return undefined;
   }
 
-  selectArtist(artist: Artist) {
+  selectArtistAndMakeDefault(artist: Artist) {
     this.selectedArtistSubject.next(artist);
     this.storeDefaultArtistId(artist ? artist.id : undefined);
   }

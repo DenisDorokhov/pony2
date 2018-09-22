@@ -20,8 +20,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   loadingState = LoadingState.LOADING;
   artistSongs: ArtistSongs;
 
+  private artistSongsSubscription: Subscription | undefined;
+  private refreshRequestSubscription: Subscription;
   private selectedArtistSubscription: Subscription;
-  private artistSongsSubscription: Subscription;
   private libraryStateSubscription: Subscription;
   private songPlaybackRequestSubscription: Subscription;
 
@@ -39,6 +40,12 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.refreshRequestSubscription = this.libraryService.observeRefreshRequest()
+      .subscribe(() => {
+        if (this.libraryService.selectedArtist) {
+          this.loadArtistSongs(this.libraryService.selectedArtist, true);
+        }
+      });
     this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         if (artist) {
@@ -69,14 +76,26 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.artistSongsSubscription) {
+      this.artistSongsSubscription.unsubscribe();
+    }
+    this.refreshRequestSubscription.unsubscribe();
     this.selectedArtistSubscription.unsubscribe();
     this.libraryStateSubscription.unsubscribe();
     this.songPlaybackRequestSubscription.unsubscribe();
   }
+  
+  trackByAlbumId(index: number, albumSongs: AlbumSongs): string {
+    return albumSongs.album.id;
+  }
 
-  private loadArtistSongs(artist: Artist) {
-    Logger.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
-    this.loadingState = LoadingState.LOADING;
+  private loadArtistSongs(artist: Artist, refreshing: boolean = false) {
+    if (refreshing) {
+      Logger.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`)
+    } else {
+      Logger.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
+      this.loadingState = LoadingState.LOADING;
+    }
     if (this.artistSongsSubscription) {
       this.artistSongsSubscription.unsubscribe();
     }
@@ -89,7 +108,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           Logger.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
         error => {
-          this.loadingState = LoadingState.ERROR;
+          if (!refreshing) {
+            this.loadingState = LoadingState.ERROR;
+          }
           Logger.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
       );

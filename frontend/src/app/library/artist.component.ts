@@ -67,6 +67,6 @@ export class ArtistComponent implements OnInit, OnDestroy {
   }
   
   select() {
-    this.libraryService.selectArtist(this.artist);
+    this.libraryService.selectArtistAndMakeDefault(this.artist);
   }
 }

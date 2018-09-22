@@ -1,6 +1,7 @@
 import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import * as Logger from 'js-logger';
 import {BsModalService} from 'ngx-bootstrap';
+import {LibraryService} from '../core/library/library.service';
 import {AuthenticationService} from '../core/user/authentication.service';
 import {UserDto} from '../core/user/user.dto';
 import {CurrentUserComponent} from './current-user.component';
@@ -25,6 +26,7 @@ export class ToolbarComponent implements OnInit {
   @ViewChild('currentUserTemplate') currentUserTemplate: TemplateRef<any>;
 
   constructor(
+    private libraryService: LibraryService,
     private authenticationService: AuthenticationService,
     private modalService: BsModalService
   ) {
@@ -35,7 +37,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   refresh() {
-    Logger.info('Refreshing.');
+    this.libraryService.requestRefresh();
   }
 
   openProfile() {
