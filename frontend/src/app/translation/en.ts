@@ -59,6 +59,13 @@ export default {
       unknownLabel: 'Unknown'
     },
     noMusicLabel: 'Your library is empty :-(',
+    scanStatistics: {
+      counts: '{{songCount}} songs, {{artistCount}} artists, {{albumCount}} albums, {{artworkCount}} artworks',
+      sizeGigabytes: '{{size}} GB',
+      sizeMegabytes: '{{size}} MB',
+      date: 'Last scan: {{date}}',
+      githubLinkLabel: 'Pony on GitHub',
+    },
   },
   player: {
     noSongTitle: 'Pony - Music Streamer',

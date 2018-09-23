@@ -17,8 +17,8 @@ export class AuthenticationService {
 
   private _currentUser: UserDto | undefined;
 
-  private _authenticationSubject = new Subject<UserDto>();
-  private _logoutSubject = new Subject<UserDto>();
+  private authenticationSubject = new Subject<UserDto>();
+  private logoutSubject = new Subject<UserDto>();
 
   constructor(private tokenStorage: TokenStorageService, private httpClient: HttpClient) {
   }
@@ -38,11 +38,11 @@ export class AuthenticationService {
     } else {
       result = this.authenticateAccessToken();
     }
-    return result.do(user => this._authenticationSubject.next(user));
+    return result.do(user => this.authenticationSubject.next(user));
   }
 
   observeAuthentication(): Observable<UserDto> {
-    return this._authenticationSubject.asObservable();
+    return this.authenticationSubject.asObservable();
   }
 
   logout(): Observable<UserDto> {
@@ -51,13 +51,13 @@ export class AuthenticationService {
         this.tokenStorage.accessToken = undefined;
         const oldUser = this._currentUser;
         this._currentUser = undefined;
-        this._logoutSubject.next(oldUser);
+        this.logoutSubject.next(oldUser);
       })
       .catch(ErrorDto.observableFromHttpErrorResponse);
   }
 
   observeLogout(): Observable<UserDto> {
-    return this._logoutSubject.asObservable();
+    return this.logoutSubject.asObservable();
   }
 
   private authenticateCredentials(credentials: Credentials): Observable<UserDto> {

@@ -43,3 +43,15 @@ export class SongDto {
   albumId: string;
   genreId: string;
 }
+
+export class ScanStatisticsDto {
+  date: Date;
+  duration: number;
+  songSize: number;
+  artworkSize: number;
+  genreCount: number;
+  artistCount: number;
+  albumCount: number;
+  songCount: number;
+  artworkCount: number;
+}

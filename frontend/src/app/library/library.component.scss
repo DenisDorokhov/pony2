@@ -65,4 +65,18 @@
       bottom: 0;
     }
   }
+  
+  .footer {
+    position: absolute;
+    bottom: 1px;
+    height: 20px;
+    left: 20px;
+    right: 20px;
+    text-align: right;
+    color: #777;
+    
+    small {
+      font-size: 80%;
+    }
+  }
 }

@@ -9,6 +9,7 @@ import {TranslateLoaderService} from './common/translate-loader.service';
 import {InstallationService} from './installation/installation.service';
 import {InstalledGuard} from './installation/installed-guard.service';
 import {NotInstalledGuard} from './installation/not-installed-guard.service';
+import {LibraryScanService} from './library/library-scan.service';
 import {LibraryService} from './library/library.service';
 import {PageTitleService} from './library/page-title.service';
 import {PlaybackService} from './library/playback.service';
@@ -44,6 +45,7 @@ export function initialize(initializerService: InitializerService) {
     AuthenticatedGuard,
     NotAuthenticatedGuard,
     LibraryService,
+    LibraryScanService,
     PlaybackService,
     NotificationService,
     PageTitleService,
