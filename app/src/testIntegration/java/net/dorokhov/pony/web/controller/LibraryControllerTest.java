@@ -566,6 +566,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(scanStatistics -> {
+            assertThat(scanStatistics.getDate()).isNotNull();
             assertThat(scanStatistics.getDuration()).isGreaterThan(0);
             assertThat(scanStatistics.getSongSize()).isEqualTo(0);
             assertThat(scanStatistics.getArtworkSize()).isEqualTo(0);
