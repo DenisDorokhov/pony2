@@ -66,15 +66,7 @@ export class LibraryService {
 
   observeSelectedArtist(): Observable<Artist | undefined> {
     return this.selectedArtistSubject.asObservable()
-      .distinctUntilChanged((artist1, artist2) => {
-        if (artist1 === artist2) {
-          return true;
-        }
-        if (!artist1 || !artist2) {
-          return false;
-        }
-        return artist1.id === artist2.id;
-      });
+      .distinctUntilChanged(Artist.equals);
   }
   
   selectDefaultArtist(artists: Artist[]): Artist | undefined {

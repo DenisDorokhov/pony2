@@ -114,6 +114,16 @@ export class Artist {
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
   }
+  
+  static equals(artist1: Artist, artist2: Artist) {
+    if (artist1 === artist2) {
+      return true;
+    }
+    if (!artist1 || !artist2) {
+      return false;
+    }
+    return artist1.id === artist2.id;
+  }
 }
 
 export class ArtistSongs {
