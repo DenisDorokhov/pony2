@@ -7,7 +7,12 @@ import {Song} from '../core/library/library.model';
   styleUrls: ['./song-list.component.scss']
 })
 export class SongListComponent {
+
   @Input() caption: string;
   @Input() songs: Song[];
   @Input() showArtist: boolean;
+
+  trackBySongId(index: number, song: Song): string {
+    return song.id;
+  }
 }
