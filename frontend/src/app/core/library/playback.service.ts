@@ -39,7 +39,7 @@ class AudioPlayer {
 
   constructor() {
     this.playbackEventSubject = new BehaviorSubject<PlaybackEvent>(new PlaybackEvent(PlaybackState.STOPPED));
-    interval(100).subscribe(() => this.fireSongProgressPlaybackEvent());
+    interval(250).subscribe(() => this.fireSongProgressPlaybackEvent());
   }
 
   get lastPlaybackEvent(): PlaybackEvent {

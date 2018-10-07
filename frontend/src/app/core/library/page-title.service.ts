@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription, timer} from 'rxjs';
 import 'rxjs/add/operator/takeWhile';
@@ -57,7 +57,10 @@ export class PageTitleService {
   private titleShifter: StringScroller | undefined;
   private timerSubscription: Subscription | undefined;
   
-  constructor(private translateService: TranslateService) {
+  constructor(
+    private translateService: TranslateService,
+    private ngZone: NgZone
+  ) {
     this.startScrolling();
   }
   
@@ -93,15 +96,17 @@ export class PageTitleService {
       ));
       const prefix = this.translateService.instant('songTitlePrefix');
       window.document.title = prefix + this.titleShifter.target;
-      
-      this.timerSubscription = timer(PageTitleService.ANIMATION_INITIAL_DELAY, PageTitleService.ANIMATION_FRAME_DELAY)
-        .do(() => {
-          window.document.title = prefix + this.titleShifter.scroll();
-        })
-        .takeWhile(() => !this.titleShifter.willRestart())
-        .subscribe({
-          complete: () => this.startScrolling()
-        });
+
+      this.ngZone.runOutsideAngular(() => {
+        this.timerSubscription = timer(PageTitleService.ANIMATION_INITIAL_DELAY, PageTitleService.ANIMATION_FRAME_DELAY)
+          .do(() => {
+            window.document.title = prefix + this.titleShifter.scroll();
+          })
+          .takeWhile(() => !this.titleShifter.willRestart())
+          .subscribe({
+            complete: () => this.startScrolling()
+          });
+      });
       
     } else {
       window.document.title = this.translateService.instant('noSongTitle');

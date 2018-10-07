@@ -62,8 +62,8 @@ export class AlbumComponent implements OnChanges {
     window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', '');
   }
 
-  trackByDiscNumber(index: number, disc: Disc): number {
-    return disc.discNumber;
+  trackByIndex(index: number): number {
+    return index;
   }
 
   private splitAlbumsIntoDiscs() {
