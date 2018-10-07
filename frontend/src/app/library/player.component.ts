@@ -65,12 +65,16 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   seek(event: MouseEvent) {
-    const progressBar = event.currentTarget as Element;
-    const progressBarRect = progressBar.getBoundingClientRect();
-    const progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
-    this.progress = progress || 0;
-    this.isLoading = true;
-    this.playbackService.seek(progress);
+    const song = this.playbackService.lastPlaybackEvent.song;
+    if (song) {
+      const progressBar = event.currentTarget as Element;
+      const progressBarRect = progressBar.getBoundingClientRect();
+      const progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
+      this.progress = progress || 0;
+      this.isLoading = true;
+      this.formattedProgress = song.relativeDurationInMinutes(this.progress);
+      this.playbackService.seek(this.progress);
+    }
   }
 
   selectCurrentSong() {
