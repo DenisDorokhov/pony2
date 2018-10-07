@@ -11,9 +11,17 @@ public class ArtistTest {
     @Test
     public void shouldSort() {
         
-        Artist artist1 = Artist.builder().name("1").build();
-        Artist artist2 = Artist.builder().name("2").build();
-        Artist artistNull = new Artist();
+        Artist artist1 = Artist.builder()
+                .id("1")
+                .name("1")
+                .build();
+        Artist artist2 = Artist.builder()
+                .id("2")
+                .name("2")
+                .build();
+        Artist artistNull = Artist.builder()
+                .id("null")
+                .build();
         
         Artist[] list = {artistNull, artist2, artist1, artist2};
         Arrays.sort(list);

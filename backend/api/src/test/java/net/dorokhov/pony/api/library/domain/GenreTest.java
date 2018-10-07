@@ -11,9 +11,17 @@ public class GenreTest {
     @Test
     public void shouldSort() {
 
-        Genre genre1 = Genre.builder().name("1").build();
-        Genre genre2 = Genre.builder().name("2").build();
-        Genre genreNull = new Genre();
+        Genre genre1 = Genre.builder()
+                .id("1")
+                .name("1")
+                .build();
+        Genre genre2 = Genre.builder()
+                .id("2")
+                .name("2")
+                .build();
+        Genre genreNull = Genre.builder()
+                .id("null")
+                .build();
 
         Genre[] list = {genreNull, genre2, genre1, genre2};
         Arrays.sort(list);

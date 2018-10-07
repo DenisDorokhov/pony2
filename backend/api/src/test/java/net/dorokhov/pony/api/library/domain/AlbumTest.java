@@ -11,15 +11,43 @@ public class AlbumTest {
     @Test
     public void shouldSort() {
 
-        Artist artist1 = Artist.builder().name("1").build();
-        Artist artist2 = Artist.builder().name("2").build();
+        Artist artist1 = Artist.builder()
+                .id("1")
+                .name("1")
+                .build();
+        Artist artist2 = Artist.builder()
+                .id("2")
+                .name("2")
+                .build();
 
-        Album album1_1 = Album.builder().artist(artist1).name("1_1").year(1000).build();
-        Album album1_2_1002 = Album.builder().artist(artist1).name("1_2").year(1002).build();
-        Album album1_2_1001 = Album.builder().artist(artist1).name("1_2").year(1001).build();
+        Album album1_1 = Album.builder()
+                .artist(artist1)
+                .id("1_1")
+                .name("1_1")
+                .year(1000)
+                .build();
+        Album album1_2_1002 = Album.builder()
+                .artist(artist1)
+                .id("1_2_1002")
+                .name("1_2")
+                .year(1002)
+                .build();
+        Album album1_2_1001 = Album.builder()
+                .artist(artist1)
+                .name("1_2_1001")
+                .year(1001)
+                .build();
 
-        Album album2_1 = Album.builder().artist(artist2).name("2_1").build();
-        Album album2_null = Album.builder().artist(artist2).name(null).build();
+        Album album2_1 = Album.builder()
+                .artist(artist2)
+                .id("2_1")
+                .name("2_1")
+                .build();
+        Album album2_null = Album.builder()
+                .artist(artist2)
+                .id("2_null")
+                .name(null)
+                .build();
 
         Album[] list = {album2_null, album2_1, album1_2_1002, album1_2_1001, album1_1};
         Arrays.sort(list);

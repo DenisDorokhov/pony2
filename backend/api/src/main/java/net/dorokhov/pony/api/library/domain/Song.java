@@ -238,7 +238,11 @@ public class Song extends SearchableEntity implements Comparable<Song>, Serializ
         return ComparisonChain.start()
                 .compare(getAlbum().getArtist(), song.getAlbum().getArtist())
                 .compare(getAlbum(), song.getAlbum())
-                .compare(discNumber, song.discNumber, Ordering.natural().nullsLast())
+                .compare(discNumber, song.discNumber, (disc1, disc2) -> {
+                    int normalizedDisc1 = disc1 == null || disc1 < 1 ? 1 : disc1;
+                    int normalizedDisc2 = disc2 == null || disc2 < 1 ? 1 : disc2;
+                    return Integer.compare(normalizedDisc1, normalizedDisc2);
+                })
                 .compare(trackNumber, song.trackNumber, Ordering.natural().nullsLast())
                 .compare(name, song.name, Ordering.natural().nullsLast())
                 .result();
