@@ -5,6 +5,8 @@ import {CookieService} from 'ngx-cookie';
 export class TokenStorageService {
 
   private static readonly ACCESS_TOKEN_LOCAL_STORAGE_KEY: string = 'pony2.AuthenticationService.accessToken';
+  private static readonly STATIC_TOKEN_LOCAL_STORAGE_KEY: string = 'pony2.AuthenticationService.staticToken';
+
   private static readonly STATIC_TOKEN_COOKIE_KEY: string = 'pony2.staticToken';
   
   private _accessToken: string | undefined;
@@ -12,7 +14,8 @@ export class TokenStorageService {
 
   constructor(private cookieService: CookieService) {
     this._accessToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_LOCAL_STORAGE_KEY);
-    this._staticToken = this.cookieService.get(TokenStorageService.STATIC_TOKEN_COOKIE_KEY);
+    this._staticToken = localStorage.getItem(TokenStorageService.STATIC_TOKEN_LOCAL_STORAGE_KEY);
+    this.cookieService.put(TokenStorageService.STATIC_TOKEN_COOKIE_KEY, this._staticToken);
   }
 
   get accessToken(): string {
@@ -34,8 +37,10 @@ export class TokenStorageService {
   
   set staticToken(staticToken: string) {
     if (staticToken) {
+      localStorage.setItem(TokenStorageService.STATIC_TOKEN_LOCAL_STORAGE_KEY, staticToken);
       this.cookieService.put(TokenStorageService.STATIC_TOKEN_COOKIE_KEY, staticToken);
     } else {
+      localStorage.removeItem(TokenStorageService.STATIC_TOKEN_LOCAL_STORAGE_KEY);
       this.cookieService.remove(TokenStorageService.STATIC_TOKEN_COOKIE_KEY);
     }
     this._staticToken = staticToken;

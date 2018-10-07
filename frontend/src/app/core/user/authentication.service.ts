@@ -49,6 +49,7 @@ export class AuthenticationService {
     return this.httpClient.delete<UserDto>('/api/authentication')
       .do(() => {
         this.tokenStorage.accessToken = undefined;
+        this.tokenStorage.staticToken = undefined;
         const oldUser = this._currentUser;
         this._currentUser = undefined;
         this.logoutSubject.next(oldUser);
