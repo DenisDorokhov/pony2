@@ -69,6 +69,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     const progressBarRect = progressBar.getBoundingClientRect();
     const progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
     this.progress = progress || 0;
+    this.isLoading = true;
     this.playbackService.seek(progress);
   }
 
