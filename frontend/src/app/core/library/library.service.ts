@@ -1,9 +1,8 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import 'rxjs-compat/add/operator/distinctUntilChanged';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
-import {Observable} from 'rxjs/Observable';
-import {Subject} from 'rxjs/Subject';
+import {catchError, distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {ErrorDto} from '../common/common.dto';
 import {ArtistSongsDto} from './library.dto';
 import {Artist, ArtistSongs, Song} from './library.model';
@@ -36,20 +35,25 @@ export class LibraryService {
 
   observeLibraryState(): Observable<LibraryState> {
     return this.libraryStateSubject.asObservable()
-      .distinctUntilChanged();
+      .pipe(distinctUntilChanged());
   }
 
   getArtists(): Observable<Artist[]> {
     return this.httpClient.get<Artist[]>('/api/library/artists')
-      .catch(ErrorDto.observableFromHttpErrorResponse)
-      .map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto)))
-      .do(artists => this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY));
+      .pipe(
+        catchError(ErrorDto.observableFromHttpErrorResponse),
+        map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto))),
+        tap(artists => 
+          this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY))
+      );
   }
 
   getArtistSongs(artist: string): Observable<ArtistSongs> {
     return this.httpClient.get<ArtistSongsDto>(`/api/library/artistSongs/${artist}`)
-      .catch(ErrorDto.observableFromHttpErrorResponse)
-      .map(artistSongsDto => new ArtistSongs(artistSongsDto));
+      .pipe(
+        catchError(ErrorDto.observableFromHttpErrorResponse),
+        map(artistSongsDto => new ArtistSongs(artistSongsDto))
+      );
   }
   
   requestRefresh() {
@@ -66,7 +70,7 @@ export class LibraryService {
 
   observeSelectedArtist(): Observable<Artist | undefined> {
     return this.selectedArtistSubject.asObservable()
-      .distinctUntilChanged(Artist.equals);
+      .pipe(distinctUntilChanged(Artist.equals));
   }
   
   selectDefaultArtist(artists: Artist[]): Artist | undefined {
@@ -100,7 +104,7 @@ export class LibraryService {
 
   observeSelectedSong(): Observable<Song | undefined> {
     return this.selectedSongSubject.asObservable()
-      .distinctUntilChanged((song1, song2) => {
+      .pipe(distinctUntilChanged((song1, song2) => {
         if (song1 === song2) {
           return true;
         }
@@ -108,7 +112,7 @@ export class LibraryService {
           return false;
         }
         return song1.id === song2.id;
-      });
+      }));
   }
 
   selectSong(song: Song) {
@@ -129,7 +133,7 @@ export class LibraryService {
   
   observeScrollToArtistRequest(): Observable<Artist> {
     return this.scrollToArtistRequestSubject.asObservable()
-      .filter(artist => artist !== undefined);
+      .pipe(filter(artist => artist !== undefined));
   }
   
   startScrollToArtist(artist: Artist) {
@@ -142,7 +146,7 @@ export class LibraryService {
   
   observeScrollToSongRequest(): Observable<Song> {
     return this.scrollToSongRequestSubject.asObservable()
-      .filter(song => song !== undefined);
+      .pipe(filter(song => song !== undefined));
   }
   
   startScrollToSong(song: Song) {

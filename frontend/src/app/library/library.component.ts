@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
 import * as Logger from 'js-logger';
-import {Subscription} from 'rxjs/Subscription';
+import {Subscription} from 'rxjs';
 import {LibraryScanService} from '../core/library/library-scan.service';
 import {ScanStatisticsDto} from '../core/library/library.dto';
 import {AuthenticationService} from '../core/user/authentication.service';

@@ -1,12 +1,8 @@
 import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import * as Logger from 'js-logger';
-import {fromEvent} from 'rxjs';
+import {fromEvent, Observable, Subscription, timer} from 'rxjs';
 import {Scheduler} from 'rxjs-compat';
-import 'rxjs/add/operator/debounce';
-import 'rxjs/add/operator/filter';
-import {Observable} from 'rxjs/Observable';
-import {timer} from 'rxjs/observable/timer';
-import {Subscription} from 'rxjs/Subscription';
+import {debounce, filter, observeOn} from 'rxjs/operators';
 
 enum ImageLoaderComponentState {
   EMPTY, PENDING, LOADING, ERROR, LOADED
@@ -58,7 +54,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
         this.intersectionSubscription = this.subscribeToIntersection();
       } else {
         this.visibilityChangeSubscription = fromEvent(document, 'visibilitychange')
-          .observeOn(Scheduler.animationFrame)
+          .pipe(observeOn(Scheduler.animationFrame))
           .subscribe(() => {
             if (!this.intersectionSubscription && !document.hidden) {
               this.intersectionSubscription = this.subscribeToIntersection();
@@ -92,11 +88,13 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
       rootMargin: '0px',
       threshold: 0
     })
-      .debounce(() => timer(50))
-      .filter(entry => {
-        this.isIntersecting = entry.isIntersecting;
-        return entry.isIntersecting;
-      })
+      .pipe(
+        debounce(() => timer(50)),
+        filter(entry => {
+          this.isIntersecting = entry.isIntersecting;
+          return entry.isIntersecting;
+        })
+      )
       .subscribe(() => {
         if (this.state === ImageLoaderComponentState.PENDING) {
           this.startLoading();

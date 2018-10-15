@@ -1,8 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Subject} from 'rxjs';
-import 'rxjs/add/observable/defer';
-import {Observable} from 'rxjs/Observable';
+import {defer, Observable, Subject} from 'rxjs';
+import {catchError, map, tap} from 'rxjs/operators';
 import {ErrorDto} from '../common/common.dto';
 import {TokenStorageService} from './token-storage.service';
 import {AuthenticationDto, UserDto} from './user.dto';
@@ -32,13 +31,14 @@ export class AuthenticationService {
   }
 
   authenticate(credentials?: Credentials): Observable<UserDto> {
-    let result;
+    let result: Observable<UserDto>;
     if (credentials) {
       result = this.authenticateCredentials(credentials);
     } else {
       result = this.authenticateAccessToken();
     }
-    return result.do(user => this.authenticationSubject.next(user));
+    return result
+      .pipe(tap(user => this.authenticationSubject.next(user)));
   }
 
   observeAuthentication(): Observable<UserDto> {
@@ -47,14 +47,16 @@ export class AuthenticationService {
 
   logout(): Observable<UserDto> {
     return this.httpClient.delete<UserDto>('/api/authentication')
-      .do(() => {
-        this.tokenStorage.accessToken = undefined;
-        this.tokenStorage.staticToken = undefined;
-        const oldUser = this._currentUser;
-        this._currentUser = undefined;
-        this.logoutSubject.next(oldUser);
-      })
-      .catch(ErrorDto.observableFromHttpErrorResponse);
+      .pipe(
+        tap(() => {
+          this.tokenStorage.accessToken = undefined;
+          this.tokenStorage.staticToken = undefined;
+          const oldUser = this._currentUser;
+          this._currentUser = undefined;
+          this.logoutSubject.next(oldUser);
+        }),
+        catchError(ErrorDto.observableFromHttpErrorResponse)
+      );
   }
 
   observeLogout(): Observable<UserDto> {
@@ -62,33 +64,37 @@ export class AuthenticationService {
   }
 
   private authenticateCredentials(credentials: Credentials): Observable<UserDto> {
-    return Observable.defer(() => {
+    return defer(() => {
       const params = {
         'email': credentials.email,
         'password': credentials.password
       };
       return this.httpClient.post<AuthenticationDto>('/api/authentication', null, {params: params})
-        .map(authentication => {
-          this.tokenStorage.accessToken = authentication.accessToken;
-          this.tokenStorage.staticToken = authentication.staticToken;
-          this._currentUser = authentication.user;
-          return this._currentUser;
-        })
-        .catch(ErrorDto.observableFromHttpErrorResponse);
+        .pipe(
+          map(authentication => {
+            this.tokenStorage.accessToken = authentication.accessToken;
+            this.tokenStorage.staticToken = authentication.staticToken;
+            this._currentUser = authentication.user;
+            return this._currentUser;
+          }),
+          catchError(ErrorDto.observableFromHttpErrorResponse)
+        );
     });
   }
 
   private authenticateAccessToken(): Observable<UserDto> {
-    return Observable.defer(() => {
+    return defer(() => {
       if (!this.tokenStorage.accessToken) {
         return Observable.throwError(ErrorDto.authenticationFailed());
       }
       return this.httpClient.get<UserDto>('/api/user')
-        .do(user => {
-          this._currentUser = user;
-          return this._currentUser;
-        })
-        .catch(ErrorDto.observableFromHttpErrorResponse);
+        .pipe(
+          tap(user => {
+            this._currentUser = user;
+            return this._currentUser;
+          }),
+          catchError(ErrorDto.observableFromHttpErrorResponse)
+        );
     });
   }
 }

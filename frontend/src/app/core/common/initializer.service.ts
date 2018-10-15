@@ -2,9 +2,7 @@ import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import * as Logger from 'js-logger';
 import {EMPTY} from 'rxjs';
-import 'rxjs/add/observable/empty';
-import 'rxjs/add/observable/onErrorResumeNext';
-import 'rxjs/add/operator/mergeMap';
+import {catchError, mergeMap} from 'rxjs/operators';
 import {InstallationService} from '../installation/installation.service';
 import {AuthenticationService} from '../user/authentication.service';
 
@@ -37,14 +35,14 @@ export class InitializerService {
     window.document.title = this.translateService.instant('noSongTitle');
 
     return this.installationService.getInstallationStatus()
-      .flatMap(installationStatus => {
+      .pipe(mergeMap(installationStatus => {
         if (installationStatus.installed) {
           return this.authenticationService.authenticate()
-            .catch(() => EMPTY);
+            .pipe(catchError(() => EMPTY));
         } else {
           return EMPTY;
         }
-      })
+      }))
       .toPromise();
   }
 }

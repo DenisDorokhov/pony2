@@ -1,5 +1,5 @@
 import {Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {Subscription} from 'rxjs/Subscription';
+import {Subscription} from 'rxjs';
 import {Song} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';
 import {PlaybackService, PlaybackState} from '../core/library/playback.service';

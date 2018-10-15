@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import * as Logger from 'js-logger';
-import {Subscription} from 'rxjs/Subscription';
+import {Subscription} from 'rxjs';
 import {LoadingState} from '../core/common/common.model';
 import {Artist} from '../core/library/library.model';
 import {LibraryService} from '../core/library/library.service';

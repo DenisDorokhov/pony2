@@ -1,6 +1,5 @@
-import 'rxjs/add/observable/defer';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
-import {Observable} from 'rxjs/Observable';
+import {BehaviorSubject, defer, Observable, of} from 'rxjs';
+import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from './library.model';
 
 export interface Playlist {
@@ -46,12 +45,12 @@ export class StaticPlaylist implements Playlist {
   }
 
   observeQueue(): Observable<Song[]> {
-    return Observable.of(this._queue.slice());
+    return of(this._queue.slice());
   }
 
   observeCurrentSong(): Observable<Song | undefined> {
     return this.currentSongSubject.asObservable()
-      .distinctUntilChanged();
+      .pipe(distinctUntilChanged());
   }
 
   hasNextSong(): boolean {
@@ -79,21 +78,21 @@ export class StaticPlaylist implements Playlist {
   }
 
   switchToNextSong(): Observable<Song | undefined> {
-    return Observable.defer(() => {
+    return defer(() => {
       if (this.hasNextSong()) {
-        return Observable.of(this.switchToIndex(this._currentIndex + 1));
+        return of(this.switchToIndex(this._currentIndex + 1));
       } else {
-        return Observable.of(undefined);
+        return of(undefined);
       }
     });
   }
 
   switchToPreviousSong(): Observable<Song | undefined> {
-    return Observable.defer(() => {
+    return defer(() => {
       if (this.hasPreviousSong()) {
-        return Observable.of(this.switchToIndex(this._currentIndex - 1));
+        return of(this.switchToIndex(this._currentIndex - 1));
       } else {
-        return Observable.of(undefined);
+        return of(undefined);
       }
     });
   }

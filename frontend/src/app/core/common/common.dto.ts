@@ -1,6 +1,5 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {throwError} from 'rxjs';
-import {Observable} from 'rxjs';
+import {Observable, throwError} from 'rxjs';
 
 export interface ErrorDto {
   code: ErrorDto.Code;

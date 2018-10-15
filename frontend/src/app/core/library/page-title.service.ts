@@ -1,7 +1,7 @@
 import {Injectable, NgZone} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription, timer} from 'rxjs';
-import 'rxjs/add/operator/takeWhile';
+import {takeWhile, tap} from 'rxjs/operators';
 import {Song} from './library.model';
 
 class StringScroller {
@@ -92,22 +92,22 @@ export class PageTitleService {
       
       this.titleShifter = new StringScroller(this.translateService.instant(
         'songTitleBody',
-        { artistName, songName }
+        {artistName, songName}
       ));
       const prefix = this.translateService.instant('songTitlePrefix');
       window.document.title = prefix + this.titleShifter.target;
 
       this.ngZone.runOutsideAngular(() => {
         this.timerSubscription = timer(PageTitleService.ANIMATION_INITIAL_DELAY, PageTitleService.ANIMATION_FRAME_DELAY)
-          .do(() => {
-            window.document.title = prefix + this.titleShifter.scroll();
-          })
-          .takeWhile(() => !this.titleShifter.willRestart())
+          .pipe(
+            tap(() => window.document.title = prefix + this.titleShifter.scroll()),
+            takeWhile(() => !this.titleShifter.willRestart())
+          )
           .subscribe({
             complete: () => this.startScrolling()
           });
       });
-      
+
     } else {
       window.document.title = this.translateService.instant('noSongTitle');
     }

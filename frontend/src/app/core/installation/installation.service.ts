@@ -1,9 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/throw';
-import 'rxjs/add/operator/catch';
-import {Observable} from 'rxjs/Observable';
+import {Observable, of} from 'rxjs';
+import {catchError, tap} from 'rxjs/operators';
 import {ErrorDto} from '../common/common.dto';
 import {InstallationCommandDto, InstallationDto, InstallationStatusDto} from './installation.dto';
 
@@ -17,17 +15,21 @@ export class InstallationService {
 
   getInstallationStatus(): Observable<InstallationStatusDto> {
     if (this.installationStatus) {
-      return Observable.of(this.installationStatus);
+      return of(this.installationStatus);
     } else {
       return this.httpClient.get<InstallationStatusDto>('/api/installation/status')
-        .do(installationStatus => this.installationStatus = installationStatus)
-        .catch(ErrorDto.observableFromHttpErrorResponse);
+        .pipe(
+          tap(installationStatus => this.installationStatus = installationStatus),
+          catchError(ErrorDto.observableFromHttpErrorResponse)
+        );
     }
   }
 
   install(installationCommand: InstallationCommandDto): Observable<InstallationDto> {
     return this.httpClient.post<InstallationDto>('/api/installation', installationCommand)
-      .do(installation => this.installationStatus = undefined)
-      .catch(ErrorDto.observableFromHttpErrorResponse);
+      .pipe(
+        tap(() => this.installationStatus = undefined),
+        catchError(ErrorDto.observableFromHttpErrorResponse)
+      );
   }
 }

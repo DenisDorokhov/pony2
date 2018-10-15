@@ -2,9 +2,8 @@ import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Howl} from 'howler';
 import * as Logger from 'js-logger';
-import {interval, Subscription, timer} from 'rxjs';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
-import {Observable} from 'rxjs/Observable';
+import {BehaviorSubject, defer, interval, Observable, of, Subscription, timer} from 'rxjs';
+import {debounce, distinctUntilChanged} from 'rxjs/operators';
 import {AuthenticationService} from '../user/authentication.service';
 import {Song} from './library.model';
 import {Playlist} from './playlist.model';
@@ -47,11 +46,12 @@ class AudioPlayer {
   }
 
   observePlaybackEvent(): Observable<PlaybackEvent> {
-    return this.playbackEventSubject.asObservable().distinctUntilChanged((playbackEvent1: PlaybackEvent, playbackEvent2: PlaybackEvent) => {
-      return playbackEvent1.state === playbackEvent2.state
-        && playbackEvent1.song === playbackEvent2.song
-        && playbackEvent1.progress === playbackEvent2.progress;
-    });
+    return this.playbackEventSubject.asObservable()
+      .pipe(distinctUntilChanged((playbackEvent1: PlaybackEvent, playbackEvent2: PlaybackEvent) => {
+        return playbackEvent1.state === playbackEvent2.state
+          && playbackEvent1.song === playbackEvent2.song
+          && playbackEvent1.progress === playbackEvent2.progress;
+      }));
   }
 
   play(song?: Song) {
@@ -180,7 +180,7 @@ export class PlaybackService {
     });
     // Sometimes redundant media key events are generated under Mac.
     this.observeUnityRequest()
-      .debounce(() => timer(150))
+      .pipe(debounce(() => timer(150)))
       .subscribe(request => {
         switch (request) {
           case UnityRequest.PLAY:
@@ -259,9 +259,9 @@ export class PlaybackService {
   switchToPreviousSong(): Observable<Song | undefined> {
     const seekToBeginning = () => {
       this.seek(0);
-      return Observable.of(this.lastPlaybackEvent.song);
+      return of(this.lastPlaybackEvent.song);
     };
-    return Observable.defer(() => {
+    return defer(() => {
       if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
         if (!this.playlist.hasPreviousSong()) {
           return seekToBeginning();
