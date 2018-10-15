@@ -1,5 +1,7 @@
 import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import * as Logger from 'js-logger';
+import {fromEvent} from 'rxjs';
+import {Scheduler} from 'rxjs-compat';
 import 'rxjs/add/operator/debounce';
 import 'rxjs/add/operator/filter';
 import {Observable} from 'rxjs/Observable';
@@ -26,6 +28,8 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   private _url: string;
 
   private isIntersecting = false;
+
+  private visibilityChangeSubscription: Subscription | undefined;
   private intersectionSubscription: Subscription | undefined;
 
   @Input()
@@ -50,26 +54,24 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
-      const intersectionOptions = {
-        root: this.findScroller(),
-        rootMargin: '0px',
-        threshold: 0
-      };
-      this.intersectionSubscription = this.createIntersectionObservable(intersectionOptions)
-        .debounce(() => timer(50))
-        .filter(entry => {
-          this.isIntersecting = entry.isIntersecting;
-          return entry.isIntersecting;
-        })
-        .subscribe(() => {
-          if (this.state === ImageLoaderComponentState.PENDING) {
-            this.startLoading();
-          }
-        });
+      if (!document.hidden) {
+        this.intersectionSubscription = this.subscribeToIntersection();
+      } else {
+        this.visibilityChangeSubscription = fromEvent(document, 'visibilitychange')
+          .observeOn(Scheduler.animationFrame)
+          .subscribe(() => {
+            if (!this.intersectionSubscription && !document.hidden) {
+              this.intersectionSubscription = this.subscribeToIntersection();
+            }
+          });
+      }
     });
   }
 
   ngOnDestroy(): void {
+    if (this.visibilityChangeSubscription) {
+      this.visibilityChangeSubscription.unsubscribe();
+    }
     if (this.intersectionSubscription) {
       this.intersectionSubscription.unsubscribe();
     }
@@ -82,6 +84,24 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   onError() {
     Logger.error(`Could not load image '${this._url}'.`);
     this.state = ImageLoaderComponentState.ERROR;
+  }
+
+  private subscribeToIntersection(): Subscription {
+    return this.createIntersectionObservable({
+      root: this.findScroller(),
+      rootMargin: '0px',
+      threshold: 0
+    })
+      .debounce(() => timer(50))
+      .filter(entry => {
+        this.isIntersecting = entry.isIntersecting;
+        return entry.isIntersecting;
+      })
+      .subscribe(() => {
+        if (this.state === ImageLoaderComponentState.PENDING) {
+          this.startLoading();
+        }
+      });
   }
 
   private findScroller(): HTMLElement {
