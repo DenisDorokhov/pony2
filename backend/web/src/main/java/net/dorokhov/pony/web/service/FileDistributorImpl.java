@@ -44,7 +44,7 @@ public class FileDistributorImpl implements FileDistributor {
         String ifNoneMatch = request.getHeader("If-None-Match");
         if (ifNoneMatch != null && matches(ifNoneMatch, distribution.getName())) {
             response.setHeader("ETag", distribution.getName()); // Required in 304.
-            response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             return;
         }
 
@@ -53,7 +53,7 @@ public class FileDistributorImpl implements FileDistributor {
         long ifModifiedSince = request.getDateHeader("If-Modified-Since");
         if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
             response.setHeader("ETag", distribution.getName()); // Required in 304.
-            response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             return;
         }
 
@@ -152,7 +152,7 @@ public class FileDistributorImpl implements FileDistributor {
         // Send requested file (part(s)) to client ------------------------------------------------
         try (
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                OutputStream output = response.getOutputStream()
+                ServletOutputStream output = response.getOutputStream()
         ) {
             if (ranges.isEmpty() || ranges.get(0) == full) {
                 // Return full file.
@@ -173,21 +173,19 @@ public class FileDistributorImpl implements FileDistributor {
                 // Return multiple parts of file.
                 response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BYTERANGES);
                 response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-                // Cast back to ServletOutputStream to get the easy println methods.
-                ServletOutputStream servletOutputStream = (ServletOutputStream) output;
                 // Copy multi part range.
                 for (Range r : ranges) {
                     // Add multipart boundary and header fields for every range.
-                    servletOutputStream.println();
-                    servletOutputStream.println("--" + MULTIPART_BYTERANGES);
-                    servletOutputStream.println("Content-Type: " + distribution.getMimeType());
-                    servletOutputStream.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
+                    output.println();
+                    output.println("--" + MULTIPART_BYTERANGES);
+                    output.println("Content-Type: " + distribution.getMimeType());
+                    output.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
                     // Copy single part range of multi part range.
                     copy(bufferedInputStream, output, length, r.start, r.length);
                 }
                 // End with multipart boundary.
-                servletOutputStream.println();
-                servletOutputStream.println("--" + MULTIPART_BYTERANGES + "--");
+                output.println();
+                output.println("--" + MULTIPART_BYTERANGES + "--");
             }
         }
     }
@@ -202,6 +200,7 @@ public class FileDistributorImpl implements FileDistributor {
                 output.flush();
             }
         } else {
+            //noinspection ResultOfMethodCallIgnored
             input.skip(start);
             long toRead = length;
             while ((read = input.read(buffer)) > 0) {

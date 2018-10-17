@@ -51,10 +51,9 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested song not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> getAudio(@PathVariable String songId,
+    public void getAudio(@PathVariable String songId,
                                       HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getSongDistribution(songId), request, response);
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping(value = "/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
@@ -62,10 +61,9 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested artwork not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> getLargeArtwork(@PathVariable String artworkId,
+    public void getLargeArtwork(@PathVariable String artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getLargeArtworkDistribution(artworkId), request, response);
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping(value = "/artwork/small/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
@@ -73,10 +71,9 @@ public class FileController implements ErrorHandlingController {
     @ApiResponses({
             @ApiResponse(code = SC_NOT_FOUND, message = "Requested artwork not found.", response = ErrorDto.class),
     })
-    public ResponseEntity<?> getSmallArtwork(@PathVariable String artworkId,
+    public void getSmallArtwork(@PathVariable String artworkId,
                                              HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getSmallArtworkDistribution(artworkId), request, response);
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping(value = "/export/song/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
