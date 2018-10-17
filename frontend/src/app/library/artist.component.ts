@@ -62,6 +62,7 @@ export class ArtistComponent implements OnInit, OnDestroy {
   
   ngOnDestroy(): void {
     this.selectedArtistSubscription.unsubscribe();
+    this.scrollToArtistRequestSubscription.unsubscribe();
     this.scrollToSongRequestSubscription.unsubscribe();
     this.playbackEventSubscription.unsubscribe();
   }

@@ -4,6 +4,7 @@ import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import 'rxjs-compat/add/operator/distinctUntilChanged';
 import {catchError, distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {ErrorDto} from '../common/common.dto';
+import {AuthenticationService} from '../user/authentication.service';
 import {ArtistSongsDto} from './library.dto';
 import {Artist, ArtistSongs, Song} from './library.model';
 
@@ -19,14 +20,27 @@ export class LibraryService {
   private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
 
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
-  private refreshRequestSubject = new Subject<void>();
+
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
-  private songPlaybackRequestSubject = new Subject<Song | undefined>();
+
   private scrollToArtistRequestSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private scrollToSongRequestSubject = new BehaviorSubject<Song | undefined>(undefined);
 
-  constructor(private httpClient: HttpClient) {
+  private refreshRequestSubject = new Subject<void>();
+  private songPlaybackRequestSubject = new Subject<Song | undefined>();
+
+  constructor(
+    private authenticationService: AuthenticationService, 
+    private httpClient: HttpClient
+  ) {
+    this.authenticationService.observeLogout().subscribe(() => {
+      this.libraryStateSubject.next(LibraryState.UNKNOWN);
+      this.selectedArtistSubject.next(undefined);
+      this.selectedSongSubject.next(undefined);
+      this.scrollToArtistRequestSubject.next(undefined);
+      this.scrollToSongRequestSubject.next(undefined);
+    });
   }
 
   get libraryState(): LibraryState {
