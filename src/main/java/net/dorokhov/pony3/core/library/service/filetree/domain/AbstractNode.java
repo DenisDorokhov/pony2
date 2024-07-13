@@ -2,7 +2,7 @@ package net.dorokhov.pony3.core.library.service.filetree.domain;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;

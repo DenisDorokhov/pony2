@@ -8,7 +8,7 @@ import net.dorokhov.pony3.core.config.repository.ConfigRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
