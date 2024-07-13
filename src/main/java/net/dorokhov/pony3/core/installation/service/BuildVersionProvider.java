@@ -18,8 +18,10 @@ public class BuildVersionProvider {
 
     private final BuildVersion buildVersion;
 
-    public BuildVersionProvider(@Value("${build.version}") String version,
-                                @Value("${build.time}") String date) {
+    public BuildVersionProvider(
+            @Value("${build.version}") String version,
+            @Value("${build.time}") String date
+    ) {
         buildVersion = new BuildVersion(version, dateFromString(date));
         logger.info("Build '{}', '{}'.", buildVersion.getVersion(), buildVersion.getDate());
     }

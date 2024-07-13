@@ -1,6 +1,5 @@
 package net.dorokhov.pony3.api.library.service;
 
-import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.library.domain.Artist;
 import net.dorokhov.pony3.api.library.domain.ArtworkFiles;
 import net.dorokhov.pony3.api.library.domain.Genre;
@@ -8,6 +7,7 @@ import net.dorokhov.pony3.api.library.domain.Song;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface LibraryService {
 
@@ -19,17 +19,13 @@ public interface LibraryService {
 
     Page<Song> getSongsByGenreId(String genreId, int pageIndex);
 
-    @Nullable
-    Genre getGenreById(String genreId);
+    Optional<Genre> getGenreById(String genreId);
 
-    @Nullable
-    Artist getArtistById(String artistId);
+    Optional<Artist> getArtistById(String artistId);
 
-    @Nullable
-    Song getSongById(String id);
+    Optional<Song> getSongById(String id);
 
-    @Nullable
-    ArtworkFiles getArtworkFilesById(String id);
+    Optional<ArtworkFiles> getArtworkFilesById(String id);
 
     List<Song> getRandomSongs(int count);
 

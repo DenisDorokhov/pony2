@@ -139,6 +139,7 @@ public class Artwork implements Serializable {
 
     public Artwork setSourceUri(URI sourceUri) {
         this.sourceUri = requireNonNull(sourceUri);
+        sourceUriScheme = sourceUri.getScheme();
         return this;
     }
 

@@ -2,7 +2,8 @@ package net.dorokhov.pony3.api.library.domain;
 
 import jakarta.annotation.Nullable;
 
-abstract class AbstractAudioData {
+@SuppressWarnings("unchecked")
+abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
 
     protected Integer discNumber;
     protected Integer discCount;
@@ -20,9 +21,9 @@ abstract class AbstractAudioData {
         return discNumber;
     }
 
-    public AbstractAudioData setDiscNumber(@Nullable Integer discNumber) {
+    public T setDiscNumber(@Nullable Integer discNumber) {
         this.discNumber = discNumber;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -30,9 +31,9 @@ abstract class AbstractAudioData {
         return discCount;
     }
 
-    public AbstractAudioData setDiscCount(Integer discCount) {
+    public T setDiscCount(Integer discCount) {
         this.discCount = discCount;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -40,9 +41,9 @@ abstract class AbstractAudioData {
         return trackNumber;
     }
 
-    public AbstractAudioData setTrackNumber(Integer trackNumber) {
+    public T setTrackNumber(Integer trackNumber) {
         this.trackNumber = trackNumber;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -50,9 +51,9 @@ abstract class AbstractAudioData {
         return trackCount;
     }
 
-    public AbstractAudioData setTrackCount(Integer trackCount) {
+    public T setTrackCount(Integer trackCount) {
         this.trackCount = trackCount;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -60,9 +61,9 @@ abstract class AbstractAudioData {
         return title;
     }
 
-    public AbstractAudioData setTitle(String title) {
+    public T setTitle(String title) {
         this.title = title;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -70,9 +71,9 @@ abstract class AbstractAudioData {
         return artist;
     }
 
-    public AbstractAudioData setArtist(String artist) {
+    public T setArtist(String artist) {
         this.artist = artist;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -80,9 +81,9 @@ abstract class AbstractAudioData {
         return albumArtist;
     }
 
-    public AbstractAudioData setAlbumArtist(String albumArtist) {
+    public T setAlbumArtist(String albumArtist) {
         this.albumArtist = albumArtist;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -90,9 +91,9 @@ abstract class AbstractAudioData {
         return album;
     }
 
-    public AbstractAudioData setAlbum(String album) {
+    public T setAlbum(String album) {
         this.album = album;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -100,9 +101,9 @@ abstract class AbstractAudioData {
         return year;
     }
 
-    public AbstractAudioData setYear(Integer year) {
+    public T setYear(Integer year) {
         this.year = year;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -110,8 +111,8 @@ abstract class AbstractAudioData {
         return genre;
     }
 
-    public AbstractAudioData setGenre(String genre) {
+    public T setGenre(String genre) {
         this.genre = genre;
-        return this;
+        return (T) this;
     }
 }

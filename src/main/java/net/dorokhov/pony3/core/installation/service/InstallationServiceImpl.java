@@ -27,7 +27,7 @@ import static org.springframework.transaction.support.TransactionSynchronization
 
 @Service
 public class InstallationServiceImpl implements InstallationService {
-    
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final InstallationRepository installationRepository;
@@ -36,11 +36,13 @@ public class InstallationServiceImpl implements InstallationService {
     private final UserService userService;
     private final LogService logService;
 
-    public InstallationServiceImpl(InstallationRepository installationRepository,
-                                   BuildVersionProvider buildVersionProvider,
-                                   ConfigService configService,
-                                   UserService userService,
-                                   LogService logService) {
+    public InstallationServiceImpl(
+            InstallationRepository installationRepository,
+            BuildVersionProvider buildVersionProvider,
+            ConfigService configService,
+            UserService userService,
+            LogService logService
+    ) {
         this.installationRepository = installationRepository;
         this.buildVersionProvider = buildVersionProvider;
         this.configService = configService;
@@ -64,7 +66,7 @@ public class InstallationServiceImpl implements InstallationService {
     @Override
     @Transactional
     synchronized public Installation install(InstallationCommand command) throws AlreadyInstalledException {
-        
+
         if (getInstallation().isPresent()) {
             throw new AlreadyInstalledException();
         }
@@ -90,17 +92,17 @@ public class InstallationServiceImpl implements InstallationService {
         registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                logService.info(logger,"The application has been installed.");
+                logService.info(logger, "The application has been installed.");
             }
         });
-        
+
         return installation;
     }
 
     @Override
     @Transactional
     synchronized public Installation upgradeIfNeeded() throws NotInstalledException {
-        
+
         Installation currentInstallation = getInstallation().orElse(null);
         if (currentInstallation == null) {
             throw new NotInstalledException();
@@ -111,7 +113,7 @@ public class InstallationServiceImpl implements InstallationService {
         if (currentInstallation.getVersion().equals(buildVersion)) {
             return currentInstallation;
         }
-            
+
         Installation upgradedInstallation = installationRepository.save(currentInstallation
                 .setVersion(buildVersion));
 
@@ -121,7 +123,7 @@ public class InstallationServiceImpl implements InstallationService {
                 logService.info(logger, "The application has been upgraded from '{}' to '{}'.", currentVersion, buildVersion);
             }
         });
-        
+
         return upgradedInstallation;
     }
 }

@@ -1,6 +1,5 @@
 package net.dorokhov.pony3.api.library.service;
 
-import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.library.domain.ScanJob;
 import net.dorokhov.pony3.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony3.api.library.service.command.EditCommand;
@@ -9,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ScanJobService {
     
@@ -25,18 +25,15 @@ public interface ScanJobService {
     void addObserver(Observer observer);
     void removeObserver(Observer observer);
 
-    @Nullable
-    ScanJobProgress getCurrentScanJobProgress();
+    Optional<ScanJobProgress> getCurrentScanJobProgress();
     
-    @Nullable
-    ScanJobProgress getScanJobProgress(String id);
+    Optional<ScanJobProgress> getScanJobProgress(String id);
 
     Page<ScanJob> getAll(Pageable pageable);
 
-    ScanJob getById(String id);
+    Optional<ScanJob> getById(String id);
     
-    @Nullable
-    ScanJob getLastSuccessfulJob();
+    Optional<ScanJob> getLastSuccessfulJob();
     
     ScanJob startScanJob() throws ConcurrentScanException;
     ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException;

@@ -5,7 +5,7 @@ import jakarta.annotation.Nullable;
 
 import java.io.File;
 
-public final class WritableAudioData extends AbstractAudioData {
+public final class WritableAudioData extends AbstractAudioData<WritableAudioData> {
 
     private boolean writeDiscNumber;
     private boolean writeDiscCount;
@@ -29,99 +29,44 @@ public final class WritableAudioData extends AbstractAudioData {
         return writeDiscNumber;
     }
 
-    public WritableAudioData setWriteDiscNumber(boolean writeDiscNumber) {
-        this.writeDiscNumber = writeDiscNumber;
-        return this;
-    }
-
     public boolean isWriteDiscCount() {
         return writeDiscCount;
-    }
-
-    public WritableAudioData setWriteDiscCount(boolean writeDiscCount) {
-        this.writeDiscCount = writeDiscCount;
-        return this;
     }
 
     public boolean isWriteTrackNumber() {
         return writeTrackNumber;
     }
 
-    public WritableAudioData setWriteTrackNumber(boolean writeTrackNumber) {
-        this.writeTrackNumber = writeTrackNumber;
-        return this;
-    }
-
     public boolean isWriteTrackCount() {
         return writeTrackCount;
-    }
-
-    public WritableAudioData setWriteTrackCount(boolean writeTrackCount) {
-        this.writeTrackCount = writeTrackCount;
-        return this;
     }
 
     public boolean isWriteTitle() {
         return writeTitle;
     }
 
-    public WritableAudioData setWriteTitle(boolean writeTitle) {
-        this.writeTitle = writeTitle;
-        return this;
-    }
-
     public boolean isWriteArtist() {
         return writeArtist;
-    }
-
-    public WritableAudioData setWriteArtist(boolean writeArtist) {
-        this.writeArtist = writeArtist;
-        return this;
     }
 
     public boolean isWriteAlbumArtist() {
         return writeAlbumArtist;
     }
 
-    public WritableAudioData setWriteAlbumArtist(boolean writeAlbumArtist) {
-        this.writeAlbumArtist = writeAlbumArtist;
-        return this;
-    }
-
     public boolean isWriteAlbum() {
         return writeAlbum;
-    }
-
-    public WritableAudioData setWriteAlbum(boolean writeAlbum) {
-        this.writeAlbum = writeAlbum;
-        return this;
     }
 
     public boolean isWriteYear() {
         return writeYear;
     }
 
-    public WritableAudioData setWriteYear(boolean writeYear) {
-        this.writeYear = writeYear;
-        return this;
-    }
-
     public boolean isWriteGenre() {
         return writeGenre;
     }
 
-    public WritableAudioData setWriteGenre(boolean writeGenre) {
-        this.writeGenre = writeGenre;
-        return this;
-    }
-
     public boolean isWriteArtwork() {
         return writeArtwork;
-    }
-
-    public WritableAudioData setWriteArtwork(boolean writeArtwork) {
-        this.writeArtwork = writeArtwork;
-        return this;
     }
 
     public @Nullable File getArtworkFile() {
@@ -130,7 +75,68 @@ public final class WritableAudioData extends AbstractAudioData {
 
     public WritableAudioData setArtworkFile(@Nullable File artworkFile) {
         this.artworkFile = artworkFile;
+        writeArtwork = true;
         return this;
+    }
+
+    @Override
+    public WritableAudioData setDiscNumber(@Nullable Integer discNumber) {
+        writeDiscNumber = true;
+        return super.setDiscNumber(discNumber);
+    }
+
+    @Override
+    public WritableAudioData setDiscCount(Integer discCount) {
+        writeDiscCount = true;
+        return super.setDiscCount(discCount);
+    }
+
+    @Override
+    public WritableAudioData setTrackNumber(Integer trackNumber) {
+        writeTrackNumber = true;
+        return super.setTrackNumber(trackNumber);
+    }
+
+    @Override
+    public WritableAudioData setTrackCount(Integer trackCount) {
+        writeTrackCount = true;
+        return super.setTrackCount(trackCount);
+    }
+
+    @Override
+    public WritableAudioData setTitle(String title) {
+        writeTitle = true;
+        return super.setTitle(title);
+    }
+
+    @Override
+    public WritableAudioData setArtist(String artist) {
+        writeArtist = true;
+        return super.setArtist(artist);
+    }
+
+    @Override
+    public WritableAudioData setAlbumArtist(String albumArtist) {
+        writeAlbumArtist = true;
+        return super.setAlbumArtist(albumArtist);
+    }
+
+    @Override
+    public WritableAudioData setAlbum(String album) {
+        writeAlbum = true;
+        return super.setAlbum(album);
+    }
+
+    @Override
+    public WritableAudioData setYear(Integer year) {
+        writeYear = true;
+        return super.setYear(year);
+    }
+
+    @Override
+    public WritableAudioData setGenre(String genre) {
+        writeGenre = true;
+        return super.setGenre(genre);
     }
 
     @Override

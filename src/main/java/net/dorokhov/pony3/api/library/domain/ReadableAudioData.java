@@ -8,7 +8,7 @@ import java.io.File;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class ReadableAudioData extends AbstractAudioData {
+public final class ReadableAudioData extends AbstractAudioData<ReadableAudioData> {
 
     private String path;
     private FileType fileType;
