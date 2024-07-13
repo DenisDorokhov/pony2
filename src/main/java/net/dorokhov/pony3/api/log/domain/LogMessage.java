@@ -9,6 +9,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -85,6 +86,9 @@ public class LogMessage implements Serializable {
     }
 
     public @NotNull List<String> getArguments() {
+        if (arguments == null) {
+            arguments = new ArrayList<>();
+        }
         return arguments;
     }
 

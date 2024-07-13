@@ -8,8 +8,9 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
 
+@SuppressWarnings("unchecked")
 @MappedSuperclass
-abstract public class BaseEntity {
+abstract public class BaseEntity<T extends BaseEntity<?>> {
     
     @Id
     @GeneratedValue(generator = "uuid2")
@@ -28,18 +29,18 @@ abstract public class BaseEntity {
         return id;
     }
 
-    public BaseEntity setId(String id) {
+    public T setId(String id) {
         this.id = id;
-        return this;
+        return (T) this;
     }
 
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
 
-    public BaseEntity setCreationDate(LocalDateTime creationDate) {
+    public T setCreationDate(LocalDateTime creationDate) {
         this.creationDate = creationDate;
-        return this;
+        return (T) this;
     }
 
     @Nullable
@@ -47,9 +48,9 @@ abstract public class BaseEntity {
         return updateDate;
     }
 
-    public BaseEntity setUpdateDate(LocalDateTime updateDate) {
+    public T setUpdateDate(LocalDateTime updateDate) {
         this.updateDate = updateDate;
-        return this;
+        return (T) this;
     }
 
     @PrePersist

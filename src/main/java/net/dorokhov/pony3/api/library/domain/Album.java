@@ -1,6 +1,7 @@
 package net.dorokhov.pony3.api.library.domain;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
@@ -16,7 +17,7 @@ import static java.util.Objects.requireNonNull;
 
 @Entity
 @Table(name = "album")
-public class Album extends BaseEntity implements Comparable<Album>, Serializable {
+public class Album extends BaseEntity<Album> implements Comparable<Album>, Serializable {
 
     @Column(name = "name")
     private String name;
@@ -85,6 +86,12 @@ public class Album extends BaseEntity implements Comparable<Album>, Serializable
     public Album setArtist(@NotNull Artist artist) {
         this.artist = requireNonNull(artist);
         return this;
+    }
+
+    @Transient
+    public String getSearchTerms() {
+        return Strings.nullToEmpty(name) + " " +
+                Strings.nullToEmpty(artist.getName());
     }
 
     @Override

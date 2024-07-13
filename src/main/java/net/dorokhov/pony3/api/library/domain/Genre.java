@@ -15,7 +15,7 @@ import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "genre")
-public class Genre extends BaseEntity implements Comparable<Genre>, Serializable {
+public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Serializable {
 
     @Column(name = "name")
     private String name;

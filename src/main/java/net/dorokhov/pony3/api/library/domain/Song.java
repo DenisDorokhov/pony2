@@ -1,6 +1,7 @@
 package net.dorokhov.pony3.api.library.domain;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
@@ -13,7 +14,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "song")
-public class Song extends BaseEntity implements Comparable<Song>, Serializable {
+public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializable {
 
     @Column(name = "path", nullable = false, unique = true)
     @NotNull
@@ -279,14 +280,22 @@ public class Song extends BaseEntity implements Comparable<Song>, Serializable {
         return this;
     }
 
-    @PostLoad
-    public void postLoad() {
-        fileType = FileType.of(mimeType, fileExtension);
+    @Transient
+    public String getSearchTerms() {
+        return Strings.nullToEmpty(name) + " " +
+                Strings.nullToEmpty(artistName) + " " +
+                Strings.nullToEmpty(albumArtistName) + " " +
+                Strings.nullToEmpty(albumName);
     }
-    
+
     @Transient
     public File getFile() {
         return new File(getPath());
+    }
+
+    @PostLoad
+    public void postLoad() {
+        fileType = FileType.of(mimeType, fileExtension);
     }
 
     @Override

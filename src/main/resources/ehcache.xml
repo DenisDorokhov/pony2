@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ehcache updateCheck="false">
-    <defaultCache eternal="true" maxElementsInMemory="1000" overflowToDisk="false"/>
-    <cache name="pony.installation" eternal="true" maxElementsInMemory="100" overflowToDisk="false"/>
-    <cache name="pony.user" eternal="true" maxElementsInMemory="100" overflowToDisk="false"/>
-    <cache name="pony.tokenKey" eternal="true" maxElementsInMemory="100" overflowToDisk="false"/>
-    <cache name="pony.installationSecret" eternal="true" maxElementsInMemory="100" overflowToDisk="false"/>
-</ehcache>

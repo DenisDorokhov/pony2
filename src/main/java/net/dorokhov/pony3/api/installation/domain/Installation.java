@@ -11,7 +11,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "installation")
-public class Installation extends BaseEntity implements Serializable {
+public class Installation extends BaseEntity<Installation> implements Serializable {
 
     @Column(name = "version", nullable = false)
     @NotNull

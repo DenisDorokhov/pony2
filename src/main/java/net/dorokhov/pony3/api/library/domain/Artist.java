@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "artist")
-public class Artist extends BaseEntity implements Comparable<Artist>, Serializable {
+public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Serializable {
 
     @Column(name = "name")
     private String name;

@@ -4,24 +4,17 @@ import com.google.common.base.MoreObjects;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony3.api.common.BaseEntity;
-import org.hibernate.annotations.Cache;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
-import static net.dorokhov.pony3.api.user.domain.User.CACHE_REGION;
-import static org.hibernate.annotations.CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
 
 @Entity
 @Table(name = "pony_user")
-@Cacheable
-@Cache(usage = NONSTRICT_READ_WRITE, region = CACHE_REGION)
-public class User extends BaseEntity implements Serializable {
+public class User extends BaseEntity<User> implements Serializable {
     
-    public static final String CACHE_REGION = "pony.user";
-
     public enum Role {
         USER, ADMIN
     }

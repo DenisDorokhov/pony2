@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 @Entity
 @Table(name = "scan_job")
-public class ScanJob extends BaseEntity {
+public class ScanJob extends BaseEntity<ScanJob> {
 
     private static final Logger log = LoggerFactory.getLogger(ScanJob.class);
 
