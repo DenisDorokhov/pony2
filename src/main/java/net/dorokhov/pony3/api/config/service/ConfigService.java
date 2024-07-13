@@ -4,11 +4,11 @@ import jakarta.annotation.Nullable;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 public interface ConfigService {
 
-    @Nullable
-    Integer getAutoScanInterval();
+    Optional<Integer> getAutoScanInterval();
 
     void saveAutoScanInterval(@Nullable Integer value);
 

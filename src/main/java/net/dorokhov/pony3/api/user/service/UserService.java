@@ -1,6 +1,5 @@
 package net.dorokhov.pony3.api.user.service;
 
-import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.user.domain.User;
 import net.dorokhov.pony3.api.user.service.command.SafeUserUpdateCommand;
 import net.dorokhov.pony3.api.user.service.command.UnsafeUserUpdateCommand;
@@ -10,13 +9,12 @@ import net.dorokhov.pony3.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony3.api.user.service.exception.UserNotFoundException;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
 
-    @Nullable
-    User getById(String id);
-    @Nullable
-    User getByEmail(String email);
+    Optional<User> getById(String id);
+    Optional<User> getByEmail(String email);
 
     List<User> getAll();
     
