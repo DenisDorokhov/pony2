@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class LogMessagePageDto extends PageDto<LogMessagePageDto> {
+public class LogMessagePageDto extends PageDto<LogMessagePageDto> {
 
     private List<LogMessageDto> logMessages;
 

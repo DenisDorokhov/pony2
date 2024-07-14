@@ -277,6 +277,8 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
 
     public Song setFileType(FileType fileType) {
         this.fileType = fileType;
+        setMimeType(fileType.getMimeType());
+        setFileExtension(fileType.getFileExtension());
         return this;
     }
 

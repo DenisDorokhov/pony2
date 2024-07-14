@@ -40,7 +40,7 @@ public class RepeatPasswordValidator implements ConstraintValidator<RepeatPasswo
             return true;
         }
         if (constraintViolationValueFields.isEmpty()) {
-            constraintViolationValueFields.add(valueFields.get(0));
+            constraintViolationValueFields.add(valueFields.getFirst());
         }
         Set<Object> values = valueFields.stream()
                 .flatMap(field -> {
@@ -58,7 +58,7 @@ public class RepeatPasswordValidator implements ConstraintValidator<RepeatPasswo
         } else {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate())
-                    .addPropertyNode(constraintViolationValueFields.get(0).getName())
+                    .addPropertyNode(constraintViolationValueFields.getFirst().getName())
                     .addConstraintViolation();
             return false;
         }

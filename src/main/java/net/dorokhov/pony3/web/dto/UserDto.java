@@ -1,6 +1,6 @@
 package net.dorokhov.pony3.web.dto;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import net.dorokhov.pony3.api.user.domain.User;
 
 import java.util.Set;
@@ -13,9 +13,9 @@ public final class UserDto extends BaseDto<UserDto> {
 
         public Set<User.Role> convert() {
             if (this == ADMIN) {
-                return ImmutableSet.of(User.Role.USER, User.Role.ADMIN);
+                return Sets.newHashSet(User.Role.USER, User.Role.ADMIN);
             } else {
-                return ImmutableSet.of(User.Role.USER);
+                return Sets.newHashSet(User.Role.USER);
             }
         }
 

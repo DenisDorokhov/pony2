@@ -56,7 +56,7 @@ public class Artwork implements Serializable {
 
     @Column(name = "source_uri")
     @NotNull
-    private URI sourceUri;
+    private String sourceUri;
 
     @Column(name = "source_uri_scheme")
     private String sourceUriScheme;
@@ -134,12 +134,12 @@ public class Artwork implements Serializable {
     }
 
     public URI getSourceUri() {
-        return sourceUri;
+        return URI.create(sourceUri);
     }
 
     public Artwork setSourceUri(URI sourceUri) {
-        this.sourceUri = requireNonNull(sourceUri);
-        sourceUriScheme = sourceUri.getScheme();
+        this.sourceUri = sourceUri.toString();
+        setSourceUriScheme(sourceUri.getScheme());
         return this;
     }
 

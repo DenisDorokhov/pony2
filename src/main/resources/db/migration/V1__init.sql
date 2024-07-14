@@ -2,8 +2,8 @@ CREATE TABLE installation (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   version VARCHAR (255) NOT NULL
 );
@@ -12,8 +12,8 @@ CREATE TABLE pony_user (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   name VARCHAR (255) NOT NULL,
 
@@ -42,7 +42,7 @@ CREATE TABLE log_message (
 
   id CHAR(36) PRIMARY KEY,
 
-  date TIMESTAMP NOT NULL,
+  date TIMESTAMP(9) NOT NULL,
 
   level TINYINT NOT NULL,
 
@@ -60,8 +60,8 @@ CREATE TABLE config (
 
   id VARCHAR (255) NOT NULL,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   config_value LONGVARCHAR,
 
@@ -72,7 +72,7 @@ CREATE TABLE scan_result (
 
   id CHAR(36) PRIMARY KEY,
 
-  date TIMESTAMP NOT NULL,
+  date TIMESTAMP(9) NOT NULL,
   scan_type VARCHAR (255) NOT NULL,
   target_paths TEXT NOT NULL,
   failed_paths TEXT NOT NULL,
@@ -114,8 +114,8 @@ CREATE TABLE scan_job (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   scan_type VARCHAR (255) NOT NULL,
   status VARCHAR (255) NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE artwork (
 
   id CHAR(36) PRIMARY KEY,
 
-  date TIMESTAMP NOT NULL,
+  date TIMESTAMP(9) NOT NULL,
 
   mime_type VARCHAR (255) NOT NULL,
   checksum VARCHAR (255) NOT NULL,
@@ -154,8 +154,8 @@ CREATE TABLE genre (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   name VARCHAR_IGNORECASE (255),
 
@@ -170,8 +170,8 @@ CREATE TABLE artist (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   name VARCHAR_IGNORECASE (255),
 
@@ -186,8 +186,8 @@ CREATE TABLE album (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   name VARCHAR_IGNORECASE (255),
   album_year INT,
@@ -207,8 +207,8 @@ CREATE TABLE song (
 
   id CHAR(36) PRIMARY KEY,
 
-  creation_date TIMESTAMP NOT NULL,
-  update_date TIMESTAMP,
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
 
   path VARCHAR_IGNORECASE (1000) NOT NULL,
 

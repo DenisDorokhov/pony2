@@ -1,0 +1,1081 @@
+{
+  "artworksToGenerate": [
+    {
+      "copyFrom": "red.png",
+      "copyTo": "Hard Times/2000 - Best Ever And Forever/cover.png"
+    }
+  ],
+  "songsToGenerate": [
+    
+    {
+      "path": "unknown.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": null,
+      "trackCount": null,
+      "title": null,
+      "artist": null,
+      "albumArtist": null,
+      "album": null,
+      "year": null,
+      "genre": null,
+      "embeddedArtwork": null
+    },
+    
+    {
+      "path": "Hard Times/1986 - Very First/01 - Why me.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 1,
+      "trackCount": 10,
+      "title": "Why me?",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/02 - I don't know.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 2,
+      "trackCount": 10,
+      "title": "I don't know",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/03 - About love.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 3,
+      "trackCount": 10,
+      "title": "About love",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/04 - About death.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 4,
+      "trackCount": 10,
+      "title": "About death",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/05 - About dirty things.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 5,
+      "trackCount": 10,
+      "title": "About dirty things",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/06 - About chicks.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 6,
+      "trackCount": 10,
+      "title": "About chicks",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/07 - Some politics.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 7,
+      "trackCount": 10,
+      "title": "Some politics",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/08 - Suicide.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 8,
+      "trackCount": 10,
+      "title": "Suicide",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/09 - My little pony.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 9,
+      "trackCount": 10,
+      "title": "My little pony",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    {
+      "path": "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3",
+      "discNumber": 1,
+      "discCount": 1,
+      "trackNumber": 10,
+      "trackCount": 10,
+      "title": "I am an alcoholic",
+      "artist": "Good Times",
+      "albumArtist": "Hard Times",
+      "album": "Very First",
+      "year": 1986,
+      "genre": "Crazy Metal",
+      "embeddedArtwork": {
+        "copyFrom": "black.png"
+      }
+    },
+    
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 1,
+      "trackCount": 12,
+      "title": "I am the best",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 2,
+      "trackCount": 12,
+      "title": "I am drunk",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/03 - Hangover.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 3,
+      "trackCount": 12,
+      "title": "Hangover",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/04 - Your music is junk.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 4,
+      "trackCount": 12,
+      "title": "Your music is junk",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/05 - Beer.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 5,
+      "trackCount": 12,
+      "title": "Beer",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/06 - Vodka.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 6,
+      "trackCount": 12,
+      "title": "Vodka",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/07 - Drugs.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 7,
+      "trackCount": 12,
+      "title": "Drugs",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/08 - Sex.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 8,
+      "trackCount": 12,
+      "title": "Sex",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/09 - Violence.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 9,
+      "trackCount": 12,
+      "title": "Violence",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 10,
+      "trackCount": 12,
+      "title": "You don't want to hear that",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 11,
+      "trackCount": 12,
+      "title": "Worse than hangover",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3",
+      "discNumber": null,
+      "discCount": null,
+      "trackNumber": 12,
+      "trackCount": 12,
+      "title": "Better than Weißbier",
+      "artist": "Hard Times",
+      "albumArtist": null,
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Beer Rock",
+      "embeddedArtwork": null
+    },
+    
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
+      "discNumber": 2,
+      "discCount": null,
+      "trackNumber": null,
+      "trackCount": null,
+      "title": "Bonus for software developers",
+      "artist": "Hard Times",
+      "albumArtist": "Hard Times",
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Engineering realism",
+      "embeddedArtwork": null
+    },
+    {
+      "path": "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3",
+      "discNumber": 2,
+      "discCount": null,
+      "trackNumber": null,
+      "trackCount": null,
+      "title": "I never write tests (my bad habit)",
+      "artist": "Hard Times",
+      "albumArtist": "Hard Times",
+      "album": "Best Ever And Forever",
+      "year": 2000,
+      "genre": "Engineering realism",
+      "embeddedArtwork": null
+    },
+    
+    {
+      "path": "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+      "discNumber": 1,
+      "discCount": null,
+      "trackNumber": 1,
+      "trackCount": null,
+      "title": "No unit tests",
+      "artist": "Bad Music",
+      "albumArtist": null,
+      "album": "Worse Than Ever",
+      "year": 1991,
+      "genre": "Pessimistic realistic rock",
+      "embeddedArtwork": {
+        "copyFrom": "green.png"
+      }
+    },
+    {
+      "path": "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
+      "discNumber": 1,
+      "discCount": null,
+      "trackNumber": 2,
+      "trackCount": null,
+      "title": "No integration tests",
+      "artist": "Bad Music",
+      "albumArtist": null,
+      "album": "Worse Than Ever",
+      "year": 1991,
+      "genre": "Pessimistic realistic rock",
+      "embeddedArtwork": {
+        "copyFrom": "green.png"
+      }
+    },
+    {
+      "path": "Bad Music/1991 - Worse than ever/03 - No functional tests.mp3",
+      "discNumber": 1,
+      "discCount": null,
+      "trackNumber": 3,
+      "trackCount": null,
+      "title": "No functional tests",
+      "artist": "Bad Music",
+      "albumArtist": null,
+      "album": "Worse Than Ever",
+      "year": 1991,
+      "genre": "Pessimistic realistic rock",
+      "embeddedArtwork": {
+        "copyFrom": "green.png"
+      }
+    },
+    {
+      "path": "Bad Music/1991 - Worse than ever/04 - No quality.mp3",
+      "discNumber": 1,
+      "discCount": null,
+      "trackNumber": 4,
+      "trackCount": null,
+      "title": "No quality",
+      "artist": "Bad Music",
+      "albumArtist": null,
+      "album": "Worse Than Ever",
+      "year": 1991,
+      "genre": "Pessimistic realistic rock",
+      "embeddedArtwork": {
+        "copyFrom": "green.png"
+      }
+    }
+  ],
+  "filePathsToDelete": [],
+  "expectedData": {
+    "result": {
+      "processedAudioFileCount": 29,
+      "genreCount": 5,
+      "artistCount": 3,
+      "albumCount": 4,
+      "songCount": 29,
+      "artworkCount": 3,
+      "createdArtistCount": 3,
+      "updatedArtistCount": 0,
+      "deletedArtistCount": 0,
+      "createdAlbumCount": 4,
+      "updatedAlbumCount": 0,
+      "deletedAlbumCount": 0,
+      "createdGenreCount": 5,
+      "updatedGenreCount": 0,
+      "deletedGenreCount": 0,
+      "createdSongCount": 29,
+      "updatedSongCount": 0,
+      "deletedSongCount": 0,
+      "createdArtworkCount": 3,
+      "deletedArtworkCount": 0
+    },
+    "genres": [
+      {
+        "name": null,
+        "artworkPath": null,
+        "songPaths": [
+          "unknown.mp3"
+        ]
+      },
+      {
+        "name": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
+        "songPaths": [
+          "Hard Times/1986 - Very First/01 - Why me.mp3",
+          "Hard Times/1986 - Very First/02 - I don't know.mp3",
+          "Hard Times/1986 - Very First/03 - About love.mp3",
+          "Hard Times/1986 - Very First/04 - About death.mp3",
+          "Hard Times/1986 - Very First/05 - About dirty things.mp3",
+          "Hard Times/1986 - Very First/06 - About chicks.mp3",
+          "Hard Times/1986 - Very First/07 - Some politics.mp3",
+          "Hard Times/1986 - Very First/08 - Suicide.mp3",
+          "Hard Times/1986 - Very First/09 - My little pony.mp3",
+          "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3"
+        ]
+      },
+      {
+        "name": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
+        "songPaths": [
+          "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/03 - Hangover.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/04 - Your music is junk.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/05 - Beer.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/06 - Vodka.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/07 - Drugs.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/08 - Sex.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/09 - Violence.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3"
+        ]
+      },
+      {
+        "name": "Engineering realism",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
+        "songPaths": [
+          "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
+          "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3"
+        ]
+      },
+      {
+        "name": "Pessimistic realistic rock",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+        "songPaths": [
+          "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+          "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
+          "Bad Music/1991 - Worse than ever/03 - No functional tests.mp3",
+          "Bad Music/1991 - Worse than ever/04 - No quality.mp3"
+        ]
+      }
+    ],
+    "artists": [
+      {
+        "name": null,
+        "artworkPath": null,
+        "albums": [
+          {
+            "name": null,
+            "year": null,
+            "songPaths": [
+              "unknown.mp3"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Hard Times",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
+        "albums": [
+          {
+            "name": "Very First",
+            "year": 1986,
+            "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
+            "songPaths": [
+              "Hard Times/1986 - Very First/01 - Why me.mp3",
+              "Hard Times/1986 - Very First/02 - I don't know.mp3",
+              "Hard Times/1986 - Very First/03 - About love.mp3",
+              "Hard Times/1986 - Very First/04 - About death.mp3",
+              "Hard Times/1986 - Very First/05 - About dirty things.mp3",
+              "Hard Times/1986 - Very First/06 - About chicks.mp3",
+              "Hard Times/1986 - Very First/07 - Some politics.mp3",
+              "Hard Times/1986 - Very First/08 - Suicide.mp3",
+              "Hard Times/1986 - Very First/09 - My little pony.mp3",
+              "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3"
+            ]
+          },
+          {
+            "name": "Best Ever And Forever",
+            "year": 2000,
+            "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png",
+            "songPaths": [
+              "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/03 - Hangover.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/04 - Your music is junk.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/05 - Beer.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/06 - Vodka.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/07 - Drugs.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/08 - Sex.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/09 - Violence.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Bad Music",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+        "albums": [
+          {
+            "name": "Worse Than Ever",
+            "year": 1991,
+            "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+            "songPaths": [
+              "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+              "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
+              "Bad Music/1991 - Worse than ever/03 - No functional tests.mp3",
+              "Bad Music/1991 - Worse than ever/04 - No quality.mp3"
+            ]
+          }
+        ]
+      }
+    ],
+    "songs": [
+      {
+        "path": "unknown.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": null,
+        "trackCount": null,
+        "title": null,
+        "artist": null,
+        "albumArtist": null,
+        "album": null,
+        "year": null,
+        "genre": null,
+        "artworkPath": null
+      },
+
+      {
+        "path": "Hard Times/1986 - Very First/01 - Why me.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 1,
+        "trackCount": 10,
+        "title": "Why me?",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/02 - I don't know.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 2,
+        "trackCount": 10,
+        "title": "I don't know",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/03 - About love.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 3,
+        "trackCount": 10,
+        "title": "About love",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/04 - About death.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 4,
+        "trackCount": 10,
+        "title": "About death",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/05 - About dirty things.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 5,
+        "trackCount": 10,
+        "title": "About dirty things",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/06 - About chicks.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 6,
+        "trackCount": 10,
+        "title": "About chicks",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/07 - Some politics.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 7,
+        "trackCount": 10,
+        "title": "Some politics",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/08 - Suicide.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 8,
+        "trackCount": 10,
+        "title": "Suicide",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/09 - My little pony.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 9,
+        "trackCount": 10,
+        "title": "My little pony",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+      {
+        "path": "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": 1,
+        "trackNumber": 10,
+        "trackCount": 10,
+        "title": "I am an alcoholic",
+        "artist": "Good Times",
+        "albumArtist": "Hard Times",
+        "album": "Very First",
+        "year": 1986,
+        "genre": "Crazy Metal",
+        "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3"
+      },
+
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 1,
+        "trackCount": 12,
+        "title": "I am the best",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 2,
+        "trackCount": 12,
+        "title": "I am drunk",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/03 - Hangover.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 3,
+        "trackCount": 12,
+        "title": "Hangover",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/04 - Your music is junk.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 4,
+        "trackCount": 12,
+        "title": "Your music is junk",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/05 - Beer.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 5,
+        "trackCount": 12,
+        "title": "Beer",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/06 - Vodka.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 6,
+        "trackCount": 12,
+        "title": "Vodka",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/07 - Drugs.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 7,
+        "trackCount": 12,
+        "title": "Drugs",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/08 - Sex.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 8,
+        "trackCount": 12,
+        "title": "Sex",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/09 - Violence.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 9,
+        "trackCount": 12,
+        "title": "Violence",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 10,
+        "trackCount": 12,
+        "title": "You don't want to hear that",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 11,
+        "trackCount": 12,
+        "title": "Worse than hangover",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": null,
+        "discCount": null,
+        "trackNumber": 12,
+        "trackCount": 12,
+        "title": "Better than Weißbier",
+        "artist": "Hard Times",
+        "albumArtist": null,
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Beer Rock",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 2,
+        "discCount": null,
+        "trackNumber": null,
+        "trackCount": null,
+        "title": "Bonus for software developers",
+        "artist": "Hard Times",
+        "albumArtist": "Hard Times",
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Engineering realism",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+      {
+        "path": "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 2,
+        "discCount": null,
+        "trackNumber": null,
+        "trackCount": null,
+        "title": "I never write tests (my bad habit)",
+        "artist": "Hard Times",
+        "albumArtist": "Hard Times",
+        "album": "Best Ever And Forever",
+        "year": 2000,
+        "genre": "Engineering realism",
+        "artworkPath": "file:/Hard Times/2000 - Best Ever And Forever/cover.png"
+      },
+
+      {
+        "path": "Bad Music/1991 - Worse than ever/01 - No unit tests.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": null,
+        "trackNumber": 1,
+        "trackCount": null,
+        "title": "No unit tests",
+        "artist": "Bad Music",
+        "albumArtist": null,
+        "album": "Worse Than Ever",
+        "year": 1991,
+        "genre": "Pessimistic realistic rock",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+      },
+      {
+        "path": "Bad Music/1991 - Worse than ever/02 - No integration tests.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": null,
+        "trackNumber": 2,
+        "trackCount": null,
+        "title": "No integration tests",
+        "artist": "Bad Music",
+        "albumArtist": null,
+        "album": "Worse Than Ever",
+        "year": 1991,
+        "genre": "Pessimistic realistic rock",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+      },
+      {
+        "path": "Bad Music/1991 - Worse than ever/03 - No functional tests.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": null,
+        "trackNumber": 3,
+        "trackCount": null,
+        "title": "No functional tests",
+        "artist": "Bad Music",
+        "albumArtist": null,
+        "album": "Worse Than Ever",
+        "year": 1991,
+        "genre": "Pessimistic realistic rock",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+      },
+      {
+        "path": "Bad Music/1991 - Worse than ever/04 - No quality.mp3",
+        "mimeType": "audio/mpeg",
+        "fileExtension": "mp3",
+        "discNumber": 1,
+        "discCount": null,
+        "trackNumber": 4,
+        "trackCount": null,
+        "title": "No quality",
+        "artist": "Bad Music",
+        "albumArtist": null,
+        "album": "Worse Than Ever",
+        "year": 1991,
+        "genre": "Pessimistic realistic rock",
+        "artworkPath": "embedded:/Bad Music/1991 - Worse than ever/01 - No unit tests.mp3"
+      }
+    ]
+  }
+}
