@@ -7,7 +7,6 @@ import net.dorokhov.pony3.api.library.domain.ScanType;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class ScanProgressDto {
     
@@ -133,7 +132,7 @@ public final class ScanProgressDto {
                 .setStep(Step.of(scanProgress.getStep()))
                 .setFiles(scanProgress.getFiles().stream()
                         .map(File::getAbsolutePath)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .setValue(scanProgress.getValue() != null ? Value.of(scanProgress.getValue()) : null);
     }
 }

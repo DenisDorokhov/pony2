@@ -5,7 +5,6 @@ import net.dorokhov.pony3.api.library.domain.Song;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class GenreSongsPageDto extends PageDto<GenreSongsPageDto> {
 
@@ -38,6 +37,6 @@ public class GenreSongsPageDto extends PageDto<GenreSongsPageDto> {
                 .setGenre(GenreDto.of(genre))
                 .setSongAlbums(songPage.getContent().stream()
                         .map(SongAlbumDto::of)
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 }

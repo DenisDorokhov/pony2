@@ -4,15 +4,13 @@ import com.google.common.base.MoreObjects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import net.dorokhov.pony3.common.JsonAttributeConverter;
+import net.dorokhov.pony3.common.ListOfStringsJsonAttributeConverter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "scan_result")
@@ -34,14 +32,14 @@ public class ScanResult implements Serializable {
     private ScanType scanType;
 
     @Column(name = "target_paths")
-    @Convert(converter = JsonAttributeConverter.class)
+    @Convert(converter = ListOfStringsJsonAttributeConverter.class)
     @NotNull
-    private List<String> targetPaths = emptyList();
+    private List<String> targetPaths = new ArrayList<>();
 
     @Column(name = "failed_paths")
-    @Convert(converter = JsonAttributeConverter.class)
+    @Convert(converter = ListOfStringsJsonAttributeConverter.class)
     @NotNull
-    private List<String> failedPaths = emptyList();
+    private List<String> failedPaths = new ArrayList<>();
 
     @Column(name = "processed_audio_file_count")
     @NotNull

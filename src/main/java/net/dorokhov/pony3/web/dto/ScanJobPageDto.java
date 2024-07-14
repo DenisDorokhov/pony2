@@ -4,7 +4,6 @@ import net.dorokhov.pony3.api.library.domain.ScanJob;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class ScanJobPageDto extends PageDto<ScanJobPageDto> {
 
@@ -26,6 +25,6 @@ public final class ScanJobPageDto extends PageDto<ScanJobPageDto> {
                 .setTotalPages(scanJobPage.getTotalPages())
                 .setScanJobs(scanJobPage.getContent().stream()
                         .map(ScanJobDto::of)
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 }

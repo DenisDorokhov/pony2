@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class LogServiceImpl implements LogService {
@@ -75,7 +74,7 @@ public class LogServiceImpl implements LogService {
                         return o.toString();
                     }
                 })
-                .collect(Collectors.toList());
+                .toList();
         return logMessageRepository.save(new LogMessage()
                 .setLevel(level)
                 .setPattern(pattern)

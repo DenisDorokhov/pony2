@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 import static java.lang.Math.toIntExact;
@@ -144,7 +143,7 @@ public class ScanResultCalculator {
     private List<String> filesToPaths(List<File> files) {
         return files.stream()
                 .map(File::getAbsolutePath)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private class ScanStateBeforeProcessing {

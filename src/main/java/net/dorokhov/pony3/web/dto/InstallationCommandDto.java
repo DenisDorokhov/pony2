@@ -1,5 +1,8 @@
 package net.dorokhov.pony3.web.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import net.dorokhov.pony3.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony3.web.validation.InstallationSecret;
 import net.dorokhov.pony3.web.validation.RepeatPassword;
@@ -7,14 +10,9 @@ import net.dorokhov.pony3.web.validation.RepeatPasswordValue;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RepeatPassword
 public final class InstallationCommandDto {
@@ -104,7 +102,7 @@ public final class InstallationCommandDto {
         return new InstallationCommand()
                 .setLibraryFolders(libraryFolders.stream()
                         .map(folder -> new File(folder.getPath()))
-                        .collect(Collectors.toList()))
+                        .toList())
                 .setAdminName(adminName)
                 .setAdminEmail(adminEmail)
                 .setAdminPassword(adminPassword);

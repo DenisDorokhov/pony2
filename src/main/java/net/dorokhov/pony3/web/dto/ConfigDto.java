@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class ConfigDto {
 
@@ -38,6 +37,6 @@ public final class ConfigDto {
                 .setAutoScanInterval(autoScanInterval)
                 .setLibraryFolders(libraryFolders.stream()
                         .map(LibraryFolderDto::of)
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 }

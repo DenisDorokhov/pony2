@@ -1,6 +1,7 @@
 package net.dorokhov.pony3.core.library.service.scan;
 
 import com.google.common.collect.Lists;
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.library.domain.ScanProgress;
 import net.dorokhov.pony3.api.library.domain.ScanProgress.Step;
 import net.dorokhov.pony3.api.library.domain.ScanResult;
@@ -22,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.unmodifiableList;
@@ -189,7 +188,7 @@ public class LibraryScanner {
         List<File> targetFiles = commands.stream()
                 .map(WriteAndImportCommand::getAudioNode)
                 .map(AudioNode::getFile)
-                .collect(Collectors.toList());
+                .toList();
 
         logService.info(logger, "Writing songs...");
         progressScan(EDIT_WRITING, targetFiles, null, observer);

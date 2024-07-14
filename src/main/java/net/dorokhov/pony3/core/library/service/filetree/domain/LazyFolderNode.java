@@ -2,13 +2,12 @@ package net.dorokhov.pony3.core.library.service.filetree.domain;
 
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import jakarta.annotation.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -78,7 +77,7 @@ public class LazyFolderNode implements FolderNode {
         return getChildNodes().stream()
                 .filter(node -> node instanceof ImageNode)
                 .map(node -> (ImageNode) node)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -86,7 +85,7 @@ public class LazyFolderNode implements FolderNode {
         return getChildNodes().stream()
                 .filter(node -> node instanceof AudioNode)
                 .map(node -> (AudioNode) node)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -94,7 +93,7 @@ public class LazyFolderNode implements FolderNode {
         return getChildNodes().stream()
                 .filter(node -> node instanceof FolderNode)
                 .map(node -> (FolderNode) node)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<Node> getChildNodes() {

@@ -4,7 +4,6 @@ import net.dorokhov.pony3.api.log.domain.LogMessage;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class LogMessagePageDto extends PageDto<LogMessagePageDto> {
 
@@ -26,6 +25,6 @@ public class LogMessagePageDto extends PageDto<LogMessagePageDto> {
                 .setTotalPages(logMessagePage.getTotalPages())
                 .setLogMessages(logMessagePage.getContent().stream()
                         .map(LogMessageDto::of)
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 }

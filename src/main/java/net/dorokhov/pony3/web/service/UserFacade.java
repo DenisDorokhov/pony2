@@ -5,17 +5,16 @@ import net.dorokhov.pony3.api.user.service.UserService;
 import net.dorokhov.pony3.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony3.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony3.api.user.service.exception.UserNotFoundException;
-import net.dorokhov.pony3.web.service.exception.NotAuthenticatedException;
-import net.dorokhov.pony3.web.service.exception.ObjectNotFoundException;
 import net.dorokhov.pony3.web.dto.CurrentUserUpdateCommandDto;
 import net.dorokhov.pony3.web.dto.UserCreationCommandDto;
 import net.dorokhov.pony3.web.dto.UserDto;
 import net.dorokhov.pony3.web.dto.UserUpdateCommandDto;
+import net.dorokhov.pony3.web.service.exception.NotAuthenticatedException;
+import net.dorokhov.pony3.web.service.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UserFacade {
@@ -46,7 +45,7 @@ public class UserFacade {
     public List<UserDto> getAllUsers() {
         return userService.getAll().stream()
                 .map(UserDto::of)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)

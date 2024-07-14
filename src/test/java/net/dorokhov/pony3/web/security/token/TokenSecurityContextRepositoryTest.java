@@ -19,7 +19,6 @@ import org.springframework.security.web.context.HttpRequestResponseHolder;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static net.dorokhov.pony3.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,7 +54,7 @@ public class TokenSecurityContextRepositoryTest {
                 assertThat(userDetails.getUser()).isSameAs(user);
                 List<String> authorities = authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toList());
+                        .toList();
                 assertThat(authorities).containsExactlyInAnyOrder(
                         "ROLE_" + User.Role.USER.name(), 
                         "ROLE_" + User.Role.ADMIN.name(), 
@@ -139,7 +138,7 @@ public class TokenSecurityContextRepositoryTest {
                 assertThat(userDetails.getUser()).isSameAs(user);
                 List<String> authorities = authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toList());
+                        .toList();
                 assertThat(authorities).containsExactlyInAnyOrder(
                         "ROLE_" + User.Role.USER.name(),
                         "ROLE_" + User.Role.ADMIN.name(),

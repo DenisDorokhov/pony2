@@ -1,5 +1,6 @@
 package net.dorokhov.pony3.core.library.service;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.config.service.ConfigService;
 import net.dorokhov.pony3.api.library.domain.ScanJob;
 import net.dorokhov.pony3.api.library.domain.ScanJob.Status;
@@ -26,7 +27,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import jakarta.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -35,7 +35,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.synchronizedSet;
@@ -327,6 +326,6 @@ public class ScanJobServiceImpl implements ScanJobService {
     private List<String> fetchAbsolutePaths(List<File> files) {
         return files.stream()
                 .map(File::getAbsolutePath)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

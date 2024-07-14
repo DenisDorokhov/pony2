@@ -1,12 +1,12 @@
 package net.dorokhov.pony3.core.library.service.scan;
 
-import net.dorokhov.pony3.api.library.domain.Song;
-import net.dorokhov.pony3.core.library.service.AudioTagger;
 import net.dorokhov.pony3.api.library.domain.ReadableAudioData;
+import net.dorokhov.pony3.api.library.domain.Song;
 import net.dorokhov.pony3.api.library.domain.WritableAudioData;
+import net.dorokhov.pony3.api.log.service.LogService;
+import net.dorokhov.pony3.core.library.service.AudioTagger;
 import net.dorokhov.pony3.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony3.core.library.service.scan.BatchLibraryImportPlanner.Plan;
-import net.dorokhov.pony3.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.*;
@@ -139,7 +138,7 @@ public class BatchLibraryImporter {
 
         return doImport(importTasks.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()), plan.getAudioNodesToSkip(), failedFiles);
+                .toList(), plan.getAudioNodesToSkip(), failedFiles);
     }
 
     public ImportResult writeAndImport(List<WriteAndImportCommand> commands, ProgressObserver observer) {
@@ -179,7 +178,7 @@ public class BatchLibraryImporter {
 
         return doImport(importTasks.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()), emptyList(), failedFiles);
+                .toList(), emptyList(), failedFiles);
     }
 
     private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {

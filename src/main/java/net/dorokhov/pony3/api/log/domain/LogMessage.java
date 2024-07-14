@@ -4,15 +4,13 @@ import com.google.common.base.MoreObjects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import net.dorokhov.pony3.common.JsonAttributeConverter;
+import net.dorokhov.pony3.common.ListOfStringsJsonAttributeConverter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 @Entity
 @Table(name = "log_message")
@@ -41,9 +39,9 @@ public class LogMessage implements Serializable {
     private String pattern;
 
     @Column(name = "arguments")
-    @Convert(converter = JsonAttributeConverter.class)
+    @Convert(converter = ListOfStringsJsonAttributeConverter.class)
     @NotNull
-    private List<String> arguments = emptyList();
+    private List<String> arguments = new ArrayList<>();
 
     @Column(name = "text")
     @NotNull
@@ -58,50 +56,50 @@ public class LogMessage implements Serializable {
         return this;
     }
 
-    public @NotNull LocalDateTime getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public LogMessage setDate(@NotNull LocalDateTime date) {
+    public LogMessage setDate(LocalDateTime date) {
         this.date = date;
         return this;
     }
 
-    public @NotNull Level getLevel() {
+    public Level getLevel() {
         return level;
     }
 
-    public LogMessage setLevel(@NotNull Level level) {
+    public LogMessage setLevel(Level level) {
         this.level = level;
         return this;
     }
 
-    public @NotNull String getPattern() {
+    public String getPattern() {
         return pattern;
     }
 
-    public LogMessage setPattern(@NotNull String pattern) {
+    public LogMessage setPattern(String pattern) {
         this.pattern = pattern;
         return this;
     }
 
-    public @NotNull List<String> getArguments() {
+    public List<String> getArguments() {
         if (arguments == null) {
             arguments = new ArrayList<>();
         }
         return arguments;
     }
 
-    public LogMessage setArguments(@NotNull List<String> arguments) {
+    public LogMessage setArguments(List<String> arguments) {
         this.arguments = arguments;
         return this;
     }
 
-    public @NotNull String getText() {
+    public String getText() {
         return text;
     }
 
-    public LogMessage setText(@NotNull String text) {
+    public LogMessage setText(String text) {
         this.text = text;
         return this;
     }

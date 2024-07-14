@@ -79,7 +79,7 @@ public class LogMessageDto {
                 .setDate(logMessage.getDate())
                 .setLevel(logMessage.getLevel())
                 .setPattern(logMessage.getPattern())
-                .setArguments(logMessage.getArguments())
+                .setArguments(new ArrayList<>(logMessage.getArguments()))
                 .setText(logMessage.getText());
     }
 }

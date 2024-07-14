@@ -3,12 +3,12 @@ package net.dorokhov.pony3.common;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 
-import java.io.Serializable;
+import java.util.List;
 
-public class JsonAttributeConverter implements AttributeConverter<Serializable, String> {
+public class ListOfStringsJsonAttributeConverter implements AttributeConverter<List<String>, String> {
 
     @Override
-    public String convertToDatabaseColumn(@Nullable Serializable attribute) {
+    public String convertToDatabaseColumn(@Nullable List<String> attribute) {
         if (attribute == null) {
             return null;
         }
@@ -16,10 +16,10 @@ public class JsonAttributeConverter implements AttributeConverter<Serializable, 
     }
 
     @Override
-    public Serializable convertToEntityAttribute(@Nullable String dbData) {
+    public List<String> convertToEntityAttribute(@Nullable String dbData) {
         if (dbData == null) {
             return null;
         }
-        return (Serializable) JsonConverter.fromJson(dbData);
+        return JsonConverter.listFromJson(dbData, String.class);
     }
 }

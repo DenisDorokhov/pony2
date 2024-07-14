@@ -11,8 +11,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
-
 @Entity
 @Table(name = "genre")
 public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Serializable {
@@ -25,7 +23,7 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
     private Artwork artwork;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "genre")
-    private List<Song> songs = emptyList();
+    private List<Song> songs = new ArrayList<>();
 
     @Nullable
     public String getName() {

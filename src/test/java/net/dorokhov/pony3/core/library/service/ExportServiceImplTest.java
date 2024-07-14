@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -165,7 +164,7 @@ public class ExportServiceImplTest {
         checkZipExportBundle(exportBundle, zipContent -> {
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getFile)
-                    .collect(Collectors.toList()))
+                    .toList())
                     .containsExactly(
                             songFile1,
                             songFile2,
@@ -173,7 +172,7 @@ public class ExportServiceImplTest {
                     );
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getPath)
-                    .collect(Collectors.toList()))
+                    .toList())
                     .containsExactly(
                             Paths.get("someArtist/1986 - someAlbum/CD1/01 - song1.mp3"),
                             Paths.get("someArtist/1986 - someAlbum/CD1/12 - song2.mp3"),
@@ -212,7 +211,7 @@ public class ExportServiceImplTest {
             List<String> paths = zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getPath)
                     .map(Path::toString)
-                    .collect(Collectors.toList());
+                    .toList();
             assertThat(paths).containsExactly(
                     UNKNOWN_ARTIST + File.separator + UNKNOWN_ALBUM + File.separator + "song1.mp3",
                     UNKNOWN_ARTIST + File.separator + UNKNOWN_ALBUM + File.separator + "song1 (1).mp3"
@@ -277,11 +276,11 @@ public class ExportServiceImplTest {
         checkZipExportBundle(exportBundle, zipContent -> {
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getFile)
-                    .collect(Collectors.toList()))
+                    .toList())
                     .containsExactly(songFile1, songFile2, songFile3);
             assertThat(zipContent.getEntries().stream()
                     .map(ExportServiceImpl.ZipEntry::getPath)
-                    .collect(Collectors.toList()))
+                    .toList())
                     .containsExactly(
                             Paths.get("someArtist/1986 - someAlbum1/01 - song1.mp3"),
                             Paths.get("someArtist/1986 - someAlbum1/12 - song2.mp3"),

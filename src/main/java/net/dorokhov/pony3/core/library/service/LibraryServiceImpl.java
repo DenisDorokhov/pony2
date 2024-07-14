@@ -68,7 +68,7 @@ public class LibraryServiceImpl implements LibraryService {
         return ids.stream()
                 .map(songs::get)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

@@ -7,9 +7,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class JsonAttributeConverterTest {
+public class ListOfStringsJsonAttributeConverterTest {
 
-    private final JsonAttributeConverter converter = new JsonAttributeConverter();
+    private final ListOfStringsJsonAttributeConverter converter = new ListOfStringsJsonAttributeConverter();
 
     @Test
     @SuppressWarnings("unchecked")

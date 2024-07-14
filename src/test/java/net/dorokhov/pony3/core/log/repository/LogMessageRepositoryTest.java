@@ -23,6 +23,13 @@ public class LogMessageRepositoryTest extends IntegrationTest {
                 .setArguments(List.of("arg1", "arg2"))
                 .setText("someText"));
 
-        assertThat(logMessageRepository.findById(logMessage.getId())).isNotEmpty();
+        assertThat(logMessageRepository.findById(logMessage.getId())).hasValueSatisfying(result -> {
+            assertThat(result.getId()).isNotNull();
+            assertThat(result.getDate()).isNotNull();
+            assertThat(result.getLevel()).isEqualTo(LogMessage.Level.DEBUG);
+            assertThat(result.getPattern()).isEqualTo("someCode");
+            assertThat(result.getText()).isEqualTo("someText");
+            assertThat(result.getArguments()).isEqualTo(List.of("arg1", "arg2"));
+        });
     }
 }

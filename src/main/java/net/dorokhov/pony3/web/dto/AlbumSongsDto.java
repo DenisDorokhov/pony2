@@ -3,7 +3,6 @@ package net.dorokhov.pony3.web.dto;
 import net.dorokhov.pony3.api.library.domain.Album;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class AlbumSongsDto {
 
@@ -34,6 +33,6 @@ public final class AlbumSongsDto {
                 .setSongs(album.getSongs().stream()
                         .sorted()
                         .map(SongDto::of)
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 }

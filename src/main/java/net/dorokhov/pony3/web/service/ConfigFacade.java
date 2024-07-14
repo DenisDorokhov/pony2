@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.util.stream.Collectors;
 
 @Service
 public class ConfigFacade {
@@ -27,7 +26,7 @@ public class ConfigFacade {
         configService.saveAutoScanInterval(config.getAutoScanInterval());
         configService.saveLibraryFolders(config.getLibraryFolders().stream()
                 .map(folder -> new File(folder.getPath()))
-                .collect(Collectors.toList()));
+                .toList());
         return getConfig();
     }
 }

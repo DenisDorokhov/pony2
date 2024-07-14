@@ -21,7 +21,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -172,7 +171,7 @@ public class ScanTestPlanExecutor {
         for (ScanTestPlan.ExpectedData.Genre expectedGenre : context.getScanTestPlan().getExpectedData().getGenres()) {
             List<Genre> foundGenres = genres.stream()
                     .filter(genre -> Objects.equals(genre.getName(), expectedGenre.getName()))
-                    .collect(Collectors.toList());
+                    .toList();
             assertThat(foundGenres).hasSize(1);
             assertThat(foundGenres).first().satisfies(genre -> {
                 if (expectedGenre.getArtworkPath() != null) {
@@ -188,7 +187,7 @@ public class ScanTestPlanExecutor {
                         .containsAll(expectedGenre.getSongPaths().stream()
                                 .map(relativePath -> new File(context.getRootFolder().getAbsolutePath(), relativePath))
                                 .map(File::getAbsolutePath)
-                                .collect(Collectors.toList()));
+                                .toList());
             });
         }
     }
@@ -199,7 +198,7 @@ public class ScanTestPlanExecutor {
         for (ScanTestPlan.ExpectedData.Artist expectedArtist : context.getScanTestPlan().getExpectedData().getArtists()) {
             List<Artist> foundArtists = artists.stream()
                     .filter(artist -> Objects.equals(artist.getName(), expectedArtist.getName()))
-                    .collect(Collectors.toList());
+                    .toList();
             assertThat(foundArtists).hasSize(1);
             assertThat(foundArtists).first().satisfies(artist -> {
                 if (expectedArtist.getArtworkPath() != null) {
@@ -212,7 +211,7 @@ public class ScanTestPlanExecutor {
                 for (ScanTestPlan.ExpectedData.Artist.Album expectedAlbum : expectedArtist.getAlbums()) {
                     List<Album> foundAlbums = artist.getAlbums().stream()
                             .filter(album -> Objects.equals(album.getName(), expectedAlbum.getName()))
-                            .collect(Collectors.toList());
+                            .toList();
                     assertThat(foundAlbums).hasSize(1);
                     assertThat(foundAlbums).first().satisfies(album -> {
                         assertThat(album.getYear()).isEqualTo(expectedAlbum.getYear());
@@ -229,7 +228,7 @@ public class ScanTestPlanExecutor {
                                 .containsAll(expectedAlbum.getSongPaths().stream()
                                         .map(relativePath -> new File(context.getRootFolder().getAbsolutePath(), relativePath))
                                         .map(File::getAbsolutePath)
-                                        .collect(Collectors.toList()));
+                                        .toList());
                     });
                 }
             });
@@ -243,7 +242,7 @@ public class ScanTestPlanExecutor {
             String expectedPath = new File(context.getRootFolder(), expectedSong.getPath()).getAbsolutePath();
             List<Song> foundSongs = songs.stream()
                     .filter(song -> Objects.equals(song.getPath(), expectedPath))
-                    .collect(Collectors.toList());
+                    .toList();
             assertThat(foundSongs).hasSize(1);
             assertThat(foundSongs).first().satisfies(song -> {
                 assertThat(song.getPath()).isEqualTo(expectedPath);

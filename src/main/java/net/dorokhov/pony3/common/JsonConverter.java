@@ -1,11 +1,11 @@
 package net.dorokhov.pony3.common;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class JsonConverter {
 
@@ -24,31 +24,31 @@ public final class JsonConverter {
     
     public static Object fromJson(String json) {
         try {
-            return MAPPER.readValue(json, new TypeReference<Object>(){});
+            return MAPPER.readValue(json, new TypeReference<>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
     
-    public static <T> T fromJson(String json, Class<T> clazz) {
+    public static <T> T fromJson(String json, Class<T> ignoredClazz) {
         try {
-            return MAPPER.readValue(json, new TypeReference<T>(){});
+            return MAPPER.readValue(json, new TypeReference<>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
     
-    public static <T> List<T> listFromJson(String json, Class<T> clazz) {
+    public static <T> List<T> listFromJson(String json, Class<T> ignoredClazz) {
         try {
-            return MAPPER.readValue(json, new TypeReference<List<T>>(){});
+            return MAPPER.readValue(json, new TypeReference<>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
     
-    public static <K, V> Map<K, V> mapFromJson(String json, Class<K> keyClass, Class<V> keyValue) {
+    public static <K, V> Map<K, V> mapFromJson(String json, Class<K> ignoredKeyClass, Class<V> ignoredValueClass) {
         try {
-            return MAPPER.readValue(json, new TypeReference<Map<K, V>>(){});
+            return MAPPER.readValue(json, new TypeReference<>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
