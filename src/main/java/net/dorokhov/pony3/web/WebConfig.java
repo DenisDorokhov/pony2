@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -47,51 +48,46 @@ public class WebConfig {
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/*", "/assets/**");
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .csrf().disable()
-                .headers().frameOptions().sameOrigin()
-                .and()
+        return httpSecurity
 
-                .sessionManagement().sessionCreationPolicy(STATELESS)
-                .and()
+                .csrf(AbstractHttpConfigurer::disable)
 
-                .securityContext()
-                .securityContextRepository(securityContextRepository)
-                .and()
+                .headers(httpSecurityHeadersConfigurer ->
+                        httpSecurityHeadersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
 
-                .exceptionHandling()
-                .authenticationEntryPoint(authenticationEntryPoint)
-                .accessDeniedHandler(accessDeniedHandler)
-                .and()
+                .sessionManagement(httpSecuritySessionManagementConfigurer ->
+                        httpSecuritySessionManagementConfigurer.sessionCreationPolicy(STATELESS))
 
-                .formLogin()
-                .loginPage("/api/authentication")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .successHandler(authenticationSuccessHandler)
-                .failureHandler(authenticationFailureHandler)
-                .and()
+                .securityContext(httpSecuritySecurityContextConfigurer ->
+                        httpSecuritySecurityContextConfigurer.securityContextRepository(securityContextRepository))
 
-                .logout()
-                .logoutRequestMatcher(
-                        new AntPathRequestMatcher(
-                                "/api/authentication",
-                                HttpMethod.DELETE.name()))
-                .logoutSuccessHandler(logoutSuccessHandler)
-                .and()
+                .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
 
-                .authorizeRequests()
-                .requestMatchers("/api/installation/**").permitAll()
-                .requestMatchers("/api/file/**").hasAuthority(WebAuthority.FILE_API.name())
-                .requestMatchers("/api/admin/**").hasAuthority(WebAuthority.ADMIN_API.name())
-                .requestMatchers("/api/**").hasAuthority(WebAuthority.USER_API.name())
-                .anyRequest().permitAll();
-        return httpSecurity.build();
+                .formLogin(httpSecurityFormLoginConfigurer -> httpSecurityFormLoginConfigurer
+                        .loginPage("/api/authentication")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .successHandler(authenticationSuccessHandler)
+                        .failureHandler(authenticationFailureHandler))
+
+                .logout(httpSecurityLogoutConfigurer -> httpSecurityLogoutConfigurer
+                        .logoutRequestMatcher(
+                                new AntPathRequestMatcher(
+                                        "/api/authentication",
+                                        HttpMethod.DELETE.name()))
+                        .logoutSuccessHandler(logoutSuccessHandler))
+
+                .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
+                        .requestMatchers("/api/installation/**").permitAll()
+                        .requestMatchers("/api/file/**").hasAuthority(WebAuthority.FILE_API.name())
+                        .requestMatchers("/api/admin/**").hasAuthority(WebAuthority.ADMIN_API.name())
+                        .requestMatchers("/api/**").hasAuthority(WebAuthority.USER_API.name())
+                        .anyRequest().permitAll()
+                )
+
+                .build();
     }
 }
