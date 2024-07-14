@@ -5,12 +5,10 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import jakarta.annotation.PostConstruct;
 import net.dorokhov.pony3.web.security.token.exception.InvalidTokenException;
 import net.dorokhov.pony3.web.service.exception.SecretNotFoundException;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.PostConstruct;
-import java.io.IOException;
 
 @Component
 public class TokenService {
@@ -22,7 +20,7 @@ public class TokenService {
     }
 
     @PostConstruct
-    public void assureTokenKeysExist() throws IOException {
+    public void assureTokenKeysExist() {
         try {
             tokenKeyService.fetchAccessTokenKey();
         } catch (SecretNotFoundException e) {
@@ -38,7 +36,7 @@ public class TokenService {
     public String generateAccessTokenForUserId(String userId) {
         try {
             return generateJwtTokenForUserId(userId, tokenKeyService.fetchAccessTokenKey());
-        } catch (SecretNotFoundException | IOException e) {
+        } catch (SecretNotFoundException e) {
             throw new IllegalStateException("Could not generate access token. Does the key file exist?");
         }
     }
@@ -46,7 +44,7 @@ public class TokenService {
     public String verifyAccessTokenAndGetUserId(String userId) throws InvalidTokenException {
         try {
             return verifyJwtTokenAndGetUserId(userId, tokenKeyService.fetchAccessTokenKey());
-        } catch (SecretNotFoundException | IOException e) {
+        } catch (SecretNotFoundException e) {
             throw new IllegalStateException("Could not verify access token. Does the key file exist?");
         }
     }
@@ -54,7 +52,7 @@ public class TokenService {
     public String generateStaticTokenForUserId(String userId) {
         try {
             return generateJwtTokenForUserId(userId, tokenKeyService.fetchStaticTokenKey());
-        } catch (SecretNotFoundException | IOException e) {
+        } catch (SecretNotFoundException e) {
             throw new IllegalStateException("Could not generate static token. Does the key file exist?");
         }
     }
@@ -62,7 +60,7 @@ public class TokenService {
     public String verifyStaticTokenAndGetUserId(String userId) throws InvalidTokenException {
         try {
             return verifyJwtTokenAndGetUserId(userId, tokenKeyService.fetchStaticTokenKey());
-        } catch (SecretNotFoundException | IOException e) {
+        } catch (SecretNotFoundException e) {
             throw new IllegalStateException("Could not verify static token. Does the key file exist?");
         }
     }
