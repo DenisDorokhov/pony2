@@ -12,7 +12,6 @@ import net.dorokhov.pony3.core.library.repository.GenreRepository;
 import net.dorokhov.pony3.core.library.repository.SongRepository;
 import net.dorokhov.pony3.core.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony3.core.library.service.artwork.command.FileArtworkStorageCommand;
-import net.dorokhov.pony3.test.SongFixtures;
 import net.dorokhov.pony3.web.dto.*;
 import net.dorokhov.pony3.web.dto.ErrorDto.Code;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 
+import static net.dorokhov.pony3.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -83,44 +83,42 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 throw new RuntimeException(e);
             }
 
-            Genre genreBuilder = new Genre()
-                    .setArtwork(artworkFiles.getArtwork());
-
-            genre1 = genreRepository.save(genreBuilder
+            genre1 = genreRepository.save(new Genre()
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo genre1"));
-            genre2 = genreRepository.save(genreBuilder
+            genre2 = genreRepository.save(new Genre()
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo genre2"));
 
-            Artist artistBuilder = new Artist()
-                    .setArtwork(artworkFiles.getArtwork());
-
-            artist1 = artistRepository.save(artistBuilder
+            artist1 = artistRepository.save(new Artist()
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo artist1"));
-            artist2 = artistRepository.save(artistBuilder
+            artist2 = artistRepository.save(new Artist()
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo artist2"));
 
-            Album albumBuilder = new Album()
+            album1_1 = albumRepository.save(new Album()
                     .setYear(1986)
-                    .setArtwork(artworkFiles.getArtwork());
-
-            album1_1 = albumRepository.save(albumBuilder
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo album1_1")
                     .setArtist(artist1));
-            album1_2 = albumRepository.save(albumBuilder
+            album1_2 = albumRepository.save(new Album()
+                    .setYear(1986)
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo album1_2")
                     .setArtist(artist1));
-            album2_1 = albumRepository.save(albumBuilder
+            album2_1 = albumRepository.save(new Album()
+                    .setYear(1986)
+                    .setArtwork(artworkFiles.getArtwork())
                     .setName("foo album2_1")
                     .setArtist(artist2));
 
-            Song songBuilder = SongFixtures.song()
+            song1_1_1 = songRepository.save(song()
                     .setId(null)
                     .setCreationDate(null)
                     .setUpdateDate(null)
                     .setArtistName("bar")
-                    .setArtwork(artworkFiles.getArtwork());
-
-            song1_1_1 = songRepository.save(songBuilder
+                    .setArtwork(artworkFiles.getArtwork())
                     .setPath("song1_1_1")
                     .setName("foo song1_1_1")
                     .setAlbum(album1_1)
@@ -128,7 +126,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             song1_1_1.getAlbum().getArtist(); // Pre-fetch.
             song1_1_1.getGenre(); // Pre-fetch.
 
-            song1_1_2 = songRepository.save(songBuilder
+            song1_1_2 = songRepository.save(song()
+                    .setId(null)
+                    .setCreationDate(null)
+                    .setUpdateDate(null)
+                    .setArtistName("bar")
+                    .setArtwork(artworkFiles.getArtwork())
                     .setPath("song1_1_2")
                     .setName("foo song1_1_2")
                     .setAlbum(album1_1)
@@ -136,7 +139,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             song1_1_2.getAlbum().getArtist(); // Pre-fetch.
             song1_1_2.getGenre(); // Pre-fetch.
 
-            song1_2_1 = songRepository.save(songBuilder
+            song1_2_1 = songRepository.save(song()
+                    .setId(null)
+                    .setCreationDate(null)
+                    .setUpdateDate(null)
+                    .setArtistName("bar")
+                    .setArtwork(artworkFiles.getArtwork())
                     .setPath("song1_2_1")
                     .setName("foo song1_2_1")
                     .setAlbum(album1_2)
@@ -144,7 +152,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             song1_2_1.getAlbum().getArtist(); // Pre-fetch.
             song1_2_1.getGenre(); // Pre-fetch.
 
-            song2_1_1 = songRepository.save(songBuilder
+            song2_1_1 = songRepository.save(song()
+                    .setId(null)
+                    .setCreationDate(null)
+                    .setUpdateDate(null)
+                    .setArtistName("bar")
+                    .setArtwork(artworkFiles.getArtwork())
                     .setPath("song2_1_1")
                     .setName("foo song2_1_1")
                     .setAlbum(album2_1)

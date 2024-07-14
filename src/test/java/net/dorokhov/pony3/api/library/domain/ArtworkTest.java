@@ -12,9 +12,9 @@ public class ArtworkTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        Artwork eqArtwork1 = artworkBuilder().setId("1");
-        Artwork eqArtwork2 = artworkBuilder().setId("1");
-        Artwork diffArtwork = artworkBuilder().setId("2");
+        Artwork eqArtwork1 = artwork().setId("1");
+        Artwork eqArtwork2 = artwork().setId("1");
+        Artwork diffArtwork = artwork().setId("2");
 
         assertThat(eqArtwork1.hashCode()).isEqualTo(eqArtwork2.hashCode());
         assertThat(eqArtwork1.hashCode()).isNotEqualTo(diffArtwork.hashCode());
@@ -27,7 +27,7 @@ public class ArtworkTest {
         assertThat(eqArtwork1).isNotEqualTo(null);
     }
 
-    private Artwork artworkBuilder() {
+    private Artwork artwork() {
         return new Artwork()
                 .setId("1")
                 .setDate(LocalDateTime.now())

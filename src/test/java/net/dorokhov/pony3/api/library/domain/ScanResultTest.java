@@ -10,9 +10,9 @@ public class ScanResultTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        ScanResult eqScanResult1 = scanResultBuilder(FULL).setId("1");
-        ScanResult eqScanResult2 = scanResultBuilder(FULL).setId("1");
-        ScanResult diffScanResult = scanResultBuilder(FULL).setId("2");
+        ScanResult eqScanResult1 = scanResult(FULL).setId("1");
+        ScanResult eqScanResult2 = scanResult(FULL).setId("1");
+        ScanResult diffScanResult = scanResult(FULL).setId("2");
 
         assertThat(eqScanResult1.hashCode()).isEqualTo(eqScanResult2.hashCode());
         assertThat(eqScanResult1.hashCode()).isNotEqualTo(diffScanResult.hashCode());
@@ -25,7 +25,7 @@ public class ScanResultTest {
         assertThat(eqScanResult1).isNotEqualTo(null);
     }
     
-    private ScanResult scanResultBuilder(ScanType scanType) {
+    private ScanResult scanResult(ScanType scanType) {
         return new ScanResult()
                 .setScanType(scanType)
                 .setDuration(10L)

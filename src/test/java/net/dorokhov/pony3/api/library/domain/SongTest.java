@@ -30,14 +30,14 @@ public class SongTest {
         
         Genre genre = new Genre();
 
-        Song song1_1_1 = songBuilder()
+        Song song1_1_1 = song()
                 .setId("1_1_1")
                 .setAlbum(album1_1)
                 .setGenre(genre)
                 .setDiscNumber(1)
                 .setTrackNumber(1)
                 .setName("1");
-        Song song1_1_2 = songBuilder()
+        Song song1_1_2 = song()
                 .setId("1_1_2")
                 .setAlbum(album1_1)
                 .setGenre(genre)
@@ -45,28 +45,28 @@ public class SongTest {
                 .setTrackNumber(2)
                 .setName("2");
 
-        Song song1_2_1 = songBuilder()
+        Song song1_2_1 = song()
                 .setId("1_2_1")
                 .setAlbum(album1_2)
                 .setGenre(genre)
                 .setDiscNumber(null)
                 .setTrackNumber(3)
                 .setName("1");
-        Song song1_2_2 = songBuilder()
+        Song song1_2_2 = song()
                 .setId("1_2_2")
                 .setAlbum(album1_2)
                 .setGenre(genre)
                 .setDiscNumber(1)
                 .setTrackNumber(4)
                 .setName("2");
-        Song song1_2_3 = songBuilder()
+        Song song1_2_3 = song()
                 .setId("1_2_3")
                 .setAlbum(album1_2)
                 .setGenre(genre)
                 .setDiscNumber(2)
                 .setTrackNumber(1)
                 .setName("3");
-        Song song1_2_4 = songBuilder()
+        Song song1_2_4 = song()
                 .setId("1_2_4")
                 .setAlbum(album1_2)
                 .setGenre(genre)
@@ -82,7 +82,7 @@ public class SongTest {
     @Test
     public void shouldBuildSearchTerms() {
 
-        Song song1 = songBuilder()
+        Song song1 = song()
                 .setName("s1")
                 .setArtistName("ar1")
                 .setAlbumArtistName("ar2")
@@ -97,9 +97,9 @@ public class SongTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        Song eqSong1 = songBuilder().setId("1");
-        Song eqSong2 = songBuilder().setId("1");
-        Song diffSong = songBuilder().setId("2");
+        Song eqSong1 = song().setId("1");
+        Song eqSong2 = song().setId("1");
+        Song diffSong = song().setId("2");
 
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
@@ -112,7 +112,7 @@ public class SongTest {
         assertThat(eqSong1).isNotEqualTo(null);
     }
     
-    private Song songBuilder() {
+    private Song song() {
         Artist artist = new Artist();
         Album album = new Album().setArtist(artist);
         Genre genre = new Genre();

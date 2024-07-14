@@ -40,17 +40,17 @@ public class ErrorAttributesImpl extends DefaultErrorAttributes {
         Cookie[] cookies = request.getCookies() != null ? request.getCookies() : new Cookie[]{};
         List<String> headers = request.getHeaderNames() != null ? Collections.list(request.getHeaderNames()) : new ArrayList<>();
         Integer statusCode = (Integer) webRequest.getAttribute(ERROR_STATUS_CODE, SCOPE_REQUEST);
-        logger.error("Error occurred when executing request: {}.", HttpServletRequestDetails.builder()
-                .method(request.getMethod())
-                .requestUri((String) webRequest.getAttribute(FORWARD_REQUEST_URI, SCOPE_REQUEST))
-                .queryString((String) webRequest.getAttribute(FORWARD_QUERY_STRING, SCOPE_REQUEST))
-                .cookies(Arrays.stream(cookies)
+        logger.error("Error occurred when executing request: {}.", new HttpServletRequestDetails()
+                .setMethod(request.getMethod())
+                .setRequestUri((String) webRequest.getAttribute(FORWARD_REQUEST_URI, SCOPE_REQUEST))
+                .setQueryString((String) webRequest.getAttribute(FORWARD_QUERY_STRING, SCOPE_REQUEST))
+                .setCookies(Arrays.stream(cookies)
                         .collect(Collectors.toMap(Cookie::getName, Cookie::getValue)))
-                .headers(headers.stream()
+                .setHeaders(headers.stream()
                         .map(name -> new AbstractMap.SimpleEntry<>(name, request.getHeader(name)))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
-                .statusCode(statusCode)
-                .build());
+                .setStatusCode(statusCode)
+        );
         
         String acceptedMimeType = request.getHeader(HttpHeaders.ACCEPT);
         if (acceptedMimeType != null
@@ -72,44 +72,65 @@ public class ErrorAttributesImpl extends DefaultErrorAttributes {
     
     private static class HttpServletRequestDetails {
         
-        private final String method;
-        private final String requestUri;
-        private final String queryString;
-        private final Map<String, String> cookies;
-        private final Map<String, String> headers;
-        private final Integer statusCode;
-
-        private HttpServletRequestDetails(Builder builder) {
-            method = builder.method;
-            requestUri = builder.requestUri;
-            queryString = builder.queryString;
-            cookies = builder.cookies;
-            headers = builder.headers;
-            statusCode = builder.statusCode;
-        }
+        private String method;
+        private String requestUri;
+        private String queryString;
+        private Map<String, String> cookies;
+        private Map<String, String> headers;
+        private Integer statusCode;
 
         public String getMethod() {
             return method;
+        }
+
+        public HttpServletRequestDetails setMethod(String method) {
+            this.method = method;
+            return this;
         }
 
         public String getRequestUri() {
             return requestUri;
         }
 
+        public HttpServletRequestDetails setRequestUri(String requestUri) {
+            this.requestUri = requestUri;
+            return this;
+        }
+
         public String getQueryString() {
             return queryString;
+        }
+
+        public HttpServletRequestDetails setQueryString(String queryString) {
+            this.queryString = queryString;
+            return this;
         }
 
         public Map<String, String> getCookies() {
             return cookies;
         }
 
+        public HttpServletRequestDetails setCookies(Map<String, String> cookies) {
+            this.cookies = cookies;
+            return this;
+        }
+
         public Map<String, String> getHeaders() {
             return headers;
         }
 
+        public HttpServletRequestDetails setHeaders(Map<String, String> headers) {
+            this.headers = headers;
+            return this;
+        }
+
         public Integer getStatusCode() {
             return statusCode;
+        }
+
+        public HttpServletRequestDetails setStatusCode(Integer statusCode) {
+            this.statusCode = statusCode;
+            return this;
         }
 
         @Override
@@ -122,57 +143,6 @@ public class ErrorAttributesImpl extends DefaultErrorAttributes {
                     .add("headers", headers)
                     .add("statusCode", statusCode)
                     .toString();
-        }
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static final class Builder {
-
-            private String method;
-            private String requestUri;
-            private String queryString;
-            private Map<String, String> cookies;
-            private Map<String, String> headers;
-            private Integer statusCode;
-
-            private Builder() {
-            }
-
-            public Builder method(String method) {
-                this.method = method;
-                return this;
-            }
-
-            public Builder requestUri(String requestUri) {
-                this.requestUri = requestUri;
-                return this;
-            }
-
-            public Builder queryString(String queryString) {
-                this.queryString = queryString;
-                return this;
-            }
-
-            public Builder cookies(Map<String, String> cookies) {
-                this.cookies = cookies;
-                return this;
-            }
-
-            public Builder headers(Map<String, String> headers) {
-                this.headers = headers;
-                return this;
-            }
-
-            public Builder statusCode(Integer statusCode) {
-                this.statusCode = statusCode;
-                return this;
-            }
-
-            public HttpServletRequestDetails build() {
-                return new HttpServletRequestDetails(this);
-            }
         }
     }
 }

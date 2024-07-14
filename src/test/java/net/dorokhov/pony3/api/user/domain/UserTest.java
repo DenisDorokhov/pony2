@@ -9,9 +9,9 @@ public class UserTest {
     @Test
     public void shouldSupportEqualityAndHashCode() {
 
-        User eqUser1 = userBuilder().setId("1");
-        User eqUser2 = userBuilder().setId("1");
-        User diffUser = userBuilder().setId("2");
+        User eqUser1 = user().setId("1");
+        User eqUser2 = user().setId("1");
+        User diffUser = user().setId("2");
 
         assertThat(eqUser1.hashCode()).isEqualTo(eqUser2.hashCode());
         assertThat(eqUser1.hashCode()).isNotEqualTo(diffUser.hashCode());
@@ -24,7 +24,7 @@ public class UserTest {
         assertThat(eqUser1).isNotEqualTo(null);
     }
 
-    private User userBuilder() {
+    private User user() {
         return new User()
                 .setName("someName")
                 .setEmail("someEmail")
