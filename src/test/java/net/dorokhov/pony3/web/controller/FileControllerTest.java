@@ -58,10 +58,8 @@ public class FileControllerTest extends InstallingIntegrationTest {
     private ArtworkFiles artworkFiles;
     private File songFile;
 
-    @Override
     @BeforeEach
     public void setUp() throws Exception {
-        super.setUp();
         artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
         Genre genre = genreRepository.save(new Genre());
         Artist artist = artistRepository.save(new Artist());

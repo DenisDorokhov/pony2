@@ -1,6 +1,7 @@
 package net.dorokhov.pony3;
 
 import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +40,15 @@ abstract public class IntegrationTest {
     }
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUpIntegrationTest() {
         flyway.clean();
+        cleanFiles();
         flyway.migrate();
+    }
+
+    @AfterEach
+    void tearDownIntegrationTest() {
+        flyway.clean();
         cleanFiles();
     }
 

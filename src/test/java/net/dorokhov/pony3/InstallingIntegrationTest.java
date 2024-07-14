@@ -25,10 +25,8 @@ public abstract class InstallingIntegrationTest extends IntegrationTest {
     
     protected File libraryFolder;
 
-    @Override
     @BeforeEach
-    public void setUp() throws Exception {
-        super.setUp();
+    public void setUpInstallingIntegrationTest() throws Exception {
         libraryFolder = tempFolder.toFile();
         InstallationCommand command = new InstallationCommand()
                 .setAdminName(ADMIN_NAME)

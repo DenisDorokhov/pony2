@@ -70,11 +70,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
     private final BlockingScanJobServiceObserver blockingObserver = new BlockingScanJobServiceObserver();
 
-    @Override
     @BeforeEach
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void setUp() throws Exception {
-        super.setUp();
         getTransactionTemplate().execute(_ -> {
 
             try {
