@@ -336,6 +336,72 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldSearch() {
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<SearchResultDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/search?query=foo", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SearchResultDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(searchResult -> {
+            assertThat(searchResult.getGenres()).satisfies(genres -> {
+                assertThat(genres).hasSize(2);
+                checkGenreDto(genres.get(0), genre1);
+                checkGenreDto(genres.get(1), genre2);
+            });
+            assertThat(searchResult.getArtists()).satisfies(artists -> {
+                assertThat(artists).hasSize(2);
+                checkArtistDto(artists.get(0), artist1);
+                checkArtistDto(artists.get(1), artist2);
+            });
+            assertThat(searchResult.getAlbumDetails()).satisfies(albums -> {
+                assertThat(albums).hasSize(3);
+                assertThat(albums.get(0)).satisfies(album -> {
+                    checkArtistDto(album.getArtist(), artist1);
+                    checkAlbumDto(album.getAlbum(), album1_1);
+                });
+                assertThat(albums.get(1)).satisfies(album -> {
+                    checkArtistDto(album.getArtist(), artist1);
+                    checkAlbumDto(album.getAlbum(), album1_2);
+                });
+                assertThat(albums.get(2)).satisfies(album -> {
+                    checkArtistDto(album.getArtist(), artist2);
+                    checkAlbumDto(album.getAlbum(), album2_1);
+                });
+            });
+            assertThat(searchResult.getSongDetails()).satisfies(songs -> {
+                assertThat(songs).hasSize(4);
+                assertThat(songs.get(0)).satisfies(song -> {
+                    checkSongDto(song.getSong(), song1_1_1);
+                    checkGenreDto(song.getGenre(), genre1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
+                });
+                assertThat(songs.get(1)).satisfies(song -> {
+                    checkSongDto(song.getSong(), song1_1_2);
+                    checkGenreDto(song.getGenre(), genre1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
+                });
+                assertThat(songs.get(2)).satisfies(song -> {
+                    checkSongDto(song.getSong(), song1_2_1);
+                    checkGenreDto(song.getGenre(), genre1);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_2);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
+                });
+                assertThat(songs.get(3)).satisfies(song -> {
+                    checkSongDto(song.getSong(), song2_1_1);
+                    checkGenreDto(song.getGenre(), genre2);
+                    checkAlbumDto(song.getAlbumDetails().getAlbum(), album2_1);
+                    checkArtistDto(song.getAlbumDetails().getArtist(), artist2);
+                });
+            });
+        });
+    }
+
+    @Test
     public void shouldGetRandomSongs() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();

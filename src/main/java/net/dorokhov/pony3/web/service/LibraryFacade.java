@@ -1,6 +1,7 @@
 package net.dorokhov.pony3.web.service;
 
 import net.dorokhov.pony3.api.library.domain.*;
+import net.dorokhov.pony3.api.library.service.LibrarySearchService;
 import net.dorokhov.pony3.api.library.service.LibraryService;
 import net.dorokhov.pony3.web.dto.*;
 import net.dorokhov.pony3.web.service.exception.ObjectNotFoundException;
@@ -17,9 +18,14 @@ public class LibraryFacade {
     private final static int SEARCH_RESULT_COUNT = 10;
     
     private final LibraryService libraryService;
+    private final LibrarySearchService librarySearchService;
 
-    public LibraryFacade(LibraryService libraryService) {
+    public LibraryFacade(
+            LibraryService libraryService,
+            LibrarySearchService librarySearchService
+    ) {
         this.libraryService = libraryService;
+        this.librarySearchService = librarySearchService;
     }
 
     @Transactional(readOnly = true)
@@ -61,6 +67,15 @@ public class LibraryFacade {
             throw new ObjectNotFoundException(Genre.class, genreId);
         }
         return GenreSongsPageDto.of(genre, libraryService.getSongsByGenreId(genreId, pageIndex));
+    }
+
+    @Transactional(readOnly = true)
+    public SearchResultDto search(String query) {
+        List<Genre> genres = librarySearchService.searchGenres(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Artist> artists = librarySearchService.searchArtists(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Album> albums = librarySearchService.searchAlbums(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        List<Song> songs = librarySearchService.searchSongs(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
+        return SearchResultDto.of(genres, artists, albums, songs);
     }
 
     @Transactional(readOnly = true)

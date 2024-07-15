@@ -1,16 +1,20 @@
 package net.dorokhov.pony3.api.library.domain;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import net.dorokhov.pony3.api.common.BaseEntity;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Indexed
 @Entity
 @Table(name = "genre")
 public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Serializable {
@@ -55,6 +59,12 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
     public Genre setSongs(List<Song> songs) {
         this.songs = songs;
         return this;
+    }
+
+    @Transient
+    @FullTextField
+    public String getSearchTerms() {
+        return Strings.nullToEmpty(name);
     }
 
     @Override

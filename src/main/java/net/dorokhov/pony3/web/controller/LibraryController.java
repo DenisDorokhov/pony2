@@ -50,6 +50,11 @@ public class LibraryController implements ErrorHandlingController {
         return libraryFacade.getGenreSongs(genreId, pageIndex);
     }
 
+    @GetMapping("/search")
+    public SearchResultDto search(@RequestParam String query) {
+        return libraryFacade.search(query);
+    }
+
     @GetMapping("/randomSongs")
     public List<SongDetailsDto> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
         return libraryFacade.getRandomSongs(Math.min(count, MAX_RANDOM_COUNT));

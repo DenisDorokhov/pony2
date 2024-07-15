@@ -8,6 +8,8 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony3.api.common.BaseEntity;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
+@Indexed
 @Entity
 @Table(name = "album")
 public class Album extends BaseEntity<Album> implements Comparable<Album>, Serializable {
@@ -89,6 +92,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     }
 
     @Transient
+    @FullTextField
     public String getSearchTerms() {
         return Strings.nullToEmpty(name) + " " +
                 Strings.nullToEmpty(artist.getName());
