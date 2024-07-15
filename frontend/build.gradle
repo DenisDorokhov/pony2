@@ -16,7 +16,7 @@ jar {
 
 node {
     download = true
-    version = '20.9.0'
+    version = '20.15.1'
 }
 
 task npmBuild(type: NpmTask) {
@@ -24,25 +24,15 @@ task npmBuild(type: NpmTask) {
     args = ['run', 'build']
 }
 
-task npmBuildDev(type: NpmTask) {
-    group = 'build'
-    args = ['run', 'buildDev']
-}
-
 task npmTest(type: NpmTask) {
     group = 'test'
     args = ['run', 'test']
 }
 
-task npmStart(type: NpmTask, dependsOn: 'yarn') {
+task npmStart(type: NpmTask) {
     group = 'application'
     args = ['run', 'start']
 }
 
-if (gradle.startParameter.taskNames.contains('bootRun')) {
-    jar.dependsOn npmBuildDev
-} else {
-    jar.dependsOn npmBuild
-}
-
+jar.dependsOn npmBuild
 test.dependsOn npmTest
