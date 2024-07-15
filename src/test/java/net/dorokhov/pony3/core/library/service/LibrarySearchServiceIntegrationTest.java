@@ -36,11 +36,15 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
 
         Genre genre1 = genreRepository.save(buildGenre("the foobar entity1"));
         Genre genre2 = genreRepository.save(buildGenre("the foobar entity2"));
+        Genre genre3 = genreRepository.save(buildGenre("русская песня"));
 
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("русс"), 10)).containsExactly(genre3);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("песня русская"), 10)).containsExactly(genre3);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("рус пес"), 10)).containsExactly(genre3);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 

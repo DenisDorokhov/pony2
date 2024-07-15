@@ -6,8 +6,7 @@ import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import net.dorokhov.pony3.api.common.BaseEntity;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -63,7 +62,10 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
     }
 
     @Transient
-    @FullTextField
+    @FullTextField(name = "searchTerms")
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "name"),
+    }))
     public String getSearchTerms() {
         return Strings.nullToEmpty(name);
     }

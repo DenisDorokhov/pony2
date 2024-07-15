@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,7 +54,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                 .trim()
                 .toLowerCase()
                 .split("\\s+");
-        List<T> result = Search.session(entityManager).search(clazz)
+        List<T> result = new ArrayList<>(Search.session(entityManager).search(clazz)
                 .where((f, root) -> {
                     for (String word : words) {
                         root.add(f.wildcard()
@@ -62,7 +63,8 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                     }
                 })
                 .fetch(maxResults)
-                .hits();
+                .hits()
+        );
         Collections.sort(result);
         return result;
     }

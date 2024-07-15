@@ -8,8 +8,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony3.api.common.BaseEntity;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -92,7 +91,14 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     }
 
     @Transient
-    @FullTextField
+    @FullTextField(name = "searchTerms")
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "name"),
+    }))
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "artist"),
+            @PropertyValue(propertyName = "name"),
+    }))
     public String getSearchTerms() {
         return Strings.nullToEmpty(name) + " " +
                 Strings.nullToEmpty(artist.getName());

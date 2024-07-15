@@ -8,8 +8,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony3.api.common.BaseEntity;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import java.io.File;
 import java.io.Serializable;
@@ -286,17 +285,29 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
     }
 
     @Transient
-    @FullTextField
+    public File getFile() {
+        return new File(getPath());
+    }
+
+    @Transient
+    @FullTextField(name = "searchTerms")
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "name"),
+    }))
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "artistName"),
+    }))
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "albumArtistName"),
+    }))
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "albumName"),
+    }))
     public String getSearchTerms() {
         return Strings.nullToEmpty(name) + " " +
                 Strings.nullToEmpty(artistName) + " " +
                 Strings.nullToEmpty(albumArtistName) + " " +
                 Strings.nullToEmpty(albumName);
-    }
-
-    @Transient
-    public File getFile() {
-        return new File(getPath());
     }
 
     @PostLoad
