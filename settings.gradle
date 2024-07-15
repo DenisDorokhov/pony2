@@ -1,1 +1,3 @@
 rootProject.name = 'pony3'
+
+include 'backend', 'frontend'

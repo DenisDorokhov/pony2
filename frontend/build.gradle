@@ -1,0 +1,48 @@
+plugins {
+    id "com.github.node-gradle.node" version "7.0.2"
+}
+
+apply plugin: 'java'
+archivesBaseName = 'pony3-frontend'
+
+jar {
+    doFirst {
+        copy {
+            from "build/browser"
+            into "build/resources/main/static"
+        }
+    }
+}
+
+node {
+    download = true
+    version = '20.9.0'
+}
+
+task npmBuild(type: NpmTask) {
+    group = 'build'
+    args = ['run', 'build']
+}
+
+task npmBuildDev(type: NpmTask) {
+    group = 'build'
+    args = ['run', 'buildDev']
+}
+
+task npmTest(type: NpmTask) {
+    group = 'test'
+    args = ['run', 'test']
+}
+
+task npmStart(type: NpmTask, dependsOn: 'yarn') {
+    group = 'application'
+    args = ['run', 'start']
+}
+
+if (gradle.startParameter.taskNames.contains('bootRun')) {
+    jar.dependsOn npmBuildDev
+} else {
+    jar.dependsOn npmBuild
+}
+
+test.dependsOn npmTest
