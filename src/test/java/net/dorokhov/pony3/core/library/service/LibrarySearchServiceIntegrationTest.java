@@ -34,11 +34,12 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     @Test
     public void shouldSearchGenres() {
 
-        Genre genre1 = genreRepository.save(buildGenre("the foobar entity1"));
-        Genre genre2 = genreRepository.save(buildGenre("the foobar entity2"));
-        Genre genre3 = genreRepository.save(buildGenre("русская песня"));
+        Genre genre1 = genreRepository.save(new Genre().setName("the foobar entity1"));
+        Genre genre2 = genreRepository.save(new Genre().setName("the foobar entity2"));
+        Genre genre3 = genreRepository.save(new Genre().setName("русская песня"));
 
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
+        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
         assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
@@ -51,10 +52,11 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     @Test
     public void shouldSearchArtists() {
 
-        Artist artist1 = artistRepository.save(buildArtist("the foobar entity1"));
-        Artist artist2 = artistRepository.save(buildArtist("the foobar entity2"));
+        Artist artist1 = artistRepository.save(new Artist().setName("the foobar entity1"));
+        Artist artist2 = artistRepository.save(new Artist().setName("the foobar entity2"));
 
         assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 10)).containsOnly(artist1, artist2);
+        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(artist1, artist2);
         assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(artist1);
@@ -64,15 +66,17 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     @Test
     public void shouldSearchAlbums() {
 
-        Artist artist = artistRepository.save(new Artist());
+        Artist artist = artistRepository.save(new Artist().setName("artist"));
 
-        Album album1 = albumRepository.save(buildAlbum(artist, "the foobar entity1"));
-        Album album2 = albumRepository.save(buildAlbum(artist, "the foobar entity2"));
+        Album album1 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity1"));
+        Album album2 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity2"));
 
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 10)).containsOnly(album1, album2);
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).containsOnly(album1, album2);
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 
@@ -83,38 +87,42 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         Artist artist = artistRepository.save(new Artist());
         Album album = albumRepository.save(new Album().setArtist(artist));
 
-        Song song1 = songRepository.save(buildSong("the foobar entity1", genre, album));
-        Song song2 = songRepository.save(buildSong("the foobar entity2", genre, album));
-
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 10)).containsOnly(song1, song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
-    }
-
-    private Genre buildGenre(String name) {
-        return new Genre().setName(name);
-    }
-
-    private Artist buildArtist(String name) {
-        return new Artist().setName(name);
-    }
-
-    private Album buildAlbum(Artist artist, String name) {
-        return new Album().setArtist(artist).setName(name);
-    }
-
-    private Song buildSong(String name, Genre genre, Album album) {
-        return new Song()
+        Song song1 = songRepository.save(new Song()
                 .setAlbum(album)
                 .setGenre(genre)
                 .setBitRate(128L)
                 .setBitRateVariable(false)
-                .setPath(name)
+                .setPath("the foobar entity1")
                 .setFileType(FileType.of("text/plain", "txt"))
                 .setDuration(666L)
                 .setSize(256L)
-                .setName(name);
+                .setName("the foobar entity1")
+                .setArtistName("артист")
+                .setAlbumArtistName("другой")
+                .setAlbumName("альбом")
+        );
+        Song song2 = songRepository.save(new Song()
+                .setAlbum(album)
+                .setGenre(genre)
+                .setBitRate(128L)
+                .setBitRateVariable(false)
+                .setPath("the foobar entity2")
+                .setFileType(FileType.of("text/plain", "txt"))
+                .setDuration(666L)
+                .setSize(256L)
+                .setName("the foobar entity2")
+                .setArtistName("артист")
+                .setAlbumArtistName("другой")
+                .setAlbumName("альбом")
+        );
+
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 10)).containsOnly(song1, song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист другой альбом entity"), 10)).containsOnly(song1, song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
+
 }
