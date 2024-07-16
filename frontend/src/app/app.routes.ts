@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import {NotInstalledGuard} from "./guard/not-installed-guard.service";
-import {InstalledGuard} from "./guard/installed-guard.service";
-import {AuthenticatedGuard} from "./guard/authenticated-guard.service";
-import {NotAuthenticatedGuard} from "./guard/not-authenticated-guard.service";
+import {NotInstalledGuard} from "./service/not-installed-guard.service";
+import {InstalledGuard} from "./service/installed-guard.service";
+import {AuthenticatedGuard} from "./service/authenticated-guard.service";
+import {NotAuthenticatedGuard} from "./service/not-authenticated-guard.service";
 import {InstallationComponent} from "./component/installation.component";
-import {LibraryComponent} from "./component/library.component";
+import {LibraryComponent} from "./component/library/library.component";
 import {LoginComponent} from "./component/login.component";
 
 export const routes: Routes = [

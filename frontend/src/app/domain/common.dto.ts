@@ -28,7 +28,7 @@ export namespace ErrorDto {
     arguments: string[];
   }
 
-  export function fieldHasViolation(error: ErrorDto, fieldRegex: string): boolean {
+  export function fieldHasViolation(error: ErrorDto | undefined, fieldRegex: string): boolean {
     if (error) {
       const regex = new RegExp(fieldRegex);
       return error.fieldViolations
@@ -55,7 +55,7 @@ export namespace ErrorDto {
   export function observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<never> {
     return throwError(ErrorDto.fromHttpErrorResponse(error));
   }
-  
+
   export function authenticationFailed(): ErrorDto {
     return {
       'code': ErrorDto.Code.AUTHENTICATION_FAILED,

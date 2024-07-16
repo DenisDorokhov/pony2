@@ -1,0 +1,16 @@
+.error-indicator-container {
+  margin-top: 2em;
+  text-align: center;
+  color: #a94442;
+
+  img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+
+  span {
+    position: relative;
+    top: 1px;
+  }
+}

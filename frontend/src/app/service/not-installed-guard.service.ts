@@ -1,10 +1,12 @@
 import {Injectable} from '@angular/core';
 import {CanMatch, GuardResult, MaybeAsync, Router} from '@angular/router';
 import {map, tap} from 'rxjs/operators';
-import {InstallationService} from "../service/installation.service";
+import {InstallationService} from "./installation.service";
 
-@Injectable()
-export class InstalledGuard implements CanMatch {
+@Injectable({
+  providedIn: 'root'
+})
+export class NotInstalledGuard implements CanMatch {
 
   constructor(
     private installationService: InstallationService,
@@ -16,11 +18,11 @@ export class InstalledGuard implements CanMatch {
     return this.installationService.getInstallationStatus()
       .pipe(
         tap(installationStatus => {
-          if (!installationStatus.installed) {
-            this.router.navigate(['/install'], {replaceUrl: true});
+          if (installationStatus.installed) {
+            this.router.navigate(['/library'], {replaceUrl: true});
           }
         }),
-        map(installationStatus => installationStatus.installed)
+        map(installationStatus => !installationStatus.installed)
       );
   }
 }

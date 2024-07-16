@@ -1,0 +1,11 @@
+<div class="image-loader-container">
+  <img #image (load)="onLoaded()" (error)="onError()"
+       [style.visibility]="state === State.LOADED ? 'visible' : 'hidden'"
+       class="loaded">
+  <img [hidden]="state !== State.EMPTY"
+       src="./unknown.png">
+  <img [hidden]="state !== State.PENDING && state !== State.LOADING"
+       src="./spinner.gif">
+  <img [hidden]="state !== State.ERROR"
+       src="./error.png">
+</div>

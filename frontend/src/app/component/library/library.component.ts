@@ -1,8 +1,8 @@
 import {Component} from "@angular/core";
 
 @Component({
-  selector: 'app-library',
   standalone: true,
+  selector: 'pony-library',
   templateUrl: './library.component.html',
   styleUrl: './library.component.scss'
 })

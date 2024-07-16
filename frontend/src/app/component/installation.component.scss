@@ -1,0 +1,35 @@
+.container {
+  max-width: 600px;
+
+  .logo-container {
+    padding-top: 20px;
+    margin-bottom: 15px;
+    text-align: center;
+
+    img {
+      width: 283px;
+      height: 67px;
+    }
+  }
+
+  .input-group {
+    margin-bottom: 5px;
+
+    button:disabled {
+      border: 0;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  pony-error-container {
+    display: block;
+  }
+
+  .btn-primary {
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+}

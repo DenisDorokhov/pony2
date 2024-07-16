@@ -1,0 +1,7 @@
+<div [class.has-error]="errorMessages.length > 0">
+  <ng-content></ng-content>
+  <span *ngIf="errorMessages.length == 1" class="help-block">{{ errorMessages[0] }}</span>
+  <ul *ngIf="errorMessages.length > 1" class="help-block">
+    <li *ngFor="let error of errorMessages">{{ error }}</li>
+  </ul>
+</div>

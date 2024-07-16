@@ -67,10 +67,9 @@ export class AuthenticationService {
 
   private authenticateCredentials(credentials: Credentials): Observable<UserDto> {
     return defer(() => {
-      const params = {
-        'email': credentials.email,
-        'password': credentials.password
-      };
+      const params: FormData = new FormData();
+      params.set('email', credentials.email!);
+      params.set('password', credentials.password!);
       return this.httpClient.post<AuthenticationDto>('/api/authentication', params)
         .pipe(
           map(authentication => {
