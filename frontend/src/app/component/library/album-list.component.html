@@ -6,7 +6,7 @@
   </pony-no-content-indicator>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
-    <h3 class="panel-title">{{ artistSongs.artist.name }}</h3>
+    <h5 class="panel-title">{{ artistSongs.artist.name }}</h5>
   </div>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-body album-list-container" data-image-loader-scroller>
