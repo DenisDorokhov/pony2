@@ -1,5 +1,5 @@
 import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom, provideZoneChangeDetection} from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {provideRouter, withHashLocation} from '@angular/router';
 
 import { routes } from './app.routes';
 import {InitializerService} from "./service/initializer.service";
@@ -17,7 +17,7 @@ export function initialize(initializerService: InitializerService) {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    provideRouter(routes, withHashLocation()),
     provideHttpClient(
       withInterceptorsFromDi()
     ),

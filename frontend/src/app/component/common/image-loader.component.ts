@@ -2,6 +2,7 @@ import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChil
 import {animationFrameScheduler, fromEvent, Observable, Subscription, timer} from 'rxjs';
 import {debounce, filter, observeOn} from 'rxjs/operators';
 import Logger from "js-logger";
+import {CommonModule} from "@angular/common";
 
 enum ImageLoaderComponentState {
   EMPTY, PENDING, LOADING, ERROR, LOADED
@@ -9,6 +10,7 @@ enum ImageLoaderComponentState {
 
 @Component({
   standalone: true,
+  imports: [CommonModule],
   selector: 'pony-image-loader',
   templateUrl: './image-loader.component.html',
   styleUrls: ['./image-loader.component.scss']

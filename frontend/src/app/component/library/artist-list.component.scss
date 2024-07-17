@@ -7,12 +7,16 @@
   margin: 0;
 
   .list-container {
+
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     overflow-y: auto;
+
+    border-radius: 5px;
+    border: 1px solid #cccccc;
 
     .list-group {
       height: 100%;

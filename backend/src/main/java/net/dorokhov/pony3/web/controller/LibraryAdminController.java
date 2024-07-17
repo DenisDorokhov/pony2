@@ -60,7 +60,7 @@ public class LibraryAdminController implements ErrorHandlingController {
         return scanFacade.getScanJob(scanJobId);
     }
 
-    @PostMapping("/scanJobs/full")
+    @PostMapping("/scanJobs")
     public ScanJobDto startScanJob() throws ConcurrentScanException {
         return scanFacade.startScanJob();
     }
