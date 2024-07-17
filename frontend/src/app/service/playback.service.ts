@@ -273,5 +273,28 @@ export class PlaybackService {
     if (playbackEvent.state === PlaybackState.ENDED) {
       this.playlist!.switchToNextSong().subscribe();
     }
+    if (
+      playbackEvent.state === PlaybackState.LOADING
+      || playbackEvent.state === PlaybackState.PLAYING
+      || playbackEvent.state === PlaybackState.PAUSED
+    ) {
+
+      if (navigator && navigator.mediaSession && playbackEvent.song) {
+        const metadata = new MediaMetadata();
+        if (playbackEvent.song.name) {
+          metadata.title = playbackEvent.song.name;
+        }
+        if (playbackEvent.song.artistName) {
+          metadata.artist = playbackEvent.song.artistName;
+        }
+        if (playbackEvent.song.album.name) {
+          metadata.album = playbackEvent.song.album.name + (playbackEvent.song.album.year ? ' (' + playbackEvent.song.album.year + ')' : '');
+        }
+        if (playbackEvent.song.album.largeArtworkUrl) {
+          metadata.artwork = [{src: location.protocol + '//' + location.host + playbackEvent.song.album.largeArtworkUrl}];
+        }
+        navigator.mediaSession.metadata = metadata;
+      }
+    }
   }
 }
