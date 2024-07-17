@@ -51,18 +51,21 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.ngZone.runOutsideAngular(() => {
-      if (!document.hidden) {
-        this.intersectionSubscription = this.subscribeToIntersection();
-      } else {
-        this.visibilityChangeSubscription = fromEvent(document, 'visibilitychange')
-          .pipe(observeOn(animationFrameScheduler))
-          .subscribe(() => {
-            if (!this.intersectionSubscription && !document.hidden) {
-              this.intersectionSubscription = this.subscribeToIntersection();
-            }
-          });
-      }
+    // Next animation frame is needed for stability in case of performance problems when loading the page.
+    requestAnimationFrame(() => {
+      this.ngZone.runOutsideAngular(() => {
+        if (!document.hidden) {
+          this.intersectionSubscription = this.subscribeToIntersection();
+        } else {
+          this.visibilityChangeSubscription = fromEvent(document, 'visibilitychange')
+            .pipe(observeOn(animationFrameScheduler))
+            .subscribe(() => {
+              if (!this.intersectionSubscription && !document.hidden) {
+                this.intersectionSubscription = this.subscribeToIntersection();
+              }
+            });
+        }
+      });
     });
   }
 

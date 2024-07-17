@@ -3,28 +3,28 @@
     {{ 'library.toolbar.refreshButton' | translate }}
     <i class="fa fa-refresh"></i>
   </button>
-  <div dropdown class="btn-group" *ngIf="currentUser?.role === 'ADMIN'">
-    <button dropdownToggle type="button" class="btn btn-default dropdown-toggle">
+  <div ngbDropdown class="btn-group" *ngIf="currentUser?.role === 'ADMIN'">
+    <button ngbDropdownToggle type="button" class="btn btn-default dropdown-toggle">
       {{ 'library.toolbar.systemButton' | translate }}
       <i class="fa fa-gear"></i>
       <span class="caret"></span>
     </button>
-    <ul *dropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
-      <li><a (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</a></li>
-      <li><a (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</a></li>
-      <li><a (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</a></li>
-      <li><a (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</a></li>
-    </ul>
+    <div ngbDropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
+      <button ngbDropdownItem (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
+    </div>
   </div>
-  <div dropdown class="btn-group">
-    <button dropdownToggle type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+  <div ngbDropdown class="btn-group">
+    <button ngbDropdownToggle type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
       {{ currentUser?.name }}
       <i class="fa fa-user"></i>
       <span class="caret"></span>
     </button>
-    <ul *dropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
-      <li><a (click)="openProfile()">Profile</a></li>
-      <li><a (click)="signOut()">Sign Out</a></li>
+    <ul ngbDropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
+      <button ngbDropdownItem (click)="openProfile()">Profile</button>
+      <button ngbDropdownItem (click)="signOut()">Sign Out</button>
     </ul>
   </div>
 </div>

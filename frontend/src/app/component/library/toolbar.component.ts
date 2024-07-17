@@ -9,12 +9,12 @@ import {LibraryService} from "../../service/library.service";
 import {AuthenticationService} from "../../service/authentication.service";
 import {TranslateModule} from "@ngx-translate/core";
 import Logger from "js-logger";
-import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {NgbDropdownModule, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, CurrentUserComponent, SettingsComponent, ScanningComponent, LogComponent, UserListComponent],
+  imports: [CommonModule, TranslateModule, NgbDropdownModule, CurrentUserComponent, SettingsComponent, ScanningComponent, LogComponent, UserListComponent],
   selector: 'pony-toolbar',
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss']
