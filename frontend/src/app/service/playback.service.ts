@@ -125,6 +125,17 @@ class AudioPlayer {
         this.firePlaybackEvent(PlaybackState.PAUSED, song, this.lastPlaybackEvent.progress);
       }
     });
+    // Workaround for Howler bug: https://github.com/goldfire/howler.js/issues/1175
+    if (navigator && navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        Logger.info("Play by media key detected.");
+        this.howl?.play();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        Logger.info("Pause by media key detected.");
+        this.howl?.pause();
+      });
+    }
   }
 
   private firePlaybackEvent(state: PlaybackState, song?: Song, progress?: number) {
