@@ -46,7 +46,9 @@ class StringScroller {
   }
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class PageTitleService {
 
   private static readonly ANIMATION_INITIAL_DELAY = 3000;

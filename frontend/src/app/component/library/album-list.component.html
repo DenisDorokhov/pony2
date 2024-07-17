@@ -1,0 +1,18 @@
+<div class="panel panel-default">
+  <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
+  <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
+                             [message]="'library.noMusicLabel' | translate">
+  </pony-no-content-indicator>
+  <div *ngIf="loadingState === LoadingState.LOADED"
+       class="panel-heading">
+    <h3 class="panel-title">{{ artistSongs.artist.name }}</h3>
+  </div>
+  <div *ngIf="loadingState === LoadingState.LOADED"
+       class="panel-body album-list-container" data-image-loader-scroller>
+    <div class="album-list-container album-list-scroller">
+      <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album">
+      </pony-album>
+    </div>
+  </div>
+</div>

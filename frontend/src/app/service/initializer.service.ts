@@ -21,7 +21,7 @@ export class InitializerService {
   initialize(): Promise<any> {
 
     Logger.useDefaults({
-      defaultLevel: Logger.WARN,
+      defaultLevel: Logger.INFO,
       formatter: (messages, context) => {
         messages.unshift(':');
         messages.unshift('[' + (context.name || 'default') + ']');
@@ -29,7 +29,7 @@ export class InitializerService {
         messages.unshift(new Date().toISOString());
       }
     });
-    Logger.info('Application started.');
+    Logger.info('Pony3 started.');
 
     this.translateService.setDefaultLang('en');
     this.translateService.use('en');

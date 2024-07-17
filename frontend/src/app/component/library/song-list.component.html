@@ -1,0 +1,6 @@
+<div class="song-list-container">
+  <h5>{{ caption }}</h5>
+  <div class="song-list">
+    <pony-song *ngFor="let song of songs; trackBy: trackByIndex" [song]="song" [showArtist]="showArtist"></pony-song>
+  </div>
+</div>

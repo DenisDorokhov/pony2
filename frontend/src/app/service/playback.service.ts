@@ -3,7 +3,7 @@ import {BehaviorSubject, defer, interval, Observable, of, Subscription} from 'rx
 import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
 import Logger from "js-logger";
-import {HowlOptions} from "howler";
+import {Howl, HowlOptions} from "howler";
 import {AuthenticationService} from "./authentication.service";
 import {Playlist} from "../domain/playlist.model";
 
@@ -144,7 +144,9 @@ class AudioPlayer {
   }
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class PlaybackService {
 
   private audioPlayer = new AudioPlayer();

@@ -1,0 +1,15 @@
+<div #container [class.selected]="selected" [class.withArtist]="showArtist" 
+     (click)="select()" (dblclick)="play()"
+     tabindex="0" class="song-container">
+  <div class="track-number">
+    <i [class.fa-volume-up]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"
+       [class.fa-volume-off]="playbackState === PlaybackState.PAUSED"
+       class="fa"></i>
+    <span [hidden]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
+      {{ song.trackNumber }}
+    </span>
+  </div>
+  <div class="duration">{{ duration }}</div>
+  <div class="title">{{ song.name }}</div>
+  <div class="artist">{{ song.artistName }}</div>
+</div>

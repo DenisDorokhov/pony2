@@ -1,0 +1,16 @@
+.toolbar-container {
+  text-align: right;
+
+  > button, > .btn-group {
+    margin-left: 10px;
+  }
+
+  .toolbar-dropdown {
+    width: 100%;
+    min-width: 100%;
+
+    a {
+      cursor: pointer;
+    }
+  }
+}

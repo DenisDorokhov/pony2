@@ -1,0 +1,35 @@
+<div class="player-container">
+
+  <button type="button" class="btn btn-default backward"
+          (click)="switchToPreviousSong()" [disabled]="!hasPreviousSong">
+    <i class="fa fa-fast-backward"></i>
+  </button>
+  <button type="button" class="btn btn-default btn-lg play"
+          (click)="playOrPause()">
+    <i [class]="isPlaying ? 'fa fa-pause' : 'fa fa-play'"></i>
+  </button>
+  <button type="button" class="btn btn-default forward"
+          (click)="switchToNextSong()" [disabled]="!hasNextSong">
+    <i class="fa fa-fast-forward"></i>
+  </button>
+
+  <div class="title-container" tabindex="0"
+       (click)="selectCurrentSong()">
+    <div class="title-border">
+      <span class="title">{{ songTitle }}</span>
+    </div>
+  </div>
+
+  <div class="progress" (click)="seek($event)">
+    <div class="progress-bar progress-bar-info" [style.width]="(progress * 100) + '%'"></div>
+  </div>
+
+  <div class="time">{{ formattedProgress }}</div>
+  <div class="loading-indicator-container">
+    <img [hidden]="!isLoading" class="loading-indicator" alt="..." src="./spinner.gif">
+  </div>
+  <div class="duration">{{ formattedDuration }}</div>
+
+  <pony-image-loader [url]="artworkUrl"></pony-image-loader>
+
+</div>

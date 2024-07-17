@@ -19,7 +19,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
 
-  @ViewChild('image') imageElement: ElementRef | undefined;
+  @ViewChild('image') imageElement!: ElementRef;
 
   private _url: string | undefined;
 
@@ -33,7 +33,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     return this._url;
   }
 
-  set url(url: string) {
+  set url(url: string | undefined) {
     this._url = url;
     if (url) {
       this.state = ImageLoaderComponentState.PENDING;

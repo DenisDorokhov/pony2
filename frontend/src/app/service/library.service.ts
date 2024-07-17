@@ -1,7 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import 'rxjs-compat/add/operator/distinctUntilChanged';
 import {catchError, distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Artist, ArtistSongs, Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
@@ -14,7 +13,9 @@ export enum LibraryState {
   EMPTY,
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class LibraryService {
 
   private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';

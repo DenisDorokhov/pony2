@@ -1,1 +1,37 @@
-Library ;-)
+<div class="library-container">
+  <div class="header">
+    <div class="logo-container">
+      <img src="./logo.svg">
+    </div>
+    <div class="player">
+      <pony-player></pony-player>
+    </div>
+    <div class="toolbar">
+      <pony-toolbar></pony-toolbar>
+    </div>
+  </div>
+  <div class="content">
+    <pony-artist-list></pony-artist-list>
+    <pony-album-list></pony-album-list>
+  </div>
+  <div class="footer">
+    <small>
+      <span *ngIf="scanStatistics">
+        {{ 'library.scanStatistics.counts' | translate:{
+            artistCount: scanStatistics.artistCount,
+            albumCount: scanStatistics.albumCount,
+            songCount: scanStatistics.songCount,
+            artworkCount: scanStatistics.artworkCount
+        } }}
+        |
+        {{ size }}
+        |
+        {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:'yyyy-MM-dd hh:mm:ss')} }}
+        |
+      </span>
+      <a href="https://github.com/DenisDorokhov/pony3" target="_blank">
+        {{ 'library.scanStatistics.githubLinkLabel' | translate }}
+      </a>
+    </small>
+  </div>
+</div>

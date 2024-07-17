@@ -1,0 +1,30 @@
+<div class="toolbar-container">
+  <button (click)="refresh()" type="button" class="btn btn-default">
+    {{ 'library.toolbar.refreshButton' | translate }}
+    <i class="fa fa-refresh"></i>
+  </button>
+  <div dropdown class="btn-group" *ngIf="currentUser?.role === 'ADMIN'">
+    <button dropdownToggle type="button" class="btn btn-default dropdown-toggle">
+      {{ 'library.toolbar.systemButton' | translate }}
+      <i class="fa fa-gear"></i>
+      <span class="caret"></span>
+    </button>
+    <ul *dropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
+      <li><a (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</a></li>
+      <li><a (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</a></li>
+      <li><a (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</a></li>
+      <li><a (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</a></li>
+    </ul>
+  </div>
+  <div dropdown class="btn-group">
+    <button dropdownToggle type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+      {{ currentUser?.name }}
+      <i class="fa fa-user"></i>
+      <span class="caret"></span>
+    </button>
+    <ul *dropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
+      <li><a (click)="openProfile()">Profile</a></li>
+      <li><a (click)="signOut()">Sign Out</a></li>
+    </ul>
+  </div>
+</div>

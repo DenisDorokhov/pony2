@@ -1,0 +1,37 @@
+.album-container {
+  clear: both;
+
+  pony-image-loader {
+    float: left;
+    width: 140px;
+    height: 140px;
+    margin-bottom: 50px;
+  }
+
+  .song-list-container {
+    margin-left: 150px;
+    margin-bottom: 50px;
+
+    h4 {
+      margin-top: 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+
+      button {
+        margin-left: 5px;
+        float: right;
+      }
+    }
+  }
+}
+
+:host:last-child {
+
+  pony-image-loader {
+    margin-bottom: 0;
+  }
+
+  .song-list-container {
+    margin-bottom: 0;
+  }
+}

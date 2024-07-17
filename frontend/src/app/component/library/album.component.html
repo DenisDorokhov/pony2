@@ -1,0 +1,18 @@
+<div class="album-container">
+  <pony-image-loader [url]="albumSongs.album.largeArtworkUrl"></pony-image-loader>
+  <div class="song-list-container">
+    <h4>
+      {{ albumSongs.album.name ? albumSongs.album.name : ('library.album.unknownLabel' | translate) }}
+      <button (click)="download()"
+              type="button" class="btn btn-default btn-xs">
+        <i class="fa fa-download"></i>
+        Download
+      </button>
+      <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
+    </h4>
+    <pony-song-list *ngFor="let disc of discs; trackBy: trackByIndex"
+                    [caption]="disc.discNumber ? ('library.album.discLabel' | translate:{discNumber:disc.discNumber}) : undefined"
+                    [songs]="disc.songs" [showArtist]="disc.showArtist">
+    </pony-song-list>
+  </div>
+</div>

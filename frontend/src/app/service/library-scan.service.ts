@@ -7,7 +7,9 @@ import {AuthenticationService} from "./authentication.service";
 import {ErrorDto} from "../domain/common.dto";
 import Logger from "js-logger";
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class LibraryScanService {
 
   private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined>(undefined);
