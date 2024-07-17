@@ -1,0 +1,22 @@
+table.status-container {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  td {
+    padding: 5px 20px 5px 20px;
+
+    ngb-progressbar {
+      margin-bottom: 0 !important;
+    }
+  }
+
+  td.label {
+    font-weight: bold;
+    width: 0;
+  }
+
+  ngb-progressbar {
+    height: 20px;
+  }
+}

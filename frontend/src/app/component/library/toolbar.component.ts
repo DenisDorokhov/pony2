@@ -58,7 +58,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   openScanning() {
-    this.modalService.open(ScanningComponent);
+    this.modalService.open(ScanningComponent, { size: 'lg' });
   }
 
   openLog() {

@@ -1,8 +1,16 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ 'library.scanning.header' | translate }}</h4>
 </div>
-<div class="modal-body">
-</div>
+<table class="status-container">
+  <tr>
+    <td class="label">Status:</td>
+    <td>importing songs (1000 of 3000)...</td>
+  </tr>
+  <tr>
+    <td class="label">Progress:</td>
+    <td><ngb-progressbar class="mb-3" textType="white" height="100" [value]="50" [showValue]="true" /></td>
+  </tr>
+</table>
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
 </div>
