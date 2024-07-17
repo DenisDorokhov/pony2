@@ -5,6 +5,7 @@ export class Song {
   id: string;
   creationDate: Date;
   updateDate: Date | undefined;
+  path: string;
   mimeType: string;
   fileExtension: string;
   size: number;
@@ -18,11 +19,13 @@ export class Song {
   genreId: string;
   album: Album;
   audioUrl: string;
+  sizeMb: number;
 
   constructor(songDto: SongDto, album: Album) {
     this.id = songDto.id;
     this.creationDate = songDto.creationDate;
     this.updateDate = songDto.updateDate;
+    this.path = songDto.path;
     this.mimeType = songDto.mimeType;
     this.fileExtension = songDto.fileExtension;
     this.size = songDto.size;
@@ -36,6 +39,11 @@ export class Song {
     this.genreId = songDto.genreId;
     this.album = album;
     this.audioUrl = '/api/file/audio/' + this.id;
+    this.sizeMb = Song.roundToTwoDecimals(songDto.size / 1_000_000);
+  }
+
+  private static roundToTwoDecimals(num: number) {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 
   get durationInMinutes(): string {

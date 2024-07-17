@@ -51,8 +51,8 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Next animation frame is needed for stability in case of performance problems when loading the page.
-    requestAnimationFrame(() => {
+    // Timeout is needed for stability in case of performance problems when loading the page.
+    setTimeout(() => {
       this.ngZone.runOutsideAngular(() => {
         if (!document.hidden) {
           this.intersectionSubscription = this.subscribeToIntersection();
@@ -66,7 +66,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
             });
         }
       });
-    });
+    }, 50);
   }
 
   ngOnDestroy(): void {

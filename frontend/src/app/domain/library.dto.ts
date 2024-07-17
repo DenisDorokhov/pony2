@@ -30,6 +30,7 @@ export class SongDto {
   id!: string;
   creationDate!: Date;
   updateDate: Date | undefined;
+  path!: string;
   mimeType!: string;
   fileExtension!: string;
   size!: number;

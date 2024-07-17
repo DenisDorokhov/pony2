@@ -21,11 +21,20 @@
         margin-left: 5px;
         float: right;
       }
+
+      small {
+        font-weight: normal;
+        color: #909090;
+      }
     }
   }
 }
 
 :host:last-child {
+
+  .song-list-container {
+    min-height: 140px;
+  }
 
   pony-image-loader {
     margin-bottom: 0;

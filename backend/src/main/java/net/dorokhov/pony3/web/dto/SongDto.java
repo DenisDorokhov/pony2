@@ -5,6 +5,7 @@ import net.dorokhov.pony3.api.library.domain.Song;
 
 public final class SongDto extends BaseDto<SongDto> {
 
+    private String path;
     private String mimeType;
     private String fileExtension;
 
@@ -23,6 +24,15 @@ public final class SongDto extends BaseDto<SongDto> {
 
     private String albumId;
     private String genreId;
+
+    public String getPath() {
+        return path;
+    }
+
+    public SongDto setPath(String path) {
+        this.path = path;
+        return this;
+    }
 
     public String getMimeType() {
         return mimeType;
@@ -141,6 +151,7 @@ public final class SongDto extends BaseDto<SongDto> {
                 .setId(song.getId())
                 .setCreationDate(song.getCreationDate())
                 .setUpdateDate(song.getUpdateDate())
+                .setPath(song.getPath())
                 .setMimeType(song.getFileType().getMimeType())
                 .setFileExtension(song.getFileType().getFileExtension())
                 .setSize(song.getSize())

@@ -6,7 +6,7 @@
   }
 }
 
-:host:last-child { 
+:host:last-child {
   .list-group-item {
     border-bottom-width: 0;
     border-bottom-left-radius: 4px;
@@ -49,15 +49,20 @@
     position: absolute;
     left: 68px;
     right: 10px;
-    
+
     &.playing {
       right: 33px;
     }
   }
-  
+
   .playback-indicator {
     line-height: 50px;
     float: right;
     width: 13px;
   }
+}
+
+.list-group-item.active {
+  background-color: #428bca;
+  border-color: #428bca;
 }

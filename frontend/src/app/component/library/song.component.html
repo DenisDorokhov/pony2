@@ -1,5 +1,5 @@
 <div #container [class.selected]="selected" [class.withArtist]="showArtist"
-     (click)="select()" (dblclick)="play()" title="{{ song.name }}"
+     (click)="select()" (dblclick)="play()" title="{{ song.name + ' [' + song.sizeMb + ' MB, ' + song.bitRate + ' kbit/s]\n' + song.path }}"
      tabindex="0" class="song-container">
   <div class="track-number">
     <i [class.fa-volume-up]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"
