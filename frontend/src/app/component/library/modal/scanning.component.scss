@@ -34,6 +34,7 @@
 
   table.log-container {
     width: 100%;
+    margin-bottom: 5px;
 
     thead {
       border-bottom: 1px solid #cccccc;
@@ -41,6 +42,19 @@
 
     tbody {
       border: 1px solid #cccccc;
+    }
+  }
+
+  table.log-container.hidden {
+    border: 1px solid #cccccc;
+
+    tbody {
+      visibility: hidden;
+      border: transparent;
+    }
+
+    tr:last-child {
+      border-bottom: 1px solid #cccccc;
     }
   }
 
