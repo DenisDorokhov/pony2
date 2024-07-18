@@ -1,16 +1,120 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ 'library.scanning.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
-<table class="status-container">
-  <tr>
-    <td class="label">Status:</td>
-    <td>importing songs (1000 of 3000)...</td>
-  </tr>
-  <tr>
-    <td class="label">Progress:</td>
-    <td><ngb-progressbar class="mb-3" textType="white" height="100" [value]="50" [showValue]="true" /></td>
-  </tr>
-</table>
-<div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
+
+<div class="container">
+
+  <table class="status-container">
+    <tr>
+      <td class="label">Status:</td>
+      <td>importing songs (1000 of 3000)...</td>
+    </tr>
+    <tr>
+      <td class="label">Progress:</td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 25%;">
+            25%
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <table class="table table-striped log-container">
+    <thead>
+    <tr>
+      <th scope="col">Start Date</th>
+      <th scope="col">Update Date</th>
+      <th scope="col">Status</th>
+      <th scope="col">Last Message</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          2024.07.18 17:29:06
+        </td>
+        <td>
+          2024.07.18 17:29:27
+        </td>
+        <td>
+          COMPLETE
+        </td>
+        <td>
+          Scan job complete for [/home/pony/music].
+        </td>
+      </tr>
+      <tr>
+        <td>
+          2024.07.18 17:29:06
+        </td>
+        <td>
+          2024.07.18 17:29:27
+        </td>
+        <td>
+          COMPLETE
+        </td>
+        <td>
+          Scan job complete for [/home/pony/music].
+        </td>
+      </tr>
+      <tr>
+        <td>
+          2024.07.18 17:29:06
+        </td>
+        <td>
+          2024.07.18 17:29:27
+        </td>
+        <td>
+          COMPLETE
+        </td>
+        <td>
+          Scan job complete for [/home/pony/music].
+        </td>
+      </tr>
+      <tr>
+        <td>
+          2024.07.18 17:29:06
+        </td>
+        <td>
+          2024.07.18 17:29:27
+        </td>
+        <td>
+          COMPLETE
+        </td>
+        <td>
+          Scan job complete for [/home/pony/music].
+        </td>
+      </tr>
+      <tr>
+        <td>
+          2024.07.18 17:29:06
+        </td>
+        <td>
+          2024.07.18 17:29:27
+        </td>
+        <td>
+          COMPLETE
+        </td>
+        <td>
+          Scan job complete for [/home/pony/music].
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="row pagination-container">
+    <div class="col prev-button-container">
+      <button type="button" class="btn btn-outline-dark" disabled>&laquo; Previous</button>
+    </div>
+    <div class="col page-label">
+      Page 1 of 2
+    </div>
+    <div class="col next-button-container">
+      <button type="button" class="btn btn-outline-dark">Next &raquo;</button>
+    </div>
+  </div>
+
 </div>

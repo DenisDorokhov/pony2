@@ -1,22 +1,60 @@
-table.status-container {
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
+.container {
 
-  td {
-    padding: 5px 20px 5px 20px;
+  padding-left: 16px;
+  padding-right: 16px;
 
-    ngb-progressbar {
-      margin-bottom: 0 !important;
+  table.status-container {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 5px;
+
+    td {
+      padding-top: 5px;
+      padding-bottom: 5px;
+
+      progress {
+        height: 20px;
+      }
+    }
+
+    td.label {
+      font-weight: bold;
+      width: 0;
+      padding-right: 20px;
+    }
+
+    .progress {
+      height: 20px;
+
+      .progress-bar {
+        background-color: #428bca;
+      }
     }
   }
 
-  td.label {
-    font-weight: bold;
-    width: 0;
+  table.log-container {
+    width: 100%;
+
+    thead {
+      border-bottom: 1px solid #cccccc;
+    }
+
+    tbody {
+      border: 1px solid #cccccc;
+    }
   }
 
-  ngb-progressbar {
-    height: 20px;
+  .pagination-container {
+    padding-top: 7px;
+    padding-bottom: 16px;
+
+    .page-label {
+      text-align: center;
+      line-height: 37px;
+    }
+
+    .next-button-container {
+      text-align: right;
+    }
   }
 }

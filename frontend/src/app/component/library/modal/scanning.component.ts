@@ -1,10 +1,10 @@
 import {Component} from '@angular/core';
-import {NgbActiveModal, NgbProgressbarModule} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {TranslateModule} from "@ngx-translate/core";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, NgbProgressbarModule],
+  imports: [TranslateModule],
   selector: 'pony-scanning',
   templateUrl: './scanning.component.html',
   styleUrls: ['./scanning.component.scss']
