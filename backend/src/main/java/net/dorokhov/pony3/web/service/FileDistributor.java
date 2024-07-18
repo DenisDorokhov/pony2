@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony3.web.dto.FileDistribution;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.util.UriUtils;
 
 import jakarta.servlet.ServletOutputStream;
@@ -42,7 +43,7 @@ public class FileDistributor {
         // If-None-Match header should contain "*" or ETag. If so, then return 304.
         String ifNoneMatch = request.getHeader("If-None-Match");
         if (ifNoneMatch != null && matches(ifNoneMatch, distribution.getName())) {
-            response.setHeader("ETag", distribution.getName()); // Required in 304.
+            response.setHeader("ETag", createETag(distribution)); // Required in 304.
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             return;
         }
@@ -51,7 +52,7 @@ public class FileDistributor {
         // This header is ignored if any If-None-Match header is specified.
         long ifModifiedSince = request.getDateHeader("If-Modified-Since");
         if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
-            response.setHeader("ETag", distribution.getName()); // Required in 304.
+            response.setHeader("ETag", createETag(distribution)); // Required in 304.
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             return;
         }
@@ -144,7 +145,7 @@ public class FileDistributor {
         response.setBufferSize(BUFFER_SIZE);
         response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(distribution.getName(), Charsets.UTF_8.name()) + "\"");
         response.setHeader("Accept-Ranges", "bytes");
-        response.setHeader("ETag", distribution.getName());
+        response.setHeader("ETag", createETag(distribution));
         response.setDateHeader("Last-Modified", lastModified);
         response.setDateHeader("Expires", System.currentTimeMillis() + EXPIRE_TIME);
 
@@ -187,6 +188,10 @@ public class FileDistributor {
                 output.println("--" + MULTIPART_BYTERANGES + "--");
             }
         }
+    }
+
+    private String createETag(FileDistribution distribution) {
+        return DigestUtils.md5DigestAsHex(distribution.getFile().getAbsolutePath().getBytes());
     }
 
     @SuppressFBWarnings("SR_NOT_CHECKED")
