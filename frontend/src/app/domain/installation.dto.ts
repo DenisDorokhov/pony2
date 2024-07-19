@@ -1,6 +1,6 @@
 export interface InstallationDto {
-  creationDate: Date;
-  updateDate: Date | undefined;
+  creationDate: string;
+  updateDate: string | undefined;
   version: string;
 }
 

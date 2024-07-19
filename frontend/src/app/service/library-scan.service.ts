@@ -25,10 +25,6 @@ export class LibraryScanService {
       .subscribe(() => this.updateScanStatistics());
   }
 
-  observeScanStatistics(): Observable<ScanStatisticsDto | undefined> {
-    return this.scanStatisticsSubject.asObservable();
-  }
-
   private updateScanStatistics() {
     Logger.info('Updating scan statistics...');
     return this.httpClient.get<ScanStatisticsDto>('/api/library/scanStatistics')
@@ -48,5 +44,9 @@ export class LibraryScanService {
         })
       )
       .subscribe();
+  }
+
+  observeScanStatistics(): Observable<ScanStatisticsDto | undefined> {
+    return this.scanStatisticsSubject.asObservable();
   }
 }

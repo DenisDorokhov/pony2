@@ -20,13 +20,14 @@
         </div>
       </td>
     </tr>
+    <tr>
+      <td colspan="2">
+        <button type="button" class="btn btn-primary">Start Scan</button>
+      </td>
+    </tr>
   </table>
 
-  <div style="position: relative; text-align: center">
-    <pony-loading-indicator style="position: absolute; top: 30px; left: 0; right: 0;"></pony-loading-indicator>
-  </div>
-
-  <table class="table table-striped log-container hidden">
+  <table class="table table-striped log-container">
     <thead>
     <tr>
       <th scope="col">Start Date</th>
@@ -108,6 +109,10 @@
       </tr>
     </tbody>
   </table>
+
+  <div class="indicator-container hidden">
+    <pony-loading-indicator></pony-loading-indicator>
+  </div>
 
   <div class="row pagination-container">
     <div class="col prev-button-container">

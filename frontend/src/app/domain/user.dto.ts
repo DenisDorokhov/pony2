@@ -1,7 +1,7 @@
 export interface UserDto {
   id: string;
-  creationDate: Date;
-  updateDate: Date | undefined;
+  creationDate: string;
+  updateDate: string | undefined;
   name: string;
   email: string;
   role: UserDto.Role;

@@ -5,7 +5,7 @@ import {catchError, distinctUntilChanged, filter, map, tap} from 'rxjs/operators
 import {Artist, ArtistSongs, Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
 import {ErrorDto} from "../domain/common.dto";
-import {ArtistSongsDto} from "../domain/library.dto";
+import {ArtistDto, ArtistSongsDto} from "../domain/library.dto";
 
 export enum LibraryState {
   UNKNOWN,
@@ -54,7 +54,7 @@ export class LibraryService {
   }
 
   getArtists(): Observable<Artist[]> {
-    return this.httpClient.get<Artist[]>('/api/library/artists')
+    return this.httpClient.get<ArtistDto[]>('/api/library/artists')
       .pipe(
         catchError(ErrorDto.observableFromHttpErrorResponse),
         map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto))),

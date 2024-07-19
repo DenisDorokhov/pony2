@@ -23,8 +23,8 @@ export class Song {
 
   constructor(songDto: SongDto, album: Album) {
     this.id = songDto.id;
-    this.creationDate = songDto.creationDate;
-    this.updateDate = songDto.updateDate;
+    this.creationDate = new Date(songDto.creationDate);
+    this.updateDate = songDto.updateDate ? new Date(songDto.updateDate) : undefined;
     this.path = songDto.path;
     this.mimeType = songDto.mimeType;
     this.fileExtension = songDto.fileExtension;
@@ -80,8 +80,8 @@ export class Album {
 
   constructor(albumDto: AlbumDto, artist: Artist) {
     this.id = albumDto.id;
-    this.creationDate = albumDto.creationDate;
-    this.updateDate = albumDto.updateDate;
+    this.creationDate = new Date(albumDto.creationDate);
+    this.updateDate = albumDto.updateDate ? new Date(albumDto.updateDate) : undefined;
     this.name = albumDto.name;
     this.year = albumDto.year;
     this.artworkId = albumDto.artworkId;
@@ -115,8 +115,8 @@ export class Artist {
 
   constructor(artistDto: ArtistDto) {
     this.id = artistDto.id;
-    this.creationDate = artistDto.creationDate;
-    this.updateDate = artistDto.updateDate;
+    this.creationDate = new Date(artistDto.creationDate);
+    this.updateDate = artistDto.updateDate ? new Date(artistDto.updateDate) : undefined;
     this.name = artistDto.name;
     this.artworkId = artistDto.artworkId;
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;

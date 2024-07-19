@@ -30,11 +30,16 @@
         background-color: #428bca;
       }
     }
+
+    button {
+      background-color: #428bca;
+    }
   }
 
   table.log-container {
+    border: 1px solid #cccccc;
     width: 100%;
-    margin-bottom: 5px;
+    margin: 0;
 
     thead {
       border-bottom: 1px solid #cccccc;
@@ -46,16 +51,17 @@
   }
 
   table.log-container.hidden {
-    border: 1px solid #cccccc;
-
     tbody {
-      visibility: hidden;
-      border: transparent;
+      display: none;
     }
+  }
 
-    tr:last-child {
-      border-bottom: 1px solid #cccccc;
-    }
+  .indicator-container {
+    height: 204px;
+  }
+
+  .indicator-container.hidden {
+    display: none;
   }
 
   .pagination-container {
