@@ -127,3 +127,36 @@ export namespace ScanJobDto {
     INTERRUPTED = 'INTERRUPTED',
   }
 }
+
+export interface ScanProgressDto {
+  step: ScanProgressDto.Step;
+  files: string[];
+  value: ScanProgressDto.Value;
+}
+
+export namespace ScanProgressDto {
+
+  export enum Step {
+
+    FULL_PREPARING = 'FULL_PREPARING',
+    FULL_SEARCHING_MEDIA = 'FULL_SEARCHING_MEDIA',
+    FULL_CLEANING_SONGS = 'FULL_CLEANING_SONGS',
+    FULL_CLEANING_ARTWORKS = 'FULL_CLEANING_ARTWORKS',
+    FULL_IMPORTING = 'FULL_IMPORTING',
+    FULL_SEARCHING_ARTWORKS = 'FULL_SEARCHING_ARTWORKS',
+
+    EDIT_PREPARING = 'EDIT_PREPARING',
+    EDIT_WRITING = 'EDIT_WRITING',
+    EDIT_SEARCHING_ARTWORKS = 'EDIT_SEARCHING_ARTWORKS',
+  }
+
+  export interface Value {
+    itemsComplete: number
+    itemsTotal: number;
+  }
+}
+
+export interface ScanJobProgressDto {
+  scanJob: ScanJobDto;
+  scanProgress: ScanProgressDto;
+}

@@ -105,19 +105,19 @@ export class AlbumListComponent implements OnInit, OnDestroy {
       this.artistSongsSubscription.unsubscribe();
     }
     this.artistSongsSubscription = this.libraryService.getArtistSongs(artist.id)
-      .subscribe(
-        artistSongs => {
+      .subscribe({
+        next: artistSongs => {
           this.artistSongs = artistSongs;
           this.artistSongs.albumSongs.sort(AlbumListComponent.compareAlbumSongs);
           this.loadingState = LoadingState.LOADED;
           Logger.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
-        error => {
+        error: error => {
           if (!refreshing) {
             this.loadingState = LoadingState.ERROR;
           }
           Logger.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
-      );
+      });
   }
 }
