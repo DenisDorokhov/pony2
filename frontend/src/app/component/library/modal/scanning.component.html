@@ -8,27 +8,87 @@
   <table class="status-container">
     <tr>
       <td class="label">{{ 'scanning.statusLabel' | translate }}</td>
-      <td>importing songs (1000 of 3000)...</td>
+      <td>
+        @if (scanJobProgressLoadingState === LoadingState.LOADING) {
+          {{ 'scanning.scanJobProgress.startingLabel' | translate }}
+        } @else if (scanJobProgressLoadingState === LoadingState.ERROR) {
+          {{ 'scanning.scanJobProgress.errorLabel' | translate }}
+        } @else {
+          @if (!scanJobProgress) {
+            {{ 'scanning.scanJobProgress.inactiveLabel' | translate }}
+          } @else {
+            @switch (scanJobProgress.scanProgress.stepDescriptor.step) {
+              @case (Step.FULL_SEARCHING_MEDIA) {
+                {{ 'scanning.scanJobProgress.searchingMediaLabel' | translate }}
+              }
+              @case (Step.FULL_CLEANING_SONGS) {
+                {{
+                  'scanning.scanJobProgress.cleaningSongsLabel' | translate:{
+                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                  }
+                }}
+              }
+              @case (Step.FULL_CLEANING_ARTWORKS) {
+                {{
+                  'scanning.scanJobProgress.cleaningArtworksLabel' | translate:{
+                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                  }
+                }}
+              }
+              @case (Step.FULL_IMPORTING) {
+                {{
+                  'scanning.scanJobProgress.importingLabel' | translate:{
+                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                  }
+                }}
+              }
+              @case (Step.FULL_SEARCHING_ARTWORKS) {
+                {{
+                  'scanning.scanJobProgress.searchingArtworksLabel' | translate:{
+                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                  }
+                }}
+              }
+              @default {
+                {{ 'scanning.scanJobProgress.preparingLabel' | translate }}
+              }
+            }
+          }
+        }
+      </td>
     </tr>
     <tr>
       <td class="label">{{ 'scanning.progressLabel' | translate }}</td>
       <td>
         <div class="progress">
-          <div class="progress-bar" role="progressbar" [style.width]="25">
-            25%
-          </div>
+          @if (scanProgressValue) {
+            <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+          } @else if (scanJobProgress) {
+            <div role="progressbar" class="progress-bar progress-bar-striped progress-bar-animated" [style.width]="'100%'"></div>
+          } @else {
+            <div role="progressbar" class="progress-bar" [style.width]="'0'"></div>
+          }
         </div>
       </td>
     </tr>
     <tr>
       <td colspan="2">
-        <button type="button" class="btn btn-primary">{{ 'scanning.startScanButton' | translate }}</button>
+        <button type="button" class="btn btn-primary"
+                [disabled]="scanJobProgressLoadingState === LoadingState.LOADING || scanJobProgress"
+                (click)="startScanJob()">
+          {{ 'scanning.startScanButton' | translate }}
+        </button>
       </td>
     </tr>
   </table>
 
   <div class="indicator-container">
-    <div class="indicator" [class.hidden]="scanJobsLoadingState !== LoadingState.LOADING && scanJobsLoadingState !== LoadingState.ERROR">
+    <div class="indicator"
+         [class.hidden]="scanJobsLoadingState !== LoadingState.LOADING && scanJobsLoadingState !== LoadingState.ERROR">
       <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
       <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
     </div>
@@ -46,8 +106,8 @@
     <tbody>
       @for (scanJob of scanJobs; track scanJob) {
         <tr>
-          <td>{{ scanJob.creationDate | date:( 'shared.scanJobDateFormat' | translate ) }}</td>
-          <td>{{ scanJob.updateDate | date:( 'shared.scanJobDateFormat' | translate ) }}</td>
+          <td>{{ scanJob.creationDate | date:('shared.scanJobDateFormat' | translate) }}</td>
+          <td>{{ scanJob.updateDate | date:('shared.scanJobDateFormat' | translate) }}</td>
           <td>{{ scanJob.status }}</td>
           <td>{{ scanJob.logMessage?.text }}</td>
         </tr>
@@ -65,13 +125,23 @@
 
   <div class="row pagination-container">
     <div class="col prev-button-container">
-      <button type="button" class="btn btn-outline-dark" [innerHtml]="'shared.previousPageButton' | translate"></button>
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.previousPageButton' | translate"
+              [disabled]="(page?.pageIndex ?? 0) === 0"></button>
     </div>
-    <div class="col page-label">
-      Page 1 of 2
+    <div class="col page-label"
+         [hidden]="scanJobsLoadingState !== LoadingState.LOADED && scanJobsLoadingState !== LoadingState.EMPTY">
+      {{
+        'shared.currentPageLabel' | translate:{
+          pageIndex: ((page?.pageIndex ?? 0) + 1),
+          totalPages: (page?.totalPages ?? 0)
+        }
+      }}
     </div>
     <div class="col next-button-container">
-      <button type="button" class="btn btn-outline-dark" [innerHtml]="'shared.nextPageButton' | translate"></button>
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.nextPageButton' | translate"
+              [disabled]="(page?.pageIndex ?? 0) >= ((page?.totalPages ?? 0) - 1)"></button>
     </div>
   </div>
 

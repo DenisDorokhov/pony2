@@ -188,7 +188,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         }
 
         List<String> targetPaths = fetchAbsolutePaths(targetFolders);
-        LogMessage logStarting = logService.info(logger, "Starting scan job for '{}'...", targetPaths);
+        LogMessage logStarting = logService.info(logger, "Starting scan job for {}...", targetPaths);
         ScanJob scanJob = scanJobRepository.save(new ScanJob()
                 .setScanType(ScanType.FULL)
                 .setStatus(Status.STARTING)
@@ -202,7 +202,7 @@ public class ScanJobServiceImpl implements ScanJobService {
                     ScanJob currentScanJob = scanJob;
                     try {
                         currentScanJob = changeScanJobStatusInTransaction(() -> {
-                            LogMessage logStarted = logService.info(logger, "Started scan job for '{}'.", targetPaths);
+                            LogMessage logStarted = logService.info(logger, "Started scan job for {}.", targetPaths);
                             return scanJobRepository.save(scanJob
                                     .setStatus(Status.STARTED)
                                     .setLogMessage(logStarted));

@@ -10,22 +10,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.DefaultApplicationArguments;
 
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ScanJobInterruptionRunnerTest {
+public class ScanJobInterruptionServiceTest {
 
     @InjectMocks
-    private ScanJobInterruptionRunner scanJobInterruptionRunner;
+    private ScanJobInterruptionService scanJobInterruptionService;
 
     @Mock
     private ScanJobRepository scanJobRepository;
@@ -39,7 +36,7 @@ public class ScanJobInterruptionRunnerTest {
 
         when(scanJobRepository.findByStatusIn(any())).thenReturn(scanJobs);
 
-        scanJobInterruptionRunner.markCurrentJobsAsInterrupted();
+        scanJobInterruptionService.markCurrentJobsAsInterrupted();
 
         ArgumentCaptor<ScanJob> savedScanJob = ArgumentCaptor.forClass(ScanJob.class);
         verify(scanJobRepository, times(3)).save(savedScanJob.capture());
@@ -48,17 +45,6 @@ public class ScanJobInterruptionRunnerTest {
                 .isSameAs(ScanJob.Status.INTERRUPTED));
 
         verify(logService).warn(any(), any(), any());
-    }
-
-    @Test
-    public void shouldMarkCurrentJobsAsInterruptedOnStartup() {
-
-        when(scanJobRepository.findByStatusIn(any())).thenReturn(emptyList());
-        ScanJobInterruptionRunner spy = Mockito.spy(scanJobInterruptionRunner);
-
-        spy.run(new DefaultApplicationArguments());
-
-        verify(spy).markCurrentJobsAsInterrupted();
     }
 
     private ScanJob scanJob() {

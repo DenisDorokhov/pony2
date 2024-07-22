@@ -134,9 +134,9 @@ export namespace ScanJobDto {
 }
 
 export interface ScanProgressDto {
-  step: ScanProgressDto.Step;
+  stepDescriptor: ScanProgressDto.StepDescriptor;
   files: string[];
-  value: ScanProgressDto.Value;
+  value: ScanProgressDto.Value | undefined;
 }
 
 export namespace ScanProgressDto {
@@ -158,6 +158,13 @@ export namespace ScanProgressDto {
   export interface Value {
     itemsComplete: number
     itemsTotal: number;
+  }
+
+  export interface StepDescriptor {
+    step: ScanProgressDto.Step;
+    scanType: ScanType;
+    stepNumber: number;
+    totalSteps: number;
   }
 }
 

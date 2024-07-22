@@ -1,8 +1,19 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, defer, delayWhen, interval, Observable, of, repeat, throwError} from 'rxjs';
+import {
+  BehaviorSubject,
+  defer, delay,
+  delayWhen,
+  interval,
+  mergeMap,
+  Observable,
+  of,
+  repeat,
+  Subscription,
+  throwError
+} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
-import {ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
+import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
 import {ErrorDto} from "../domain/common.dto";
 import Logger from "js-logger";
@@ -14,6 +25,8 @@ export class LibraryScanService {
 
   private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined>(undefined);
   private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined>(undefined);
+
+  private scanJobProgressUpdateSubscription: Subscription | undefined;
 
   constructor(
     private httpClient: HttpClient,
@@ -49,7 +62,8 @@ export class LibraryScanService {
   }
 
   private scheduleScanJobProgressUpdate() {
-    return defer(() => {
+    this.scanJobProgressUpdateSubscription?.unsubscribe();
+    this.scanJobProgressUpdateSubscription = defer(() => {
       if (this.authenticationService.isAuthenticated) {
         return this.updateScanJobProgress();
       } else {
@@ -100,6 +114,19 @@ export class LibraryScanService {
       .pipe(
         catchError(error => {
           Logger.error(`Could not get scan jobs: ${JSON.stringify(error)}`);
+          throw ErrorDto.fromHttpErrorResponse(error);
+        })
+      );
+  }
+
+  startScanJob(): Observable<ScanJobProgressDto | undefined> {
+    return this.httpClient.post<ScanJobDto>('/api/admin/library/scanJobs', null)
+      .pipe(
+        delay(1000),
+        mergeMap(() => this.updateScanJobProgress()),
+        tap(() => this.scheduleScanJobProgressUpdate()),
+        catchError(error => {
+          Logger.error(`Could not start scan job: ${JSON.stringify(error)}`);
           throw ErrorDto.fromHttpErrorResponse(error);
         })
       );

@@ -110,7 +110,7 @@ public class BatchLibraryImporter {
 
         int itemsTotal = plan.getAudioNodesToImport().size();
         CountDownLatch latch = new CountDownLatch(itemsTotal);
-        for (int i = 0; i < plan.getAudioNodesToImport().size(); i++) {
+        for (int i = 0; i < itemsTotal; i++) {
             AudioNode audioNode = plan.getAudioNodesToImport().get(i);
             final int index = i;
             executor.execute(() -> {
@@ -118,7 +118,7 @@ public class BatchLibraryImporter {
                     // Preserve original order.
                     importTasks.set(index, new ImportTask(audioNode, audioNode.getAudioData()));
                 } catch (IOException e) {
-                    logService.error(logger, "Could not read audio data from '{}'.",
+                    logService.warn(logger, "Could not read audio data from '{}'.",
                             audioNode.getFile().getAbsolutePath(), e);
                     failedFiles.add(audioNode.getFile());
                 } finally {
@@ -135,6 +135,10 @@ public class BatchLibraryImporter {
             logger.warn("Batch audio data reading has been interrupted.", e);
             throw new RuntimeException("Batch audio data reading has been interrupted.", e);
         }
+        // Trigger progress even if there are no songs to import.
+        if (itemsTotal == 0) {
+            notifyObserver(observer, 0, 0);
+        }
 
         return doImport(importTasks.stream()
                 .filter(Objects::nonNull)
@@ -149,7 +153,7 @@ public class BatchLibraryImporter {
 
         int itemsTotal = commands.size();
         CountDownLatch latch = new CountDownLatch(itemsTotal);
-        for (int i = 0; i < commands.size(); i++) {
+        for (int i = 0; i < itemsTotal; i++) {
             WriteAndImportCommand command = commands.get(i);
             final int index = i;
             executor.execute(() -> {
@@ -174,6 +178,10 @@ public class BatchLibraryImporter {
         } catch (InterruptedException e) {
             logger.warn("Batch audio data writing has been interrupted.", e);
             throw new RuntimeException("Batch audio data writing has been interrupted.", e);
+        }
+        // Trigger progress even if there are no songs to import.
+        if (itemsTotal == 0) {
+            notifyObserver(observer, 0, 0);
         }
 
         return doImport(importTasks.stream()

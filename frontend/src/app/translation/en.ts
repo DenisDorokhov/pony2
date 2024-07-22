@@ -81,6 +81,17 @@ export default {
     updateDateColumn: 'Update Date',
     statusColumn: 'Status',
     lastMessageColumn: 'Last Message',
+    scanJobProgress: {
+      inactiveLabel: 'inactive',
+      errorLabel: 'could not start scan job :-(',
+      startingLabel: 'starting...',
+      preparingLabel: 'preparing...',
+      searchingMediaLabel: 'searching media...',
+      cleaningSongsLabel: 'cleaning songs ({{itemsComplete}} of {{itemsTotal}})',
+      cleaningArtworksLabel: 'cleaning artworks ({{itemsComplete}} of {{itemsTotal}})',
+      importingLabel: 'importing songs ({{itemsComplete}} of {{itemsTotal}})',
+      searchingArtworksLabel: 'searching artworks ({{itemsComplete}} of {{itemsTotal}})',
+    },
   },
   shared: {
     errorsHeader: 'Errors',
@@ -89,14 +100,7 @@ export default {
     previousPageButton: '&laquo; Previous',
     nextPageButton: 'Next &raquo;',
     scanJobDateFormat: 'yyyy-MM-dd hh:mm:ss',
-    scanJobProgress: {
-      preparingLabel: 'preparing...',
-      searchingMediaLabel: 'searching media...',
-      cleaningSongsLabel: 'cleaning songs ({{itemsComplete}} of {{itemsTotal}})',
-      cleaningArtworksLabel: 'cleaning artworks ({{itemsComplete}} of {{itemsTotal}})',
-      importingLabel: 'importing songs ({{itemsComplete}} of {{itemsTotal}})',
-      searchingArtworks: 'searching artworks ({{itemsComplete}} of {{itemsTotal}})',
-    },
+    currentPageLabel: 'Page {{pageIndex}} of {{totalPages}}',
     scanJob: {
       startingStatus: 'STARTING',
       startedStatus: 'STARTED',

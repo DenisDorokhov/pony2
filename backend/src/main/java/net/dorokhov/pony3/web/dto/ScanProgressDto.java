@@ -10,19 +10,19 @@ import java.util.List;
 
 public final class ScanProgressDto {
     
-    public static final class Step {
+    public static final class StepDescriptor {
         
-        private ScanProgress.Step code;
+        private ScanProgress.Step step;
         private ScanType scanType;
         private int stepNumber;
         private int totalSteps;
 
-        public ScanProgress.Step getCode() {
-            return code;
+        public ScanProgress.Step getStep() {
+            return step;
         }
 
-        public Step setCode(ScanProgress.Step code) {
-            this.code = code;
+        public StepDescriptor setStep(ScanProgress.Step step) {
+            this.step = step;
             return this;
         }
 
@@ -30,7 +30,7 @@ public final class ScanProgressDto {
             return scanType;
         }
 
-        public Step setScanType(ScanType scanType) {
+        public StepDescriptor setScanType(ScanType scanType) {
             this.scanType = scanType;
             return this;
         }
@@ -39,7 +39,7 @@ public final class ScanProgressDto {
             return stepNumber;
         }
 
-        public Step setStepNumber(int stepNumber) {
+        public StepDescriptor setStepNumber(int stepNumber) {
             this.stepNumber = stepNumber;
             return this;
         }
@@ -48,14 +48,14 @@ public final class ScanProgressDto {
             return totalSteps;
         }
 
-        public Step setTotalSteps(int totalSteps) {
+        public StepDescriptor setTotalSteps(int totalSteps) {
             this.totalSteps = totalSteps;
             return this;
         }
 
-        public static Step of(ScanProgress.Step step) {
-            return new Step()
-                    .setCode(step)
+        public static StepDescriptor of(ScanProgress.Step step) {
+            return new StepDescriptor()
+                    .setStep(step)
                     .setScanType(step.getScanType())
                     .setStepNumber(step.getStepNumber())
                     .setTotalSteps(step.getTotalSteps());
@@ -92,16 +92,16 @@ public final class ScanProgressDto {
         }
     }
 
-    private Step step;
+    private StepDescriptor stepDescriptor;
     private List<String> files = new ArrayList<>();
     private Value value;
 
-    public Step getStep() {
-        return step;
+    public StepDescriptor getStepDescriptor() {
+        return stepDescriptor;
     }
 
-    public ScanProgressDto setStep(Step step) {
-        this.step = step;
+    public ScanProgressDto setStepDescriptor(StepDescriptor stepDescriptor) {
+        this.stepDescriptor = stepDescriptor;
         return this;
     }
 
@@ -129,7 +129,7 @@ public final class ScanProgressDto {
 
     public static ScanProgressDto of(ScanProgress scanProgress) {
         return new ScanProgressDto()
-                .setStep(Step.of(scanProgress.getStep()))
+                .setStepDescriptor(StepDescriptor.of(scanProgress.getStep()))
                 .setFiles(scanProgress.getFiles().stream()
                         .map(File::getAbsolutePath)
                         .toList())
