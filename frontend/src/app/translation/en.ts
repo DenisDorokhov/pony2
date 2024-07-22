@@ -1,7 +1,7 @@
 export default {
   noSongTitle: 'Pony | Music Streamer',
   songTitlePrefix: 'Pony | ',
-  songTitleBody: '{{ artistName }} - {{ songName }} | ',
+  songTitleBody: '{{artistName}} - {{songName}} | ',
   installation: {
     mainHeader: 'Installation',
     libraryFoldersLabel: 'Library Folders:',
@@ -64,19 +64,46 @@ export default {
       sizeGigabytes: '{{size}} GB',
       sizeMegabytes: '{{size}} MB',
       date: 'Last scan: {{date}}',
+      lastScanDateFormat: 'yyyy-MM-dd hh:mm:ss',
       githubLinkLabel: 'Pony on GitHub',
     },
   },
   player: {
     noSongTitle: 'Pony - Music Streamer',
-    songTitle: '{{ artistName }} - {{ songName }}',
+    songTitle: '{{artistName}} - {{songName}}',
     playbackFailed: 'Playback failed.',
     windowCloseConfirmation: 'Playback will stop after closing the window. Are you sure?',
+  },
+  scanning: {
+    statusLabel: 'Status:',
+    progressLabel: 'Progress:',
+    startScanButton: 'Start Scan',
+    startDateColumn: 'Start Date',
+    updateDateColumn: 'Update Date',
+    statusColumn: 'Status',
+    lastMessageColumn: 'Last Message',
   },
   shared: {
     errorsHeader: 'Errors',
     loadingIndicatorLabel: 'Loading...',
     errorIndicatorLabel: 'Loading failed!',
+    previousPageButton: '&laquo; Previous',
+    nextPageButton: 'Next &raquo;',
+    scanJobProgress: {
+      preparingLabel: 'preparing...',
+      searchingMediaLabel: 'searching media...',
+      cleaningSongsLabel: 'cleaning songs ({{itemsComplete}} of {{itemsTotal}})',
+      cleaningArtworksLabel: 'cleaning artworks ({{itemsComplete}} of {{itemsTotal}})',
+      importingLabel: 'importing songs ({{itemsComplete}} of {{itemsTotal}})',
+      searchingArtworks: 'searching artworks ({{itemsComplete}} of {{itemsTotal}})',
+    },
+    scanJob: {
+      startingStatus: 'STARTING',
+      startedStatus: 'STARTED',
+      completeStatus: 'COMPLETE',
+      failedStatus: 'FAILED',
+      interruptedStatus: 'INTERRUPTED',
+    },
   },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).

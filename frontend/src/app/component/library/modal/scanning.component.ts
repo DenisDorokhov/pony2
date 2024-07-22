@@ -8,10 +8,11 @@ import {LibraryScanService} from "../../../service/library-scan.service";
 import {ScanJobProgressDto} from "../../../domain/library.dto";
 import {LoadingState} from "../../../domain/common.model";
 import Logger from "js-logger";
+import {CommonModule} from "@angular/common";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent],
+  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent],
   selector: 'pony-scanning',
   templateUrl: './scanning.component.html',
   styleUrls: ['./scanning.component.scss']

@@ -7,11 +7,11 @@
 
   <table class="status-container">
     <tr>
-      <td class="label">Status:</td>
+      <td class="label">{{ 'scanning.statusLabel' | translate }}</td>
       <td>importing songs (1000 of 3000)...</td>
     </tr>
     <tr>
-      <td class="label">Progress:</td>
+      <td class="label">{{ 'scanning.progressLabel' | translate }}</td>
       <td>
         <div class="progress">
           <div class="progress-bar" role="progressbar" [style.width]="25">
@@ -22,107 +22,70 @@
     </tr>
     <tr>
       <td colspan="2">
-        <button type="button" class="btn btn-primary">Start Scan</button>
+        <button type="button" class="btn btn-primary">{{ 'scanning.startScanButton' | translate }}</button>
       </td>
     </tr>
   </table>
 
+  <div class="indicator-container">
+    <div class="indicator" [class.hidden]="scanJobListLoadingState !== LoadingState.LOADING && scanJobListLoadingState !== LoadingState.ERROR">
+      <pony-loading-indicator *ngIf="scanJobListLoadingState === LoadingState.LOADING"></pony-loading-indicator>
+      <pony-error-indicator *ngIf="scanJobListLoadingState === LoadingState.ERROR"></pony-error-indicator>
+    </div>
+  </div>
+
   <table class="table table-striped log-container">
     <thead>
     <tr>
-      <th scope="col">Start Date</th>
-      <th scope="col">Update Date</th>
-      <th scope="col">Status</th>
-      <th scope="col">Last Message</th>
+      <th scope="col">{{ 'scanning.startDateColumn' | translate }}</th>
+      <th scope="col">{{ 'scanning.updateDateColumn' | translate }}</th>
+      <th scope="col">{{ 'scanning.statusColumn' | translate }}</th>
+      <th scope="col">{{ 'scanning.lastMessageColumn' | translate }}</th>
     </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>
-          2024.07.18 17:29:06
-        </td>
-        <td>
-          2024.07.18 17:29:27
-        </td>
-        <td>
-          COMPLETE
-        </td>
-        <td>
-          Scan job complete for [/home/pony/music].
-        </td>
+      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
-      <tr>
-        <td>
-          2024.07.18 17:29:06
-        </td>
-        <td>
-          2024.07.18 17:29:27
-        </td>
-        <td>
-          COMPLETE
-        </td>
-        <td>
-          Scan job complete for [/home/pony/music].
-        </td>
+      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
-      <tr>
-        <td>
-          2024.07.18 17:29:06
-        </td>
-        <td>
-          2024.07.18 17:29:27
-        </td>
-        <td>
-          COMPLETE
-        </td>
-        <td>
-          Scan job complete for [/home/pony/music].
-        </td>
+      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
-      <tr>
-        <td>
-          2024.07.18 17:29:06
-        </td>
-        <td>
-          2024.07.18 17:29:27
-        </td>
-        <td>
-          COMPLETE
-        </td>
-        <td>
-          Scan job complete for [/home/pony/music].
-        </td>
+      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
-      <tr>
-        <td>
-          2024.07.18 17:29:06
-        </td>
-        <td>
-          2024.07.18 17:29:27
-        </td>
-        <td>
-          COMPLETE
-        </td>
-        <td>
-          Scan job complete for [/home/pony/music].
-        </td>
+      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
     </tbody>
   </table>
 
-  <div class="indicator-container hidden">
-    <pony-loading-indicator></pony-loading-indicator>
-  </div>
-
   <div class="row pagination-container">
     <div class="col prev-button-container">
-      <button type="button" class="btn btn-outline-dark" disabled>&laquo; Previous</button>
+      <button type="button" class="btn btn-outline-dark" [innerHtml]="'shared.previousPageButton' | translate"></button>
     </div>
     <div class="col page-label">
       Page 1 of 2
     </div>
     <div class="col next-button-container">
-      <button type="button" class="btn btn-outline-dark">Next &raquo;</button>
+      <button type="button" class="btn btn-outline-dark" [innerHtml]="'shared.nextPageButton' | translate"></button>
     </div>
   </div>
 

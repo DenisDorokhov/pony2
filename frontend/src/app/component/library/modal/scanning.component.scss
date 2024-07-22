@@ -50,17 +50,21 @@
     }
   }
 
-  table.log-container.hidden {
-    tbody {
-      display: none;
-    }
-  }
-
   .indicator-container {
-    height: 204px;
+    position: relative;
   }
 
-  .indicator-container.hidden {
+  .indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 204px;
+    top: 41px;
+    padding-top: 15px;
+    background-color: rgba(255, 255, 255, .6);
+  }
+
+  .indicator.hidden {
     display: none;
   }
 
