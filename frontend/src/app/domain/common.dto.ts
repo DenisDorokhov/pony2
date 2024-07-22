@@ -65,3 +65,9 @@ export namespace ErrorDto {
     };
   }
 }
+
+export interface PageDto {
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+}

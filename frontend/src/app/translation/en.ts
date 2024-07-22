@@ -64,7 +64,6 @@ export default {
       sizeGigabytes: '{{size}} GB',
       sizeMegabytes: '{{size}} MB',
       date: 'Last scan: {{date}}',
-      lastScanDateFormat: 'yyyy-MM-dd hh:mm:ss',
       githubLinkLabel: 'Pony on GitHub',
     },
   },
@@ -89,6 +88,7 @@ export default {
     errorIndicatorLabel: 'Loading failed!',
     previousPageButton: '&laquo; Previous',
     nextPageButton: 'Next &raquo;',
+    scanJobDateFormat: 'yyyy-MM-dd hh:mm:ss',
     scanJobProgress: {
       preparingLabel: 'preparing...',
       searchingMediaLabel: 'searching media...',

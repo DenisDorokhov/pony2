@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, defer, delayWhen, interval, Observable, of, repeat, throwError} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
-import {ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
+import {ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
 import {ErrorDto} from "../domain/common.dto";
 import Logger from "js-logger";
@@ -93,5 +93,15 @@ export class LibraryScanService {
 
   observeScanJobProgress(): Observable<ScanJobProgressDto | undefined> {
     return this.scanJobProgressSubject.asObservable();
+  }
+
+  getScanJobs(pageIndex = 0): Observable<ScanJobPageDto> {
+    return this.httpClient.get<ScanJobPageDto>('/api/admin/library/scanJobs', { params: {pageIndex} })
+      .pipe(
+        catchError(error => {
+          Logger.error(`Could not get scan jobs: ${JSON.stringify(error)}`);
+          throw ErrorDto.fromHttpErrorResponse(error);
+        })
+      );
   }
 }

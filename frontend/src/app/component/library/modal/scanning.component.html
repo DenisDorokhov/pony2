@@ -28,9 +28,9 @@
   </table>
 
   <div class="indicator-container">
-    <div class="indicator" [class.hidden]="scanJobListLoadingState !== LoadingState.LOADING && scanJobListLoadingState !== LoadingState.ERROR">
-      <pony-loading-indicator *ngIf="scanJobListLoadingState === LoadingState.LOADING"></pony-loading-indicator>
-      <pony-error-indicator *ngIf="scanJobListLoadingState === LoadingState.ERROR"></pony-error-indicator>
+    <div class="indicator" [class.hidden]="scanJobsLoadingState !== LoadingState.LOADING && scanJobsLoadingState !== LoadingState.ERROR">
+      <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
+      <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
     </div>
   </div>
 
@@ -44,36 +44,22 @@
     </tr>
     </thead>
     <tbody>
-      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
-      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
-      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
-      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
-      <tr *ngIf="scanJobListLoadingState === LoadingState.EMPTY || scanJobListLoadingState === LoadingState.LOADING">
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
+      @for (scanJob of scanJobs; track scanJob) {
+        <tr>
+          <td>{{ scanJob.creationDate | date:( 'shared.scanJobDateFormat' | translate ) }}</td>
+          <td>{{ scanJob.updateDate | date:( 'shared.scanJobDateFormat' | translate ) }}</td>
+          <td>{{ scanJob.status }}</td>
+          <td>{{ scanJob.logMessage?.text }}</td>
+        </tr>
+      }
+      @for (i of [].constructor(emptyScanJobRowCount); track i) {
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+      }
     </tbody>
   </table>
 

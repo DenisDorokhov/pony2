@@ -236,7 +236,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         try {
             result = libraryScanner.scan(targetFolders, scanProgress ->
                     onScanJobProgress(new ScanJobProgress(scanJob, scanProgress)));
-            logMessage = () -> logService.info(logger, "Scan job complete for '{}'.", fetchAbsolutePaths(targetFolders));
+            logMessage = () -> logService.info(logger, "Scan job complete for {}.", fetchAbsolutePaths(targetFolders));
         } catch (IOException e) {
             logMessage = () -> logService.error(logger, "Scan job failed due to I/O error.", e);
         }

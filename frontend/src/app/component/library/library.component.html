@@ -1,7 +1,8 @@
 <div class="library-container">
   <div class="header">
     <div class="logo-container">
-      <img src="./logo.svg">
+      <!--suppress HtmlUnknownTarget -->
+      <img src="./logo.svg" alt="logo">
     </div>
     <div class="player">
       <pony-player></pony-player>
@@ -26,7 +27,7 @@
         |
         {{ size }}
         |
-        {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'library.scanStatistics.lastScanDateFormat' | translate ))} }}
+        {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.scanJobDateFormat' | translate ))} }}
         |
       </span>
       <a href="https://github.com/DenisDorokhov/pony3" target="_blank">

@@ -1,3 +1,5 @@
+import {PageDto} from "./common.dto";
+
 export interface AlbumDto {
   id: string;
   creationDate: string;
@@ -112,6 +114,9 @@ export interface ScanResultDto {
 }
 
 export interface ScanJobDto {
+  id: number;
+  creationDate: string;
+  updateDate: string | undefined;
   scanType: ScanType;
   status: ScanJobDto.Status;
   logMessage: LogMessageDto | undefined;
@@ -159,4 +164,8 @@ export namespace ScanProgressDto {
 export interface ScanJobProgressDto {
   scanJob: ScanJobDto;
   scanProgress: ScanProgressDto;
+}
+
+export interface ScanJobPageDto extends PageDto {
+  scanJobs: ScanJobDto[];
 }

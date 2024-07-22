@@ -5,7 +5,7 @@ import {LoadingIndicatorComponent} from "../../common/loading-indicator.componen
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {LibraryScanService} from "../../../service/library-scan.service";
-import {ScanJobProgressDto} from "../../../domain/library.dto";
+import {ScanJobDto, ScanJobProgressDto} from "../../../domain/library.dto";
 import {LoadingState} from "../../../domain/common.model";
 import Logger from "js-logger";
 import {CommonModule} from "@angular/common";
@@ -22,9 +22,11 @@ export class ScanningComponent implements OnInit {
   LoadingState = LoadingState;
 
   scanJobProgressLoadingState = LoadingState.LOADING;
-  scanJobListLoadingState = LoadingState.LOADING;
+  scanJobsLoadingState = LoadingState.LOADING;
 
-  private scanJobProgress: ScanJobProgressDto | undefined;
+  scanJobProgress: ScanJobProgressDto | undefined;
+  scanJobs: ScanJobDto[] = [];
+  emptyScanJobRowCount = 5;
 
   constructor(
     private libraryScanService: LibraryScanService,
@@ -33,7 +35,7 @@ export class ScanningComponent implements OnInit {
 
   ngOnInit(): void {
     this.scanJobProgressLoadingState = LoadingState.LOADING;
-    this.scanJobListLoadingState = LoadingState.LOADING;
+    this.scanJobsLoadingState = LoadingState.LOADING;
     this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
@@ -45,5 +47,15 @@ export class ScanningComponent implements OnInit {
       }
     });
     this.libraryScanService.updateScanJobProgress().subscribe();
+    this.libraryScanService.getScanJobs(0).subscribe({
+      next: scanJobPage => {
+        this.scanJobs = scanJobPage.scanJobs;
+        this.emptyScanJobRowCount = Math.max(0, 5 - this.scanJobs.length);
+        this.scanJobsLoadingState = this.scanJobs.length > 1 ? LoadingState.LOADED : LoadingState.EMPTY;
+      },
+      error: () => {
+        this.scanJobsLoadingState = LoadingState.ERROR;
+      }
+    })
   }
 }
