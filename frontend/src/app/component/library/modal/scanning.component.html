@@ -22,36 +22,52 @@
                 {{ 'scanning.scanJobProgress.searchingMediaLabel' | translate }}
               }
               @case (Step.FULL_CLEANING_SONGS) {
-                {{
-                  'scanning.scanJobProgress.cleaningSongsLabel' | translate:{
-                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
-                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
-                  }
-                }}
+                @if (scanJobProgress.scanProgress.value) {
+                  {{
+                    'scanning.scanJobProgress.cleaningSongsWithProgressLabel' | translate:{
+                      itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                    }
+                  }}
+                } @else {
+                  {{ 'scanning.scanJobProgress.cleaningSongsLabel' | translate }}
+                }
               }
               @case (Step.FULL_CLEANING_ARTWORKS) {
-                {{
-                  'scanning.scanJobProgress.cleaningArtworksLabel' | translate:{
-                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
-                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
-                  }
-                }}
+                @if (scanJobProgress.scanProgress.value) {
+                  {{
+                    'scanning.scanJobProgress.cleaningArtworksWithProgressLabel' | translate:{
+                      itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                    }
+                  }}
+                } @else {
+                  {{ 'scanning.scanJobProgress.cleaningArtworksLabel' | translate }}
+                }
               }
               @case (Step.FULL_IMPORTING) {
-                {{
-                  'scanning.scanJobProgress.importingLabel' | translate:{
-                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
-                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
-                  }
-                }}
+                @if (scanJobProgress.scanProgress.value) {
+                  {{
+                    'scanning.scanJobProgress.importingWithProgressLabel' | translate:{
+                      itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                    }
+                  }}
+                } @else {
+                  {{ 'scanning.scanJobProgress.importingLabel' | translate }}
+                }
               }
               @case (Step.FULL_SEARCHING_ARTWORKS) {
-                {{
-                  'scanning.scanJobProgress.searchingArtworksLabel' | translate:{
-                    itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
-                    itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
-                  }
-                }}
+                @if (scanJobProgress.scanProgress.value) {
+                  {{
+                    'scanning.scanJobProgress.searchingArtworksWithProgressLabel' | translate:{
+                      itemsComplete: scanJobProgress.scanProgress.value?.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress.value?.itemsTotal
+                    }
+                  }}
+                } @else {
+                  {{ 'scanning.scanJobProgress.searchingArtworksLabel' | translate }}
+                }
               }
               @default {
                 {{ 'scanning.scanJobProgress.preparingLabel' | translate }}
@@ -66,7 +82,21 @@
       <td>
         <div class="progress">
           @if (scanProgressValue) {
-            <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+            <!-- We make sure here that progress bar animations don't intersect, that is why progress bars are separate. -->
+            @switch (scanJobProgress!.scanProgress.stepDescriptor.step) {
+              @case (Step.FULL_CLEANING_SONGS) {
+                <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+              }
+              @case (Step.FULL_CLEANING_ARTWORKS) {
+                <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+              }
+              @case (Step.FULL_IMPORTING) {
+                <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+              }
+              @case (Step.FULL_SEARCHING_ARTWORKS) {
+                <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+              }
+            }
           } @else if (scanJobProgress) {
             <div role="progressbar" class="progress-bar progress-bar-striped progress-bar-animated" [style.width]="'100%'"></div>
           } @else {
