@@ -10,6 +10,11 @@
   border-radius: 5px;
   border: 1px solid #ddd;
 
+  pony-loading-indicator, pony-error-indicator {
+    margin-top: 2em;
+    display: block;
+  }
+
   .panel-title {
     border-bottom: 1px solid #ddd;
     padding-bottom: 3px;

@@ -59,11 +59,11 @@ export class ScanningComponent implements OnInit {
       }
     });
     this.libraryScanService.updateScanJobProgress().subscribe();
+    this.scanJobsLoadingState = LoadingState.LOADING;
     this.loadScanJobs();
   }
 
   private loadScanJobs(pageIndex = 0, pageSize = 5) {
-    this.scanJobsLoadingState = LoadingState.LOADING;
     this.libraryScanService.getScanJobs(pageIndex, pageSize).subscribe({
       next: scanJobPage => {
         this.scanJobs = scanJobPage.scanJobs;

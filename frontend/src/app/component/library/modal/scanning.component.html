@@ -86,14 +86,6 @@
     </tr>
   </table>
 
-  <div class="indicator-container">
-    <div class="indicator"
-         [class.hidden]="scanJobsLoadingState !== LoadingState.LOADING && scanJobsLoadingState !== LoadingState.ERROR">
-      <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
-      <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
-    </div>
-  </div>
-
   <table class="table table-striped log-container">
     <thead>
     <tr>
@@ -112,7 +104,7 @@
           <td>{{ scanJob.logMessage?.text }}</td>
         </tr>
       }
-      @for (i of [].constructor(emptyScanJobRowCount); track i) {
+      @for (i of [].constructor(emptyScanJobRowCount); track $index) {
         <tr>
           <td>&nbsp;</td>
           <td>&nbsp;</td>
@@ -130,14 +122,18 @@
               [disabled]="(page?.pageIndex ?? 0) === 0"
               (click)="loadScanJobsPreviousPage()"></button>
     </div>
-    <div class="col page-label"
-         [hidden]="scanJobsLoadingState !== LoadingState.LOADED && scanJobsLoadingState !== LoadingState.EMPTY">
+
+    <div class="col">
+      <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
+      <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
+      <div class="page-label" [hidden]="scanJobsLoadingState !== LoadingState.LOADED && scanJobsLoadingState !== LoadingState.EMPTY">
       {{
         'shared.currentPageLabel' | translate:{
           pageIndex: ((page?.pageIndex ?? 0) + 1),
           totalPages: (page?.totalPages ?? 0)
         }
       }}
+      </div>
     </div>
     <div class="col next-button-container">
       <button type="button" class="btn btn-outline-dark"

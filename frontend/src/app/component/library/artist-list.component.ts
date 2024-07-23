@@ -59,8 +59,8 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       this.artistsSubscription.unsubscribe();
     }
     this.artistsSubscription = this.libraryService.getArtists()
-      .subscribe(
-        artists => {
+      .subscribe({
+        next: artists => {
           this.artists = artists;
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
@@ -77,12 +77,12 @@ export class ArtistListComponent implements OnInit, OnDestroy {
             this.libraryService.deselectSong();
           }
         },
-        error => {
+        error: error => {
           if (!refreshing) {
             this.loadingState = LoadingState.ERROR;
           }
           Logger.error(`Could not load artists: "${error.message}".`);
         }
-      );
+      });
   }
 }

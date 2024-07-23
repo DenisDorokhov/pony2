@@ -50,24 +50,6 @@
     }
   }
 
-  .indicator-container {
-    position: relative;
-  }
-
-  .indicator {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 204px;
-    top: 41px;
-    padding-top: 15px;
-    background-color: rgba(255, 255, 255, .6);
-  }
-
-  .indicator.hidden {
-    display: none;
-  }
-
   .pagination-container {
     padding-top: 7px;
     padding-bottom: 16px;
@@ -79,6 +61,10 @@
 
     .next-button-container {
       text-align: right;
+    }
+
+    pony-loading-indicator, pony-error-indicator {
+      line-height: 37px;
     }
   }
 }
