@@ -6,10 +6,10 @@ import {CookieService} from 'ngx-cookie';
 })
 export class TokenStorageService {
 
-  private static readonly ACCESS_TOKEN_LOCAL_STORAGE_KEY: string = 'pony2.AuthenticationService.accessToken';
-  private static readonly STATIC_TOKEN_LOCAL_STORAGE_KEY: string = 'pony2.AuthenticationService.staticToken';
+  private static readonly ACCESS_TOKEN_LOCAL_STORAGE_KEY: string = 'pony3.AuthenticationService.accessToken';
+  private static readonly STATIC_TOKEN_LOCAL_STORAGE_KEY: string = 'pony3.AuthenticationService.staticToken';
 
-  private static readonly STATIC_TOKEN_COOKIE_KEY: string = 'pony2.staticToken';
+  private static readonly STATIC_TOKEN_COOKIE_KEY: string = 'pony3.staticToken';
 
   private _accessToken: string | undefined;
   private _staticToken: string | undefined;
