@@ -51,8 +51,8 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @GetMapping("/scanJobs")
-    public ScanJobPageDto getScanJobs(@RequestParam(defaultValue = "0") int pageIndex) {
-        return scanFacade.getScanJobs(pageIndex);
+    public ScanJobPageDto getScanJobs(@RequestParam(defaultValue = "0") int pageIndex, @RequestParam(defaultValue = "30") int pageSize) {
+        return scanFacade.getScanJobs(pageIndex, pageSize);
     }
 
     @GetMapping("/scanJobs/{scanJobId}")

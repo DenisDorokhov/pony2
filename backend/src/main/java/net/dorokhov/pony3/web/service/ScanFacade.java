@@ -58,8 +58,8 @@ public class ScanFacade {
     }
 
     @Transactional(readOnly = true)
-    public ScanJobPageDto getScanJobs(int pageIndex) {
-        return ScanJobPageDto.of(scanJobService.getAll(PageRequest.of(pageIndex, PAGE_SIZE,
+    public ScanJobPageDto getScanJobs(int pageIndex, int pageSize) {
+        return ScanJobPageDto.of(scanJobService.getAll(PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)),
                 Sort.by(DESC, "creationDate", "updateDate"))));
     }
 

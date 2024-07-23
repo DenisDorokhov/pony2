@@ -109,8 +109,8 @@ export class LibraryScanService {
     return this.scanJobProgressSubject.asObservable();
   }
 
-  getScanJobs(pageIndex = 0): Observable<ScanJobPageDto> {
-    return this.httpClient.get<ScanJobPageDto>('/api/admin/library/scanJobs', { params: {pageIndex} })
+  getScanJobs(pageIndex = 0, pageSize = 30): Observable<ScanJobPageDto> {
+    return this.httpClient.get<ScanJobPageDto>('/api/admin/library/scanJobs', { params: {pageIndex, pageSize} })
       .pipe(
         catchError(error => {
           Logger.error(`Could not get scan jobs: ${JSON.stringify(error)}`);

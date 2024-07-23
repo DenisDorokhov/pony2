@@ -39,7 +39,6 @@ export class ScanningComponent implements OnInit {
 
   ngOnInit(): void {
     this.scanJobProgressLoadingState = LoadingState.LOADING;
-    this.scanJobsLoadingState = LoadingState.LOADING;
     this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
@@ -60,7 +59,12 @@ export class ScanningComponent implements OnInit {
       }
     });
     this.libraryScanService.updateScanJobProgress().subscribe();
-    this.libraryScanService.getScanJobs(0).subscribe({
+    this.loadScanJobs();
+  }
+
+  private loadScanJobs(pageIndex = 0, pageSize = 5) {
+    this.scanJobsLoadingState = LoadingState.LOADING;
+    this.libraryScanService.getScanJobs(pageIndex, pageSize).subscribe({
       next: scanJobPage => {
         this.scanJobs = scanJobPage.scanJobs;
         this.page = scanJobPage;
@@ -70,7 +74,7 @@ export class ScanningComponent implements OnInit {
       error: () => {
         this.scanJobsLoadingState = LoadingState.ERROR;
       }
-    })
+    });
   }
 
   startScanJob() {
@@ -83,5 +87,17 @@ export class ScanningComponent implements OnInit {
         this.scanJobProgressLoadingState = LoadingState.ERROR;
       }
     });
+  }
+
+  loadScanJobsPreviousPage() {
+    if (this.page && this.page.pageIndex > 0) {
+      this.loadScanJobs(this.page.pageIndex - 1);
+    }
+  }
+
+  loadScanJobsNextPage() {
+    if (this.page && this.page.pageIndex < (this.page.totalPages - 1)) {
+      this.loadScanJobs(this.page.pageIndex + 1);
+    }
   }
 }

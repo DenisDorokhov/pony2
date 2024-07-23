@@ -127,7 +127,8 @@
     <div class="col prev-button-container">
       <button type="button" class="btn btn-outline-dark"
               [innerHtml]="'shared.previousPageButton' | translate"
-              [disabled]="(page?.pageIndex ?? 0) === 0"></button>
+              [disabled]="(page?.pageIndex ?? 0) === 0"
+              (click)="loadScanJobsPreviousPage()"></button>
     </div>
     <div class="col page-label"
          [hidden]="scanJobsLoadingState !== LoadingState.LOADED && scanJobsLoadingState !== LoadingState.EMPTY">
@@ -141,7 +142,8 @@
     <div class="col next-button-container">
       <button type="button" class="btn btn-outline-dark"
               [innerHtml]="'shared.nextPageButton' | translate"
-              [disabled]="(page?.pageIndex ?? 0) >= ((page?.totalPages ?? 0) - 1)"></button>
+              [disabled]="(page?.pageIndex ?? 0) >= ((page?.totalPages ?? 0) - 1)"
+              (click)="loadScanJobsNextPage()"></button>
     </div>
   </div>
 
