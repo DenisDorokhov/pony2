@@ -62,7 +62,7 @@ public class LibraryArtworkFinder {
         ImageNode artwork = artworkFileFinder.findArtwork(audioNode);
         if (artwork != null) {
             return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(
-                    UriComponentsBuilder.fromPath(artwork.getFile().getAbsolutePath())
+                    UriComponentsBuilder.fromPath(artwork.getFile().toURI().getPath())
                             .scheme(Artwork.SOURCE_URI_SCHEME_FILE)
                             .build()
                             .toUri(),
@@ -78,7 +78,7 @@ public class LibraryArtworkFinder {
         ReadableAudioData.EmbeddedArtwork artwork = audioData.getEmbeddedArtwork();
         if (artwork != null) {
             return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(
-                    UriComponentsBuilder.fromPath(audioData.getFile().getAbsolutePath())
+                    UriComponentsBuilder.fromPath(audioData.getFile().toURI().getPath())
                             .scheme(Artwork.SOURCE_URI_SCHEME_EMBEDDED)
                             .build()
                             .toUri(),

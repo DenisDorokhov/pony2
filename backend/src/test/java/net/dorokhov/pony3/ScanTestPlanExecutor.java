@@ -8,6 +8,7 @@ import net.dorokhov.pony3.core.library.repository.ArtistRepository;
 import net.dorokhov.pony3.core.library.repository.GenreRepository;
 import net.dorokhov.pony3.core.library.repository.SongRepository;
 import net.dorokhov.pony3.core.library.service.AudioTagger;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -279,7 +280,7 @@ public class ScanTestPlanExecutor {
                 .build()
                 .toUri();
         return UriComponentsBuilder
-                .fromPath(new File(context.getRootFolder(), artworkUri.getPath()).getAbsolutePath())
+                .fromPath(FilenameUtils.separatorsToUnix(new File(context.getRootFolder(), artworkUri.getPath()).getAbsolutePath()))
                 .scheme(artworkUri.getScheme())
                 .build()
                 .toUri();
