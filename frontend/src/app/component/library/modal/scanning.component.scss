@@ -48,6 +48,14 @@
     tbody {
       border: 1px solid #cccccc;
     }
+
+    .log-message {
+      display: inline-block;
+      width: 600px;
+      white-space: nowrap;
+      overflow: hidden !important;
+      text-overflow: ellipsis;
+    }
   }
 
   .pagination-container {

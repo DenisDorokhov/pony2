@@ -131,7 +131,7 @@
           <td>{{ scanJob.creationDate | date:('shared.scanJobDateFormat' | translate) }}</td>
           <td>{{ scanJob.updateDate | date:('shared.scanJobDateFormat' | translate) }}</td>
           <td>{{ scanJob.status }}</td>
-          <td>{{ scanJob.logMessage?.text }}</td>
+          <td><span class="log-message">{{ scanJob.logMessage?.text }}</span></td>
         </tr>
       }
       @for (i of [].constructor(emptyScanJobRowCount); track $index) {
