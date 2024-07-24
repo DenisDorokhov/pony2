@@ -179,6 +179,22 @@ export class PlaybackService {
       });
     this.audioPlayer.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
+    if (navigator && navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler(
+        'nexttrack',
+        () => {
+          Logger.info("Next track by media key detected.");
+          this.switchToNextSong().subscribe();
+        }
+      );
+      navigator.mediaSession.setActionHandler(
+        'previoustrack',
+        () => {
+          Logger.info("Previous track by media key detected.");
+          this.switchToPreviousSong().subscribe();
+        }
+      );
+    }
   }
 
   get lastPlaybackEvent(): PlaybackEvent {
@@ -278,7 +294,6 @@ export class PlaybackService {
       || playbackEvent.state === PlaybackState.PLAYING
       || playbackEvent.state === PlaybackState.PAUSED
     ) {
-
       if (navigator && navigator.mediaSession && playbackEvent.song) {
         const metadata = new MediaMetadata();
         if (playbackEvent.song.name) {
