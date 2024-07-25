@@ -69,7 +69,7 @@ export class ScanningComponent implements OnInit {
         this.scanJobs = scanJobPage.scanJobs;
         this.page = scanJobPage;
         this.emptyScanJobRowCount = Math.max(0, 5 - this.scanJobs.length);
-        this.scanJobsLoadingState = this.scanJobs.length > 1 ? LoadingState.LOADED : LoadingState.EMPTY;
+        this.scanJobsLoadingState = this.scanJobs.length > 0 ? LoadingState.LOADED : LoadingState.EMPTY;
       },
       error: () => {
         this.scanJobsLoadingState = LoadingState.ERROR;
