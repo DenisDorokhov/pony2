@@ -17,6 +17,7 @@ import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from 
 import {AuthenticationService} from "./authentication.service";
 import {ErrorDto} from "../domain/common.dto";
 import Logger from "js-logger";
+import {LibraryService} from "./library.service";
 
 @Injectable({
   providedIn: 'root'
@@ -27,8 +28,10 @@ export class LibraryScanService {
   private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined>(undefined);
 
   private scanJobProgressUpdateSubscription: Subscription | undefined;
+  private refreshRequestSubscription: Subscription | undefined;
 
   constructor(
+    private libraryService: LibraryService,
     private httpClient: HttpClient,
     private authenticationService: AuthenticationService
   ) {
@@ -85,14 +88,28 @@ export class LibraryScanService {
     return this.httpClient.get<ScanJobProgressDto>('/api/admin/library/scanJobProgress')
       .pipe(
         tap(scanJobProgress => {
-          Logger.info('Scan job progress updated.');
+          Logger.debug('Scan job progress updated.');
+          if (!this.scanJobProgressSubject.value) {
+            Logger.info("Scheduling auto-refresh during scan job running.")
+            this.refreshRequestSubscription = interval(10000).pipe(
+              tap(() => {
+                Logger.debug("Requesting refresh.");
+                this.libraryService.requestRefresh();
+              })
+            ).subscribe();
+          }
           this.scanJobProgressSubject.next(scanJobProgress);
         }),
         catchError(httpError => {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.NOT_FOUND) {
             Logger.info('Scan job is not running.');
-            this.scanJobProgressSubject.next(undefined)
+            this.scanJobProgressSubject.next(undefined);
+            if (this.refreshRequestSubscription) {
+              Logger.info("Scan job finished, cancelling auto-refresh.");
+              this.libraryService.requestRefresh();
+              this.refreshRequestSubscription.unsubscribe();
+            }
             return of(undefined);
           } else {
             return throwError(() => error);

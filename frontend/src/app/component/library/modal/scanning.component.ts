@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {TranslateModule} from "@ngx-translate/core";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
@@ -10,6 +10,8 @@ import {LoadingState} from "../../../domain/common.model";
 import Logger from "js-logger";
 import {CommonModule} from "@angular/common";
 import {PageDto} from "../../../domain/common.dto";
+import {Subscription} from "rxjs";
+import {LibraryService} from "../../../service/library.service";
 
 @Component({
   standalone: true,
@@ -18,7 +20,7 @@ import {PageDto} from "../../../domain/common.dto";
   templateUrl: './scanning.component.html',
   styleUrls: ['./scanning.component.scss']
 })
-export class ScanningComponent implements OnInit {
+export class ScanningComponent implements OnInit, OnDestroy {
 
   LoadingState = LoadingState;
   Step = ScanProgressDto.Step;
@@ -33,14 +35,18 @@ export class ScanningComponent implements OnInit {
   emptyScanJobRowCount = 5;
   scanProgressValue: number | null | undefined;
 
+  private scanJobProgressSubscription: Subscription | undefined;
+  private refreshRequestSubscription: Subscription | undefined;
+
   constructor(
     private libraryScanService: LibraryScanService,
+    private libraryService: LibraryService,
     public readonly activeModal: NgbActiveModal
   ) {}
 
   ngOnInit(): void {
     this.scanJobProgressLoadingState = LoadingState.LOADING;
-    this.libraryScanService.observeScanJobProgress().subscribe({
+    this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
         if (scanJobProgress) {
@@ -59,9 +65,17 @@ export class ScanningComponent implements OnInit {
         Logger.error(`Could not load scan job progress: "${error.message}".`);
       }
     });
+    this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {
+      this.loadScanJobs(this.page?.pageIndex ?? 0, this.page?.pageSize ?? 5);
+    });
     this.libraryScanService.updateScanJobProgress().subscribe();
     this.scanJobsLoadingState = LoadingState.LOADING;
     this.loadScanJobs();
+  }
+
+  ngOnDestroy(): void {
+    this.scanJobProgressSubscription?.unsubscribe();
+    this.refreshRequestSubscription?.unsubscribe();
   }
 
   private loadScanJobs(pageIndex = 0, pageSize = 5) {
