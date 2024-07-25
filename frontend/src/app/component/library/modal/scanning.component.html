@@ -156,7 +156,7 @@
     <div class="col">
       <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
       <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
-      <div class="page-label" [hidden]="scanJobsLoadingState !== LoadingState.LOADED && scanJobsLoadingState !== LoadingState.EMPTY">
+      <div class="page-label" [hidden]="scanJobsLoadingState !== LoadingState.LOADED">
       {{
         'shared.currentPageLabel' | translate:{
           pageIndex: ((page?.pageIndex ?? 0) + 1),
