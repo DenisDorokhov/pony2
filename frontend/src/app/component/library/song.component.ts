@@ -17,13 +17,30 @@ export class SongComponent implements OnInit, OnDestroy {
 
   PlaybackState = PlaybackState;
 
-  @Input() song!: Song;
+  private _song!: Song;
+
+  get song(): Song {
+    return this._song;
+  }
+
+  @Input()
+  set song(song: Song) {
+    this._song = song;
+    this.duration = this.song.durationInMinutes;
+    this.selected = this.libraryService.selectedSong?.id === this.song.id;
+    if (this.playbackService.lastPlaybackEvent.song?.id === this.song.id) {
+      this.playbackState = this.playbackService.lastPlaybackEvent.state;
+    } else {
+      this.playbackState = undefined;
+    }
+  }
+
   @Input() showArtist = false;
 
   @ViewChild('container') containerElement!: ElementRef;
 
-  selected = false;
   duration: string | undefined;
+  selected = false;
   playbackState: PlaybackState | undefined;
 
   private selectedSongSubscription: Subscription | undefined;
@@ -56,7 +73,6 @@ export class SongComponent implements OnInit, OnDestroy {
           this.playbackState = undefined;
         }
       });
-    this.duration = this.song.durationInMinutes;
   }
 
   ngOnDestroy(): void {

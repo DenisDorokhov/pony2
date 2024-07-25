@@ -19,7 +19,22 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
   PlaybackState = PlaybackState;
 
-  @Input() artist!: Artist;
+  private _artist!: Artist;
+
+  get artist(): Artist {
+    return this._artist;
+  }
+
+  @Input()
+  set artist(artist: Artist) {
+    this._artist = artist;
+    this.selected = this.libraryService.selectedArtist?.id === this.artist.id;
+    if (this.playbackService.lastPlaybackEvent.song?.album.artist.id === this.artist.id) {
+      this.playbackState = this.playbackService.lastPlaybackEvent.state;
+    } else {
+      this.playbackState = undefined;
+    }
+  }
 
   @ViewChild('container') containerElement!: ElementRef;
 
@@ -35,16 +50,6 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
     private libraryService: LibraryService,
     private playbackService: PlaybackService
   ) {
-  }
-
-  ngAfterViewInit(): void {
-    this.scrollToArtistRequestSubscription = this.libraryService.observeScrollToArtistRequest()
-      .subscribe(artist => {
-        if (artist.id === this.artist.id) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-          this.libraryService.finishScrollToArtist();
-        }
-      });
   }
 
   ngOnInit(): void {
@@ -64,6 +69,16 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
           this.playbackState = playbackEvent.state;
         } else {
           this.playbackState = undefined;
+        }
+      });
+  }
+
+  ngAfterViewInit(): void {
+    this.scrollToArtistRequestSubscription = this.libraryService.observeScrollToArtistRequest()
+      .subscribe(artist => {
+        if (artist.id === this.artist.id) {
+          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+          this.libraryService.finishScrollToArtist();
         }
       });
   }
