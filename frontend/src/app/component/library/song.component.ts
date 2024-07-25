@@ -1,4 +1,4 @@
-import {Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Song} from "../../domain/library.model";
 import {PlaybackService, PlaybackState} from "../../service/playback.service";
@@ -13,7 +13,7 @@ import {ScrollingUtils} from "../../utils/scrolling.utils";
   templateUrl: './song.component.html',
   styleUrls: ['./song.component.scss']
 })
-export class SongComponent implements OnInit, OnDestroy {
+export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   PlaybackState = PlaybackState;
 
@@ -58,19 +58,22 @@ export class SongComponent implements OnInit, OnDestroy {
       .subscribe(song => {
         this.selected = song != null && song.id === this.song.id;
       });
-    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
-      .subscribe(song => {
-        if (song.id === this.song.id) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-          this.libraryService.finishScrollToSong();
-        }
-      });
     this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => {
         if (playbackEvent.song && playbackEvent.song.id === this.song.id) {
           this.playbackState = playbackEvent.state;
         } else {
           this.playbackState = undefined;
+        }
+      });
+  }
+
+  ngAfterViewInit(): void {
+    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
+      .subscribe(song => {
+        if (song.id === this.song.id) {
+          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+          this.libraryService.finishScrollToSong();
         }
       });
   }
