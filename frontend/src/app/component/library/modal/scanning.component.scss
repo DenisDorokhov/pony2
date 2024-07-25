@@ -49,6 +49,21 @@
       border: 1px solid #cccccc;
     }
 
+    .scan-job-status.starting {
+    }
+    .scan-job-status.started {
+      color: #337ab7;
+    }
+    .scan-job-status.complete {
+      color: #5cb85c;
+    }
+    .scan-job-status.failed {
+      color: #d9534f;
+    }
+    .scan-job-status.interrupted {
+      color: #f0ad4e;
+    }
+
     .log-message {
       display: inline-block;
       width: 600px;
@@ -60,7 +75,7 @@
   }
 
   .pagination-container {
-    padding-top: 7px;
+    padding-top: 10px;
     padding-bottom: 16px;
 
     .page-label {

@@ -130,7 +130,13 @@
         <tr>
           <td>{{ scanJob.creationDate | date:('shared.scanJobDateFormat' | translate) }}</td>
           <td>{{ scanJob.updateDate | date:('shared.scanJobDateFormat' | translate) }}</td>
-          <td>{{ scanJob.status }}</td>
+          <td><span class="scan-job-status"
+                    [class.starting]="scanJob.status === ScanJobStatus.STARTING"
+                    [class.started]="scanJob.status === ScanJobStatus.STARTED"
+                    [class.complete]="scanJob.status === ScanJobStatus.COMPLETE"
+                    [class.failed]="scanJob.status === ScanJobStatus.FAILED"
+                    [class.interrupted]="scanJob.status === ScanJobStatus.INTERRUPTED"
+          >{{ scanJob.status }}</span></td>
           <td><span class="log-message">{{ scanJob.logMessage?.text }}</span></td>
         </tr>
       }

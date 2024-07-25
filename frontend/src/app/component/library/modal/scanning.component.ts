@@ -22,6 +22,7 @@ export class ScanningComponent implements OnInit {
 
   LoadingState = LoadingState;
   Step = ScanProgressDto.Step;
+  ScanJobStatus = ScanJobDto.Status;
 
   scanJobProgressLoadingState = LoadingState.LOADING;
   scanJobsLoadingState = LoadingState.LOADING;
