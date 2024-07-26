@@ -43,6 +43,16 @@
 
     thead {
       border-bottom: 1px solid #cccccc;
+
+      .startDate {
+        width: 180px;
+      }
+      .updateDate {
+        width: 180px;
+      }
+      .status {
+        width: 130px;
+      }
     }
 
     tbody {
