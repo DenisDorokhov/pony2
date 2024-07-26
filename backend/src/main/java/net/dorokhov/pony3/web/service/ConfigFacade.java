@@ -18,12 +18,11 @@ public class ConfigFacade {
 
     @Transactional(readOnly = true)
     public ConfigDto getConfig() {
-        return ConfigDto.of(configService.getAutoScanInterval().orElse(null), configService.getLibraryFolders());
+        return ConfigDto.of(configService.getLibraryFolders());
     }
 
     @Transactional
     public ConfigDto saveConfig(ConfigDto config) {
-        configService.saveAutoScanInterval(config.getAutoScanInterval());
         configService.saveLibraryFolders(config.getLibraryFolders().stream()
                 .map(folder -> new File(folder.getPath()))
                 .toList());

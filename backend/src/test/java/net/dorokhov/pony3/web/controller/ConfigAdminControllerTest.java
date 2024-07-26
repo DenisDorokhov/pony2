@@ -35,7 +35,6 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(config -> {
-            assertThat(config.getAutoScanInterval()).isEqualTo(AUTO_SCAN_INTERVAL);
             assertThat(config.getLibraryFolders()).hasSize(1);
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto -> 
                     assertThat(libraryFolderDto.getPath()).isEqualTo(libraryFolder.getAbsolutePath()));
@@ -47,7 +46,6 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         File newLibraryFolder = Files.createDirectory(tempFolder.resolve("newLibraryFolder")).toFile();
         ConfigDto newConfig = new ConfigDto()
-                .setAutoScanInterval(128)
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(newLibraryFolder)));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -57,7 +55,6 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(config -> {
-            assertThat(config.getAutoScanInterval()).isEqualTo(128);
             assertThat(config.getLibraryFolders()).hasSize(1);
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto ->
                     assertThat(libraryFolderDto.getPath()).isEqualTo(newLibraryFolder.getAbsolutePath()));
@@ -68,7 +65,6 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
     public void shouldValidateConfig() {
 
         ConfigDto config = new ConfigDto()
-                .setAutoScanInterval(128)
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(new File("notExistingFile"))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 

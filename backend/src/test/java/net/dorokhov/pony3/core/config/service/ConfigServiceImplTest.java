@@ -28,66 +28,6 @@ public class ConfigServiceImplTest {
     private ConfigRepository configRepository;
 
     @Test
-    public void shouldGetEnabledScanInterval() {
-
-        when(configRepository.findById(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .thenReturn(Optional.of(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000")));
-
-        assertThat(configService.getAutoScanInterval()).contains(1000);
-    }
-    
-    @Test
-    public void shouldGetDisabledAutoScanInterval() {
-        
-        when(configRepository.findById(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .thenReturn(Optional.empty());
-        assertThat(configService.getAutoScanInterval()).isEmpty();
-        
-        when(configRepository.findById(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .thenReturn(Optional.of(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, null)));
-        assertThat(configService.getAutoScanInterval()).isEmpty();
-    }
-
-    @Test
-    public void shouldSaveEnabledAutoScanInterval() {
-        
-        when(configRepository.findById(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .thenReturn(Optional.of(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000")));
-
-        configService.saveAutoScanInterval(2000);
-        
-        ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
-        verify(configRepository).save(savedConfig.capture());
-        assertThat(savedConfig.getValue().getValue()).isEqualTo("2000");
-    }
-
-    @Test
-    public void shouldSaveDisabledAutoScanInterval() {
-        
-        when(configRepository.findById(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .thenReturn(Optional.of(Config.of(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL, "1000")));
-
-        configService.saveAutoScanInterval(null);
-        
-        ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
-        verify(configRepository).save(savedConfig.capture());
-        assertThat(savedConfig.getValue().getValue()).isNull();
-    }
-
-    @Test
-    public void shouldSaveAutoScanIntervalWhichDidNotExist() {
-
-        when(configRepository.findById(ConfigServiceImpl.CONFIG_AUTO_SCAN_INTERVAL))
-                .thenReturn(Optional.empty());
-
-        configService.saveAutoScanInterval(2000);
-
-        ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
-        verify(configRepository).save(savedConfig.capture());
-        assertThat(savedConfig.getValue().getValue()).isEqualTo("2000");
-    }
-
-    @Test
     public void shouldFetchExistingLibraryFolders() {
 
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))

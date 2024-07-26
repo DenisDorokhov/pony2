@@ -103,7 +103,6 @@ public class InstallationServiceImplTest {
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
-        verify(configService).saveAutoScanInterval(command.getAutoScanInterval());
         verify(configService).saveLibraryFolders(command.getLibraryFolders());
         verify(installationRepository).save(any());
         verify(logService).info(any(), any());

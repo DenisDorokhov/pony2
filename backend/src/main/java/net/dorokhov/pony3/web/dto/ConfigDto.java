@@ -1,6 +1,5 @@
 package net.dorokhov.pony3.web.dto;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 
 import java.io.File;
@@ -8,20 +7,8 @@ import java.util.List;
 
 public final class ConfigDto {
 
-    private Integer autoScanInterval;
-
     @Valid
     private List<LibraryFolderDto> libraryFolders;
-
-    @Nullable
-    public Integer getAutoScanInterval() {
-        return autoScanInterval;
-    }
-
-    public ConfigDto setAutoScanInterval(Integer autoScanInterval) {
-        this.autoScanInterval = autoScanInterval;
-        return this;
-    }
 
     public List<LibraryFolderDto> getLibraryFolders() {
         return libraryFolders;
@@ -32,9 +19,8 @@ public final class ConfigDto {
         return this;
     }
 
-    public static ConfigDto of(@Nullable Integer autoScanInterval, List<File> libraryFolders) {
+    public static ConfigDto of(List<File> libraryFolders) {
         return new ConfigDto()
-                .setAutoScanInterval(autoScanInterval)
                 .setLibraryFolders(libraryFolders.stream()
                         .map(LibraryFolderDto::of)
                         .toList());

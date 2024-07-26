@@ -85,7 +85,6 @@ public class InstallationServiceImpl implements InstallationService {
             throw new AlreadyInstalledException();
         }
 
-        configService.saveAutoScanInterval(command.getAutoScanInterval());
         configService.saveLibraryFolders(command.getLibraryFolders());
 
         try {

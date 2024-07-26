@@ -63,7 +63,6 @@ public class InstallationControllerTest extends IntegrationTest {
         assertThat(installationResponse.getBody()).satisfies(installationDto -> 
                 assertThat(installationDto.getVersion()).isNotNull());
 
-        assertThat(configService.getAutoScanInterval()).isEmpty();
         assertThat(configService.getLibraryFolders()).isEmpty();
 
         List<User> users = userService.getAll();
