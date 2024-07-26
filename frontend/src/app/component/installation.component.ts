@@ -56,6 +56,7 @@ export class InstallationComponent {
 
   install() {
     const installationCommand = <InstallationCommandDto>this.installationForm.value;
+    installationCommand.startScanJobAfterInstallation = true;
     this.installationService.install(installationCommand).subscribe(
       installation => {
         Logger.info(`Version ${installation.version} has been installed.`);

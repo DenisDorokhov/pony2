@@ -41,6 +41,8 @@ public final class InstallationCommandDto {
     @RepeatPasswordValue(constraintViolationField = true)
     private String repeatAdminPassword;
 
+    private boolean startScanJobAfterInstallation;
+
     public String getInstallationSecret() {
         return installationSecret;
     }
@@ -98,6 +100,15 @@ public final class InstallationCommandDto {
         return this;
     }
 
+    public boolean isStartScanJobAfterInstallation() {
+        return startScanJobAfterInstallation;
+    }
+
+    public InstallationCommandDto setStartScanJobAfterInstallation(boolean startScanJobAfterInstallation) {
+        this.startScanJobAfterInstallation = startScanJobAfterInstallation;
+        return this;
+    }
+
     public InstallationCommand convert() {
         return new InstallationCommand()
                 .setLibraryFolders(libraryFolders.stream()
@@ -105,6 +116,7 @@ public final class InstallationCommandDto {
                         .toList())
                 .setAdminName(adminName)
                 .setAdminEmail(adminEmail)
-                .setAdminPassword(adminPassword);
+                .setAdminPassword(adminPassword)
+                .setStartScanJobAfterInstallation(startScanJobAfterInstallation);
     }
 }

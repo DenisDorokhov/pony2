@@ -7,6 +7,8 @@ import net.dorokhov.pony3.api.installation.service.InstallationService;
 import net.dorokhov.pony3.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony3.api.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony3.api.installation.service.exception.NotInstalledException;
+import net.dorokhov.pony3.api.library.service.ScanJobService;
+import net.dorokhov.pony3.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony3.api.log.service.LogService;
 import net.dorokhov.pony3.api.user.domain.User.Role;
 import net.dorokhov.pony3.api.user.service.UserService;
@@ -18,11 +20,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Optional;
 
+import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
@@ -35,19 +41,27 @@ public class InstallationServiceImpl implements InstallationService {
     private final ConfigService configService;
     private final UserService userService;
     private final LogService logService;
+    private final ScanJobService scanJobService;
+
+    private final TransactionTemplate transactionTemplate;
 
     public InstallationServiceImpl(
             InstallationRepository installationRepository,
             BuildVersionProvider buildVersionProvider,
             ConfigService configService,
             UserService userService,
-            LogService logService
+            LogService logService,
+            ScanJobService scanJobService,
+            PlatformTransactionManager transactionManager
     ) {
         this.installationRepository = installationRepository;
         this.buildVersionProvider = buildVersionProvider;
         this.configService = configService;
         this.userService = userService;
         this.logService = logService;
+        this.scanJobService = scanJobService;
+
+        transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
     @Override
@@ -93,6 +107,19 @@ public class InstallationServiceImpl implements InstallationService {
             @Override
             public void afterCommit() {
                 logService.info(logger, "The application has been installed.");
+                if (command.isStartScanJobAfterInstallation()) {
+                    try {
+                        transactionTemplate.executeWithoutResult(status -> {
+                            try {
+                                scanJobService.startScanJob();
+                            } catch (ConcurrentScanException e) {
+                                logService.error(logger, "Could not start scan job after installation: scan job is already running.");
+                            }
+                        });
+                    } catch (Exception e) {
+                        logger.error("Could not start scan job due to unexpected error.", e);
+                    }
+                }
             }
         });
 

@@ -10,7 +10,7 @@ import {
   of,
   repeat,
   Subscription,
-  throwError
+  throwError, timer
 } from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
@@ -24,8 +24,8 @@ import {LibraryService} from "./library.service";
 })
 export class LibraryScanService {
 
-  private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined>(undefined);
-  private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined>(undefined);
+  private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined | null>(undefined);
+  private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined | null>(undefined);
 
   private scanJobProgressUpdateSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
@@ -44,7 +44,7 @@ export class LibraryScanService {
     ).subscribe();
   }
 
-  public updateScanStatistics(): Observable<ScanStatisticsDto | undefined> {
+  updateScanStatistics(): Observable<ScanStatisticsDto | null> {
     Logger.info('Updating scan statistics...');
     return this.httpClient.get<ScanStatisticsDto>('/api/library/scanStatistics')
       .pipe(
@@ -56,7 +56,10 @@ export class LibraryScanService {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.NOT_FOUND) {
             Logger.info('Library was not scanned yet.');
-            return of(undefined);
+            if (this.scanStatisticsSubject.value !== null) {
+              this.scanStatisticsSubject.next(null);
+            }
+            return of(null);
           } else {
             return throwError(() => error);
           }
@@ -84,14 +87,14 @@ export class LibraryScanService {
       .subscribe();
   }
 
-  updateScanJobProgress(): Observable<ScanJobProgressDto | undefined> {
+  updateScanJobProgress(): Observable<ScanJobProgressDto | null> {
     return this.httpClient.get<ScanJobProgressDto>('/api/admin/library/scanJobProgress')
       .pipe(
         tap(scanJobProgress => {
           Logger.debug('Scan job progress updated.');
           if (!this.scanJobProgressSubject.value) {
             Logger.info("Scheduling auto-refresh during scan job running.")
-            this.refreshRequestSubscription = interval(10000).pipe(
+            this.refreshRequestSubscription = timer(0, 10000).pipe(
               tap(() => {
                 Logger.debug("Requesting refresh.");
                 this.libraryService.requestRefresh();
@@ -104,13 +107,15 @@ export class LibraryScanService {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.NOT_FOUND) {
             Logger.info('Scan job is not running.');
-            this.scanJobProgressSubject.next(undefined);
+            if (this.scanJobProgressSubject.value !== null) {
+              this.scanJobProgressSubject.next(null);
+            }
             if (this.refreshRequestSubscription) {
               Logger.info("Scan job finished, cancelling auto-refresh.");
               this.libraryService.requestRefresh();
               this.refreshRequestSubscription.unsubscribe();
             }
-            return of(undefined);
+            return of(null);
           } else {
             return throwError(() => error);
           }
@@ -118,11 +123,11 @@ export class LibraryScanService {
       );
   }
 
-  observeScanStatistics(): Observable<ScanStatisticsDto | undefined> {
+  observeScanStatistics(): Observable<ScanStatisticsDto | undefined | null> {
     return this.scanStatisticsSubject.asObservable();
   }
 
-  observeScanJobProgress(): Observable<ScanJobProgressDto | undefined> {
+  observeScanJobProgress(): Observable<ScanJobProgressDto | undefined | null> {
     return this.scanJobProgressSubject.asObservable();
   }
 
@@ -136,7 +141,7 @@ export class LibraryScanService {
       );
   }
 
-  startScanJob(): Observable<ScanJobProgressDto | undefined> {
+  startScanJob(): Observable<ScanJobProgressDto | null> {
     return this.httpClient.post<ScanJobDto>('/api/admin/library/scanJobs', null)
       .pipe(
         delay(1000),

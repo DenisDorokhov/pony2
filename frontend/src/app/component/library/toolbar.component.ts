@@ -11,6 +11,7 @@ import {TranslateModule} from "@ngx-translate/core";
 import Logger from "js-logger";
 import {NgbDropdownModule, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
+import {LibraryScanService} from "../../service/library-scan.service";
 
 @Component({
   standalone: true,
@@ -31,6 +32,7 @@ export class ToolbarComponent implements OnInit {
 
   constructor(
     private libraryService: LibraryService,
+    private libraryScanService: LibraryScanService,
     private authenticationService: AuthenticationService,
     private modalService: NgbModal
   ) {
@@ -38,6 +40,11 @@ export class ToolbarComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authenticationService.currentUser;
+    this.libraryScanService.observeScanStatistics().subscribe(scanStatistics => {
+      if (scanStatistics === null) {
+        this.openScanning();
+      }
+    })
   }
 
   refresh() {

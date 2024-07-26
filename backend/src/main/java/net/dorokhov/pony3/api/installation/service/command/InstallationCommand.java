@@ -14,6 +14,7 @@ public final class InstallationCommand {
     private String adminName;
     private String adminEmail;
     private String adminPassword;
+    private boolean startScanJobAfterInstallation;
 
     @Nullable
     public Integer getAutoScanInterval() {
@@ -65,6 +66,15 @@ public final class InstallationCommand {
 
     public InstallationCommand setAdminPassword(String adminPassword) {
         this.adminPassword = adminPassword;
+        return this;
+    }
+
+    public boolean isStartScanJobAfterInstallation() {
+        return startScanJobAfterInstallation;
+    }
+
+    public InstallationCommand setStartScanJobAfterInstallation(boolean startScanJobAfterInstallation) {
+        this.startScanJobAfterInstallation = startScanJobAfterInstallation;
         return this;
     }
 }

@@ -310,7 +310,7 @@ public class LibraryImporter {
         try {
             return libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData);
         } catch (IOException e) {
-            logService.error(logger, "Could not find and save embedded artwork for data '{}'.",
+            logService.warn(logger, "Could not find and save embedded artwork for data '{}'.",
                     audioData, e);
         }
         return null;

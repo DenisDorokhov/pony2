@@ -29,7 +29,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
   scanJobProgressLoadingState = LoadingState.LOADING;
   scanJobsLoadingState = LoadingState.LOADING;
 
-  scanJobProgress: ScanJobProgressDto | undefined;
+  scanJobProgress: ScanJobProgressDto | undefined | null;
   scanJobs: ScanJobDto[] = [];
   page: PageDto | undefined;
   emptyScanJobRowCount = 5;

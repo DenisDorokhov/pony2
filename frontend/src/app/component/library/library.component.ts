@@ -26,7 +26,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
   private scanStatisticsSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
 
-  scanStatistics: ScanStatisticsDto | undefined;
+  scanStatistics: ScanStatisticsDto | undefined | null;
   size: string | undefined;
 
   constructor(

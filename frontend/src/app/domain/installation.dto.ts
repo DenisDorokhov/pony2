@@ -10,6 +10,7 @@ export interface InstallationCommandDto {
   adminName: string;
   adminEmail: string;
   adminPassword: string;
+  startScanJobAfterInstallation: boolean;
 }
 
 export namespace InstallationCommandDto {
