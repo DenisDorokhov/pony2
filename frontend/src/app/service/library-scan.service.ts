@@ -37,13 +37,14 @@ export class LibraryScanService {
   ) {
     this.scheduleScanJobProgressUpdate();
     if (this.authenticationService.isAuthenticated) {
-      this.updateScanStatistics();
+      this.updateScanStatistics().subscribe();
     }
-    this.authenticationService.observeAuthentication()
-      .subscribe(() => this.updateScanStatistics());
+    this.authenticationService.observeAuthentication().pipe(
+      mergeMap(() => this.updateScanStatistics())
+    ).subscribe();
   }
 
-  private updateScanStatistics() {
+  public updateScanStatistics(): Observable<ScanStatisticsDto | undefined> {
     Logger.info('Updating scan statistics...');
     return this.httpClient.get<ScanStatisticsDto>('/api/library/scanStatistics')
       .pipe(
@@ -60,8 +61,7 @@ export class LibraryScanService {
             return throwError(() => error);
           }
         })
-      )
-      .subscribe();
+      );
   }
 
   private scheduleScanJobProgressUpdate() {
