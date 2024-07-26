@@ -81,7 +81,7 @@ export class LibraryScanService {
           Logger.error(`Could not update scan job progress: ${JSON.stringify(error)}`);
           return of(undefined);
         }),
-        delayWhen(() => this.scanJobProgressSubject.value !== undefined ? interval(1000) : interval(30000)),
+        delayWhen(() => this.scanJobProgressSubject.value ? interval(1000) : interval(30000)),
         repeat()
       )
       .subscribe();
@@ -96,7 +96,6 @@ export class LibraryScanService {
             Logger.info("Scheduling auto-refresh during scan job running.")
             this.refreshRequestSubscription = timer(0, 10000).pipe(
               tap(() => {
-                Logger.debug("Requesting refresh.");
                 this.libraryService.requestRefresh();
               })
             ).subscribe();
