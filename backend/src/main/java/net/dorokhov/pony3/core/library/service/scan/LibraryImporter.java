@@ -17,6 +17,8 @@ import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.util.Objects;
 
+import static net.dorokhov.pony3.api.library.domain.Artwork.SOURCE_URI_SCHEME_EMBEDDED;
+
 @Component
 public class LibraryImporter {
 
@@ -143,12 +145,25 @@ public class LibraryImporter {
                 albumRepository.save(album
                         .setArtwork(null));
             }
-            if (artwork != null && album.getArtwork() == null) {
+            if (shouldImportAlbumArtwork(album, artwork)) {
                 importAlbumArtwork(album, artwork);
             }
             return savedSong;
         }
         return existingSong;
+    }
+
+    private boolean shouldImportAlbumArtwork(Album album, Artwork artwork) {
+        if (artwork == null) {
+            return false;
+        }
+        if (album.getArtwork() == null) {
+            return true;
+        }
+        // Embedded artwork is always preferred and will override any other artwork type.
+        return album.getArtwork() != null &&
+                !Objects.equals(album.getArtwork().getSourceUriScheme(), SOURCE_URI_SCHEME_EMBEDDED) &&
+                Objects.equals(artwork.getSourceUriScheme(), SOURCE_URI_SCHEME_EMBEDDED);
     }
 
     @Transactional
@@ -163,7 +178,7 @@ public class LibraryImporter {
                             .setArtwork(artworkFiles.getArtwork()));
                 }
             }
-            if (song.getArtwork() != null && song.getAlbum().getArtwork() == null) {
+            if (shouldImportAlbumArtwork(song.getAlbum(), song.getArtwork())) {
                 importAlbumArtwork(song.getAlbum(), song.getArtwork());
             }
         }
