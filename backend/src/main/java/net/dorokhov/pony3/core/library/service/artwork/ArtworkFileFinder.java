@@ -40,23 +40,23 @@ public class ArtworkFileFinder {
 
     @Nullable
     public ImageNode findArtwork(AudioNode audioNode) {
-        return Optional.ofNullable(fetchArtworkFromParentFolder(audioNode))
-                .orElseGet(() -> fetchArtworkFromParentFolder(audioNode.getParentFolder()));
+        return Optional.ofNullable(fetchArtworkFromParentFolder(audioNode, true))
+                .orElseGet(() -> fetchArtworkFromParentFolder(audioNode.getParentFolder(), false));
     }
 
     @Nullable
-    private ImageNode fetchArtworkFromParentFolder(@Nullable Node node) {
+    private ImageNode fetchArtworkFromParentFolder(@Nullable Node node, boolean fallbackToAnyChildFolder) {
         if (node != null) {
             FolderNode folderNode = node.getParentFolder();
             if (folderNode != null) {
-                return fetchArtworkFromFolderTree(folderNode);
+                return fetchArtworkFromFolderTree(folderNode, fallbackToAnyChildFolder);
             }
         }
         return null;
     }
 
     @Nullable
-    private ImageNode fetchArtworkFromFolderTree(FolderNode folderNode) {
+    private ImageNode fetchArtworkFromFolderTree(FolderNode folderNode, boolean fallbackToAnyChildFolder) {
         ImageNode artwork = fetchArtworkFromFolder(folderNode);
         if (artwork != null) {
             return artwork;
@@ -67,13 +67,17 @@ public class ArtworkFileFinder {
                     .map(this::fetchArtworkFromFolder)
                     .filter(Objects::nonNull)
                     .findFirst()
-                    .orElseGet(() ->
-                            childFolders.stream()
+                    .orElseGet(() -> {
+                        if (fallbackToAnyChildFolder) {
+                            return childFolders.stream()
                                     .map(this::fetchArtworkFromFolder)
                                     .filter(Objects::nonNull)
                                     .findFirst()
-                                    .orElse(null)
-                    );
+                                    .orElse(null);
+                        } else {
+                            return null;
+                        }
+                    });
         }
     }
 
