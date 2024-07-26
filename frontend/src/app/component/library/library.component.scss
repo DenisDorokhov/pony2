@@ -18,7 +18,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 410px;
+      width: 300px;
       bottom: 0;
 
       img {
@@ -29,15 +29,16 @@
     .player {
       position: absolute;
       top: 0;
-      left: 410px;
-      right: 410px;
+      left: 300px;
+      right: 440px;
       bottom: 0;
+      min-width: 300px;
     }
     .toolbar {
       position: absolute;
       top: 0;
       right: 0;
-      width: 410px;
+      width: 440px;
       bottom: 0;
     }
   }
