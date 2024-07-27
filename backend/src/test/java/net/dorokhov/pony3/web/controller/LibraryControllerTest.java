@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
@@ -554,21 +555,25 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         await().until(() -> scanJobService.getById(scanJob.getId()).orElseThrow().getStatus() == ScanJob.Status.COMPLETE);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ScanStatisticsDto> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<OptionalResponseDto<ScanStatisticsDto>> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatistics", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanStatisticsDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {});
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(scanStatistics -> {
-            assertThat(scanStatistics.getDate()).isNotNull();
-            assertThat(scanStatistics.getDuration()).isGreaterThan(0);
-            assertThat(scanStatistics.getSongSize()).isEqualTo(0);
-            assertThat(scanStatistics.getArtworkSize()).isEqualTo(0);
-            assertThat(scanStatistics.getGenreCount()).isEqualTo(0);
-            assertThat(scanStatistics.getArtistCount()).isEqualTo(0);
-            assertThat(scanStatistics.getAlbumCount()).isEqualTo(0);
-            assertThat(scanStatistics.getSongCount()).isEqualTo(0);
-            assertThat(scanStatistics.getArtworkCount()).isEqualTo(0);
+        assertThat(response.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isTrue();
+            assertThat(optionalResponse.getValue()).satisfies(scanStatistics -> {
+                assertThat(scanStatistics.getDate()).isNotNull();
+                assertThat(scanStatistics.getDuration()).isGreaterThan(0);
+                assertThat(scanStatistics.getSongSize()).isEqualTo(0);
+                assertThat(scanStatistics.getArtworkSize()).isEqualTo(0);
+                assertThat(scanStatistics.getGenreCount()).isEqualTo(0);
+                assertThat(scanStatistics.getArtistCount()).isEqualTo(0);
+                assertThat(scanStatistics.getAlbumCount()).isEqualTo(0);
+                assertThat(scanStatistics.getSongCount()).isEqualTo(0);
+                assertThat(scanStatistics.getArtworkCount()).isEqualTo(0);
+            });
         });
     }
 
@@ -577,14 +582,15 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<OptionalResponseDto<ScanStatisticsDto>> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/scanStatistics", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {});
 
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).satisfies(error -> {
-            assertThat(error.getCode()).isSameAs(Code.NOT_FOUND);
-            assertThat(error.getArguments().getFirst()).isEqualTo("ScanResult");
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isFalse();
+            assertThat(optionalResponse.getValue()).isNull();
         });
     }
 

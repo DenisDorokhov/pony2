@@ -16,6 +16,7 @@ import net.dorokhov.pony3.web.dto.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -158,14 +159,15 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<OptionalResponseDto<ScanJobProgressDto>> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {});
 
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).satisfies(error -> {
-            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
-            assertThat(error.getArguments().getFirst()).isEqualTo("ScanJobProgress");
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isFalse();
+            assertThat(optionalResponse.getValue()).isNull();
         });
     }
 
@@ -213,17 +215,21 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             return scanJobProgress != null && scanJobProgress.getScanProgress() != null;
         });
 
-        ResponseEntity<ScanJobProgressDto> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<OptionalResponseDto<ScanJobProgressDto>> optionalScanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobProgressDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {});
 
-        assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
-            assertThat(scanJobProgress.getScanJob()).isNotNull();
-            assertThat(scanJobProgress.getScanProgress()).isNotNull();
+        assertThat(optionalScanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(optionalScanJobProgressResponse.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isTrue();
+            assertThat(optionalResponse.getValue()).satisfies(scanJobProgress -> {
+                assertThat(scanJobProgress.getScanJob()).isNotNull();
+                assertThat(scanJobProgress.getScanProgress()).isNotNull();
+            });
         });
 
-        scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<ScanJobProgressDto> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress/{scanJobId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobProgressDto.class, scanJob.getId());
 

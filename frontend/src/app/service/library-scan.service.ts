@@ -2,7 +2,8 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {
   BehaviorSubject,
-  defer, delay,
+  defer,
+  delay,
   delayWhen,
   interval,
   mergeMap,
@@ -10,12 +11,17 @@ import {
   of,
   repeat,
   Subscription,
-  throwError, timer
+  timer
 } from 'rxjs';
-import {catchError, tap} from 'rxjs/operators';
-import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
+import {catchError, map, tap} from 'rxjs/operators';
+import {
+  ScanJobDto,
+  ScanJobPageDto,
+  ScanJobProgressDto,
+  ScanStatisticsDto
+} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
-import {ErrorDto} from "../domain/common.dto";
+import {ErrorDto, OptionalResponseDto} from "../domain/common.dto";
 import Logger from "js-logger";
 import {LibraryService} from "./library.service";
 
@@ -46,22 +52,18 @@ export class LibraryScanService {
 
   updateScanStatistics(): Observable<ScanStatisticsDto | null> {
     Logger.info('Updating scan statistics...');
-    return this.httpClient.get<ScanStatisticsDto>('/api/library/scanStatistics')
+    return this.httpClient.get<OptionalResponseDto<ScanStatisticsDto>>('/api/library/scanStatistics')
       .pipe(
-        tap(scanStatistics => {
-          Logger.info('Scan statistics updated.');
-          this.scanStatisticsSubject.next(scanStatistics);
-        }),
-        catchError(httpError => {
-          const error = ErrorDto.fromHttpErrorResponse(httpError);
-          if (error.code === ErrorDto.Code.NOT_FOUND) {
-            Logger.info('Library was not scanned yet.');
+        map(optionalResponse => {
+          if (optionalResponse.present) {
+            Logger.info('Scan statistics updated.');
+            this.scanStatisticsSubject.next(optionalResponse.value!);
+            return optionalResponse.value!;
+          } else {
             if (this.scanStatisticsSubject.value !== null) {
               this.scanStatisticsSubject.next(null);
             }
-            return of(null);
-          } else {
-            return throwError(() => error);
+            return null;
           }
         })
       );
@@ -88,23 +90,22 @@ export class LibraryScanService {
   }
 
   updateScanJobProgress(): Observable<ScanJobProgressDto | null> {
-    return this.httpClient.get<ScanJobProgressDto>('/api/admin/library/scanJobProgress')
+    return this.httpClient.get<OptionalResponseDto<ScanJobProgressDto>>('/api/admin/library/scanJobProgress')
       .pipe(
-        tap(scanJobProgress => {
-          Logger.debug('Scan job progress updated.');
-          if (!this.scanJobProgressSubject.value) {
-            Logger.info("Scheduling auto-refresh during scan job running.")
-            this.refreshRequestSubscription = timer(0, 10000).pipe(
-              tap(() => {
-                this.libraryService.requestRefresh();
-              })
-            ).subscribe();
-          }
-          this.scanJobProgressSubject.next(scanJobProgress);
-        }),
-        catchError(httpError => {
-          const error = ErrorDto.fromHttpErrorResponse(httpError);
-          if (error.code === ErrorDto.Code.NOT_FOUND) {
+        map(optionalResponse => {
+          if (optionalResponse.present) {
+            Logger.debug('Scan job progress updated.');
+            if (!this.scanJobProgressSubject.value) {
+              Logger.info("Scheduling auto-refresh during scan job running.");
+              this.refreshRequestSubscription = timer(0, 10000).pipe(
+                tap(() => {
+                  this.libraryService.requestRefresh();
+                })
+              ).subscribe();
+            }
+            this.scanJobProgressSubject.next(optionalResponse.value!);
+            return optionalResponse.value!;
+          } else {
             Logger.info('Scan job is not running.');
             if (this.scanJobProgressSubject.value !== null) {
               this.scanJobProgressSubject.next(null);
@@ -113,10 +114,9 @@ export class LibraryScanService {
               Logger.info("Scan job finished, cancelling auto-refresh.");
               this.libraryService.requestRefresh();
               this.refreshRequestSubscription.unsubscribe();
+              this.refreshRequestSubscription = undefined;
             }
-            return of(null);
-          } else {
-            return throwError(() => error);
+            return null;
           }
         })
       );

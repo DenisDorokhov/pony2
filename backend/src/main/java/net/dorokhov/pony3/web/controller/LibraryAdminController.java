@@ -2,11 +2,8 @@ package net.dorokhov.pony3.web.controller;
 
 import net.dorokhov.pony3.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony3.web.controller.common.ErrorHandlingController;
-import net.dorokhov.pony3.web.dto.ErrorDto;
+import net.dorokhov.pony3.web.dto.*;
 import net.dorokhov.pony3.web.dto.ErrorDto.Code;
-import net.dorokhov.pony3.web.dto.ScanJobDto;
-import net.dorokhov.pony3.web.dto.ScanJobPageDto;
-import net.dorokhov.pony3.web.dto.ScanJobProgressDto;
 import net.dorokhov.pony3.web.service.ScanFacade;
 import net.dorokhov.pony3.web.service.exception.ObjectNotFoundException;
 import org.springframework.core.Ordered;
@@ -41,7 +38,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @GetMapping("/scanJobProgress")
-    public ScanJobProgressDto getCurrentScanJobProgress() throws ObjectNotFoundException {
+    public OptionalResponseDto<ScanJobProgressDto> getCurrentScanJobProgress() {
         return scanFacade.getCurrentScanJobProgress();
     }
 

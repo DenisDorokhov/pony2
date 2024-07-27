@@ -2,7 +2,6 @@ package net.dorokhov.pony3.web.service;
 
 import net.dorokhov.pony3.api.library.domain.ScanJob;
 import net.dorokhov.pony3.api.library.domain.ScanJobProgress;
-import net.dorokhov.pony3.api.library.domain.ScanResult;
 import net.dorokhov.pony3.api.library.service.ScanJobService;
 import net.dorokhov.pony3.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony3.web.dto.*;
@@ -32,20 +31,21 @@ public class ScanFacade {
     }
 
     @Transactional(readOnly = true)
-    public ScanStatisticsDto getScanStatistics() throws ObjectNotFoundException {
+    public OptionalResponseDto<ScanStatisticsDto> getScanStatistics() {
         return scanJobService.getLastSuccessfulJob()
                 .map(ScanJob::getScanResult)
                 .map(ScanStatisticsDto::of)
-                .orElseThrow(() -> new ObjectNotFoundException(ScanResult.class));
+                .map(OptionalResponseDto::of)
+                .orElseGet(OptionalResponseDto::empty);
     }
 
     @Transactional(readOnly = true)
-    public ScanJobProgressDto getCurrentScanJobProgress() throws ObjectNotFoundException {
+    public OptionalResponseDto<ScanJobProgressDto> getCurrentScanJobProgress() {
         ScanJobProgress scanJobProgress = scanJobService.getCurrentScanJobProgress().orElse(null);
         if (scanJobProgress == null) {
-            throw new ObjectNotFoundException(ScanJobProgress.class);
+            return OptionalResponseDto.empty();
         }
-        return ScanJobProgressDto.of(scanJobProgress);
+        return OptionalResponseDto.of(ScanJobProgressDto.of(scanJobProgress));
     }
 
     @Transactional(readOnly = true)

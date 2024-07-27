@@ -81,7 +81,7 @@ public class LibraryController implements ErrorHandlingController {
     }
 
     @GetMapping("/scanStatistics")
-    public ScanStatisticsDto getStatistics() throws ObjectNotFoundException {
+    public OptionalResponseDto<ScanStatisticsDto> getStatistics() {
         return scanFacade.getScanStatistics();
     }
 }

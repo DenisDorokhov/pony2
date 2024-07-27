@@ -71,3 +71,8 @@ export interface PageDto {
   pageSize: number;
   totalPages: number;
 }
+
+export interface OptionalResponseDto<T> {
+  present: boolean;
+  value: T | undefined;
+}
