@@ -1,6 +1,13 @@
-/* You can add global styles to this file, and also import other style files */
+// Override Bootstrap colors.
+$min-contrast-ratio: 3;
+$blue: #428bca;
 
-/* Importing Bootstrap SCSS file. */
 @import 'bootstrap/scss/bootstrap';
 
 @import '../node_modules/font-awesome/css/font-awesome.css';
+
+// Set global colors.
+:root {
+  --blue: #428bca;
+  --turquoise: #5bc0de;
+}

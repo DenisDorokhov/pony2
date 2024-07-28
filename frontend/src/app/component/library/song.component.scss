@@ -77,7 +77,7 @@
 }
 
 .song-container.selected {
-  background-color: #428bca !important;
+  background-color: var(--blue) !important;
 
   .track-number, .title, .artist, .duration {
     color: white;
