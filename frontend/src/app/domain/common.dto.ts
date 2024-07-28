@@ -53,7 +53,7 @@ export namespace ErrorDto {
   }
 
   export function observableFromHttpErrorResponse(error: HttpErrorResponse): Observable<never> {
-    return throwError(ErrorDto.fromHttpErrorResponse(error));
+    return throwError(() => ErrorDto.fromHttpErrorResponse(error));
   }
 
   export function authenticationFailed(): ErrorDto {

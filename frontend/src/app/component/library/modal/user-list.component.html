@@ -1,8 +1,33 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ 'library.userList.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
-<div class="modal-body">
-</div>
-<div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
+
+<div class="container">
+
+  <table class="table table-striped log-container">
+    <thead>
+    <tr>
+      <th scope="col">{{ 'userList.creationDateColumn' | translate }}</th>
+      <th scope="col">{{ 'userList.updateDateColumn' | translate }}</th>
+      <th scope="col">{{ 'userList.nameColumn' | translate }}</th>
+      <th scope="col">{{ 'userList.emailColumn' | translate }}</th>
+      <th scope="col">{{ 'userList.roleColumn' | translate }}</th>
+      <th scope="col">{{ 'userList.editColumn' | translate }}</th>
+    </tr>
+    </thead>
+    <tbody>
+      @for (user of users; track user) {
+        <tr>
+          <td>{{ user.creationDate | date:('shared.scanJobDateFormat' | translate) }}</td>
+          <td>{{ user.updateDate | date:('shared.scanJobDateFormat' | translate) }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td><button type="button" class="btn btn-outline-dark">Edit User</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
 </div>

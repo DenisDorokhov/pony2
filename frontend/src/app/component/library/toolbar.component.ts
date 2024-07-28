@@ -73,6 +73,6 @@ export class ToolbarComponent implements OnInit {
   }
 
   openUsers() {
-    this.modalService.open(UserListComponent);
+    this.modalService.open(UserListComponent, { size: 'xl' });
   }
 }

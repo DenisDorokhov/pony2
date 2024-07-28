@@ -97,6 +97,14 @@ export default {
       searchingArtworksWithProgressLabel: 'searching artworks ({{itemsComplete}} of {{itemsTotal}})',
     },
   },
+  userList: {
+    creationDateColumn: 'Creation Date',
+    updateDateColumn: 'Update Date',
+    nameColumn: 'Name',
+    emailColumn: 'Email',
+    roleColumn: 'Role',
+    editColumn: 'Edit',
+  },
   shared: {
     errorsHeader: 'Errors',
     loadingIndicatorLabel: 'Loading...',

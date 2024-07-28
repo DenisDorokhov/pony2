@@ -45,7 +45,6 @@ export class ScanningComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.scanJobProgressLoadingState = LoadingState.LOADING;
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
