@@ -66,7 +66,7 @@ public class BruteForceProtector {
         try {
             attempts = loginAttemptCounter.get(clientIp);
         } catch (ExecutionException e) {
-            throw new RuntimeException("Could not fetch number of login attempts for IP '" + clientIp + "'.", e);
+            throw new RuntimeException("Could not fetch number of login attempts for IP '" + clientIp + "' after failed login attempt.", e);
         }
         if (attempts < maxLoginAttempts) {
             attempts++;
@@ -88,7 +88,7 @@ public class BruteForceProtector {
         try {
             attempts = loginAttemptCounter.get(clientIp);
         } catch (ExecutionException e) {
-            throw new RuntimeException("Could not fetch number of login attempts for IP '" + clientIp + "'.", e);
+            throw new RuntimeException("Could not fetch number of login attempts for IP '" + clientIp + "' to check for blocked login attempt.", e);
         }
         return attempts >= maxLoginAttempts;
     }

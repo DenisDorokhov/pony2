@@ -238,7 +238,66 @@ public class SecurityTest extends InstallingIntegrationTest {
         assertThat(response.getBody()).satisfies(error ->
                 assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
     }
-    
+
+    @Test
+    void shouldBlockLoginAfter5LoginAttempts() {
+
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(ImmutableMap.of(
+                "email", ADMIN_EMAIL,
+                "password", ADMIN_PASSWORD
+        ));
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().postForEntity("/api/authentication", entity, ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.AUTHENTICATION_FAILED));
+    }
+
+    @Test
+    void shouldNotBlockLoginAfter4LoginAttempts() {
+
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        assertThat(authentication.getAccessToken()).isNotNull();
+        assertThat(authentication.getUser()).satisfies(user ->
+                assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
+    }
+
+    @Test
+    void shouldClearLoginAttemptsAfterSuccessfulLogin() {
+
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        assertThat(authentication.getAccessToken()).isNotNull();
+        assertThat(authentication.getUser()).satisfies(user ->
+                assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
+
+        apiTemplate.authenticate("incorrectEmail", "incorrectPassword");
+
+        authentication = apiTemplate.authenticateAdmin();
+
+        assertThat(authentication.getAccessToken()).isNotNull();
+        assertThat(authentication.getUser()).satisfies(user ->
+                assertThat(user.getEmail()).isEqualTo(ADMIN_EMAIL));
+    }
+
     private User createUser() throws DuplicateEmailException {
         return userService.create(new UserCreationCommand()
                 .setName("Plain User")
