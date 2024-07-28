@@ -71,7 +71,7 @@ public class LogServiceImpl implements LogService {
                     if (o instanceof Throwable) {
                         return Throwables.getStackTraceAsString((Throwable) o);
                     } else {
-                        return o.toString();
+                        return o != null ? o.toString() : null;
                     }
                 })
                 .toList();

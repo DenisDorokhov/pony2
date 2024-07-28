@@ -4,9 +4,11 @@ import net.dorokhov.pony3.ApiTemplate;
 import net.dorokhov.pony3.InstallingIntegrationTest;
 import net.dorokhov.pony3.api.log.domain.LogMessage;
 import net.dorokhov.pony3.api.log.service.LogService;
+import net.dorokhov.pony3.core.log.repository.LogMessageRepository;
 import net.dorokhov.pony3.web.dto.AuthenticationDto;
 import net.dorokhov.pony3.web.dto.LogMessageDto;
 import net.dorokhov.pony3.web.dto.LogMessagePageDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,15 +25,25 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     
     @Autowired
     private ApiTemplate apiTemplate;
+
+    @Autowired
+    private LogMessageRepository logMessageRepository;
     
     @Autowired
     private LogService logService;
+
+    private AuthenticationDto authentication;
+
+    @BeforeEach
+    void setUp() {
+        authentication = apiTemplate.authenticateAdmin();
+        logMessageRepository.deleteAll();
+    }
 
     @Test
     public void shouldGetLog() {
 
         LogMessage logMessage = logService.info(logger, "someMessage");
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log", HttpMethod.GET,
@@ -45,7 +57,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     public void shouldGetLogByMinLevel() {
 
         logService.info(logger, "someMessage");
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=WARN", HttpMethod.GET,
@@ -59,8 +70,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     public void shouldGetLogByMinAndMaxDate() {
         
         LogMessage logMessage = logService.info(logger, "someMessage");
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        
+
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minDate=1986-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
@@ -80,7 +90,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     public void shouldGetLogByPageIndex() {
 
         logService.info(logger, "someMessage");
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?pageIndex=1", HttpMethod.GET,

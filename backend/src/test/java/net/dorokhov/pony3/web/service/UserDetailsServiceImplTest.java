@@ -3,16 +3,21 @@ package net.dorokhov.pony3.web.service;
 import com.google.common.collect.Sets;
 import net.dorokhov.pony3.api.user.domain.User;
 import net.dorokhov.pony3.api.user.service.UserService;
+import net.dorokhov.pony3.web.security.BruteForceProtector;
 import net.dorokhov.pony3.web.security.UserDetailsImpl;
 import net.dorokhov.pony3.web.security.UserDetailsServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Optional;
 import java.util.Set;
@@ -31,6 +36,14 @@ public class UserDetailsServiceImplTest {
 
     @Mock
     private UserService userService;
+    @Mock
+    private BruteForceProtector bruteForceProtector;
+
+    @BeforeEach
+    void setUp() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
 
     @Test
     public void shouldLoadUser() {
