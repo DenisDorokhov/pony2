@@ -55,7 +55,7 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
                 .orElse(null);
         if (loggedOutUser != null) {
             logoutDelegates.forEach(logoutDelegate -> logoutDelegate.onLogout(loggedOutUser));
-            logger.debug("User '{}' has logged out.");
+            logger.debug("User '{}' has logged out.", loggedOutUser.getEmail());
             messageConverter.write(UserDto.of(loggedOutUser), MediaType.ALL, new ServletServerHttpResponse(response));
         } else {
             logger.debug("Logging out failed: user is not authenticated.");

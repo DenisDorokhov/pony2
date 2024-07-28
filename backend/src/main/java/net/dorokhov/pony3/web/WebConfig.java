@@ -24,6 +24,8 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableWebSecurity
 public class WebConfig {
 
+    public static final String AUTH_PARAM_USERNAME = "email";
+    public static final String AUTH_PARAM_PASSWORD = "password";
     private final SecurityContextRepository securityContextRepository;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final AccessDeniedHandler accessDeniedHandler;
@@ -68,8 +70,8 @@ public class WebConfig {
 
                 .formLogin(httpSecurityFormLoginConfigurer -> httpSecurityFormLoginConfigurer
                         .loginPage("/api/authentication")
-                        .usernameParameter("email")
-                        .passwordParameter("password")
+                        .usernameParameter(AUTH_PARAM_USERNAME)
+                        .passwordParameter(AUTH_PARAM_PASSWORD)
                         .successHandler(authenticationSuccessHandler)
                         .failureHandler(authenticationFailureHandler))
 

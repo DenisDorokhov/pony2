@@ -2,9 +2,9 @@ package net.dorokhov.pony3.web.security.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import net.dorokhov.pony3.web.WebConfig;
 import net.dorokhov.pony3.web.dto.ErrorDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.dorokhov.pony3.web.security.BruteForceProtector;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -17,11 +17,14 @@ import java.io.IOException;
 @Component
 public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
+    private final BruteForceProtector bruteForceProtector;
     private final MappingJackson2HttpMessageConverter messageConverter;
 
-    public AuthenticationFailureHandlerImpl(MappingJackson2HttpMessageConverter messageConverter) {
+    public AuthenticationFailureHandlerImpl(
+            BruteForceProtector bruteForceProtector,
+            MappingJackson2HttpMessageConverter messageConverter
+    ) {
+        this.bruteForceProtector = bruteForceProtector;
         this.messageConverter = messageConverter;
     }
 
@@ -31,7 +34,7 @@ public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHa
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        logger.debug("Authentication failed.");
+        bruteForceProtector.onFailedLoginAttempt(request, request.getParameter(WebConfig.AUTH_PARAM_USERNAME));
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         messageConverter.write(ErrorDto.authenticationFailed(), MediaType.ALL, new ServletServerHttpResponse(response));
     }

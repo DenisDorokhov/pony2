@@ -5,6 +5,9 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
+import net.dorokhov.pony3.api.log.service.LogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutionException;
@@ -15,6 +18,8 @@ public class BruteForceProtector {
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final LoadingCache<String, Integer> loginAttemptCounter = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.DAYS)
             .build(new CacheLoader<>() {
@@ -24,20 +29,20 @@ public class BruteForceProtector {
                 }
             });
 
-    public synchronized void onFailedLogin(HttpServletRequest request) {
-        String clientIp = getClientIp(request);
-        int attempts;
-        try {
-            attempts = loginAttemptCounter.get(clientIp);
-        } catch (ExecutionException e) {
-            throw new RuntimeException("Could not fetch number of login attempts for IP '" + clientIp + "'.", e);
-        }
-        if (attempts < MAX_LOGIN_ATTEMPTS) {
-            loginAttemptCounter.put(clientIp, attempts + 1);
-        }
+    private final LogService logService;
+
+    public BruteForceProtector(LogService logService) {
+        this.logService = logService;
     }
 
-    private String getClientIp(HttpServletRequest request) {
+    public synchronized void onSuccessfulLoginAttempt(HttpServletRequest request, String username) {
+        String clientIp = resolveIpAddress(request);
+        loginAttemptCounter.put(clientIp, 0);
+        logService.info(logger, "Successful login attempt for '{}' from '{}'.",
+                username, clientIp);
+    }
+
+    private String resolveIpAddress(HttpServletRequest request) {
         String xForwardedForHeader = request.getHeader("X-Forwarded-For");
         if (xForwardedForHeader != null) {
             return xForwardedForHeader.split(",")[0];
@@ -45,8 +50,27 @@ public class BruteForceProtector {
         return request.getRemoteAddr();
     }
 
-    public synchronized boolean shouldBlockLogin(HttpServletRequest request) {
-        String clientIp = getClientIp(request);
+    public synchronized void onFailedLoginAttempt(HttpServletRequest request, String username) {
+        String clientIp = resolveIpAddress(request);
+        int attempts;
+        try {
+            attempts = loginAttemptCounter.get(clientIp);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Could not fetch number of login attempts for IP '" + clientIp + "'.", e);
+        }
+        if (attempts < MAX_LOGIN_ATTEMPTS) {
+            attempts++;
+            loginAttemptCounter.put(clientIp, attempts);
+            logService.info(logger, "Failed login attempt for '{}' from '{}' with {} total attempts.",
+                    username, clientIp, attempts);
+        } else {
+            logService.info(logger, "Blocked login attempt for '{}' from '{}' with {} total attempts.",
+                    username, clientIp, attempts);
+        }
+    }
+
+    public synchronized boolean shouldBlockLoginAttempt(HttpServletRequest request) {
+        String clientIp = resolveIpAddress(request);
         int attempts;
         try {
             attempts = loginAttemptCounter.get(clientIp);
