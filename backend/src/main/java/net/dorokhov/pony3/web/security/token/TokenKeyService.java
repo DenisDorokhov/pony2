@@ -86,4 +86,8 @@ public class TokenKeyService {
             }
         }
     }
+
+    public void clearCache() {
+        cache.invalidateAll();
+    }
 }

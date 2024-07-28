@@ -3,6 +3,8 @@ package net.dorokhov.pony3;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony3.api.installation.service.InstallationService;
 import net.dorokhov.pony3.api.installation.service.command.InstallationCommand;
+import net.dorokhov.pony3.web.security.BruteForceProtector;
+import net.dorokhov.pony3.web.security.token.TokenKeyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +19,14 @@ public abstract class InstallingIntegrationTest extends IntegrationTest {
     public static final String ADMIN_PASSWORD = "foobar";
 
     @Autowired
+    private BruteForceProtector bruteForceProtector;
+
+    @Autowired
+    private TokenKeyService tokenKeyService;
+
+    @Autowired
     private InstallationService installationService;
-    
+
     @TempDir
     public Path tempFolder;
     
@@ -27,6 +35,8 @@ public abstract class InstallingIntegrationTest extends IntegrationTest {
     @BeforeEach
     public void setUpInstallingIntegrationTest() throws Exception {
         libraryFolder = tempFolder.toFile();
+        bruteForceProtector.clearLoginAttempts();
+        tokenKeyService.clearCache();
         InstallationCommand command = new InstallationCommand()
                 .setAdminName(ADMIN_NAME)
                 .setAdminEmail(ADMIN_EMAIL)
