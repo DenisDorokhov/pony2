@@ -1,38 +1,40 @@
-<div class="library-container">
-  <div class="header">
-    <div class="logo-container">
-      <!--suppress HtmlUnknownTarget -->
-      <img src="./logo.svg" alt="logo">
+<div class="library-root">
+  <div class="library-container">
+    <div class="header">
+      <div class="logo-container">
+        <!--suppress HtmlUnknownTarget -->
+        <img src="./logo.svg" alt="logo">
+      </div>
+      <div class="player">
+        <pony-player></pony-player>
+      </div>
+      <div class="toolbar">
+        <pony-toolbar></pony-toolbar>
+      </div>
     </div>
-    <div class="player">
-      <pony-player></pony-player>
+    <div class="content">
+      <pony-artist-list></pony-artist-list>
+      <pony-album-list></pony-album-list>
     </div>
-    <div class="toolbar">
-      <pony-toolbar></pony-toolbar>
+    <div class="footer">
+      <small>
+        <span *ngIf="scanStatistics">
+          {{ 'library.scanStatistics.counts' | translate:{
+              artistCount: scanStatistics.artistCount,
+              albumCount: scanStatistics.albumCount,
+              songCount: scanStatistics.songCount,
+              artworkCount: scanStatistics.artworkCount
+          } }}
+          |
+          {{ size }}
+          |
+          {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.scanJobDateFormat' | translate ))} }}
+          |
+        </span>
+        <a href="https://github.com/DenisDorokhov/pony3" target="_blank">
+          {{ 'library.scanStatistics.githubLinkLabel' | translate }}
+        </a>
+      </small>
     </div>
-  </div>
-  <div class="content">
-    <pony-artist-list></pony-artist-list>
-    <pony-album-list></pony-album-list>
-  </div>
-  <div class="footer">
-    <small>
-      <span *ngIf="scanStatistics">
-        {{ 'library.scanStatistics.counts' | translate:{
-            artistCount: scanStatistics.artistCount,
-            albumCount: scanStatistics.albumCount,
-            songCount: scanStatistics.songCount,
-            artworkCount: scanStatistics.artworkCount
-        } }}
-        |
-        {{ size }}
-        |
-        {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.scanJobDateFormat' | translate ))} }}
-        |
-      </span>
-      <a href="https://github.com/DenisDorokhov/pony3" target="_blank">
-        {{ 'library.scanStatistics.githubLinkLabel' | translate }}
-      </a>
-    </small>
   </div>
 </div>
