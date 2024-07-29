@@ -74,6 +74,13 @@
     .loading-indicator {
       width: 15px;
       height: 15px;
+      margin-bottom: -7px;
+    }
+
+    .error-indicator {
+      width: 15px;
+      height: 15px;
+      margin-bottom: -7px;
     }
   }
   .duration {

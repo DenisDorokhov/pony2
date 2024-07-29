@@ -20,6 +20,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   artworkUrl: string | undefined;
   isPlaying = false;
   isLoading = false;
+  isError = false;
   hasPreviousSong = false;
   hasNextSong = false;
   progress = 0.0; // 0.0 - 1.0.
@@ -97,6 +98,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     this.isPlaying = playbackEvent.state === PlaybackState.LOADING || playbackEvent.state === PlaybackState.PLAYING;
     this.isLoading = playbackEvent.state === PlaybackState.LOADING;
+    this.isError = playbackEvent.state === PlaybackState.ERROR;
     this.progress = playbackEvent.progress || 0;
     this.formattedProgress = playbackEvent.song ? playbackEvent.song.relativeDurationInMinutes(this.progress) : '0:00';
     this.formattedDuration = playbackEvent.song ? playbackEvent.song.durationInMinutes : '0:00';
