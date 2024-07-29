@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/config", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class ConfigAdminController implements ErrorHandlingController {
 
     private final ConfigFacade configFacade;
@@ -18,12 +18,12 @@ public class ConfigAdminController implements ErrorHandlingController {
         this.configFacade = configFacade;
     }
 
-    @GetMapping
+    @GetMapping("/api/admin/config")
     public ConfigDto getConfig() {
         return configFacade.getConfig();
     }
 
-    @PutMapping
+    @PutMapping("/api/admin/config")
     public ConfigDto saveConfig(@Valid @RequestBody ConfigDto config) {
         return configFacade.saveConfig(config);
     }

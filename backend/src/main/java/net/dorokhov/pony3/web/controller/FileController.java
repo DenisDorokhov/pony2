@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.UriUtils;
 
@@ -23,7 +22,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Controller
 @ResponseBody
-@RequestMapping("/api/file")
 public class FileController implements ErrorHandlingController {
 
     private final FileFacade fileFacade;
@@ -34,25 +32,25 @@ public class FileController implements ErrorHandlingController {
         this.fileDistributor = fileDistributor;
     }
 
-    @GetMapping(value = "/audio/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/api/file/audio/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
     public void getAudio(@PathVariable String songId,
-                                      HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
+                         HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getSongDistribution(songId), request, response);
     }
 
-    @GetMapping(value = "/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/api/file/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
     public void getLargeArtwork(@PathVariable String artworkId,
-                                             HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
+                                HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getLargeArtworkDistribution(artworkId), request, response);
     }
 
-    @GetMapping(value = "/artwork/small/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/api/file/artwork/small/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
     public void getSmallArtwork(@PathVariable String artworkId,
-                                             HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
+                                HttpServletRequest request, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         fileDistributor.distribute(fileFacade.getSmallArtworkDistribution(artworkId), request, response);
     }
 
-    @GetMapping(value = "/export/song/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/api/file/export/song/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
     public ResponseEntity<?> exportSong(@PathVariable String songId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = fileFacade.exportSong(songId);
         setExportBundleHeaders(exportBundle, response);
@@ -62,7 +60,7 @@ public class FileController implements ErrorHandlingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/export/album/{albumId}", produces = {"application/zip", APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/api/file/export/album/{albumId}", produces = {"application/zip", APPLICATION_JSON_VALUE})
     public ResponseEntity<?> exportAlbum(@PathVariable String albumId, HttpServletResponse response) throws ObjectNotFoundException, IOException {
         ExportBundle exportBundle = fileFacade.exportAlbum(albumId);
         setExportBundleHeaders(exportBundle, response);
@@ -72,7 +70,7 @@ public class FileController implements ErrorHandlingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private void setExportBundleHeaders(ExportBundle exportBundle, HttpServletResponse response) throws IOException {
+    private void setExportBundleHeaders(ExportBundle exportBundle, HttpServletResponse response) {
         response.setHeader("Content-Type", exportBundle.getMimeType());
         response.setHeader("Content-Disposition", "attachment; filename=\"" + UriUtils.encodeQuery(exportBundle.getFileName(), "UTF-8") + "\"");
     }

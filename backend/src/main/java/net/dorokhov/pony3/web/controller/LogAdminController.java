@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/log", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class LogAdminController implements ErrorHandlingController {
 
     private final LogFacade logFacade;
@@ -24,7 +24,7 @@ public class LogAdminController implements ErrorHandlingController {
         this.logFacade = logFacade;
     }
 
-    @GetMapping
+    @GetMapping("/api/admin/log")
     public LogMessagePageDto getLog(
             @RequestParam(required = false) Level minLevel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime minDate,

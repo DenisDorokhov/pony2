@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/installation", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class InstallationController implements ErrorHandlingController {
 
     @ControllerAdvice(assignableTypes = InstallationController.class)
@@ -43,12 +43,12 @@ public class InstallationController implements ErrorHandlingController {
         this.installationFacade = installationFacade;
     }
     
-    @GetMapping("/status")
+    @GetMapping("/api/installation/status")
     public InstallationStatusDto getInstallationStatus() {
         return installationFacade.getInstallationStatus();
     }
 
-    @PostMapping
+    @PostMapping("/api/installation")
     public InstallationDto install(@Valid @RequestBody InstallationCommandDto command) throws InvalidInstallationSecretException, AlreadyInstalledException {
         return installationFacade.install(command);
     }

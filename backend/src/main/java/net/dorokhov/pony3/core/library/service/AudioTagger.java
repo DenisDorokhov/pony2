@@ -71,13 +71,11 @@ public class AudioTagger {
     }
 
     private ReadableAudioData readMp3(File file, FileType fileType) throws Exception {
-        logger.debug("Reading MP3 file: '{}'.", file.getAbsolutePath());
         return tagToAudioData(AudioFileIO.read(file), fileType);
     }
     
     private ReadableAudioData writeMp3(File file, FileType fileType, WritableAudioData data) throws Exception {
 
-        logger.debug("Opening MP3 file for writing: '{}'.", file.getAbsolutePath());
         AudioFile audioFile = AudioFileIO.read(file);
         Tag tag = audioFile.getTagOrCreateDefault();
         audioFile.setTag(tag);

@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/frontend", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class FrontendController implements ErrorHandlingController {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @PostMapping("/log")
+    @PostMapping("/api/frontend/log")
     public void log(@RequestBody List<FrontendLogCommandDto> commands, @RequestHeader(HttpHeaders.USER_AGENT) String userAgent) {
         String message = "[{}] {} ('{}')";
         for (FrontendLogCommandDto command : commands) {

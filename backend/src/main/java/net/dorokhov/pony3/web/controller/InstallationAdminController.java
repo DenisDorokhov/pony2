@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/installation", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class InstallationAdminController implements ErrorHandlingController {
 
     private final InstallationFacade installationFacade;
@@ -20,7 +20,7 @@ public class InstallationAdminController implements ErrorHandlingController {
         this.installationFacade = installationFacade;
     }
 
-    @GetMapping
+    @GetMapping("/api/admin/installation")
     public InstallationDto getInstallation() throws ObjectNotFoundException {
         return installationFacade.getInstallation();
     }

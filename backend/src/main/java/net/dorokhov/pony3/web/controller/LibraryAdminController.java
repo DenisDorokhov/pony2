@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/library", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class LibraryAdminController implements ErrorHandlingController {
 
     @ControllerAdvice(assignableTypes = LibraryAdminController.class)
@@ -37,27 +37,27 @@ public class LibraryAdminController implements ErrorHandlingController {
         this.scanFacade = scanFacade;
     }
 
-    @GetMapping("/scanJobProgress")
+    @GetMapping("/api/admin/library/scanJobProgress")
     public OptionalResponseDto<ScanJobProgressDto> getCurrentScanJobProgress() {
         return scanFacade.getCurrentScanJobProgress();
     }
 
-    @GetMapping("/scanJobProgress/{scanJobId}")
+    @GetMapping("/api/admin/library/scanJobProgress/{scanJobId}")
     public ScanJobProgressDto getScanJobProgress(@PathVariable String scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJobProgress(scanJobId);
     }
 
-    @GetMapping("/scanJobs")
+    @GetMapping("/api/admin/library/scanJobs")
     public ScanJobPageDto getScanJobs(@RequestParam(defaultValue = "0") int pageIndex, @RequestParam(defaultValue = "30") int pageSize) {
         return scanFacade.getScanJobs(pageIndex, pageSize);
     }
 
-    @GetMapping("/scanJobs/{scanJobId}")
+    @GetMapping("/api/admin/library/scanJobs/{scanJobId}")
     public ScanJobDto getScanJob(@PathVariable String scanJobId) throws ObjectNotFoundException {
         return scanFacade.getScanJob(scanJobId);
     }
 
-    @PostMapping("/scanJobs")
+    @PostMapping("/api/admin/library/scanJobs")
     public ScanJobDto startScanJob() throws ConcurrentScanException {
         return scanFacade.startScanJob();
     }

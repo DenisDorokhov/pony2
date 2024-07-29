@@ -16,7 +16,7 @@ import java.util.List;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/admin/users", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class UserAdminController implements ErrorHandlingController {
     
     private final UserFacade userFacade;
@@ -25,22 +25,22 @@ public class UserAdminController implements ErrorHandlingController {
         this.userFacade = userFacade;
     }
     
-    @GetMapping
+    @GetMapping("/api/admin/users")
     public List<UserDto> getAllUsers() {
         return userFacade.getAllUsers();
     }
     
-    @GetMapping("/{userId}")
+    @GetMapping("/api/admin/users/{userId}")
     public UserDto getUserById(@PathVariable String userId) throws ObjectNotFoundException {
         return userFacade.getUserById(userId);
     }
     
-    @PostMapping
+    @PostMapping("/api/admin/users")
     public UserDto createUser(@Valid @RequestBody UserCreationCommandDto command) throws DuplicateEmailException {
         return userFacade.createUser(command);
     }
     
-    @PutMapping("/{userId}")
+    @PutMapping("/api/admin/users/{userId}")
     public UserDto updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdateCommandDto command) throws BadRequestException, ObjectNotFoundException, DuplicateEmailException {
         if (!userId.equals(command.getId())) {
             throw new BadRequestException();
@@ -48,7 +48,7 @@ public class UserAdminController implements ErrorHandlingController {
         return userFacade.updateUser(command);
     }
     
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/api/admin/users/{userId}")
     public UserDto deleteUser(@PathVariable String userId) throws BadRequestException, ObjectNotFoundException {
         if (userFacade.getCurrentUser().getId().equals(userId)) {
             throw new BadRequestException();

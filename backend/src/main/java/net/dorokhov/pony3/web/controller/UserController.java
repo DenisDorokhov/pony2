@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/api/user", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class UserController implements ErrorHandlingController {
     
     private final UserFacade userFacade;
@@ -21,12 +21,12 @@ public class UserController implements ErrorHandlingController {
         this.userFacade = userFacade;
     }
 
-    @GetMapping
+    @GetMapping("/api/user")
     public UserDto getCurrentUser() {
         return userFacade.getCurrentUser();
     }
     
-    @PutMapping
+    @PutMapping("/api/user")
     public UserDto updateCurrentUser(@Valid @RequestBody CurrentUserUpdateCommandDto command) throws InvalidPasswordException, DuplicateEmailException {
         return userFacade.updateCurrentUser(command);
     }

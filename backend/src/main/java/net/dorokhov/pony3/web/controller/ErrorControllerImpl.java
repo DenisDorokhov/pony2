@@ -9,15 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/error")
 public class ErrorControllerImpl implements ErrorController {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @GetMapping
+    @GetMapping("/error")
     public String error(HttpServletRequest request, Model model) {
         model.addAttribute("status", getStatus(request));
         return "error";
