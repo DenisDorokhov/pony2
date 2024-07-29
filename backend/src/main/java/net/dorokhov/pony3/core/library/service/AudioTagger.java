@@ -226,9 +226,23 @@ public class AudioTagger {
                 .setArtist(parseString(audioFile, FieldKey.ARTIST))
                 .setAlbumArtist(parseString(audioFile, FieldKey.ALBUM_ARTIST))
                 .setAlbum(parseString(audioFile, FieldKey.ALBUM))
-                .setYear(parseInteger(audioFile, FieldKey.YEAR))
+                .setYear(parseYear(audioFile))
                 .setGenre(parseGenre(audioFile))
                 .setEmbeddedArtwork(parseArtwork(audioFile));
+    }
+
+    private Integer parseYear(AudioFile audioFile) {
+        String stringValue = getFirstFromTagByKey(audioFile, FieldKey.YEAR);
+        if (stringValue != null) {
+            String[] numericParts = stringValue.split("[^\\d]");
+            if (numericParts.length > 0) {
+                Integer intValue = Ints.tryParse(numericParts[0]);
+                if (intValue != null && intValue > 0) {
+                    return intValue;
+                }
+            }
+        }
+        return null;
     }
 
     private String parseString(AudioFile audioFile, FieldKey key) {

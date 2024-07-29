@@ -34,6 +34,7 @@ public class AudioTaggerTest {
     private static final Resource FILE_ID3V2 = new ClassPathResource("audio/id3v2.mp3");
     private static final Resource FILE_ID3V2_EMPTY = new ClassPathResource("audio/id3v2-empty.mp3");
     private static final Resource FILE_ID3V2_UNICODE = new ClassPathResource("audio/id3v2-unicode.mp3");
+    private static final Resource FILE_ID3V2_YEAR_AS_DATE = new ClassPathResource("audio/id3v2-year-as-date.mp3");
     private static final Resource FILE_ARTWORK = new ClassPathResource("image.png");
 
     private static final FileType FILE_TYPE_MP3 = FileType.of("audio/mpeg", "mp3");
@@ -144,6 +145,17 @@ public class AudioTaggerTest {
         assertThat(data.getYear()).isNull();
         assertThat(data.getGenre()).isEqualTo("хэви метал");
         assertThat(data.getEmbeddedArtwork()).isNull();
+    }
+
+    @Test
+    public void shouldReadId3V2YearAsDate() throws IOException {
+
+        File file = FILE_ID3V2_YEAR_AS_DATE.getFile();
+
+        ReadableAudioData data = audioTagger.read(file);
+
+        checkMp3File(file, data);
+        assertThat(data.getYear()).isEqualTo(2024);
     }
 
     @Test
