@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {EMPTY} from 'rxjs';
-import {catchError, mergeMap} from 'rxjs/operators';
+import {catchError, mergeMap, tap} from 'rxjs/operators';
 import {InstallationService} from "./installation.service";
 import {AuthenticationService} from "./authentication.service";
 import Logger from "js-logger";
@@ -37,14 +37,24 @@ export class InitializerService {
     window.document.title = this.translateService.instant('noSongTitle');
 
     return this.installationService.getInstallationStatus()
-      .pipe(mergeMap(installationStatus => {
-        if (installationStatus.installed) {
-          return this.authenticationService.authenticate()
-            .pipe(catchError(() => EMPTY));
-        } else {
-          return EMPTY;
-        }
-      }))
+      .pipe(
+        mergeMap(installationStatus => {
+          if (installationStatus.installed) {
+            return this.authenticationService.authenticate()
+              .pipe(catchError(() => EMPTY));
+          } else {
+            return EMPTY;
+          }
+        }),
+        tap({
+          next: () => {
+            (window as any).ponyBootstrapSuccess = true;
+          },
+          error: () => {
+            (window as any).ponyBootstrapError = true;
+          }
+        })
+      )
       .toPromise();
   }
 }
