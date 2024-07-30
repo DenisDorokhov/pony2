@@ -10,20 +10,26 @@ public interface FolderNode extends Node {
     List<AudioNode> getChildAudios();
     List<FolderNode> getChildFolders();
 
-    default List<ImageNode> getChildImagesRecursively() {
+    default boolean isIgnored() {
+        return false;
+    }
+
+    default List<ImageNode> getNotIgnoredChildImagesRecursively() {
         List<ImageNode> result = new ArrayList<>();
         fetchChildrenRecursively(this, result, FolderNode::getChildImages);
         return result;
     }
     
-    default List<AudioNode> getChildAudiosRecursively() {
+    default List<AudioNode> getNotIgnoredChildAudiosRecursively() {
         List<AudioNode> result = new ArrayList<>();
         fetchChildrenRecursively(this, result, FolderNode::getChildAudios);
         return result;
     }
 
-    static <T> void fetchChildrenRecursively(FolderNode folder, List<T> result, Function<FolderNode, List<T>> childrenProvider) {
-        result.addAll(childrenProvider.apply(folder));
-        folder.getChildFolders().forEach(nextFolder -> fetchChildrenRecursively(nextFolder, result, childrenProvider));
+    private static <T> void fetchChildrenRecursively(FolderNode folder, List<T> result, Function<FolderNode, List<T>> childrenProvider) {
+        if (!folder.isIgnored()) {
+            result.addAll(childrenProvider.apply(folder));
+            folder.getChildFolders().forEach(nextFolder -> fetchChildrenRecursively(nextFolder, result, childrenProvider));
+        }
     }
 }

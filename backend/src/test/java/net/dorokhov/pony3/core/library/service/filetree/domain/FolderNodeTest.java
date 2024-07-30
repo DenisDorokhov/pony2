@@ -13,67 +13,67 @@ import static org.mockito.Mockito.when;
 public class FolderNodeTest {
 
     @Test
-    public void shouldGetChildImagesRecursively() {
+    public void shouldGetNotIgnoredChildImagesRecursively() {
 
         FolderNode folder1_1_1 = mock(FolderNode.class);
         ImageNode image1_1_1_1 = mock(ImageNode.class);
         when(folder1_1_1.getChildImages()).thenReturn(ImmutableList.of(image1_1_1_1));
         when(folder1_1_1.getChildFolders()).thenReturn(emptyList());
-        when(folder1_1_1.getChildImagesRecursively()).thenCallRealMethod();
+        when(folder1_1_1.getNotIgnoredChildImagesRecursively()).thenCallRealMethod();
 
         FolderNode folder1_1 = mock(FolderNode.class);
         ImageNode image1_1_1 = mock(ImageNode.class);
         when(folder1_1.getChildImages()).thenReturn(ImmutableList.of(image1_1_1));
         when(folder1_1.getChildFolders()).thenReturn(ImmutableList.of(folder1_1_1));
-        when(folder1_1.getChildImagesRecursively()).thenCallRealMethod();
+        when(folder1_1.getNotIgnoredChildImagesRecursively()).thenCallRealMethod();
 
         FolderNode folder1_2 = mock(FolderNode.class);
         ImageNode image1_2_1 = mock(ImageNode.class);
         when(folder1_2.getChildImages()).thenReturn(ImmutableList.of(image1_2_1));
         when(folder1_2.getChildFolders()).thenReturn(emptyList());
-        when(folder1_2.getChildImagesRecursively()).thenCallRealMethod();
+        when(folder1_2.getNotIgnoredChildImagesRecursively()).thenCallRealMethod();
 
         FolderNode folder1 = mock(FolderNode.class);
         ImageNode image1_1 = mock(ImageNode.class);
         ImageNode image1_2 = mock(ImageNode.class);
         when(folder1.getChildImages()).thenReturn(ImmutableList.of(image1_1, image1_2));
         when(folder1.getChildFolders()).thenReturn(ImmutableList.of(folder1_1, folder1_2));
-        when(folder1.getChildImagesRecursively()).thenCallRealMethod();
+        when(folder1.getNotIgnoredChildImagesRecursively()).thenCallRealMethod();
 
-        List<ImageNode> imageNodes = folder1.getChildImagesRecursively();
+        List<ImageNode> imageNodes = folder1.getNotIgnoredChildImagesRecursively();
 
         assertThat(imageNodes).containsExactlyInAnyOrder(image1_1_1_1, image1_1_1, image1_2_1, image1_1, image1_2);
     }
 
     @Test
-    public void shouldGetChildAudiosRecursively() {
+    public void shouldGetNotIgnoredChildAudiosRecursively() {
 
         FolderNode folder1_1_1 = mock(FolderNode.class);
         AudioNode audio1_1_1_1 = mock(AudioNode.class);
         when(folder1_1_1.getChildAudios()).thenReturn(ImmutableList.of(audio1_1_1_1));
         when(folder1_1_1.getChildFolders()).thenReturn(emptyList());
-        when(folder1_1_1.getChildAudiosRecursively()).thenCallRealMethod();
+        when(folder1_1_1.getNotIgnoredChildAudiosRecursively()).thenCallRealMethod();
 
         FolderNode folder1_1 = mock(FolderNode.class);
         AudioNode audio1_1_1 = mock(AudioNode.class);
         when(folder1_1.getChildAudios()).thenReturn(ImmutableList.of(audio1_1_1));
         when(folder1_1.getChildFolders()).thenReturn(ImmutableList.of(folder1_1_1));
-        when(folder1_1.getChildAudiosRecursively()).thenCallRealMethod();
+        when(folder1_1.getNotIgnoredChildAudiosRecursively()).thenCallRealMethod();
 
         FolderNode folder1_2 = mock(FolderNode.class);
         AudioNode audio1_2_1 = mock(AudioNode.class);
         when(folder1_2.getChildAudios()).thenReturn(ImmutableList.of(audio1_2_1));
         when(folder1_2.getChildFolders()).thenReturn(emptyList());
-        when(folder1_2.getChildAudiosRecursively()).thenCallRealMethod();
+        when(folder1_2.getNotIgnoredChildAudiosRecursively()).thenCallRealMethod();
 
         FolderNode folder1 = mock(FolderNode.class);
         AudioNode audio1_1 = mock(AudioNode.class);
         AudioNode audio1_2 = mock(AudioNode.class);
         when(folder1.getChildAudios()).thenReturn(ImmutableList.of(audio1_1, audio1_2));
         when(folder1.getChildFolders()).thenReturn(ImmutableList.of(folder1_1, folder1_2));
-        when(folder1.getChildAudiosRecursively()).thenCallRealMethod();
+        when(folder1.getNotIgnoredChildAudiosRecursively()).thenCallRealMethod();
 
-        List<AudioNode> AudioNodes = folder1.getChildAudiosRecursively();
+        List<AudioNode> AudioNodes = folder1.getNotIgnoredChildAudiosRecursively();
 
         assertThat(AudioNodes).containsExactlyInAnyOrder(audio1_1_1_1, audio1_1_1, audio1_2_1, audio1_1, audio1_2);
     }

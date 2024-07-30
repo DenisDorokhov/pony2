@@ -128,8 +128,8 @@ public class FileTreeScannerTest {
 
         assertThat(nodesToNames(root.getChildFolders())).containsOnly("artist1", "artist2");
 
-        assertThat(nodesToNames(root.getChildImagesRecursively())).containsOnly("cover1-1-1.png", "cover1-2-1.png");
-        assertThat(nodesToNames(root.getChildAudiosRecursively())).containsOnly("song1-1-1.mp3", "song1-1-2.mp3", "song1-2-1.mp3", "song2-1.mp3");
+        assertThat(nodesToNames(root.getNotIgnoredChildImagesRecursively())).containsOnly("cover1-1-1.png", "cover1-2-1.png");
+        assertThat(nodesToNames(root.getNotIgnoredChildAudiosRecursively())).containsOnly("song1-1-1.mp3", "song1-1-2.mp3", "song1-2-1.mp3", "song2-1.mp3");
 
         root.getChildFolders().forEach(f -> {
             switch (f.getFile().getName()) {
@@ -164,7 +164,7 @@ public class FileTreeScannerTest {
     }
 
     private void checkAlbum1_1(FolderNode folder) {
-        assertThat(nodesToNames(folder.getChildFolders())).isEmpty();
+        assertThat(nodesToNames(folder.getChildFolders())).containsOnly("ignored");
         assertThat(nodesToNames(folder.getChildImages())).containsOnly("cover1-1-1.png");
         assertThat(nodesToNames(folder.getChildAudios())).containsOnly("song1-1-1.mp3", "song1-1-2.mp3");
     }

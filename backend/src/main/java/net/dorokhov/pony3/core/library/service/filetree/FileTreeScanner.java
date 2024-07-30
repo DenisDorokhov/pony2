@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -101,9 +102,13 @@ public class FileTreeScanner {
         }
 
         @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
+            File file = filePath.toFile();
             MutableFolderNode parentFolder = folderStack.peek();
-            FileNode fileNode = resolveFileNode(file.toFile(), parentFolder);
+            if (Objects.equals(file.getName(), ".ponyignore")) {
+                parentFolder.setIgnored(true);
+            }
+            FileNode fileNode = resolveFileNode(file, parentFolder);
             if (fileNode instanceof ImageNode) {
                 parentFolder.getMutableChildImages().add((ImageNode) fileNode);
             } else if (fileNode instanceof AudioNode) {

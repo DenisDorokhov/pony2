@@ -12,6 +12,8 @@ public class MutableFolderNode extends AbstractNode implements FolderNode {
     private final List<AudioNode> childAudios = new ArrayList<>();
     private final List<MutableFolderNode> childFolders = new ArrayList<>();
 
+    private boolean ignored = false;
+
     public MutableFolderNode(File file, MutableFolderNode parentFolder) {
         super(file, parentFolder);
     }
@@ -41,5 +43,14 @@ public class MutableFolderNode extends AbstractNode implements FolderNode {
     
     public List<MutableFolderNode> getMutableChildFolders() {
         return childFolders;
+    }
+
+    @Override
+    public boolean isIgnored() {
+        return ignored;
+    }
+
+    public void setIgnored(boolean ignored) {
+        this.ignored = ignored;
     }
 }

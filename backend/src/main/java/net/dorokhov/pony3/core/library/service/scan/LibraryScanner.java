@@ -143,8 +143,8 @@ public class LibraryScanner {
         List<ImageNode> imageNodes = new ArrayList<>();
         for (File file : targetFolders) {
             FolderNode folderNode = fileTreeScanner.scanFolder(file);
-            audioNodes.addAll(folderNode.getChildAudiosRecursively());
-            imageNodes.addAll(folderNode.getChildImagesRecursively());
+            audioNodes.addAll(folderNode.getNotIgnoredChildAudiosRecursively());
+            imageNodes.addAll(folderNode.getNotIgnoredChildImagesRecursively());
         }
         audioNodes.sort(Comparator.comparing(audioNode -> audioNode.getFile().getAbsolutePath()));
         imageNodes.sort(Comparator.comparing(imageNode -> imageNode.getFile().getAbsolutePath()));

@@ -89,13 +89,13 @@ public class LibraryScannerTest {
         AudioNode audioNode2 = mock(AudioNode.class);
         when(audioNode1.getFile()).thenReturn(new File("audioNode1"));
         when(audioNode2.getFile()).thenReturn(new File("audioNode2"));
-        when(folderNode.getChildAudiosRecursively()).thenReturn(ImmutableList.of(audioNode1, audioNode2));
+        when(folderNode.getNotIgnoredChildAudiosRecursively()).thenReturn(ImmutableList.of(audioNode1, audioNode2));
 
         ImageNode imageNode1 = mock(ImageNode.class);
         ImageNode imageNode2 = mock(ImageNode.class);
         when(imageNode1.getFile()).thenReturn(new File("imageNode1"));
         when(imageNode2.getFile()).thenReturn(new File("imageNode2"));
-        when(folderNode.getChildImagesRecursively()).thenReturn(ImmutableList.of(imageNode1, imageNode2));
+        when(folderNode.getNotIgnoredChildImagesRecursively()).thenReturn(ImmutableList.of(imageNode1, imageNode2));
 
         ScanResult scanResultFixture = scanResult(FULL);
         when(scanResultCalculator.calculateAndSave(any())).then(invocation -> {
