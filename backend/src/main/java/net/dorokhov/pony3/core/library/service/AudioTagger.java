@@ -220,13 +220,24 @@ public class AudioTagger {
                 .setDiscCount(parseInteger(audioFile, FieldKey.DISC_TOTAL))
                 .setTrackNumber(parseInteger(audioFile, FieldKey.TRACK))
                 .setTrackCount(parseInteger(audioFile, FieldKey.TRACK_TOTAL))
-                .setTitle(parseString(audioFile, FieldKey.TITLE))
-                .setArtist(parseString(audioFile, FieldKey.ARTIST))
-                .setAlbumArtist(parseString(audioFile, FieldKey.ALBUM_ARTIST))
-                .setAlbum(parseString(audioFile, FieldKey.ALBUM))
+                .setTitle(acceptStringNotLongerThan(parseString(audioFile, FieldKey.TITLE), 255))
+                .setArtist(acceptStringNotLongerThan(parseString(audioFile, FieldKey.ARTIST), 255))
+                .setAlbumArtist(acceptStringNotLongerThan(parseString(audioFile, FieldKey.ALBUM_ARTIST), 255))
+                .setAlbum(acceptStringNotLongerThan(parseString(audioFile, FieldKey.ALBUM), 255))
                 .setYear(parseYear(audioFile))
-                .setGenre(parseGenre(audioFile))
+                .setGenre(acceptStringNotLongerThan(parseGenre(audioFile), 255))
                 .setEmbeddedArtwork(parseArtwork(audioFile));
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private @Nullable String acceptStringNotLongerThan(@Nullable String value, int lengthLimit) {
+        if (value == null) {
+            return null;
+        }
+        if (value.length() <= lengthLimit) {
+            return value;
+        }
+        return null;
     }
 
     private Integer parseYear(AudioFile audioFile) {
