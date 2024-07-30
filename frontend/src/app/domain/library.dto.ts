@@ -114,7 +114,7 @@ export interface ScanResultDto {
 }
 
 export interface ScanJobDto {
-  id: number;
+  id: string;
   creationDate: string;
   updateDate: string | undefined;
   scanType: ScanType;

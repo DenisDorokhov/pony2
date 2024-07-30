@@ -19,7 +19,7 @@ export class AuthenticationService {
   private _currentUser: UserDto | undefined;
 
   private authenticationSubject = new Subject<UserDto>();
-  private logoutSubject = new Subject<UserDto>();
+  private logoutSubject = new Subject<UserDto | undefined>();
 
   constructor(private tokenStorage: TokenStorageService, private httpClient: HttpClient) {
   }
@@ -50,18 +50,23 @@ export class AuthenticationService {
   logout(): Observable<UserDto> {
     return this.httpClient.delete<UserDto>('/api/authentication')
       .pipe(
-        tap(() => {
-          this.tokenStorage.accessToken = undefined;
-          this.tokenStorage.staticToken = undefined;
-          const oldUser = this._currentUser;
-          this._currentUser = undefined;
-          this.logoutSubject.next(oldUser!);
-        }),
-        catchError(ErrorDto.observableFromHttpErrorResponse)
+        tap(() => this.doLogout()),
+        catchError(error => {
+          this.doLogout();
+          return ErrorDto.observableFromHttpErrorResponse(error);
+        })
       );
   }
 
-  observeLogout(): Observable<UserDto> {
+  private doLogout() {
+    this.tokenStorage.accessToken = undefined;
+    this.tokenStorage.staticToken = undefined;
+    const oldUser = this._currentUser;
+    this._currentUser = undefined;
+    this.logoutSubject.next(oldUser);
+  }
+
+  observeLogout(): Observable<UserDto | undefined> {
     return this.logoutSubject.asObservable();
   }
 

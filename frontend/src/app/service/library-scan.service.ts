@@ -14,16 +14,14 @@ import {
   timer
 } from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
-import {
-  ScanJobDto,
-  ScanJobPageDto,
-  ScanJobProgressDto,
-  ScanStatisticsDto
-} from "../domain/library.dto";
+import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
 import {ErrorDto, OptionalResponseDto} from "../domain/common.dto";
 import Logger from "js-logger";
 import {LibraryService} from "./library.service";
+import {NotificationService} from "./notification.service";
+import {TranslateService} from "@ngx-translate/core";
+import Status = ScanJobDto.Status;
 
 @Injectable({
   providedIn: 'root'
@@ -39,7 +37,9 @@ export class LibraryScanService {
   constructor(
     private libraryService: LibraryService,
     private httpClient: HttpClient,
-    private authenticationService: AuthenticationService
+    private authenticationService: AuthenticationService,
+    private notificationService: NotificationService,
+    private translateService: TranslateService
   ) {
     this.scheduleScanJobProgressUpdate();
     if (this.authenticationService.isAuthenticated) {
@@ -102,13 +102,31 @@ export class LibraryScanService {
                   this.libraryService.requestRefresh();
                 })
               ).subscribe();
+              this.notificationService.success(
+                this.translateService.instant('notification.scanJobTitle'),
+                this.translateService.instant('notification.scanJobStartedText')
+              );
             }
             this.scanJobProgressSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
             Logger.info('Scan job is not running.');
             if (this.scanJobProgressSubject.value !== null) {
+              const oldScanJob = this.scanJobProgressSubject.value?.scanJob;
               this.scanJobProgressSubject.next(null);
+              this.getScanJob(oldScanJob?.id!).subscribe(scanJob => {
+                if (scanJob.status === Status.FAILED) {
+                  this.notificationService.error(
+                    this.translateService.instant('notification.scanJobTitle'),
+                    this.translateService.instant('notification.scanJobFailedText')
+                  );
+                } else {
+                  this.notificationService.success(
+                    this.translateService.instant('notification.scanJobTitle'),
+                    this.translateService.instant('notification.scanJobFinishedText')
+                  );
+                }
+              });
             }
             if (this.refreshRequestSubscription) {
               Logger.info("Scan job finished, cancelling auto-refresh.");
@@ -120,6 +138,10 @@ export class LibraryScanService {
           }
         })
       );
+  }
+
+  private getScanJob(id: string): Observable<ScanJobDto> {
+    return this.httpClient.get<ScanJobDto>('/api/admin/library/scanJobs/' + id);
   }
 
   observeScanStatistics(): Observable<ScanStatisticsDto | undefined | null> {

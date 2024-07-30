@@ -121,6 +121,16 @@ export default {
       interruptedStatus: 'INTERRUPTED',
     },
   },
+  notification: {
+    authenticationErrorTitle: 'Authentication Error',
+    authenticationErrorText: 'Please re-login.',
+    authorizationErrorTitle: 'Authorization Error',
+    authorizationErrorText: 'Access denied.',
+    scanJobTitle: 'Scan Job',
+    scanJobStartedText: 'Running...',
+    scanJobFinishedText: 'Complete!',
+    scanJobFailedText: 'Failed!',
+  },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).
   },

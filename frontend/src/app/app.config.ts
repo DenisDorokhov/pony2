@@ -1,14 +1,16 @@
 import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom, provideZoneChangeDetection} from '@angular/core';
 import {provideRouter, withHashLocation} from '@angular/router';
 
-import { routes } from './app.routes';
+import {routes} from './app.routes';
 import {InitializerService} from "./service/initializer.service";
 import {HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {CookieModule} from "ngx-cookie";
 import {TranslateLoaderService} from "./service/translate-loader.service";
 import {TranslateLoader, TranslateModule} from "@ngx-translate/core";
-import {TokenInterceptor} from "./service/token-interceptor.service";
+import {SecurityInterceptor} from "./service/security-interceptor.service";
 import {ReactiveFormsModule} from "@angular/forms";
+import {provideToastr} from "ngx-toastr";
+import {provideAnimations} from "@angular/platform-browser/animations";
 
 export function initialize(initializerService: InitializerService) {
   return () => initializerService.initialize();
@@ -18,9 +20,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withHashLocation()),
-    provideHttpClient(
-      withInterceptorsFromDi()
-    ),
+    provideHttpClient(withInterceptorsFromDi()),
+    provideAnimations(),
+    provideToastr(),
     importProvidersFrom(
       ReactiveFormsModule,
       TranslateModule.forRoot({
@@ -29,7 +31,7 @@ export const appConfig: ApplicationConfig = {
           useClass: TranslateLoaderService,
         }
       }),
-      CookieModule.withOptions()
+      CookieModule.withOptions(),
     ),
     {
       provide: APP_INITIALIZER,
@@ -39,7 +41,7 @@ export const appConfig: ApplicationConfig = {
     },
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: TokenInterceptor,
+      useClass: SecurityInterceptor,
       multi: true,
     }
   ]
