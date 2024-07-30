@@ -8,8 +8,8 @@ import {LibraryComponent} from "./component/library/library.component";
 import {LoginComponent} from "./component/login.component";
 
 export const routes: Routes = [
-  {path: '', redirectTo: 'library', pathMatch: 'full'},
   {path: 'install', component: InstallationComponent, canMatch: [NotInstalledGuard]},
   {path: 'library', component: LibraryComponent, canMatch: [InstalledGuard, AuthenticatedGuard]},
   {path: 'login', component: LoginComponent, canMatch: [InstalledGuard, NotAuthenticatedGuard]},
+  {path: '**', redirectTo: 'library', pathMatch: 'full'},
 ];
