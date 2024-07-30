@@ -64,6 +64,22 @@ export class Song {
     buf += Math.floor(seconds);
     return buf;
   }
+
+  static compare(song1: Song, song2: Song): number {
+    if ((song1.trackNumber ?? 0) > (song2.trackNumber ?? 0)) {
+      return 1;
+    }
+    if ((song1.trackNumber ?? 0) < (song2.trackNumber ?? 0)) {
+      return -1;
+    }
+    if ((song1.name ?? "") > (song2.name ?? "")) {
+      return 1;
+    }
+    if ((song1.name ?? "") < (song2.name ?? "")) {
+      return -1;
+    }
+    return 0;
+  }
 }
 
 export class Album {
@@ -100,6 +116,16 @@ export class AlbumSongs {
     this.album = new Album(albumSongsDto.album, artist);
     this.songs = albumSongsDto.songs
       .map(songDto => new Song(songDto, this.album));
+  }
+
+  static compare(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
+    if ((albumSongs1.album.year ?? 0) < (albumSongs2.album.year ?? 0)) {
+      return 1;
+    }
+    if ((albumSongs1.album.year ?? 0) > (albumSongs2.album.year ?? 0)) {
+      return -1;
+    }
+    return 0;
   }
 }
 

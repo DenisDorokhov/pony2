@@ -24,22 +24,6 @@ export class AlbumComponent implements OnChanges {
 
   discs: Disc[] = [];
 
-  private static compareSongs(song1: Song, song2: Song): number {
-    if ((song1.trackNumber ?? 0) > (song2.trackNumber ?? 0)) {
-      return 1;
-    }
-    if ((song1.trackNumber ?? 0) < (song2.trackNumber ?? 0)) {
-      return -1;
-    }
-    if ((song1.name ?? "") > (song2.name ?? "")) {
-      return 1;
-    }
-    if ((song1.name ?? "") < (song2.name ?? "")) {
-      return -1;
-    }
-    return 0;
-  }
-
   private static compareDiscs(disc1: Disc, disc2: Disc) {
     if ((disc1.discNumber ?? 0) > (disc2.discNumber ?? 0)) {
       return 1;
@@ -92,7 +76,7 @@ export class AlbumComponent implements OnChanges {
         showArtist: false,
         songs: discSongs
       };
-      disc.songs.sort(AlbumComponent.compareSongs);
+      disc.songs.sort(Song.compare);
       disc.songs.forEach(song => {
         if (!disc.showArtist) {
           disc.showArtist = !AlbumComponent.nullSafeNormalizedEquals(song.artistName, this.albumSongs.album.artist.name);

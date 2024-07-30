@@ -33,16 +33,6 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   private libraryStateSubscription: Subscription | undefined;
   private songPlaybackRequestSubscription: Subscription | undefined;
 
-  private static compareAlbumSongs(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
-    if ((albumSongs1.album.year ?? 0) < (albumSongs2.album.year ?? 0)) {
-      return 1;
-    }
-    if ((albumSongs1.album.year ?? 0) > (albumSongs2.album.year ?? 0)) {
-      return -1;
-    }
-    return 0;
-  }
-
   constructor(private libraryService: LibraryService, private playbackService: PlaybackService) {
   }
 
@@ -108,7 +98,8 @@ export class AlbumListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: artistSongs => {
           this.artistSongs = artistSongs;
-          this.artistSongs.albumSongs.sort(AlbumListComponent.compareAlbumSongs);
+          this.artistSongs.albumSongs.sort(AlbumSongs.compare);
+          this.artistSongs.albumSongs.forEach(next => next.songs.sort(Song.compare));
           this.loadingState = LoadingState.LOADED;
           Logger.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
