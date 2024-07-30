@@ -66,7 +66,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
             });
         }
       });
-    }, 50);
+    }, 0);
   }
 
   ngOnDestroy(): void {
