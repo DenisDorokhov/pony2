@@ -1,0 +1,60 @@
+.container {
+
+  padding-left: 16px;
+  padding-right: 16px;
+
+  .create-user-button {
+    margin: 16px 0 10px;
+  }
+
+  table {
+    border: 1px solid #cccccc;
+    width: 100%;
+    margin: 0;
+
+    thead {
+      border-bottom: 1px solid #cccccc;
+
+      .startDate {
+        width: 180px;
+      }
+      .updateDate {
+        width: 180px;
+      }
+      .status {
+        width: 130px;
+      }
+    }
+
+    tbody {
+      border: 1px solid #cccccc;
+    }
+
+    td {
+      vertical-align: middle;
+      line-height: 34px;
+    }
+
+    .role.admin {
+      font-weight: bold;
+    }
+  }
+
+  .pagination-container {
+    padding-top: 10px;
+    padding-bottom: 16px;
+
+    .page-label {
+      text-align: center;
+      line-height: 37px;
+    }
+
+    .next-button-container {
+      text-align: right;
+    }
+
+    pony-loading-indicator, pony-error-indicator {
+      line-height: 37px;
+    }
+  }
+}

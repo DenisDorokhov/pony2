@@ -14,6 +14,7 @@ import net.dorokhov.pony3.web.service.exception.SecretNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -65,7 +66,7 @@ public class InstallationControllerTest extends IntegrationTest {
 
         assertThat(configService.getLibraryFolders()).isEmpty();
 
-        List<User> users = userService.getAll();
+        List<User> users = userService.getAll(PageRequest.of(0, 30)).getContent();
         assertThat(users).hasSize(1);
         assertThat(users).first().satisfies(user -> {
             assertThat(user.getName()).isEqualTo("Foo Bar");

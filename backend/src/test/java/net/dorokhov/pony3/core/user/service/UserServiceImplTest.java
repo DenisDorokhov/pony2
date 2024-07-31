@@ -17,7 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -65,9 +67,9 @@ public class UserServiceImplTest {
     public void shouldGetAll() {
 
         List<User> users = ImmutableList.of(user());
-        when(userRepository.findAll((Sort) any())).thenReturn(users);
+        when(userRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(users));
 
-        assertThat(userService.getAll()).isSameAs(users);
+        assertThat(userService.getAll(PageRequest.of(0, 10)).getContent()).isEqualTo(users);
     }
 
     @Test

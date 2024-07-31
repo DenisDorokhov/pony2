@@ -1,9 +1,7 @@
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs";
-import {UserDto} from "../domain/user.dto";
+import {UserPageDto} from "../domain/user.dto";
 import {HttpClient} from "@angular/common/http";
-import {catchError} from "rxjs/operators";
-import {ErrorDto} from "../domain/common.dto";
 
 @Injectable({
   providedIn: 'root'
@@ -15,10 +13,7 @@ export class UserService {
   ) {
   }
 
-  getAllUsers(): Observable<UserDto[]> {
-    return this.httpClient.get<UserDto[]>('/api/admin/users')
-      .pipe(
-        catchError(ErrorDto.observableFromHttpErrorResponse)
-      );
+  getAllUsers(pageIndex = 0, pageSize = 30): Observable<UserPageDto> {
+    return this.httpClient.get<UserPageDto>('/api/admin/users', { params: {pageIndex, pageSize} });
   }
 }

@@ -53,7 +53,7 @@ export class AuthenticationService {
         tap(() => this.doLogout()),
         catchError(error => {
           this.doLogout();
-          return ErrorDto.observableFromHttpErrorResponse(error);
+          return throwError(() => error);
         })
       );
   }

@@ -7,8 +7,9 @@ import net.dorokhov.pony3.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony3.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony3.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony3.api.user.service.exception.UserNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -16,7 +17,7 @@ public interface UserService {
     Optional<User> getById(String id);
     Optional<User> getByEmail(String email);
 
-    List<User> getAll();
+    Page<User> getAll(Pageable pageable);
     
     boolean checkUserPassword(String id, String password) throws UserNotFoundException;
 

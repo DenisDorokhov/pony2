@@ -104,6 +104,8 @@ export default {
     emailColumn: 'Email',
     roleColumn: 'Role',
     editColumn: 'Edit',
+    createUserButton: 'Create User',
+    editUserButton: 'Edit User',
   },
   shared: {
     errorsHeader: 'Errors',
@@ -123,7 +125,7 @@ export default {
   },
   notification: {
     authenticationErrorTitle: 'Authentication Error',
-    authenticationErrorText: 'Please re-login.',
+    authenticationErrorText: 'Please sign in.',
     authorizationErrorTitle: 'Authorization Error',
     authorizationErrorText: 'Access denied.',
     scanJobTitle: 'Scan Job',

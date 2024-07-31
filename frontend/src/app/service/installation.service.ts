@@ -21,8 +21,7 @@ export class InstallationService {
     } else {
       return this.httpClient.get<InstallationStatusDto>('/api/installation/status')
         .pipe(
-          tap(installationStatus => this.installationStatus = installationStatus),
-          catchError(ErrorDto.observableFromHttpErrorResponse)
+          tap(installationStatus => this.installationStatus = installationStatus)
         );
     }
   }

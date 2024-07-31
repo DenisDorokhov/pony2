@@ -32,16 +32,16 @@ export class LoginComponent {
 
   login() {
     const credentials = <Credentials>this.loginForm.value;
-    this.authenticationService.authenticate(credentials).subscribe(
-      user => {
+    this.authenticationService.authenticate(credentials).subscribe({
+      next: user => {
         Logger.info(`User ${user.email} has been authenticated.`);
         this.error = undefined;
         this.router.navigate(['/library'], {replaceUrl: true});
       },
-      (error: ErrorDto) => {
+      error: (error: ErrorDto) => {
         Logger.error(`Authentication failed: "${error.message}".`);
         this.error = error;
       }
-    );
+    });
   }
 }

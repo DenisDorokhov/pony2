@@ -6,12 +6,11 @@ import net.dorokhov.pony3.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony3.web.controller.exception.BadRequestException;
 import net.dorokhov.pony3.web.dto.UserCreationCommandDto;
 import net.dorokhov.pony3.web.dto.UserDto;
+import net.dorokhov.pony3.web.dto.UserPageDto;
 import net.dorokhov.pony3.web.dto.UserUpdateCommandDto;
 import net.dorokhov.pony3.web.service.UserFacade;
 import net.dorokhov.pony3.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -26,8 +25,8 @@ public class UserAdminController implements ErrorHandlingController {
     }
     
     @GetMapping("/api/admin/users")
-    public List<UserDto> getAllUsers() {
-        return userFacade.getAllUsers();
+    public UserPageDto getAllUsers(@RequestParam(defaultValue = "0") int pageIndex, @RequestParam(defaultValue = "30") int pageSize) {
+        return userFacade.getAllUsers(pageIndex, pageSize);
     }
     
     @GetMapping("/api/admin/users/{userId}")

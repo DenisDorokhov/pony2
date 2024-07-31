@@ -16,7 +16,7 @@ import {
 import {catchError, map, tap} from 'rxjs/operators';
 import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
-import {ErrorDto, OptionalResponseDto} from "../domain/common.dto";
+import {OptionalResponseDto} from "../domain/common.dto";
 import Logger from "js-logger";
 import {LibraryService} from "./library.service";
 import {NotificationService} from "./notification.service";
@@ -166,13 +166,7 @@ export class LibraryScanService {
   }
 
   getScanJobs(pageIndex = 0, pageSize = 30): Observable<ScanJobPageDto> {
-    return this.httpClient.get<ScanJobPageDto>('/api/admin/library/scanJobs', { params: {pageIndex, pageSize} })
-      .pipe(
-        catchError(error => {
-          Logger.error(`Could not get scan jobs: ${JSON.stringify(error)}`);
-          throw ErrorDto.fromHttpErrorResponse(error);
-        })
-      );
+    return this.httpClient.get<ScanJobPageDto>('/api/admin/library/scanJobs', { params: {pageIndex, pageSize} });
   }
 
   startScanJob(): Observable<ScanJobProgressDto | null> {

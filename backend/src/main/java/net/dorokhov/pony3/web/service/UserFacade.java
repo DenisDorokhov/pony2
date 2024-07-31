@@ -5,19 +5,18 @@ import net.dorokhov.pony3.api.user.service.UserService;
 import net.dorokhov.pony3.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony3.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony3.api.user.service.exception.UserNotFoundException;
-import net.dorokhov.pony3.web.dto.CurrentUserUpdateCommandDto;
-import net.dorokhov.pony3.web.dto.UserCreationCommandDto;
-import net.dorokhov.pony3.web.dto.UserDto;
-import net.dorokhov.pony3.web.dto.UserUpdateCommandDto;
+import net.dorokhov.pony3.web.dto.*;
 import net.dorokhov.pony3.web.service.exception.NotAuthenticatedException;
 import net.dorokhov.pony3.web.service.exception.ObjectNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class UserFacade {
+
+    private static final int PAGE_SIZE = 30;
 
     private final UserService userService;
     private final UserContext userContext;
@@ -42,10 +41,9 @@ public class UserFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDto> getAllUsers() {
-        return userService.getAll().stream()
-                .map(UserDto::of)
-                .toList();
+    public UserPageDto getAllUsers(int pageIndex, int pageSize) {
+        return UserPageDto.of(userService.getAll(PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)),
+                Sort.by("name", "email"))));
     }
 
     @Transactional(readOnly = true)

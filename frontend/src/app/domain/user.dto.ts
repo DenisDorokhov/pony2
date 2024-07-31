@@ -1,3 +1,5 @@
+import {PageDto} from "./common.dto";
+
 export interface UserDto {
   id: string;
   creationDate: string;
@@ -18,4 +20,8 @@ export interface AuthenticationDto {
   user: UserDto;
   accessToken: string;
   staticToken: string;
+}
+
+export interface UserPageDto extends PageDto {
+  users: UserDto[];
 }

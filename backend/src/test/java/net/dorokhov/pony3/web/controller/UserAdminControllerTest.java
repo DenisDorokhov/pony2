@@ -9,6 +9,7 @@ import net.dorokhov.pony3.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony3.web.dto.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,21 +31,28 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto[]> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<UserPageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/users", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto[].class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserPageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(users -> {
-            assertThat(users).hasSize(1);
-            assertThat(users[0]).satisfies(userDto -> checkUser(userDto, userService.getAll().getFirst()));
+        assertThat(response.getBody()).satisfies(userPage -> {
+            assertThat(userPage.getPageIndex()).isEqualTo(0);
+            assertThat(userPage.getPageSize()).isGreaterThan(0);
+            assertThat(userPage.getTotalPages()).isEqualTo(1);
+            assertThat(userPage.getUsers()).satisfies(users -> {
+                assertThat(users).hasSize(1);
+                assertThat(users.getFirst()).satisfies(userDto -> checkUser(
+                        userDto, userService.getAll(PageRequest.of(0, 1)).getContent().getFirst()
+                ));
+            });
         });
     }
 
     @Test
     public void shouldGetUserById() {
 
-        User user = userService.getAll().getFirst();
+        User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
@@ -145,7 +153,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldUpdateUser() {
 
-        User user = userService.getAll().getFirst();
+        User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         UserUpdateCommandDto command = new UserUpdateCommandDto()
                 .setId(user.getId())
                 .setName("someName")
@@ -170,7 +178,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldValidateUserUpdateCommand() {
 
-        User user = userService.getAll().getFirst();
+        User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         UserUpdateCommandDto command = new UserUpdateCommandDto()
                 .setId(user.getId())
                 .setName(" ")
@@ -219,7 +227,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailUserUpdateValidationOnDuplicateEmail() throws DuplicateEmailException {
 
-        User user = userService.getAll().getFirst();
+        User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         userService.create(new UserCreationCommand()
                 .setName("Plain User")
                 .setEmail("new@email.com")
@@ -284,7 +292,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailWhenDeletingCurrentUser() {
 
-        User user = userService.getAll().getFirst();
+        User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(

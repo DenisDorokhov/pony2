@@ -1,10 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import {catchError, distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
+import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Artist, ArtistSongs, Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
-import {ErrorDto} from "../domain/common.dto";
 import {ArtistDto, ArtistSongsDto} from "../domain/library.dto";
 
 export enum LibraryState {
@@ -56,7 +55,6 @@ export class LibraryService {
   getArtists(): Observable<Artist[]> {
     return this.httpClient.get<ArtistDto[]>('/api/library/artists')
       .pipe(
-        catchError(ErrorDto.observableFromHttpErrorResponse),
         map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto))),
         tap(artists =>
           this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY))
@@ -66,7 +64,6 @@ export class LibraryService {
   getArtistSongs(artist: string): Observable<ArtistSongs> {
     return this.httpClient.get<ArtistSongsDto>(`/api/library/artistSongs/${artist}`)
       .pipe(
-        catchError(ErrorDto.observableFromHttpErrorResponse),
         map(artistSongsDto => new ArtistSongs(artistSongsDto))
       );
   }

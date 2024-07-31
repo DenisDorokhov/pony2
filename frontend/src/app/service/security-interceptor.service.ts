@@ -31,7 +31,7 @@ export class SecurityInterceptor implements HttpInterceptor {
     }
     return next.handle(newRequest).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && !error.url?.endsWith('/api/authentication')) {
           this.notificationService.error(
             this.translateService.instant('notification.authenticationErrorTitle'),
             this.translateService.instant('notification.authenticationErrorText')
