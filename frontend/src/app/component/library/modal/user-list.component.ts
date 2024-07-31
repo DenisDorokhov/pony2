@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {TranslateModule} from "@ngx-translate/core";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {UserDto, UserPageDto} from "../../../domain/user.dto";
 import {CommonModule} from "@angular/common";
 import {UserService} from "../../../service/user.service";
@@ -8,6 +8,7 @@ import {LoadingState} from "../../../domain/common.model";
 import Logger from "js-logger";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
+import {UserComponent} from "./user.component";
 
 @Component({
   standalone: true,
@@ -28,8 +29,9 @@ export class UserListComponent implements OnInit {
   emptyRowCount = 5;
 
   constructor(
+    public readonly activeModal: NgbActiveModal,
     private readonly userService: UserService,
-    public readonly activeModal: NgbActiveModal
+    private readonly modal: NgbModal
   ) {
   }
 
@@ -65,10 +67,11 @@ export class UserListComponent implements OnInit {
   }
 
   createUser() {
-
+    this.modal.open(UserComponent);
   }
 
   editUser(user: UserDto) {
-
+    const userComponent: UserComponent = this.modal.open(UserComponent).componentInstance;
+    userComponent.user = user;
   }
 }

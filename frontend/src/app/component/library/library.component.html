@@ -28,7 +28,7 @@
           |
           {{ size }}
           |
-          {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.scanJobDateFormat' | translate ))} }}
+          {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.dateTimeFormat' | translate ))} }}
           |
         </span>
         <a href="https://github.com/DenisDorokhov/pony3" target="_blank">

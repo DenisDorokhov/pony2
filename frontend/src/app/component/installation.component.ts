@@ -64,11 +64,6 @@ export class InstallationComponent {
         this.router.navigate(['/login'], {replaceUrl: true});
       },
       (error: ErrorDto) => {
-        if (error.code === ErrorDto.Code.VALIDATION) {
-          Logger.error('Validation failed.');
-        } else {
-          Logger.error(`Installation failed: "${error.message}".`);
-        }
         this.error = error;
       }
     );

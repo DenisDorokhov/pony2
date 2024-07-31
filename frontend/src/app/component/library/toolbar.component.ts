@@ -34,7 +34,7 @@ export class ToolbarComponent implements OnInit {
     private libraryService: LibraryService,
     private libraryScanService: LibraryScanService,
     private authenticationService: AuthenticationService,
-    private modalService: NgbModal
+    private modal: NgbModal
   ) {
   }
 
@@ -52,7 +52,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   openProfile() {
-    this.modalService.open(CurrentUserComponent);
+    this.modal.open(CurrentUserComponent);
   }
 
   signOut() {
@@ -61,18 +61,18 @@ export class ToolbarComponent implements OnInit {
   }
 
   openSettings() {
-    this.modalService.open(SettingsComponent);
+    this.modal.open(SettingsComponent);
   }
 
   openScanning() {
-    this.modalService.open(ScanningComponent, { size: 'xl' });
+    this.modal.open(ScanningComponent, { size: 'xl' });
   }
 
   openLog() {
-    this.modalService.open(LogComponent);
+    this.modal.open(LogComponent);
   }
 
   openUsers() {
-    this.modalService.open(UserListComponent, { size: 'xl' });
+    this.modal.open(UserListComponent, { size: 'xl' });
   }
 }

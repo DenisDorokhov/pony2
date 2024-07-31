@@ -128,8 +128,8 @@
     <tbody>
       @for (scanJob of scanJobs; track scanJob) {
         <tr>
-          <td>{{ scanJob.creationDate | date:('shared.scanJobDateFormat' | translate) }}</td>
-          <td>{{ scanJob.updateDate | date:('shared.scanJobDateFormat' | translate) }}</td>
+          <td>{{ scanJob.creationDate | date:('shared.dateTimeFormat' | translate) }}</td>
+          <td>{{ scanJob.updateDate | date:('shared.dateTimeFormat' | translate) }}</td>
           <td><span class="scan-job-status"
                     [class.starting]="scanJob.status === ScanJobStatus.STARTING"
                     [class.started]="scanJob.status === ScanJobStatus.STARTED"

@@ -25,3 +25,18 @@ export interface AuthenticationDto {
 export interface UserPageDto extends PageDto {
   users: UserDto[];
 }
+
+export interface UserUpdateCommandDto {
+  id: string;
+  name: string;
+  email: string;
+  newPassword: string;
+  role: UserDto.Role;
+}
+
+export interface UserCreateCommandDto {
+  name: string;
+  email: string;
+  password: string;
+  role: UserDto.Role;
+}
