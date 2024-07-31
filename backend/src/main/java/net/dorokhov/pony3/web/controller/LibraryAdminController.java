@@ -43,7 +43,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @GetMapping("/api/admin/library/scanJobProgress/{scanJobId}")
-    public ScanJobProgressDto getScanJobProgress(@PathVariable String scanJobId) throws ObjectNotFoundException {
+    public OptionalResponseDto<ScanJobProgressDto> getScanJobProgress(@PathVariable String scanJobId) {
         return scanFacade.getScanJobProgress(scanJobId);
     }
 

@@ -49,7 +49,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
         if (scanJobProgress) {
-          if (scanJobProgress.scanProgress.value) {
+          if (scanJobProgress.scanProgress?.value) {
             this.scanProgressValue = scanJobProgress?.scanProgress.value.itemsComplete * 100 / scanJobProgress?.scanProgress.value.itemsTotal;
           } else {
             this.scanProgressValue = null;

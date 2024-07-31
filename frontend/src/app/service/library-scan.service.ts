@@ -3,14 +3,14 @@ import {Injectable} from '@angular/core';
 import {
   BehaviorSubject,
   defer,
-  delay,
   delayWhen,
   interval,
   mergeMap,
   Observable,
   of,
   repeat,
-  Subscription, throwError,
+  Subscription,
+  throwError,
   timer
 } from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
@@ -178,7 +178,6 @@ export class LibraryScanService {
   startScanJob(): Observable<ScanJobProgressDto | null> {
     return this.httpClient.post<ScanJobDto>('/api/admin/library/scanJobs', null)
       .pipe(
-        delay(1000), // Scan job progress can't be checked immediately.
         mergeMap(scanJob => this.updateScanJobProgress().pipe(
           tap(scanJobProgress => {
             // If scan job finished too fast.

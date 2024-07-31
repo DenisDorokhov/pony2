@@ -18,12 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
 
-import java.util.Optional;
 import java.util.concurrent.Executor;
 
-import static net.dorokhov.pony3.api.library.domain.ScanType.FULL;
 import static net.dorokhov.pony3.core.library.PlatformTransactionManagerFixtures.transactionManager;
-import static net.dorokhov.pony3.test.ScanJobFixtures.scanJob;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -91,7 +88,6 @@ public class ScanJobServiceImplProgressTest {
             ScanJob scanJob = invocation.getArgument(0);
             return scanJob.setId("1");
         });
-        when(scanJobRepository.findById("2")).thenReturn(Optional.of(scanJob(FULL).setId("2")));
 
         scanJobService.startScanJob();
 
@@ -102,11 +98,7 @@ public class ScanJobServiceImplProgressTest {
             assertThat(currentScanJobProgress.getScanProgress()).isNull();
         });
 
-        assertThat(scanJobService.getScanJobProgress("2")).hasValueSatisfying(otherScanJobProgress -> {
-            assertThat(otherScanJobProgress.getScanJob()).isNotNull();
-            assertThat(otherScanJobProgress.getScanProgress()).isNull();
-        });
-
+        assertThat(scanJobService.getScanJobProgress("2")).isEmpty();
         assertThat(scanJobService.getScanJobProgress("3")).isEmpty();
     }
 }

@@ -103,7 +103,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         if (scanJobProgress != null && id.equals(scanJobProgress.getScanJob().getId())) {
             return Optional.of(scanJobProgress);
         } else {
-            return getById(id).map(scanJob -> new ScanJobProgress(scanJob, null));
+            return Optional.empty();
         }
     }
 

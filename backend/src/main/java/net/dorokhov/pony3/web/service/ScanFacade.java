@@ -49,12 +49,12 @@ public class ScanFacade {
     }
 
     @Transactional(readOnly = true)
-    public ScanJobProgressDto getScanJobProgress(String scanJobId) throws ObjectNotFoundException {
+    public OptionalResponseDto<ScanJobProgressDto> getScanJobProgress(String scanJobId) {
         ScanJobProgress scanJobProgress = scanJobService.getScanJobProgress(scanJobId).orElse(null);
         if (scanJobProgress == null) {
-            throw new ObjectNotFoundException(ScanJob.class, scanJobId);
+            return OptionalResponseDto.empty();
         }
-        return ScanJobProgressDto.of(scanJobProgress);
+        return OptionalResponseDto.of(ScanJobProgressDto.of(scanJobProgress));
     }
 
     @Transactional(readOnly = true)

@@ -176,15 +176,15 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<OptionalResponseDto<ScanJobProgressDto>> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {});
 
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).satisfies(error -> {
-            assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
-            assertThat(error.getArguments().get(0)).isEqualTo("ScanJob");
-            assertThat(error.getArguments().get(1)).isEqualTo("1000");
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isFalse();
+            assertThat(optionalResponse.getValue()).isNull();
         });
     }
     
@@ -229,14 +229,17 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             });
         });
 
-        ResponseEntity<ScanJobProgressDto> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<OptionalResponseDto<ScanJobProgressDto>> scanJobProgressResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/scanJobProgress/{scanJobId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ScanJobProgressDto.class, scanJob.getId());
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {},
+                scanJob.getId());
 
         assertThat(scanJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(scanJobProgressResponse.getBody()).satisfies(scanJobProgress -> {
-            assertThat(scanJobProgress.getScanJob()).isNotNull();
-            assertThat(scanJobProgress.getScanProgress()).isNotNull();
+        assertThat(scanJobProgressResponse.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isTrue();
+            assertThat(optionalResponse.getValue().getScanJob()).isNotNull();
+            assertThat(optionalResponse.getValue().getScanProgress()).isNotNull();
         });
 
         blockingObserver.unlock();

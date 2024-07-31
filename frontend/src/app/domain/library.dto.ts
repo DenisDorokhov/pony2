@@ -170,7 +170,7 @@ export namespace ScanProgressDto {
 
 export interface ScanJobProgressDto {
   scanJob: ScanJobDto;
-  scanProgress: ScanProgressDto;
+  scanProgress: ScanProgressDto | undefined;
 }
 
 export interface ScanJobPageDto extends PageDto {

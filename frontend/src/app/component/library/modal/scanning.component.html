@@ -17,16 +17,16 @@
           @if (!scanJobProgress) {
             {{ 'scanning.scanJobProgress.inactiveLabel' | translate }}
           } @else {
-            @switch (scanJobProgress.scanProgress.stepDescriptor.step) {
+            @switch (scanJobProgress.scanProgress?.stepDescriptor?.step) {
               @case (Step.FULL_SEARCHING_MEDIA) {
                 {{ 'scanning.scanJobProgress.searchingMediaLabel' | translate }}
               }
               @case (Step.FULL_CLEANING_SONGS) {
-                @if (scanJobProgress.scanProgress.value) {
+                @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.cleaningSongsWithProgressLabel' | translate:{
-                      itemsComplete: scanJobProgress.scanProgress.value.itemsComplete,
-                      itemsTotal: scanJobProgress.scanProgress.value.itemsTotal
+                      itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
                   }}
                 } @else {
@@ -34,11 +34,11 @@
                 }
               }
               @case (Step.FULL_CLEANING_ARTWORKS) {
-                @if (scanJobProgress.scanProgress.value) {
+                @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.cleaningArtworksWithProgressLabel' | translate:{
-                      itemsComplete: scanJobProgress.scanProgress.value.itemsComplete,
-                      itemsTotal: scanJobProgress.scanProgress.value.itemsTotal
+                      itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
                   }}
                 } @else {
@@ -46,11 +46,11 @@
                 }
               }
               @case (Step.FULL_IMPORTING) {
-                @if (scanJobProgress.scanProgress.value) {
+                @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.importingWithProgressLabel' | translate:{
-                      itemsComplete: scanJobProgress.scanProgress.value.itemsComplete,
-                      itemsTotal: scanJobProgress.scanProgress.value.itemsTotal
+                      itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
                   }}
                 } @else {
@@ -58,11 +58,11 @@
                 }
               }
               @case (Step.FULL_SEARCHING_ARTWORKS) {
-                @if (scanJobProgress.scanProgress.value) {
+                @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.searchingArtworksWithProgressLabel' | translate:{
-                      itemsComplete: scanJobProgress.scanProgress.value.itemsComplete,
-                      itemsTotal: scanJobProgress.scanProgress.value.itemsTotal
+                      itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
                   }}
                 } @else {
@@ -83,7 +83,7 @@
         <div class="progress">
           @if (scanProgressValue) {
             <!-- We make sure here that progress bar animations don't intersect, that is why progress bars are separate. -->
-            @switch (scanJobProgress!.scanProgress.stepDescriptor.step) {
+            @switch (scanJobProgress!.scanProgress!.stepDescriptor.step) {
               @case (Step.FULL_CLEANING_SONGS) {
                 <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
               }
