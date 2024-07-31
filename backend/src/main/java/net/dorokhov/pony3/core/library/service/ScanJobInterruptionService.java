@@ -1,15 +1,13 @@
 package net.dorokhov.pony3.core.library.service;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.PostConstruct;
 import net.dorokhov.pony3.api.library.domain.ScanJob;
 import net.dorokhov.pony3.api.log.service.LogService;
 import net.dorokhov.pony3.core.library.repository.ScanJobRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class ScanJobInterruptionService {
@@ -27,8 +25,7 @@ public class ScanJobInterruptionService {
         this.logService = logService;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    @Transactional
+    @PostConstruct
     public void markCurrentJobsAsInterrupted() {
 
         int interruptedJobsCount = 0;

@@ -128,6 +128,7 @@ export default {
     authorizationErrorText: 'Access denied.',
     scanJobTitle: 'Scan Job',
     scanJobStartedText: 'Running...',
+    scanJobInterruptedText: 'Interrupted!',
     scanJobFinishedText: 'Complete!',
     scanJobFailedText: 'Failed!',
   },

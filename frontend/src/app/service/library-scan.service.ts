@@ -10,7 +10,7 @@ import {
   Observable,
   of,
   repeat,
-  Subscription,
+  Subscription, throwError,
   timer
 } from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
@@ -60,7 +60,7 @@ export class LibraryScanService {
             this.scanStatisticsSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
-            if (this.scanStatisticsSubject.value !== null) {
+            if (this.scanStatisticsSubject.value) {
               this.scanStatisticsSubject.next(null);
             }
             return null;
@@ -111,22 +111,10 @@ export class LibraryScanService {
             return optionalResponse.value!;
           } else {
             Logger.info('Scan job is not running.');
-            if (this.scanJobProgressSubject.value !== null) {
-              const oldScanJob = this.scanJobProgressSubject.value?.scanJob;
+            if (this.scanJobProgressSubject.value) {
+              const oldScanJob = this.scanJobProgressSubject.value!.scanJob;
               this.scanJobProgressSubject.next(null);
-              this.getScanJob(oldScanJob?.id!).subscribe(scanJob => {
-                if (scanJob.status === Status.FAILED) {
-                  this.notificationService.error(
-                    this.translateService.instant('notification.scanJobTitle'),
-                    this.translateService.instant('notification.scanJobFailedText')
-                  );
-                } else {
-                  this.notificationService.success(
-                    this.translateService.instant('notification.scanJobTitle'),
-                    this.translateService.instant('notification.scanJobFinishedText')
-                  );
-                }
-              });
+              this.showScanJobEndedNotification(oldScanJob!.id!);
             }
             if (this.refreshRequestSubscription) {
               Logger.info("Scan job finished, cancelling auto-refresh.");
@@ -138,6 +126,31 @@ export class LibraryScanService {
           }
         })
       );
+  }
+
+  private showScanJobEndedNotification(scanJobId: string) {
+    this.getScanJob(scanJobId).subscribe(scanJob => {
+      if (scanJob.status === Status.FAILED) {
+        this.showScanJobFailedNotification();
+      } else if (scanJob.status === Status.INTERRUPTED) {
+        this.notificationService.warning(
+          this.translateService.instant('notification.scanJobTitle'),
+          this.translateService.instant('notification.scanJobInterruptedText')
+        );
+      } else {
+        this.notificationService.success(
+          this.translateService.instant('notification.scanJobTitle'),
+          this.translateService.instant('notification.scanJobFinishedText')
+        );
+      }
+    });
+  }
+
+  private showScanJobFailedNotification() {
+    this.notificationService.error(
+      this.translateService.instant('notification.scanJobTitle'),
+      this.translateService.instant('notification.scanJobFailedText')
+    );
   }
 
   private getScanJob(id: string): Observable<ScanJobDto> {
@@ -165,12 +178,19 @@ export class LibraryScanService {
   startScanJob(): Observable<ScanJobProgressDto | null> {
     return this.httpClient.post<ScanJobDto>('/api/admin/library/scanJobs', null)
       .pipe(
-        delay(1000),
-        mergeMap(() => this.updateScanJobProgress()),
+        delay(1000), // Scan job progress can't be checked immediately.
+        mergeMap(scanJob => this.updateScanJobProgress().pipe(
+          tap(scanJobProgress => {
+            // If scan job finished too fast.
+            if (!scanJobProgress) {
+              this.showScanJobEndedNotification(scanJob.id);
+            }
+          })
+        )),
         tap(() => this.scheduleScanJobProgressUpdate()),
         catchError(error => {
-          Logger.error(`Could not start scan job: ${JSON.stringify(error)}`);
-          throw ErrorDto.fromHttpErrorResponse(error);
+          this.showScanJobFailedNotification();
+          return throwError(() => error);
         })
       );
   }
