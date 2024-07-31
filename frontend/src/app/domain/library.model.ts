@@ -66,6 +66,14 @@ export class Song {
   }
 
   static compare(song1: Song, song2: Song): number {
+    const normalizedDisc1 = !song1.discNumber || song1.discNumber < 1 ? 1 : song1.discNumber;
+    const normalizedDisc2 = !song2.discNumber || song2.discNumber < 1 ? 1 : song2.discNumber;
+    if (normalizedDisc1 > normalizedDisc2) {
+      return 1;
+    }
+    if (normalizedDisc1 < normalizedDisc2) {
+      return -1;
+    }
     if ((song1.trackNumber ?? 0) > (song2.trackNumber ?? 0)) {
       return 1;
     }
