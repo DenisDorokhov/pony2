@@ -37,6 +37,10 @@ export class UserService {
     );
   }
 
+  deleteUser(id: string): Observable<UserDto> {
+    return this.httpClient.delete<UserDto>('/api/admin/users/' + id);
+  }
+
   updateCurrentUser(command: CurrentUserUpdateCommandDto): Observable<UserDto> {
     return this.httpClient.put<UserDto>('/api/user', command).pipe(
       catchError(ErrorDto.observableFromHttpErrorResponse)

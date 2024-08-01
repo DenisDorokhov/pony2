@@ -20,7 +20,6 @@ public final class UserCreationCommandDto {
     @UniqueEmail
     private String email;
 
-    @NotBlank
     @Size(min = 6, max = 255)
     private String password;
 

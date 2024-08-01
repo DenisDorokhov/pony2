@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {TranslateModule} from "@ngx-translate/core";
+import {TranslateModule, TranslateService} from "@ngx-translate/core";
 import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {UserDto, UserPageDto} from "../../../domain/user.dto";
 import {CommonModule} from "@angular/common";
@@ -9,6 +9,8 @@ import Logger from "js-logger";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 import {UserComponent} from "./user.component";
+import {AuthenticationService} from "../../../service/authentication.service";
+import {NotificationService} from "../../../service/notification.service";
 
 @Component({
   standalone: true,
@@ -30,10 +32,12 @@ export class UserListComponent implements OnInit {
 
   constructor(
     public readonly activeModal: NgbActiveModal,
+    public readonly authenticationService: AuthenticationService,
     private readonly userService: UserService,
-    private readonly modal: NgbModal
-  ) {
-  }
+    private readonly modal: NgbModal,
+    private readonly translateService: TranslateService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   ngOnInit(): void {
     this.loadPage();
@@ -83,5 +87,24 @@ export class UserListComponent implements OnInit {
         this.loadPage();
       }
     });
+  }
+
+  deleteUser(user: UserDto) {
+    if (window.confirm(this.translateService.instant('userList.deletionConfirmation'))) {
+      this.loadingState = LoadingState.LOADING;
+      this.userService.deleteUser(user.id).subscribe({
+        next: () => {
+          this.loadingState = LoadingState.LOADED;
+          this.loadPage();
+        },
+        error: () => {
+          this.loadingState = LoadingState.LOADED;
+          this.notificationService.error(
+            this.translateService.instant('userList.userDeletionNotificationTitle'),
+            this.translateService.instant('userList.userDeletionNotificationFailed'),
+          );
+        }
+      })
+    }
   }
 }

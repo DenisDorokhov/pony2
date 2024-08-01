@@ -15,7 +15,7 @@
       <th scope="col">{{ 'userList.nameColumn' | translate }}</th>
       <th scope="col">{{ 'userList.emailColumn' | translate }}</th>
       <th scope="col">{{ 'userList.roleColumn' | translate }}</th>
-      <th scope="col">{{ 'userList.editColumn' | translate }}</th>
+      <th scope="col">{{ 'userList.actionsColumn' | translate }}</th>
     </tr>
     </thead>
     <tbody>
@@ -26,7 +26,12 @@
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
           <td class="role" [class.admin]="user.role === UserRole.ADMIN">{{ user.role }}</td>
-          <td><span class="button-container"><button type="button" class="btn btn-outline-dark" (click)="editUser(user)">{{ 'userList.editUserButton' | translate }}</button></span></td>
+          <td>
+            <span class="button-container"><button type="button" class="btn btn-outline-dark" [disabled]="loadingState !== LoadingState.LOADED"
+                                                   (click)="editUser(user)">{{ 'userList.editButton' | translate }}</button></span>
+            <span class="button-container"><button type="button" class="btn btn-danger" [disabled]="loadingState !== LoadingState.LOADED || authenticationService.currentUser?.id === user.id"
+                                                   (click)="deleteUser(user)">{{ 'userList.deleteButton' | translate }}</button></span>
+          </td>
         </tr>
       }
       @for (i of [].constructor(emptyRowCount); track $index) {
