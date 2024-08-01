@@ -67,11 +67,21 @@ export class UserListComponent implements OnInit {
   }
 
   createUser() {
-    this.modal.open(UserComponent);
+    this.modal.open(UserComponent).closed.subscribe(user => {
+      if (user) {
+        this.loadPage();
+      }
+    });
   }
 
   editUser(user: UserDto) {
-    const userComponent: UserComponent = this.modal.open(UserComponent).componentInstance;
+    const modalRef = this.modal.open(UserComponent);
+    const userComponent: UserComponent = modalRef.componentInstance;
     userComponent.user = user;
+    modalRef.closed.subscribe(user => {
+      if (user) {
+        this.loadPage();
+      }
+    });
   }
 }

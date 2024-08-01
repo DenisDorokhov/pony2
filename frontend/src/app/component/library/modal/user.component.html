@@ -57,9 +57,12 @@
       </pony-error-container>
     </div>
 
+    <input type="submit" hidden />
+
   </form>
 </div>
 <div class="modal-footer">
+  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
-  <button type="submit" class="btn btn-primary" (click)="save()">{{ 'shared.saveButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
 </div>

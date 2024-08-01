@@ -10,15 +10,19 @@ import {CommonModule} from "@angular/common";
 import {UserService} from "../../../service/user.service";
 import {Observable} from "rxjs";
 import {AuthenticationService} from "../../../service/authentication.service";
+import {LoadingState} from "../../../domain/common.model";
+import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ReactiveFormsModule, ErrorComponent, ErrorContainerComponent],
+  imports: [TranslateModule, CommonModule, ReactiveFormsModule, ErrorComponent, ErrorContainerComponent, LoadingIndicatorComponent],
   selector: 'pony-user',
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss']
 })
 export class UserComponent implements OnInit {
+
+  LoadingState = LoadingState;
 
   @Input()
   user: UserDto | undefined;
@@ -26,6 +30,7 @@ export class UserComponent implements OnInit {
   userForm!: FormGroup;
   roles = [UserDto.Role.USER, UserDto.Role.ADMIN];
   error: ErrorDto | undefined;
+  loadingState = LoadingState.LOADED;
 
   constructor(
     public readonly activeModal: NgbActiveModal,
@@ -70,11 +75,17 @@ export class UserComponent implements OnInit {
       };
       observable = this.userService.createUser(command);
     }
+    this.loadingState = LoadingState.LOADING;
+    this.userForm.disable();
     observable.subscribe({
-      next: () => {
-        this.activeModal.close();
+      next: user => {
+        this.loadingState = LoadingState.LOADED;
+        this.userForm.enable();
+        this.activeModal.close(user);
       },
       error: error => {
+        this.loadingState = LoadingState.LOADED;
+        this.userForm.enable();
         this.error = error;
       }
     });
