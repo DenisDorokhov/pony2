@@ -47,7 +47,7 @@ export class LibraryScanService {
     if (this.authenticationService.isAuthenticated) {
       this.updateScanStatistics().subscribe();
     }
-    this.authenticationService.observeAuthentication().pipe(
+    this.libraryService.observeRefreshRequest().pipe(
       mergeMap(() => this.updateScanStatistics())
     ).subscribe();
   }

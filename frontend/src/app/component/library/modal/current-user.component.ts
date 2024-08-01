@@ -10,10 +10,12 @@ import {LoadingIndicatorComponent} from "../../common/loading-indicator.componen
 import {CurrentUserUpdateCommandDto, UserDto} from "../../../domain/user.dto";
 import {ErrorDto} from "../../../domain/common.dto";
 import {UserService} from "../../../service/user.service";
+import {AuthenticationService} from "../../../service/authentication.service";
+import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorComponent, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent],
+  imports: [TranslateModule, CommonModule, ErrorComponent, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
   selector: 'pony-current-user',
   templateUrl: './current-user.component.html',
   styleUrls: ['./current-user.component.scss']
@@ -27,21 +29,35 @@ export class CurrentUserComponent implements OnInit {
 
   userForm!: FormGroup;
   error: ErrorDto | undefined;
-  loadingState = LoadingState.LOADED;
+  loadingState = LoadingState.LOADING;
 
   constructor(
     public readonly activeModal: NgbActiveModal,
     private formBuilder: FormBuilder,
+    private authenticationService: AuthenticationService,
     private userService: UserService
   ) {
+    this.userForm = this.formBuilder.group({
+      name: '',
+      email: '',
+      oldPassword: '',
+      newPassword: '',
+    });
   }
 
   ngOnInit(): void {
-    this.userForm = this.formBuilder.group({
-      name: this.user.name,
-      email: this.user.email,
-      oldPassword: '',
-      newPassword: '',
+    this.userForm.disable();
+    this.authenticationService.authenticate().subscribe({
+      next: user => {
+        this.userForm.enable();
+        this.user = user;
+        this.userForm.controls['name'].setValue(this.user.name);
+        this.userForm.controls['email'].setValue(this.user.email);
+        this.loadingState = LoadingState.LOADED;
+      },
+      error: () => {
+        this.loadingState = LoadingState.ERROR;
+      }
     });
   }
 
@@ -62,9 +78,9 @@ export class CurrentUserComponent implements OnInit {
         this.activeModal.close(user);
       },
       error: error => {
-        this.loadingState = LoadingState.LOADED;
-        this.userForm.enable();
         this.error = error;
+        this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
+        this.userForm.enable();
       }
     });
   }

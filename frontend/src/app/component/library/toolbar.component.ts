@@ -52,10 +52,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   openProfile() {
-    const modalRef = this.modal.open(CurrentUserComponent);
-    const userComponent: CurrentUserComponent = modalRef.componentInstance;
-    userComponent.user = this.authenticationService.currentUser!;
-    modalRef.closed.subscribe(user => {
+    this.modal.open(CurrentUserComponent).closed.subscribe(user => {
       if (user) {
         this.authenticationService.authenticate().subscribe(currentUser => {
           this.currentUser = currentUser;

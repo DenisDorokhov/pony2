@@ -1,7 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {mergeMap, Subscription} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {ScanStatisticsDto} from "../../domain/library.dto";
 import {AuthenticationService} from "../../service/authentication.service";
 import {LibraryScanService} from "../../service/library-scan.service";
@@ -11,7 +11,6 @@ import {PlayerComponent} from "./player.component";
 import {ToolbarComponent} from "./toolbar.component";
 import {ArtistListComponent} from "./artist-list.component";
 import {AlbumListComponent} from "./album-list.component";
-import {LibraryService} from "../../service/library.service";
 
 @Component({
   standalone: true,
@@ -24,7 +23,6 @@ export class LibraryComponent implements OnInit, OnDestroy {
 
   private loggedOutSubscription: Subscription | undefined;
   private scanStatisticsSubscription: Subscription | undefined;
-  private refreshRequestSubscription: Subscription | undefined;
 
   scanStatistics: ScanStatisticsDto | undefined | null;
   size: string | undefined;
@@ -33,7 +31,6 @@ export class LibraryComponent implements OnInit, OnDestroy {
     private router: Router,
     private authenticationService: AuthenticationService,
     private libraryScanService: LibraryScanService,
-    private libraryService: LibraryService,
     private translateService: TranslateService
   ) {
   }
@@ -49,15 +46,11 @@ export class LibraryComponent implements OnInit, OnDestroy {
         this.scanStatistics = scanStatistics;
         this.size = this.calculateSize();
       });
-    this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().pipe(
-      mergeMap(() => this.libraryScanService.updateScanStatistics())
-    ).subscribe();
   }
 
   ngOnDestroy(): void {
     this.loggedOutSubscription?.unsubscribe();
     this.scanStatisticsSubscription?.unsubscribe();
-    this.refreshRequestSubscription?.unsubscribe();
   }
 
   private calculateSize(): string | undefined {
