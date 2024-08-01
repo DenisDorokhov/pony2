@@ -1,8 +1,49 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ 'library.currentUser.header' | translate }}</h4>
+  <h4 class="modal-title">{{ 'currentUser.header' | translate }}</h4>
 </div>
 <div class="modal-body">
+  <form [formGroup]="userForm" (ngSubmit)="save()" novalidate>
+
+    <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
+
+    <div class="mb-3">
+      <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'name'">
+        <label for="name" class="form-label">{{ 'currentUser.nameLabel' | translate }}</label>
+        <input id="name" formControlName="name" type="text" class="form-control"
+               [class.is-invalid]="nameContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
+    <div class="mb-3">
+      <pony-error-container #emailContainer class="form-group" [error]="error" [field]="'email'">
+        <label for="email" class="form-label">{{ 'currentUser.emailLabel' | translate }}</label>
+        <input id="email" formControlName="email" type="text" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="emailContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
+    <div class="mb-3">
+      <pony-error-container #oldPasswordContainer class="form-group" [error]="error" [field]="'oldPassword'">
+        <label for="oldPassword" class="form-label">{{ 'currentUser.oldPasswordLabel' | translate }}</label>
+        <input id="oldPassword" formControlName="oldPassword" type="password" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="oldPasswordContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
+    <div class="mb-3">
+      <pony-error-container #newPasswordContainer class="form-group" [error]="error" [field]="'newPassword'">
+        <label for="newPassword" class="form-label">{{ 'currentUser.newPasswordLabel' | translate }}</label>
+        <input id="newPassword" formControlName="newPassword" type="password" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="newPasswordContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
+    <input type="submit" hidden />
+
+  </form>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
+  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
 </div>

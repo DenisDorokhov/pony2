@@ -1,6 +1,12 @@
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs";
-import {UserCreateCommandDto, UserDto, UserPageDto, UserUpdateCommandDto} from "../domain/user.dto";
+import {
+  CurrentUserUpdateCommandDto,
+  UserCreateCommandDto,
+  UserDto,
+  UserPageDto,
+  UserUpdateCommandDto
+} from "../domain/user.dto";
 import {HttpClient} from "@angular/common/http";
 import {catchError} from "rxjs/operators";
 import {ErrorDto} from "../domain/common.dto";
@@ -27,6 +33,12 @@ export class UserService {
 
   createUser(command: UserCreateCommandDto): Observable<UserDto> {
     return this.httpClient.post<UserDto>('/api/admin/users', command).pipe(
+      catchError(ErrorDto.observableFromHttpErrorResponse)
+    );
+  }
+
+  updateCurrentUser(command: CurrentUserUpdateCommandDto): Observable<UserDto> {
+    return this.httpClient.put<UserDto>('/api/user', command).pipe(
       catchError(ErrorDto.observableFromHttpErrorResponse)
     );
   }

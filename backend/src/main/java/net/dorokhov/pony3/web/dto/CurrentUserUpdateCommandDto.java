@@ -21,7 +21,6 @@ public final class CurrentUserUpdateCommandDto {
     @UniqueCurrentUserEmail
     private String email;
 
-    @NotBlank
     @CurrentUserPasswordMatch
     private String oldPassword;
 

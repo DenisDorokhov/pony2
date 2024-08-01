@@ -33,9 +33,6 @@ export default {
       logButton: 'Log',
       usersButton: 'Users',
     },
-    currentUser: {
-      header: 'My Profile',
-    },
     log: {
       header: 'Log',
     },
@@ -115,6 +112,13 @@ export default {
     newPasswordLabel: 'New password:',
     passwordLabel: 'Password:',
     roleLabel: "Role:",
+  },
+  currentUser: {
+    header: 'My Profile',
+    nameLabel: "Name:",
+    emailLabel: "Email:",
+    oldPasswordLabel: 'Old Password:',
+    newPasswordLabel: 'New password:',
   },
   shared: {
     errorsHeader: 'Errors',

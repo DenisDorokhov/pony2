@@ -40,3 +40,10 @@ export interface UserCreateCommandDto {
   password: string;
   role: UserDto.Role;
 }
+
+export interface CurrentUserUpdateCommandDto {
+  name: string;
+  email: string;
+  oldPassword: string;
+  newPassword: string;
+}
