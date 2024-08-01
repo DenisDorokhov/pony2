@@ -19,23 +19,26 @@
     </div>
 
     <div class="mb-3">
-      <pony-error-container class="form-group" [error]="error" [field]="'name'">
+      <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'name'">
         <label for="name" class="form-label">{{ 'user.nameLabel' | translate }}</label>
-        <input id="name" formControlName="name" type="text" class="form-control">
+        <input id="name" formControlName="name" type="text" class="form-control"
+               [class.is-invalid]="nameContainer.hasErrors">
       </pony-error-container>
     </div>
 
     <div class="mb-3">
-      <pony-error-container class="form-group" [error]="error" [field]="'email'">
+      <pony-error-container #emailContainer class="form-group" [error]="error" [field]="'email'">
         <label for="email" class="form-label">{{ 'user.emailLabel' | translate }}</label>
-        <input id="email" formControlName="email" type="text" class="form-control" autocomplete="one-time-code">
+        <input id="email" formControlName="email" type="text" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="emailContainer.hasErrors">
       </pony-error-container>
     </div>
 
     <div class="mb-3">
-      <pony-error-container class="form-group" [error]="error" [field]="'role'">
+      <pony-error-container #roleContainer class="form-group" [error]="error" [field]="'role'">
         <label for="role" class="form-label">{{ 'user.roleLabel' | translate }}</label>
-        <select id="role" formControlName="role" class="form-control">
+        <select id="role" formControlName="role" class="form-control"
+                [class.is-invalid]="roleContainer.hasErrors">
           <option *ngFor="let role of roles" [ngValue]="role">
             {{ role }}
           </option>
@@ -44,16 +47,18 @@
     </div>
 
     <div class="mb-3" *ngIf="user === undefined">
-      <pony-error-container class="form-group" [error]="error" [field]="'password'">
+      <pony-error-container #passwordContainer class="form-group" [error]="error" [field]="'password'">
         <label for="password" class="form-label">{{ 'user.passwordLabel' | translate }}</label>
-        <input id="password" formControlName="password" type="password" class="form-control" autocomplete="one-time-code">
+        <input id="password" formControlName="password" type="password" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="passwordContainer.hasErrors">
       </pony-error-container>
     </div>
 
     <div class="mb-3" *ngIf="user !== undefined">
-      <pony-error-container class="form-group" [error]="error" [field]="'newPassword'">
+      <pony-error-container #newPasswordContainer class="form-group" [error]="error" [field]="'newPassword'">
         <label for="newPassword" class="form-label">{{ 'user.newPasswordLabel' | translate }}</label>
-        <input id="newPassword" formControlName="newPassword" type="password" class="form-control" autocomplete="one-time-code">
+        <input id="newPassword" formControlName="newPassword" type="password" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="newPasswordContainer.hasErrors">
       </pony-error-container>
     </div>
 

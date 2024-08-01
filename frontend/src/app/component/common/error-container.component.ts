@@ -16,12 +16,14 @@ export class ErrorContainerComponent implements OnChanges {
   @Input() field: string | undefined;
 
   errorMessages: string[] = [];
+  hasErrors = false;
 
   constructor(private errorTranslationService: ErrorTranslationService) {
   }
 
   ngOnChanges(changes: SimpleChanges) {
     this.errorMessages = this.fetchErrorMessages().sort();
+    this.hasErrors = this.errorMessages.length > 0;
   }
 
   private fetchErrorMessages(): string[] {
