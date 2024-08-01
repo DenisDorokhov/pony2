@@ -104,16 +104,16 @@ class AudioPlayer {
         Logger.info('Audio loaded.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
-      onloaderror: (id, error) => {
-        Logger.error(`Audio could not be loaded: "${error}".`);
+      onloaderror: () => {
+        Logger.error('Audio could not be loaded.');
         this.firePlaybackEvent(PlaybackState.ERROR, song);
       },
       onplay: () => {
         Logger.info('Playback started / resumed.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, this.lastPlaybackEvent.progress);
       },
-      onplayerror: (id, error) => {
-        Logger.error(`Playback failed: "${error}".`);
+      onplayerror: () => {
+        Logger.error('Playback failed.');
         this.firePlaybackEvent(PlaybackState.ERROR, song, this.lastPlaybackEvent.progress);
       },
       onend: () => {

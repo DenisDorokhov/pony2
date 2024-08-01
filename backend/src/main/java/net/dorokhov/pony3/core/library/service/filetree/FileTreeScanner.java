@@ -1,5 +1,6 @@
 package net.dorokhov.pony3.core.library.service.filetree;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.library.domain.FileType;
 import net.dorokhov.pony3.core.library.service.AudioTagger;
 import net.dorokhov.pony3.core.library.service.file.ChecksumCalculator;
@@ -8,7 +9,6 @@ import net.dorokhov.pony3.core.library.service.filetree.domain.*;
 import net.dorokhov.pony3.core.library.service.image.ImageSizeReader;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -21,7 +21,9 @@ import Logger from "js-logger";
 import {LibraryService} from "./library.service";
 import {NotificationService} from "./notification.service";
 import {TranslateService} from "@ngx-translate/core";
+import {UserDto} from "../domain/user.dto";
 import Status = ScanJobDto.Status;
+import Role = UserDto.Role;
 
 @Injectable({
   providedIn: 'root'
@@ -60,7 +62,7 @@ export class LibraryScanService {
             this.scanStatisticsSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
-            if (this.scanStatisticsSubject.value) {
+            if (this.scanStatisticsSubject.value !== null) {
               this.scanStatisticsSubject.next(null);
             }
             return null;
@@ -72,7 +74,7 @@ export class LibraryScanService {
   private scheduleScanJobProgressUpdate() {
     this.scanJobProgressUpdateSubscription?.unsubscribe();
     this.scanJobProgressUpdateSubscription = defer(() => {
-      if (this.authenticationService.isAuthenticated) {
+      if (this.authenticationService.currentUser?.role === Role.ADMIN) {
         return this.updateScanJobProgress();
       } else {
         return of(undefined);
