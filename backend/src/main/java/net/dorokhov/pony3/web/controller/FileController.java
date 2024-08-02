@@ -52,9 +52,6 @@ public class FileController implements ErrorHandlingController {
                 if (isBrokenPipe(e)) {
                     // Filter out broken pipe exceptions, as they could easily happen during streaming.
                     logger.trace("Broken pipe error occurred.", e);
-                    try {
-                        response.sendError(499); // HTTP 499 Connection closed.
-                    } catch (IOException ignored) {}
                 } else {
                     logger.error("Unexpected error occurred.", e);
                     try {
