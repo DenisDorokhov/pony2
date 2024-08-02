@@ -85,6 +85,9 @@ export class UserListComponent implements OnInit {
     modalRef.closed.subscribe(user => {
       if (user) {
         this.loadPage();
+        if (user.id === this.authenticationService.currentUser!.id) {
+          this.authenticationService.authenticate().subscribe();
+        }
       }
     });
   }

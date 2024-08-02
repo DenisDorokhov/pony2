@@ -116,6 +116,7 @@ export default {
     newPasswordLabel: 'New password:',
     passwordLabel: 'Password:',
     roleLabel: 'Role:',
+    newPasswordPlaceholder: 'Leave empty to keep old password'
   },
   currentUser: {
     header: 'My Profile',

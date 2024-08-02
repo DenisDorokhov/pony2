@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {defer, Observable, Subject, throwError} from 'rxjs';
+import {BehaviorSubject, defer, Observable, Subject, throwError} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
 import {TokenStorageService} from './token-storage.service';
 import {AuthenticationDto, UserDto} from "../domain/user.dto";
@@ -18,7 +18,7 @@ export class AuthenticationService {
 
   private _currentUser: UserDto | undefined;
 
-  private authenticationSubject = new Subject<UserDto>();
+  private authenticationSubject = new BehaviorSubject<UserDto | undefined>(undefined);
   private logoutSubject = new Subject<UserDto | undefined>();
 
   constructor(private tokenStorage: TokenStorageService, private httpClient: HttpClient) {
@@ -43,7 +43,7 @@ export class AuthenticationService {
       .pipe(tap(user => this.authenticationSubject.next(user)));
   }
 
-  observeAuthentication(): Observable<UserDto> {
+  observeAuthentication(): Observable<UserDto | undefined> {
     return this.authenticationSubject.asObservable();
   }
 
@@ -63,6 +63,7 @@ export class AuthenticationService {
     this.tokenStorage.staticToken = undefined;
     const oldUser = this._currentUser;
     this._currentUser = undefined;
+    this.authenticationSubject.next(undefined);
     this.logoutSubject.next(oldUser);
   }
 

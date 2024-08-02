@@ -76,16 +76,13 @@ export class UserComponent implements OnInit {
       observable = this.userService.createUser(command);
     }
     this.loadingState = LoadingState.LOADING;
-    this.userForm.disable();
     observable.subscribe({
       next: user => {
         this.loadingState = LoadingState.LOADED;
-        this.userForm.enable();
         this.activeModal.close(user);
       },
       error: error => {
         this.loadingState = LoadingState.LOADED;
-        this.userForm.enable();
         this.error = error;
       }
     });

@@ -1,4 +1,4 @@
-import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CurrentUserComponent} from './modal/current-user.component';
 import {LogComponent} from './modal/log.component';
 import {ScanningComponent} from './modal/scanning.component';
@@ -12,6 +12,7 @@ import Logger from "js-logger";
 import {NgbDropdownModule, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
 import {LibraryScanService} from "../../service/library-scan.service";
+import {Subscription} from "rxjs";
 
 @Component({
   standalone: true,
@@ -20,15 +21,12 @@ import {LibraryScanService} from "../../service/library-scan.service";
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss']
 })
-export class ToolbarComponent implements OnInit {
+export class ToolbarComponent implements OnInit, OnDestroy {
 
   currentUser: UserDto | undefined;
 
-  @ViewChild('settingsTemplate') settingsTemplate!: TemplateRef<any>;
-  @ViewChild('scanningTemplate') scanningTemplate!: TemplateRef<any>;
-  @ViewChild('logTemplate') logTemplate!: TemplateRef<any>;
-  @ViewChild('userListTemplate') userListTemplate!: TemplateRef<any>;
-  @ViewChild('currentUserTemplate') currentUserTemplate!: TemplateRef<any>;
+  private scanStatisticsSubscription: Subscription | undefined;
+  private authenticationSubscription: Subscription | undefined;
 
   constructor(
     private libraryService: LibraryService,
@@ -39,12 +37,18 @@ export class ToolbarComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.currentUser = this.authenticationService.currentUser;
-    this.libraryScanService.observeScanStatistics().subscribe(scanStatistics => {
+    this.scanStatisticsSubscription = this.libraryScanService.observeScanStatistics().subscribe(scanStatistics => {
       if (scanStatistics === null) {
         this.openScanning();
       }
-    })
+    });
+    this.authenticationSubscription = this.authenticationService.observeAuthentication().subscribe(user =>
+      this.currentUser = user);
+  }
+
+  ngOnDestroy(): void {
+    this.scanStatisticsSubscription?.unsubscribe();
+    this.authenticationSubscription?.unsubscribe();
   }
 
   refresh() {
@@ -54,9 +58,7 @@ export class ToolbarComponent implements OnInit {
   openProfile() {
     this.modal.open(CurrentUserComponent).closed.subscribe(user => {
       if (user) {
-        this.authenticationService.authenticate().subscribe(currentUser => {
-          this.currentUser = currentUser;
-        });
+        this.authenticationService.authenticate().subscribe();
       }
     });
   }

@@ -46,10 +46,8 @@ export class CurrentUserComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userForm.disable();
     this.authenticationService.authenticate().subscribe({
       next: user => {
-        this.userForm.enable();
         this.user = user;
         this.userForm.controls['name'].setValue(this.user.name);
         this.userForm.controls['email'].setValue(this.user.email);
@@ -70,17 +68,14 @@ export class CurrentUserComponent implements OnInit {
       newPassword: formValue.newPassword === '' ? undefined : formValue.newPassword,
     };
     this.loadingState = LoadingState.LOADING;
-    this.userForm.disable();
     this.userService.updateCurrentUser(command).subscribe({
       next: user => {
         this.loadingState = LoadingState.LOADED;
-        this.userForm.enable();
         this.activeModal.close(user);
       },
       error: error => {
         this.error = error;
         this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
-        this.userForm.enable();
       }
     });
   }

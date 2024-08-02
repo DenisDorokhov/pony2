@@ -1,19 +1,22 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ user ? ('user.editHeader' | translate) : ('user.createHeader' | translate) }}</h4>
 </div>
-<div class="container">
+<div class="modal-body">
+
+  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING"></div>
+
   <form [formGroup]="userForm" (ngSubmit)="save()" novalidate>
 
     <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
 
     <input type="hidden" formControlName="id">
 
-    <div class="mb-3">
+    <div class="mb-3" [hidden]="!user?.creationDate">
       <label for="creationDate" class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
       <input id="creationDate" type="text" class="form-control" [value]="user?.creationDate | date:('shared.dateTimeFormat' | translate) " disabled>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3" [hidden]="!user?.updateDate">
       <label for="updateDate" class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
       <input id="updateDate" type="text" class="form-control" [value]="user?.updateDate | date:('shared.dateTimeFormat' | translate) " disabled>
     </div>
@@ -58,6 +61,7 @@
       <pony-error-container #newPasswordContainer class="form-group" [error]="error" [field]="'newPassword'">
         <label for="newPassword" class="form-label">{{ 'user.newPasswordLabel' | translate }}</label>
         <input id="newPassword" formControlName="newPassword" type="password" class="form-control" autocomplete="one-time-code"
+               [placeholder]="'user.newPasswordPlaceholder' | translate"
                [class.is-invalid]="newPasswordContainer.hasErrors">
       </pony-error-container>
     </div>
