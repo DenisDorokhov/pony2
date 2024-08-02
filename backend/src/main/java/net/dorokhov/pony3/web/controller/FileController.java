@@ -82,7 +82,7 @@ public class FileController implements ErrorHandlingController {
         } catch (IllegalArgumentException iae) {
             logger.error("Could not get root cause of exception.", iae);
         }
-        return !Strings.nullToEmpty(rootCause.getMessage()).toLowerCase().contains("broken pipe");
+        return Strings.nullToEmpty(rootCause.getMessage()).toLowerCase().contains("broken pipe");
     }
 
     @GetMapping(value = "/api/file/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
