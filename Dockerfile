@@ -17,7 +17,7 @@ COPY settings.gradle /home/pony/src
 RUN mkdir /home/pony/.pony3 && chown pony:pony /home/pony/.pony3 && \
     mkdir /home/pony/music && chown pony:pony /home/pony/music
 
-RUN cd /home/pony/src && /bin/sh gradlew build && \
+RUN cd /home/pony/src && /bin/sh gradlew --no-daemon build && \
     cp /home/pony/src/backend/build/libs/`ls /home/pony/src/backend/build/libs | grep -v plain.jar` /home/pony/pony.jar
 
 COPY docker/pony.sh /home/pony/pony.sh
