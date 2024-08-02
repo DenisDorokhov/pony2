@@ -22,7 +22,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withHashLocation()),
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
-    provideToastr(),
+    provideToastr({
+      timeOut: 1500
+    }),
     importProvidersFrom(
       ReactiveFormsModule,
       TranslateModule.forRoot({

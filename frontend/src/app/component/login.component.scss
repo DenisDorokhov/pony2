@@ -3,7 +3,7 @@
 
   .logo-container {
     padding-top: 20px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     text-align: center;
 
     img {
@@ -12,12 +12,20 @@
     }
   }
 
-  .form-group {
-    margin-bottom: 10px;
+  h3 {
+    text-align: center;
+    margin-bottom: 16px;
   }
 
-  .btn-primary {
-    margin-top: 5px;
-    margin-bottom: 10px;
+  label {
+    font-weight: bold;
+  }
+
+  .login-button-container {
+    text-align: center;
+
+    button {
+      margin-top: 10px;
+    }
   }
 }

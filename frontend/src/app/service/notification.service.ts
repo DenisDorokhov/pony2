@@ -8,8 +8,7 @@ export class NotificationService {
 
   constructor(
     private toastr: ToastrService
-  ) {
-  }
+  ) {}
 
   success(title: string, text: string) {
     this.toastr.success(text, title);
