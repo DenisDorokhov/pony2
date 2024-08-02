@@ -1,6 +1,7 @@
 package net.dorokhov.pony3.core.library.service.scan;
 
 import net.dorokhov.pony3.api.library.domain.*;
+import net.dorokhov.pony3.common.UriUtils;
 import net.dorokhov.pony3.core.library.repository.AlbumRepository;
 import net.dorokhov.pony3.core.library.repository.ArtistRepository;
 import net.dorokhov.pony3.core.library.repository.GenreRepository;
@@ -62,7 +63,7 @@ public class LibraryArtworkFinder {
         ImageNode artwork = artworkFileFinder.findArtwork(audioNode);
         if (artwork != null) {
             return artworkStorage.getOrSave(new ImageNodeArtworkStorageCommand(
-                    UriComponentsBuilder.fromPath(artwork.getFile().toURI().getPath())
+                    UriComponentsBuilder.fromPath(UriUtils.fileToUriPath(artwork.getFile()))
                             .scheme(Artwork.SOURCE_URI_SCHEME_FILE)
                             .build()
                             .toUri(),
@@ -78,7 +79,7 @@ public class LibraryArtworkFinder {
         ReadableAudioData.EmbeddedArtwork artwork = audioData.getEmbeddedArtwork();
         if (artwork != null) {
             return artworkStorage.getOrSave(new ByteSourceArtworkStorageCommand(
-                    UriComponentsBuilder.fromPath(audioData.getFile().toURI().getPath())
+                    UriComponentsBuilder.fromPath(UriUtils.fileToUriPath(audioData.getFile()))
                             .scheme(Artwork.SOURCE_URI_SCHEME_EMBEDDED)
                             .build()
                             .toUri(),

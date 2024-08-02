@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import net.dorokhov.pony3.api.library.domain.Artwork;
 import net.dorokhov.pony3.api.library.domain.Song;
 import net.dorokhov.pony3.api.log.service.LogService;
+import net.dorokhov.pony3.common.UriUtils;
 import net.dorokhov.pony3.core.library.repository.*;
 import net.dorokhov.pony3.core.library.service.artwork.ArtworkStorage;
 import net.dorokhov.pony3.core.library.service.filetree.domain.AudioNode;
@@ -21,7 +22,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.File;
-import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -126,8 +126,7 @@ public class BatchLibraryCleaner {
 
         Set<String> existingImagePaths = existingImageNodes.stream()
                 .map(ImageNode::getFile)
-                .map(File::toURI)
-                .map(URI::getPath)
+                .map(UriUtils::fileToUriPath)
                 .collect(Collectors.toSet());
 
         List<String> artworksToDelete = requireNonNull(transactionTemplate.execute(transactionStatus -> {
