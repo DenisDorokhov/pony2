@@ -96,9 +96,11 @@ export class ScanningComponent implements OnInit, OnDestroy {
     this.libraryScanService.startScanJob().subscribe({
       next: () => {
         this.scanJobProgressLoadingState = LoadingState.LOADED;
+        this.loadScanJobs();
       },
       error: () => {
         this.scanJobProgressLoadingState = LoadingState.ERROR;
+        this.loadScanJobs();
       }
     });
   }
