@@ -1,96 +1,100 @@
-.container {
 
-  padding-left: 16px;
-  padding-right: 16px;
+table.status-container {
+  width: 100%;
+  margin-bottom: 16px;
 
-  table.status-container {
-    width: 100%;
-    margin-top: 10px;
-    margin-bottom: 5px;
-
-    td {
-      padding-top: 5px;
-      padding-bottom: 5px;
-
-      .progress {
-        height: 20px;
-      }
-    }
-
-    td.label {
-      font-weight: bold;
-      width: 0;
-      padding-right: 20px;
-    }
-
+  td {
     .progress {
       height: 20px;
     }
   }
 
-  table.log-container {
-    border: 1px solid #cccccc;
-    width: 100%;
-    margin: 0;
+  td.label {
+    font-weight: bold;
+    width: 0;
+    padding-right: 20px;
+    padding-bottom: 8px;
+  }
 
-    thead {
-      border-bottom: 1px solid #cccccc;
+  td.value {
+    padding-bottom: 8px;
+  }
 
-      .startDate {
-        width: 180px;
-      }
-      .updateDate {
-        width: 180px;
-      }
-      .status {
-        width: 130px;
-      }
-    }
+  .progress {
+    height: 20px;
+  }
 
-    tbody {
-      border: 1px solid #cccccc;
-    }
+  button {
+    margin-top: 6px;
+  }
+}
 
-    .scan-job-status.starting {
-    }
-    .scan-job-status.started {
-      color: #337ab7;
-    }
-    .scan-job-status.complete {
-      color: #5cb85c;
-    }
-    .scan-job-status.failed {
-      color: #d9534f;
-    }
-    .scan-job-status.interrupted {
-      color: #f0ad4e;
+table.log-container {
+  border: 1px solid #cccccc;
+  width: 100%;
+  margin: 0 0 16px;
+
+  thead {
+    border-bottom: 1px solid #cccccc;
+
+    .startDate {
+      width: 180px;
     }
 
-    .log-message {
-      display: inline-block;
-      width: 580px;
-      white-space: nowrap;
-      overflow: hidden !important;
-      text-overflow: ellipsis;
-      margin-bottom: -6px;
+    .updateDate {
+      width: 180px;
+    }
+
+    .status {
+      width: 130px;
     }
   }
 
-  .pagination-container {
-    padding-top: 10px;
-    padding-bottom: 16px;
+  tbody {
+    border: 1px solid #cccccc;
+  }
 
-    .page-label {
-      text-align: center;
-      line-height: 37px;
-    }
+  .scan-job-status.starting {
+  }
 
-    .next-button-container {
-      text-align: right;
-    }
+  .scan-job-status.started {
+    color: #337ab7;
+  }
 
-    pony-loading-indicator, pony-error-indicator {
-      line-height: 37px;
-    }
+  .scan-job-status.complete {
+    color: #5cb85c;
+  }
+
+  .scan-job-status.failed {
+    color: #d9534f;
+  }
+
+  .scan-job-status.interrupted {
+    color: #f0ad4e;
+  }
+
+  .log-message {
+    display: inline-block;
+    width: 580px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    margin-bottom: -6px;
+  }
+}
+
+.pagination-container {
+
+  .page-label {
+    text-align: center;
+    line-height: 37px;
+  }
+
+  .next-button-container {
+    text-align: right;
+  }
+
+  pony-loading-indicator, pony-error-indicator {
+    line-height: 37px;
   }
 }

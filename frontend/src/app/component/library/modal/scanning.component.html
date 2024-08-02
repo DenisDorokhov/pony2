@@ -3,12 +3,12 @@
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
-<div class="container">
+<div class="modal-body">
 
   <table class="status-container">
     <tr>
       <td class="label">{{ 'scanning.statusLabel' | translate }}</td>
-      <td>
+      <td class="value">
         @if (scanJobProgressLoadingState === LoadingState.LOADING) {
           {{ 'scanning.scanJobProgress.startingLabel' | translate }}
         } @else if (scanJobProgressLoadingState === LoadingState.ERROR) {
@@ -79,7 +79,7 @@
     </tr>
     <tr>
       <td class="label">{{ 'scanning.progressLabel' | translate }}</td>
-      <td>
+      <td class="value">
         <div class="progress">
           @if (scanProgressValue) {
             <!-- We make sure here that progress bar animations don't intersect, that is why progress bars are separate. -->
