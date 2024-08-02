@@ -65,7 +65,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
       }
     });
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {
-      this.loadScanJobs(this.page?.pageIndex ?? 0, this.page?.pageSize ?? 5);
+      this.loadScanJobs();
     });
     this.libraryScanService.updateScanJobProgress().subscribe();
     this.scanJobsLoadingState = LoadingState.LOADING;
@@ -96,11 +96,9 @@ export class ScanningComponent implements OnInit, OnDestroy {
     this.libraryScanService.startScanJob().subscribe({
       next: () => {
         this.scanJobProgressLoadingState = LoadingState.LOADED;
-        this.loadScanJobs();
       },
       error: () => {
         this.scanJobProgressLoadingState = LoadingState.ERROR;
-        this.loadScanJobs();
       }
     });
   }
