@@ -25,6 +25,7 @@
                 @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.cleaningSongsWithProgressLabel' | translate:{
+                      percentage: (scanJobProgress.scanProgress!.value!.itemsComplete / scanJobProgress.scanProgress!.value!.itemsTotal * 100).toFixed(0),
                       itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
                       itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
@@ -37,6 +38,7 @@
                 @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.cleaningArtworksWithProgressLabel' | translate:{
+                      percentage: (scanJobProgress.scanProgress!.value!.itemsComplete / scanJobProgress.scanProgress!.value!.itemsTotal * 100).toFixed(0),
                       itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
                       itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
@@ -49,6 +51,7 @@
                 @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.importingWithProgressLabel' | translate:{
+                      percentage: (scanJobProgress.scanProgress!.value!.itemsComplete / scanJobProgress.scanProgress!.value!.itemsTotal * 100).toFixed(0),
                       itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
                       itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
@@ -61,6 +64,7 @@
                 @if (scanJobProgress.scanProgress?.value) {
                   {{
                     'scanning.scanJobProgress.searchingArtworksWithProgressLabel' | translate:{
+                      percentage: (scanJobProgress.scanProgress!.value!.itemsComplete / scanJobProgress.scanProgress!.value!.itemsTotal * 100).toFixed(0),
                       itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
                       itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
                     }
