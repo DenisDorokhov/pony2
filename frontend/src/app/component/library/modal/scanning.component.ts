@@ -31,7 +31,8 @@ export class ScanningComponent implements OnInit, OnDestroy {
 
   scanJobProgress: ScanJobProgressDto | undefined | null;
   scanJobs: ScanJobDto[] = [];
-  page: PageDto | undefined;
+  currentPage: PageDto | undefined;
+  pageToLoad: PageDto | undefined;
   emptyScanJobRowCount = 5;
   scanProgressValue: number | null | undefined;
 
@@ -65,7 +66,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
       }
     });
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {
-      this.loadScanJobs(this.page?.pageIndex ?? 0, this.page?.pageSize ?? 5);
+      this.loadScanJobs(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 5);
     });
     this.libraryScanService.updateScanJobProgress().subscribe();
     this.scanJobsLoadingState = LoadingState.LOADING;
@@ -81,7 +82,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
     this.libraryScanService.getScanJobs(pageIndex, pageSize).subscribe({
       next: scanJobPage => {
         this.scanJobs = scanJobPage.scanJobs;
-        this.page = scanJobPage;
+        this.currentPage = this.pageToLoad = scanJobPage;
         this.emptyScanJobRowCount = Math.max(0, 5 - this.scanJobs.length);
         this.scanJobsLoadingState = this.scanJobs.length > 0 ? LoadingState.LOADED : LoadingState.EMPTY;
       },
@@ -92,6 +93,12 @@ export class ScanningComponent implements OnInit, OnDestroy {
   }
 
   startScanJob() {
+    // We will load first page next time to show the scan job appeared.
+    this.pageToLoad = {
+      pageIndex: 0,
+      pageSize: this.pageToLoad!.pageSize,
+      totalPages: this.pageToLoad!.totalPages
+    };
     this.scanJobProgressLoadingState = LoadingState.LOADING;
     this.libraryScanService.startScanJob().subscribe({
       next: () => {
@@ -104,14 +111,14 @@ export class ScanningComponent implements OnInit, OnDestroy {
   }
 
   loadScanJobsPreviousPage() {
-    if (this.page && this.page.pageIndex > 0) {
-      this.loadScanJobs(this.page.pageIndex - 1);
+    if (this.currentPage && this.currentPage.pageIndex > 0) {
+      this.loadScanJobs(this.currentPage.pageIndex - 1);
     }
   }
 
   loadScanJobsNextPage() {
-    if (this.page && this.page.pageIndex < (this.page.totalPages - 1)) {
-      this.loadScanJobs(this.page.pageIndex + 1);
+    if (this.currentPage && this.currentPage.pageIndex < (this.currentPage.totalPages - 1)) {
+      this.loadScanJobs(this.currentPage.pageIndex + 1);
     }
   }
 }
