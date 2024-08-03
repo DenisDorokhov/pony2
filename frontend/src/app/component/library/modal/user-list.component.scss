@@ -1,64 +1,58 @@
-.container {
+.create-user-button {
+  margin-bottom: 16px;
+}
 
-  padding-left: 16px;
-  padding-right: 16px;
+table {
+  border: 1px solid #cccccc;
+  width: 100%;
+  margin: 0 0 16px;
 
-  .create-user-button {
-    margin: 16px 0 10px;
+  thead {
+    border-bottom: 1px solid #cccccc;
+
+    .startDate {
+      width: 180px;
+    }
+
+    .updateDate {
+      width: 180px;
+    }
+
+    .status {
+      width: 130px;
+    }
   }
 
-  table {
+  tbody {
     border: 1px solid #cccccc;
-    width: 100%;
-    margin: 0;
+  }
 
-    thead {
-      border-bottom: 1px solid #cccccc;
+  td {
+    vertical-align: middle;
+    line-height: 42px;
 
-      .startDate {
-        width: 180px;
-      }
-      .updateDate {
-        width: 180px;
-      }
-      .status {
-        width: 130px;
-      }
-    }
-
-    tbody {
-      border: 1px solid #cccccc;
-    }
-
-    td {
-      vertical-align: middle;
-      line-height: 42px;
-
-      button {
-        margin-right: 10px;
-      }
-    }
-
-    .role.admin {
-      font-weight: bold;
+    button {
+      margin-right: 10px;
     }
   }
 
-  .pagination-container {
-    padding-top: 10px;
-    padding-bottom: 16px;
+  .role.admin {
+    font-weight: bold;
+  }
+}
 
-    .page-label {
-      text-align: center;
-      line-height: 37px;
-    }
+.pagination-container {
 
-    .next-button-container {
-      text-align: right;
-    }
+  .page-label {
+    text-align: center;
+    line-height: 37px;
+  }
 
-    pony-loading-indicator, pony-error-indicator {
-      line-height: 37px;
-    }
+  .next-button-container {
+    text-align: right;
+  }
+
+  pony-loading-indicator, pony-error-indicator {
+    line-height: 37px;
   }
 }
