@@ -1,5 +1,6 @@
 package net.dorokhov.pony3.web.validation;
 
+import com.google.common.base.Strings;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -19,6 +20,9 @@ public final class FolderExistsValidator implements ConstraintValidator<FolderEx
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
+        if (Strings.emptyToNull(value) == null) {
+            return false;
+        }
         try {
             return Files.isDirectory(Path.of(value));
         } catch (InvalidPathException e) {
