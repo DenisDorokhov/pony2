@@ -74,11 +74,17 @@ table.log-container {
 
   .log-message {
     display: inline-block;
-    width: 580px;
+    width: 480px;
     white-space: nowrap;
     overflow: hidden !important;
     text-overflow: ellipsis;
     margin-bottom: -6px;
+  }
+
+  td {
+    white-space: nowrap;
+    height: 56px;
+    vertical-align: middle;
   }
 }
 

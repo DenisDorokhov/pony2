@@ -102,7 +102,8 @@
               }
             }
           } @else if (scanJobProgress) {
-            <div role="progressbar" class="progress-bar progress-bar-striped progress-bar-animated" [style.width]="'100%'"></div>
+            <div role="progressbar" class="progress-bar progress-bar-striped progress-bar-animated"
+                 [style.width]="'100%'"></div>
           } @else {
             <div role="progressbar" class="progress-bar" [style.width]="'0'"></div>
           }
@@ -127,6 +128,7 @@
       <th scope="col" class="updateDate">{{ 'scanning.updateDateColumn' | translate }}</th>
       <th scope="col" class="status">{{ 'scanning.statusColumn' | translate }}</th>
       <th scope="col" class="lastMessage">{{ 'scanning.lastMessageColumn' | translate }}</th>
+      <th scope="col" class="lastMessage">{{ 'scanning.detailsColumn' | translate }}</th>
     </tr>
     </thead>
     <tbody>
@@ -142,10 +144,16 @@
                     [class.interrupted]="scanJob.status === ScanJobStatus.INTERRUPTED"
           >{{ scanJob.status }}</span></td>
           <td><span class="log-message">{{ scanJob.logMessage?.text }}</span></td>
+          <td>
+            <button type="button" class="btn btn-outline-dark" [disabled]="scanJob.status !== ScanJobStatus.COMPLETE && scanJob.status !== ScanJobStatus.FAILED"
+                    (click)="showDetails(scanJob)">{{ 'scanning.detailsButton' | translate }}
+            </button>
+          </td>
         </tr>
       }
       @for (i of [].constructor(emptyScanJobRowCount); track $index) {
         <tr>
+          <td>&nbsp;</td>
           <td>&nbsp;</td>
           <td>&nbsp;</td>
           <td>&nbsp;</td>
@@ -167,12 +175,12 @@
       <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
       <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
       <div class="page-label" [hidden]="scanJobsLoadingState !== LoadingState.LOADED">
-      {{
-        'shared.currentPageLabel' | translate:{
-          pageIndex: ((currentPage?.pageIndex ?? 0) + 1),
-          totalPages: (currentPage?.totalPages ?? 0)
-        }
-      }}
+        {{
+          'shared.currentPageLabel' | translate:{
+            pageIndex: ((currentPage?.pageIndex ?? 0) + 1),
+            totalPages: (currentPage?.totalPages ?? 0)
+          }
+        }}
       </div>
     </div>
     <div class="col next-button-container">

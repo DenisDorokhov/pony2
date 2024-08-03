@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {TranslateModule} from "@ngx-translate/core";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
@@ -12,6 +12,7 @@ import {CommonModule} from "@angular/common";
 import {PageDto} from "../../../domain/common.dto";
 import {Subscription} from "rxjs";
 import {LibraryService} from "../../../service/library.service";
+import {ScanResultComponent} from "./scan-result.component";
 
 @Component({
   standalone: true,
@@ -42,7 +43,8 @@ export class ScanningComponent implements OnInit, OnDestroy {
   constructor(
     private libraryScanService: LibraryScanService,
     private libraryService: LibraryService,
-    public readonly activeModal: NgbActiveModal
+    private modal: NgbModal,
+    public activeModal: NgbActiveModal,
   ) {}
 
   ngOnInit(): void {
@@ -120,5 +122,10 @@ export class ScanningComponent implements OnInit, OnDestroy {
     if (this.currentPage && this.currentPage.pageIndex < (this.currentPage.totalPages - 1)) {
       this.loadScanJobs(this.currentPage.pageIndex + 1);
     }
+  }
+
+  showDetails(scanJob: ScanJobDto) {
+    const modalRef = this.modal.open(ScanResultComponent);
+    (<ScanResultComponent>modalRef.componentInstance).scanJob = scanJob;
   }
 }

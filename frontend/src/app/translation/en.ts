@@ -66,6 +66,8 @@ export default {
     updateDateColumn: 'Update Date',
     statusColumn: 'Status',
     lastMessageColumn: 'Last Message',
+    detailsColumn: '',
+    detailsButton: 'Details',
     scanJobProgress: {
       inactiveLabel: 'inactive',
       errorLabel: 'could not start scan job :-(',
@@ -81,6 +83,9 @@ export default {
       searchingArtworksLabel: 'searching artworks...',
       searchingArtworksWithProgressLabel: 'searching artworks: {{percentage}}% ({{itemsComplete}} of {{itemsTotal}} files processed)...',
     },
+  },
+  scanResult: {
+    header: 'Scan Result',
   },
   userList: {
     header: 'Users',

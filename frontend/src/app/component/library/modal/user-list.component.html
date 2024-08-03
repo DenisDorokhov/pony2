@@ -5,7 +5,9 @@
 
 <div class="modal-body">
 
-  <button type="button" class="btn btn-primary create-user-button" (click)="createUser()">{{ 'userList.createUserButton' | translate }}</button>
+  <button type="button" class="btn btn-primary create-user-button"
+          (click)="createUser()">{{ 'userList.createUserButton' | translate }}
+  </button>
 
   <table class="table table-striped">
     <thead>
@@ -27,10 +29,13 @@
           <td>{{ user.email }}</td>
           <td class="role" [class.admin]="user.role === UserRole.ADMIN">{{ user.role }}</td>
           <td>
-            <span class="button-container"><button type="button" class="btn btn-outline-dark" [disabled]="loadingState !== LoadingState.LOADED"
-                                                   (click)="editUser(user)">{{ 'userList.editButton' | translate }}</button></span>
-            <span class="button-container"><button type="button" class="btn btn-danger" [disabled]="loadingState !== LoadingState.LOADED || authenticationService.currentUser?.id === user.id"
-                                                   (click)="deleteUser(user)">{{ 'userList.deleteButton' | translate }}</button></span>
+            <button type="button" class="btn btn-outline-dark" [disabled]="loadingState !== LoadingState.LOADED"
+                    (click)="editUser(user)">{{ 'userList.editButton' | translate }}
+            </button>
+            <button type="button" class="btn btn-danger"
+                    [disabled]="loadingState !== LoadingState.LOADED || authenticationService.currentUser?.id === user.id"
+                    (click)="deleteUser(user)">{{ 'userList.deleteButton' | translate }}
+            </button>
           </td>
         </tr>
       }
