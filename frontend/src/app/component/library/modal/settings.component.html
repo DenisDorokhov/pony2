@@ -7,8 +7,6 @@
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
-    <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
-
     <div class="mb-3" [hidden]="!config?.updateDate">
       <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
       <div>{{ config?.updateDate | date:('shared.dateTimeFormat' | translate) }}</div>

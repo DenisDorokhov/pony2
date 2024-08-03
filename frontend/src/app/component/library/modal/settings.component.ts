@@ -6,10 +6,9 @@ import {LoadingState} from "../../../domain/common.model";
 import {ConfigDto} from "../../../domain/config.dto";
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
 import {ErrorDto} from "../../../domain/common.dto";
-import {ErrorComponent} from "../../common/error.component";
 import {AutoFocusDirective} from "../../common/auto-focus.directive";
 import {ErrorContainerComponent} from "../../common/error-container.component";
-import {DatePipe, NgForOf} from "@angular/common";
+import {CommonModule} from "@angular/common";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 import _ from "underscore";
@@ -18,7 +17,7 @@ import {NotificationService} from "../../../service/notification.service";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, ErrorComponent, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, NgForOf, ErrorIndicatorComponent, LoadingIndicatorComponent, DatePipe],
+  imports: [TranslateModule, CommonModule, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, ErrorIndicatorComponent, LoadingIndicatorComponent],
   selector: 'pony-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']

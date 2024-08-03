@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {TranslateModule} from "@ngx-translate/core";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
-import {ErrorComponent} from "../../common/error.component";
 import {ErrorContainerComponent} from "../../common/error-container.component";
 import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
 import {LoadingState} from "../../../domain/common.model";
@@ -15,7 +14,7 @@ import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorComponent, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
+  imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
   selector: 'pony-current-user',
   templateUrl: './current-user.component.html',
   styleUrls: ['./current-user.component.scss']

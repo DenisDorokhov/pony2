@@ -7,8 +7,6 @@
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
-    <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
-
     <div class="mb-3">
       <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'name'">
         <label for="name" class="form-label">{{ 'currentUser.nameLabel' | translate }}</label>

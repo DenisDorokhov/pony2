@@ -7,8 +7,6 @@
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
-    <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
-
     <input type="hidden" formControlName="id">
 
     <div class="mb-3" [hidden]="!user?.creationDate">
