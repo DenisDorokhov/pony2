@@ -13,14 +13,15 @@
         <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
 
         <div class="mb-3" formArrayName="libraryFolders">
-          <span [class.has-error]="fieldHasViolation(error, 'libraryFolders')">
+          <span>
             <label class="control-label">{{ 'installation.libraryFoldersLabel' | translate }}</label>
           </span>
-          <pony-error-container *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
+          <pony-error-container #libraryFoldersContainer class="library-folders-container"
+                                *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
                                 [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
-            <div class="input-group">
+            <div class="input-group" [class.is-invalid]="libraryFoldersContainer.hasErrors">
               <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
-                     [placeholder]="'installation.libraryFoldersPlaceholder' | translate">
+                     [class.is-invalid]="libraryFoldersContainer.hasErrors" [placeholder]="'installation.libraryFoldersPlaceholder' | translate">
               <span class="input-group-btn">
                 <button type="button" class="btn btn-default add"
                         [disabled]="libraryFolders.controls.length >= 5"
@@ -38,44 +39,44 @@
         </div>
 
         <div class="mb-3">
-          <pony-error-container class="form-group" [error]="error" [field]="'adminName'">
+          <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'adminName'">
             <label for="adminName" class="control-label">{{ 'installation.adminNameLabel' | translate }}</label>
             <input id="adminName" formControlName="adminName" type="text" class="form-control"
-                   [placeholder]="'installation.adminNamePlaceholder' | translate">
+                   [class.is-invalid]="nameContainer.hasErrors" [placeholder]="'installation.adminNamePlaceholder' | translate">
           </pony-error-container>
         </div>
 
         <div class="mb-3">
-          <pony-error-container class="form-group" [error]="error" [field]="'adminEmail'">
+          <pony-error-container #adminEmailContainer class="form-group" [error]="error" [field]="'adminEmail'">
             <label for="adminEmail" class="control-label">{{ 'installation.adminEmailLabel' | translate }}</label>
             <input id="adminEmail" formControlName="adminEmail" type="text" class="form-control"
-                   [placeholder]="'installation.adminEmailPlaceholder' | translate">
+                   [class.is-invalid]="adminEmailContainer.hasErrors" [placeholder]="'installation.adminEmailPlaceholder' | translate">
           </pony-error-container>
         </div>
 
         <div class="mb-3">
-          <pony-error-container class="form-group" [error]="error" [field]="'adminPassword'">
+          <pony-error-container #adminPasswordContainer class="form-group" [error]="error" [field]="'adminPassword'">
             <label for="adminPassword" class="control-label">{{ 'installation.adminPasswordLabel' | translate }}</label>
             <input id="adminPassword" formControlName="adminPassword" type="password" class="form-control"
-                   [placeholder]="'installation.adminPasswordLabel' | translate">
+                   [class.is-invalid]="adminPasswordContainer.hasErrors" [placeholder]="'installation.adminPasswordLabel' | translate">
           </pony-error-container>
         </div>
 
         <div class="mb-3">
-          <pony-error-container class="form-group" [error]="error" [field]="'repeatAdminPassword'">
+          <pony-error-container #repeatAdminPasswordContainer class="form-group" [error]="error" [field]="'repeatAdminPassword'">
             <label for="repeatAdminPassword"
                    class="control-label">{{ 'installation.repeatAdminPasswordLabel' | translate }}</label>
             <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
-                   [placeholder]="'installation.repeatAdminPasswordPlaceholder' | translate">
+                   [class.is-invalid]="repeatAdminPasswordContainer.hasErrors" [placeholder]="'installation.repeatAdminPasswordPlaceholder' | translate">
           </pony-error-container>
         </div>
 
         <div class="mb-3">
-          <pony-error-container class="form-group" [error]="error" [field]="'installationSecret'">
+          <pony-error-container #installationSecretContainer class="form-group" [error]="error" [field]="'installationSecret'">
             <label for="installationSecret"
                    class="control-label">{{ 'installation.installationSecretLabel' | translate }}</label>
             <input id="installationSecret" formControlName="installationSecret" type="password" class="form-control"
-                   [placeholder]="'installation.installationSecretPlaceholder' | translate">
+                   [class.is-invalid]="installationSecretContainer.hasErrors" [placeholder]="'installation.installationSecretPlaceholder' | translate">
           </pony-error-container>
         </div>
 
