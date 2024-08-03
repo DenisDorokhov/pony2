@@ -4,8 +4,8 @@ import net.dorokhov.pony3.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony3.web.validation.RepeatPassword;
 import net.dorokhov.pony3.web.validation.RepeatPasswordValue;
 import net.dorokhov.pony3.web.validation.UniqueEmail;
-import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

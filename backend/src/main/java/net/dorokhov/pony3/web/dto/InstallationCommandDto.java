@@ -7,8 +7,8 @@ import net.dorokhov.pony3.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony3.web.validation.InstallationSecret;
 import net.dorokhov.pony3.web.validation.RepeatPassword;
 import net.dorokhov.pony3.web.validation.RepeatPasswordValue;
-import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 import java.io.File;
 import java.util.ArrayList;

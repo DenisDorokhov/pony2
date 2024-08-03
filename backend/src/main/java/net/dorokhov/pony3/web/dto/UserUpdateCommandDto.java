@@ -6,8 +6,8 @@ import net.dorokhov.pony3.api.user.service.command.UnsafeUserUpdateCommand;
 import net.dorokhov.pony3.web.validation.RepeatPassword;
 import net.dorokhov.pony3.web.validation.RepeatPasswordValue;
 import net.dorokhov.pony3.web.validation.UpdateUniqueEmail;
-import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 import jakarta.annotation.Nullable;
 
