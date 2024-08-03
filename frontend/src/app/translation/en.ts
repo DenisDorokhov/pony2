@@ -122,6 +122,7 @@ export default {
     header: 'Settings',
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
+    startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',
   },
   shared: {
     errorsHeader: 'Errors',
@@ -153,6 +154,8 @@ export default {
     scanJobInterruptedText: 'Interrupted!',
     scanJobFinishedText: 'Complete!',
     scanJobFailedText: 'Failed!',
+    settingsTitle: 'Settings',
+    settingsUpdatedText: 'Updated!',
   },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).

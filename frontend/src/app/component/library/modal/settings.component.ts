@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {TranslateModule} from "@ngx-translate/core";
+import {TranslateModule, TranslateService} from "@ngx-translate/core";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {ConfigService} from "../../../service/config.service";
 import {LoadingState} from "../../../domain/common.model";
@@ -12,6 +12,9 @@ import {ErrorContainerComponent} from "../../common/error-container.component";
 import {DatePipe, NgForOf} from "@angular/common";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
+import _ from "underscore";
+import {LibraryScanService} from "../../../service/library-scan.service";
+import {NotificationService} from "../../../service/notification.service";
 
 @Component({
   standalone: true,
@@ -36,6 +39,9 @@ export class SettingsComponent implements OnInit{
     public readonly activeModal: NgbActiveModal,
     private readonly configService: ConfigService,
     private readonly formBuilder: FormBuilder,
+    private readonly translateService: TranslateService,
+    private readonly libraryScanService: LibraryScanService,
+    private readonly notificationService: NotificationService,
   ) {
     this.formLibraryFolders = formBuilder.array([
       formBuilder.group({path: ''})
@@ -74,6 +80,15 @@ export class SettingsComponent implements OnInit{
     this.configService.saveConfig(configToSave).subscribe({
       next: config => {
         this.loadingState = LoadingState.LOADED;
+        if (!_.isEqual(this.config?.libraryFolders, config.libraryFolders)) {
+          this.notificationService.success(
+            this.translateService.instant('notification.settingsTitle'),
+            this.translateService.instant('notification.settingsUpdatedText')
+          );
+          if (window.confirm(this.translateService.instant('settings.startScanJobConfirmation'))) {
+            this.libraryScanService.startScanJob().subscribe();
+          }
+        }
         this.activeModal.close(config);
       },
       error: error => {
