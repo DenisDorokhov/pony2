@@ -1,8 +1,46 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ 'library.settings.header' | translate }}</h4>
+  <h4 class="modal-title">{{ 'settings.header' | translate }}</h4>
 </div>
 <div class="modal-body">
+
+  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+
+    <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
+
+    <div class="mb-3" formArrayName="libraryFolders">
+      <label class="form-label">{{ 'settings.libraryFoldersLabel' | translate }}</label>
+      <pony-error-container #libraryFoldersContainer class="library-folders-container"
+                            *ngFor="let libraryFolder of formLibraryFolders.controls; let i = index;"
+                            [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
+        <div class="input-group" [class.is-invalid]="libraryFoldersContainer.hasErrors">
+          <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
+                 [class.is-invalid]="libraryFoldersContainer.hasErrors" [placeholder]="'settings.libraryFoldersPlaceholder' | translate">
+          <span class="input-group-btn">
+                <button type="button" class="btn btn-default add"
+                        [disabled]="formLibraryFolders.controls.length >= 5"
+                        (click)="addLibraryFolder()">
+                  <i class="fa fa-plus"></i>
+                </button>
+                <button type="button" class="btn btn-default remove"
+                        [disabled]="formLibraryFolders.controls.length <= 1"
+                        (click)="removeLibraryFolder(i)">
+                  <i class="fa fa-minus"></i>
+                </button>
+              </span>
+        </div>
+      </pony-error-container>
+    </div>
+
+    <input type="submit" hidden />
+
+  </form>
+
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
+  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
 </div>

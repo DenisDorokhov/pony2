@@ -69,7 +69,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   openSettings() {
-    this.modal.open(SettingsComponent);
+    this.modal.open(SettingsComponent, { size: 'lg' });
   }
 
   openScanning() {

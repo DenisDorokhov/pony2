@@ -20,13 +20,11 @@ import {AutoFocusDirective} from "./common/auto-focus.directive";
 })
 export class InstallationComponent {
 
-  installationForm: FormGroup;
+  form: FormGroup;
   error: ErrorDto | undefined;
 
-  fieldHasViolation = ErrorDto.fieldHasViolation;
-
   get libraryFolders(): FormArray {
-    return this.installationForm.get('libraryFolders') as FormArray;
+    return this.form.get('libraryFolders') as FormArray;
   }
 
   constructor(
@@ -34,7 +32,7 @@ export class InstallationComponent {
     private formBuilder: FormBuilder,
     private router: Router
   ) {
-    this.installationForm = formBuilder.group({
+    this.form = formBuilder.group({
       installationSecret: '',
       libraryFolders: formBuilder.array([
         formBuilder.group({path: ''})
@@ -55,17 +53,17 @@ export class InstallationComponent {
   }
 
   install() {
-    const installationCommand = <InstallationCommandDto>this.installationForm.value;
+    const installationCommand = <InstallationCommandDto>this.form.value;
     installationCommand.startScanJobAfterInstallation = true;
-    this.installationService.install(installationCommand).subscribe(
-      installation => {
+    this.installationService.install(installationCommand).subscribe({
+      next: installation => {
         Logger.info(`Version ${installation.version} has been installed.`);
         this.error = undefined;
         this.router.navigate(['/login'], {replaceUrl: true});
       },
-      (error: ErrorDto) => {
+      error: error => {
         this.error = error;
       }
-    );
+    });
   }
 }

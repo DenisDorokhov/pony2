@@ -36,15 +36,6 @@ export default {
     log: {
       header: 'Log',
     },
-    scanning: {
-      header: 'Scanning',
-    },
-    settings: {
-      header: 'Settings',
-    },
-    userList: {
-      header: 'Users',
-    },
     album: {
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown'
@@ -71,6 +62,7 @@ export default {
     windowCloseConfirmation: 'Playback will stop after closing the window. Are you sure?',
   },
   scanning: {
+    header: 'Scanning',
     statusLabel: 'Status:',
     progressLabel: 'Progress:',
     startScanButton: 'Start Scan',
@@ -95,6 +87,7 @@ export default {
     },
   },
   userList: {
+    header: 'Users',
     creationDateColumn: 'Creation Date',
     updateDateColumn: 'Update Date',
     nameColumn: 'Name',
@@ -124,6 +117,11 @@ export default {
     emailLabel: 'Email:',
     oldPasswordLabel: 'Old Password:',
     newPasswordLabel: 'New password:',
+  },
+  settings: {
+    header: 'Settings',
+    libraryFoldersLabel: 'Library Folders:',
+    libraryFoldersPlaceholder: 'Enter full folder path',
   },
   shared: {
     errorsHeader: 'Errors',

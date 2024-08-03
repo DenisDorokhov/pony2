@@ -5,7 +5,7 @@
 
   <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING"></div>
 
-  <form [formGroup]="userForm" (ngSubmit)="save()" novalidate>
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
     <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
 

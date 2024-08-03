@@ -8,13 +8,13 @@
       <h3 class="panel-title">{{ 'installation.mainHeader' | translate }}</h3>
     </div>
     <div class="panel-body">
-      <form [formGroup]="installationForm" (ngSubmit)="install()" novalidate>
+      <form [formGroup]="form" (ngSubmit)="install()" novalidate>
 
         <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
 
         <div class="mb-3" formArrayName="libraryFolders">
           <span>
-            <label class="control-label">{{ 'installation.libraryFoldersLabel' | translate }}</label>
+            <label class="form-label">{{ 'installation.libraryFoldersLabel' | translate }}</label>
           </span>
           <pony-error-container #libraryFoldersContainer class="library-folders-container"
                                 *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
@@ -40,7 +40,7 @@
 
         <div class="mb-3">
           <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'adminName'">
-            <label for="adminName" class="control-label">{{ 'installation.adminNameLabel' | translate }}</label>
+            <label for="adminName" class="form-label">{{ 'installation.adminNameLabel' | translate }}</label>
             <input id="adminName" formControlName="adminName" type="text" class="form-control"
                    [class.is-invalid]="nameContainer.hasErrors" [placeholder]="'installation.adminNamePlaceholder' | translate">
           </pony-error-container>
@@ -48,7 +48,7 @@
 
         <div class="mb-3">
           <pony-error-container #adminEmailContainer class="form-group" [error]="error" [field]="'adminEmail'">
-            <label for="adminEmail" class="control-label">{{ 'installation.adminEmailLabel' | translate }}</label>
+            <label for="adminEmail" class="form-label">{{ 'installation.adminEmailLabel' | translate }}</label>
             <input id="adminEmail" formControlName="adminEmail" type="text" class="form-control"
                    [class.is-invalid]="adminEmailContainer.hasErrors" [placeholder]="'installation.adminEmailPlaceholder' | translate">
           </pony-error-container>
@@ -56,7 +56,7 @@
 
         <div class="mb-3">
           <pony-error-container #adminPasswordContainer class="form-group" [error]="error" [field]="'adminPassword'">
-            <label for="adminPassword" class="control-label">{{ 'installation.adminPasswordLabel' | translate }}</label>
+            <label for="adminPassword" class="form-label">{{ 'installation.adminPasswordLabel' | translate }}</label>
             <input id="adminPassword" formControlName="adminPassword" type="password" class="form-control"
                    [class.is-invalid]="adminPasswordContainer.hasErrors" [placeholder]="'installation.adminPasswordLabel' | translate">
           </pony-error-container>
@@ -65,7 +65,7 @@
         <div class="mb-3">
           <pony-error-container #repeatAdminPasswordContainer class="form-group" [error]="error" [field]="'repeatAdminPassword'">
             <label for="repeatAdminPassword"
-                   class="control-label">{{ 'installation.repeatAdminPasswordLabel' | translate }}</label>
+                   class="form-label">{{ 'installation.repeatAdminPasswordLabel' | translate }}</label>
             <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
                    [class.is-invalid]="repeatAdminPasswordContainer.hasErrors" [placeholder]="'installation.repeatAdminPasswordPlaceholder' | translate">
           </pony-error-container>
@@ -74,7 +74,7 @@
         <div class="mb-3">
           <pony-error-container #installationSecretContainer class="form-group" [error]="error" [field]="'installationSecret'">
             <label for="installationSecret"
-                   class="control-label">{{ 'installation.installationSecretLabel' | translate }}</label>
+                   class="form-label">{{ 'installation.installationSecretLabel' | translate }}</label>
             <input id="installationSecret" formControlName="installationSecret" type="password" class="form-control"
                    [class.is-invalid]="installationSecretContainer.hasErrors" [placeholder]="'installation.installationSecretPlaceholder' | translate">
           </pony-error-container>

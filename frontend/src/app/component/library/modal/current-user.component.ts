@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {TranslateModule} from "@ngx-translate/core";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
@@ -24,10 +24,9 @@ export class CurrentUserComponent implements OnInit {
 
   LoadingState = LoadingState;
 
-  @Input()
   user!: UserDto;
 
-  userForm!: FormGroup;
+  form: FormGroup;
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADING;
 
@@ -37,7 +36,7 @@ export class CurrentUserComponent implements OnInit {
     private authenticationService: AuthenticationService,
     private userService: UserService
   ) {
-    this.userForm = this.formBuilder.group({
+    this.form = this.formBuilder.group({
       name: '',
       email: '',
       oldPassword: '',
@@ -49,8 +48,8 @@ export class CurrentUserComponent implements OnInit {
     this.authenticationService.authenticate().subscribe({
       next: user => {
         this.user = user;
-        this.userForm.controls['name'].setValue(this.user.name);
-        this.userForm.controls['email'].setValue(this.user.email);
+        this.form.controls['name'].setValue(this.user.name);
+        this.form.controls['email'].setValue(this.user.email);
         this.loadingState = LoadingState.LOADED;
       },
       error: () => {
@@ -60,7 +59,7 @@ export class CurrentUserComponent implements OnInit {
   }
 
   save() {
-    const formValue = this.userForm.value;
+    const formValue = this.form.value;
     const command: CurrentUserUpdateCommandDto = {
       name: formValue.name,
       email: formValue.email,

@@ -27,7 +27,7 @@ export class UserComponent implements OnInit {
   @Input()
   user: UserDto | undefined;
 
-  userForm!: FormGroup;
+  form!: FormGroup;
   roles = [UserDto.Role.USER, UserDto.Role.ADMIN];
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADED;
@@ -41,7 +41,7 @@ export class UserComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userForm = this.formBuilder.group({
+    this.form = this.formBuilder.group({
       id: this.user?.id ?? undefined,
       name: this.user?.name ?? '',
       email: this.user?.email ?? '',
@@ -50,12 +50,12 @@ export class UserComponent implements OnInit {
       newPassword: '',
     });
     if (this.user?.id === this.authenticationService.currentUser!.id) {
-      this.userForm.controls['role'].disable();
+      this.form.controls['role'].disable();
     }
   }
 
   save() {
-    const formValue = this.userForm.value;
+    const formValue = this.form.value;
     let observable: Observable<UserDto>;
     if (this.user) {
       const command: UserUpdateCommandDto = {
