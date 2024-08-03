@@ -1,6 +1,8 @@
 package net.dorokhov.pony3.web.dto;
 
 import net.dorokhov.pony3.api.user.service.command.UserCreationCommand;
+import net.dorokhov.pony3.web.validation.RepeatPassword;
+import net.dorokhov.pony3.web.validation.RepeatPasswordValue;
 import net.dorokhov.pony3.web.validation.UniqueEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
@@ -8,6 +10,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+@RepeatPassword
 public final class UserCreationCommandDto {
 
     @NotBlank
@@ -21,7 +24,11 @@ public final class UserCreationCommandDto {
     private String email;
 
     @Size(min = 6, max = 255)
+    @RepeatPasswordValue
     private String password;
+
+    @RepeatPasswordValue(constraintViolationField = true)
+    private String repeatPassword;
 
     @NotNull
     private UserDto.Role role;
@@ -50,6 +57,15 @@ public final class UserCreationCommandDto {
 
     public UserCreationCommandDto setPassword(String password) {
         this.password = password;
+        return this;
+    }
+
+    public String getRepeatPassword() {
+        return repeatPassword;
+    }
+
+    public UserCreationCommandDto setRepeatPassword(String repeatPassword) {
+        this.repeatPassword = repeatPassword;
         return this;
     }
 

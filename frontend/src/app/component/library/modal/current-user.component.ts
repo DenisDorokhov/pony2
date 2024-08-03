@@ -40,6 +40,7 @@ export class CurrentUserComponent implements OnInit {
       email: '',
       oldPassword: '',
       newPassword: '',
+      repeatNewPassword: '',
     });
   }
 
@@ -64,6 +65,7 @@ export class CurrentUserComponent implements OnInit {
       email: formValue.email,
       oldPassword: formValue.oldPassword,
       newPassword: formValue.newPassword === '' ? undefined : formValue.newPassword,
+      repeatNewPassword: formValue.repeatNewPassword === '' ? undefined : formValue.repeatNewPassword,
     };
     this.loadingState = LoadingState.LOADING;
     this.userService.updateCurrentUser(command).subscribe({

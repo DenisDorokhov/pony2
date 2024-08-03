@@ -55,12 +55,28 @@
       </pony-error-container>
     </div>
 
+    <div class="mb-3" *ngIf="user === undefined">
+      <pony-error-container #repeatPasswordContainer class="form-group" [error]="error" [field]="'repeatPassword'">
+        <label for="repeatPassword" class="form-label">{{ 'user.repeatPasswordLabel' | translate }}</label>
+        <input id="repeatPassword" formControlName="repeatPassword" type="password" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="repeatPasswordContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
     <div class="mb-3" *ngIf="user !== undefined">
       <pony-error-container #newPasswordContainer class="form-group" [error]="error" [field]="'newPassword'">
         <label for="newPassword" class="form-label">{{ 'user.newPasswordLabel' | translate }}</label>
         <input id="newPassword" formControlName="newPassword" type="password" class="form-control" autocomplete="one-time-code"
                [placeholder]="'user.newPasswordPlaceholder' | translate"
                [class.is-invalid]="newPasswordContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
+    <div class="mb-3" *ngIf="user !== undefined">
+      <pony-error-container #repeatNewPasswordContainer class="form-group" [error]="error" [field]="'repeatNewPassword'">
+        <label for="repeatNewPassword" class="form-label">{{ 'user.repeatNewPasswordLabel' | translate }}</label>
+        <input id="repeatNewPassword" formControlName="repeatNewPassword" type="password" class="form-control" autocomplete="one-time-code"
+               [class.is-invalid]="repeatNewPasswordContainer.hasErrors">
       </pony-error-container>
     </div>
 

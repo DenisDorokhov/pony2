@@ -42,7 +42,7 @@
           <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'adminName'">
             <label for="adminName" class="form-label">{{ 'installation.adminNameLabel' | translate }}</label>
             <input id="adminName" formControlName="adminName" type="text" class="form-control"
-                   [class.is-invalid]="nameContainer.hasErrors" [placeholder]="'installation.adminNamePlaceholder' | translate">
+                   [class.is-invalid]="nameContainer.hasErrors">
           </pony-error-container>
         </div>
 
@@ -50,7 +50,7 @@
           <pony-error-container #adminEmailContainer class="form-group" [error]="error" [field]="'adminEmail'">
             <label for="adminEmail" class="form-label">{{ 'installation.adminEmailLabel' | translate }}</label>
             <input id="adminEmail" formControlName="adminEmail" type="text" class="form-control"
-                   [class.is-invalid]="adminEmailContainer.hasErrors" [placeholder]="'installation.adminEmailPlaceholder' | translate">
+                   [class.is-invalid]="adminEmailContainer.hasErrors">
           </pony-error-container>
         </div>
 
@@ -58,7 +58,7 @@
           <pony-error-container #adminPasswordContainer class="form-group" [error]="error" [field]="'adminPassword'">
             <label for="adminPassword" class="form-label">{{ 'installation.adminPasswordLabel' | translate }}</label>
             <input id="adminPassword" formControlName="adminPassword" type="password" class="form-control"
-                   [class.is-invalid]="adminPasswordContainer.hasErrors" [placeholder]="'installation.adminPasswordLabel' | translate">
+                   [class.is-invalid]="adminPasswordContainer.hasErrors">
           </pony-error-container>
         </div>
 
@@ -67,7 +67,7 @@
             <label for="repeatAdminPassword"
                    class="form-label">{{ 'installation.repeatAdminPasswordLabel' | translate }}</label>
             <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
-                   [class.is-invalid]="repeatAdminPasswordContainer.hasErrors" [placeholder]="'installation.repeatAdminPasswordPlaceholder' | translate">
+                   [class.is-invalid]="repeatAdminPasswordContainer.hasErrors">
           </pony-error-container>
         </div>
 

@@ -3,6 +3,8 @@ package net.dorokhov.pony3.web.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import net.dorokhov.pony3.api.user.service.command.UnsafeUserUpdateCommand;
+import net.dorokhov.pony3.web.validation.RepeatPassword;
+import net.dorokhov.pony3.web.validation.RepeatPasswordValue;
 import net.dorokhov.pony3.web.validation.UpdateUniqueEmail;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
@@ -10,6 +12,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import jakarta.annotation.Nullable;
 
 @UpdateUniqueEmail
+@RepeatPassword
 public final class UserUpdateCommandDto {
 
     @NotNull
@@ -25,7 +28,11 @@ public final class UserUpdateCommandDto {
     private String email;
 
     @Size(min = 6, max = 255)
+    @RepeatPasswordValue
     private String newPassword;
+
+    @RepeatPasswordValue(constraintViolationField = true)
+    private String repeatNewPassword;
 
     @NotNull
     private UserDto.Role role;
@@ -73,6 +80,15 @@ public final class UserUpdateCommandDto {
 
     public UserUpdateCommandDto setRole(UserDto.Role role) {
         this.role = role;
+        return this;
+    }
+
+    public String getRepeatNewPassword() {
+        return repeatNewPassword;
+    }
+
+    public UserUpdateCommandDto setRepeatNewPassword(String repeatNewPassword) {
+        this.repeatNewPassword = repeatNewPassword;
         return this;
     }
 

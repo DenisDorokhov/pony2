@@ -87,6 +87,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName("someName")
                 .setEmail("some@email.com")
                 .setPassword("somePassword")
+                .setRepeatPassword("somePassword")
                 .setRole(UserDto.Role.USER);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -110,6 +111,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName(" ")
                 .setEmail("invalidEmail")
                 .setPassword("")
+                .setRepeatPassword("123")
                 .setRole(null);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -123,7 +125,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
             assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(4);
             assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("name", "email", "password", "role");
+                    .containsExactlyInAnyOrder("name", "email", "password", "repeatPassword", "role");
         });
     }
 
@@ -134,6 +136,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName("someName")
                 .setEmail(ADMIN_EMAIL)
                 .setPassword("somePassword")
+                .setRepeatPassword("somePassword")
                 .setRole(UserDto.Role.ADMIN);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -159,6 +162,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName("someName")
                 .setEmail("some@email.com")
                 .setNewPassword("newPassword")
+                .setRepeatNewPassword("newPassword")
                 .setRole(UserDto.Role.ADMIN);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -184,6 +188,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName(" ")
                 .setEmail("invalidEmail")
                 .setNewPassword("")
+                .setRepeatNewPassword("123")
                 .setRole(null);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -197,7 +202,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
             assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(4);
             assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("name", "email", "newPassword", "role");
+                    .containsExactlyInAnyOrder("name", "email", "newPassword", "repeatNewPassword", "role");
         });
     }
 
@@ -209,6 +214,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName("someName")
                 .setEmail("some@email.com")
                 .setNewPassword("somePassword")
+                .setRepeatNewPassword("somePassword")
                 .setRole(UserDto.Role.USER);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -238,6 +244,7 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setName("someName")
                 .setEmail("new@email.com")
                 .setNewPassword("somePassword")
+                .setRepeatNewPassword("somePassword")
                 .setRole(UserDto.Role.ADMIN);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 

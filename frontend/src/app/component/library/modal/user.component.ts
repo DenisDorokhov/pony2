@@ -46,7 +46,9 @@ export class UserComponent implements OnInit {
       email: this.user?.email ?? '',
       role: this.user?.role ?? UserDto.Role.USER,
       password: '',
+      repeatPassword: '',
       newPassword: '',
+      repeatNewPassword: '',
     });
     if (this.user?.id === this.authenticationService.currentUser!.id) {
       this.form.controls['role'].disable();
@@ -62,6 +64,7 @@ export class UserComponent implements OnInit {
         name: formValue.name,
         email: formValue.email,
         newPassword: formValue.newPassword === '' ? undefined : formValue.newPassword,
+        repeatNewPassword: formValue.repeatNewPassword === '' ? undefined : formValue.repeatNewPassword,
         role: formValue.role ?? this.user.role
       };
       observable = this.userService.updateUser(command);
@@ -70,6 +73,7 @@ export class UserComponent implements OnInit {
         name: formValue.name,
         email: formValue.email,
         password: formValue.password,
+        repeatPassword: formValue.repeatPassword === '' ? undefined : formValue.repeatPassword,
         role: formValue.role
       };
       observable = this.userService.createUser(command);

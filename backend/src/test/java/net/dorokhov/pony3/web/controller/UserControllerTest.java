@@ -50,7 +50,9 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 .setName("newName")
                 .setEmail("new@email.com")
                 .setOldPassword(ADMIN_PASSWORD)
-                .setNewPassword("newPassword");
+                .setNewPassword("newPassword")
+                .setRepeatNewPassword("newPassword")
+                ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
@@ -76,7 +78,9 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 .setName(" ")
                 .setEmail("invalidEmail")
                 .setOldPassword("")
-                .setNewPassword("");
+                .setNewPassword("")
+                .setRepeatNewPassword("123")
+                ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
@@ -89,7 +93,7 @@ public class UserControllerTest extends InstallingIntegrationTest {
             assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(4);
             assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("name", "email", "oldPassword", "newPassword");
+                    .containsExactlyInAnyOrder("name", "email", "oldPassword", "newPassword", "repeatNewPassword");
         });
     }
 
@@ -100,7 +104,9 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 .setName("newName")
                 .setEmail("new@email.com")
                 .setOldPassword("incorrectPassword")
-                .setNewPassword("newPassword");
+                .setNewPassword("newPassword")
+                .setRepeatNewPassword("newPassword")
+                ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
@@ -128,7 +134,9 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 .setName("newName")
                 .setEmail(user.getEmail())
                 .setOldPassword(ADMIN_PASSWORD)
-                .setNewPassword("newPassword");
+                .setNewPassword("newPassword")
+                .setRepeatNewPassword("newPassword")
+                ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(

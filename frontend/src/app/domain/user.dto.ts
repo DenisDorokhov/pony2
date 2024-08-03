@@ -31,6 +31,7 @@ export interface UserUpdateCommandDto {
   name: string;
   email: string;
   newPassword: string;
+  repeatNewPassword: string;
   role: UserDto.Role;
 }
 
@@ -38,6 +39,7 @@ export interface UserCreateCommandDto {
   name: string;
   email: string;
   password: string;
+  repeatPassword: string;
   role: UserDto.Role;
 }
 
@@ -46,4 +48,5 @@ export interface CurrentUserUpdateCommandDto {
   email: string;
   oldPassword: string;
   newPassword: string;
+  repeatNewPassword: string;
 }
