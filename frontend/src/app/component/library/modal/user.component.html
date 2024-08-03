@@ -12,13 +12,13 @@
     <input type="hidden" formControlName="id">
 
     <div class="mb-3" [hidden]="!user?.creationDate">
-      <label for="creationDate" class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
-      <input id="creationDate" type="text" class="form-control" [value]="user?.creationDate | date:('shared.dateTimeFormat' | translate) " disabled>
+      <label class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
+      <div>{{ user?.creationDate | date:('shared.dateTimeFormat' | translate) }}</div>
     </div>
 
     <div class="mb-3" [hidden]="!user?.updateDate">
-      <label for="updateDate" class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
-      <input id="updateDate" type="text" class="form-control" [value]="user?.updateDate | date:('shared.dateTimeFormat' | translate) " disabled>
+      <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
+      <div>{{ user?.updateDate | date:('shared.dateTimeFormat' | translate) }}</div>
     </div>
 
     <div class="mb-3">

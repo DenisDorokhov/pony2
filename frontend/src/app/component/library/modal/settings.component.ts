@@ -9,13 +9,13 @@ import {ErrorDto} from "../../../domain/common.dto";
 import {ErrorComponent} from "../../common/error.component";
 import {AutoFocusDirective} from "../../common/auto-focus.directive";
 import {ErrorContainerComponent} from "../../common/error-container.component";
-import {NgForOf} from "@angular/common";
+import {DatePipe, NgForOf} from "@angular/common";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, ErrorComponent, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, NgForOf, ErrorIndicatorComponent, LoadingIndicatorComponent],
+  imports: [TranslateModule, ErrorComponent, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, NgForOf, ErrorIndicatorComponent, LoadingIndicatorComponent, DatePipe],
   selector: 'pony-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
@@ -24,7 +24,7 @@ export class SettingsComponent implements OnInit{
 
   LoadingState = LoadingState;
 
-  config!: ConfigDto;
+  config: ConfigDto | undefined;
 
   form: FormGroup;
   formLibraryFolders: FormArray;
@@ -57,7 +57,7 @@ export class SettingsComponent implements OnInit{
       error: () => {
         this.loadingState = LoadingState.ERROR;
       }
-    })
+    });
   }
 
   addLibraryFolder() {

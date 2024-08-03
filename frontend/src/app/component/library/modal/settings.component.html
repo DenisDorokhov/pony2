@@ -9,6 +9,11 @@
 
     <pony-error [error]="error" [ignoredCodes]="['VALIDATION']"></pony-error>
 
+    <div class="mb-3" [hidden]="!config?.updateDate">
+      <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
+      <div>{{ config?.updateDate | date:('shared.dateTimeFormat' | translate) }}</div>
+    </div>
+
     <div class="mb-3" formArrayName="libraryFolders">
       <label class="form-label">{{ 'settings.libraryFoldersLabel' | translate }}</label>
       <pony-error-container #libraryFoldersContainer class="library-folders-container"

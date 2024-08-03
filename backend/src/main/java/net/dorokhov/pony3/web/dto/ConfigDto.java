@@ -3,12 +3,24 @@ package net.dorokhov.pony3.web.dto;
 import jakarta.validation.Valid;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public final class ConfigDto {
 
+    private LocalDateTime updateDate;
+
     @Valid
     private List<LibraryFolderDto> libraryFolders;
+
+    public LocalDateTime getUpdateDate() {
+        return updateDate;
+    }
+
+    public ConfigDto setUpdateDate(LocalDateTime updateDate) {
+        this.updateDate = updateDate;
+        return this;
+    }
 
     public List<LibraryFolderDto> getLibraryFolders() {
         return libraryFolders;
@@ -19,8 +31,9 @@ public final class ConfigDto {
         return this;
     }
 
-    public static ConfigDto of(List<File> libraryFolders) {
+    public static ConfigDto of(LocalDateTime updateDate, List<File> libraryFolders) {
         return new ConfigDto()
+                .setUpdateDate(updateDate)
                 .setLibraryFolders(libraryFolders.stream()
                         .map(LibraryFolderDto::of)
                         .toList());

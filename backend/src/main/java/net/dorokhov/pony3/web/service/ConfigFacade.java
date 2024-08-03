@@ -18,7 +18,7 @@ public class ConfigFacade {
 
     @Transactional(readOnly = true)
     public ConfigDto getConfig() {
-        return ConfigDto.of(configService.getLibraryFolders());
+        return ConfigDto.of(configService.getUpdateDate().orElse(null), configService.getLibraryFolders());
     }
 
     @Transactional

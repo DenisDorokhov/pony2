@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Collections.emptyList;
 
@@ -22,6 +24,17 @@ public class ConfigServiceImpl implements ConfigService {
 
     public ConfigServiceImpl(ConfigRepository configRepository) {
         this.configRepository = configRepository;
+    }
+
+    @Override
+    public Optional<LocalDateTime> getUpdateDate() {
+        return configRepository.findById(CONFIG_LIBRARY_FOLDERS)
+                .map(config -> {
+                    if (config.getUpdateDate() == null) {
+                        return config.getCreationDate();
+                    }
+                    return config.getUpdateDate();
+                });
     }
 
     @Override

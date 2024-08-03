@@ -3,5 +3,6 @@ export interface LibraryFolderDto {
 }
 
 export interface ConfigDto {
+  updateDate: string;
   libraryFolders: LibraryFolderDto[];
 }
