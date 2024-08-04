@@ -29,8 +29,6 @@ public class ScanResultCalculator {
     public interface AudioFileProcessingResult {
         ScanType getScanType();
 
-        List<File> getTargetFiles();
-
         List<File> getFailedFiles();
 
         int getProcessedAudioFileCount();
@@ -104,7 +102,6 @@ public class ScanResultCalculator {
         ScanResult scanResult = new ScanResult()
 
                 .setScanType(processingResult.getScanType())
-                .setTargetPaths(filesToPaths(processingResult.getTargetFiles()))
                 .setFailedPaths(filesToPaths(processingResult.getFailedFiles()))
                 .setProcessedAudioFileCount(processingResult.getProcessedAudioFileCount())
                 .setDuration(duration)

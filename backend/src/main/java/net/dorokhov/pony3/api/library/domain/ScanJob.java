@@ -6,14 +6,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony3.api.common.BaseEntity;
 import net.dorokhov.pony3.api.log.domain.LogMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.dorokhov.pony3.common.ListOfStringsJsonAttributeConverter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "scan_job")
 public class ScanJob extends BaseEntity<ScanJob> {
-
-    private static final Logger log = LoggerFactory.getLogger(ScanJob.class);
 
     public enum Status {
         STARTING, STARTED, COMPLETE, FAILED, INTERRUPTED
@@ -29,6 +29,11 @@ public class ScanJob extends BaseEntity<ScanJob> {
     @NotNull
     private Status status;
 
+    @Column(name = "target_paths")
+    @Convert(converter = ListOfStringsJsonAttributeConverter.class)
+    @NotNull
+    private List<String> targetPaths = new ArrayList<>();
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "log_message_id", unique = true)
     private LogMessage logMessage;
@@ -41,7 +46,7 @@ public class ScanJob extends BaseEntity<ScanJob> {
         return scanType;
     }
 
-    public ScanJob setScanType(@NotNull ScanType scanType) {
+    public ScanJob setScanType(ScanType scanType) {
         this.scanType = scanType;
         return this;
     }
@@ -50,8 +55,20 @@ public class ScanJob extends BaseEntity<ScanJob> {
         return status;
     }
 
-    public ScanJob setStatus(@NotNull Status status) {
+    public ScanJob setStatus(Status status) {
         this.status = status;
+        return this;
+    }
+
+    public List<String> getTargetPaths() {
+        if (targetPaths == null) {
+            targetPaths = new ArrayList<>();
+        }
+        return targetPaths;
+    }
+
+    public ScanJob setTargetPaths(List<String> targetPaths) {
+        this.targetPaths = targetPaths;
         return this;
     }
 

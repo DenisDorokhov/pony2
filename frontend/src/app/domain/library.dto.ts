@@ -86,7 +86,6 @@ export interface ScanResultDto {
   id: string;
   date: string;
   scanType: ScanType;
-  targetPaths: string[];
   failedPaths: string[];
   processedAudioFileCount: number;
   duration: number;
@@ -119,6 +118,7 @@ export interface ScanJobDto {
   updateDate: string | undefined;
   scanType: ScanType;
   status: ScanJobDto.Status;
+  targetPaths: string[];
   logMessage: LogMessageDto | undefined;
   scanResult: ScanResultDto | undefined;
 }

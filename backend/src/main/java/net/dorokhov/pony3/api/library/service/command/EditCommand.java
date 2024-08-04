@@ -6,16 +6,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class EditCommand {
     
-    private final String songId;
+    private final String songFilePath;
     private final WritableAudioData audioData;
 
-    public EditCommand(String songId, WritableAudioData audioData) {
-        this.songId = checkNotNull(songId);
+    public EditCommand(String songFilePath, WritableAudioData audioData) {
+        this.songFilePath = checkNotNull(songFilePath);
         this.audioData = checkNotNull(audioData);
     }
 
-    public String getSongId() {
-        return songId;
+    public String getSongFilePath() {
+        return songFilePath;
     }
 
     public WritableAudioData getAudioData() {

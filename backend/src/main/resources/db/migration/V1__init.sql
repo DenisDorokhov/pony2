@@ -74,7 +74,6 @@ CREATE TABLE scan_result (
 
   date TIMESTAMP(9) NOT NULL,
   scan_type VARCHAR (255) NOT NULL,
-  target_paths TEXT NOT NULL,
   failed_paths TEXT NOT NULL,
   processed_audio_file_count INT NOT NULL,
   duration BIGINT NOT NULL,
@@ -119,6 +118,7 @@ CREATE TABLE scan_job (
 
   scan_type VARCHAR (255) NOT NULL,
   status VARCHAR (255) NOT NULL,
+  target_paths TEXT NOT NULL,
 
   log_message_id CHAR(36),
   scan_result_id CHAR(36),

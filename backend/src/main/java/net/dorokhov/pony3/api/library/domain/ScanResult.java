@@ -31,11 +31,6 @@ public class ScanResult implements Serializable {
     @NotNull
     private ScanType scanType;
 
-    @Column(name = "target_paths")
-    @Convert(converter = ListOfStringsJsonAttributeConverter.class)
-    @NotNull
-    private List<String> targetPaths = new ArrayList<>();
-
     @Column(name = "failed_paths")
     @Convert(converter = ListOfStringsJsonAttributeConverter.class)
     @NotNull
@@ -157,18 +152,6 @@ public class ScanResult implements Serializable {
 
     public ScanResult setScanType(ScanType scanType) {
         this.scanType = scanType;
-        return this;
-    }
-
-    public List<String> getTargetPaths() {
-        if (targetPaths == null) {
-            targetPaths = new ArrayList<>();
-        }
-        return targetPaths;
-    }
-
-    public ScanResult setTargetPaths(List<String> targetPaths) {
-        this.targetPaths = targetPaths;
         return this;
     }
 
@@ -420,7 +403,6 @@ public class ScanResult implements Serializable {
                 .add("id", id)
                 .add("date", date)
                 .add("scanType", scanType)
-                .add("targetPaths", targetPaths)
                 .add("failedPaths", failedPaths)
                 .add("processedAudioFileCount", processedAudioFileCount)
                 .add("duration", duration)

@@ -4,10 +4,14 @@ import jakarta.annotation.Nullable;
 import net.dorokhov.pony3.api.library.domain.ScanJob;
 import net.dorokhov.pony3.api.library.domain.ScanType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ScanJobDto extends BaseDto<ScanJobDto> {
 
     private ScanType scanType;
     private ScanJob.Status status;
+    private List<String> targetPaths = new ArrayList<>();
     private LogMessageDto logMessage;
     private ScanResultDto scanResult;
 
@@ -26,6 +30,18 @@ public final class ScanJobDto extends BaseDto<ScanJobDto> {
 
     public ScanJobDto setStatus(ScanJob.Status status) {
         this.status = status;
+        return this;
+    }
+
+    public List<String> getTargetPaths() {
+        if (targetPaths == null) {
+            targetPaths = new ArrayList<>();
+        }
+        return targetPaths;
+    }
+
+    public ScanJobDto setTargetPaths(List<String> targetPaths) {
+        this.targetPaths = targetPaths;
         return this;
     }
 
@@ -56,6 +72,7 @@ public final class ScanJobDto extends BaseDto<ScanJobDto> {
                 .setUpdateDate(scanJob.getUpdateDate())
                 .setScanType(scanJob.getScanType())
                 .setStatus(scanJob.getStatus())
+                .setTargetPaths(scanJob.getTargetPaths())
                 .setLogMessage(scanJob.getLogMessage() != null ? LogMessageDto.of(scanJob.getLogMessage()) : null)
                 .setScanResult(scanJob.getScanResult() != null ? ScanResultDto.of(scanJob.getScanResult()) : null);
     }

@@ -132,12 +132,12 @@ public class ScanTestPlanExecutor {
         assertThat(scanJob.getUpdateDate()).isNotNull();
         assertThat(scanJob.getScanType()).isSameAs(ScanType.FULL);
         assertThat(scanJob.getStatus()).isSameAs(ScanJob.Status.COMPLETE);
+        assertThat(scanJob.getTargetPaths()).containsExactly(context.getRootFolder().getAbsolutePath());
         assertThat(scanJob.getLogMessage()).satisfies(logMessage ->
                 assertThat(logMessage.getLevel()).isSameAs(LogMessage.Level.INFO));
         assertThat(scanJob.getScanResult()).satisfies(scanResult -> {
             assertThat(scanResult.getDate()).isNotNull();
             assertThat(scanResult.getScanType()).isSameAs(ScanType.FULL);
-            assertThat(scanResult.getTargetPaths()).containsExactly(context.getRootFolder().getAbsolutePath());
             assertThat(scanResult.getFailedPaths()).isEmpty();
             assertThat(scanResult.getDuration()).isGreaterThan(0);
             assertThat(scanResult.getSongSize()).isGreaterThan(0);

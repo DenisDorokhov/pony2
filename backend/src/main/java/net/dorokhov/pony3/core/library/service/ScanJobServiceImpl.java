@@ -140,10 +140,14 @@ public class ScanJobServiceImpl implements ScanJobService {
             throw new ConcurrentScanException();
         }
 
-        LogMessage logStarting = logService.info(logger, "Starting edit job for {} songs...", commands.size());
+        List<String> targetPaths = commands.stream()
+                .map(EditCommand::getSongFilePath)
+                .toList();
+        LogMessage logStarting = logService.info(logger, "Starting edit job for {}...", targetPaths);
         ScanJob scanJob = scanJobRepository.save(new ScanJob()
                 .setScanType(ScanType.EDIT)
                 .setStatus(Status.STARTING)
+                .setTargetPaths(targetPaths)
                 .setLogMessage(logStarting));
 
         registerSynchronization(new TransactionSynchronization() {
@@ -192,6 +196,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         ScanJob scanJob = scanJobRepository.save(new ScanJob()
                 .setScanType(ScanType.FULL)
                 .setStatus(Status.STARTING)
+                .setTargetPaths(targetPaths)
                 .setLogMessage(logStarting));
 
         registerSynchronization(new TransactionSynchronization() {

@@ -117,8 +117,6 @@ public class ScanResultCalculatorTest {
 
         when(scanResultRepository.save(any())).then(returnsFirstArg());
 
-        File targetFile1 = new File("/targetFile1");
-        File targetFile2 = new File("/targetFile2");
         File failedFile = new File("/failedFile");
         ScanResult scanResult = scanResultCalculator.calculateAndSave(rethrow(() -> {
             Thread.sleep(150);
@@ -126,12 +124,6 @@ public class ScanResultCalculatorTest {
                 @Override
                 public ScanType getScanType() {
                     return ScanType.FULL;
-                }
-
-                @Override
-                @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
-                public List<File> getTargetFiles() {
-                    return ImmutableList.of(targetFile1, targetFile2);
                 }
 
                 @Override
@@ -150,7 +142,6 @@ public class ScanResultCalculatorTest {
         verify(scanResultRepository).save(any());
 
         assertThat(scanResult.getScanType()).isSameAs(ScanType.FULL);
-        assertThat(scanResult.getTargetPaths()).containsExactly(targetFile1.getAbsolutePath(), targetFile2.getAbsolutePath());
         assertThat(scanResult.getFailedPaths()).containsExactly(failedFile.getAbsolutePath());
         assertThat(scanResult.getProcessedAudioFileCount()).isEqualTo(20);
         assertThat(scanResult.getDuration()).isBetween(100L, 200L);

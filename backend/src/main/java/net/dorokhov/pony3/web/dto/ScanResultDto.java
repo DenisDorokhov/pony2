@@ -14,7 +14,6 @@ public final class ScanResultDto {
 
     private ScanType scanType;
 
-    private List<String> targetPaths = new ArrayList<>();
     private List<String> failedPaths = new ArrayList<>();
 
     private Integer processedAudioFileCount;
@@ -72,18 +71,6 @@ public final class ScanResultDto {
 
     public ScanResultDto setScanType(ScanType scanType) {
         this.scanType = scanType;
-        return this;
-    }
-
-    public List<String> getTargetPaths() {
-        if (targetPaths == null) {
-            targetPaths = new ArrayList<>();
-        }
-        return targetPaths;
-    }
-
-    public ScanResultDto setTargetPaths(List<String> targetPaths) {
-        this.targetPaths = targetPaths;
         return this;
     }
 
@@ -311,7 +298,6 @@ public final class ScanResultDto {
                 .setId(scanResult.getId())
                 .setDate(scanResult.getDate())
                 .setScanType(scanResult.getScanType())
-                .setTargetPaths(scanResult.getTargetPaths())
                 .setFailedPaths(scanResult.getFailedPaths())
                 .setProcessedAudioFileCount(scanResult.getProcessedAudioFileCount())
                 .setDuration(scanResult.getDuration())

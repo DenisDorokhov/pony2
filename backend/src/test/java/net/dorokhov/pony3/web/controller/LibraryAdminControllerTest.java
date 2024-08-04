@@ -289,7 +289,6 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getId()).isEqualTo(scanResult.getId());
         assertThat(dto.getDate()).isEqualTo(scanResult.getDate());
         assertThat(dto.getScanType()).isEqualTo(scanResult.getScanType());
-        assertThat(dto.getTargetPaths()).isEqualTo(scanResult.getTargetPaths());
         assertThat(dto.getFailedPaths()).isEqualTo(scanResult.getFailedPaths());
         assertThat(dto.getProcessedAudioFileCount()).isEqualTo(scanResult.getProcessedAudioFileCount());
         assertThat(dto.getDuration()).isEqualTo(scanResult.getDuration());

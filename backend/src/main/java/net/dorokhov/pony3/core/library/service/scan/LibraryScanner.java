@@ -6,10 +6,8 @@ import net.dorokhov.pony3.api.library.domain.ScanProgress;
 import net.dorokhov.pony3.api.library.domain.ScanProgress.Step;
 import net.dorokhov.pony3.api.library.domain.ScanResult;
 import net.dorokhov.pony3.api.library.domain.ScanType;
-import net.dorokhov.pony3.api.library.domain.Song;
 import net.dorokhov.pony3.api.library.service.command.EditCommand;
 import net.dorokhov.pony3.api.log.service.LogService;
-import net.dorokhov.pony3.core.library.repository.SongRepository;
 import net.dorokhov.pony3.core.library.service.filetree.FileTreeScanner;
 import net.dorokhov.pony3.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony3.core.library.service.filetree.domain.FileNode;
@@ -42,7 +40,6 @@ public class LibraryScanner {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final LogService logService;
-    private final SongRepository songRepository;
     private final FileTreeScanner fileTreeScanner;
     private final ScanResultCalculator scanResultCalculator;
     private final BatchLibraryCleaner batchLibraryCleaner;
@@ -52,7 +49,6 @@ public class LibraryScanner {
 
     public LibraryScanner(
             LogService logService,
-            SongRepository songRepository,
             FileTreeScanner fileTreeScanner,
             ScanResultCalculator scanResultCalculator,
             BatchLibraryCleaner batchLibraryCleaner,
@@ -61,7 +57,6 @@ public class LibraryScanner {
             @Value("${pony.scan.importChunkSize}") int importChunkSize
     ) {
         this.logService = logService;
-        this.songRepository = songRepository;
         this.fileTreeScanner = fileTreeScanner;
         this.scanResultCalculator = scanResultCalculator;
         this.batchLibraryCleaner = batchLibraryCleaner;
@@ -98,11 +93,7 @@ public class LibraryScanner {
         List<File> targetFiles = new ArrayList<>();
         List<WriteAndImportCommand> writeAndImportCommands = new ArrayList<>();
         for (EditCommand command : commands) {
-            Song song = songRepository.findById(command.getSongId()).orElse(null);
-            if (song == null) {
-                throw new SongNotFoundException(command.getSongId());
-            }
-            File songFile = song.getFile();
+            File songFile = new File(command.getSongFilePath());
             if (!songFile.exists()) {
                 throw new FileNotFoundException(songFile.getAbsolutePath());
             }
@@ -180,7 +171,7 @@ public class LibraryScanner {
                 progressScan(FULL_SEARCHING_ARTWORKS, targetFolders,
                         ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
-        return new AudioFileProcessingResultImpl(ScanType.FULL, targetFolders, failedFiles, audioNodes.size());
+        return new AudioFileProcessingResultImpl(ScanType.FULL, failedFiles, audioNodes.size());
     }
 
     private AudioFileProcessingResult performEditSteps(List<WriteAndImportCommand> commands, @Nullable Consumer<ScanProgress> observer) {
@@ -209,7 +200,7 @@ public class LibraryScanner {
                 progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles,
                         ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
-        return new AudioFileProcessingResultImpl(ScanType.EDIT, targetFiles, failedFiles, commands.size());
+        return new AudioFileProcessingResultImpl(ScanType.EDIT, failedFiles, commands.size());
     }
 
     private void progressScan(Step step, List<File> files, ScanProgress.Value progressValue, @Nullable Consumer<ScanProgress> observer) {
@@ -229,18 +220,15 @@ public class LibraryScanner {
     private static class AudioFileProcessingResultImpl implements AudioFileProcessingResult {
 
         private final ScanType scanType;
-        private final List<File> targetFiles;
         private final List<File> failedFiles;
         private final int processedAudioFileCount;
 
         public AudioFileProcessingResultImpl(
                 ScanType scanType,
-                List<File> targetFiles,
                 List<File> failedFiles,
                 int processedAudioFileCount
         ) {
             this.scanType = checkNotNull(scanType);
-            this.targetFiles = unmodifiableList(targetFiles);
             this.failedFiles = unmodifiableList(failedFiles);
             this.processedAudioFileCount = processedAudioFileCount;
         }
@@ -248,11 +236,6 @@ public class LibraryScanner {
         @Override
         public ScanType getScanType() {
             return scanType;
-        }
-
-        @Override
-        public List<File> getTargetFiles() {
-            return targetFiles;
         }
 
         @Override

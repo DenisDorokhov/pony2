@@ -24,19 +24,19 @@
     >{{ scanJob.status }}</div>
   </div>
 
+  <div class="mb-3">
+    <label class="form-label">{{ 'scanJob.targetPathsLabel' | translate }}</label>
+    <div *ngFor="let targetPath of scanJob.targetPaths">
+      {{ targetPath }}
+    </div>
+  </div>
+
   <div class="mb-3" [hidden]="!scanJob.logMessage">
     <label class="form-label">{{ 'scanJob.logMessageLabel' | translate }}</label>
     <div>{{ scanJob.logMessage?.text }}</div>
   </div>
 
   <div *ngIf="scanJob.scanResult">
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.targetPathsLabel' | translate }}</label>
-      <div *ngFor="let targetPath of scanJob.scanResult!.targetPaths">
-        {{ targetPath }}
-      </div>
-    </div>
 
     <div class="mb-3" [hidden]="scanJob.scanResult!.failedPaths.length < 1">
       <label class="form-label">{{ 'scanJob.failedPathsLabel' | translate }}</label>
@@ -47,7 +47,7 @@
 
     <div class="mb-3">
       <label class="form-label">{{ 'scanJob.processedAudioFilesLabel' | translate }}</label>
-      <div>{{ scanJob.scanResult?.processedAudioFileCount }}</div>
+      <div>{{ scanJob.scanResult!.processedAudioFileCount }}</div>
     </div>
 
     <div class="mb-3">

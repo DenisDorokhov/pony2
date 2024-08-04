@@ -7,7 +7,6 @@ import net.dorokhov.pony3.api.library.domain.ScanResult;
 import net.dorokhov.pony3.api.library.domain.WritableAudioData;
 import net.dorokhov.pony3.api.library.service.command.EditCommand;
 import net.dorokhov.pony3.api.log.service.LogService;
-import net.dorokhov.pony3.core.library.repository.SongRepository;
 import net.dorokhov.pony3.core.library.service.filetree.FileTreeScanner;
 import net.dorokhov.pony3.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony3.core.library.service.filetree.domain.FolderNode;
@@ -31,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -55,8 +53,6 @@ public class LibraryScannerTest {
     @Mock
     private LogService logService;
     @Mock
-    private SongRepository songRepository;
-    @Mock
     private FileTreeScanner fileTreeScanner;
     @Mock
     private ScanResultCalculator scanResultCalculator;
@@ -75,8 +71,15 @@ public class LibraryScannerTest {
 
     @BeforeEach
     public void setUp() {
-        libraryScanner = new LibraryScanner(logService, songRepository, fileTreeScanner, 
-                scanResultCalculator, batchLibraryCleaner, batchLibraryImporter, batchLibraryArtworkFinder, 1);
+        libraryScanner = new LibraryScanner(
+                logService,
+                fileTreeScanner,
+                scanResultCalculator,
+                batchLibraryCleaner,
+                batchLibraryImporter,
+                batchLibraryArtworkFinder,
+                1
+        );
     }
 
     @Test
@@ -102,7 +105,6 @@ public class LibraryScannerTest {
             Object result = ((Supplier<?>) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
                 assertThat(audioFileProcessingResult.getScanType()).isSameAs(FULL);
-                assertThat(audioFileProcessingResult.getTargetFiles()).containsExactly(tempFolder.toFile());
                 assertThat(audioFileProcessingResult.getFailedFiles()).isEmpty();
                 assertThat(audioFileProcessingResult.getProcessedAudioFileCount()).isEqualTo(2);
             });
@@ -174,18 +176,13 @@ public class LibraryScannerTest {
         AudioNode audioNode2 = mock(AudioNode.class);
         when(audioNode2.getFile()).thenReturn(file2);
         when(fileTreeScanner.scanFile(eq(file1), any())).thenReturn(audioNode1);
-        when(songRepository.findById("1")).thenReturn(Optional.of(song()
-                .setPath(file1.getAbsolutePath())));
         when(fileTreeScanner.scanFile(eq(file2), any())).thenReturn(audioNode2);
-        when(songRepository.findById("2")).thenReturn(Optional.of(song()
-                .setPath(file2.getAbsolutePath())));
 
         ScanResult scanResultFixture = scanResult(EDIT);
         when(scanResultCalculator.calculateAndSave(any())).then(invocation -> {
             Object result = ((Supplier<?>) invocation.getArgument(0)).get();
             assertThat(result).isInstanceOfSatisfying(AudioFileProcessingResult.class, audioFileProcessingResult -> {
                 assertThat(audioFileProcessingResult.getScanType()).isSameAs(EDIT);
-                assertThat(audioFileProcessingResult.getTargetFiles()).containsExactly(file1, file2);
                 assertThat(audioFileProcessingResult.getFailedFiles()).isEmpty();
                 assertThat(audioFileProcessingResult.getProcessedAudioFileCount()).isEqualTo(2);
             });
@@ -205,8 +202,8 @@ public class LibraryScannerTest {
 
         ScanObserver scanObserver = new ScanObserver();
         assertThat(libraryScanner.edit(ImmutableList.of(
-                new EditCommand("1", new WritableAudioData()),
-                new EditCommand("2", new WritableAudioData())
+                new EditCommand(file1.getAbsolutePath(), new WritableAudioData()),
+                new EditCommand(file2.getAbsolutePath(), new WritableAudioData())
         ), emptyList(), scanObserver::observe)).isSameAs(scanResultFixture);
 
         verify(batchLibraryImporter, times(2)).writeAndImport(writeAndImportCommandsCaptor.capture(), any());
@@ -266,21 +263,9 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldFailEditIfSongNotFound() {
-
-        when(songRepository.findById(any())).thenReturn(Optional.empty());
-        EditCommand command = new EditCommand("1", new WritableAudioData());
-
-        assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
-                .isInstanceOfSatisfying(SongNotFoundException.class, e -> 
-                        assertThat(e.getSongId()).isEqualTo("1"));
-    }
-
-    @Test
     public void shouldFailEditIfFileNotFound() {
 
-        when(songRepository.findById(any())).thenReturn(Optional.of(song()));
-        EditCommand command = new EditCommand("1", new WritableAudioData());
+        EditCommand command = new EditCommand("notExistingFile", new WritableAudioData());
 
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(FileNotFoundException.class);
@@ -291,9 +276,7 @@ public class LibraryScannerTest {
 
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(mock(ImageNode.class));
         File file = Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile();
-        when(songRepository.findById(any())).thenReturn(Optional.of(song()
-                .setPath(file.getAbsolutePath())));
-        EditCommand command = new EditCommand("1", new WritableAudioData());
+        EditCommand command = new EditCommand(file.getAbsolutePath(), new WritableAudioData());
 
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(command), emptyList(), null))
                 .isInstanceOf(IOException.class);
@@ -305,15 +288,13 @@ public class LibraryScannerTest {
         AudioNode audioNode = mock(AudioNode.class);
         when(fileTreeScanner.scanFile(any(), any())).thenReturn(audioNode);
         File file = Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile();
-        when(songRepository.findById(any())).thenReturn(Optional.of(song()
-                .setPath(file.getAbsolutePath())));
 
         Exception calculationException = new RuntimeException();
         when(scanResultCalculator.calculateAndSave(any())).thenThrow(calculationException);
 
         ScanObserver scanObserver = new ScanObserver();
         assertThatThrownBy(() -> libraryScanner.edit(ImmutableList.of(
-                new EditCommand("1", new WritableAudioData())
+                new EditCommand(file.getAbsolutePath(), new WritableAudioData())
         ), emptyList(), scanObserver::observe)).isSameAs(calculationException);
 
         verify(logService).error(any(), any(), any());
