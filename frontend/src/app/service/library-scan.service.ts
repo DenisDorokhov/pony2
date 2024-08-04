@@ -179,6 +179,7 @@ export class LibraryScanService {
             // If scan job finished too fast.
             if (!scanJobProgress) {
               this.showScanJobEndedNotification(scanJob.id);
+              this.libraryService.requestRefresh();
             }
           })
         )),

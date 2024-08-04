@@ -92,20 +92,22 @@ export default {
     failedPathsLabel: 'Failed folders:',
     processedAudioFilesLabel: 'Processed audio files:',
     scanResultLabel: 'Updates:',
-    scanResult: 'created {{createdArtistCount}} artists, \n' +
-      'updated {{updatedArtistCount}} artists, \n' +
-      'deleted {{deletedArtistCount}} artists, \n' +
-      'created {{createdAlbumCount}} albums, \n' +
-      'updated {{updatedAlbumCount}} albums, \n' +
-      'deleted {{deletedAlbumCount}} albums, \n' +
-      'created {{createdGenreCount}} genres, \n' +
-      'updated {{updatedGenreCount}} genres, \n' +
-      'deleted {{deletedGenreCount}} genres, \n' +
-      'created {{createdSongCount}} songs, \n' +
-      'updated {{updatedSongCount}} songs, \n' +
-      'deleted {{deletedSongCount}} songs, \n' +
-      'created {{createdArtworkCount}} artworks, \n' +
-      'deleted {{deletedArtworkCount}} artworks.',
+    scanResult: {
+      createdArtistCount: 'created {{value}} artists',
+      updatedArtistCount: 'updated {{value}} artists',
+      deletedArtistCount: 'deleted {{value}} artists',
+      createdAlbumCount: 'created {{value}} albums',
+      updatedAlbumCount: 'updated {{value}} albums',
+      deletedAlbumCount: 'deleted {{value}} albums',
+      createdGenreCount: 'created {{value}} genres',
+      updatedGenreCount: 'updated {{value}} genres',
+      deletedGenreCount: 'deleted {{value}} genres',
+      createdSongCount: 'created {{value}} songs',
+      updatedSongCount: 'updated {{value}} songs',
+      deletedSongCount: 'deleted {{value}} songs',
+      createdArtworkCount: 'created {{value}} artworks',
+      deletedArtworkCount: 'deleted {{value}} artworks',
+    },
     countsLabel: 'Total counts:',
     counts: '{{artistCount}} artists,\n' +
       '{{albumCount}} albums, \n' +

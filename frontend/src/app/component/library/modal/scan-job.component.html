@@ -16,7 +16,8 @@
 
   <div class="mb-3">
     <label class="form-label">{{ 'scanJob.statusLabel' | translate }}</label>
-    <div class="scan-job-status" [class.starting]="scanJob.status === ScanJobStatus.STARTING"
+    <div class="scan-job-status"
+         [class.starting]="scanJob.status === ScanJobStatus.STARTING"
          [class.started]="scanJob.status === ScanJobStatus.STARTED"
          [class.complete]="scanJob.status === ScanJobStatus.COMPLETE"
          [class.failed]="scanJob.status === ScanJobStatus.FAILED"
@@ -33,7 +34,12 @@
 
   <div class="mb-3" [hidden]="!scanJob.logMessage">
     <label class="form-label">{{ 'scanJob.logMessageLabel' | translate }}</label>
-    <div>{{ scanJob.logMessage?.text }}</div>
+    <div><span class="log-level"
+               [class.debug]="scanJob.logMessage!.level === LogMessageLevel.DEBUG"
+               [class.info]="scanJob.logMessage!.level === LogMessageLevel.INFO"
+               [class.warn]="scanJob.logMessage!.level === LogMessageLevel.WARN"
+               [class.error]="scanJob.logMessage!.level === LogMessageLevel.ERROR"
+    >[{{ scanJob.logMessage!.level }}]</span> {{ scanJob.logMessage!.text }}</div>
   </div>
 
   <div *ngIf="scanJob.scanResult">
@@ -52,22 +58,7 @@
 
     <div class="mb-3">
       <label class="form-label">{{ 'scanJob.scanResultLabel' | translate }}</label>
-      <div>{{ 'scanJob.scanResult' | translate:{
-        createdArtistCount: scanJob.scanResult!.createdArtistCount,
-        updatedArtistCount: scanJob.scanResult!.updatedArtistCount,
-        deletedArtistCount: scanJob.scanResult!.deletedArtistCount,
-        createdAlbumCount: scanJob.scanResult!.createdAlbumCount,
-        updatedAlbumCount: scanJob.scanResult!.updatedAlbumCount,
-        deletedAlbumCount: scanJob.scanResult!.deletedAlbumCount,
-        createdGenreCount: scanJob.scanResult!.createdGenreCount,
-        updatedGenreCount: scanJob.scanResult!.updatedGenreCount,
-        deletedGenreCount: scanJob.scanResult!.deletedGenreCount,
-        createdSongCount: scanJob.scanResult!.createdSongCount,
-        updatedSongCount: scanJob.scanResult!.updatedSongCount,
-        deletedSongCount: scanJob.scanResult!.deletedSongCount,
-        createdArtworkCount: scanJob.scanResult!.createdArtworkCount,
-        deletedArtworkCount: scanJob.scanResult!.deletedArtworkCount,
-      } }}</div>
+      <div>{{ result }}</div>
     </div>
 
     <div class="mb-3">
@@ -94,4 +85,3 @@
   </div>
 
 </div>
-<div class="modal-footer"></div>
