@@ -12,7 +12,7 @@ import {CommonModule} from "@angular/common";
 import {PageDto} from "../../../domain/common.dto";
 import {Subscription} from "rxjs";
 import {LibraryService} from "../../../service/library.service";
-import {ScanResultComponent} from "./scan-result.component";
+import {ScanJobComponent} from "./scan-job.component";
 
 @Component({
   standalone: true,
@@ -125,7 +125,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
   }
 
   showDetails(scanJob: ScanJobDto) {
-    const modalRef = this.modal.open(ScanResultComponent);
-    (<ScanResultComponent>modalRef.componentInstance).scanJob = scanJob;
+    const modalRef = this.modal.open(ScanJobComponent);
+    (<ScanJobComponent>modalRef.componentInstance).scanJob = scanJob;
   }
 }

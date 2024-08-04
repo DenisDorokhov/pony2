@@ -84,8 +84,37 @@ export default {
       searchingArtworksWithProgressLabel: 'searching artworks: {{percentage}}% ({{itemsComplete}} of {{itemsTotal}} files processed)...',
     },
   },
-  scanResult: {
-    header: 'Scan Result',
+  scanJob: {
+    header: 'Scan Job',
+    statusLabel: 'Status:',
+    logMessageLabel: 'Log message:',
+    targetPathsLabel: 'Target folders:',
+    failedPathsLabel: 'Failed folders:',
+    processedAudioFilesLabel: 'Processed audio files:',
+    scanResultLabel: 'Updates:',
+    scanResult: 'created {{createdArtistCount}} artists, \n' +
+      'updated {{updatedArtistCount}} artists, \n' +
+      'deleted {{deletedArtistCount}} artists, \n' +
+      'created {{createdAlbumCount}} albums, \n' +
+      'updated {{updatedAlbumCount}} albums, \n' +
+      'deleted {{deletedAlbumCount}} albums, \n' +
+      'created {{createdGenreCount}} genres, \n' +
+      'updated {{updatedGenreCount}} genres, \n' +
+      'deleted {{deletedGenreCount}} genres, \n' +
+      'created {{createdSongCount}} songs, \n' +
+      'updated {{updatedSongCount}} songs, \n' +
+      'deleted {{deletedSongCount}} songs, \n' +
+      'created {{createdArtworkCount}} artworks, \n' +
+      'deleted {{deletedArtworkCount}} artworks.',
+    librarySizeLabel: 'Library:',
+    librarySize: '{{artistCount}} artists,\n' +
+      '{{albumCount}} albums, \n' +
+      '{{songCount}} songs, \n' +
+      '{{artworkCount}} artworks, \n' +
+      '{{genreCount}} genres, \n' +
+      '{{duration}}, \n' +
+      '{{songSize}} songs,\n' +
+      '{{artworkSize}} artworks.',
   },
   userList: {
     header: 'Users',

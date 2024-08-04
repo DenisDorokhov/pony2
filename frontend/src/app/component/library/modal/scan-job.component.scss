@@ -1,0 +1,24 @@
+.modal-body {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+label {
+  font-weight: bold;
+}
+
+.scan-job-status.started {
+  color: #337ab7;
+}
+
+.scan-job-status.complete {
+  color: #5cb85c;
+}
+
+.scan-job-status.failed {
+  color: #d9534f;
+}
+
+.scan-job-status.interrupted {
+  color: #f0ad4e;
+}
