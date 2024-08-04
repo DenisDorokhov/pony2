@@ -22,7 +22,8 @@
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js",
-              "@angular/localize/init"
+              "@angular/localize/init",
+              "@formatjs/intl-durationformat/polyfill"
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -42,8 +43,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",

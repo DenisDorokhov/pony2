@@ -106,15 +106,13 @@ export default {
       'deleted {{deletedSongCount}} songs, \n' +
       'created {{createdArtworkCount}} artworks, \n' +
       'deleted {{deletedArtworkCount}} artworks.',
-    librarySizeLabel: 'Library:',
-    librarySize: '{{artistCount}} artists,\n' +
+    countsLabel: 'Total counts:',
+    counts: '{{artistCount}} artists,\n' +
       '{{albumCount}} albums, \n' +
       '{{songCount}} songs, \n' +
       '{{artworkCount}} artworks, \n' +
-      '{{genreCount}} genres, \n' +
-      '{{duration}}, \n' +
-      '{{songSize}} songs,\n' +
-      '{{artworkSize}} artworks.',
+      '{{genreCount}} genres',
+    durationLabel: 'Duration:',
   },
   userList: {
     header: 'Users',

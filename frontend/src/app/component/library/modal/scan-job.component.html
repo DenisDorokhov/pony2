@@ -29,7 +29,7 @@
     <div>{{ scanJob.logMessage?.text }}</div>
   </div>
 
-  <div [hidden]="!scanJob.scanResult">
+  <div *ngIf="scanJob.scanResult">
 
     <div class="mb-3">
       <label class="form-label">{{ 'scanJob.targetPathsLabel' | translate }}</label>
@@ -71,17 +71,24 @@
     </div>
 
     <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.librarySizeLabel' | translate }}</label>
-      <div>{{ 'scanJob.librarySize' | translate:{
+      <label class="form-label">{{ 'scanJob.countsLabel' | translate }}</label>
+      <div>{{ 'scanJob.counts' | translate:{
         artistCount: scanJob.scanResult!.artistCount,
         albumCount: scanJob.scanResult!.albumCount,
         songCount: scanJob.scanResult!.songCount,
         artworkCount: scanJob.scanResult!.artworkCount,
         genreCount: scanJob.scanResult!.genreCount,
-        duration: duration,
-        songSize: songSize,
-        artworkSize: artworkSize,
       } }}</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">{{ 'scanJob.durationLabel' | translate }}</label>
+      <div>{{ duration }}</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">{{ 'scanJob.sizeLabel' | translate }}</label>
+      <div>{{ songSize }}</div>
     </div>
 
   </div>

@@ -11,6 +11,7 @@ import {PlayerComponent} from "./player.component";
 import {ToolbarComponent} from "./toolbar.component";
 import {ArtistListComponent} from "./artist-list.component";
 import {AlbumListComponent} from "./album-list.component";
+import {renderFileSize} from "../../service/utils";
 
 @Component({
   standalone: true,
@@ -57,16 +58,6 @@ export class LibraryComponent implements OnInit, OnDestroy {
     if (!this.scanStatistics) {
       return undefined;
     }
-    const gigabytes = this.scanStatistics.songSize / 1_000_000_000;
-    if (gigabytes >= 1) {
-      return this.translateService.instant('library.scanStatistics.sizeGigabytes', {
-        size: gigabytes.toFixed(2)
-      });
-    } else {
-      const megabytes = this.scanStatistics.songSize / 1_000_000;
-      return this.translateService.instant('library.scanStatistics.sizeMegabytes', {
-        size: megabytes.toFixed(2)
-      });
-    }
+    return renderFileSize(this.scanStatistics.songSize, this.translateService);
   }
 }
