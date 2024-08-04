@@ -565,7 +565,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             assertThat(optionalResponse.isPresent()).isTrue();
             assertThat(optionalResponse.getValue()).satisfies(scanStatistics -> {
                 assertThat(scanStatistics.getDate()).isNotNull();
-                assertThat(scanStatistics.getDuration()).isGreaterThan(0);
+                assertThat(scanStatistics.getDuration()).isEqualTo(0);
                 assertThat(scanStatistics.getSongSize()).isEqualTo(0);
                 assertThat(scanStatistics.getArtworkSize()).isEqualTo(0);
                 assertThat(scanStatistics.getGenreCount()).isEqualTo(0);

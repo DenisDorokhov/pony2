@@ -11,7 +11,7 @@ import {PlayerComponent} from "./player.component";
 import {ToolbarComponent} from "./toolbar.component";
 import {ArtistListComponent} from "./artist-list.component";
 import {AlbumListComponent} from "./album-list.component";
-import {renderFileSize} from "../../service/utils";
+import {renderDuration, renderFileSize} from "../../service/utils";
 
 @Component({
   standalone: true,
@@ -27,6 +27,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
 
   scanStatistics: ScanStatisticsDto | undefined | null;
   size: string | undefined;
+  duration: string | undefined;
 
   constructor(
     private router: Router,
@@ -46,6 +47,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
       .subscribe(scanStatistics => {
         this.scanStatistics = scanStatistics;
         this.size = this.calculateSize();
+        this.duration = this.calculateDuration();
       });
   }
 
@@ -55,9 +57,10 @@ export class LibraryComponent implements OnInit, OnDestroy {
   }
 
   private calculateSize(): string | undefined {
-    if (!this.scanStatistics) {
-      return undefined;
-    }
-    return renderFileSize(this.scanStatistics.songSize, this.translateService);
+    return this.scanStatistics ? renderFileSize(this.scanStatistics.songSize, this.translateService) : undefined;
+  }
+
+  private calculateDuration(): string | undefined {
+    return this.scanStatistics ? renderDuration(this.scanStatistics.duration, this.translateService) : undefined;
   }
 }

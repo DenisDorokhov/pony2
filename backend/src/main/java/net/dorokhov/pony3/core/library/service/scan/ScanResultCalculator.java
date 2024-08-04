@@ -1,6 +1,5 @@
 package net.dorokhov.pony3.core.library.service.scan;
 
-import com.google.common.base.Stopwatch;
 import net.dorokhov.pony3.api.library.domain.ScanResult;
 import net.dorokhov.pony3.api.library.domain.ScanType;
 import net.dorokhov.pony3.core.library.repository.*;
@@ -15,7 +14,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static java.lang.Math.max;
@@ -58,22 +56,16 @@ public class ScanResultCalculator {
         this.albumRepository = albumRepository;
         this.songRepository = songRepository;
         this.artworkRepository = artworkRepository;
-
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
     public ScanResult calculateAndSave(Supplier<AudioFileProcessingResult> audioFileProcessor) {
-
         ScanStateBeforeProcessing scanStateBeforeProcessing = requireNonNull(transactionTemplate.execute(transactionStatus -> new ScanStateBeforeProcessing()));
-
-        Stopwatch stopwatch = Stopwatch.createStarted();
         AudioFileProcessingResult processingResult = audioFileProcessor.get();
-        long duration = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-
-        return transactionTemplate.execute(transactionStatus -> doCalculateAndSave(processingResult, duration, scanStateBeforeProcessing));
+        return transactionTemplate.execute(transactionStatus -> doCalculateAndSave(processingResult, scanStateBeforeProcessing));
     }
 
-    private ScanResult doCalculateAndSave(AudioFileProcessingResult processingResult, long duration, ScanStateBeforeProcessing scanStateBeforeProcessing) {
+    private ScanResult doCalculateAndSave(AudioFileProcessingResult processingResult, ScanStateBeforeProcessing scanStateBeforeProcessing) {
 
         long songCountAfterScan = songRepository.count();
         long songCountCreated = songRepository.countByCreationDateGreaterThan(scanStateBeforeProcessing.lastScanDate);
@@ -104,8 +96,8 @@ public class ScanResultCalculator {
                 .setScanType(processingResult.getScanType())
                 .setFailedPaths(filesToPaths(processingResult.getFailedFiles()))
                 .setProcessedAudioFileCount(processingResult.getProcessedAudioFileCount())
-                .setDuration(duration)
 
+                .setDuration(songRepository.sumDuration())
                 .setSongSize(songRepository.sumSize())
                 .setArtworkSize(artworkRepository.sumLargeImageSize() + artworkRepository.sumSmallImageSize())
 

@@ -26,6 +26,8 @@
               artworkCount: scanStatistics.artworkCount
           } }}
           |
+          {{ duration }}
+          |
           {{ size }}
           |
           {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.dateTimeFormat' | translate ))} }}

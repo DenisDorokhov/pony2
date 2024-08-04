@@ -31,6 +31,9 @@ public interface SongRepository extends JpaRepository<Song, String> {
     @Query("SELECT COALESCE(SUM(s.size), 0) FROM Song s")
     long sumSize();
 
+    @Query("SELECT COALESCE(SUM(s.duration), 0) FROM Song s")
+    long sumDuration();
+
     Song findByPath(String path);
 
     List<Song> findByAlbumId(String albumId, Sort sort);

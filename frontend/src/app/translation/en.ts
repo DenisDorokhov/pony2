@@ -108,13 +108,14 @@ export default {
       createdArtworkCount: 'created {{value}} artworks',
       deletedArtworkCount: 'deleted {{value}} artworks',
     },
-    countsLabel: 'Total counts:',
+    countsLabel: 'Counts:',
     counts: '{{artistCount}} artists,\n' +
       '{{albumCount}} albums, \n' +
       '{{songCount}} songs, \n' +
       '{{artworkCount}} artworks, \n' +
       '{{genreCount}} genres',
     durationLabel: 'Duration:',
+    sizeLabel: 'Audio files size:',
   },
   userList: {
     header: 'Users',

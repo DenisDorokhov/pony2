@@ -112,6 +112,7 @@ public class ScanResultCalculatorTest {
                 .thenReturn(5L);
 
         when(songRepository.sumSize()).thenReturn(123L);
+        when(songRepository.sumDuration()).thenReturn(234L);
         when(artworkRepository.sumLargeImageSize()).thenReturn(100L);
         when(artworkRepository.sumSmallImageSize()).thenReturn(200L);
 
@@ -144,7 +145,7 @@ public class ScanResultCalculatorTest {
         assertThat(scanResult.getScanType()).isSameAs(ScanType.FULL);
         assertThat(scanResult.getFailedPaths()).containsExactly(failedFile.getAbsolutePath());
         assertThat(scanResult.getProcessedAudioFileCount()).isEqualTo(20);
-        assertThat(scanResult.getDuration()).isBetween(100L, 200L);
+        assertThat(scanResult.getDuration()).isEqualTo(234L);
         assertThat(scanResult.getSongSize()).isEqualTo(123L);
         assertThat(scanResult.getArtworkSize()).isEqualTo(300L);
         assertThat(scanResult.getGenreCount()).isEqualTo(2);
