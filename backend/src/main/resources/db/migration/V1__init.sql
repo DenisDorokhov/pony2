@@ -54,7 +54,7 @@ CREATE TABLE log_message (
 
 CREATE INDEX index_log_message_date ON log_message (date);
 CREATE INDEX index_log_message_type ON log_message (level);
-CREATE INDEX index_log_message_date_type ON log_message (date, level);
+CREATE INDEX index_log_message_date_type ON log_message (level, date);
 
 CREATE TABLE config (
 

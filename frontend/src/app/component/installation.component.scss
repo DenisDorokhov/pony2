@@ -20,6 +20,7 @@
   .input-group {
     button {
       border: 0;
+      margin-left: 10px;
     }
   }
 
@@ -33,10 +34,6 @@
 
   input.library-folders {
     border-radius: 6px !important;
-  }
-
-  button.add {
-    margin-left: 10px;
   }
 
   .library-folders-container {
