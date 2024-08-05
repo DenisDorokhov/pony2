@@ -1,16 +1,16 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {TranslateModule} from "@ngx-translate/core";
 import {LogService} from "../../../service/log.service";
 import {LoadingState} from "../../../domain/common.model";
 import {LogMessageDto, LogMessagePageDto} from "../../../domain/library.dto";
-import {DatePipe, NgIf} from "@angular/common";
+import {CommonModule, DatePipe} from "@angular/common";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, NgIf],
+  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule],
   selector: 'pony-log',
   templateUrl: './log.component.html',
   styleUrls: ['./log.component.scss']
@@ -24,6 +24,8 @@ export class LogComponent implements OnInit {
 
   logs: LogMessageDto[] = [];
   page: LogMessagePageDto | undefined;
+
+  @ViewChild('scroller') containerElement!: ElementRef;
 
   constructor(
     public readonly activeModal: NgbActiveModal,
@@ -40,6 +42,7 @@ export class LogComponent implements OnInit {
       next: page => {
         this.logs = page.logMessages;
         this.page = page;
+        this.containerElement.nativeElement.scrollTop = 0;
         this.loadingState = LoadingState.LOADED;
       },
       error: () => {
