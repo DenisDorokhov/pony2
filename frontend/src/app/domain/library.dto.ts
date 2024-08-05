@@ -69,16 +69,29 @@ export interface LogMessageDto {
   date: string;
   level: LogMessageDto.Level;
   pattern: string;
-  arguments: string[],
+  arguments: string[];
   text: string;
 }
 
 export namespace LogMessageDto {
+
   export enum Level {
     DEBUG = 'DEBUG',
     INFO = 'INFO',
     WARN = 'WARN',
     ERROR = 'ERROR',
+  }
+
+  export function extractException(logMessage: LogMessageDto | undefined): string | undefined {
+    if (!logMessage) {
+      return undefined;
+    }
+    const regExp = /{}/g
+    const argCount = ((logMessage.pattern || '').match(regExp) || []).length;
+    if (argCount < logMessage.arguments.length) {
+      return logMessage.arguments[logMessage.arguments.length - 1];
+    }
+    return undefined;
   }
 }
 

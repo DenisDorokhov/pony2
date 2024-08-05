@@ -40,6 +40,7 @@
                [class.warn]="scanJob.logMessage!.level === LogMessageLevel.WARN"
                [class.error]="scanJob.logMessage!.level === LogMessageLevel.ERROR"
     >[{{ scanJob.logMessage!.level }}]</span> {{ scanJob.logMessage!.text }}</div>
+    <div *ngIf="exception" title="{{ exception }}" class="exception"><pre>{{ exception }}</pre></div>
   </div>
 
   <div *ngIf="scanJob.scanResult">

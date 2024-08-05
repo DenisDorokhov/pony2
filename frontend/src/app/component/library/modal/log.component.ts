@@ -10,6 +10,27 @@ import {LoadingIndicatorComponent} from "../../common/loading-indicator.componen
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import Level = LogMessageDto.Level;
 
+class LogWithException implements LogMessageDto {
+
+  id!: string;
+  date!: string;
+  level!: LogMessageDto.Level;
+  pattern!: string;
+  arguments!: string[];
+  text!: string;
+  exception?: string;
+
+  constructor(log: LogMessageDto) {
+    this.id = log.id;
+    this.date = log.date;
+    this.level = log.level;
+    this.pattern = log.pattern;
+    this.arguments = log.arguments;
+    this.text = log.text;
+    this.exception = LogMessageDto.extractException(log);
+  }
+}
+
 @Component({
   standalone: true,
   imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, NgbInputDatepicker, FormsModule, ReactiveFormsModule],
@@ -26,7 +47,7 @@ export class LogComponent implements OnInit {
 
   logLevels: LogMessageDto.Level[] = [Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR];
 
-  logs: LogMessageDto[] = [];
+  logs: LogWithException[] = [];
   page: LogMessagePageDto | undefined;
 
   form: FormGroup;
@@ -56,7 +77,7 @@ export class LogComponent implements OnInit {
       pageIndex, pageSize
     ).subscribe({
       next: page => {
-        this.logs = page.logMessages;
+        this.logs = page.logMessages.map(next => new LogWithException(next));
         this.page = page;
         this.containerElement.nativeElement.scrollTop = 0;
         this.loadingState = page.totalPages > 0 ? LoadingState.LOADED : LoadingState.EMPTY;

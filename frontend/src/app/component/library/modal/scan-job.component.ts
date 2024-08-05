@@ -23,6 +23,7 @@ export class ScanJobComponent implements OnInit {
   result: string | undefined;
   duration: string | undefined;
   songSize: string | undefined;
+  exception: string | undefined;
 
   constructor(
     public readonly activeModal: NgbActiveModal,
@@ -31,6 +32,7 @@ export class ScanJobComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.exception = LogMessageDto.extractException(this.scanJob.logMessage);
     if (this.scanJob.scanResult) {
       this.duration = formatDuration(this.scanJob.scanResult!.duration, this.translateService);
       this.songSize = formatFileSize(this.scanJob.scanResult!.songSize, this.translateService);

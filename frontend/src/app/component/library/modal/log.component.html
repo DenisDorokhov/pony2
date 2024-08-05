@@ -36,7 +36,10 @@
               [class.warn]="log.level === Level.WARN"
               [class.error]="log.level === Level.ERROR"
             >{{ log.level }}</td>
-            <td>{{ log.text }}</td>
+            <td>
+              <div>{{ log.text }}</div>
+              <div class="exception" title="{{ log.exception }}" *ngIf="log.exception !== undefined"><pre>{{ log.exception }}</pre></div>
+            </td>
           </tr>
         }
       </tbody>
