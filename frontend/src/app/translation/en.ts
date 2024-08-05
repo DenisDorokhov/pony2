@@ -172,7 +172,7 @@ export default {
     errorIndicatorLabel: 'Operation failed!',
     previousPageButton: '&laquo; Previous',
     nextPageButton: 'Next &raquo;',
-    dateTimeFormat: 'yyyy-MM-dd hh:mm:ss',
+    dateTimeFormat: 'yyyy-MM-dd H:mm:ss',
     currentPageLabel: 'Page {{pageIndex}} of {{totalPages}}',
     creationDateLabel: 'Creation Date:',
     updateDateLabel: 'Update Date:',
