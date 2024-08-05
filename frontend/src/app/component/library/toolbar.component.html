@@ -1,21 +1,8 @@
 <div class="toolbar-container">
-  <button (click)="refresh()" type="button" class="btn btn-default">
-    {{ 'library.toolbar.refreshButton' | translate }}
-    <i class="fa fa-refresh"></i>
+  <button (click)="startScanJob()" type="button" class="btn btn-default" [disabled]="scanRunning">
+    {{ 'library.toolbar.scanButton' | translate }}
+    <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>
-  <div ngbDropdown class="btn-group" *ngIf="currentUser?.role === 'ADMIN'">
-    <button ngbDropdownToggle type="button" class="btn btn-default dropdown-toggle">
-      {{ 'library.toolbar.systemButton' | translate }}
-      <i class="fa fa-gear"></i>
-      <span class="caret"></span>
-    </button>
-    <div ngbDropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
-      <button ngbDropdownItem (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
-    </div>
-  </div>
   <div ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
       {{ currentUser?.name }}
@@ -24,6 +11,10 @@
     </button>
     <ul ngbDropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
       <button ngbDropdownItem (click)="openProfile()">Profile</button>
+      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
+      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
+      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
+      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
       <button ngbDropdownItem (click)="signOut()">Sign Out</button>
     </ul>
   </div>

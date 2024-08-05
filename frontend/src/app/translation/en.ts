@@ -22,10 +22,9 @@ export default {
   },
   library: {
     toolbar: {
-      refreshButton: 'Refresh',
-      systemButton: 'System',
+      scanButton: 'Re-Scan',
       settingsButton: 'Settings',
-      scanningButton: 'Scanning',
+      scanningButton: 'Scan',
       logButton: 'Log',
       usersButton: 'Users',
     },
@@ -55,10 +54,10 @@ export default {
     windowCloseConfirmation: 'Playback will stop after closing the window. Are you sure?',
   },
   scanning: {
-    header: 'Scanning',
+    header: 'Scan Jobs',
     statusLabel: 'Status:',
     progressLabel: 'Progress:',
-    startScanButton: 'Start Scan',
+    startScanButton: 'Re-Scan',
     startDateColumn: 'Start Date',
     updateDateColumn: 'Update Date',
     statusColumn: 'Status',
@@ -193,7 +192,6 @@ export default {
     authorizationErrorTitle: 'Authorization Error',
     authorizationErrorText: 'Access denied.',
     scanJobTitle: 'Scan Job',
-    scanJobStartedText: 'Running...',
     scanJobInterruptedText: 'Interrupted!',
     scanJobFinishedText: 'Complete!',
     scanJobFailedText: 'Failed!',

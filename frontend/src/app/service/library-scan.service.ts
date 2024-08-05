@@ -104,10 +104,6 @@ export class LibraryScanService {
                   this.libraryService.requestRefresh();
                 })
               ).subscribe();
-              this.notificationService.success(
-                this.translateService.instant('notification.scanJobTitle'),
-                this.translateService.instant('notification.scanJobStartedText')
-              );
             }
             this.scanJobProgressSubject.next(optionalResponse.value!);
             return optionalResponse.value!;

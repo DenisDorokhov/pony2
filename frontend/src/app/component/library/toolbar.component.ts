@@ -5,7 +5,6 @@ import {ScanningComponent} from './modal/scanning.component';
 import {SettingsComponent} from './modal/settings.component';
 import {UserListComponent} from './modal/user-list.component';
 import {UserDto} from "../../domain/user.dto";
-import {LibraryService} from "../../service/library.service";
 import {AuthenticationService} from "../../service/authentication.service";
 import {TranslateModule} from "@ngx-translate/core";
 import Logger from "js-logger";
@@ -25,11 +24,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   currentUser: UserDto | undefined;
 
+  scanRunning = false;
+
   private scanStatisticsSubscription: Subscription | undefined;
   private authenticationSubscription: Subscription | undefined;
 
   constructor(
-    private libraryService: LibraryService,
     private libraryScanService: LibraryScanService,
     private authenticationService: AuthenticationService,
     private modal: NgbModal
@@ -42,6 +42,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
         this.openScanning();
       }
     });
+    this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
+      this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null);
     this.authenticationSubscription = this.authenticationService.observeAuthentication().subscribe(user =>
       this.currentUser = user);
   }
@@ -51,8 +53,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.authenticationSubscription?.unsubscribe();
   }
 
-  refresh() {
-    this.libraryService.requestRefresh();
+  startScanJob() {
+    this.libraryScanService.startScanJob().subscribe(() => this.openScanning());
   }
 
   openProfile() {
