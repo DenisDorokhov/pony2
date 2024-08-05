@@ -54,16 +54,89 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetLogByMinLevel() {
+    public void shouldGetLogByDebugLevel() {
 
-        logService.info(logger, "someMessage");
+        LogMessage debug = logService.debug(logger, "debugMessage");
+        LogMessage info = logService.info(logger, "infoMessage");
+        LogMessage warn = logService.warn(logger, "warnMessage");
+        LogMessage error = logService.error(logger, "errorMessage");
+
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?minLevel=DEBUG", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(logs -> {
+            assertThat(logs.getLogMessages()).hasSize(4);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.ERROR), error);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.WARN), warn);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.INFO), info);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.DEBUG), debug);
+        });
+    }
+
+    private LogMessageDto getByLevel(LogMessagePageDto page, LogMessage.Level level) {
+        return page.getLogMessages().stream()
+                .filter(next -> next.getLevel() == level)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Test
+    public void shouldGetLogByInfoLevel() {
+
+        logService.debug(logger, "debugMessage");
+        LogMessage info = logService.info(logger, "infoMessage");
+        LogMessage warn = logService.warn(logger, "warnMessage");
+        LogMessage error = logService.error(logger, "errorMessage");
+
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?minLevel=INFO", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(logs -> {
+            assertThat(logs.getLogMessages()).hasSize(3);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.ERROR), error);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.WARN), warn);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.INFO), info);
+        });
+    }
+
+    @Test
+    public void shouldGetLogByWarnLevel() {
+
+        logService.debug(logger, "debugMessage");
+        logService.info(logger, "infoMessage");
+        LogMessage warn = logService.warn(logger, "warnMessage");
+        LogMessage error = logService.error(logger, "errorMessage");
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=WARN", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(this::checkEmptyLog);
+        assertThat(response.getBody()).satisfies(logs -> {
+            assertThat(logs.getLogMessages()).hasSize(2);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.ERROR), error);
+            checkLogMessage(getByLevel(logs, LogMessage.Level.WARN), warn);
+        });
+    }
+
+    @Test
+    public void shouldGetLogByErrorLevel() {
+
+        logService.debug(logger, "debugMessage");
+        logService.info(logger, "infoMessage");
+        logService.warn(logger, "warnMessage");
+        LogMessage error = logService.error(logger, "errorMessage");
+
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/log?minLevel=ERROR", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(logs -> checkLog(error, logs));
     }
 
     @Test
@@ -115,9 +188,9 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     
     @SuppressWarnings("Duplicates")
     private void checkLogMessage(LogMessageDto dto, LogMessage logMessage) {
+        assertThat(dto.getLevel()).isEqualTo(logMessage.getLevel());
         assertThat(dto.getId()).isEqualTo(logMessage.getId());
         assertThat(dto.getDate()).isEqualTo(logMessage.getDate());
-        assertThat(dto.getLevel()).isEqualTo(logMessage.getLevel());
         assertThat(dto.getPattern()).isEqualTo(logMessage.getPattern());
         assertThat(dto.getArguments()).isEqualTo(logMessage.getArguments());
         assertThat(dto.getText()).isEqualTo(logMessage.getText());

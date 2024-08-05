@@ -176,3 +176,7 @@ export interface ScanJobProgressDto {
 export interface ScanJobPageDto extends PageDto {
   scanJobs: ScanJobDto[];
 }
+
+export interface LogMessagePageDto extends PageDto {
+  logMessages: LogMessageDto[];
+}

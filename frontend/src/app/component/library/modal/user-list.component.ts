@@ -5,7 +5,6 @@ import {UserDto, UserPageDto} from "../../../domain/user.dto";
 import {CommonModule} from "@angular/common";
 import {UserService} from "../../../service/user.service";
 import {LoadingState} from "../../../domain/common.model";
-import Logger from "js-logger";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 import {UserComponent} from "./user.component";
@@ -51,9 +50,8 @@ export class UserListComponent implements OnInit {
         this.emptyRowCount = Math.max(0, 5 - this.users.length);
         this.loadingState = LoadingState.LOADED;
       },
-      error: error => {
+      error: () => {
         this.loadingState = LoadingState.ERROR;
-        Logger.error(`Could not load user list: "${error.message}".`);
       }
     });
   }

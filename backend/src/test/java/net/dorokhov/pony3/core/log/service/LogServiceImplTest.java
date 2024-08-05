@@ -44,7 +44,7 @@ public class LogServiceImplTest {
     public void shouldGetByTypeAndDate() {
 
         Page<LogMessage> page = new PageImpl<>(emptyList());
-        when(logMessageRepository.findByLevelGreaterThanEqualAndDateBetween(any(), any(), any(), any())).thenReturn(page);
+        when(logMessageRepository.findByLevelInAndDateBetween(any(), any(), any(), any())).thenReturn(page);
 
         assertThat(logService.getByTypeAndDate(DEBUG, LocalDateTime.now(), LocalDateTime.now(), PageRequest.of(0, 10))).isSameAs(page);
     }

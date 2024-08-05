@@ -17,7 +17,21 @@ import java.util.List;
 public class LogMessage implements Serializable {
 
     public enum Level {
-        DEBUG, INFO, WARN, ERROR
+
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR,
+        ;
+
+        public List<Level> getIncludedLevels() {
+            return switch (this) {
+                case DEBUG -> List.of(DEBUG, INFO, WARN, ERROR);
+                case INFO -> List.of(INFO, WARN, ERROR);
+                case WARN -> List.of(WARN, ERROR);
+                case ERROR -> List.of(ERROR);
+            };
+        }
     }
 
     @Id
@@ -31,9 +45,10 @@ public class LogMessage implements Serializable {
     private LocalDateTime date;
 
     @Column(name = "level", nullable = false)
+    @Enumerated(EnumType.STRING)
     @NotNull
     private Level level;
-    
+
     @Column(name = "pattern", nullable = false)
     @NotNull
     private String pattern;

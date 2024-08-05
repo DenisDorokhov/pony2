@@ -1,8 +1,62 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ 'library.log.header' | translate }}</h4>
+  <h4 class="modal-title">{{ 'log.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
-</div>
-<div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
+
+  <div class="table-container">
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th scope="col" class="date">{{ 'log.dateColumn' | translate }}</th>
+        <th scope="col" class="level">{{ 'log.levelColumn' | translate }}</th>
+        <th scope="col">{{ 'log.messageColumn' | translate }}</th>
+      </tr>
+      </thead>
+      <tbody>
+        @for (log of logs; track log) {
+          <tr>
+            <td>{{ log.date | date:('shared.dateTimeFormat' | translate) }}</td>
+            <td
+              class="log-level"
+              [class.debug]="log.level === Level.DEBUG"
+              [class.info]="log.level === Level.INFO"
+              [class.warn]="log.level === Level.WARN"
+              [class.error]="log.level === Level.ERROR"
+            >{{ log.level }}</td>
+            <td>{{ log.text }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row pagination-container">
+    <div class="col prev-button-container">
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.previousPageButton' | translate"
+              [disabled]="(page?.pageIndex ?? 0) === 0"
+              (click)="loadPreviousPage()"></button>
+    </div>
+
+    <div class="col">
+      <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
+      <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
+      <div class="page-label" [hidden]="loadingState !== LoadingState.LOADED">
+        {{
+          'shared.currentPageLabel' | translate:{
+            pageIndex: ((page?.pageIndex ?? 0) + 1),
+            totalPages: (page?.totalPages ?? 0)
+          }
+        }}
+      </div>
+    </div>
+    <div class="col next-button-container">
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.nextPageButton' | translate"
+              [disabled]="(page?.pageIndex ?? 0) >= ((page?.totalPages ?? 0) - 1)"
+              (click)="loadNextPage()"></button>
+    </div>
+  </div>
+
 </div>

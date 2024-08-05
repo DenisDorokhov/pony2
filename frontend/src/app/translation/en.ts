@@ -29,9 +29,6 @@ export default {
       logButton: 'Log',
       usersButton: 'Users',
     },
-    log: {
-      header: 'Log',
-    },
     album: {
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown'
@@ -158,6 +155,12 @@ export default {
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
     startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',
+  },
+  log: {
+    header: 'Log',
+    dateColumn: 'Date',
+    levelColumn: 'Level',
+    messageColumn: 'Message',
   },
   shared: {
     errorsHeader: 'Errors',

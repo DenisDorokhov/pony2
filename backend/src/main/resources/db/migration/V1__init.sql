@@ -44,7 +44,7 @@ CREATE TABLE log_message (
 
   date TIMESTAMP(9) NOT NULL,
 
-  level TINYINT NOT NULL,
+  level VARCHAR (255) NOT NULL,
 
   pattern LONGVARCHAR NOT NULL,
   arguments LONGVARCHAR,

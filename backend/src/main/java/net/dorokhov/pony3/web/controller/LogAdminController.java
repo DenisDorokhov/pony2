@@ -29,15 +29,16 @@ public class LogAdminController implements ErrorHandlingController {
             @RequestParam(required = false) Level minLevel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime minDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime maxDate,
-            @RequestParam(defaultValue = "0") int pageIndex
+            @RequestParam(defaultValue = "0") int pageIndex,
+            @RequestParam(defaultValue = "30") int pageSize
     ) {
         if (minLevel == null) {
             minLevel = Level.INFO;
         }
         if (minDate != null && maxDate != null) {
-            return logFacade.getLog(minLevel, minDate, maxDate, pageIndex);
+            return logFacade.getLog(minLevel, minDate, maxDate, pageIndex, pageSize);
         } else {
-            return logFacade.getLog(minLevel, pageIndex);
+            return logFacade.getLog(minLevel, pageIndex, pageSize);
         }
     }
 }

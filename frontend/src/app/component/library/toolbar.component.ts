@@ -77,7 +77,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   openLog() {
-    this.modal.open(LogComponent);
+    this.modal.open(LogComponent, { size: 'xl' });
   }
 
   openUsers() {

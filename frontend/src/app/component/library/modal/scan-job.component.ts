@@ -3,7 +3,7 @@ import {TranslateModule, TranslateService} from "@ngx-translate/core";
 import {CommonModule} from "@angular/common";
 import {LogMessageDto, ScanJobDto} from "../../../domain/library.dto";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {renderDuration, renderFileSize} from "../../../service/utils";
+import {formatDuration, formatFileSize} from "../../../utils/format.utils";
 
 @Component({
   standalone: true,
@@ -32,8 +32,8 @@ export class ScanJobComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.scanJob.scanResult) {
-      this.duration = renderDuration(this.scanJob.scanResult!.duration, this.translateService);
-      this.songSize = renderFileSize(this.scanJob.scanResult!.songSize, this.translateService);
+      this.duration = formatDuration(this.scanJob.scanResult!.duration, this.translateService);
+      this.songSize = formatFileSize(this.scanJob.scanResult!.songSize, this.translateService);
       const resultEntries: string[] = [];
       if (this.scanJob.scanResult.createdArtistCount) {
         resultEntries.push(this.translateService.instant('scanJob.scanResult.createdArtistCount', {value: this.scanJob.scanResult.createdArtistCount}));

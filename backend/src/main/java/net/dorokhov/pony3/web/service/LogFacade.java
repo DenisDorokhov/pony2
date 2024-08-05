@@ -22,13 +22,13 @@ public class LogFacade {
     }
 
     @Transactional(readOnly = true)
-    public LogMessagePageDto getLog(Level minLevel, int pageIndex) {
-        return LogMessagePageDto.of(logService.getByType(minLevel, PageRequest.of(pageIndex, PAGE_SIZE, Sort.Direction.DESC, "date")));
+    public LogMessagePageDto getLog(Level minLevel, int pageIndex, int pageSize) {
+        return LogMessagePageDto.of(logService.getByType(minLevel, PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)), Sort.Direction.DESC, "date")));
     }
     
     @Transactional(readOnly = true)
-    public LogMessagePageDto getLog(Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex) {
+    public LogMessagePageDto getLog(Level minLevel, LocalDateTime minDate, LocalDateTime maxDate, int pageIndex, int pageSize) {
         return LogMessagePageDto.of(logService.getByTypeAndDate(minLevel, minDate, maxDate,
-                PageRequest.of(pageIndex, PAGE_SIZE, Sort.Direction.DESC, "date")));
+                PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)), Sort.Direction.DESC, "date")));
     }
 }
