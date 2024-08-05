@@ -25,19 +25,11 @@
 
   <div #scroller class="table-scroller">
     <table class="table table-borderless">
-      <thead>
-      <tr>
-        <th scope="col" class="date">{{ 'log.dateColumn' | translate }}</th>
-        <th scope="col" class="level">{{ 'log.levelColumn' | translate }}</th>
-        <th scope="col">{{ 'log.messageColumn' | translate }}</th>
-      </tr>
-      </thead>
       <tbody>
         @for (log of logs; track log) {
           <tr>
-            <td>{{ log.date | date:('shared.dateTimeFormat' | translate) }}</td>
-            <td
-              class="log-level"
+            <td class="date">{{ log.date | date:('shared.dateTimeFormat' | translate) }}</td>
+            <td class="log-level"
               [class.debug]="log.level === Level.DEBUG"
               [class.info]="log.level === Level.INFO"
               [class.warn]="log.level === Level.WARN"

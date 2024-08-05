@@ -36,25 +36,33 @@ table {
   margin: 0;
   table-layout:fixed;
 
-  thead {
-    border-bottom: 1px solid #cccccc;
-
-    .date {
-      width: 180px;
-    }
-
-    .level {
-      width: 100px;
-    }
+  .date {
+    width: 180px;
   }
 
   td {
     vertical-align: middle;
-    background-color: #f5f5f5;
+    border-top: 1px solid #cccccc;
 
     button {
       margin-right: 10px;
     }
+  }
+
+  tr:first-child {
+    td {
+      border: 0;
+    }
+  }
+
+  tr:nth-child(odd) {
+    td {
+      background-color: #f5f5f5;
+    }
+  }
+
+  .log-level {
+    width: 100px;
   }
 }
 
