@@ -77,6 +77,7 @@ export class LibraryScanService {
       if (this.authenticationService.currentUser?.role === Role.ADMIN) {
         return this.updateScanJobProgress();
       } else {
+        this.libraryService.requestRefresh();
         return of(undefined);
       }
     })

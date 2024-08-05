@@ -1,5 +1,5 @@
 <div class="toolbar-container">
-  <button (click)="startScanJob()" type="button" class="btn" [disabled]="scanRunning">
+  <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn" [disabled]="scanRunning">
     {{ 'library.toolbar.scanButton' | translate }}
     <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>
@@ -14,7 +14,7 @@
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
-      <li><hr class="dropdown-divider"></li>
+      <li *ngIf="currentUser?.role === 'ADMIN'"><hr class="dropdown-divider"></li>
       <button ngbDropdownItem (click)="openProfile()">{{ 'library.toolbar.profileButton' | translate }}</button>
       <button ngbDropdownItem (click)="signOut()">{{ 'library.toolbar.logOutButton' | translate }}</button>
     </ul>
