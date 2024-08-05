@@ -50,7 +50,6 @@ export class LogComponent implements OnInit {
   }
 
   private loadPage(pageIndex = 0, pageSize = 30) {
-    this.loadingState = LoadingState.LOADING;
     this.logService.getLog(
       this.form.value.minLevel,
       this.normalizeFormDate(this.form.value.minDate), this.normalizeFormDate(this.form.value.maxDate),
@@ -60,7 +59,7 @@ export class LogComponent implements OnInit {
         this.logs = page.logMessages;
         this.page = page;
         this.containerElement.nativeElement.scrollTop = 0;
-        this.loadingState = LoadingState.LOADED;
+        this.loadingState = page.totalPages > 0 ? LoadingState.LOADED : LoadingState.EMPTY;
       },
       error: () => {
         this.loadingState = LoadingState.ERROR;
