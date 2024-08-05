@@ -49,8 +49,13 @@ export class LogComponent implements OnInit {
     this.loadPage();
   }
 
-  private loadPage(pageIndex = 0, pageSize = 30, minLevel: LogMessageDto.Level = Level.INFO, minDate?: Date, maxDate?: Date) {
-    this.logService.getLog(minLevel, minDate, maxDate, pageIndex, pageSize).subscribe({
+  private loadPage(pageIndex = 0, pageSize = 30) {
+    this.loadingState = LoadingState.LOADING;
+    this.logService.getLog(
+      this.form.value.minLevel,
+      this.normalizeFormDate(this.form.value.minDate), this.normalizeFormDate(this.form.value.maxDate),
+      pageIndex, pageSize
+    ).subscribe({
       next: page => {
         this.logs = page.logMessages;
         this.page = page;
@@ -61,6 +66,13 @@ export class LogComponent implements OnInit {
         this.loadingState = LoadingState.ERROR;
       }
     });
+  }
+
+  private normalizeFormDate(date: any): Date | undefined {
+    if (typeof date === 'string') {
+      return undefined;
+    }
+    return date as Date;
   }
 
   loadPreviousPage() {
@@ -76,18 +88,6 @@ export class LogComponent implements OnInit {
   }
 
   applyFilter() {
-    this.loadPage(
-      0, this.page?.pageSize,
-      this.form.value.minLevel,
-      this.normalizeFormDate(this.form.value.minDate),
-      this.normalizeFormDate(this.form.value.maxDate)
-    );
-  }
-
-  private normalizeFormDate(date: any): Date | undefined {
-    if (typeof date === 'string') {
-      return undefined;
-    }
-    return date as Date;
+    this.loadPage(0, this.page?.pageSize);
   }
 }

@@ -27,12 +27,6 @@ public class LogServiceImpl implements LogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LogMessage> getByType(Level minimalLevel, Pageable pageable) {
-        return logMessageRepository.findByLevelIn(minimalLevel.getIncludedLevels(), pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Page<LogMessage> getByTypeAndDate(Level minimalLevel, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable) {
         return logMessageRepository.findByLevelInAndDateBetween(minimalLevel.getIncludedLevels(), minDate, maxDate, pageable);
     }

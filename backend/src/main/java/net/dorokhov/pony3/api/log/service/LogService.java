@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 
 public interface LogService {
 
-    Page<LogMessage> getByType(Level minimalLevel, Pageable pageable);
     Page<LogMessage> getByTypeAndDate(Level minimalLevel, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);
 
     LogMessage debug(Logger logger, String message, Object... arguments);

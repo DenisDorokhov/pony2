@@ -32,13 +32,6 @@ public class LogAdminController implements ErrorHandlingController {
             @RequestParam(defaultValue = "0") int pageIndex,
             @RequestParam(defaultValue = "30") int pageSize
     ) {
-        if (minLevel == null) {
-            minLevel = Level.INFO;
-        }
-        if (minDate != null && maxDate != null) {
-            return logFacade.getLog(minLevel, minDate, maxDate, pageIndex, pageSize);
-        } else {
-            return logFacade.getLog(minLevel, pageIndex, pageSize);
-        }
+        return logFacade.getLog(minLevel, minDate, maxDate, pageIndex, pageSize);
     }
 }
