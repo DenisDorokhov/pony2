@@ -27,6 +27,8 @@ export default {
       scanningButton: 'Scan',
       logButton: 'Log',
       usersButton: 'Users',
+      profileButton: 'Profile',
+      logOutButton: 'Sign Out',
     },
     album: {
       discLabel: 'Disc {{discNumber}}',

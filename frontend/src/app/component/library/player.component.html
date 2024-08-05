@@ -1,14 +1,14 @@
 <div class="player-container">
 
-  <button type="button" class="btn btn-default backward"
+  <button type="button" class="btn btn-light backward"
           (click)="switchToPreviousSong()" [disabled]="!hasPreviousSong">
     <i class="fa fa-fast-backward"></i>
   </button>
-  <button type="button" class="btn btn-default btn-lg play"
+  <button type="button" class="btn btn-light btn-lg play"
           (click)="playOrPause()">
     <i [class]="isPlaying ? 'fa fa-pause' : 'fa fa-play'"></i>
   </button>
-  <button type="button" class="btn btn-default forward"
+  <button type="button" class="btn btn-light forward"
           (click)="switchToNextSong()" [disabled]="!hasNextSong">
     <i class="fa fa-fast-forward"></i>
   </button>
