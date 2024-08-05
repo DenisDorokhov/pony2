@@ -89,4 +89,11 @@ export class LogComponent implements OnInit {
   applyFilter() {
     this.loadPage(0, this.page?.pageSize);
   }
+
+  clearFilter() {
+    this.form.controls['minLevel'].setValue(LogMessageDto.Level.INFO);
+    this.form.controls['minDate'].setValue(undefined);
+    this.form.controls['maxDate'].setValue(undefined);
+    this.applyFilter();
+  }
 }

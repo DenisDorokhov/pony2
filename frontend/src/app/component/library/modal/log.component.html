@@ -20,6 +20,7 @@
       #maxDatePicker="ngbDatepicker" (click)="maxDatePicker.toggle()" (dateSelect)="applyFilter()" />
 
     <button type="submit" class="btn btn-primary" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.applyButton' | translate }}</button>
+    <button type="button" class="btn btn-outline-dark" (click)="clearFilter()">{{ 'shared.clearButton' | translate }}</button>
 
   </form>
 
