@@ -161,6 +161,9 @@ export default {
     dateColumn: 'Date',
     levelColumn: 'Level',
     messageColumn: 'Message',
+    levelFilterLabel: 'Level:',
+    minDateFilterLabel: 'From:',
+    maxDateFilterLabel: 'To:',
   },
   shared: {
     errorsHeader: 'Errors',
@@ -174,6 +177,7 @@ export default {
     updateDateLabel: 'Update Date:',
     cancelButton: 'Cancel',
     saveButton: 'Save',
+    applyButton: 'Apply',
     scanJob: {
       startingStatus: 'STARTING',
       startedStatus: 'STARTED',

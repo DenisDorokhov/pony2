@@ -7,6 +7,30 @@
   border: 1px solid #cccccc;
 }
 
+form {
+
+  margin-bottom: 16px;
+
+  label {
+    font-weight: bold;
+    margin-right: 12px;
+  }
+
+  select {
+    display: inline;
+    width: 120px;
+    margin-right: 12px;
+    vertical-align: middle;
+  }
+
+  input {
+    display: inline;
+    width: 120px;
+    margin-right: 12px;
+    vertical-align: middle;
+  }
+}
+
 table {
 
   margin: 0;

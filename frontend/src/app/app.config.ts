@@ -11,6 +11,7 @@ import {SecurityInterceptor} from "./service/security-interceptor.service";
 import {ReactiveFormsModule} from "@angular/forms";
 import {provideToastr} from "ngx-toastr";
 import {provideAnimations} from "@angular/platform-browser/animations";
+import {NgbDateAdapter, NgbDateNativeAdapter} from "@ng-bootstrap/ng-bootstrap";
 
 export function initialize(initializerService: InitializerService) {
   return () => initializerService.initialize();
@@ -35,6 +36,10 @@ export const appConfig: ApplicationConfig = {
       }),
       CookieModule.withOptions(),
     ),
+    {
+      provide: NgbDateAdapter,
+      useClass: NgbDateNativeAdapter
+    },
     {
       provide: APP_INITIALIZER,
       useFactory: initialize,
