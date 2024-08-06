@@ -92,10 +92,12 @@ public class ConfigTest {
         assertThat(eqConfig1.hashCode()).isEqualTo(eqConfig2.hashCode());
         assertThat(eqConfig1.hashCode()).isNotEqualTo(diffConfig.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqConfig1).isEqualTo(eqConfig1);
         assertThat(eqConfig1).isEqualTo(eqConfig2);
 
         assertThat(eqConfig1).isNotEqualTo(diffConfig);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqConfig1).isNotEqualTo("foo1");
         assertThat(eqConfig1).isNotEqualTo(null);
     }

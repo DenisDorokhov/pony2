@@ -4,17 +4,17 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
+
+import static jakarta.persistence.GenerationType.UUID;
 
 @SuppressWarnings("unchecked")
 @MappedSuperclass
 abstract public class BaseEntity<T extends BaseEntity<?>> {
-    
+
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = UUID)
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
     protected String id;
 
@@ -69,6 +69,7 @@ abstract public class BaseEntity<T extends BaseEntity<?>> {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     @SuppressFBWarnings("NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION")
     public boolean equals(@Nullable Object obj) {
         if (this == obj) {

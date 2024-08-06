@@ -14,7 +14,6 @@ import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
-import net.dorokhov.pony2.core.library.service.scan.exception.SongNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -268,8 +267,6 @@ public class ScanJobServiceImpl implements ScanJobService {
             result = libraryScanner.edit(commands, configService.getLibraryFolders(), scanProgress ->
                     onScanJobProgress(new ScanJobProgress(scanJob, scanProgress)));
             logMessage = () -> logService.info(logger, "Edit job complete for {} songs.", commands.size());
-        } catch (SongNotFoundException e) {
-            logMessage = () -> logService.error(logger, "Song '{}' not found.", e.getSongId());
         } catch (IOException e) {
             logMessage = () -> logService.error(logger, "Edit job failed due to I/O error.", e);
         }

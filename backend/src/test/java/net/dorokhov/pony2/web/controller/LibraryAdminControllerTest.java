@@ -271,7 +271,6 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         });
     }
 
-    @SuppressWarnings("Duplicates")
     private void checkLogMessageDto(@Nullable LogMessageDto dto, @Nullable LogMessage logMessage) {
         assertThat(logMessage).isNotNull();
         assertThat(dto).isNotNull();

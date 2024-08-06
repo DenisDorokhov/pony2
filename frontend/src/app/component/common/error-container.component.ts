@@ -8,7 +8,7 @@ import {CommonModule} from "@angular/common";
   imports: [CommonModule],
   selector: 'pony-error-container',
   templateUrl: './error-container.component.html',
-  styleUrls: ['./error-container.component.scss']
+  styleUrls: []
 })
 export class ErrorContainerComponent implements OnChanges {
 

@@ -15,7 +15,6 @@ import net.dorokhov.pony2.core.library.service.filetree.domain.FolderNode;
 import net.dorokhov.pony2.core.library.service.filetree.domain.ImageNode;
 import net.dorokhov.pony2.core.library.service.scan.BatchLibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony2.core.library.service.scan.ScanResultCalculator.AudioFileProcessingResult;
-import net.dorokhov.pony2.core.library.service.scan.exception.SongNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,7 +87,7 @@ public class LibraryScanner {
         }
     }
 
-    public ScanResult edit(List<EditCommand> commands, List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws SongNotFoundException, IOException {
+    public ScanResult edit(List<EditCommand> commands, List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws IOException {
 
         List<File> targetFiles = new ArrayList<>();
         List<WriteAndImportCommand> writeAndImportCommands = new ArrayList<>();

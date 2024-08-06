@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -39,7 +38,7 @@ public class BatchLibraryImportPlannerTest {
     public Path tempFolder;
 
     @BeforeEach
-    public void setUp() throws IOException {
+    public void setUp() {
         when(audioNode.getFile()).thenAnswer(invocationOnMock -> Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile());
     }
 

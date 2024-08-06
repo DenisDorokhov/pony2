@@ -36,10 +36,12 @@ public class ArtistTest {
         assertThat(eqArtist1.hashCode()).isEqualTo(eqArtist2.hashCode());
         assertThat(eqArtist1.hashCode()).isNotEqualTo(diffArtist.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqArtist1).isEqualTo(eqArtist1);
         assertThat(eqArtist1).isEqualTo(eqArtist2);
 
         assertThat(eqArtist1).isNotEqualTo(diffArtist);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqArtist1).isNotEqualTo("foo1");
         assertThat(eqArtist1).isNotEqualTo(null);
     }

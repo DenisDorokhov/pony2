@@ -73,10 +73,12 @@ public class AlbumTest {
         assertThat(eqAlbum1.hashCode()).isEqualTo(eqAlbum2.hashCode());
         assertThat(eqAlbum1.hashCode()).isNotEqualTo(diffAlbum.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqAlbum1).isEqualTo(eqAlbum1);
         assertThat(eqAlbum1).isEqualTo(eqAlbum2);
 
         assertThat(eqAlbum1).isNotEqualTo(diffAlbum);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqAlbum1).isNotEqualTo("foo1");
         assertThat(eqAlbum1).isNotEqualTo(null);
     }

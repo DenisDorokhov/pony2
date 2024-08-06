@@ -50,7 +50,7 @@ public class AudioTaggerTest {
     private FileTypeResolver fileTypeResolver;
 
     @BeforeEach
-    public void setUp() throws IOException {
+    public void setUp() {
         when(fileTypeResolver.resolve((File) any())).thenReturn(FileType.of("audio/mpeg", "mp3"));
         lenient().when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FileType.of("image/png", "png"));
     }

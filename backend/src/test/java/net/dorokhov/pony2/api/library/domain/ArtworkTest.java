@@ -19,10 +19,12 @@ public class ArtworkTest {
         assertThat(eqArtwork1.hashCode()).isEqualTo(eqArtwork2.hashCode());
         assertThat(eqArtwork1.hashCode()).isNotEqualTo(diffArtwork.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqArtwork1).isEqualTo(eqArtwork1);
         assertThat(eqArtwork1).isEqualTo(eqArtwork2);
 
         assertThat(eqArtwork1).isNotEqualTo(diffArtwork);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqArtwork1).isNotEqualTo("foo1");
         assertThat(eqArtwork1).isNotEqualTo(null);
     }

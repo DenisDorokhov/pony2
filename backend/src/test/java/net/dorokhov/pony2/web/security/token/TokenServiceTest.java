@@ -10,8 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -26,7 +24,7 @@ public class TokenServiceTest {
     private TokenKeyService tokenKeyService;
 
     @Test
-    public void shouldNotGenerateKeysIfTheyExist() throws IOException, SecretNotFoundException {
+    public void shouldNotGenerateKeysIfTheyExist() throws SecretNotFoundException {
         
         when(tokenKeyService.fetchAccessTokenKey()).thenReturn(new byte[]{});
         when(tokenKeyService.fetchStaticTokenKey()).thenReturn(new byte[]{});
@@ -38,7 +36,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldGenerateKeysIdTheyDoNotExist() throws SecretNotFoundException, IOException {
+    public void shouldGenerateKeysIdTheyDoNotExist() throws SecretNotFoundException {
 
         when(tokenKeyService.fetchAccessTokenKey()).thenThrow(new SecretNotFoundException());
         when(tokenKeyService.fetchStaticTokenKey()).thenThrow(new SecretNotFoundException());
@@ -50,7 +48,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldVerifyAccessToken() throws SecretNotFoundException, IOException, InvalidTokenException {
+    public void shouldVerifyAccessToken() throws SecretNotFoundException, InvalidTokenException {
 
         when(tokenKeyService.fetchAccessTokenKey()).thenReturn(new byte[]{1, 2, 3});
 
@@ -61,16 +59,15 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldFailAccessTokenVerificationIfKeyIsNotFound() throws SecretNotFoundException, IOException {
+    public void shouldFailAccessTokenVerificationIfKeyIsNotFound() throws SecretNotFoundException {
 
         when(tokenKeyService.fetchAccessTokenKey()).thenThrow(new SecretNotFoundException());
 
-        //noinspection ResultOfMethodCallIgnored
         assertThatThrownBy(() -> tokenService.verifyAccessTokenAndGetUserId("someToken"));
     }
 
     @Test
-    public void shouldFailAccessTokenVerificationIfTokenIsInvalid() throws SecretNotFoundException, IOException {
+    public void shouldFailAccessTokenVerificationIfTokenIsInvalid() throws SecretNotFoundException {
 
         when(tokenKeyService.fetchAccessTokenKey()).thenReturn(new byte[]{});
 
@@ -79,7 +76,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldFailAccessTokenVerificationOnNoSubject() throws SecretNotFoundException, IOException {
+    public void shouldFailAccessTokenVerificationOnNoSubject() throws SecretNotFoundException {
 
         byte[] key = new byte[]{1, 2, 3};
         when(tokenKeyService.fetchAccessTokenKey()).thenReturn(key);
@@ -90,7 +87,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldVerifyStaticToken() throws SecretNotFoundException, IOException, InvalidTokenException {
+    public void shouldVerifyStaticToken() throws SecretNotFoundException, InvalidTokenException {
 
         when(tokenKeyService.fetchStaticTokenKey()).thenReturn(new byte[]{1, 2, 3});
 
@@ -101,16 +98,15 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldFailStaticTokenVerificationIfKeyIsNotFound() throws SecretNotFoundException, IOException {
+    public void shouldFailStaticTokenVerificationIfKeyIsNotFound() throws SecretNotFoundException {
 
         when(tokenKeyService.fetchStaticTokenKey()).thenThrow(new SecretNotFoundException());
 
-        //noinspection ResultOfMethodCallIgnored
         assertThatThrownBy(() -> tokenService.verifyStaticTokenAndGetUserId("someToken"));
     }
 
     @Test
-    public void shouldFailStaticTokenVerificationIfTokenIsInvalid() throws SecretNotFoundException, IOException {
+    public void shouldFailStaticTokenVerificationIfTokenIsInvalid() throws SecretNotFoundException {
 
         when(tokenKeyService.fetchStaticTokenKey()).thenReturn(new byte[]{});
 
@@ -119,7 +115,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    public void shouldFailStaticTokenVerificationOnNoSubject() throws SecretNotFoundException, IOException {
+    public void shouldFailStaticTokenVerificationOnNoSubject() throws SecretNotFoundException {
 
         byte[] key = new byte[]{1, 2, 3};
         when(tokenKeyService.fetchStaticTokenKey()).thenReturn(key);

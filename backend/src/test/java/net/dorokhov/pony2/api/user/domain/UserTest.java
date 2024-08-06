@@ -16,10 +16,12 @@ public class UserTest {
         assertThat(eqUser1.hashCode()).isEqualTo(eqUser2.hashCode());
         assertThat(eqUser1.hashCode()).isNotEqualTo(diffUser.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqUser1).isEqualTo(eqUser1);
         assertThat(eqUser1).isEqualTo(eqUser2);
 
         assertThat(eqUser1).isNotEqualTo(diffUser);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqUser1).isNotEqualTo("foo1");
         assertThat(eqUser1).isNotEqualTo(null);
     }

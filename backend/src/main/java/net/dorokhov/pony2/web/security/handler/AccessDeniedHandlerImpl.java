@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.security.handler;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.dorokhov.pony2.web.dto.ErrorDto;
@@ -29,7 +28,7 @@ public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
         logger.debug("Access denied to '{}'.", request.getServletPath());
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         messageConverter.write(

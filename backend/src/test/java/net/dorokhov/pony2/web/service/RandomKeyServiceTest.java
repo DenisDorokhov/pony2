@@ -18,7 +18,7 @@ public class RandomKeyServiceTest {
 
     private static final Resource SECRET_RESOURCE = new ClassPathResource("test.txt");
 
-    private RandomKeyService randomKeyService = new RandomKeyService();
+    private final RandomKeyService randomKeyService = new RandomKeyService();
 
     @TempDir
     public Path tempFolder;

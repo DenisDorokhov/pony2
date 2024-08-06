@@ -13,7 +13,6 @@ import net.dorokhov.pony2.core.library.service.filetree.domain.FolderNode;
 import net.dorokhov.pony2.core.library.service.filetree.domain.ImageNode;
 import net.dorokhov.pony2.core.library.service.scan.BatchLibraryImporter.WriteAndImportCommand;
 import net.dorokhov.pony2.core.library.service.scan.ScanResultCalculator.AudioFileProcessingResult;
-import net.dorokhov.pony2.core.library.service.scan.exception.SongNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -167,7 +166,7 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldEdit() throws IOException, SongNotFoundException {
+    public void shouldEdit() throws IOException {
 
         File file1 = Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile();
         File file2 = Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile();

@@ -36,10 +36,12 @@ public class GenreTest {
         assertThat(eqGenre1.hashCode()).isEqualTo(eqGenre2.hashCode());
         assertThat(eqGenre1.hashCode()).isNotEqualTo(diffGenre.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqGenre1).isEqualTo(eqGenre1);
         assertThat(eqGenre1).isEqualTo(eqGenre2);
 
         assertThat(eqGenre1).isNotEqualTo(diffGenre);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqGenre1).isNotEqualTo("foo1");
         assertThat(eqGenre1).isNotEqualTo(null);
     }

@@ -1,6 +1,5 @@
 package net.dorokhov.pony2;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import net.dorokhov.pony2.common.RethrowingLambdas;
 import org.flywaydb.core.Flyway;
@@ -42,8 +41,6 @@ abstract public class IntegrationTest {
     private Flyway flyway;
 
     @Autowired
-    private EntityManager entityManager;
-    @Autowired
     private EntityManagerFactory entityManagerFactory;
 
     @Value("${pony.artwork.path}")
@@ -51,7 +48,7 @@ abstract public class IntegrationTest {
     
     private TransactionTemplate transactionTemplate;
 
-    private List<Class<?>> indexedClasses = fetchIndexedClasses();
+    private final List<Class<?>> indexedClasses = fetchIndexedClasses();
 
     @Autowired
     private void initTransactionTemplate(PlatformTransactionManager transactionManager) {

@@ -5,12 +5,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.time.LocalDateTime;
 
+import static jakarta.persistence.GenerationType.UUID;
 import static java.util.Objects.requireNonNull;
 
 @Entity
@@ -21,8 +21,7 @@ public class Artwork implements Serializable {
     public static final String SOURCE_URI_SCHEME_EMBEDDED = "embedded";
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = UUID)
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
     private String id;
 
@@ -139,8 +138,7 @@ public class Artwork implements Serializable {
 
     public Artwork setSourceUri(URI sourceUri) {
         this.sourceUri = sourceUri.toString();
-        setSourceUriScheme(sourceUri.getScheme());
-        return this;
+        return setSourceUriScheme(sourceUri.getScheme());
     }
 
     @Nullable

@@ -19,10 +19,12 @@ public class LogMessageTest {
         assertThat(eqLogMessage1.hashCode()).isEqualTo(eqLogMessage2.hashCode());
         assertThat(eqLogMessage1.hashCode()).isNotEqualTo(diffLogMessage.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqLogMessage1).isEqualTo(eqLogMessage1);
         assertThat(eqLogMessage1).isEqualTo(eqLogMessage2);
 
         assertThat(eqLogMessage1).isNotEqualTo(diffLogMessage);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqLogMessage1).isNotEqualTo("foo1");
         assertThat(eqLogMessage1).isNotEqualTo(null);
     }

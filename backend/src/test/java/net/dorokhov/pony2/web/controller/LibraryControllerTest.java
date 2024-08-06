@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -73,7 +74,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
     @BeforeEach
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void setUp() throws Exception {
+    public void setUp() {
         getTransactionTemplate().execute(transactionStatus -> {
 
             try {
@@ -594,22 +595,20 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         });
     }
 
-    @SuppressWarnings({"ConstantConditions", "Duplicates"})
     private void checkGenreDto(GenreDto dto, Genre genre) {
         assertThat(dto.getId()).isEqualTo(genre.getId());
         assertThat(dto.getCreationDate()).isEqualTo(genre.getCreationDate());
         assertThat(dto.getUpdateDate()).isEqualTo(genre.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(genre.getName());
-        assertThat(dto.getArtworkId()).isEqualTo(genre.getArtwork().getId());
+        assertThat(dto.getArtworkId()).isEqualTo(requireNonNull(genre.getArtwork()).getId());
     }
 
-    @SuppressWarnings({"ConstantConditions", "Duplicates"})
     private void checkArtistDto(ArtistDto dto, Artist artist) {
         assertThat(dto.getId()).isEqualTo(artist.getId());
         assertThat(dto.getCreationDate()).isEqualTo(artist.getCreationDate());
         assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(artist.getName());
-        assertThat(dto.getArtworkId()).isEqualTo(artist.getArtwork().getId());
+        assertThat(dto.getArtworkId()).isEqualTo(requireNonNull(artist.getArtwork()).getId());
     }
 
     @SuppressWarnings("ConstantConditions")

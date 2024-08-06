@@ -104,10 +104,12 @@ public class SongTest {
         assertThat(eqSong1.hashCode()).isEqualTo(eqSong2.hashCode());
         assertThat(eqSong1.hashCode()).isNotEqualTo(diffSong.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqSong1).isEqualTo(eqSong1);
         assertThat(eqSong1).isEqualTo(eqSong2);
 
         assertThat(eqSong1).isNotEqualTo(diffSong);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqSong1).isNotEqualTo("foo1");
         assertThat(eqSong1).isNotEqualTo(null);
     }

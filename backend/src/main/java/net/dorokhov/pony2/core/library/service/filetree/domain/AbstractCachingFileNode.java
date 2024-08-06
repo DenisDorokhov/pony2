@@ -30,7 +30,7 @@ public abstract class AbstractCachingFileNode extends AbstractNode implements Fi
     }
 
     @Override
-    public FileType getFileType() throws IOException {
+    public FileType getFileType() {
         if (fileType == null) {
             synchronized (fileTypeLock) {
                 if (fileType == null) {

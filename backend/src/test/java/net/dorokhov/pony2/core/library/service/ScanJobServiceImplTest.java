@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.ScanProgress.Value;
@@ -11,7 +12,6 @@ import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
-import net.dorokhov.pony2.core.library.service.scan.exception.SongNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
 
-import jakarta.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -172,7 +171,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldExecuteEditJob() throws IOException, SongNotFoundException, ConcurrentScanException {
+    public void shouldExecuteEditJob() throws IOException, ConcurrentScanException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());
@@ -268,17 +267,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailEditJobOnSongNotFoundException() throws ConcurrentScanException, IOException, SongNotFoundException {
-
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
-
-        doTestFailEditJobOnException(new SongNotFoundException("1"));
-
-        verify(logService).error(any(), any(), any());
-    }
-
-    @Test
-    public void shouldFailEditJobOnIOException() throws ConcurrentScanException, IOException, SongNotFoundException {
+    public void shouldFailEditJobOnIOException() throws ConcurrentScanException, IOException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
 
@@ -309,7 +298,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailEditJobOnUnexpectedException() throws ConcurrentScanException, IOException, SongNotFoundException {
+    public void shouldFailEditJobOnUnexpectedException() throws ConcurrentScanException, IOException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
 
@@ -364,7 +353,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatFailedAt(3);
     }
 
-    private void doTestFailEditJobOnException(Exception e) throws IOException, SongNotFoundException, ConcurrentScanException {
+    private void doTestFailEditJobOnException(Exception e) throws IOException, ConcurrentScanException {
 
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());

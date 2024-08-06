@@ -5,20 +5,20 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony2.common.ListOfStringsJsonAttributeConverter;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.GenerationType.UUID;
+
 @Entity
 @Table(name = "scan_result")
 public class ScanResult implements Serializable {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = UUID)
     @Column(name = "id")
     private String id;
 

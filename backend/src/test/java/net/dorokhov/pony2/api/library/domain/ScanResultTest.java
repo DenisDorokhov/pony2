@@ -17,10 +17,12 @@ public class ScanResultTest {
         assertThat(eqScanResult1.hashCode()).isEqualTo(eqScanResult2.hashCode());
         assertThat(eqScanResult1.hashCode()).isNotEqualTo(diffScanResult.hashCode());
 
+        //noinspection EqualsWithItself
         assertThat(eqScanResult1).isEqualTo(eqScanResult1);
         assertThat(eqScanResult1).isEqualTo(eqScanResult2);
 
         assertThat(eqScanResult1).isNotEqualTo(diffScanResult);
+        //noinspection AssertBetweenInconvertibleTypes
         assertThat(eqScanResult1).isNotEqualTo("foo1");
         assertThat(eqScanResult1).isNotEqualTo(null);
     }

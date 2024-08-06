@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RequestTokenFinderTest {
 
-    private RequestTokenFinder requestTokenFinder = new RequestTokenFinder();
+    private final RequestTokenFinder requestTokenFinder = new RequestTokenFinder();
 
     @Test
     public void shouldFetchAccessTokenFromAuthorizationHeader() {
