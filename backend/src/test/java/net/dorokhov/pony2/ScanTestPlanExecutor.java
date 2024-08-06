@@ -59,16 +59,19 @@ public class ScanTestPlanExecutor {
     private final File rootFolder;
 
     public ScanTestPlanExecutor(
-            AudioTagger audioTagger, ScanJobService scanJobService,
-            GenreRepository genreRepository, ArtistRepository artistRepository, SongRepository songRepository
-    ) {
+            AudioTagger audioTagger,
+            ScanJobService scanJobService,
+            GenreRepository genreRepository,
+            ArtistRepository artistRepository,
+            SongRepository songRepository
+    ) throws IOException {
         this.audioTagger = audioTagger;
         this.scanJobService = scanJobService;
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
         this.songRepository = songRepository;
 
-        rootFolder = Files.createTempDir();
+        rootFolder = java.nio.file.Files.createTempDirectory("ScanTestPlanExecutor.").toFile();
     }
 
     public Context prepare(ScanTestPlan scanTestPlan) throws IOException {

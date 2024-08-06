@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.filetree;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import net.dorokhov.pony2.api.library.domain.FileType;
 import net.dorokhov.pony2.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony2.core.library.service.AudioTagger;
@@ -13,6 +12,7 @@ import net.dorokhov.pony2.core.library.service.image.domain.ImageSize;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +22,7 @@ import org.springframework.core.io.Resource;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,6 +58,9 @@ public class FileTreeScannerTest {
     private ChecksumCalculator checksumCalculator;
     @Mock
     private AudioTagger audioTagger;
+
+    @TempDir
+    public Path tempFolder;
 
     private final FileType fileTypeAudio = FileType.of("audio/mpeg", "mp3");
     private final FileType fileTypeImage = FileType.of("image/png", "png");
@@ -117,7 +121,7 @@ public class FileTreeScannerTest {
 
     @Test
     public void shouldFailIfFileIsNotFoundInRootFolders() {
-        assertThatThrownBy(() -> fileTreeScanner.scanFile(FILE_AUDIO.getFile(), ImmutableList.of(Files.createTempDir())))
+        assertThatThrownBy(() -> fileTreeScanner.scanFile(FILE_AUDIO.getFile(), ImmutableList.of(tempFolder.toFile())))
                 .isInstanceOf(FileNotFoundException.class);
     }
 
