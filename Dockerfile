@@ -14,11 +14,12 @@ COPY gradle /home/pony/src/gradle
 COPY gradlew /home/pony/src
 COPY settings.gradle /home/pony/src
 
-RUN mkdir /home/pony/.pony2 && chown pony:pony /home/pony/.pony2 && \
-    mkdir /home/pony/music && chown pony:pony /home/pony/music
+RUN cd /home/pony/src && /bin/sh gradlew --no-daemon clean build
 
-RUN cd /home/pony/src && /bin/sh gradlew --no-daemon build && \
-    cp /home/pony/src/backend/build/libs/`ls /home/pony/src/backend/build/libs | grep -v plain.jar` /home/pony/pony.jar
+RUN ls /home/pony/src/backend/build/libs && \
+    cp /home/pony/src/backend/build/libs/`ls /home/pony/src/backend/build/libs | grep -v plain.jar` /home/pony/pony.jar && \
+    mkdir /home/pony/.pony2 && chown pony:pony /home/pony/.pony2 && \
+    mkdir /home/pony/music && chown pony:pony /home/pony/music
 
 COPY docker/pony.sh /home/pony/pony.sh
 
