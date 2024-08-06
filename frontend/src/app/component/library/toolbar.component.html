@@ -1,5 +1,5 @@
 <div class="toolbar-container">
-  <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn" [disabled]="scanRunning">
+  <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn">
     {{ 'library.toolbar.scanButton' | translate }}
     <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>

@@ -54,7 +54,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   startScanJob() {
-    this.libraryScanService.startScanJob().subscribe(() => this.openScanning());
+    if (this.scanRunning) {
+      this.openScanning();
+    } else {
+      this.libraryScanService.startScanJob().subscribe(() => this.openScanning());
+    }
   }
 
   openProfile() {
