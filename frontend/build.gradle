@@ -3,7 +3,7 @@ plugins {
 }
 
 apply plugin: 'java'
-archivesBaseName = 'pony3-frontend'
+archivesBaseName = 'pony2-frontend'
 
 jar {
     doFirst {

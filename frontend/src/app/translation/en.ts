@@ -11,7 +11,7 @@ export default {
     adminPasswordLabel: 'Admin password:',
     repeatAdminPasswordLabel: 'Repeat admin password:',
     installationSecretLabel: 'Installation secret:',
-    installationSecretPlaceholder: 'Get from file ~/.pony3/installationSecret.txt',
+    installationSecretPlaceholder: 'Get from file ~/.pony2/installationSecret.txt',
     installButton: 'Install',
   },
   login: {

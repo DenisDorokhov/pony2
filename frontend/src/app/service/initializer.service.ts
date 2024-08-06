@@ -29,7 +29,7 @@ export class InitializerService {
         messages.unshift(new Date().toISOString());
       }
     });
-    Logger.info('Pony3 started.');
+    Logger.info('Application started.');
 
     this.translateService.setDefaultLang('en');
     this.translateService.use('en');

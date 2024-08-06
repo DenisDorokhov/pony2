@@ -17,7 +17,7 @@ export enum LibraryState {
 })
 export class LibraryService {
 
-  private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony3.LibraryService.defaultArtistId';
+  private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
 
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
 

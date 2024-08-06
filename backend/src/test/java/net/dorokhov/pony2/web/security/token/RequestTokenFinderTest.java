@@ -1,0 +1,65 @@
+package net.dorokhov.pony2.web.security.token;
+
+import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class RequestTokenFinderTest {
+
+    private RequestTokenFinder requestTokenFinder = new RequestTokenFinder();
+
+    @Test
+    public void shouldFetchAccessTokenFromAuthorizationHeader() {
+
+        MockHttpServletRequest request = mockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer someToken");
+
+        assertThat(requestTokenFinder.findAccessToken(request)).isEqualTo("someToken");
+    }
+
+    @Test
+    public void shouldFetchStaticTokenFromCookie() {
+
+        MockHttpServletRequest request = mockHttpServletRequest();
+        request.setCookies(new Cookie(RequestTokenFinder.TOKEN_COOKIE_NAME, "someToken"));
+
+        assertThat(requestTokenFinder.findStaticToken(request)).isEqualTo("someToken");
+    }
+
+    @Test
+    public void shouldSupportNoAccessTokenInAuthorizationHeader() {
+
+        MockHttpServletRequest request = mockHttpServletRequest();
+
+        assertThat(requestTokenFinder.findAccessToken(request)).isNull();
+    }
+
+    @Test
+    public void shouldSupportNotBearerAuthorizationHeader() {
+
+        MockHttpServletRequest request = mockHttpServletRequest();
+        request.addHeader("Authorization", "Basic someToken");
+
+        assertThat(requestTokenFinder.findAccessToken(request)).isNull();
+    }
+
+    @Test
+    public void shouldSupportNoStaticTokenInCookies() {
+
+        MockHttpServletRequest request = mockHttpServletRequest("GET", "/api/file/someFile");
+
+        assertThat(requestTokenFinder.findAccessToken(request)).isNull();
+    }
+
+    private MockHttpServletRequest mockHttpServletRequest() {
+        return mockHttpServletRequest("GET", "/api/someApi");
+    }
+
+    private MockHttpServletRequest mockHttpServletRequest(String method, String servletPath) {
+        MockHttpServletRequest request = new MockHttpServletRequest(method, servletPath);
+        request.setServletPath(servletPath);
+        return request;
+    }
+}

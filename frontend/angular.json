@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "pony3": {
+    "pony2": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -66,10 +66,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "pony3:build:production"
+              "buildTarget": "pony2:build:production"
             },
             "development": {
-              "buildTarget": "pony3:build:development"
+              "buildTarget": "pony2:build:development"
             }
           },
           "defaultConfiguration": "development"

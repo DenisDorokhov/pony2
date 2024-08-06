@@ -1,5 +1,5 @@
 {
-  "name": "pony3",
+  "name": "pony2",
   "version": "0.0.0",
   "scripts": {
     "ng": "npx -p @angular/cli ng",
