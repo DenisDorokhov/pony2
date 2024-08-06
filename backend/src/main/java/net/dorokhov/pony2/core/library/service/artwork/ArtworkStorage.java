@@ -151,10 +151,18 @@ public class ArtworkStorage {
         Files.createParentDirs(largeImageFile);
 
         try (InputStream stream = streamSupplier.get()) {
-            thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, smallImageFile);
+            try {
+                thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, smallImageFile);
+            } catch (Exception e) {
+                throw new IOException("Could not generate small thumbnail for: " + sourceUri, e);
+            }
         }
         try (InputStream stream = streamSupplier.get()) {
-            thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, largeImageFile);
+            try {
+                thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, largeImageFile);
+            } catch (Exception e) {
+                throw new IOException("Could not generate large thumbnail for: " + sourceUri, e);
+            }
         }
 
         artwork = artworkRepository.save(new Artwork()
