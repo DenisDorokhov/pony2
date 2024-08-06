@@ -22,8 +22,7 @@
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js",
-              "@angular/localize/init",
-              "@formatjs/intl-durationformat/polyfill"
+              "@angular/localize/init"
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",

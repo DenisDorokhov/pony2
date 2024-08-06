@@ -180,6 +180,12 @@ export default {
     saveButton: 'Save',
     applyButton: 'Apply',
     clearButton: 'Clear',
+    duration: {
+      days: '{{value}} days',
+      hours: '{{value}} hours',
+      minutes: '{{value}} minutes',
+      seconds: '{{value}} seconds',
+    },
     scanJob: {
       startingStatus: 'STARTING',
       startedStatus: 'STARTED',
