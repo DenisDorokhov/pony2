@@ -5,7 +5,6 @@ import {Subscription} from 'rxjs';
 import {ScanStatisticsDto} from "../../domain/library.dto";
 import {AuthenticationService} from "../../service/authentication.service";
 import {LibraryScanService} from "../../service/library-scan.service";
-import Logger from "js-logger";
 import {CommonModule} from "@angular/common";
 import {PlayerComponent} from "./player.component";
 import {ToolbarComponent} from "./toolbar.component";
@@ -40,7 +39,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loggedOutSubscription = this.authenticationService.observeLogout()
       .subscribe(user => {
-        Logger.info(`User ${user?.email} has been logged out.`);
+        console.info(`User ${user?.email} has been logged out.`);
         this.router.navigate(['/login'], {replaceUrl: true});
       });
     this.scanStatisticsSubscription = this.libraryScanService.observeScanStatistics()

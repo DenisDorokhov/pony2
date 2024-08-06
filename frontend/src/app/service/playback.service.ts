@@ -2,7 +2,6 @@ import {Injectable} from '@angular/core';
 import {BehaviorSubject, defer, interval, Observable, of, Subscription} from 'rxjs';
 import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
-import Logger from "js-logger";
 import {Howl, HowlOptions} from "howler";
 import {AuthenticationService} from "./authentication.service";
 import {Playlist} from "../domain/playlist.model";
@@ -94,45 +93,45 @@ class AudioPlayer {
 
   private loadHowlForSong(song: Song) {
     this.unloadHowl();
-    Logger.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
+    console.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
     this.firePlaybackEvent(PlaybackState.LOADING, song);
     this.howl = new Howl(<HowlOptions>{
       src: [song.audioUrl],
       format: [song.fileExtension],
       html5: true,
       onload: () => {
-        Logger.info('Audio loaded.');
+        console.info('Audio loaded.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
       onloaderror: () => {
-        Logger.error('Audio could not be loaded.');
+        console.error('Audio could not be loaded.');
         this.firePlaybackEvent(PlaybackState.ERROR, song);
       },
       onplay: () => {
-        Logger.info('Playback started / resumed.');
+        console.info('Playback started / resumed.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, this.lastPlaybackEvent.progress);
       },
       onplayerror: () => {
-        Logger.error('Playback failed.');
+        console.error('Playback failed.');
         this.firePlaybackEvent(PlaybackState.ERROR, song, this.lastPlaybackEvent.progress);
       },
       onend: () => {
-        Logger.info('Playback finished.');
+        console.info('Playback finished.');
         this.firePlaybackEvent(PlaybackState.ENDED, song, this.lastPlaybackEvent.progress);
       },
       onpause: () => {
-        Logger.info('Playback paused.');
+        console.info('Playback paused.');
         this.firePlaybackEvent(PlaybackState.PAUSED, song, this.lastPlaybackEvent.progress);
       }
     });
     // Workaround for Howler bug: https://github.com/goldfire/howler.js/issues/1175
     if (navigator && navigator.mediaSession) {
       navigator.mediaSession.setActionHandler('play', () => {
-        Logger.info("Play by media key detected.");
+        console.info("Play by media key detected.");
         this.howl?.play();
       });
       navigator.mediaSession.setActionHandler('pause', () => {
-        Logger.info("Pause by media key detected.");
+        console.info("Pause by media key detected.");
         this.howl?.pause();
       });
     }
@@ -183,14 +182,14 @@ export class PlaybackService {
       navigator.mediaSession.setActionHandler(
         'nexttrack',
         () => {
-          Logger.info("Next track by media key detected.");
+          console.info("Next track by media key detected.");
           this.switchToNextSong().subscribe();
         }
       );
       navigator.mediaSession.setActionHandler(
         'previoustrack',
         () => {
-          Logger.info("Previous track by media key detected.");
+          console.info("Previous track by media key detected.");
           this.switchToPreviousSong().subscribe();
         }
       );

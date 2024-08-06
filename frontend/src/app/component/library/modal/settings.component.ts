@@ -11,7 +11,6 @@ import {ErrorContainerComponent} from "../../common/error-container.component";
 import {CommonModule} from "@angular/common";
 import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import _ from "underscore";
 import {LibraryScanService} from "../../../service/library-scan.service";
 import {NotificationService} from "../../../service/notification.service";
 
@@ -79,7 +78,7 @@ export class SettingsComponent implements OnInit{
     this.configService.saveConfig(configToSave).subscribe({
       next: config => {
         this.loadingState = LoadingState.LOADED;
-        if (!_.isEqual(this.config?.libraryFolders, config.libraryFolders)) {
+        if (JSON.stringify(this.config!.libraryFolders) !== JSON.stringify(config.libraryFolders)) {
           this.notificationService.success(
             this.translateService.instant('notification.settingsTitle'),
             this.translateService.instant('notification.settingsUpdatedText')

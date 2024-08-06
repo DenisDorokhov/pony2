@@ -3,7 +3,6 @@ import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
 import {ErrorDto} from "../domain/common.dto";
 import {AuthenticationService, Credentials} from "../service/authentication.service";
 import {Router} from "@angular/router";
-import Logger from "js-logger";
 import {TranslateModule} from "@ngx-translate/core";
 import {ErrorComponent} from "./common/error.component";
 
@@ -34,12 +33,12 @@ export class LoginComponent {
     const credentials = <Credentials>this.loginForm.value;
     this.authenticationService.authenticate(credentials).subscribe({
       next: user => {
-        Logger.info(`User ${user.email} has been authenticated.`);
+        console.info(`User ${user.email} has been authenticated.`);
         this.error = undefined;
         this.router.navigate(['/library'], {replaceUrl: true});
       },
       error: (error: ErrorDto) => {
-        Logger.error(`Authentication failed: "${error.message}".`);
+        console.error(`Authentication failed: "${error.message}".`);
         this.error = error;
       }
     });

@@ -7,7 +7,6 @@ import {UserListComponent} from './modal/user-list.component';
 import {UserDto} from "../../domain/user.dto";
 import {AuthenticationService} from "../../service/authentication.service";
 import {TranslateModule} from "@ngx-translate/core";
-import Logger from "js-logger";
 import {NgbDropdownModule, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
 import {LibraryScanService} from "../../service/library-scan.service";
@@ -70,7 +69,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   signOut() {
-    Logger.info('Signing out...');
+    console.info('Signing out...');
     this.authenticationService.logout().subscribe();
   }
 

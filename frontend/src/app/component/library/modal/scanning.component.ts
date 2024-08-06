@@ -7,7 +7,6 @@ import {NoContentIndicatorComponent} from "../../common/no-content-indicator.com
 import {LibraryScanService} from "../../../service/library-scan.service";
 import {ScanJobDto, ScanJobProgressDto, ScanProgressDto} from "../../../domain/library.dto";
 import {LoadingState} from "../../../domain/common.model";
-import Logger from "js-logger";
 import {CommonModule} from "@angular/common";
 import {PageDto} from "../../../domain/common.dto";
 import {Subscription} from "rxjs";
@@ -64,7 +63,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.scanJobProgressLoadingState = LoadingState.ERROR;
-        Logger.error(`Could not load scan job progress: "${error.message}".`);
+        console.error(`Could not load scan job progress: "${error.message}".`);
       }
     });
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {

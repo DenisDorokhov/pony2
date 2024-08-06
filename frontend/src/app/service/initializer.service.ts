@@ -4,7 +4,6 @@ import {EMPTY} from 'rxjs';
 import {catchError, mergeMap, tap} from 'rxjs/operators';
 import {InstallationService} from "./installation.service";
 import {AuthenticationService} from "./authentication.service";
-import Logger from "js-logger";
 
 @Injectable({
   providedIn: 'root'
@@ -20,16 +19,7 @@ export class InitializerService {
 
   initialize(): Promise<any> {
 
-    Logger.useDefaults({
-      defaultLevel: Logger.INFO,
-      formatter: (messages, context) => {
-        messages.unshift(':');
-        messages.unshift('[' + (context.name || 'default') + ']');
-        messages.unshift(context.level.name);
-        messages.unshift(new Date().toISOString());
-      }
-    });
-    Logger.info('Application started.');
+    console.info('Application started.');
 
     this.translateService.setDefaultLang('en');
     this.translateService.use('en');

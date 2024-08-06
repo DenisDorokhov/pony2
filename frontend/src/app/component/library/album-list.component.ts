@@ -5,7 +5,6 @@ import {LibraryService, LibraryState} from "../../service/library.service";
 import {PlaybackService} from "../../service/playback.service";
 import {StaticPlaylist} from "../../domain/playlist.model";
 import {LoadingState} from "../../domain/common.model";
-import Logger from "js-logger";
 import {TranslateModule} from "@ngx-translate/core";
 import {LoadingIndicatorComponent} from "../common/loading-indicator.component";
 import {ErrorIndicatorComponent} from "../common/error-indicator.component";
@@ -86,9 +85,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   private loadArtistSongs(artist: Artist, refreshing: boolean = false) {
     if (refreshing) {
-      Logger.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`);
+      console.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`);
     } else {
-      Logger.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
+      console.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
       this.loadingState = LoadingState.LOADING;
     }
     if (this.artistSongsSubscription) {
@@ -101,13 +100,13 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.artistSongs.albumSongs.sort(AlbumSongs.compare);
           this.artistSongs.albumSongs.forEach(next => next.songs.sort(Song.compare));
           this.loadingState = LoadingState.LOADED;
-          Logger.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
+          console.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
         error: error => {
           if (!refreshing) {
             this.loadingState = LoadingState.ERROR;
           }
-          Logger.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
+          console.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
       });
   }

@@ -3,7 +3,6 @@ import {Subscription} from 'rxjs';
 import {Artist} from "../../domain/library.model";
 import {LibraryService} from "../../service/library.service";
 import {LoadingState} from "../../domain/common.model";
-import Logger from "js-logger";
 import {TranslateModule} from "@ngx-translate/core";
 import {LoadingIndicatorComponent} from "../common/loading-indicator.component";
 import {CommonModule} from "@angular/common";
@@ -50,9 +49,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   private loadArtists(refreshing: boolean = false) {
     if (refreshing) {
-      Logger.info('Refreshing artists...');
+      console.info('Refreshing artists...');
     } else {
-      Logger.info('Loading artists...');
+      console.info('Loading artists...');
       this.loadingState = LoadingState.LOADING;
     }
     if (this.artistsSubscription) {
@@ -64,7 +63,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
           this.artists = artists;
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
-            Logger.info(`${artists.length} artists loaded.`);
+            console.info(`${artists.length} artists loaded.`);
             const oldSelectedArtist = this.libraryService.selectedArtist;
             const selectedArtist = this.libraryService.selectDefaultArtist(artists)!;
             if (!Artist.equals(selectedArtist, oldSelectedArtist)) {
@@ -72,7 +71,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
             }
           } else {
             this.loadingState = LoadingState.EMPTY;
-            Logger.info(`No artists found.`);
+            console.info(`No artists found.`);
             this.libraryService.deselectArtist();
             this.libraryService.deselectSong();
           }
@@ -81,7 +80,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
           if (!refreshing) {
             this.loadingState = LoadingState.ERROR;
           }
-          Logger.error(`Could not load artists: "${error.message}".`);
+          console.error(`Could not load artists: "${error.message}".`);
         }
       });
   }

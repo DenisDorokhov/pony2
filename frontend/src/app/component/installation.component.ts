@@ -4,7 +4,6 @@ import {ErrorDto} from "../domain/common.dto";
 import {InstallationService} from "../service/installation.service";
 import {Router} from "@angular/router";
 import {InstallationCommandDto} from "../domain/installation.dto";
-import Logger from "js-logger";
 import {ErrorComponent} from "./common/error.component";
 import {ErrorContainerComponent} from "./common/error-container.component";
 import {TranslateModule} from "@ngx-translate/core";
@@ -57,7 +56,7 @@ export class InstallationComponent {
     installationCommand.startScanJobAfterInstallation = true;
     this.installationService.install(installationCommand).subscribe({
       next: installation => {
-        Logger.info(`Version ${installation.version} has been installed.`);
+        console.info(`Version ${installation.version} has been installed.`);
         this.error = undefined;
         this.router.navigate(['/login'], {replaceUrl: true});
       },

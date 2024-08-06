@@ -17,7 +17,6 @@ import {catchError, map, tap} from 'rxjs/operators';
 import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
 import {OptionalResponseDto} from "../domain/common.dto";
-import Logger from "js-logger";
 import {LibraryService} from "./library.service";
 import {NotificationService} from "./notification.service";
 import {TranslateService} from "@ngx-translate/core";
@@ -53,12 +52,12 @@ export class LibraryScanService {
   }
 
   updateScanStatistics(): Observable<ScanStatisticsDto | null> {
-    Logger.info('Updating scan statistics...');
+    console.info('Updating scan statistics...');
     return this.httpClient.get<OptionalResponseDto<ScanStatisticsDto>>('/api/library/scanStatistics')
       .pipe(
         map(optionalResponse => {
           if (optionalResponse.present) {
-            Logger.info('Scan statistics updated.');
+            console.info('Scan statistics updated.');
             this.scanStatisticsSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
@@ -83,7 +82,7 @@ export class LibraryScanService {
     })
       .pipe(
         catchError(error => {
-          Logger.error(`Could not update scan job progress: ${JSON.stringify(error)}`);
+          console.error(`Could not update scan job progress: ${JSON.stringify(error)}`);
           return of(undefined);
         }),
         delayWhen(() => this.scanJobProgressSubject.value ? interval(1000) : interval(30000)),
@@ -97,9 +96,9 @@ export class LibraryScanService {
       .pipe(
         map(optionalResponse => {
           if (optionalResponse.present) {
-            Logger.debug('Scan job progress updated.');
+            console.debug('Scan job progress updated.');
             if (!this.scanJobProgressSubject.value) {
-              Logger.info("Scheduling auto-refresh during scan job running.");
+              console.info("Scheduling auto-refresh during scan job running.");
               this.refreshRequestSubscription = timer(0, 10000).pipe(
                 tap(() => {
                   this.libraryService.requestRefresh();
@@ -109,14 +108,14 @@ export class LibraryScanService {
             this.scanJobProgressSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
-            Logger.info('Scan job is not running.');
+            console.info('Scan job is not running.');
             if (this.scanJobProgressSubject.value) {
               const oldScanJob = this.scanJobProgressSubject.value!.scanJob;
               this.scanJobProgressSubject.next(null);
               this.showScanJobEndedNotification(oldScanJob!.id!);
             }
             if (this.refreshRequestSubscription) {
-              Logger.info("Scan job finished, cancelling auto-refresh.");
+              console.info("Scan job finished, cancelling auto-refresh.");
               this.libraryService.requestRefresh();
               this.refreshRequestSubscription.unsubscribe();
               this.refreshRequestSubscription = undefined;

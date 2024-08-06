@@ -1,7 +1,6 @@
 import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {animationFrameScheduler, fromEvent, Observable, Subscription, timer} from 'rxjs';
 import {debounce, filter, observeOn} from 'rxjs/operators';
-import Logger from "js-logger";
 import {CommonModule} from "@angular/common";
 
 enum ImageLoaderComponentState {
@@ -83,7 +82,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   onError() {
-    Logger.error(`Could not load image '${this._url}'.`);
+    console.error(`Could not load image '${this._url}'.`);
     this.state = ImageLoaderComponentState.ERROR;
   }
 
