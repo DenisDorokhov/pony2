@@ -1,5 +1,5 @@
-// Taken from com.google.gwt.dom.client.DOMImpl#scrollIntoView.
-function doScrollIntoElement(element: HTMLElement) {
+// Inspired by com.google.gwt.dom.client.DOMImpl#scrollIntoView.
+function doScrollIntoElement(element: HTMLElement, scrollToCenter: boolean) {
   let left = element.offsetLeft, top = element.offsetTop;
   const width = element.offsetWidth, height = element.offsetHeight;
 
@@ -11,16 +11,30 @@ function doScrollIntoElement(element: HTMLElement) {
   let currentNode = element.parentElement;
   while (currentNode && (currentNode.nodeType === 1)) {
     if (left < currentNode.scrollLeft) {
-      currentNode.scrollLeft = left;
-    }
-    if (left + width > currentNode.scrollLeft + currentNode.clientWidth) {
-      currentNode.scrollLeft = (left + width) - currentNode.clientWidth;
+      if (scrollToCenter) {
+        currentNode.scrollLeft = left - (currentNode.clientWidth / 2 - width * 0.5);
+      } else {
+        currentNode.scrollLeft = left;
+      }
+    } else {
+      if (scrollToCenter) {
+        currentNode.scrollLeft = (left + (currentNode.clientWidth / 2 + width * 0.5)) - currentNode.clientWidth;
+      } else if (left + width > currentNode.scrollLeft + currentNode.clientWidth) {
+        currentNode.scrollLeft = (left + width) - currentNode.clientWidth;
+      }
     }
     if (top < currentNode.scrollTop) {
-      currentNode.scrollTop = top;
-    }
-    if (top + height > currentNode.scrollTop + currentNode.clientHeight) {
-      currentNode.scrollTop = (top + height) - currentNode.clientHeight;
+      if (scrollToCenter) {
+        currentNode.scrollTop = top - (currentNode.clientHeight / 2 - height * 0.5);
+      } else {
+        currentNode.scrollTop = top;
+      }
+    } else {
+      if (scrollToCenter) {
+        currentNode.scrollTop = (top + (currentNode.clientHeight / 2 + height * 0.5)) - currentNode.clientHeight;
+      } else if (top + height > currentNode.scrollTop + currentNode.clientHeight) {
+        currentNode.scrollTop = (top + height) - currentNode.clientHeight;
+      }
     }
 
     let offsetLeft = currentNode.offsetLeft, offsetTop = currentNode.offsetTop;
@@ -36,8 +50,8 @@ function doScrollIntoElement(element: HTMLElement) {
 }
 
 export namespace ScrollingUtils {
-  export function scrollIntoElement(element: HTMLElement) {
+  export function scrollIntoElement(element: HTMLElement, scrollToCenter = true) {
     // Make sure element is properly positioned before scrolling.
-    window.requestAnimationFrame(() => doScrollIntoElement(element));
+    window.requestAnimationFrame(() => doScrollIntoElement(element, scrollToCenter));
   }
 }

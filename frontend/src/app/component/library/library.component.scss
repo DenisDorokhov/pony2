@@ -17,14 +17,14 @@
 
     .header {
       position: absolute;
-      top: 20px;
+      top: 0;
       left: 20px;
       right: 20px;
       height: 85px;
 
       .logo-container {
         position: absolute;
-        top: 0;
+        top: 20px;
         left: 0;
         width: 380px;
         bottom: 0;
@@ -37,7 +37,7 @@
 
       .player {
         position: absolute;
-        top: 0;
+        top: 20px;
         left: 380px;
         right: 480px;
         bottom: 0;
@@ -46,9 +46,9 @@
 
       .toolbar {
         position: absolute;
-        top: 0;
+        top: 12px;
         right: 0;
-        width: 380px;
+        max-width: 380px;
         bottom: 0;
       }
     }

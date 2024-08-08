@@ -1,0 +1,15 @@
+<div class="container">
+  <input class="form-control" type="text" placeholder="{{ 'fastSearch.searchPlaceholder' | translate }}"
+         (input)="onInputChange($event)"
+         (focusin)="onFocusIn()" (focusout)="onFocusOut()">
+  <i class="fa fa-search ms-3 search-icon"></i>
+  <div class="search-results" #searchResults [hidden]="!active || !searchResult">
+    <h5>{{ 'fastSearch.foundSongsHeader' | translate:{
+      count: searchResult?.songDetails?.length
+    } }}</h5>
+    <a *ngFor="let songDetails of searchResult?.songDetails" (mousedown)="onSongSelection(songDetails)">
+      {{ songDetails.song.name }}<br>
+      <small>{{ songDetails.albumDetails.artist.name }} - {{ songDetails.albumDetails.album.name }} {{ songDetails.albumDetails.album.year ? '(' + songDetails.albumDetails.album.year + ')' : '' }}</small>
+    </a>
+  </div>
+</div>

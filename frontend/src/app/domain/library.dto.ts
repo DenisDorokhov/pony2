@@ -193,3 +193,26 @@ export interface ScanJobPageDto extends PageDto {
 export interface LogMessagePageDto extends PageDto {
   logMessages: LogMessageDto[];
 }
+
+export interface GenreDto {
+  name: string | undefined;
+  artworkId: string | undefined;
+}
+
+export interface AlbumDetailsDto {
+  album: AlbumDto;
+  artist: ArtistDto;
+}
+
+export interface SongDetailsDto {
+  song: SongDto;
+  albumDetails: AlbumDetailsDto;
+  genre: GenreDto;
+}
+
+export interface SearchResultDto {
+  genres: GenreDto[];
+  artists: ArtistDto[];
+  albumDetails: AlbumDetailsDto[];
+  songDetails: SongDetailsDto[];
+}

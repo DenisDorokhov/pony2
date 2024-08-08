@@ -11,10 +11,11 @@ import {NgbDropdownModule, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonModule} from "@angular/common";
 import {LibraryScanService} from "../../service/library-scan.service";
 import {Subscription} from "rxjs";
+import {FastSearchComponent} from "./fast-search.component";
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, NgbDropdownModule, CurrentUserComponent, SettingsComponent, ScanningComponent, LogComponent, UserListComponent],
+  imports: [CommonModule, TranslateModule, NgbDropdownModule, CurrentUserComponent, SettingsComponent, ScanningComponent, LogComponent, UserListComponent, FastSearchComponent],
   selector: 'pony-toolbar',
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss']

@@ -1,0 +1,56 @@
+.container {
+  position: relative;
+}
+
+input {
+  padding-right: 32px;
+}
+
+input::placeholder {
+  text-align: right;
+}
+
+.search-icon {
+  position: absolute;
+  top: 12.5px;
+  right: 22px;
+  pointer-events: none;
+  transform: scaleX(-1);
+}
+
+.search-results {
+
+  position: absolute;
+  top: 42px;
+  right: 0;
+  min-width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #cccccc;
+  text-align: left;
+
+  h5 {
+    margin: 0;
+    padding: 8px;
+    border-bottom: 1px solid #cccccc;
+  }
+
+  a {
+    background-color: white;
+    display: block;
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 8px;
+
+    small {
+      color: #909090;
+    }
+  }
+
+  a:hover {
+    background-color: #f5f5f5;
+  }
+}

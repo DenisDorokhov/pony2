@@ -194,6 +194,12 @@ export default {
       interruptedStatus: 'INTERRUPTED',
     },
   },
+  fastSearch: {
+    searchPlaceholder: 'Search',
+    foundSongsHeader: 'Found {{count}} songs',
+    foundArtistsHeader: 'Found {{count}} artists',
+    foundAlbumsHeader: 'Found {{count}} albums',
+  },
   notification: {
     authenticationErrorTitle: 'Authentication Error',
     authenticationErrorText: 'Please sign in.',
