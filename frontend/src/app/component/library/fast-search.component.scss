@@ -23,7 +23,7 @@ input::placeholder {
   position: absolute;
   top: 42px;
   right: 0;
-  min-width: 100%;
+  width: 380px;
   max-height: 300px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -57,9 +57,23 @@ input::placeholder {
       height: 48px;
       margin-left: 52px;
 
-      small {
-        color: #909090;
+      div {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
       }
+
+      small {
+        display: block;
+        color: #909090;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+
+    .text.no-description {
+      line-height: 48px;
     }
   }
 

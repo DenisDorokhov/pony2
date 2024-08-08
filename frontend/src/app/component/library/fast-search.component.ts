@@ -16,9 +16,10 @@ import {ImageLoaderComponent} from "../common/image-loader.component";
 })
 export class FastSearchComponent implements OnInit, OnDestroy {
 
-  active = false;
+  open = false;
   searchResult: SearchResult | undefined;
 
+  @ViewChild('container') containerElement!: ElementRef;
   @ViewChild('searchResults') searchResultsElement!: ElementRef;
 
   private searchSubject = new Subject<string>();
@@ -56,6 +57,17 @@ export class FastSearchComponent implements OnInit, OnDestroy {
       this.searchResult = searchResult;
       this.searchResultsElement.nativeElement.scrollTop = 0;
     });
+    window.document.body.addEventListener('mousedown', event => {
+      let checkElement: Node | null = event.target as Node;
+      let clickWithinContainer = false;
+      do {
+        clickWithinContainer = this.containerElement.nativeElement === checkElement;
+        checkElement = (checkElement as Node).parentNode;
+      } while (!clickWithinContainer && checkElement);
+      if (!clickWithinContainer) {
+        this.open = false;
+      }
+    });
   }
 
   onInputChange(event: Event) {
@@ -63,26 +75,25 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   onFocusIn() {
-    this.active = true;
-  }
-
-  onFocusOut() {
-    this.active = false;
+    this.open = true;
   }
 
   onSongSelection(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
     this.libraryService.startScrollToSong(song);
+    this.open = false;
   }
 
   onAlbumSelection(album: Album) {
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.startScrollToAlbum(album);
+    this.open = false;
   }
 
   onArtistSelection(artist: Artist) {
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.startScrollToArtist(artist);
+    this.open = false;
   }
 }
