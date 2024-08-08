@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
-import {Artist, ArtistSongs, SearchResult, Song} from "../domain/library.model";
+import {Album, Artist, ArtistSongs, SearchResult, Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
 import {ArtistDto, ArtistSongsDto, SearchResultDto} from "../domain/library.dto";
 
@@ -25,6 +25,7 @@ export class LibraryService {
   private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
 
   private scrollToArtistRequestSubject = new BehaviorSubject<Artist | undefined>(undefined);
+  private scrollToAlbumRequestSubject = new BehaviorSubject<Album | undefined>(undefined);
   private scrollToSongRequestSubject = new BehaviorSubject<Song | undefined>(undefined);
 
   private refreshRequestSubject = new Subject<void>();
@@ -154,6 +155,19 @@ export class LibraryService {
 
   finishScrollToArtist() {
     this.scrollToArtistRequestSubject.next(undefined);
+  }
+
+  observeScrollToAlbumRequest(): Observable<Album> {
+    return this.scrollToAlbumRequestSubject.asObservable()
+      .pipe(filter(album => album !== undefined));
+  }
+
+  startScrollToAlbum(album: Album) {
+    this.scrollToAlbumRequestSubject.next(album);
+  }
+
+  finishScrollToAlbum() {
+    this.scrollToAlbumRequestSubject.next(undefined);
   }
 
   observeScrollToSongRequest(): Observable<Song> {

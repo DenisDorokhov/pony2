@@ -43,6 +43,7 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private selectedArtistSubscription: Subscription | undefined;
   private scrollToArtistRequestSubscription: Subscription | undefined;
+  private scrollToAlbumRequestSubscription: Subscription | undefined;
   private scrollToSongRequestSubscription: Subscription | undefined;
   private playbackEventSubscription: Subscription | undefined;
 
@@ -56,12 +57,6 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
     this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         this.selected = artist != null && artist.id === this.artist.id;
-      });
-    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
-      .subscribe(song => {
-        if (song.album.artist.id === this.artist.id) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-        }
       });
     this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => {
@@ -81,11 +76,24 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
           this.libraryService.finishScrollToArtist();
         }
       });
+    this.scrollToAlbumRequestSubscription = this.libraryService.observeScrollToAlbumRequest()
+      .subscribe(album => {
+        if (album.artist.id === this.artist.id) {
+          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+        }
+      });
+    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
+      .subscribe(song => {
+        if (song.album.artist.id === this.artist.id) {
+          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
+        }
+      });
   }
 
   ngOnDestroy(): void {
     this.selectedArtistSubscription?.unsubscribe();
     this.scrollToArtistRequestSubscription?.unsubscribe();
+    this.scrollToAlbumRequestSubscription?.unsubscribe();
     this.scrollToSongRequestSubscription?.unsubscribe();
     this.playbackEventSubscription?.unsubscribe();
   }

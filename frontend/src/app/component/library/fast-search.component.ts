@@ -77,7 +77,8 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   onAlbumSelection(album: Album) {
-    // TODO: implement
+    this.libraryService.selectArtistAndMakeDefault(album.artist);
+    this.libraryService.startScrollToAlbum(album);
   }
 
   onArtistSelection(artist: Artist) {

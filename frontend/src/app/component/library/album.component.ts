@@ -1,14 +1,36 @@
-import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
+import {Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
 import {AlbumSongs, Song} from "../../domain/library.model";
 import {SongListComponent} from "./song-list.component";
 import {TranslateModule} from "@ngx-translate/core";
 import {ImageLoaderComponent} from "../common/image-loader.component";
 import {CommonModule} from "@angular/common";
+import {LibraryService} from "../../service/library.service";
+import {Subscription} from "rxjs";
 
 interface Disc {
   discNumber: number | undefined;
   showArtist: boolean;
   songs: Song[];
+}
+
+function compareDiscs(disc1: Disc, disc2: Disc) {
+  if ((disc1.discNumber ?? 0) > (disc2.discNumber ?? 0)) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
+
+function nullSafeNormalizedEquals(value1: string | undefined, value2: string | undefined): boolean {
+  if (value1 == null && value2 == null) {
+    return true;
+  }
+  if (value1 == null || value2 == null) {
+    return false;
+  }
+  const normalizedValue1 = value1.trim().toLowerCase();
+  const normalizedValue2 = value2.trim().toLowerCase();
+  return normalizedValue1 === normalizedValue2;
 }
 
 @Component({
@@ -18,30 +40,33 @@ interface Disc {
   templateUrl: './album.component.html',
   styleUrls: ['./album.component.scss']
 })
-export class AlbumComponent implements OnChanges {
+export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
 
   @Input() albumSongs!: AlbumSongs;
 
   discs: Disc[] = [];
 
-  private static compareDiscs(disc1: Disc, disc2: Disc) {
-    if ((disc1.discNumber ?? 0) > (disc2.discNumber ?? 0)) {
-      return 1;
-    } else {
-      return -1;
-    }
+  private scrollToAlbumRequestSubscription: Subscription | undefined;
+
+  constructor(
+    private readonly libraryService: LibraryService
+  ) {
   }
 
-  private static nullSafeNormalizedEquals(value1: string | undefined, value2: string | undefined): boolean {
-    if (value1 == null && value2 == null) {
-      return true;
-    }
-    if (value1 == null || value2 == null) {
-      return false;
-    }
-    const normalizedValue1 = value1.trim().toLowerCase();
-    const normalizedValue2 = value2.trim().toLowerCase();
-    return normalizedValue1 === normalizedValue2;
+  ngOnDestroy(): void {
+    this.scrollToAlbumRequestSubscription?.unsubscribe();
+  }
+
+  ngOnInit(): void {
+    this.scrollToAlbumRequestSubscription = this.libraryService.observeScrollToAlbumRequest()
+      .subscribe(album => {
+        if (album.id === this.albumSongs.album.id) {
+          var song = this.discs[0].songs[0];
+          this.libraryService.selectSong(song);
+          this.libraryService.startScrollToSong(song);
+          this.libraryService.finishScrollToAlbum();
+        }
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -79,11 +104,11 @@ export class AlbumComponent implements OnChanges {
       disc.songs.sort(Song.compare);
       disc.songs.forEach(song => {
         if (!disc.showArtist) {
-          disc.showArtist = !AlbumComponent.nullSafeNormalizedEquals(song.artistName, this.albumSongs.album.artist.name);
+          disc.showArtist = !nullSafeNormalizedEquals(song.artistName, this.albumSongs.album.artist.name);
         }
       });
       this.discs.push(disc);
     });
-    this.discs.sort(AlbumComponent.compareDiscs);
+    this.discs.sort(compareDiscs);
   }
 }
