@@ -49,19 +49,6 @@ public class AlbumTest {
     }
 
     @Test
-    public void shouldBuildSearchTerms() {
-
-        Artist artist1 = new Artist().setName("ar1");
-        Artist artistNull = new Artist().setName(null);
-
-        Album album1 = new Album().setArtist(artist1).setName("al1");
-        Album albumNull = new Album().setArtist(artistNull).setName(null);
-
-        assertThat(album1.getSearchTerms()).isEqualTo("al1 ar1");
-        assertThat(albumNull.getSearchTerms()).isEqualTo(" ");
-    }
-
-    @Test
     public void shouldSupportEqualityAndHashCode() {
 
         Artist artist = new Artist();

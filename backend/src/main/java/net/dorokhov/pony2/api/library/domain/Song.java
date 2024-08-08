@@ -304,10 +304,7 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
             @PropertyValue(propertyName = "albumName"),
     }))
     public String getSearchTerms() {
-        return Strings.nullToEmpty(name) + " " +
-                Strings.nullToEmpty(artistName) + " " +
-                Strings.nullToEmpty(albumArtistName) + " " +
-                Strings.nullToEmpty(albumName);
+        return Strings.nullToEmpty(name);
     }
 
     @PostLoad

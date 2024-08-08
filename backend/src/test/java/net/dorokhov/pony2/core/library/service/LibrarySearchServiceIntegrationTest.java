@@ -76,7 +76,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).containsOnly(album1, album2);
+        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).isEmpty();
         assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 
@@ -121,7 +121,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист другой альбом entity"), 10)).containsOnly(song1, song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист другой альбом entity"), 10)).isEmpty();
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
     }
 

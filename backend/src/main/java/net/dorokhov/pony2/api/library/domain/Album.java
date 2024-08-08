@@ -100,8 +100,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return Strings.nullToEmpty(name) + " " +
-                Strings.nullToEmpty(artist.getName());
+        return Strings.nullToEmpty(name);
     }
 
     @Override

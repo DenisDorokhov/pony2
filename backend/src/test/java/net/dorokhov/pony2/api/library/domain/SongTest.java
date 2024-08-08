@@ -80,21 +80,6 @@ public class SongTest {
     }
 
     @Test
-    public void shouldBuildSearchTerms() {
-
-        Song song1 = song()
-                .setName("s1")
-                .setArtistName("ar1")
-                .setAlbumArtistName("ar2")
-                .setAlbumName("al1");
-
-        assertThat(song1.getSearchTerms()).isEqualTo("s1 ar1 ar2 al1");
-
-        Song song2 = new Song();
-        assertThat(song2.getSearchTerms()).isEqualTo("   ");
-    }
-
-    @Test
     public void shouldSupportEqualityAndHashCode() {
 
         Song eqSong1 = song().setId("1");
