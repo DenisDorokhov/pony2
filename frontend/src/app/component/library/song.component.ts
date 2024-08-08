@@ -5,10 +5,11 @@ import {PlaybackService, PlaybackState} from "../../service/playback.service";
 import {TranslateModule} from "@ngx-translate/core";
 import {LibraryService} from "../../service/library.service";
 import {ScrollingUtils} from "../../utils/scrolling.utils";
+import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule],
+  imports: [TranslateModule, UnknownSongPipe],
   selector: 'pony-song',
   templateUrl: './song.component.html',
   styleUrls: ['./song.component.scss']

@@ -2,7 +2,7 @@
   <pony-image-loader [url]="albumSongs.album.largeArtworkUrl"></pony-image-loader>
   <div class="song-list-container">
     <h4>
-      {{ albumSongs.album.name ? albumSongs.album.name : ('library.album.unknownLabel' | translate) }}
+      {{ albumSongs.album.name | ponyUnknownAlbum }}
       <button (click)="download()"
               type="button" class="btn btn-default btn-xs">
         <i class="fa fa-download"></i>

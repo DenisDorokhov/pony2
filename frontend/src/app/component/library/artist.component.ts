@@ -7,10 +7,11 @@ import {ScrollingUtils} from "../../utils/scrolling.utils";
 import {ImageLoaderComponent} from "../common/image-loader.component";
 import {TranslateModule} from "@ngx-translate/core";
 import {CommonModule} from "@angular/common";
+import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, ImageLoaderComponent],
+  imports: [CommonModule, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
   selector: 'pony-artist',
   templateUrl: './artist.component.html',
   styleUrls: ['./artist.component.scss']

@@ -13,6 +13,6 @@ export class UnknownSongPipe implements PipeTransform {
   }
 
   transform(value: any, ...args: any[]): any {
-    return value ? value : this.translateService.instant('library.artist.unknownSong');
+    return value ? value : this.translateService.instant('library.song.unknownLabel');
   }
 }

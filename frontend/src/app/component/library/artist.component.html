@@ -1,10 +1,10 @@
 <a #container class="list-group-item" title="{{ artist.name }}"
-   [class.active]="selected" 
+   [class.active]="selected"
    (click)="select()">
   <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
-  <div class="artist-name" 
+  <div class="artist-name"
        [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
-    {{ artist.name ? artist.name : ('library.artist.unknownLabel' | translate) }}
+    {{ artist.name | ponyUnknownArtist }}
   </div>
   <div class="playback-indicator">
     <i class="fa fa-volume-up" *ngIf="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"></i>
