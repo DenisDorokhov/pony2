@@ -25,9 +25,9 @@ public final class SongAlbumDto {
         return this;
     }
 
-    public static SongAlbumDto of(Song song) {
+    public static SongAlbumDto of(Song song, boolean isAdmin) {
         return new SongAlbumDto()
-                .setSong(SongDto.of(song))
+                .setSong(SongDto.of(song, isAdmin))
                 .setAlbumDetails(AlbumDetailsDto.of(song.getAlbum()));
     }
 }

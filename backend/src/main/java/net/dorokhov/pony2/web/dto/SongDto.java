@@ -146,12 +146,12 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
-    public static SongDto of(Song song) {
+    public static SongDto of(Song song, boolean isAdmin) {
         return new SongDto()
                 .setId(song.getId())
                 .setCreationDate(song.getCreationDate())
                 .setUpdateDate(song.getUpdateDate())
-                .setPath(song.getPath())
+                .setPath(isAdmin ? song.getPath() : null)
                 .setMimeType(song.getFileType().getMimeType())
                 .setFileExtension(song.getFileType().getFileExtension())
                 .setSize(song.getSize())

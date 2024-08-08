@@ -29,14 +29,14 @@ public class GenreSongsPageDto extends PageDto<GenreSongsPageDto> {
         return this;
     }
 
-    public static GenreSongsPageDto of(Genre genre, Page<Song> songPage) {
+    public static GenreSongsPageDto of(Genre genre, Page<Song> songPage, boolean isAdmin) {
         return new GenreSongsPageDto()
                 .setPageIndex(songPage.getNumber())
                 .setPageSize(songPage.getSize())
                 .setTotalPages(songPage.getTotalPages())
                 .setGenre(GenreDto.of(genre))
                 .setSongAlbums(songPage.getContent().stream()
-                        .map(SongAlbumDto::of)
+                        .map(songs -> SongAlbumDto.of(songs, isAdmin))
                         .toList());
     }
 }

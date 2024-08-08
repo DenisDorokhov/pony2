@@ -63,7 +63,7 @@ public final class SearchResultDto {
         return this;
     }
 
-    public static SearchResultDto of(List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs) {
+    public static SearchResultDto of(List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs, boolean isAdmin) {
         return new SearchResultDto()
                 .setGenres(genres.stream()
                         .map(GenreDto::of)
@@ -75,7 +75,7 @@ public final class SearchResultDto {
                         .map(AlbumDetailsDto::of)
                         .toList())
                 .setSongDetails(songs.stream()
-                        .map(SongDetailsDto::of)
+                        .map(song -> SongDetailsDto.of(song, isAdmin))
                         .toList());
     }
 }

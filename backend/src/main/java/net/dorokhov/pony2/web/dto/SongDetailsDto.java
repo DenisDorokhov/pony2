@@ -35,9 +35,9 @@ public final class SongDetailsDto {
         return this;
     }
 
-    public static SongDetailsDto of(Song song) {
+    public static SongDetailsDto of(Song song, boolean isAdmin) {
         return new SongDetailsDto()
-                .setSong(SongDto.of(song))
+                .setSong(SongDto.of(song, isAdmin))
                 .setAlbumDetails(AlbumDetailsDto.of(song.getAlbum()))
                 .setGenre(GenreDto.of(song.getGenre()));
     }

@@ -27,12 +27,12 @@ public final class AlbumSongsDto {
         return this;
     }
 
-    public static AlbumSongsDto of(Album album) {
+    public static AlbumSongsDto of(Album album, boolean isAdmin) {
         return new AlbumSongsDto()
                 .setAlbum(AlbumDto.of(album))
                 .setSongs(album.getSongs().stream()
                         .sorted()
-                        .map(SongDto::of)
+                        .map(song -> SongDto.of(song, isAdmin))
                         .toList());
     }
 }

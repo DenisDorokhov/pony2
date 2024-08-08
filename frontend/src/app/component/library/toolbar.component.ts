@@ -12,6 +12,7 @@ import {CommonModule} from "@angular/common";
 import {LibraryScanService} from "../../service/library-scan.service";
 import {Subscription} from "rxjs";
 import {FastSearchComponent} from "./fast-search.component";
+import Role = UserDto.Role;
 
 @Component({
   standalone: true,
@@ -38,7 +39,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.scanStatisticsSubscription = this.libraryScanService.observeScanStatistics().subscribe(scanStatistics => {
-      if (scanStatistics === null) {
+      if (scanStatistics === null && this.authenticationService.currentUser?.role === Role.ADMIN) {
         this.openScanning();
       }
     });

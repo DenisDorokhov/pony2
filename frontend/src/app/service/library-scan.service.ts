@@ -47,7 +47,12 @@ export class LibraryScanService {
       this.updateScanStatistics().subscribe();
     }
     this.libraryService.observeRefreshRequest().pipe(
-      mergeMap(() => this.updateScanStatistics())
+      mergeMap(() => {
+        if (this.authenticationService.isAuthenticated) {
+          return this.updateScanStatistics();
+        }
+        return of(undefined);
+      })
     ).subscribe();
   }
 
