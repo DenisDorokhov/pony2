@@ -13,7 +13,7 @@
            (click)="selectArtist(artist)">
         <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
         <div class="text no-description">
-          {{ artist.name }}
+          {{ artist.name | ponyUnknownArtist }}
         </div>
       </div>
     </div>
@@ -25,9 +25,10 @@
            (click)="selectSong(song)">
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
         <div class="text">
-          <div>{{ song.name }}</div>
-          <div><small>{{ song.album.artist.name }}
-            - {{ song.album.name }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
+          <div>{{ song.name | ponyUnknownSong }}</div>
+          <div><small>
+            {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}
+          </small></div>
         </div>
       </div>
     </div>
@@ -39,8 +40,8 @@
            (click)="selectAlbum(album)">
         <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
         <div class="text">
-          <div>{{ album.name }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
-          <div><small>{{ album.artist.name }}</small></div>
+          <div>{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
+          <div><small>{{ album.artist.name | ponyUnknownArtist }}</small></div>
         </div>
       </div>
     </div>

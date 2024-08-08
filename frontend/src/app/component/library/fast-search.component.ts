@@ -8,6 +8,9 @@ import {Album, Artist, SearchResult, Song} from "../../domain/library.model";
 import {ImageLoaderComponent} from "../common/image-loader.component";
 import {ScrollingUtils} from "../../utils/scrolling.utils";
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
+import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
+import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
+import {UnknownAlbumPipe} from "../../pipe/unknown-album.pipe";
 
 class NavigationItem {
 
@@ -23,7 +26,7 @@ class NavigationItem {
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ImageLoaderComponent],
+  imports: [TranslateModule, CommonModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
   selector: 'pony-fast-search',
   templateUrl: './fast-search.component.html',
   styleUrls: ['./fast-search.component.scss']
