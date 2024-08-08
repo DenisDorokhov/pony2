@@ -1,46 +1,47 @@
 <div #container class="container">
 
-  <input class="form-control" type="text" placeholder="{{ 'fastSearch.searchPlaceholder' | translate }}"
-         (input)="onInputChange($event)" (focusin)="onFocusIn()">
+  <input #input class="form-control" type="text" placeholder="{{ 'fastSearch.searchPlaceholder' | translate }}"
+         (input)="onInputChange($event)" (focusin)="onFocusIn()" (keydown)="onInputKeyDown($event)">
   <i class="fa fa-search ms-3 search-icon"></i>
 
-  <div class="search-results" #searchResults [hidden]="!open || !searchResult">
+  <div class="search-results" #searchResults [hidden]="!open || !searchResult" (keydown)="onInputKeyDown($event)">
 
     <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
-      <div class="links">
-        <a *ngFor="let artist of searchResult?.artists" (click)="onArtistSelection(artist)">
-          <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
-          <div class="text no-description">
-            {{ artist.name }}
-          </div>
-        </a>
+      <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
+           *ngFor="let artist of searchResult?.artists"
+           (click)="selectArtist(artist)">
+        <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
+        <div class="text no-description">
+          {{ artist.name }}
+        </div>
       </div>
     </div>
 
     <div [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
-      <div class="links">
-        <a *ngFor="let song of searchResult?.songs" (click)="onSongSelection(song)">
-          <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-          <div class="text">
-            <div>{{ song.name }}</div>
-            <div><small>{{ song.album.artist.name }} - {{ song.album.name }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
-          </div>
-        </a>
+      <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
+           *ngFor="let song of searchResult?.songs"
+           (click)="selectSong(song)">
+        <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
+        <div class="text">
+          <div>{{ song.name }}</div>
+          <div><small>{{ song.album.artist.name }}
+            - {{ song.album.name }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
+        </div>
       </div>
     </div>
 
     <div [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
-      <div class="links">
-        <a *ngFor="let album of searchResult?.albums" (click)="onAlbumSelection(album)">
-          <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
-          <div class="text">
-            <div>{{ album.name }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
-            <div><small>{{ album.artist.name }}</small></div>
-          </div>
-        </a>
+      <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
+           *ngFor="let album of searchResult?.albums"
+           (click)="selectAlbum(album)">
+        <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
+        <div class="text">
+          <div>{{ album.name }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
+          <div><small>{{ album.artist.name }}</small></div>
+        </div>
       </div>
     </div>
 

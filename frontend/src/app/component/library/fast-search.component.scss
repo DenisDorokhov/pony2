@@ -38,9 +38,8 @@ input::placeholder {
     border-bottom: 1px solid #cccccc;
   }
 
-  a {
+  .link {
     background-color: white;
-    display: block;
     white-space: nowrap;
     cursor: pointer;
     padding: 8px;
@@ -55,7 +54,7 @@ input::placeholder {
 
     .text {
       height: 48px;
-      margin-left: 52px;
+      margin-left: 54px;
 
       div {
         text-overflow: ellipsis;
@@ -77,7 +76,12 @@ input::placeholder {
     }
   }
 
-  a:hover {
+  .link:hover, .link.selected {
     background-color: #f5f5f5;
+  }
+
+  .link.selected {
+    border-left: 4px solid var(--blue);
+    padding-left: 4px;
   }
 }
