@@ -4,7 +4,7 @@
          (input)="onInputChange($event)" (focusin)="onFocusIn()" (keydown)="onInputKeyDown($event)">
   <i class="fa fa-search ms-3 search-icon"></i>
 
-  <div class="search-results" #searchResults [hidden]="!open || !searchResult" (keydown)="onInputKeyDown($event)">
+  <div tabindex="0" class="search-results" #searchResults [hidden]="!open || !searchResult" (keydown)="onInputKeyDown($event)">
 
     <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>

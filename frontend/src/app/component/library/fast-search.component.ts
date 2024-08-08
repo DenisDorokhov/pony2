@@ -55,6 +55,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+
     this.searchSubscription = this.searchSubject.pipe(
       map(value => value.trim()),
       debounceTime(200),
@@ -94,6 +95,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
       });
       this.searchResultsElement.nativeElement.scrollTop = 0;
     });
+
     window.document.body.addEventListener('mousedown', event => {
       let checkElement: Node | null = event.target as Node;
       let clickWithinContainer = false;
@@ -116,25 +118,36 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   onInputKeyDown(event: KeyboardEvent) {
-    if (event.key === 'ArrowDown') {
-      this.moveNavigation(true);
-      event.preventDefault();
-    }
-    if (event.key === 'ArrowUp') {
-      this.moveNavigation(false);
-      event.preventDefault();
-    }
-    if (event.key === 'Enter') {
-      const selectedIndex = this.indexOfSelectedNavigationItem();
-      if (selectedIndex !== undefined) {
-        this.navigationItems[selectedIndex].activate();
-      }
-      event.preventDefault();
-    }
-    if (event.key === 'Escape') {
-      this.open = false;
-      this.inputElement.nativeElement.blur();
-      event.preventDefault();
+    switch (event.key) {
+      case 'ArrowDown':
+        this.moveNavigationIndex(1, true);
+        event.preventDefault();
+        break;
+      case 'ArrowUp':
+        this.moveNavigationIndex(1, false);
+        event.preventDefault();
+        break;
+      case 'PageDown':
+        this.moveNavigationIndex(4, true, false);
+        event.preventDefault();
+        break;
+      case 'PageUp':
+        this.moveNavigationIndex(4, false, false);
+        event.preventDefault();
+        break;
+      case 'Enter':
+        const selectedIndex = this.indexOfSelectedNavigationItem();
+        if (selectedIndex !== undefined) {
+          this.navigationItems[selectedIndex].activate();
+          this.inputElement.nativeElement.blur();
+        }
+        event.preventDefault();
+        break;
+      case 'Escape':
+        this.open = false;
+        this.inputElement.nativeElement.blur();
+        event.preventDefault();
+        break;
     }
   }
 
@@ -142,44 +155,53 @@ export class FastSearchComponent implements OnInit, OnDestroy {
     return this.navigationItems.findIndex(next => next.selected);
   }
 
-  private moveNavigation(next: boolean) {
+  private moveNavigationIndex(value: number, next: boolean, loop = true) {
     const selectedIndex = this.indexOfSelectedNavigationItem();
-    this.navigationItems.forEach(next => next.selected = false);
-    let indexToSelect: number | undefined = next ? selectedIndex + 1 : selectedIndex - 1;
+    let indexToSelect: number | undefined = next ? selectedIndex + value : selectedIndex - value;
     if (indexToSelect < 0) {
-      indexToSelect = this.navigationItems.length - 1;
+      if (loop) {
+        indexToSelect = this.navigationItems.length - 1;
+      } else {
+        indexToSelect = 0;
+      }
     }
     if (indexToSelect > this.navigationItems.length - 1) {
-      indexToSelect = 0;
+      if (loop) {
+        indexToSelect = 0;
+      } else {
+        indexToSelect = this.navigationItems.length - 1;
+      }
     }
     if (indexToSelect >= 0) {
-      this.navigationItems[indexToSelect].selected = true;
-      scrollIntoElement(this.linkElements.toArray()[indexToSelect].nativeElement, false);
+      this.selectNavigationItem(indexToSelect);
     }
   }
 
-  selectSong(song: Song, close = true) {
+  private selectNavigationItem(index: number) {
+    this.navigationItems.forEach(next => next.selected = false);
+    this.navigationItems[index].selected = true;
+    scrollIntoElement(this.linkElements.toArray()[index].nativeElement, false);
+  }
+
+  selectSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
     this.libraryService.startScrollToSong(song);
-    if (close) {
-      this.open = false;
-    }
+    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
+    this.open = false;
   }
 
-  selectAlbum(album: Album, close = true) {
+  selectAlbum(album: Album) {
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.startScrollToAlbum(album);
-    if (close) {
-      this.open = false;
-    }
+    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
+    this.open = false;
   }
 
-  selectArtist(artist: Artist, close = true) {
+  selectArtist(artist: Artist) {
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.startScrollToArtist(artist);
-    if (close) {
-      this.open = false;
-    }
+    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
+    this.open = false;
   }
 }
