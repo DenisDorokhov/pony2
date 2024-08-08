@@ -15,7 +15,7 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class LibraryFacade {
 
-    private final static int SEARCH_RESULT_COUNT = 10;
+    private final static int SEARCH_RESULT_COUNT = 15;
     
     private final LibraryService libraryService;
     private final LibrarySearchService librarySearchService;
