@@ -24,7 +24,7 @@ export default {
     toolbar: {
       scanButton: 'Re-Scan',
       settingsButton: 'Settings',
-      scanningButton: 'Scan',
+      scanningButton: 'Scanning',
       logButton: 'Log',
       usersButton: 'Users',
       profileButton: 'Profile',
@@ -56,7 +56,7 @@ export default {
     windowCloseConfirmation: 'Playback will stop after closing the window. Are you sure?',
   },
   scanning: {
-    header: 'Scan Jobs',
+    header: 'Scanning',
     statusLabel: 'Status:',
     progressLabel: 'Progress:',
     startScanButton: 'Re-Scan',

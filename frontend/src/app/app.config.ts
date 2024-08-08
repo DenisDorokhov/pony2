@@ -24,7 +24,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
     provideToastr({
-      timeOut: 1500
+      timeOut: 1500,
+      positionClass: "toast-top-left",
     }),
     importProvidersFrom(
       ReactiveFormsModule,
