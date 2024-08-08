@@ -1,4 +1,4 @@
-import {AlbumDto, AlbumSongsDto, ArtistDto, ArtistSongsDto, SongDto} from './library.dto';
+import {AlbumDto, AlbumSongsDto, ArtistDto, ArtistSongsDto, SearchResultDto, SongDto} from './library.dto';
 
 export class Song {
 
@@ -177,5 +177,27 @@ export class ArtistSongs {
     this.artist = new Artist(artistSongsDto.artist);
     this.albumSongs = artistSongsDto.albumSongs
       .map(albumSongsDto => new AlbumSongs(albumSongsDto, this.artist));
+  }
+}
+
+export class SearchResult {
+
+  artists: Artist[];
+  albums: Album[];
+  songs: Song[];
+
+  constructor(searchResultDto: SearchResultDto) {
+    this.artists = searchResultDto.artists.map(artist =>
+      new Artist(artist));
+    this.albums = searchResultDto.albumDetails.map(albumDetails =>
+      new Album(albumDetails.album, new Artist(albumDetails.artist)));
+    this.songs = searchResultDto.songDetails.map(songDetails =>
+      new Song(
+        songDetails.song,
+        new Album(
+          songDetails.albumDetails.album,
+          new Artist(songDetails.albumDetails.artist)
+        )
+      ));
   }
 }

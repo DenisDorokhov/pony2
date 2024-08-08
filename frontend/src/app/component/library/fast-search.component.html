@@ -1,15 +1,50 @@
 <div class="container">
+
   <input class="form-control" type="text" placeholder="{{ 'fastSearch.searchPlaceholder' | translate }}"
          (input)="onInputChange($event)"
          (focusin)="onFocusIn()" (focusout)="onFocusOut()">
   <i class="fa fa-search ms-3 search-icon"></i>
+
   <div class="search-results" #searchResults [hidden]="!active || !searchResult">
-    <h5>{{ 'fastSearch.foundSongsHeader' | translate:{
-      count: searchResult?.songDetails?.length
-    } }}</h5>
-    <a *ngFor="let songDetails of searchResult?.songDetails" (mousedown)="onSongSelection(songDetails)">
-      {{ songDetails.song.name }}<br>
-      <small>{{ songDetails.albumDetails.artist.name }} - {{ songDetails.albumDetails.album.name }} {{ songDetails.albumDetails.album.year ? '(' + songDetails.albumDetails.album.year + ')' : '' }}</small>
-    </a>
+
+    <div [hidden]="(searchResult?.songs?.length ?? 0) < 1">
+      <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
+      <div class="links">
+        <a *ngFor="let song of searchResult?.songs" (mousedown)="onSongSelection(song)">
+          <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
+          <div class="text">
+            {{ song.name }}<br>
+            <small>{{ song.album.artist.name }} - {{ song.album.name }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div [hidden]="(searchResult?.albums?.length ?? 0) < 1">
+      <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
+      <div class="links">
+        <a *ngFor="let album of searchResult?.albums" (mousedown)="onAlbumSelection(album)">
+          <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
+          <div class="text">
+            {{ album.name }} {{ album.year ? '(' + album.year + ')' : '' }}<br>
+            <small>{{ album.artist.name }}</small>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
+      <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
+      <div class="links">
+        <a *ngFor="let artist of searchResult?.artists" (mousedown)="onArtistSelection(artist)">
+          <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
+          <div class="text">
+            {{ artist.name }}
+          </div>
+        </a>
+      </div>
+    </div>
+
   </div>
+
 </div>

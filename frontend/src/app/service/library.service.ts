@@ -2,9 +2,9 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
-import {Artist, ArtistSongs, Song} from "../domain/library.model";
+import {Artist, ArtistSongs, SearchResult, Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
-import {ArtistDto, ArtistSongsDto} from "../domain/library.dto";
+import {ArtistDto, ArtistSongsDto, SearchResultDto} from "../domain/library.dto";
 
 export enum LibraryState {
   UNKNOWN,
@@ -179,5 +179,12 @@ export class LibraryService {
     } else {
       window.localStorage.removeItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
     }
+  }
+
+  search(query: string): Observable<SearchResult> {
+    return this.httpClient.get<SearchResultDto>('/api/library/search', { params: {query} })
+      .pipe(
+        map(searchResultDto => new SearchResult(searchResultDto))
+      );
   }
 }

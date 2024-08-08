@@ -1,12 +1,10 @@
 import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {TranslateModule} from "@ngx-translate/core";
 import {CommonModule} from "@angular/common";
-import {SearchService} from "../../service/search.service";
-import {SearchResultDto, SongDetailsDto} from "../../domain/library.dto";
 import {debounceTime, mergeMap, of, Subject, Subscription} from "rxjs";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {LibraryService} from "../../service/library.service";
-import {Album, Artist, Song} from "../../domain/library.model";
+import {Album, Artist, SearchResult, Song} from "../../domain/library.model";
 import {ImageLoaderComponent} from "../common/image-loader.component";
 
 @Component({
@@ -19,7 +17,7 @@ import {ImageLoaderComponent} from "../common/image-loader.component";
 export class FastSearchComponent implements OnInit, OnDestroy {
 
   active = false;
-  searchResult: SearchResultDto | undefined;
+  searchResult: SearchResult | undefined;
 
   @ViewChild('searchResults') searchResultsElement!: ElementRef;
 
@@ -28,7 +26,6 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   private searchSubscription: Subscription | undefined;
 
   constructor(
-    private readonly searchService: SearchService,
     private readonly libraryService: LibraryService,
   ) {
   }
@@ -43,13 +40,13 @@ export class FastSearchComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       mergeMap(query => {
         if (query.length > 2) {
-          return this.searchService.search(query);
+          return this.libraryService.search(query);
         } else {
           return of(undefined);
         }
       }),
       map(searchResult => {
-        if (searchResult?.songDetails.length || searchResult?.albumDetails.length || searchResult?.artists.length) {
+        if (searchResult?.songs.length || searchResult?.albums.length || searchResult?.artists.length) {
           return searchResult;
         } else {
           return undefined;
@@ -73,12 +70,18 @@ export class FastSearchComponent implements OnInit, OnDestroy {
     this.active = false;
   }
 
-  onSongSelection(songDetails: SongDetailsDto) {
-    const artist = new Artist(songDetails.albumDetails.artist);
-    const album = new Album(songDetails.albumDetails.album, artist);
-    const song = new Song(songDetails.song, album);
-    this.libraryService.selectArtistAndMakeDefault(artist);
+  onSongSelection(song: Song) {
+    this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
     this.libraryService.startScrollToSong(song);
+  }
+
+  onAlbumSelection(album: Album) {
+    // TODO: implement
+  }
+
+  onArtistSelection(artist: Artist) {
+    this.libraryService.selectArtistAndMakeDefault(artist);
+    this.libraryService.startScrollToArtist(artist);
   }
 }

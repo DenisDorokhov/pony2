@@ -33,7 +33,7 @@ input::placeholder {
   text-align: left;
 
   h5 {
-    margin: 0;
+    margin: 6px 0 0;
     padding: 8px;
     border-bottom: 1px solid #cccccc;
   }
@@ -45,8 +45,21 @@ input::placeholder {
     cursor: pointer;
     padding: 8px;
 
-    small {
-      color: #909090;
+    pony-image-loader {
+      width: 48px;
+      height: 48px;
+      display: block;
+      float: left;
+      margin-right: 4px;
+    }
+
+    .text {
+      height: 48px;
+      margin-left: 52px;
+
+      small {
+        color: #909090;
+      }
     }
   }
 

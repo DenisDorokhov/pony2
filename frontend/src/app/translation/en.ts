@@ -196,9 +196,9 @@ export default {
   },
   fastSearch: {
     searchPlaceholder: 'Search',
-    foundSongsHeader: 'Found {{count}} songs',
-    foundArtistsHeader: 'Found {{count}} artists',
-    foundAlbumsHeader: 'Found {{count}} albums',
+    foundSongsHeader: 'Songs',
+    foundArtistsHeader: 'Artists',
+    foundAlbumsHeader: 'Albums',
   },
   notification: {
     authenticationErrorTitle: 'Authentication Error',
