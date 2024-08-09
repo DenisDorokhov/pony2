@@ -69,16 +69,16 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.visibilityChangeSubscription) {
-      this.visibilityChangeSubscription.unsubscribe();
-    }
-    if (this.intersectionSubscription) {
-      this.intersectionSubscription.unsubscribe();
-    }
+    this.visibilityChangeSubscription?.unsubscribe();
+    this.intersectionSubscription?.unsubscribe();
   }
 
   onLoaded() {
     this.state = ImageLoaderComponentState.LOADED;
+    this.intersectionSubscription?.unsubscribe();
+    this.intersectionSubscription = undefined;
+    this.visibilityChangeSubscription?.unsubscribe();
+    this.visibilityChangeSubscription = undefined;
   }
 
   onError() {
