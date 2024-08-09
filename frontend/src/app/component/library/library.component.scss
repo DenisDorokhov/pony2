@@ -66,7 +66,8 @@
         left: 0;
         bottom: 0;
         width: 283px;
-        will-change: scroll-position;
+        /* Scrolling performance optimization */
+        transform: translate3d(0,0,0);
       }
 
       pony-album-list {
@@ -75,7 +76,8 @@
         left: 293px;
         right: 0;
         bottom: 0;
-        will-change: scroll-position;
+        /* Scrolling performance optimization */
+        transform: translate3d(0,0,0);
       }
     }
 
