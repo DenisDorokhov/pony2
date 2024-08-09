@@ -64,7 +64,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
       debounceTime(200),
       distinctUntilChanged(),
       mergeMap(query => {
-        if (query.length > 2) {
+        if (query.length > 1) {
           return this.libraryService.search(query);
         } else {
           return of(undefined);
