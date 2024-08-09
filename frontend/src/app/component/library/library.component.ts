@@ -48,6 +48,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
         this.size = this.calculateSize();
         this.duration = this.calculateDuration();
       });
+    this.libraryScanService.updateScanStatistics().subscribe();
   }
 
   ngOnDestroy(): void {

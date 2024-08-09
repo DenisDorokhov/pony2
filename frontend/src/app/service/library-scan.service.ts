@@ -42,10 +42,7 @@ export class LibraryScanService {
     private notificationService: NotificationService,
     private translateService: TranslateService
   ) {
-    this.scheduleScanJobProgressUpdate();
-    if (this.authenticationService.isAuthenticated) {
-      this.updateScanStatistics().subscribe();
-    }
+    this.updateAndScheduleScanJobProgressUpdate();
     this.libraryService.observeRefreshRequest().pipe(
       mergeMap(() => {
         if (this.authenticationService.isAuthenticated) {
@@ -54,6 +51,30 @@ export class LibraryScanService {
         return of(undefined);
       })
     ).subscribe();
+    this.authenticationService.observeLogout().subscribe(() => {
+      this.refreshRequestSubscription?.unsubscribe();
+      this.refreshRequestSubscription = undefined;
+    });
+  }
+
+  private updateAndScheduleScanJobProgressUpdate() {
+    this.scanJobProgressUpdateSubscription?.unsubscribe();
+    this.scanJobProgressUpdateSubscription = defer(() => {
+      if (this.authenticationService.currentUser?.role === Role.ADMIN) {
+        return this.updateScanJobProgress();
+      } else {
+        return of(undefined);
+      }
+    })
+      .pipe(
+        catchError(error => {
+          console.error(`Could not update scan job progress: ${JSON.stringify(error)}`);
+          return of(undefined);
+        }),
+        delayWhen(() => this.scanJobProgressSubject.value ? interval(1000) : interval(30000)),
+        repeat()
+      )
+      .subscribe();
   }
 
   updateScanStatistics(): Observable<ScanStatisticsDto | null> {
@@ -75,34 +96,13 @@ export class LibraryScanService {
       );
   }
 
-  private scheduleScanJobProgressUpdate() {
-    this.scanJobProgressUpdateSubscription?.unsubscribe();
-    this.scanJobProgressUpdateSubscription = defer(() => {
-      if (this.authenticationService.currentUser?.role === Role.ADMIN) {
-        return this.updateScanJobProgress();
-      } else {
-        this.libraryService.requestRefresh();
-        return of(undefined);
-      }
-    })
-      .pipe(
-        catchError(error => {
-          console.error(`Could not update scan job progress: ${JSON.stringify(error)}`);
-          return of(undefined);
-        }),
-        delayWhen(() => this.scanJobProgressSubject.value ? interval(1000) : interval(30000)),
-        repeat()
-      )
-      .subscribe();
-  }
-
   updateScanJobProgress(): Observable<ScanJobProgressDto | null> {
     return this.httpClient.get<OptionalResponseDto<ScanJobProgressDto>>('/api/admin/library/scanJobProgress')
       .pipe(
         map(optionalResponse => {
           if (optionalResponse.present) {
             console.debug('Scan job progress updated.');
-            if (!this.scanJobProgressSubject.value) {
+            if (!this.refreshRequestSubscription) {
               console.info("Scheduling auto-refresh during scan job running.");
               this.refreshRequestSubscription = timer(0, 10000).pipe(
                 tap(() => {
@@ -184,7 +184,7 @@ export class LibraryScanService {
             }
           })
         )),
-        tap(() => this.scheduleScanJobProgressUpdate()),
+        tap(() => this.updateAndScheduleScanJobProgressUpdate()),
         catchError(error => {
           this.showScanJobFailedNotification();
           return throwError(() => error);
