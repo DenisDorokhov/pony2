@@ -16,7 +16,7 @@ import {
 import {catchError, map, tap} from 'rxjs/operators';
 import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
 import {AuthenticationService} from "./authentication.service";
-import {OptionalResponseDto} from "../domain/common.dto";
+import {ErrorDto, OptionalResponseDto} from "../domain/common.dto";
 import {LibraryService} from "./library.service";
 import {NotificationService} from "./notification.service";
 import {TranslateService} from "@ngx-translate/core";
@@ -189,8 +189,14 @@ export class LibraryScanService {
           })
         )),
         tap(() => this.updateAndScheduleScanJobProgressUpdate()),
-        catchError(error => {
-          this.showScanJobFailedNotification();
+        catchError(httpError => {
+          const error = ErrorDto.fromHttpErrorResponse(httpError);
+          if (error.code === ErrorDto.Code.CONCURRENT_SCAN) {
+            console.log('Scan job is already running.');
+            this.updateAndScheduleScanJobProgressUpdate()
+          } else {
+            this.showScanJobFailedNotification();
+          }
           return throwError(() => error);
         })
       );

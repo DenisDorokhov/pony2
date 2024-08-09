@@ -13,6 +13,7 @@ import {LibraryScanService} from "../../service/library-scan.service";
 import {Subscription} from "rxjs";
 import {FastSearchComponent} from "./fast-search.component";
 import Role = UserDto.Role;
+import {ErrorDto} from "../../domain/common.dto";
 
 @Component({
   standalone: true,
@@ -58,7 +59,14 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     if (this.scanRunning) {
       this.openScanning();
     } else {
-      this.libraryScanService.startScanJob().subscribe(() => this.openScanning());
+      this.libraryScanService.startScanJob().subscribe({
+        next: () => this.openScanning(),
+        error: (error: ErrorDto) => {
+          if (error.code === ErrorDto.Code.CONCURRENT_SCAN) {
+            this.openScanning();
+          }
+        }
+      });
     }
   }
 
