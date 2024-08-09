@@ -175,6 +175,11 @@ export class PlaybackService {
     this.authenticationService.observeLogout()
       .subscribe(() => {
         this.audioPlayer.stop();
+        this.currentSongSubject.next(undefined);
+        this.queueSubject.next([]);
+        this.queueSubscription?.unsubscribe();
+        this.currentSongSubscription?.unsubscribe();
+        this.playlist = undefined;
       });
     this.audioPlayer.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));

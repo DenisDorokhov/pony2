@@ -43,10 +43,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
         this.openScanning();
       }
     });
-    this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
-      this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null);
     this.authenticationSubscription = this.authenticationService.observeAuthentication().subscribe(user =>
       this.currentUser = user);
+    this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
+      this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null);
   }
 
   ngOnDestroy(): void {

@@ -42,7 +42,6 @@ export class LibraryScanService {
     private notificationService: NotificationService,
     private translateService: TranslateService
   ) {
-    this.updateAndScheduleScanJobProgressUpdate();
     this.libraryService.observeRefreshRequest().pipe(
       mergeMap(() => {
         if (this.authenticationService.isAuthenticated) {
@@ -51,9 +50,14 @@ export class LibraryScanService {
         return of(undefined);
       })
     ).subscribe();
-    this.authenticationService.observeLogout().subscribe(() => {
-      this.refreshRequestSubscription?.unsubscribe();
-      this.refreshRequestSubscription = undefined;
+    this.authenticationService.observeAuthentication().subscribe(user => {
+      if (user) {
+        this.updateAndScheduleScanJobProgressUpdate();
+      } else {
+        this.scanJobProgressSubject.next(undefined);
+        this.refreshRequestSubscription?.unsubscribe();
+        this.refreshRequestSubscription = undefined;
+      }
     });
   }
 
