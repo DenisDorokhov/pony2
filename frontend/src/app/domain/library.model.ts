@@ -5,7 +5,7 @@ export class Song {
   id: string;
   creationDate: Date;
   updateDate: Date | undefined;
-  path: string;
+  path: string | undefined;
   mimeType: string;
   fileExtension: string;
   size: number;

@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import net.dorokhov.pony2.PonyApplication;
@@ -37,6 +38,7 @@ public class CoreConfig implements AsyncConfigurer, Jackson2ObjectMapperBuilderC
     @Override
     public void customize(Jackson2ObjectMapperBuilder jacksonObjectMapperBuilder) {
         jacksonObjectMapperBuilder
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
                 .modules(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES), new JavaTimeModule());
     }
 }
