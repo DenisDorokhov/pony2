@@ -61,7 +61,7 @@ export class LibraryScanService {
     });
   }
 
-  private updateAndScheduleScanJobProgressUpdate() {
+  updateAndScheduleScanJobProgressUpdate() {
     this.scanJobProgressUpdateSubscription?.unsubscribe();
     this.scanJobProgressUpdateSubscription = defer(() => {
       if (this.authenticationService.currentUser?.role === Role.ADMIN) {
@@ -81,26 +81,7 @@ export class LibraryScanService {
       .subscribe();
   }
 
-  updateScanStatistics(): Observable<ScanStatisticsDto | null> {
-    console.info('Updating scan statistics...');
-    return this.httpClient.get<OptionalResponseDto<ScanStatisticsDto>>('/api/library/scanStatistics')
-      .pipe(
-        map(optionalResponse => {
-          if (optionalResponse.present) {
-            console.info('Scan statistics updated.');
-            this.scanStatisticsSubject.next(optionalResponse.value!);
-            return optionalResponse.value!;
-          } else {
-            if (this.scanStatisticsSubject.value !== null) {
-              this.scanStatisticsSubject.next(null);
-            }
-            return null;
-          }
-        })
-      );
-  }
-
-  updateScanJobProgress(): Observable<ScanJobProgressDto | null> {
+  private updateScanJobProgress(): Observable<ScanJobProgressDto | null> {
     return this.httpClient.get<OptionalResponseDto<ScanJobProgressDto>>('/api/admin/library/scanJobProgress')
       .pipe(
         map(optionalResponse => {
@@ -128,6 +109,25 @@ export class LibraryScanService {
               this.libraryService.requestRefresh();
               this.refreshRequestSubscription.unsubscribe();
               this.refreshRequestSubscription = undefined;
+            }
+            return null;
+          }
+        })
+      );
+  }
+
+  updateScanStatistics(): Observable<ScanStatisticsDto | null> {
+    console.info('Updating scan statistics...');
+    return this.httpClient.get<OptionalResponseDto<ScanStatisticsDto>>('/api/library/scanStatistics')
+      .pipe(
+        map(optionalResponse => {
+          if (optionalResponse.present) {
+            console.info('Scan statistics updated.');
+            this.scanStatisticsSubject.next(optionalResponse.value!);
+            return optionalResponse.value!;
+          } else {
+            if (this.scanStatisticsSubject.value !== null) {
+              this.scanStatisticsSubject.next(null);
             }
             return null;
           }

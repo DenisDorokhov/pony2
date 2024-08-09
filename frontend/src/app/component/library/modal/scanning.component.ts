@@ -69,7 +69,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {
       this.loadScanJobs(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 5);
     });
-    this.libraryScanService.updateScanJobProgress().subscribe();
+    this.libraryScanService.updateAndScheduleScanJobProgressUpdate();
     this.scanJobsLoadingState = LoadingState.LOADING;
     this.loadScanJobs();
   }
