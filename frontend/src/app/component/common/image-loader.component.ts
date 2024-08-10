@@ -20,15 +20,13 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
 
-  @ViewChild('image') imageElement!: ElementRef;
+  @ViewChild('container') containerElement!: ElementRef;
 
   private _url: string | undefined;
 
   private scroller: HTMLElement | undefined;
-
   private isIntersecting = false;
 
-  private visibilityChangeSubscription: Subscription | undefined;
   private intersectionSubscription: Subscription | undefined;
 
   @Input()
@@ -54,7 +52,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.scroller = this.findScroller();
     this.subscribeToIntersections();
-    // Fix for a rare bug with intersection not detected immediately after the application bootstrap.
+    // Fix for a bug of intersection not detected during application bootstrap.
     setTimeout(() => {
       if (this.state !== ImageLoaderComponentState.LOADING && this.state !== ImageLoaderComponentState.LOADED) {
         this.subscribeToIntersections();
@@ -83,7 +81,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   private findScroller(): HTMLElement | undefined {
-    let currentParent: HTMLElement | undefined = this.imageElement!.nativeElement.parentElement;
+    let currentParent: HTMLElement | undefined = this.containerElement!.nativeElement.parentElement;
     while (currentParent) {
       if (currentParent.hasAttribute('data-pony-image-loader-scroller')) {
         return currentParent;
@@ -100,7 +98,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
         (entries) => subscriber.next(entries[0]),
         intersectionOptions
       );
-      intersectionObserver.observe(this.imageElement!.nativeElement);
+      intersectionObserver.observe(this.containerElement!.nativeElement);
       return () => {
         intersectionObserver.disconnect();
       };
@@ -109,13 +107,11 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   private startLoading() {
     this.ngZone.run(() => {
-      this.imageElement!.nativeElement.setAttribute('src', this.url);
       this.state = ImageLoaderComponentState.LOADING;
     });
   }
 
   ngOnDestroy(): void {
-    this.visibilityChangeSubscription?.unsubscribe();
     this.intersectionSubscription?.unsubscribe();
   }
 
@@ -123,8 +119,6 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     this.state = ImageLoaderComponentState.LOADED;
     this.intersectionSubscription?.unsubscribe();
     this.intersectionSubscription = undefined;
-    this.visibilityChangeSubscription?.unsubscribe();
-    this.visibilityChangeSubscription = undefined;
   }
 
   onError() {

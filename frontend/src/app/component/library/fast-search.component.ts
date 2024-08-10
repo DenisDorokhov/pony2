@@ -207,4 +207,16 @@ export class FastSearchComponent implements OnInit, OnDestroy {
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
     this.open = false;
   }
+
+  trackByArtist(_: number, artist: Artist) {
+    return artist.id;
+  }
+
+  trackBySong(_: number, song: Song) {
+    return song.id;
+  }
+
+  trackByAlbum(_: number, album: Album) {
+    return album.id;
+  }
 }

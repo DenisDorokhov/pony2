@@ -41,6 +41,7 @@ export class LibraryService {
       this.selectedSongSubject.next(undefined);
       this.scrollToArtistRequestSubject.next(undefined);
       this.scrollToSongRequestSubject.next(undefined);
+      this.storeDefaultArtistId(undefined);
     });
   }
 
