@@ -56,7 +56,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     this.subscribeToIntersections();
     // Fix for a rare bug with intersection not detected immediately after the application bootstrap.
     setTimeout(() => {
-      if (this.state !== ImageLoaderComponentState.LOADED) {
+      if (this.state !== ImageLoaderComponentState.LOADING && this.state !== ImageLoaderComponentState.LOADED) {
         this.subscribeToIntersections();
       }
     }, 50);
