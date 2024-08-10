@@ -10,6 +10,7 @@
     <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
       <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
+           title="{{ artist.name | ponyUnknownArtist }}"
            *ngFor="let artist of searchResult?.artists"
            (click)="selectArtist(artist)">
         <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
@@ -22,6 +23,8 @@
     <div [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
       <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
+           title="{{ song.name | ponyUnknownSong }}
+{{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
            *ngFor="let song of searchResult?.songs"
            (click)="selectSong(song)">
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
@@ -37,6 +40,8 @@
     <div [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
       <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
+           title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
+{{ album.artist.name | ponyUnknownArtist }}"
            *ngFor="let album of searchResult?.albums"
            (click)="selectAlbum(album)">
         <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
