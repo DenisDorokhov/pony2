@@ -110,6 +110,13 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         this.open = false;
       }
     });
+
+    window.document.body.addEventListener('keydown', event => {
+      if (event.ctrlKey && event.shiftKey && event.code === 'KeyF') {
+        this.inputElement.nativeElement.focus();
+        event.preventDefault();
+      }
+    });
   }
 
   onInputChange(event: Event) {
