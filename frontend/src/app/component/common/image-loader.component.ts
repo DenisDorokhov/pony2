@@ -24,6 +24,8 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   private _url: string | undefined;
 
+  private scroller: HTMLElement | undefined;
+
   private isIntersecting = false;
 
   private visibilityChangeSubscription: Subscription | undefined;
@@ -50,9 +52,21 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    this.scroller = this.findScroller();
+    this.subscribeToIntersections();
+    // Fix for a rare bug with intersection not detected immediately after the application bootstrap.
+    setTimeout(() => {
+      if (this.state !== ImageLoaderComponentState.LOADED) {
+        this.subscribeToIntersections();
+      }
+    }, 50);
+  }
+
+  private subscribeToIntersections() {
     this.ngZone.runOutsideAngular(() => {
+      this.intersectionSubscription?.unsubscribe();
       this.intersectionSubscription = this.createIntersectionObservable({
-        root: this.findScroller(),
+        root: this.scroller,
         rootMargin: '0px',
         threshold: 0
       }).pipe(
@@ -68,6 +82,18 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  private findScroller(): HTMLElement | undefined {
+    let currentParent: HTMLElement | undefined = this.imageElement!.nativeElement.parentElement;
+    while (currentParent) {
+      if (currentParent.hasAttribute('data-pony-image-loader-scroller')) {
+        return currentParent;
+      } else {
+        currentParent = currentParent.parentElement ?? undefined;
+      }
+    }
+    return undefined;
+  }
+
   private createIntersectionObservable(intersectionOptions: any): Observable<IntersectionObserverEntry> {
     return new Observable(subscriber => {
       const intersectionObserver = new IntersectionObserver(
@@ -79,18 +105,6 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
         intersectionObserver.disconnect();
       };
     });
-  }
-
-  private findScroller(): HTMLElement | undefined {
-    let currentParent: HTMLElement | undefined = this.imageElement!.nativeElement.parentElement;
-    while (currentParent) {
-      if (currentParent.hasAttribute('data-pony-image-loader-scroller')) {
-        return currentParent;
-      } else {
-        currentParent = currentParent.parentElement ?? undefined;
-      }
-    }
-    return undefined;
   }
 
   private startLoading() {
