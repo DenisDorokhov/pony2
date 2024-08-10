@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="backend" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="dev" />
     <module name="pony2.backend.main" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="net.dorokhov.pony2.PonyApplication" />
     <method v="2">
