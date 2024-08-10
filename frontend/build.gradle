@@ -22,6 +22,10 @@ node {
 task npmBuild(type: NpmTask) {
     group = 'build'
     args = ['run', 'build']
+    inputs.dir(project.fileTree("src").exclude("**/*.spec.ts"))
+    inputs.dir("node_modules")
+    inputs.files("angular.json", "tsconfig.json", "tsconfig.app.json")
+    outputs.dir("build")
 }
 
 npmBuild.dependsOn npmInstall

@@ -1,71 +1,71 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.3.1'
-	id 'io.spring.dependency-management' version '1.1.5'
+    id 'java'
+    id 'org.springframework.boot' version '3.3.1'
+    id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'net.dorokhov.pony2'
 version = '0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
 
-	runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2'
 
-	implementation project(':frontend')
+    implementation project(':frontend')
 
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-	implementation 'org.hibernate.search:hibernate-search-mapper-orm:7.1.1.Final'
-	implementation 'org.hibernate.search:hibernate-search-backend-lucene:7.1.1.Final'
-	implementation 'org.flywaydb:flyway-core:10.15.0' // Upgrade to avoid H2 compatibility warning.
-	implementation 'org.apache.tika:tika-core:2.9.2'
-	implementation 'net.coobird:thumbnailator:0.4.20'
-	implementation 'net.jthink:jaudiotagger:3.0.1'
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
-	implementation 'com.auth0:java-jwt:4.4.0'
+    implementation 'org.hibernate.search:hibernate-search-mapper-orm:7.1.1.Final'
+    implementation 'org.hibernate.search:hibernate-search-backend-lucene:7.1.1.Final'
+    implementation 'org.flywaydb:flyway-core:10.15.0' // Upgrade to avoid H2 compatibility warning.
+    implementation 'org.apache.tika:tika-core:2.9.2'
+    implementation 'net.coobird:thumbnailator:0.4.20'
+    implementation 'net.jthink:jaudiotagger:3.0.1'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+    implementation 'com.auth0:java-jwt:4.4.0'
 
-	implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names'
-	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
-	implementation 'com.google.code.findbugs:annotations:3.0.1'
-	implementation 'com.google.guava:guava:33.2.1-jre'
+    implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.google.code.findbugs:annotations:3.0.1'
+    implementation 'com.google.guava:guava:33.2.1-jre'
 
-	testImplementation 'org.awaitility:awaitility'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.mockito:mockito-core'
-	testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.awaitility:awaitility'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.assertj:assertj-core'
 
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 jar {
-	archiveBaseName = rootProject.name
+    archiveBaseName = rootProject.name
 }
 bootJar {
-	archiveBaseName = rootProject.name
+    archiveBaseName = rootProject.name
 }
 
 springBoot {
-	buildInfo()
+    buildInfo()
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
