@@ -32,13 +32,13 @@ export default {
     },
     album: {
       discLabel: 'Disc {{discNumber}}',
-      unknownLabel: 'Unknown'
+      unknownLabel: 'Unknown Album'
     },
     artist: {
-      unknownLabel: 'Unknown'
+      unknownLabel: 'Unknown Artist'
     },
     song: {
-      unknownLabel: 'Unknown'
+      unknownLabel: 'Unknown Song'
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {
