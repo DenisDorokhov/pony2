@@ -9,7 +9,7 @@
     <h5 class="panel-title">{{ artistSongs.artist.name }}</h5>
   </div>
   <div *ngIf="loadingState === LoadingState.LOADED"
-       class="panel-body album-list-container" data-image-loader-scroller>
+       class="panel-body album-list-container" data-pony-image-loader-scroller>
     <div class="album-list-container album-list-scroller">
       <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album">
       </pony-album>
