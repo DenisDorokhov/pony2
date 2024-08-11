@@ -57,6 +57,9 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(this.libraryService.observeSelectedSong()
       .subscribe(song => {
         this.selected = song != null && song.id === this.song.id;
+        if (this.selected && this.containerElement) {
+          this.containerElement.nativeElement.focus();
+        }
       }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => {
@@ -83,6 +86,9 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         event.preventDefault();
       }
     }));
+    if (this.selected) {
+      this.containerElement.nativeElement.focus();
+    }
   }
 
   ngOnDestroy(): void {
