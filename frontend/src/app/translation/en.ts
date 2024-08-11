@@ -195,7 +195,7 @@ export default {
     },
   },
   fastSearch: {
-    searchPlaceholder: 'Search (Ctrl + Shift + F)',
+    searchPlaceholder: 'Search (Ctrl+Shift+F)',
     foundSongsHeader: 'Songs',
     foundArtistsHeader: 'Artists',
     foundAlbumsHeader: 'Albums',
