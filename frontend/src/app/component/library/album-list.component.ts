@@ -26,6 +26,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   loadingState = LoadingState.LOADING;
   artistSongs!: ArtistSongs;
 
+  albumCount = 0;
+  songCount = 0;
+
   private artistSongsSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
   private selectedArtistSubscription: Subscription | undefined;
@@ -96,9 +99,15 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.artistSongsSubscription = this.libraryService.getArtistSongs(artist.id)
       .subscribe({
         next: artistSongs => {
+          this.albumCount = 0;
+          this.songCount = 0;
           this.artistSongs = artistSongs;
           this.artistSongs.albumSongs.sort(AlbumSongs.compare);
-          this.artistSongs.albumSongs.forEach(next => next.songs.sort(Song.compare));
+          this.artistSongs.albumSongs.forEach(album => {
+            this.albumCount++;
+            album.songs.sort(Song.compare);
+            album.songs.forEach(() => this.songCount++);
+          });
           this.loadingState = LoadingState.LOADED;
           console.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },

@@ -80,7 +80,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(this.containerElement.nativeElement, 'keydown').subscribe(event => {
-      if (event.code === 'Enter' || event.code === 'Space') {
+      if (event.code === 'Enter') {
         this.select();
         this.libraryService.requestSongPlayback(this.song);
         event.preventDefault();

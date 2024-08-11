@@ -31,6 +31,7 @@ export default {
       logOutButton: 'Sign Out',
     },
     album: {
+      counterHeader: '{{albumCount}} albums, {{songCount}} songs',
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown Album'
     },

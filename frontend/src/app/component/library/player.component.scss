@@ -25,6 +25,7 @@
     text-align: center;
     cursor: pointer;
     font-weight: bold;
+    border-radius: 6px;
 
     .title-border {
       text-overflow: ellipsis;
@@ -33,12 +34,17 @@
 
       .title {
         padding: 3px 5px;
-        border-radius: 4px;
+        border-radius: 6px;
       }
     }
   }
-  .title-container:hover .title, .title-container:focus .title {
+
+  .title-container:hover .title {
     background-color: #f5f5f5;
+  }
+
+  .title-container:focus-visible {
+    outline: solid 4px var(--bs-border-color);
   }
 
   .progress {
