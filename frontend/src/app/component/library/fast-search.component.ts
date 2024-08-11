@@ -1,7 +1,7 @@
 import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from "@angular/core";
 import {TranslateModule} from "@ngx-translate/core";
 import {CommonModule} from "@angular/common";
-import {debounceTime, mergeMap, of, Subject, Subscription} from "rxjs";
+import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from "rxjs";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {LibraryService} from "../../service/library.service";
 import {Album, Artist, SearchResult, Song} from "../../domain/library.model";
@@ -46,7 +46,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
 
-  private searchSubscription: Subscription | undefined;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private readonly libraryService: LibraryService,
@@ -54,12 +54,12 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.searchSubscription?.unsubscribe();
+    this.subscriptions.forEach(next => next.unsubscribe());
   }
 
   ngOnInit(): void {
 
-    this.searchSubscription = this.searchSubject.pipe(
+    this.subscriptions.push(this.searchSubject.pipe(
       map(value => value.trim()),
       debounceTime(200),
       distinctUntilChanged(),
@@ -97,9 +97,9 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
       this.searchResultsElement.nativeElement.scrollTop = 0;
-    });
+    }));
 
-    window.document.body.addEventListener('mousedown', event => {
+    this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event => {
       let checkElement: Node | null = event.target as Node;
       let clickWithinContainer = false;
       do {
@@ -109,14 +109,15 @@ export class FastSearchComponent implements OnInit, OnDestroy {
       if (!clickWithinContainer) {
         this.open = false;
       }
-    });
+    }));
 
-    window.document.body.addEventListener('keydown', event => {
-      if (event.ctrlKey && event.shiftKey && event.code === 'KeyF') {
+    this.subscriptions.push(fromEvent(window.document.body,'keydown').subscribe(event => {
+      const keyboardEvent = event as KeyboardEvent;
+      if (keyboardEvent.ctrlKey && keyboardEvent.shiftKey && keyboardEvent.code === 'KeyF') {
         this.inputElement.nativeElement.focus();
-        event.preventDefault();
+        keyboardEvent.preventDefault();
       }
-    });
+    }));
   }
 
   onInputChange(event: Event) {

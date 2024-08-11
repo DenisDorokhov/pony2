@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {Subscription} from 'rxjs';
+import {fromEvent, Subscription} from 'rxjs';
 import {Song} from "../../domain/library.model";
 import {PlaybackService, PlaybackState} from "../../service/playback.service";
 import {TranslateModule} from "@ngx-translate/core";
@@ -45,9 +45,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   selected = false;
   playbackState: PlaybackState | undefined;
 
-  private selectedSongSubscription: Subscription | undefined;
-  private scrollToSongRequestSubscription: Subscription | undefined;
-  private playbackEventSubscription: Subscription | undefined;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private libraryService: LibraryService,
@@ -56,34 +54,39 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.selectedSongSubscription = this.libraryService.observeSelectedSong()
+    this.subscriptions.push(this.libraryService.observeSelectedSong()
       .subscribe(song => {
         this.selected = song != null && song.id === this.song.id;
-      });
-    this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
+      }));
+    this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => {
         if (playbackEvent.song && playbackEvent.song.id === this.song.id) {
           this.playbackState = playbackEvent.state;
         } else {
           this.playbackState = undefined;
         }
-      });
+      }));
   }
 
   ngAfterViewInit(): void {
-    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
+    this.subscriptions.push(this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {
         if (song.id === this.song.id) {
           ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
           this.libraryService.finishScrollToSong();
         }
-      });
+      }));
+    this.subscriptions.push(fromEvent<KeyboardEvent>(this.containerElement.nativeElement, 'keydown').subscribe(event => {
+      if (event.code === 'Enter' || event.code === 'Space') {
+        this.select();
+        this.libraryService.requestSongPlayback(this.song);
+        event.preventDefault();
+      }
+    }));
   }
 
   ngOnDestroy(): void {
-    this.selectedSongSubscription?.unsubscribe();
-    this.scrollToSongRequestSubscription?.unsubscribe();
-    this.playbackEventSubscription?.unsubscribe();
+    this.subscriptions.forEach(next => next.unsubscribe());
   }
 
   select() {
