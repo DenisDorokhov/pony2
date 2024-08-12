@@ -9,7 +9,7 @@
       <i class="fa fa-user"></i>
       <span class="caret"></span>
     </button>
-    <ul ngbDropdownMenu class="dropdown-menu toolbar-dropdown" role="menu">
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>

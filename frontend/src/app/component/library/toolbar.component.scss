@@ -1,11 +1,13 @@
 .toolbar-container {
   text-align: right;
 
-  .toolbar-dropdown {
-    min-width: 100%;
+  .dropdown-menu {
+    right: 0 !important;
+    left: auto !important;
 
-    a {
-      cursor: pointer;
+    .dropdown-item {
+      padding-left: 32px;
+      padding-right: 32px;
     }
   }
 

@@ -1,6 +1,7 @@
 // Override Bootstrap colors.
 $min-contrast-ratio: 3;
 $blue: #428bca;
+$dropdown-min-width: 100px;
 
 @import 'bootstrap/scss/bootstrap';
 
