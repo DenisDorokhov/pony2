@@ -83,7 +83,13 @@ input::placeholder {
   }
 
   .link.selected {
-    border-left: 4px solid var(--blue);
-    padding-left: 4px;
+    background-color: var(--blue);
+    color: white;
+
+    .text {
+      small {
+        color: white;
+      }
+    }
   }
 }

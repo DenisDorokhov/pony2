@@ -62,7 +62,10 @@
   }
 }
 
+.list-group-item:hover {
+  background-color: #f5f5f5;
+}
+
 .list-group-item.active {
   background-color: var(--blue);
-  border-color: var(--blue);
 }
