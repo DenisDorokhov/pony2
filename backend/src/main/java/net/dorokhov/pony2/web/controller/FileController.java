@@ -56,7 +56,7 @@ public class FileController implements ErrorHandlingController {
                     logger.error("Unexpected error occurred.", e);
                     try {
                         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    } catch (IOException ignored) {}
+                    } catch (Exception ignored) {}
                 }
             } else if (e instanceof ObjectNotFoundException) {
                 try {

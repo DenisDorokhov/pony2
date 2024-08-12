@@ -12,7 +12,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    min-width: 1150px;
+    min-width: 1400px;
     min-height: 250px;
 
     .header {
@@ -26,7 +26,7 @@
         position: absolute;
         top: 20px;
         left: 0;
-        width: 380px;
+        width: 300px;
         bottom: 0;
 
         img {
@@ -38,8 +38,8 @@
       .player {
         position: absolute;
         top: 20px;
-        left: 380px;
-        right: 480px;
+        left: 312px;
+        right: 384px;
         bottom: 0;
         min-width: 400px;
       }
@@ -48,7 +48,7 @@
         position: absolute;
         top: 12px;
         right: 0;
-        max-width: 380px;
+        width: 356px;
         bottom: 0;
       }
     }

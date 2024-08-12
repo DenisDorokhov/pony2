@@ -1,6 +1,20 @@
 .toolbar-container {
   text-align: right;
 
+  button.refresh {
+    max-width: 120px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  button.menu {
+    max-width: 220px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
   .dropdown-menu {
     right: 0 !important;
     left: auto !important;
