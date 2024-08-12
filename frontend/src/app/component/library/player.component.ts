@@ -1,6 +1,6 @@
-import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
-import {Subscription} from 'rxjs';
+import {fromEvent, Subscription} from 'rxjs';
 import {PlaybackEvent, PlaybackService, PlaybackState} from "../../service/playback.service";
 import {Song} from "../../domain/library.model";
 import {LibraryService} from "../../service/library.service";
@@ -27,8 +27,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   formattedProgress: string | undefined;
   formattedDuration: string | undefined;
 
-  private currentSongSubscription: Subscription | undefined;
-  private playbackEventSubscription: Subscription | undefined;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private playbackService: PlaybackService,
@@ -39,15 +38,37 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.currentSongSubscription = this.playbackService.observeCurrentSong()
-      .subscribe(song => this.handleSongSwitch(song));
-    this.playbackEventSubscription = this.playbackService.observePlaybackEvent()
-      .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
+    this.subscriptions.push(this.playbackService.observeCurrentSong()
+      .subscribe(song => this.handleSongSwitch(song)));
+    this.subscriptions.push(this.playbackService.observePlaybackEvent()
+      .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent)));
+    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
+      const formElements: string[] = [
+        'INPUT', 'LABEL', 'SELECT', 'TEXTAREA', 'BUTTON', 'FIELDSET', 'LEGEND', 'DATALIST', 'OUTPUT', 'OPTION', 'OPTGROUP',
+      ];
+      if (!document.activeElement || formElements.indexOf(document.activeElement?.tagName) < 0) {
+        if (event.code === 'Space') {
+          this.playbackService.playOrPause();
+          event.preventDefault();
+        }
+        if (event.key === 'ArrowRight') {
+          if (this.playbackService.hasNextSong()) {
+            this.playbackService.switchToNextSong().subscribe();
+          }
+          event.preventDefault();
+        }
+        if (event.key === 'ArrowLeft') {
+          if (this.playbackService.hasPreviousSong()) {
+            this.playbackService.switchToPreviousSong().subscribe();
+          }
+          event.preventDefault();
+        }
+      }
+    }));
   }
 
   ngOnDestroy(): void {
-    this.playbackEventSubscription?.unsubscribe();
-    this.currentSongSubscription?.unsubscribe();
+    this.subscriptions.forEach(next => next.unsubscribe());
   }
 
   switchToPreviousSong() {
@@ -85,13 +106,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.libraryService.selectArtistAndMakeDefault(song.album.artist);
       this.libraryService.selectSong(song);
       this.libraryService.startScrollToSong(song);
-    }
-  }
-
-  @HostListener('window:beforeunload', ['$event'])
-  confirmWindowClosing(event: Event) {
-    if (this.isPlaying) {
-      event.returnValue = this.translateService.instant('player.windowCloseConfirmation');
     }
   }
 

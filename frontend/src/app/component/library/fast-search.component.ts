@@ -111,11 +111,10 @@ export class FastSearchComponent implements OnInit, OnDestroy {
       }
     }));
 
-    this.subscriptions.push(fromEvent(window.document.body,'keydown').subscribe(event => {
-      const keyboardEvent = event as KeyboardEvent;
-      if (keyboardEvent.ctrlKey && keyboardEvent.shiftKey && keyboardEvent.code === 'KeyF') {
+    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
+      if (event.ctrlKey && event.shiftKey && event.code === 'KeyF') {
         this.inputElement.nativeElement.focus();
-        keyboardEvent.preventDefault();
+        event.preventDefault();
       }
     }));
   }

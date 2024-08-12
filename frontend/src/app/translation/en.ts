@@ -53,8 +53,6 @@ export default {
   player: {
     noSongTitle: 'Pony - Music Streamer',
     songTitle: '{{artistName}} - {{songName}}',
-    playbackFailed: 'Playback failed.',
-    windowCloseConfirmation: 'Playback will stop after closing the window. Are you sure?',
   },
   scanning: {
     header: 'Scanning',

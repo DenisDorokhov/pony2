@@ -14,3 +14,8 @@ $blue: #428bca;
   --blue: #428bca;
   --turquoise: #5bc0de;
 }
+
+*:focus-visible {
+  border-radius: 6px;
+  outline: solid 4px var(--bs-border-color);
+}
