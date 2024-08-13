@@ -6,8 +6,7 @@ ARG ARCHITECTURE
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     TZ=${TIMEZONE:-UTC} \
-    JAVA_HOME=/usr/lib/jvm/java-21-openjdk-${ARCHITECTURE:-amd64} \
-    JRE_HOME=/usr/lib/jvm/java-21-openjdk-${ARCHITECTURE:-amd64}
+    JAVA_HOME=/usr/lib/jvm/java-21-openjdk-${ARCHITECTURE:-amd64}
 
 RUN apt update && apt upgrade -y && apt install tzdata openjdk-21-jdk -y && \
     useradd -m pony
