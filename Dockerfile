@@ -1,11 +1,14 @@
 FROM ubuntu:24.04
 
+ARG TIMEZONE
+
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
+    TZ=${TIMEZONE:-UTC} \
     JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
     JRE_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 
-RUN apt update && apt upgrade -y && apt install openjdk-21-jdk -y && \
+RUN apt update && apt upgrade -y && apt install tzdata openjdk-21-jdk -y && \
     useradd -m pony
 
 COPY backend /home/pony/src/backend
