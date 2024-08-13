@@ -11,10 +11,11 @@ import {ErrorIndicatorComponent} from "../common/error-indicator.component";
 import {NoContentIndicatorComponent} from "../common/no-content-indicator.component";
 import {AlbumComponent} from "./album.component";
 import {CommonModule} from "@angular/common";
+import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe],
   selector: 'pony-album-list',
   templateUrl: './album-list.component.html',
   styleUrls: ['./album-list.component.scss']

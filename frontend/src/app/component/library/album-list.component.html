@@ -6,7 +6,7 @@
   </pony-no-content-indicator>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
-    <h5 class="panel-title">{{ artistSongs.artist.name }}<small>{{ 'library.album.counterHeader' | translate:{
+    <h5 class="panel-title">{{ artistSongs.artist.name | ponyUnknownArtist }}<small>{{ 'library.album.counterHeader' | translate:{
       albumCount,
       songCount
     } }}</small></h5>
