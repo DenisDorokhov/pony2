@@ -9,7 +9,7 @@
   }
 
   button.menu {
-    max-width: 220px;
+    max-width: 156px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -32,5 +32,7 @@
   pony-fast-search {
     display: block;
     margin-top: 6px;
+    width: 210px;
+    float: right;
   }
 }

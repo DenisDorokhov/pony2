@@ -249,19 +249,6 @@ public class LibraryScannerTest {
     }
 
     @Test
-    public void shouldFailScanOnUnexpectedException() {
-
-        Exception calculationException = new RuntimeException();
-        when(scanResultCalculator.calculateAndSave(any())).thenThrow(calculationException);
-
-        ScanObserver scanObserver = new ScanObserver();
-        assertThatThrownBy(() -> libraryScanner.scan(ImmutableList.of(tempFolder.toFile()), scanObserver::observe))
-                .isSameAs(calculationException);
-
-        verify(logService).error(any(), any(), any());
-    }
-
-    @Test
     public void shouldFailEditIfFileNotFound() {
 
         EditCommand command = new EditCommand("notExistingFile", new WritableAudioData());

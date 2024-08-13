@@ -75,16 +75,11 @@ public class LibraryScanner {
             }
         }
 
-        try {
-            logService.info(logger, "Scanning library {}...", targetFolders);
-            notifyProgressObserver(new ScanProgress(FULL_PREPARING, targetFolders, null), observer);
-            ScanResult scanResult = doScan(targetFolders, observer);
-            logService.info(logger, "Scan of {} has been finished with result '{}'.", targetFolders, scanResult);
-            return scanResult;
-        } catch (Exception e) {
-            logService.error(logger, "Scan failed.", e);
-            throw e;
-        }
+        logService.info(logger, "Scanning library {}...", targetFolders);
+        notifyProgressObserver(new ScanProgress(FULL_PREPARING, targetFolders, null), observer);
+        ScanResult scanResult = doScan(targetFolders, observer);
+        logService.info(logger, "Scan of {} has been finished with result '{}'.", targetFolders, scanResult);
+        return scanResult;
     }
 
     public ScanResult edit(List<EditCommand> commands, List<File> targetFolders, @Nullable Consumer<ScanProgress> observer) throws IOException {
