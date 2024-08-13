@@ -32,5 +32,5 @@ export function formatDuration(durationSeconds: number, translateService: Transl
   if (seconds) {
     parts.push(translateService.instant('shared.duration.seconds', {value: seconds}));
   }
-  return parts.join(', ');
+  return parts.join(' ');
 }
