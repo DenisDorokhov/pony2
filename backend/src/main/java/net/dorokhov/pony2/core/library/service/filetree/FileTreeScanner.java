@@ -2,20 +2,20 @@ package net.dorokhov.pony2.core.library.service.filetree;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.FileType;
+import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.service.AudioTagger;
 import net.dorokhov.pony2.core.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony2.core.library.service.file.FileTypeResolver;
 import net.dorokhov.pony2.core.library.service.filetree.domain.*;
 import net.dorokhov.pony2.core.library.service.image.ImageSizeReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Objects;
@@ -26,21 +26,26 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Component
 public class FileTreeScanner {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final FileTypeResolver fileTypeResolver;
     private final ImageSizeReader imageSizeReader;
     private final ChecksumCalculator checksumCalculator;
     private final AudioTagger audioTagger;
+    private final LogService logService;
 
     public FileTreeScanner(
             FileTypeResolver fileTypeResolver,
             ImageSizeReader imageSizeReader,
             ChecksumCalculator checksumCalculator,
-            AudioTagger audioTagger
+            AudioTagger audioTagger,
+            LogService logService
     ) {
         this.fileTypeResolver = fileTypeResolver;
         this.imageSizeReader = imageSizeReader;
         this.checksumCalculator = checksumCalculator;
         this.audioTagger = audioTagger;
+        this.logService = logService;
     }
 
     public FileNode scanFile(File file, List<File> rootFolders) throws IOException {
@@ -121,6 +126,15 @@ public class FileTreeScanner {
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
             folderStack.pop();
             return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException e) throws IOException {
+            if (e instanceof NoSuchFileException || e instanceof AccessDeniedException) {
+                logService.warn(logger, "Could not access file during file tree scanning: '{}'.", file, e);
+                return FileVisitResult.CONTINUE;
+            }
+            throw e;
         }
     }
 }

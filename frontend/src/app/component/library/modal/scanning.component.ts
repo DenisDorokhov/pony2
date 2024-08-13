@@ -128,7 +128,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
   }
 
   showDetails(scanJob: ScanJobDto) {
-    const modalRef = this.modal.open(ScanJobComponent);
+    const modalRef = this.modal.open(ScanJobComponent, { size: 'lg' });
     (<ScanJobComponent>modalRef.componentInstance).scanJob = scanJob;
   }
 }
