@@ -144,8 +144,7 @@ CREATE TABLE artwork (
   source_uri VARCHAR (1000) NOT NULL,
   source_uri_scheme VARCHAR (255),
 
-  UNIQUE (source_uri_scheme, checksum),
-  UNIQUE (source_uri),
+  UNIQUE (checksum, source_uri_scheme),
   UNIQUE (large_image_path),
   UNIQUE (small_image_path)
 );
