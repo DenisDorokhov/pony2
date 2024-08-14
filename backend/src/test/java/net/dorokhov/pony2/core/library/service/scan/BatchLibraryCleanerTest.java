@@ -67,7 +67,7 @@ public class BatchLibraryCleanerTest {
     public void setUp() {
         batchLibraryCleaner = new BatchLibraryCleaner(libraryCleaner, 
                 songRepository, albumRepository, artistRepository, genreRepository, 
-                artworkRepository, artworkStorage, logService, 1, transactionManager);
+                artworkRepository, artworkStorage, logService, 1, 1, transactionManager);
     }
 
     @Test

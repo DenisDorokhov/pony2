@@ -49,7 +49,8 @@ public class BatchLibraryCleaner {
     private final ArtworkRepository artworkRepository;
     private final ArtworkStorage artworkStorage;
     private final LogService logService;
-    private final int cleaningBufferSize;
+    private final int cleaningFetchingBufferSize;
+    private final int cleaningDeletionBufferSize;
 
     private final TransactionTemplate transactionTemplate;
 
@@ -62,7 +63,8 @@ public class BatchLibraryCleaner {
             ArtworkRepository artworkRepository,
             ArtworkStorage artworkStorage,
             LogService logService,
-            @Value("${pony.scan.cleaningBufferSize}") int cleaningBufferSize,
+            @Value("${pony.scan.cleaningFetchingBufferSize}") int cleaningFetchingBufferSize,
+            @Value("${pony.scan.cleaningDeletionBufferSize}") int cleaningDeletionBufferSize,
             PlatformTransactionManager transactionManager
     ) {
 
@@ -74,7 +76,8 @@ public class BatchLibraryCleaner {
         this.artworkRepository = artworkRepository;
         this.artworkStorage = artworkStorage;
         this.logService = logService;
-        this.cleaningBufferSize = cleaningBufferSize;
+        this.cleaningFetchingBufferSize = cleaningFetchingBufferSize;
+        this.cleaningDeletionBufferSize = cleaningDeletionBufferSize;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
@@ -88,7 +91,7 @@ public class BatchLibraryCleaner {
 
         List<String> songsToDelete = requireNonNull(transactionTemplate.execute(transactionStatus -> {
             List<String> result = new ArrayList<>();
-            Pageable pageable = PageRequest.of(0, cleaningBufferSize, Sort.by("id"));
+            Pageable pageable = PageRequest.of(0, cleaningFetchingBufferSize, Sort.by("id"));
             while (pageable != null) {
                 Page<Song> songs = songRepository.findAll(pageable);
                 for (Song song : songs.getContent()) {
@@ -102,7 +105,7 @@ public class BatchLibraryCleaner {
         }));
 
         AtomicInteger counter = new AtomicInteger();
-        for (List<String> chunk : Lists.partition(songsToDelete, cleaningBufferSize)) {
+        for (List<String> chunk : Lists.partition(songsToDelete, cleaningDeletionBufferSize)) {
             transactionTemplate.execute(transactionStatus -> {
                 for (String id : chunk) {
                     songRepository.findById(id).ifPresent(song -> {
@@ -131,7 +134,7 @@ public class BatchLibraryCleaner {
 
         List<String> artworksToDelete = requireNonNull(transactionTemplate.execute(transactionStatus -> {
             List<String> result = new ArrayList<>();
-            Pageable pageable = PageRequest.of(0, cleaningBufferSize, Sort.by("id"));
+            Pageable pageable = PageRequest.of(0, cleaningFetchingBufferSize, Sort.by("id"));
             while (pageable != null) {
                 Page<Artwork> artworks = artworkRepository.findAll(pageable);
                 for (Artwork artwork : artworks.getContent()) {
@@ -155,7 +158,7 @@ public class BatchLibraryCleaner {
         }));
 
         AtomicInteger counter = new AtomicInteger();
-        for (List<String> chunk : Lists.partition(artworksToDelete, cleaningBufferSize)) {
+        for (List<String> chunk : Lists.partition(artworksToDelete, cleaningDeletionBufferSize)) {
             transactionTemplate.execute(transactionStatus -> {
                 for (String id : chunk) {
                     artworkRepository.findById(id).ifPresent(artwork -> {
