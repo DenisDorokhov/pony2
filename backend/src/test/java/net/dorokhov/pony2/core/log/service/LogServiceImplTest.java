@@ -2,9 +2,9 @@ package net.dorokhov.pony2.core.log.service;
 
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
@@ -31,7 +31,6 @@ public class LogServiceImplTest {
     private static final String ERROR_MESSAGE = "error";
     private static final String TEXT = "foo bar";
 
-    @InjectMocks
     private LogServiceImpl logService;
 
     @Mock
@@ -40,8 +39,13 @@ public class LogServiceImplTest {
     @Mock
     private Logger logger;
 
+    @BeforeEach
+    void setUp() {
+        logService = new LogServiceImpl(logMessageRepository, LogMessage.Level.DEBUG);
+    }
+
     @Test
-    public void shouldGetByTypeAndDate() {
+    void shouldGetByTypeAndDate() {
 
         Page<LogMessage> page = new PageImpl<>(emptyList());
         when(logMessageRepository.findByLevelInAndDateBetween(any(), any(), any(), any())).thenReturn(page);
@@ -50,42 +54,42 @@ public class LogServiceImplTest {
     }
 
     @Test
-    public void shouldLogDebugMessage() {
+    void shouldLogDebugMessage() {
 
         when(logMessageRepository.save(any())).then(returnsFirstArg());
 
         RuntimeException error = new RuntimeException(ERROR_MESSAGE);
-        checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, error), DEBUG);
+        checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, error).orElseThrow(), DEBUG);
         verify(logger).debug(eq(PATTERN), aryEq(new Object[]{ARGUMENT, error}));
     }
 
     @Test
-    public void shouldLogInfoMessage() {
+    void shouldLogInfoMessage() {
 
         when(logMessageRepository.save(any())).then(returnsFirstArg());
 
         RuntimeException error = new RuntimeException(ERROR_MESSAGE);
-        checkLogMessage(logService.info(logger, PATTERN, ARGUMENT, error), INFO);
+        checkLogMessage(logService.info(logger, PATTERN, ARGUMENT, error).orElseThrow(), INFO);
         verify(logger).info(anyString(), aryEq(new Object[]{ARGUMENT, error}));
     }
 
     @Test
-    public void shouldLogWarnMessage() {
+    void shouldLogWarnMessage() {
 
         when(logMessageRepository.save(any())).then(returnsFirstArg());
 
         RuntimeException error = new RuntimeException(ERROR_MESSAGE);
-        checkLogMessage(logService.warn(logger, PATTERN, ARGUMENT, error), WARN);
+        checkLogMessage(logService.warn(logger, PATTERN, ARGUMENT, error).orElseThrow(), WARN);
         verify(logger).warn(eq(PATTERN), aryEq(new Object[]{ARGUMENT, error}));
     }
 
     @Test
-    public void shouldLogErrorMessage() {
+    void shouldLogErrorMessage() {
 
         when(logMessageRepository.save(any())).then(returnsFirstArg());
 
         RuntimeException error = new RuntimeException(ERROR_MESSAGE);
-        checkLogMessage(logService.error(logger, PATTERN, ARGUMENT, error), ERROR);
+        checkLogMessage(logService.error(logger, PATTERN, ARGUMENT, error).orElseThrow(), ERROR);
         verify(logger).error(eq(PATTERN), aryEq(new Object[]{ARGUMENT, error}));
     }
 
@@ -96,5 +100,14 @@ public class LogServiceImplTest {
         assertThat(logMessage.getArguments().get(0)).isEqualTo(ARGUMENT);
         assertThat(logMessage.getArguments().get(1)).startsWith("java.lang.RuntimeException: " + ERROR_MESSAGE);
         assertThat(logMessage.getText()).isEqualTo(TEXT);
+    }
+
+    @Test
+    void shouldIgnoreNotIncludedLevels() {
+
+        logService = new LogServiceImpl(logMessageRepository, INFO);
+
+        assertThat(logService.debug(logger, PATTERN, ARGUMENT)).isEmpty();
+        verify(logger).debug(eq(PATTERN), aryEq(new Object[]{ARGUMENT}));
     }
 }

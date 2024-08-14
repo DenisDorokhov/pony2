@@ -385,11 +385,11 @@ public class ScanJobServiceImplTest {
         observer.assertThatFailedAt(3);
     }
 
-    private LogMessage logMessage() {
-        return new LogMessage()
+    private Optional<LogMessage> logMessage() {
+        return Optional.of(new LogMessage()
                 .setLevel(LogMessage.Level.DEBUG)
                 .setPattern("someCode")
-                .setText("someText");
+                .setText("someText"));
     }
 
     private static class ScanJobServiceObserver implements ScanJobService.Observer {

@@ -43,7 +43,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLog() {
 
-        LogMessage logMessage = logService.info(logger, "someMessage");
+        LogMessage logMessage = logService.info(logger, "someMessage").orElseThrow();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log", HttpMethod.GET,
@@ -56,10 +56,10 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLogByDebugLevel() {
 
-        LogMessage debug = logService.debug(logger, "debugMessage");
-        LogMessage info = logService.info(logger, "infoMessage");
-        LogMessage warn = logService.warn(logger, "warnMessage");
-        LogMessage error = logService.error(logger, "errorMessage");
+        LogMessage debug = logService.debug(logger, "debugMessage").orElseThrow();
+        LogMessage info = logService.info(logger, "infoMessage").orElseThrow();
+        LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
+        LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=DEBUG", HttpMethod.GET,
@@ -86,9 +86,9 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     public void shouldGetLogByInfoLevel() {
 
         logService.debug(logger, "debugMessage");
-        LogMessage info = logService.info(logger, "infoMessage");
-        LogMessage warn = logService.warn(logger, "warnMessage");
-        LogMessage error = logService.error(logger, "errorMessage");
+        LogMessage info = logService.info(logger, "infoMessage").orElseThrow();
+        LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
+        LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=INFO", HttpMethod.GET,
@@ -108,8 +108,8 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         logService.debug(logger, "debugMessage");
         logService.info(logger, "infoMessage");
-        LogMessage warn = logService.warn(logger, "warnMessage");
-        LogMessage error = logService.error(logger, "errorMessage");
+        LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
+        LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=WARN", HttpMethod.GET,
@@ -129,7 +129,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         logService.debug(logger, "debugMessage");
         logService.info(logger, "infoMessage");
         logService.warn(logger, "warnMessage");
-        LogMessage error = logService.error(logger, "errorMessage");
+        LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minLevel=ERROR", HttpMethod.GET,
@@ -142,7 +142,7 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLogByMinAndMaxDate() {
         
-        LogMessage logMessage = logService.info(logger, "someMessage");
+        LogMessage logMessage = logService.info(logger, "someMessage").orElseThrow();
 
         ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/log?minDate=1986-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
