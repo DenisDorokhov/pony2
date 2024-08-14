@@ -45,7 +45,7 @@ export class LogComponent implements OnInit {
 
   loadingState: LoadingState = LoadingState.LOADING;
 
-  logLevels: LogMessageDto.Level[] = [Level.INFO, Level.WARN, Level.ERROR];
+  logLevels: LogMessageDto.Level[] = [Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR];
 
   logs: LogWithException[] = [];
   page: LogMessagePageDto | undefined;
