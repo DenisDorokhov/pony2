@@ -29,7 +29,7 @@ export function formatDuration(durationSeconds: number, translateService: Transl
   if (minutes) {
     parts.push(translateService.instant('shared.duration.minutes', {value: minutes}));
   }
-  if (seconds) {
+  if (seconds || parts.length === 0) {
     parts.push(translateService.instant('shared.duration.seconds', {value: seconds}));
   }
   return parts.join(' ');
