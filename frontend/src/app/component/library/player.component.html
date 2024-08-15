@@ -14,7 +14,7 @@
   </button>
 
   <div class="title-container" tabindex="0"
-       (click)="selectCurrentSong()">
+       [title]="songTitle" (click)="selectCurrentSong()">
     <div class="title-border">
       <span class="title">{{ songTitle }}</span>
     </div>

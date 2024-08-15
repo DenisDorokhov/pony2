@@ -49,7 +49,7 @@ public class FileController implements ErrorHandlingController {
             runnable.run();
         } catch (Exception e) {
             if (e instanceof IOException) {
-                if (isBrokenPipe(e)) {
+                if (isConnectionReset(e)) {
                     // Filter out broken pipe exceptions, as they could easily happen during streaming.
                     logger.trace("Broken pipe error occurred.", e);
                 } else {
@@ -70,14 +70,15 @@ public class FileController implements ErrorHandlingController {
         }
     }
 
-    private boolean isBrokenPipe(Exception e) {
+    private boolean isConnectionReset(Exception e) {
         Throwable rootCause = e;
         try {
             rootCause = Throwables.getRootCause(e);
         } catch (IllegalArgumentException iae) {
             logger.error("Could not get root cause of exception.", iae);
         }
-        return Strings.nullToEmpty(rootCause.getMessage()).toLowerCase().contains("broken pipe");
+        String normalizedError = Strings.nullToEmpty(rootCause.getMessage()).toLowerCase();
+        return normalizedError.contains("broken pipe") || normalizedError.contains("connection reset by peer");
     }
 
     @GetMapping(value = "/api/file/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})
@@ -103,7 +104,7 @@ public class FileController implements ErrorHandlingController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (IOException e) {
             // Filter out broken pipe exceptions, as they could easily happen during streaming.
-            if (!isBrokenPipe(e)) {
+            if (!isConnectionReset(e)) {
                 logger.error("Unexpected error when exporting song.", e);
             }
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -123,7 +124,7 @@ public class FileController implements ErrorHandlingController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (IOException e) {
             // Filter out broken pipe exceptions, as they could easily happen during streaming.
-            if (!isBrokenPipe(e)) {
+            if (!isConnectionReset(e)) {
                 logger.error("Unexpected error when exporting album.", e);
             }
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
