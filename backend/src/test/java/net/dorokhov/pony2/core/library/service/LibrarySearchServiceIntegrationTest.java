@@ -122,7 +122,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист другой entity2"), 10)).containsExactly(song2);
+        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист, другой . entity2"), 10)).containsExactly(song2);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнёт"), 10)).containsOnly(song2);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнет"), 10)).containsOnly(song2);
         assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
