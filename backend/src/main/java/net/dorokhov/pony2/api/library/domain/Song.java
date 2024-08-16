@@ -290,7 +290,16 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
     }
 
     @Transient
-    @FullTextField(name = "searchTerms")
+    @FullTextField(name = "searchTerms", analyzer = "ponyAnalyzer")
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "name"),
+    }))
+    public String getSearchTerms() {
+        return Strings.nullToEmpty(name);
+    }
+
+    @Transient
+    @FullTextField(name = "fallbackSearchTerms", analyzer = "ponyAnalyzer")
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "name"),
     }))
@@ -303,8 +312,10 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "albumName"),
     }))
-    public String getSearchTerms() {
-        return Strings.nullToEmpty(name);
+    public String getFallbackSearchTerms() {
+        return Strings.nullToEmpty(name) + " " +
+                Strings.nullToEmpty(artistName) + " " +
+                Strings.nullToEmpty(albumArtistName);
     }
 
     @PostLoad

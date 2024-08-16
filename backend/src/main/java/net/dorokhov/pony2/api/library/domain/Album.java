@@ -91,7 +91,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     }
 
     @Transient
-    @FullTextField(name = "searchTerms")
+    @FullTextField(name = "searchTerms", analyzer = "ponyAnalyzer")
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "name"),
     }))

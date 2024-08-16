@@ -61,7 +61,7 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
     }
 
     @Transient
-    @FullTextField(name = "searchTerms")
+    @FullTextField(name = "searchTerms", analyzer = "ponyAnalyzer")
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "name"),
     }))

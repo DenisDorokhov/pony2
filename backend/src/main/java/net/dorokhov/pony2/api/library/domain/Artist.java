@@ -62,7 +62,7 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
     }
 
     @Transient
-    @FullTextField(name = "searchTerms")
+    @FullTextField(name = "searchTerms", analyzer = "ponyAnalyzer")
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "name"),
     }))
