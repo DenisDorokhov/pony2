@@ -78,8 +78,8 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
     window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', '');
   }
 
-  trackByIndex(index: number): number {
-    return index;
+  trackByDisc(_: number, disc: Disc) {
+    return disc.discNumber;
   }
 
   private splitAlbumsIntoDiscs() {

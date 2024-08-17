@@ -16,7 +16,7 @@ export class SongListComponent {
   @Input() songs!: Song[];
   @Input() showArtist!: boolean;
 
-  trackByIndex(index: number): number {
-    return index;
+  trackBySong(_: number, song: Song) {
+    return song.id;
   }
 }

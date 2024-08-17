@@ -12,10 +12,15 @@ import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
 
@@ -30,6 +35,15 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     private AlbumRepository albumRepository;
     @Autowired
     private SongRepository songRepository;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    private TransactionTemplate transactionTemplate;
+
+    @BeforeEach
+    void setUp() {
+        transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
+    }
 
     @Test
     public void shouldSearchGenres() {
@@ -38,16 +52,18 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         Genre genre2 = genreRepository.save(new Genre().setName("the foobar entity2"));
         Genre genre3 = genreRepository.save(new Genre().setName("русская песня"));
 
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("русс"), 10)).containsExactly(genre3);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("РУСС"), 10)).containsExactly(genre3);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("песня русская"), 10)).containsExactly(genre3);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("рус пес"), 10)).containsExactly(genre3);
-        assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        transactionTemplate.executeWithoutResult(status -> {
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("русс"), 10)).containsExactly(genre3);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("РУСС"), 10)).containsExactly(genre3);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("песня русская"), 10)).containsExactly(genre3);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("рус пес"), 10)).containsExactly(genre3);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        });
     }
 
     @Test
@@ -56,12 +72,14 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         Artist artist1 = artistRepository.save(new Artist().setName("the foobar entity1"));
         Artist artist2 = artistRepository.save(new Artist().setName("the foobar entity2"));
 
-        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 10)).containsOnly(artist1, artist2);
-        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(artist1, artist2);
-        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(artist1);
-        assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        transactionTemplate.executeWithoutResult(status -> {
+            assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 10)).containsOnly(artist1, artist2);
+            assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(artist1, artist2);
+            assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(artist1);
+            assertThat(librarySearchService.searchArtists(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        });
     }
 
     @Test
@@ -72,13 +90,15 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
         Album album1 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity1"));
         Album album2 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity2"));
 
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 10)).containsOnly(album1, album2);
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).isEmpty();
-        assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        transactionTemplate.executeWithoutResult(status -> {
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 10)).containsOnly(album1, album2);
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).isEmpty();
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        });
     }
 
     @Test
@@ -111,21 +131,24 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
                 .setFileType(FileType.of("text/plain", "txt"))
                 .setDuration(666L)
                 .setSize(256L)
-                .setName("the foobar entity2 гнёт")
+                .setName("the foobar entity2 гнёт-ель")
                 .setArtistName("артист")
                 .setAlbumArtistName("другой")
                 .setAlbumName("альбом")
         );
 
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 10)).containsOnly(song1, song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист, другой . entity2"), 10)).containsExactly(song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнёт"), 10)).containsOnly(song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнет"), 10)).containsOnly(song2);
-        assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        transactionTemplate.executeWithoutResult(status -> {
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 10)).containsOnly(song1, song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист, другой . entity2"), 10)).containsExactly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнёт"), 10)).containsOnly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнет"), 10)).containsOnly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнет-ель"), 10)).containsOnly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
+        });
     }
 
 }

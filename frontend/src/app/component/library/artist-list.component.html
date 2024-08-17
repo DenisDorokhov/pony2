@@ -7,7 +7,7 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="list-container" data-pony-image-loader-scroller>
     <div class="list-group">
-      <pony-artist *ngFor="let artist of artists; trackBy: trackByIndex" [artist]="artist"></pony-artist>
+      <pony-artist *ngFor="let artist of artists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
     </div>
   </div>
 </div>

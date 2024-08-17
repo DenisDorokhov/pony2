@@ -10,7 +10,7 @@
       </button>
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
     </h4>
-    <pony-song-list *ngFor="let disc of discs; trackBy: trackByIndex"
+    <pony-song-list *ngFor="let disc of discs; trackBy: trackByDisc"
                     [caption]="disc.discNumber ? ('library.album.discLabel' | translate:{discNumber:disc.discNumber}) : undefined"
                     [songs]="disc.songs" [showArtist]="disc.showArtist">
     </pony-song-list>

@@ -54,7 +54,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     private <T extends Comparable<T>> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, boolean useFallbackQuery) {
         String[] words = query.getText()
                 .trim()
-                .replaceAll("[^\\p{L}\\s0-9]", "")
+                .replaceAll("[^\\p{L}\\s0-9]", " ")
                 .toLowerCase()
                 .split("\\s+");
         List<T> result = new ArrayList<>(search(maxResults, clazz, words, "searchTerms"));

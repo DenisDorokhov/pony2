@@ -43,8 +43,8 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.refreshRequestSubscription?.unsubscribe();
   }
 
-  trackByIndex(index: number): number {
-    return index;
+  trackByArtist(_: number, artist: Artist) {
+    return artist.id;
   }
 
   private loadArtists(refreshing: boolean = false) {

@@ -113,11 +113,13 @@ public class FileTreeScanner {
             if (Objects.equals(file.getName(), ".ponyignore")) {
                 parentFolder.setIgnored(true);
             }
-            FileNode fileNode = resolveFileNode(file, parentFolder);
-            if (fileNode instanceof ImageNode) {
-                parentFolder.getMutableChildImages().add((ImageNode) fileNode);
-            } else if (fileNode instanceof AudioNode) {
-                parentFolder.getMutableChildAudios().add((AudioNode) fileNode);
+            if (!file.getName().startsWith(".")) {
+                FileNode fileNode = resolveFileNode(file, parentFolder);
+                if (fileNode instanceof ImageNode) {
+                    parentFolder.getMutableChildImages().add((ImageNode) fileNode);
+                } else if (fileNode instanceof AudioNode) {
+                    parentFolder.getMutableChildAudios().add((AudioNode) fileNode);
+                }
             }
             return FileVisitResult.CONTINUE;
         }
