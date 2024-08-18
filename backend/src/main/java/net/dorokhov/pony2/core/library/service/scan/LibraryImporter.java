@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
 import static net.dorokhov.pony2.api.library.domain.Artwork.SOURCE_URI_SCHEME_EMBEDDED;
 
@@ -167,22 +168,23 @@ public class LibraryImporter {
     }
 
     @Transactional
-    @Nullable
-    public Song importArtwork(AudioNode audioNode) {
+    public Optional<Song> importArtwork(AudioNode audioNode) {
         Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
+        boolean modified = false;
         if (song != null) {
             if (song.getArtwork() == null) {
                 ArtworkFiles artworkFiles = findAndSaveFileArtwork(audioNode);
                 if (artworkFiles != null) {
                     song = songRepository.save(song
                             .setArtwork(artworkFiles.getArtwork()));
+                    modified = true;
                 }
             }
             if (shouldImportAlbumArtwork(song.getAlbum(), song.getArtwork())) {
                 importAlbumArtwork(song.getAlbum(), song.getArtwork());
             }
         }
-        return song;
+        return modified ? Optional.of(song) : Optional.empty();
     }
 
     private Genre importGenre(ReadableAudioData audioData) {

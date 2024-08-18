@@ -21,6 +21,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 
 import static java.util.Collections.emptyList;
@@ -68,7 +69,7 @@ public class BatchLibraryImporterTest {
                 ImmutableList.of(audioNodeToSkip1, audioNodeToSkip2)
         ));
         when(libraryImporter.importAudioData(any(), any())).thenReturn(song());
-        when(libraryImporter.importArtwork(any())).thenReturn(song());
+        when(libraryImporter.importArtwork(any())).thenReturn(Optional.of(song()));
         
         ProgressObserverFixture observer = new ProgressObserverFixture();
         ImportResult importResult = batchLibraryImporter.readAndImport(ImmutableList.of(

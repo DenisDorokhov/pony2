@@ -212,7 +212,7 @@ public class BatchLibraryImporter {
                 importedSongs.add(libraryImporter.importAudioData(importTask.getAudioNode(), importTask.getAudioData()));
             }
             for (AudioNode audioNode : importArtworkTasks) {
-                importedSongs.add(libraryImporter.importArtwork(audioNode));
+                libraryImporter.importArtwork(audioNode).ifPresent(importedSongs::add);
             }
             importedSongs.stream()
                     .map(Song::getAlbum)

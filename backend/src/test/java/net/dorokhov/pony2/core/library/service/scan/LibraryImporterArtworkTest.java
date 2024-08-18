@@ -117,7 +117,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
         when(libraryArtworkFinder.findAndSaveFileArtwork(audioNode)).thenReturn(artworkFiles);
         when(songRepository.save(any())).then(returnsFirstArg());
         
-        Song song = libraryImporter.importArtwork(audioNode);
+        Song song = libraryImporter.importArtwork(audioNode).orElse(null);
         
         assertThat(song).isNotNull();
         assertThat(song.getArtwork()).isSameAs(artworkFiles.getArtwork());
@@ -138,9 +138,9 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
                         .setArtwork(artwork)
                         .setArtist(new Artist())));
 
-        Song song = libraryImporter.importArtwork(audioNode);
+        Song song = libraryImporter.importArtwork(audioNode).orElse(null);
 
-        assertThat(song).isNotNull();
+        assertThat(song).isNull();
         verify(songRepository, never()).save(any());
         verify(albumRepository, never()).save(any());
     }
@@ -150,7 +150,7 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
 
         when(songRepository.findByPath(any())).thenReturn(null);
 
-        Song song = libraryImporter.importArtwork(audioNode());
+        Song song = libraryImporter.importArtwork(audioNode()).orElse(null);
 
         assertThat(song).isNull();
     }
@@ -163,9 +163,9 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
                 .setAlbum(new Album()
                         .setArtist(new Artist())));
 
-        Song song = libraryImporter.importArtwork(audioNode());
+        Song song = libraryImporter.importArtwork(audioNode()).orElse(null);
 
-        assertThat(song).isNotNull();
+        assertThat(song).isNull();
         verify(songRepository, never()).save(any());
         verify(albumRepository, never()).save(any());
     }
