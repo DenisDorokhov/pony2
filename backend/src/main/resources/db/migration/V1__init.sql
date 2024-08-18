@@ -52,9 +52,9 @@ CREATE TABLE log_message (
   text LONGVARCHAR NOT NULL
 );
 
-CREATE INDEX index_log_message_date ON log_message (date);
+CREATE INDEX index_log_message_date ON log_message (date desc);
 CREATE INDEX index_log_message_type ON log_message (level);
-CREATE INDEX index_log_message_date_type ON log_message (level, date);
+CREATE INDEX index_log_message_date_type ON log_message (level, date desc);
 
 CREATE TABLE config (
 
@@ -107,7 +107,7 @@ CREATE TABLE scan_result (
   deleted_artwork_count INT NOT NULL
 );
 
-CREATE INDEX index_scan_result_date ON scan_result (date);
+CREATE INDEX index_scan_result_date ON scan_result (date desc);
 
 CREATE TABLE scan_job (
 
