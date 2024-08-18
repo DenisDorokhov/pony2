@@ -182,7 +182,7 @@ public class LibraryArtworkFinderTest {
         Album album = new Album()
                 .setArtist(artist)
                 .setArtwork(artwork);
-        Pageable requiredSongPageable = PageRequest.of(1, 1, Sort.Direction.ASC, "year");
+        Pageable requiredSongPageable = PageRequest.of(1, 1, Sort.Direction.ASC, "year", "name");
         when(albumRepository.findByArtistIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(ImmutableList.of(album)));
         when(artistRepository.save(any())).then(returnsFirstArg());
@@ -204,7 +204,7 @@ public class LibraryArtworkFinderTest {
     public void shouldNotSaveArtistArtworkWhenMiddleAlbumNotFound() {
 
         when(albumRepository.countByArtistIdAndArtworkNotNull(any())).thenReturn(1L);
-        Pageable requiredSongPageable = PageRequest.of(0, 1, Sort.Direction.ASC, "year");
+        Pageable requiredSongPageable = PageRequest.of(0, 1, Sort.Direction.ASC, "year", "name");
         when(albumRepository.findByArtistIdAndArtworkNotNull(any(), eq(requiredSongPageable)))
                 .thenReturn(new PageImpl<>(emptyList()));
         Artist artist = new Artist();
