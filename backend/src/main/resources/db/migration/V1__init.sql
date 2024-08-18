@@ -24,8 +24,7 @@ CREATE TABLE pony_user (
   UNIQUE (email)
 );
 
-CREATE INDEX index_user_name ON pony_user (name);
-CREATE INDEX index_user_name_email ON pony_user (name, email);
+CREATE INDEX index_user_email ON pony_user (email);
 
 CREATE TABLE pony_user_role (
 
@@ -52,8 +51,6 @@ CREATE TABLE log_message (
   text LONGVARCHAR NOT NULL
 );
 
-CREATE INDEX index_log_message_date ON log_message (date desc);
-CREATE INDEX index_log_message_type ON log_message (level);
 CREATE INDEX index_log_message_date_type ON log_message (level, date desc);
 
 CREATE TABLE config (
@@ -199,9 +196,6 @@ CREATE TABLE album (
   FOREIGN KEY (artwork_id) REFERENCES artwork (id)
 );
 
-CREATE INDEX index_album_name_artist_id ON album (name, artist_id);
-CREATE INDEX index_album_artist_id_year_name ON album (artist_id, album_year, name);
-
 CREATE TABLE song (
 
   id CHAR(36) PRIMARY KEY,
@@ -244,5 +238,3 @@ CREATE TABLE song (
 
   UNIQUE (path)
 );
-
-CREATE INDEX index_song_disc_number_track_number_name ON song (disc_number, track_number, name);

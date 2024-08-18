@@ -1,6 +1,6 @@
 .player-container {
   position: relative;
-  height: 67px;
+  height: 74px;
   max-width: 768px;
   margin: 0 auto;
 
@@ -21,7 +21,7 @@
     position: absolute;
     top: 0;
     left: 152px;
-    right: 77px;
+    right: 84px;
     text-align: center;
     cursor: pointer;
     font-weight: bold;
@@ -46,8 +46,8 @@
   .progress {
     position: absolute;
     left: 152px;
-    right: 77px;
-    bottom: 22px;
+    right: 84px;
+    bottom: 28px;
     margin-bottom: 0;
     cursor: pointer;
   }
@@ -63,14 +63,15 @@
   .time {
     position: absolute;
     left: 152px;
-    bottom: -4px;
+    bottom: 1px;
     color: #909090;
   }
+
   .loading-indicator-container {
     position: absolute;
     bottom: 2px;
     left: 152px;
-    right: 77px;
+    right: 84px;
     text-align: center;
 
     .loading-indicator {
@@ -87,8 +88,8 @@
   }
   .duration {
     position: absolute;
-    right: 77px;
-    bottom: -4px;
+    right: 84px;
+    bottom: 1px;
     color: #909090;
   }
 
@@ -96,7 +97,7 @@
     position: absolute !important;
     bottom: 0;
     right: 0;
-    width: 67px;
-    height: 67px;
+    width: 74px;
+    height: 74px;
   }
 }

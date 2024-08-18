@@ -20,7 +20,7 @@
       top: 0;
       left: 20px;
       right: 20px;
-      height: 85px;
+      height: 94px;
 
       .logo-container {
         position: absolute;
@@ -30,32 +30,31 @@
         bottom: 0;
 
         img {
-          width: 283px;
-          height: 67px;
+          width: 312px;
+          height: 74px;
         }
       }
 
       .player {
         position: absolute;
         top: 20px;
-        left: 312px;
-        right: 312px;
+        left: 324px;
+        right: 324px;
         bottom: 0;
-        min-width: 360px;
+        min-width: 336px;
       }
 
       .toolbar {
         position: absolute;
-        top: 12px;
+        top: 20px;
         right: 0;
         width: 312px;
-        bottom: 0;
       }
     }
 
     .content {
       position: absolute;
-      top: 105px;
+      top: 106px;
       left: 20px;
       right: 20px;
       bottom: 20px;
