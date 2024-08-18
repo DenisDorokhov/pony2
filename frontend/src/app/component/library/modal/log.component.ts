@@ -71,12 +71,8 @@ export class LogComponent implements OnInit {
   }
 
   private loadPage(pageIndex = 0, pageSize = 30) {
-    const minLevel: LogMessageDto.Level = this.form.value.minLevel;
-    if (minLevel === Level.DEBUG) {
-      this.loadingState = LoadingState.LOADING;
-    }
     this.logService.getLog(
-      minLevel,
+      this.form.value.minLevel,
       this.normalizeFormDate(this.form.value.minDate), this.normalizeFormDate(this.form.value.maxDate),
       pageIndex, pageSize
     ).subscribe({
