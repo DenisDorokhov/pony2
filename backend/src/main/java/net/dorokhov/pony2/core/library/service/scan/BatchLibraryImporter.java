@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.domain.WritableAudioData;
@@ -75,6 +76,7 @@ public class BatchLibraryImporter {
     private final BatchLibraryImportPlanner batchLibraryImportPlanner;
     private final AudioTagger audioTagger;
     private final LibraryImporter libraryImporter;
+    private final LibraryArtworkFinder libraryArtworkFinder;
     private final LogService logService;
     private final Executor executor;
 
@@ -86,6 +88,7 @@ public class BatchLibraryImporter {
             BatchLibraryImportPlanner batchLibraryImportPlanner,
             AudioTagger audioTagger,
             LibraryImporter libraryImporter,
+            LibraryArtworkFinder libraryArtworkFinder,
             LogService logService,
             @Qualifier(LIBRARY_IMPORT_EXECUTOR) Executor executor,
             PlatformTransactionManager transactionManager
@@ -94,6 +97,7 @@ public class BatchLibraryImporter {
         this.batchLibraryImportPlanner = batchLibraryImportPlanner;
         this.audioTagger = audioTagger;
         this.libraryImporter = libraryImporter;
+        this.libraryArtworkFinder = libraryArtworkFinder;
         this.logService = logService;
         this.executor = executor;
 
@@ -210,6 +214,10 @@ public class BatchLibraryImporter {
             for (AudioNode audioNode : importArtworkTasks) {
                 importedSongs.add(libraryImporter.importArtwork(audioNode));
             }
+            importedSongs.stream()
+                    .map(Song::getAlbum)
+                    .map(Album::getArtist)
+                    .forEach(artist -> libraryArtworkFinder.findAndSaveArtistArtwork(artist, false));
             return new ImportResult(importedSongs, failedFiles);
         });
     }

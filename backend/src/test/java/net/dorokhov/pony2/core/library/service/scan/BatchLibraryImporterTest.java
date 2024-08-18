@@ -44,6 +44,8 @@ public class BatchLibraryImporterTest {
     @Mock
     private LibraryImporter libraryImporter;
     @Mock
+    private LibraryArtworkFinder libraryArtworkFinder;
+    @Mock
     @SuppressWarnings("unused")
     private LogService logService;
 

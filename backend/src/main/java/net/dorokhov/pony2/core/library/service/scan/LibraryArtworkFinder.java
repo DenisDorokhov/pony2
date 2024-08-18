@@ -121,6 +121,11 @@ public class LibraryArtworkFinder {
 
     @Transactional
     public Artist findAndSaveArtistArtwork(Artist artist) {
+        return findAndSaveArtistArtwork(artist, true);
+    }
+
+    @Transactional
+    public Artist findAndSaveArtistArtwork(Artist artist, boolean log) {
         long artistAlbumCount = albumRepository.countByArtistIdAndArtworkNotNull(artist.getId());
         if (artistAlbumCount > 0) {
             int albumIndex = (int) Math.floor(artistAlbumCount / 2.0);
@@ -129,7 +134,9 @@ public class LibraryArtworkFinder {
             if (middleAlbum.hasContent()) {
                 Artist savedArtist = artistRepository.save(artist
                         .setArtwork(middleAlbum.getContent().getFirst().getArtwork()));
-                logService.debug(logger, "Setting artwork for artist '{}': '{}'.", artist, middleAlbum.getContent().getFirst().getArtwork());
+                if (log) {
+                    logService.debug(logger, "Setting artwork for artist '{}': '{}'.", artist, middleAlbum.getContent().getFirst().getArtwork());
+                }
                 return savedArtist;
             }
         }
