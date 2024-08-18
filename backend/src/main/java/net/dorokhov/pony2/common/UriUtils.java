@@ -10,7 +10,7 @@ public final class UriUtils {
     public static String fileToUriPath(File file) {
         String path = file.getAbsolutePath();
         if (!path.startsWith("/")) {
-            return "/" + path.replaceAll("\\\\", "/");
+            return "/" + path.replaceAll("\\\\+", "/");
         }
         return path;
     }
