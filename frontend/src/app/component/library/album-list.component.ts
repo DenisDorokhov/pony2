@@ -83,8 +83,8 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.songPlaybackRequestSubscription?.unsubscribe();
   }
 
-  trackByAlbumSongs(_: number, albumSongs: AlbumSongs) {
-    return albumSongs.album.id;
+  trackByIndex(index: number, _: AlbumSongs) {
+    return index;
   }
 
   private loadArtistSongs(artist: Artist, refreshing: boolean = false) {
