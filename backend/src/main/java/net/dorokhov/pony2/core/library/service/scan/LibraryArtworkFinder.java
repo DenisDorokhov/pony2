@@ -125,7 +125,7 @@ public class LibraryArtworkFinder {
         if (artistAlbumCount > 0) {
             int albumIndex = (int) Math.floor(artistAlbumCount / 2.0);
             Page<Album> middleAlbum = albumRepository.findByArtistIdAndArtworkNotNull(artist.getId(),
-                    PageRequest.of(albumIndex, 1, Sort.Direction.ASC, "year"));
+                    PageRequest.of(albumIndex, 1, Sort.Direction.ASC, "year", "name"));
             if (middleAlbum.hasContent()) {
                 Artist savedArtist = artistRepository.save(artist
                         .setArtwork(middleAlbum.getContent().getFirst().getArtwork()));

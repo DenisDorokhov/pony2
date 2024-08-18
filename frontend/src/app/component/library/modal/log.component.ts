@@ -71,7 +71,6 @@ export class LogComponent implements OnInit {
   }
 
   private loadPage(pageIndex = 0, pageSize = 30) {
-    this.loadingState = LoadingState.LOADING;
     this.logService.getLog(
       this.form.value.minLevel,
       this.normalizeFormDate(this.form.value.minDate), this.normalizeFormDate(this.form.value.maxDate),
