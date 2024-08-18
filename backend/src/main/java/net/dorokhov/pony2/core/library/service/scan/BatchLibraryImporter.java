@@ -217,7 +217,7 @@ public class BatchLibraryImporter {
             importedSongs.stream()
                     .map(Song::getAlbum)
                     .map(Album::getArtist)
-                    .forEach(artist -> libraryArtworkFinder.findAndSaveArtistArtwork(artist, false));
+                    .forEach(libraryArtworkFinder::findAndSaveArtistArtwork);
             return new ImportResult(importedSongs, failedFiles);
         });
     }

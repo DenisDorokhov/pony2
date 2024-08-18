@@ -24,6 +24,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.annotation.Nullable;
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class LibraryArtworkFinder {
@@ -121,23 +122,18 @@ public class LibraryArtworkFinder {
 
     @Transactional
     public Artist findAndSaveArtistArtwork(Artist artist) {
-        return findAndSaveArtistArtwork(artist, true);
-    }
-
-    @Transactional
-    public Artist findAndSaveArtistArtwork(Artist artist, boolean log) {
         long artistAlbumCount = albumRepository.countByArtistIdAndArtworkNotNull(artist.getId());
         if (artistAlbumCount > 0) {
             int albumIndex = (int) Math.floor(artistAlbumCount / 2.0);
             Page<Album> middleAlbum = albumRepository.findByArtistIdAndArtworkNotNull(artist.getId(),
                     PageRequest.of(albumIndex, 1, Sort.Direction.ASC, "year", "name"));
             if (middleAlbum.hasContent()) {
-                Artist savedArtist = artistRepository.save(artist
-                        .setArtwork(middleAlbum.getContent().getFirst().getArtwork()));
-                if (log) {
-                    logService.debug(logger, "Setting artwork for artist '{}': '{}'.", artist, middleAlbum.getContent().getFirst().getArtwork());
+                Artwork artwork = middleAlbum.getContent().getFirst().getArtwork();
+                if (!Objects.equals(artwork, artist.getArtwork())) {
+                    Artist savedArtist = artistRepository.save(artist.setArtwork(artwork));
+                    logService.debug(logger, "Setting artwork for artist '{}': '{}'.", artist, artwork);
+                    return savedArtist;
                 }
-                return savedArtist;
             }
         }
         return artist;
