@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 @Service
 public class LogServiceImpl implements LogService {
 
@@ -36,7 +38,16 @@ public class LogServiceImpl implements LogService {
     @Override
     @Transactional(readOnly = true)
     public Page<LogMessage> getByTypeAndDate(Level minimalLevel, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable) {
-        return logMessageRepository.findByLevelInAndDateBetween(minimalLevel.getIncludedLevels(), minDate, maxDate, pageable);
+        if (minDate != null || maxDate != null) {
+            return logMessageRepository.findByLevelInAndDateBetween(
+                    minimalLevel.getIncludedLevels(),
+                    firstNonNull(minDate, LocalDateTime.now().minusYears(100)),
+                    firstNonNull(maxDate, LocalDateTime.now().plusYears(100)),
+                    pageable
+            );
+        } else {
+            return logMessageRepository.findByLevelIn(minimalLevel.getIncludedLevels(), pageable);
+        }
     }
 
     @Override

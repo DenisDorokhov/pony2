@@ -9,5 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface LogMessageRepository extends JpaRepository<LogMessage, String> {
+    Page<LogMessage> findByLevelIn(List<LogMessage.Level> levels, Pageable pageable);
     Page<LogMessage> findByLevelInAndDateBetween(List<LogMessage.Level> levels, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);
 }

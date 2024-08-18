@@ -27,9 +27,7 @@ public class LogFacade {
     @Transactional(readOnly = true)
     public LogMessagePageDto getLog(Level minLevel, @Nullable LocalDateTime minDate, @Nullable LocalDateTime maxDate, int pageIndex, int pageSize) {
         return LogMessagePageDto.of(logService.getByTypeAndDate(
-                firstNonNull(minLevel, Level.INFO),
-                firstNonNull(minDate, LocalDateTime.now().minusYears(100)),
-                firstNonNull(maxDate, LocalDateTime.now().plusYears(100)),
+                firstNonNull(minLevel, Level.INFO), minDate, maxDate,
                 PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)), Sort.Direction.DESC, "date")));
     }
 }
