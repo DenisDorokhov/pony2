@@ -108,6 +108,7 @@ export class LogComponent implements OnInit {
   }
 
   applyFilter() {
+    this.loadingState = LoadingState.LOADING;
     this.loadPage(0, this.page?.pageSize);
   }
 
