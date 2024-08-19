@@ -3,7 +3,6 @@ package net.dorokhov.pony2.core.library.service.scan;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Song;
-import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.ProgressObserverFixture;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -58,8 +57,6 @@ public class BatchLibraryCleanerTest {
     private ArtworkRepository artworkRepository;
     @Mock
     private ArtworkStorage artworkStorage;
-    @Mock
-    private LogService logService;
 
     private final PlatformTransactionManager transactionManager = transactionManager();
 
@@ -67,7 +64,7 @@ public class BatchLibraryCleanerTest {
     public void setUp() {
         batchLibraryCleaner = new BatchLibraryCleaner(libraryCleaner, 
                 songRepository, albumRepository, artistRepository, genreRepository, 
-                artworkRepository, artworkStorage, logService, 1, 1, transactionManager);
+                artworkRepository, artworkStorage, 1, 1, transactionManager);
     }
 
     @Test

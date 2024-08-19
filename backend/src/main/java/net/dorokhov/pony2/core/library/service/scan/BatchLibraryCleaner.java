@@ -3,7 +3,6 @@ package net.dorokhov.pony2.core.library.service.scan;
 import com.google.common.collect.Lists;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Song;
-import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.UriUtils;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -48,7 +47,6 @@ public class BatchLibraryCleaner {
     private final GenreRepository genreRepository;
     private final ArtworkRepository artworkRepository;
     private final ArtworkStorage artworkStorage;
-    private final LogService logService;
     private final int cleaningFetchingBufferSize;
     private final int cleaningDeletionBufferSize;
 
@@ -62,7 +60,6 @@ public class BatchLibraryCleaner {
             GenreRepository genreRepository,
             ArtworkRepository artworkRepository,
             ArtworkStorage artworkStorage,
-            LogService logService,
             @Value("${pony.scan.cleaningFetchingBufferSize}") int cleaningFetchingBufferSize,
             @Value("${pony.scan.cleaningDeletionBufferSize}") int cleaningDeletionBufferSize,
             PlatformTransactionManager transactionManager
@@ -75,7 +72,6 @@ public class BatchLibraryCleaner {
         this.genreRepository = genreRepository;
         this.artworkRepository = artworkRepository;
         this.artworkStorage = artworkStorage;
-        this.logService = logService;
         this.cleaningFetchingBufferSize = cleaningFetchingBufferSize;
         this.cleaningDeletionBufferSize = cleaningDeletionBufferSize;
 
@@ -109,7 +105,7 @@ public class BatchLibraryCleaner {
             transactionTemplate.execute(transactionStatus -> {
                 for (String id : chunk) {
                     songRepository.findById(id).ifPresent(song -> {
-                        logService.debug(logger, "Deleting song '{}': file '{}' not found.", song, song.getPath());
+                        logger.debug("Deleting song '{}': file '{}' not found.", song, song.getPath());
                         songRepository.delete(song);
                         libraryCleaner.deleteAlbumIfUnused(song.getAlbum());
                         libraryCleaner.deleteArtistIfUnused(song.getAlbum().getArtist());
@@ -162,7 +158,7 @@ public class BatchLibraryCleaner {
             transactionTemplate.execute(transactionStatus -> {
                 for (String id : chunk) {
                     artworkRepository.findById(id).ifPresent(artwork -> {
-                        logService.debug(logger, "Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
+                        logger.debug("Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
                         songRepository.clearArtworkByArtworkId(id);
                         albumRepository.clearArtworkByArtworkId(id);
                         artistRepository.clearArtworkByArtworkId(id);

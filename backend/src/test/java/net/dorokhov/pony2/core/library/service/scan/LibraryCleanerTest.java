@@ -4,7 +4,6 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -35,13 +34,10 @@ public class LibraryCleanerTest {
     private GenreRepository genreRepository;
     @Mock
     private ArtworkStorage artworkStorage;
-    @Mock
-    private LogService logService;
 
     @BeforeEach
     public void setUp() {
-        libraryCleaner = new LibraryCleaner(songRepository, albumRepository, artistRepository, genreRepository,
-                artworkStorage, logService);
+        libraryCleaner = new LibraryCleaner(songRepository, albumRepository, artistRepository, genreRepository, artworkStorage);
     }
 
     @Test

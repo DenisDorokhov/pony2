@@ -11,17 +11,6 @@
       <option *ngFor="let level of logLevels" [ngValue]="level">{{ level }}</option>
     </select>
 
-    <label for="minDate" class="form-label">{{ 'log.minDateFilterLabel' | translate }}</label>
-    <input formControlName="minDate" id="minDate" ngbDatepicker class="form-control" placeholder="yyyy-mm-dd"
-      #minDatePicker="ngbDatepicker" (click)="minDatePicker.toggle()" (dateSelect)="applyFilter()" />
-
-    <label for="maxDate" class="form-label">{{ 'log.maxDateFilterLabel' | translate }}</label>
-    <input formControlName="maxDate" id="maxDate" ngbDatepicker class="form-control" placeholder="yyyy-mm-dd"
-      #maxDatePicker="ngbDatepicker" (click)="maxDatePicker.toggle()" (dateSelect)="applyFilter()" />
-
-    <button type="submit" class="btn btn-primary">{{ 'shared.applyButton' | translate }}</button>
-    <button type="button" class="btn btn-outline-dark" (click)="clearFilter()">{{ 'shared.clearButton' | translate }}</button>
-
   </form>
 
   <div #scroller class="table-scroller">
@@ -31,7 +20,6 @@
           <tr>
             <td class="date">{{ log.date | date:('shared.dateTimeFormat' | translate) }}</td>
             <td class="log-level"
-              [class.debug]="log.level === Level.DEBUG"
               [class.info]="log.level === Level.INFO"
               [class.warn]="log.level === Level.WARN"
               [class.error]="log.level === Level.ERROR"

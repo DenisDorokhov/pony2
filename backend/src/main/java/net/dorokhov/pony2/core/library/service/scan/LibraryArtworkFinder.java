@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.common.UriUtils;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
@@ -12,7 +13,6 @@ import net.dorokhov.pony2.core.library.service.artwork.command.ByteSourceArtwork
 import net.dorokhov.pony2.core.library.service.artwork.command.ImageNodeArtworkStorageCommand;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony2.core.library.service.filetree.domain.ImageNode;
-import net.dorokhov.pony2.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -37,7 +36,6 @@ public class LibraryArtworkFinder {
     private final SongRepository songRepository;
     private final ArtworkFileFinder artworkFileFinder;
     private final ArtworkStorage artworkStorage;
-    private final LogService logService;
 
     LibraryArtworkFinder(
             GenreRepository genreRepository,
@@ -45,8 +43,7 @@ public class LibraryArtworkFinder {
             AlbumRepository albumRepository,
             SongRepository songRepository,
             ArtworkFileFinder artworkFileFinder,
-            ArtworkStorage artworkStorage,
-            LogService logService
+            ArtworkStorage artworkStorage
     ) {
 
         this.genreRepository = genreRepository;
@@ -55,7 +52,6 @@ public class LibraryArtworkFinder {
         this.songRepository = songRepository;
         this.artworkFileFinder = artworkFileFinder;
         this.artworkStorage = artworkStorage;
-        this.logService = logService;
     }
 
     @Transactional
@@ -101,7 +97,7 @@ public class LibraryArtworkFinder {
                 Song middleSong = middleSongPage.getContent().getFirst();
                 Genre savedGenre = genreRepository.save(genre
                         .setArtwork(middleSong.getArtwork()));
-                logService.debug(logger, "Setting artwork for genre '{}': '{}'.", genre, middleSong.getArtwork());
+                logger.debug("Setting artwork for genre '{}': '{}'.", genre, middleSong.getArtwork());
                 return savedGenre;
             }
         }
@@ -114,7 +110,7 @@ public class LibraryArtworkFinder {
         if (song != null) {
             Album savedAlbum = albumRepository.save(album
                     .setArtwork(song.getArtwork()));
-            logService.debug(logger, "Setting artwork for album '{}': '{}'.", album, song.getArtwork());
+            logger.debug("Setting artwork for album '{}': '{}'.", album, song.getArtwork());
             return savedAlbum;
         }
         return album;
@@ -131,7 +127,7 @@ public class LibraryArtworkFinder {
                 Artwork artwork = middleAlbum.getContent().getFirst().getArtwork();
                 if (!Objects.equals(artwork, artist.getArtwork())) {
                     Artist savedArtist = artistRepository.save(artist.setArtwork(artwork));
-                    logService.debug(logger, "Setting artwork for artist '{}': '{}'.", artist, artwork);
+                    logger.debug("Setting artwork for artist '{}': '{}'.", artist, artwork);
                     return savedArtist;
                 }
             }

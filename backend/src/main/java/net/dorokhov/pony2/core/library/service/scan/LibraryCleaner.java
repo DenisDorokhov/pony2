@@ -9,7 +9,6 @@ import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
-import net.dorokhov.pony2.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -25,15 +24,13 @@ public class LibraryCleaner {
     private final ArtistRepository artistRepository;
     private final GenreRepository genreRepository;
     private final ArtworkStorage artworkStorage;
-    private final LogService logService;
 
     public LibraryCleaner(
             SongRepository songRepository,
             AlbumRepository albumRepository,
             ArtistRepository artistRepository,
             GenreRepository genreRepository,
-            ArtworkStorage artworkStorage,
-            LogService logService
+            ArtworkStorage artworkStorage
     ) {
 
         this.songRepository = songRepository;
@@ -41,14 +38,13 @@ public class LibraryCleaner {
         this.artistRepository = artistRepository;
         this.genreRepository = genreRepository;
         this.artworkStorage = artworkStorage;
-        this.logService = logService;
     }
 
     @Transactional
     public boolean deleteArtistIfUnused(Artist artist) {
         if (albumRepository.countByArtistId(artist.getId()) == 0) {
             artistRepository.deleteById(artist.getId());
-            logService.debug(logger, "Deleting artist '{}'.", artist);
+            logger.debug("Deleting artist '{}'.", artist);
             return true;
         }
         return false;
@@ -58,7 +54,7 @@ public class LibraryCleaner {
     public boolean deleteAlbumIfUnused(Album album) {
         if (songRepository.countByAlbumId(album.getId()) == 0) {
             albumRepository.deleteById(album.getId());
-            logService.debug(logger, "Deleting album '{}'.", album);
+            logger.debug("Deleting album '{}'.", album);
             return true;
         }
         return false;
@@ -68,7 +64,7 @@ public class LibraryCleaner {
     public boolean deleteGenreIfUnused(Genre genre) {
         if (songRepository.countByGenreId(genre.getId()) == 0) {
             genreRepository.deleteById(genre.getId());
-            logService.debug(logger, "Deleting genre '{}'.", genre);
+            logger.debug("Deleting genre '{}'.", genre);
             return true;
         }
         return false;
@@ -82,7 +78,7 @@ public class LibraryCleaner {
             artistRepository.clearArtworkByArtworkId(artwork.getId());
             genreRepository.clearArtworkByArtworkId(artwork.getId());
             artworkStorage.delete(artwork.getId());
-            logService.debug(logger, "Artwork '{}' has been deleted.", artwork);
+            logger.debug("Artwork '{}' has been deleted.", artwork);
             return true;
         }
         return false;

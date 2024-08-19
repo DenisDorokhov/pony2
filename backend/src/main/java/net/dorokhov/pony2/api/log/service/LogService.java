@@ -6,14 +6,12 @@ import org.slf4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface LogService {
 
-    Page<LogMessage> getByTypeAndDate(Level minimalLevel, LocalDateTime minDate, LocalDateTime maxDate, Pageable pageable);
+    Page<LogMessage> getByTypeAndDate(Level minimalLevel, Pageable pageable);
 
-    Optional<LogMessage> debug(Logger logger, String message, Object... arguments);
     Optional<LogMessage> info(Logger logger, String message, Object... arguments);
     Optional<LogMessage> warn(Logger logger, String message, Object... arguments);
     Optional<LogMessage> error(Logger logger, String message, Object... arguments);

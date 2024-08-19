@@ -19,7 +19,6 @@ public class LogMessage implements Serializable {
 
     public enum Level {
 
-        DEBUG,
         INFO,
         WARN,
         ERROR,
@@ -27,7 +26,6 @@ public class LogMessage implements Serializable {
 
         public List<Level> getIncludedLevels() {
             return switch (this) {
-                case DEBUG -> List.of(DEBUG, INFO, WARN, ERROR);
                 case INFO -> List.of(INFO, WARN, ERROR);
                 case WARN -> List.of(WARN, ERROR);
                 case ERROR -> List.of(ERROR);

@@ -45,7 +45,7 @@ export class LogComponent implements OnInit {
 
   loadingState: LoadingState = LoadingState.LOADING;
 
-  logLevels: LogMessageDto.Level[] = [Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR];
+  logLevels: LogMessageDto.Level[] = [Level.INFO, Level.WARN, Level.ERROR];
 
   logs: LogWithException[] = [];
   page: LogMessagePageDto | undefined;
@@ -61,8 +61,6 @@ export class LogComponent implements OnInit {
   ) {
     this.form = this.formBuilder.group({
       minLevel: LogMessageDto.Level.INFO,
-      minDate: '',
-      maxDate: '',
     });
   }
 
@@ -73,7 +71,6 @@ export class LogComponent implements OnInit {
   private loadPage(pageIndex = 0, pageSize = 30) {
     this.logService.getLog(
       this.form.value.minLevel,
-      this.normalizeFormDate(this.form.value.minDate), this.normalizeFormDate(this.form.value.maxDate),
       pageIndex, pageSize
     ).subscribe({
       next: page => {
@@ -86,13 +83,6 @@ export class LogComponent implements OnInit {
         this.loadingState = LoadingState.ERROR;
       }
     });
-  }
-
-  private normalizeFormDate(date: any): Date | undefined {
-    if (typeof date === 'string') {
-      return undefined;
-    }
-    return date as Date;
   }
 
   loadPreviousPage() {
@@ -108,14 +98,6 @@ export class LogComponent implements OnInit {
   }
 
   applyFilter() {
-    this.loadingState = LoadingState.LOADING;
     this.loadPage(0, this.page?.pageSize);
-  }
-
-  clearFilter() {
-    this.form.controls['minLevel'].setValue(LogMessageDto.Level.INFO);
-    this.form.controls['minDate'].setValue(undefined);
-    this.form.controls['maxDate'].setValue(undefined);
-    this.applyFilter();
   }
 }

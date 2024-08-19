@@ -33,7 +33,7 @@ public class LogMessageTest {
         return new LogMessage()
                 .setId("1")
                 .setDate(LocalDateTime.now())
-                .setLevel(LogMessage.Level.DEBUG)
+                .setLevel(LogMessage.Level.INFO)
                 .setPattern("someCode")
                 .setText("someText")
                 .setArguments(Lists.newArrayList("foo", "bar"));

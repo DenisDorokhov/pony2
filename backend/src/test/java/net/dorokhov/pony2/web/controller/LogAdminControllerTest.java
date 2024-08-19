@@ -53,28 +53,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
     }
 
-    @Test
-    public void shouldGetLogByDebugLevel() {
-
-        LogMessage debug = logService.debug(logger, "debugMessage").orElseThrow();
-        LogMessage info = logService.info(logger, "infoMessage").orElseThrow();
-        LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
-        LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
-
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?minLevel=DEBUG", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(logs -> {
-            assertThat(logs.getLogMessages()).hasSize(4);
-            checkLogMessage(getByLevel(logs, LogMessage.Level.ERROR), error);
-            checkLogMessage(getByLevel(logs, LogMessage.Level.WARN), warn);
-            checkLogMessage(getByLevel(logs, LogMessage.Level.INFO), info);
-            checkLogMessage(getByLevel(logs, LogMessage.Level.DEBUG), debug);
-        });
-    }
-
     private LogMessageDto getByLevel(LogMessagePageDto page, LogMessage.Level level) {
         return page.getLogMessages().stream()
                 .filter(next -> next.getLevel() == level)
@@ -85,7 +63,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLogByInfoLevel() {
 
-        logService.debug(logger, "debugMessage");
         LogMessage info = logService.info(logger, "infoMessage").orElseThrow();
         LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
         LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
@@ -106,7 +83,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLogByWarnLevel() {
 
-        logService.debug(logger, "debugMessage");
         logService.info(logger, "infoMessage");
         LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
         LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
@@ -126,7 +102,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLogByErrorLevel() {
 
-        logService.debug(logger, "debugMessage");
         logService.info(logger, "infoMessage");
         logService.warn(logger, "warnMessage");
         LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
@@ -137,26 +112,6 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(logs -> checkLog(error, logs));
-    }
-
-    @Test
-    public void shouldGetLogByMinAndMaxDate() {
-        
-        LogMessage logMessage = logService.info(logger, "someMessage").orElseThrow();
-
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?minDate=1986-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
-        
-        response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?minDate=3000-05-04T00:00:00.000&maxDate=3000-05-04T00:00:00.000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(this::checkEmptyLog);
     }
 
     @Test
@@ -193,12 +148,5 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getPattern()).isEqualTo(logMessage.getPattern());
         assertThat(dto.getArguments()).isEqualTo(logMessage.getArguments());
         assertThat(dto.getText()).isEqualTo(logMessage.getText());
-    }
-
-    private void checkEmptyLog(LogMessagePageDto log) {
-        assertThat(log.getPageIndex()).isEqualTo(0);
-        assertThat(log.getPageSize()).isGreaterThan(0);
-        assertThat(log.getTotalPages()).isEqualTo(0);
-        assertThat(log.getLogMessages()).isEmpty();
     }
 }

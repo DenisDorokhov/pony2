@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.ReadableAudioData.EmbeddedArtwork;
-import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -55,9 +54,6 @@ public class LibraryArtworkFinderTest {
     private ArtworkFileFinder artworkFileFinder;
     @Mock
     private ArtworkStorage artworkStorage;
-    @Mock
-    @SuppressWarnings("unused")
-    private LogService logService;
 
     @Test
     public void shouldFindAndSaveFileArtwork() throws IOException {

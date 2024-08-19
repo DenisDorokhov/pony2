@@ -387,7 +387,7 @@ public class ScanJobServiceImplTest {
 
     private Optional<LogMessage> logMessage() {
         return Optional.of(new LogMessage()
-                .setLevel(LogMessage.Level.DEBUG)
+                .setLevel(LogMessage.Level.INFO)
                 .setPattern("someCode")
                 .setText("someText"));
     }

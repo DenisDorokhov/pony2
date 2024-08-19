@@ -12,8 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import java.time.LocalDateTime;
-
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony2.api.log.domain.LogMessage.Level.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,26 +39,16 @@ public class LogServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        logService = new LogServiceImpl(logMessageRepository, LogMessage.Level.DEBUG);
+        logService = new LogServiceImpl(logMessageRepository);
     }
 
     @Test
     void shouldGetByTypeAndDate() {
 
         Page<LogMessage> page = new PageImpl<>(emptyList());
-        when(logMessageRepository.findByLevelInAndDateBetween(any(), any(), any(), any())).thenReturn(page);
+        when(logMessageRepository.findByLevelIn(any(), any())).thenReturn(page);
 
-        assertThat(logService.getByTypeAndDate(DEBUG, LocalDateTime.now(), LocalDateTime.now(), PageRequest.of(0, 10))).isSameAs(page);
-    }
-
-    @Test
-    void shouldLogDebugMessage() {
-
-        when(logMessageRepository.save(any())).then(returnsFirstArg());
-
-        RuntimeException error = new RuntimeException(ERROR_MESSAGE);
-        checkLogMessage(logService.debug(logger, PATTERN, ARGUMENT, error).orElseThrow(), DEBUG);
-        verify(logger).debug(eq(PATTERN), aryEq(new Object[]{ARGUMENT, error}));
+        assertThat(logService.getByTypeAndDate(INFO, PageRequest.of(0, 10))).isSameAs(page);
     }
 
     @Test
@@ -100,14 +88,5 @@ public class LogServiceImplTest {
         assertThat(logMessage.getArguments().get(0)).isEqualTo(ARGUMENT);
         assertThat(logMessage.getArguments().get(1)).startsWith("java.lang.RuntimeException: " + ERROR_MESSAGE);
         assertThat(logMessage.getText()).isEqualTo(TEXT);
-    }
-
-    @Test
-    void shouldIgnoreNotIncludedLevels() {
-
-        logService = new LogServiceImpl(logMessageRepository, INFO);
-
-        assertThat(logService.debug(logger, PATTERN, ARGUMENT)).isEmpty();
-        verify(logger).debug(eq(PATTERN), aryEq(new Object[]{ARGUMENT}));
     }
 }

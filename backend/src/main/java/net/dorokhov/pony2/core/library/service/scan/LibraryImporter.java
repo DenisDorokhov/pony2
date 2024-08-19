@@ -1,19 +1,19 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
 import com.google.common.base.Strings;
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
-import net.dorokhov.pony2.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
@@ -129,9 +129,9 @@ public class LibraryImporter {
 
             Song savedSong = songRepository.save(songToSave);
             if (existingSong != null) {
-                logService.debug(logger, "Updating song '{}': '{}'.", existingSong, savedSong);
+                logger.debug("Updating song '{}': '{}'.", existingSong, savedSong);
             } else {
-                logService.debug(logger, "Creating song '{}'.", savedSong);
+                logger.debug("Creating song '{}'.", savedSong);
             }
             if (overriddenAlbum != null) {
                 libraryCleaner.deleteAlbumIfUnused(overriddenAlbum);
@@ -211,9 +211,9 @@ public class LibraryImporter {
             Genre savedGenre = genreRepository.save(genreToSave
                     .setName(genreName));
             if (existingGenre != null) {
-                logService.debug(logger, "Updating genre '{}': '{}'.", existingGenre, savedGenre);
+                logger.debug("Updating genre '{}': '{}'.", existingGenre, savedGenre);
             } else {
-                logService.debug(logger, "Creating genre '{}'.", savedGenre);
+                logger.debug("Creating genre '{}'.", savedGenre);
             }
             return savedGenre;
         }
@@ -247,9 +247,9 @@ public class LibraryImporter {
             Artist savedArtist = artistRepository.save(artistToSave
                     .setName(artistName));
             if (existingArtist != null) {
-                logService.debug(logger, "Updating artist '{}': '{}'.", existingArtist, savedArtist);
+                logger.debug("Updating artist '{}': '{}'.", existingArtist, savedArtist);
             } else {
-                logService.debug(logger, "Creating artist '{}'.", savedArtist);
+                logger.debug("Creating artist '{}'.", savedArtist);
             }
             return savedArtist;
         }
@@ -283,19 +283,18 @@ public class LibraryImporter {
                     .setName(albumName)
                     .setYear(audioData.getYear()));
             if (existingAlbum != null) {
-                logService.debug(logger, "Updating album '{}': '{}'.", existingAlbum, savedAlbum);
+                logger.debug("Updating album '{}': '{}'.", existingAlbum, savedAlbum);
             } else {
-                logService.debug(logger, "Creating album '{}'.", savedAlbum);
+                logger.debug("Creating album '{}'.", savedAlbum);
             }
             return savedAlbum;
         }
         return existingAlbum;
     }
 
-    private Album importAlbumArtwork(Album album, Artwork artwork) {
-        logService.debug(logger, "Setting artwork for album '{}': '{}'.", album, artwork);
-        return albumRepository.save(album
-                .setArtwork(artwork));
+    private void importAlbumArtwork(Album album, Artwork artwork) {
+        logger.debug("Setting artwork for album '{}': '{}'.", album, artwork);
+        albumRepository.save(album.setArtwork(artwork));
     }
 
     @Nullable

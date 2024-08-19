@@ -35,7 +35,6 @@
   <div class="mb-3" [hidden]="!scanJob.logMessage">
     <label class="form-label">{{ 'scanJob.logMessageLabel' | translate }}</label>
     <div><span class="log-level"
-               [class.debug]="scanJob.logMessage!.level === LogMessageLevel.DEBUG"
                [class.info]="scanJob.logMessage!.level === LogMessageLevel.INFO"
                [class.warn]="scanJob.logMessage!.level === LogMessageLevel.WARN"
                [class.error]="scanJob.logMessage!.level === LogMessageLevel.ERROR"
