@@ -105,7 +105,8 @@ public class InstallationServiceImpl implements InstallationService {
         registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                logService.info(logger, "The application has been installed.");
+                transactionTemplate.executeWithoutResult(status ->
+                        logService.info(logger, "The application has been installed."));
                 if (command.isStartScanJobAfterInstallation()) {
                     try {
                         transactionTemplate.executeWithoutResult(status -> {
@@ -146,7 +147,8 @@ public class InstallationServiceImpl implements InstallationService {
         registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                logService.info(logger, "The application has been upgraded from '{}' to '{}'.", currentVersion, buildVersion);
+                transactionTemplate.executeWithoutResult(status ->
+                        logService.info(logger, "The application has been upgraded from '{}' to '{}'.", currentVersion, buildVersion));
             }
         });
 
