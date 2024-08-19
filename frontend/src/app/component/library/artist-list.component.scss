@@ -23,6 +23,8 @@
     right: 0;
     bottom: 0;
     overflow-y: auto;
+    /* Scrolling performance optimization */
+    transform: translateZ(0);
 
     .list-group {
       height: 100%;

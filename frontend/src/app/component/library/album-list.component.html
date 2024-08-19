@@ -6,16 +6,19 @@
   </pony-no-content-indicator>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
-    <h5 class="panel-title">{{ artistSongs.artist.name | ponyUnknownArtist }}<small>{{ 'library.album.counterHeader' | translate:{
-      albumCount,
-      songCount
-    } }}</small></h5>
+    <h5 class="panel-title">
+      {{ artistSongs.artist.name | ponyUnknownArtist }}&nbsp;
+      <small>
+        {{
+          'library.album.counterHeader' | translate:{
+            albumCount,
+            songCount
+          }
+        }}
+      </small></h5>
   </div>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-body album-list-container" data-pony-image-loader-scroller>
-    <div class="album-list-container album-list-scroller">
-      <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album">
-      </pony-album>
-    </div>
+    <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album"></pony-album>
   </div>
 </div>

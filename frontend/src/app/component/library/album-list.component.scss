@@ -32,15 +32,13 @@
 
   .album-list-container {
     position: absolute;
-    top: 0;
+    top: 43px;
     left: 0;
     right: 0;
     bottom: 0;
-  }
-
-  .album-list-scroller {
-    top: 43px;
     padding: 15px;
     overflow-y: auto;
+    /* Scrolling performance optimization */
+    transform: translateZ(0);
   }
 }
