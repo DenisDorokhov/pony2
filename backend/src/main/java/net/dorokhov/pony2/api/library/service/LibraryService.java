@@ -29,8 +29,6 @@ public interface LibraryService {
 
     List<Song> getRandomSongs(int count);
 
-    List<Song> getRandomSongsByAlbumId(String albumId, int count);
-
     List<Song> getRandomSongsByArtistId(String artistId, int count);
 
     List<Song> getRandomSongsByGenreId(String genreId, int count);

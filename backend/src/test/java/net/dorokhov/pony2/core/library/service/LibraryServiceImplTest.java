@@ -143,24 +143,6 @@ public class LibraryServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void shouldGetRandomSongsByAlbumId() {
-
-        List<Song> songs = new ArrayList<>();
-        when(randomFetcher.fetch(eq(3), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
-            RandomFetcher.Repository<?> repository = invocation.getArgument(1);
-            repository.fetchCount();
-            repository.fetchContent(PageRequest.of(0, 1));
-            return songs;
-        });
-
-        assertThat(libraryService.getRandomSongsByAlbumId("1", 3)).isSameAs(songs);
-
-        verify(songRepository).countByAlbumId("1");
-        verify(songRepository).findByAlbumId(eq("1"), (Pageable) any());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
     public void shouldGetRandomSongsByArtistId() {
 
         List<Song> songs = new ArrayList<>();

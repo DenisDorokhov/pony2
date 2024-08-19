@@ -121,23 +121,6 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getRandomSongsByAlbumId(String albumId, int count) {
-        return randomFetcher.fetch(count, new RandomFetcher.Repository<>() {
-
-            @Override
-            public long fetchCount() {
-                return songRepository.countByAlbumId(albumId);
-            }
-
-            @Override
-            public List<Song> fetchContent(Pageable pageable) {
-                return songRepository.findByAlbumId(albumId, pageable);
-            }
-        });
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<Song> getRandomSongsByArtistId(String artistId, int count) {
         return randomFetcher.fetch(count, new RandomFetcher.Repository<>() {
 
