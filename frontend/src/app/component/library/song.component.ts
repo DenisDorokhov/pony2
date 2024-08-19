@@ -102,4 +102,11 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   play() {
     this.libraryService.requestSongPlayback(this.song);
   }
+
+  onMouseDown(event: MouseEvent) {
+    // Disable text selection on double click.
+    if (event.detail > 1) {
+      event.preventDefault();
+    }
+  }
 }
