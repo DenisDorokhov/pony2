@@ -20,14 +20,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
+import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,6 +54,10 @@ public class InstallationServiceImplTest {
     private UserService userService;
     @Mock
     private LogService logService;
+
+    @Spy
+    @SuppressWarnings("unused")
+    private final PlatformTransactionManager transactionManager = transactionManager();
 
     @BeforeEach
     public void setUp() {
