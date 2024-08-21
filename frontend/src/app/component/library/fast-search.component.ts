@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from "@angular/core";
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {TranslateModule} from "@ngx-translate/core";
 import {CommonModule} from "@angular/common";
 import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from "rxjs";
@@ -6,8 +6,6 @@ import {distinctUntilChanged, map} from "rxjs/operators";
 import {LibraryService} from "../../service/library.service";
 import {Album, Artist, SearchResult, Song} from "../../domain/library.model";
 import {ImageLoaderComponent} from "../common/image-loader.component";
-import {ScrollingUtils} from "../../utils/scrolling.utils";
-import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
 import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
 import {UnknownAlbumPipe} from "../../pipe/unknown-album.pipe";
@@ -42,7 +40,6 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   @ViewChild('container') containerElement!: ElementRef;
   @ViewChild('input') inputElement!: ElementRef;
   @ViewChild('searchResults') searchResultsElement!: ElementRef;
-  @ViewChildren('links') linkElements!: QueryList<ElementRef>;
 
   private searchSubject = new Subject<string>();
 
@@ -97,6 +94,9 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
       this.searchResultsElement.nativeElement.scrollTop = 0;
+      if (this.navigationItems.length > 0) {
+        this.selectNavigationItem(0);
+      }
     }));
 
     this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event => {
@@ -190,7 +190,6 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   private selectNavigationItem(index: number) {
     this.navigationItems.forEach(next => next.selected = false);
     this.navigationItems[index].selected = true;
-    scrollIntoElement(this.linkElements.toArray()[index].nativeElement, false);
   }
 
   selectSong(song: Song) {
