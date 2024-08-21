@@ -1,12 +1,10 @@
 FROM ubuntu:24.04
 
 ARG TIMEZONE
-ARG ARCHITECTURE
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    TZ=${TIMEZONE:-UTC} \
-    JAVA_HOME=/usr/lib/jvm/java-21-openjdk-${ARCHITECTURE:-amd64}
+    TZ=${TIMEZONE:-UTC}
 
 RUN apt update && apt upgrade -y && apt install tzdata openjdk-21-jdk -y && \
     useradd -m pony
