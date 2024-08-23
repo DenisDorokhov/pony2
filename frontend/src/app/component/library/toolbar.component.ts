@@ -14,6 +14,7 @@ import {Subscription} from "rxjs";
 import {FastSearchComponent} from "./fast-search.component";
 import Role = UserDto.Role;
 import {ErrorDto} from "../../domain/common.dto";
+import {QueueComponent} from "./modal/queue.component";
 
 @Component({
   standalone: true,
@@ -97,5 +98,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   openUsers() {
     this.modal.open(UserListComponent, { size: 'xl' });
+  }
+
+  openQueue() {
+    this.modal.open(QueueComponent, { size: 'xl' });
   }
 }

@@ -1,15 +1,18 @@
 <div class="toolbar-container">
+  <button type="button" class="btn btn-sm btn-light" (click)="openQueue()">
+    <i class="fa fa-list"></i>
+  </button>
   <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
-    {{ 'library.toolbar.scanButton' | translate }}
     <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>
   <div ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
-      {{ currentUser?.name }}
       <i class="fa fa-user"></i>
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <li><a class="dropdown-item disabled username" disabled="true">{{ currentUser?.name }}</a></li>
+      <li *ngIf="currentUser?.role === 'ADMIN'"><hr class="dropdown-divider"></li>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
       <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>

@@ -22,7 +22,6 @@ export default {
   },
   library: {
     toolbar: {
-      scanButton: 'Re-Scan',
       settingsButton: 'Settings',
       scanningButton: 'Scanning',
       logButton: 'Log',
@@ -53,6 +52,9 @@ export default {
   player: {
     noSongTitle: 'Pony - Music Streamer',
     songTitle: '{{artistName}} - {{songName}}',
+  },
+  queue: {
+    header: 'Playback Queue'
   },
   scanning: {
     header: 'Scanning',

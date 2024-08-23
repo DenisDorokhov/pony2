@@ -1,13 +1,6 @@
 .toolbar-container {
   text-align: right;
 
-  button.refresh {
-    max-width: 120px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
   button.menu {
     max-width: 156px;
     text-overflow: ellipsis;
@@ -22,6 +15,11 @@
     .dropdown-item {
       padding-left: 32px;
       padding-right: 32px;
+    }
+
+    .username {
+      color: var(--bs-body-color);
+      font-weight: bold;
     }
   }
 
