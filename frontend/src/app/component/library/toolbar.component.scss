@@ -16,8 +16,10 @@
     }
 
     .username {
-      color: var(--bs-body-color);
       font-weight: bold;
+      white-space: nowrap;
+      padding-left: 22px;
+      padding-right: 22px;
     }
   }
 

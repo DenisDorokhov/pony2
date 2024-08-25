@@ -27,7 +27,7 @@ export default {
       logButton: 'Log',
       usersButton: 'Users',
       profileButton: 'Profile',
-      logOutButton: 'Sign Out',
+      logOutButton: 'Logout',
     },
     album: {
       counterHeader: '{{albumCount}} albums, {{songCount}} songs',

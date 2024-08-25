@@ -5,16 +5,16 @@
   <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
     <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>
-  <div ngbDropdown class="btn-group">
+  <div *ngIf="currentUser?.role === 'ADMIN'" ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
       <i class="fa fa-gear"></i>
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
-      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
-      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
-      <button ngbDropdownItem *ngIf="currentUser?.role === 'ADMIN'" (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
     </ul>
   </div>
   <div ngbDropdown class="btn-group">
@@ -23,11 +23,13 @@
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <li><a class="dropdown-item disabled username" disabled="true">{{ currentUser?.name }}</a></li>
-      <li *ngIf="currentUser?.role === 'ADMIN'"><hr class="dropdown-divider"></li>
+      <li class="username">{{ currentUser?.name }}</li>
+      <li><hr class="dropdown-divider"></li>
       <button ngbDropdownItem (click)="openProfile()">{{ 'library.toolbar.profileButton' | translate }}</button>
       <button ngbDropdownItem (click)="signOut()">{{ 'library.toolbar.logOutButton' | translate }}</button>
     </ul>
   </div>
-  <pony-fast-search />
+  <div>
+    <pony-fast-search />
+  </div>
 </div>
