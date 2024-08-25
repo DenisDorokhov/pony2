@@ -101,6 +101,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   openQueue() {
-    this.modal.open(QueueComponent, { size: 'xl' });
+    this.modal.open(QueueComponent, { size: 'lg' });
   }
 }
