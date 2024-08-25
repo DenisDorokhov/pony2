@@ -13,11 +13,8 @@
     <i class="fa fa-fast-forward"></i>
   </button>
 
-  <div class="title-container" tabindex="0"
-       [title]="songTitle" (click)="selectCurrentSong()">
-    <div class="title-border">
-      <span class="title">{{ songTitle }}</span>
-    </div>
+  <div class="title-container">
+    <a class="title" href="javascript:void(0);" [title]="songTitle" (click)="selectCurrentSong()">{{ songTitle }}</a>
   </div>
 
   <div class="progress" (click)="seek($event)">
