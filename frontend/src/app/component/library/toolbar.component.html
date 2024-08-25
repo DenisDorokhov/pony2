@@ -1,5 +1,5 @@
 <div class="toolbar-container">
-  <button type="button" class="btn btn-sm btn-light" (click)="openQueue()">
+  <button [hidden]="true" type="button" class="btn btn-sm btn-light" (click)="openQueue()">
     <i class="fa fa-list"></i>
   </button>
   <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
