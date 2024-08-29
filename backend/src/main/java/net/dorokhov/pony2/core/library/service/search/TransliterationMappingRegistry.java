@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Additional ASCII folding that is not implemented in Lucene.
  */
-public class TransliterationMappingRegistry {
+public final class TransliterationMappingRegistry {
 
     private static final Map<String, String> MAPPING = ImmutableMap.<String, String>builder()
             .put("А", "A")
