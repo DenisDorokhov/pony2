@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -221,7 +222,7 @@ public class ExportServiceImpl implements ExportService {
 
         @Override
         public void write(OutputStream outputStream) throws IOException {
-            try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+            try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream, StandardCharsets.UTF_8)) {
                 for (ZipEntry entry : entries) {
                     compressFile(entry.getFile(), entry.getPath(), zipOutputStream);
                 }
