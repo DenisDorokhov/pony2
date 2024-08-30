@@ -10,6 +10,9 @@ import net.dorokhov.pony2.web.security.token.exception.InvalidTokenException;
 import net.dorokhov.pony2.web.service.exception.SecretNotFoundException;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+import java.util.UUID;
+
 @Component
 public class TokenService {
 
@@ -68,6 +71,8 @@ public class TokenService {
     private String generateJwtTokenForUserId(String userId, byte[] key) {
         return JWT.create()
                 .withSubject(userId)
+                .withIssuedAt(new Date())
+                .withJWTId(UUID.randomUUID().toString())
                 .sign(buildSignatureAlgorithm(key));
     }
 
