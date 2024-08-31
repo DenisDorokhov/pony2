@@ -1,8 +1,8 @@
 <div class="toolbar-container">
-  <button type="button" class="btn btn-sm btn-light" (click)="openQueue()">
+  <button type="button" class="btn btn-sm btn-light" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
     <i class="fa fa-list"></i>
   </button>
-  <button *ngIf="currentUser?.role === 'ADMIN'" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
+  <button *ngIf="currentUser?.role === 'ADMIN'" title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
     <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>
   <div *ngIf="currentUser?.role === 'ADMIN'" ngbDropdown class="btn-group">

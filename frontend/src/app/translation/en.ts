@@ -28,6 +28,8 @@ export default {
       usersButton: 'Users',
       profileButton: 'Profile',
       logOutButton: 'Logout',
+      queueButton: 'Queue & playlists',
+      refreshButton: 'Re-scan',
     },
     album: {
       counterHeader: '{{albumCount}} albums, {{songCount}} songs',
@@ -55,7 +57,7 @@ export default {
   },
   queue: {
     header: 'Playback Queue',
-    emptyQueueLabel: 'Your queue is empty :-(',
+    emptyQueueLabel: 'Your playback queue is currently empty.',
     history: 'History',
     playlists: 'Playlists',
   },
