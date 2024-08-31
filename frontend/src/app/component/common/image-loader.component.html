@@ -5,6 +5,8 @@
        alt="error" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAD7UlEQVR4nO2bSWxNURjHf6+tJ9WgimgIQpCQaEKKhAWRkiiipqggCJKKmWeuWQdWrCQs2NoSi9qJYWdtY0jYWElEdFPC4twr7eu79wz3DF75JW/R953znf/995x7z3Bf7mHTcv5lKkILCM1/AwK2vQB4DHwBHgGNIUSEMmA98BJYA4wB1kZ/t/gWEsKAeuA+MKzo+zzwIIp7I4QBl4HRCbHRwCV/UvwbMAvYIymzF5jpQQvg34BOoEpSpioq5wWfBiwCNiqW3QQsdKjlDz4NuOG4vBG+DFgNLNWsswxoti9lID4MqAC6DOt24VijDwN2AHMN6zYA2y1qGYRrA4YDVzPmuBblcYJrAw4BUzLmmAIctKClJC4NqAXOWsp1juTZYyZcGnAGqLOUqy7KZx1XBkwCDlvOeSTKaxVXBlwFqi3nrAauWM7pxIA5wE4HeQF2AbNtJpQtTEzoAipT4t3As5T4UpLHe2WUv8VIWQlylneFlwAvUuKfUHssfgQmS9p5paErEdtD4KYkrtrj8hnbUcamAS3AYkkZ1RvjCEl8CbBOMVcqtgyoRG0TQ3ZhMSpGdZJ+r1HClgG7Ubs755GLzqM2VOYgngqZsGGA7vNZ9t9V7SVE7Waab9gw4CgwUaO87AJ1DJiEmCEak9WAOuC0Zh2bBhC1b7zmyGrAefRXabIuW6OZrxaxWjQiiwFTgQMG9Wz3ABD7BUb7DqYGNADvMdupGSuJjzPIORz4gMHWm6kB3RnquugBIPR0m1TSZRmwyqBejM3HYDHNaG6/mxiQ9cDCVQ+I0dKna8Bmsh9ZuTZgEeJoTQkdA6qADm05gxklidvY/OxAceWpsyGyDzvH1gVgBvC1RKwW2GChjVkIvXdkBVU3RGqAd8CEbLq88hlh9Pe0QqpD4ATldfEgXrU5LiukYsB4RLctRwpIJlYqBlwARlqR459RCP2JyAyYDrRZkyPoQdxTciU+NVHcJm3AtKSgzIAOBr/OlpUnQG9CrDeK2yRPyuM7zYD5wBbLYgB+ZYyb0ArMKxVIM+AGolsOBXIkTJGTDFgJNDmTE4YV0WcApQzIYbCsLBO6KerVpQzYSsJ4GQLMR9wP/lBsQB647k1OGK7T7+it2ID9pDwzLSE7GHFxYt2fAXOb/o2NBNodNw7itbfnlJ4LjAC2edDQjnhl/1t/A05htiGpSyPw2kM7aYwHTgIX4yFQDxwLpycIx4H62IAC+gcS5U4NUIgN2BpSSUBaKxATA6+/0/mLqK9ALD7ehlYSiLfxELgbVEY47sUG3AaehlQSgB7gVmzAD8SvOk4Bb4C+UKoc04e4vgLien/afk+w7Pjnfzz9GyCUaOfJTJeTAAAAAElFTkSuQmCC">
   <!--suppress RequiredAttributes, AngularNgOptimizedImage -->
   <img alt="image" class="loaded" *ngIf="state === State.LOADING || state === State.LOADED"
-       [src]="url" [class.fade-in]="state === State.LOADED"
-       (load)="onLoaded()" (error)="onError()">
+       [src]="url"
+       [class.fade-in]="animate && state === State.LOADED"
+       [class.animated]="!animate"
+       (load)="onLoaded()" (error)="onError()" (animationend)="onAnimationEnd()">
 </div>

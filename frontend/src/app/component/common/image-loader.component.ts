@@ -16,9 +16,12 @@ enum ImageLoaderComponentState {
 })
 export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
+  private static LOADED_URLS = new Set<string>();
+
   readonly State = ImageLoaderComponentState;
 
   state: ImageLoaderComponentState = ImageLoaderComponentState.EMPTY;
+  animate = true;
 
   @ViewChild('container') containerElement!: ElementRef;
 
@@ -38,9 +41,13 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     if (this._url !== url) {
       this._url = url;
       if (url) {
-        this.state = ImageLoaderComponentState.PENDING;
-        if (this.isIntersecting) {
-          this.startLoading();
+        if (ImageLoaderComponent.LOADED_URLS.has(url)) {
+          this.state = ImageLoaderComponentState.LOADED;
+        } else {
+          this.state = ImageLoaderComponentState.PENDING;
+          if (this.isIntersecting) {
+            this.startLoading();
+          }
         }
       } else {
         this.state = ImageLoaderComponentState.EMPTY;
@@ -123,10 +130,15 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   onLoaded() {
     // console.log(`Loaded ${new Date()} -> '${this.url}'.`);
     this.state = ImageLoaderComponentState.LOADED;
+    ImageLoaderComponent.LOADED_URLS.add(this._url!);
   }
 
   onError() {
     console.error(`Could not load image ${new Date()} -> '${this._url}'.`);
     this.state = ImageLoaderComponentState.ERROR;
+  }
+
+  onAnimationEnd() {
+    this.animate = false;
   }
 }
