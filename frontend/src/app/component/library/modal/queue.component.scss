@@ -19,6 +19,7 @@ td:last-child {
 
 td {
   vertical-align: middle;
+  background-color: white;
 }
 
 tr:hover td {
@@ -87,7 +88,26 @@ td:last-child {
   }
 }
 
-.controls {
+.drag {
+
+  > button {
+    border: none;
+    background-color: transparent;
+  }
+}
+
+tr.selected .drag {
+
+  > button {
+    color: white;
+  }
+
+  > button:active {
+    color: #f5f5f5;
+  }
+}
+
+.options {
 
   > button {
     border: none;
@@ -103,7 +123,7 @@ td:last-child {
   }
 }
 
-tr.selected .controls {
+tr.selected .options {
 
   > button {
     color: white;
@@ -112,4 +132,12 @@ tr.selected .controls {
   > button:active {
     color: #f5f5f5;
   }
+}
+
+.cdk-drag-preview {
+  display: table;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
 }

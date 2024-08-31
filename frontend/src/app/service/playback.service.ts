@@ -213,6 +213,10 @@ export class PlaybackService {
     return this.playlist!.removeSong(index);
   }
 
+  moveSongInQueue(fromIndex: number, toIndex: number): Song {
+    return this.playlist!.moveSong(fromIndex, toIndex);
+  }
+
   observeCurrentSong(): Observable<Song | undefined> {
     return this.currentSongSubject.asObservable();
   }

@@ -1,6 +1,7 @@
 import {BehaviorSubject, defer, Observable, of} from 'rxjs';
 import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from './library.model';
+import {moveItemInArray} from "@angular/cdk/drag-drop";
 
 export interface Playlist {
 
@@ -20,6 +21,7 @@ export interface Playlist {
   switchToPreviousSong(): Observable<Song | undefined>;
 
   removeSong(index: number): Song;
+  moveSong(fromIndex: number, toIndex: number): Song;
 }
 
 export class StaticPlaylist implements Playlist {
@@ -112,5 +114,17 @@ export class StaticPlaylist implements Playlist {
     this._queue.splice(index, 1);
     this.queueSubject.next(this._queue.slice());
     return song;
+  }
+
+  moveSong(fromIndex: number, toIndex: number): Song {
+    if (this._currentIndex === fromIndex) {
+      this._currentIndex = toIndex;
+    } else if (this._currentIndex < toIndex) {
+      this._currentIndex++;
+    }
+    const fromSong = this._queue[fromIndex];
+    moveItemInArray(this._queue, fromIndex, toIndex);
+    this.queueSubject.next(this._queue.slice());
+    return fromSong;
   }
 }

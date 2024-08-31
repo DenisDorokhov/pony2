@@ -9,8 +9,8 @@
   </pony-no-content-indicator>
 
   <table *ngIf="queue.length > 0" class="table table-borderless">
-    <tbody>
-    <tr #rows [class.selected]="playbackEvent?.song?.id === song.id"
+    <tbody cdkDropList (cdkDropListDropped)="dropRow($event)">
+    <tr #rows cdkDrag [class.selected]="playbackEvent?.song?.id === song.id"
         *ngFor="let song of queue; let i = index;"
         (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
       <td class="track-number">
@@ -35,7 +35,7 @@
         <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
       </td>
       <td class="duration">{{ song.durationInMinutes }}</td>
-      <td class="controls" ngbDropdown>
+      <td class="options" ngbDropdown>
         <button ngbDropdownToggle><i class="fa fa-ellipsis-v"></i></button>
         <div ngbDropdownMenu class="dropdown-menu" role="menu">
           <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
