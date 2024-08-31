@@ -14,6 +14,7 @@ import {NoContentIndicatorComponent} from "../../common/no-content-indicator.com
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 import {ScrollingUtils} from "../../../utils/scrolling.utils";
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from "@angular/cdk/drag-drop";
+import {CdkScrollable} from "@angular/cdk/scrolling";
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
 @Component({
@@ -30,6 +31,7 @@ import scrollIntoElement = ScrollingUtils.scrollIntoElement;
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
+    CdkScrollable,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
@@ -107,5 +109,9 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   dropRow(event: CdkDragDrop<any, any>) {
     this.playbackService.moveSongInQueue(event.previousIndex, event.currentIndex);
+  }
+
+  trackByIndex(index: number, _: Song) {
+    return index;
   }
 }

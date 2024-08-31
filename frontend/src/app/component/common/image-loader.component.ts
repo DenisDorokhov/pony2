@@ -35,14 +35,16 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   set url(url: string | undefined) {
-    this._url = url;
-    if (url) {
-      this.state = ImageLoaderComponentState.PENDING;
-      if (this.isIntersecting) {
-        this.startLoading();
+    if (this._url !== url) {
+      this._url = url;
+      if (url) {
+        this.state = ImageLoaderComponentState.PENDING;
+        if (this.isIntersecting) {
+          this.startLoading();
+        }
+      } else {
+        this.state = ImageLoaderComponentState.EMPTY;
       }
-    } else {
-      this.state = ImageLoaderComponentState.EMPTY;
     }
   }
 

@@ -2,7 +2,7 @@
   <h4 class="modal-title">{{ 'queue.header' | translate }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
-<div class="modal-body" data-pony-image-loader-scroller>
+<div class="modal-body" cdk-scrollable data-pony-image-loader-scroller>
 
   <pony-no-content-indicator *ngIf="!queue.length"
                              [message]="'queue.emptyQueueLabel' | translate">
@@ -11,9 +11,9 @@
   <table *ngIf="queue.length > 0" class="table table-borderless">
     <tbody cdkDropList (cdkDropListDropped)="dropRow($event)">
     <tr #rows cdkDrag [class.selected]="playbackEvent?.song?.id === song.id"
-        *ngFor="let song of queue; let i = index;"
+        *ngFor="let song of queue; let i = index; trackBy: trackByIndex"
         (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
-      <td class="track-number">
+      <td class="track-number" [class.selected]="playbackEvent?.song?.id === song.id">
         <i *ngIf="playbackEvent?.song?.id === song.id"
            [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
            [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
@@ -26,16 +26,16 @@
           ) ? i + 1 : ''
         }}
       </td>
-      <td class="artwork">
+      <td class="artwork" [class.selected]="playbackEvent?.song?.id === song.id">
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
       </td>
-      <td class="artist">{{ song.album.artist.name | ponyUnknownArtist }}</td>
-      <td class="song">
+      <td class="artist" [class.selected]="playbackEvent?.song?.id === song.id">{{ song.album.artist.name | ponyUnknownArtist }}</td>
+      <td class="song" [class.selected]="playbackEvent?.song?.id === song.id">
         <div>{{ song.name | ponyUnknownSong }}</div>
         <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
       </td>
-      <td class="duration">{{ song.durationInMinutes }}</td>
-      <td class="options" ngbDropdown>
+      <td class="duration" [class.selected]="playbackEvent?.song?.id === song.id">{{ song.durationInMinutes }}</td>
+      <td ngbDropdown class="options" [class.selected]="playbackEvent?.song?.id === song.id">
         <button ngbDropdownToggle><i class="fa fa-ellipsis-v"></i></button>
         <div ngbDropdownMenu class="dropdown-menu" role="menu">
           <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
