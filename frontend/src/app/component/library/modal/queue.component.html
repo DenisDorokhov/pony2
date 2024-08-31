@@ -10,7 +10,7 @@
 
   <table *ngIf="queue.length > 0" class="table table-borderless">
     <tbody>
-    <tr [class.selected]="playbackEvent?.song?.id === song.id"
+    <tr #rows [class.selected]="playbackEvent?.song?.id === song.id"
         *ngFor="let song of queue; let i = index;"
         (dblclick)="playSong(song)" (mousedown)="onMouseDown($event)">
       <td class="track-number">

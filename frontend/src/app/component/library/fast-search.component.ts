@@ -193,7 +193,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   private selectNavigationItem(index: number) {
     this.navigationItems.forEach(next => next.selected = false);
     this.navigationItems[index].selected = true;
-    var selectedElement = this.linkElements.toArray()[index];
+    const selectedElement = this.linkElements.toArray()[index];
     // Element could be not shown yet, therefore undefined is fine.
     if (selectedElement) {
       scrollIntoElement(selectedElement.nativeElement, false);

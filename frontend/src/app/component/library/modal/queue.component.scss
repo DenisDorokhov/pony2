@@ -29,6 +29,10 @@ tr:hover td {
 tr.selected td {
   background-color: var(--blue) !important;
   color: white;
+
+  small {
+    color: white;
+  }
 }
 
 .track-number {
@@ -54,6 +58,7 @@ tr.selected td {
 
 .artist {
   font-weight: bold;
+  min-width: 120px;
   width: 0;
   text-align: center;
 }

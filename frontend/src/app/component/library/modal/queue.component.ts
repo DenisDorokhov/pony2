@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from "@angular/core";
+import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TranslateModule} from "@ngx-translate/core";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
@@ -12,6 +12,8 @@ import {LibraryService} from "../../../service/library.service";
 import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
+import {ScrollingUtils} from "../../../utils/scrolling.utils";
+import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
 @Component({
   standalone: true,
@@ -28,13 +30,15 @@ import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
   templateUrl: './queue.component.html',
   styleUrls: ['./queue.component.scss']
 })
-export class QueueComponent implements OnInit, OnDestroy {
+export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected readonly PlaybackState = PlaybackState;
   protected readonly LoadingState = LoadingState;
 
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
+
+  @ViewChildren('rows') rowElements!: QueryList<ElementRef>;
 
   private subscriptions: Subscription[] = [];
 
@@ -54,6 +58,16 @@ export class QueueComponent implements OnInit, OnDestroy {
       .subscribe(queue => this.queue = queue));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.playbackEvent = playbackEvent));
+  }
+
+  ngAfterViewInit(): void {
+    if (this.playbackEvent?.song) {
+      const index = this.queue.findIndex(song => song.id === this.playbackEvent?.song?.id);
+      if (index >= 0) {
+        const selectedElement = this.rowElements.toArray()[index];
+        scrollIntoElement(selectedElement.nativeElement);
+      }
+    }
   }
 
   playSong(song: Song) {
