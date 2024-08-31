@@ -1,0 +1,55 @@
+.modal-body {
+  height: 460px;
+  overflow-y: auto;
+  /* Scrolling performance optimization */
+  transform: translateZ(0);
+}
+
+table {
+  margin-bottom: 0;
+}
+
+td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+td:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+td {
+  vertical-align: middle;
+}
+
+tr:hover td {
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+tr.selected td {
+  background-color: var(--blue) !important;
+  color: white;
+}
+
+.track-number {
+  width: 40px;
+  text-align: left;
+  font-weight: bold;
+  padding-left: 16px;
+  padding-right: 0;
+}
+
+.artwork {
+  width: 0;
+
+  pony-image-loader {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+.artist {
+  font-weight: bold;
+  width: 0;
+  text-align: center;
+}

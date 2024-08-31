@@ -54,7 +54,8 @@ export default {
     songTitle: '{{artistName}} - {{songName}}',
   },
   queue: {
-    header: 'Playback Queue'
+    header: 'Playback Queue',
+    emptyQueueLabel: 'Your queue is empty :-(',
   },
   scanning: {
     header: 'Scanning',
