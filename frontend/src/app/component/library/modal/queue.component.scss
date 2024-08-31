@@ -148,3 +148,11 @@ tr.selected .options {
 .cdk-drag-placeholder {
   visibility: hidden;
 }
+
+.cdk-drop-list-dragging .cdk-drag {
+  transition: transform 100ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drag-animating {
+  transition: transform 100ms cubic-bezier(0, 0, 0.2, 1);
+}
