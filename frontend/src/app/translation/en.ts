@@ -60,6 +60,8 @@ export default {
     emptyQueueLabel: 'Your playback queue is currently empty.',
     history: 'History',
     playlists: 'Playlists',
+    goToSongButton: 'Go to song',
+    removeSongButton: 'Remove from queue',
   },
   scanning: {
     header: 'Scanning',

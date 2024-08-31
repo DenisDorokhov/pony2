@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TranslateModule} from "@ngx-translate/core";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
 import {PlaybackEvent, PlaybackService, PlaybackState} from "../../../service/playback.service";
 import {Subscription} from "rxjs";
 import {Song} from "../../../domain/library.model";
@@ -24,7 +24,8 @@ import scrollIntoElement = ScrollingUtils.scrollIntoElement;
     UnknownSongPipe,
     ImageLoaderComponent,
     NoContentIndicatorComponent,
-    UnknownAlbumPipe
+    UnknownAlbumPipe,
+    NgbDropdownModule,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
@@ -70,14 +71,33 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  playSong(song: Song) {
-    this.libraryService.requestSongPlayback(song);
+  playSongOnDoubleClick(event: MouseEvent, index: number) {
+    let checkElement: Node | null = event.target as Node;
+    let isButtonClick = false;
+    do {
+      isButtonClick = checkElement.nodeName === 'BUTTON';
+      checkElement = (checkElement as Node).parentNode;
+    } while (!isButtonClick && checkElement);
+    if (!isButtonClick) {
+      this.playbackService.play(index);
+    }
   }
 
-  onMouseDown(event: MouseEvent) {
+  preventDoubleClickDefault(event: MouseEvent) {
     // Disable text selection on double click.
     if (event.detail > 1) {
       event.preventDefault();
     }
+  }
+
+  goToSong(song: Song) {
+    this.libraryService.selectArtistAndMakeDefault(song.album.artist);
+    this.libraryService.selectSong(song);
+    this.libraryService.startScrollToSong(song);
+    this.activeModal.close();
+  }
+
+  removeSong(index: number) {
+    this.playbackService.removeSongFromQueue(index);
   }
 }

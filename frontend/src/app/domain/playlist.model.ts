@@ -18,6 +18,8 @@ export interface Playlist {
   switchToSong(songId: string): Song | undefined;
   switchToNextSong(): Observable<Song | undefined>;
   switchToPreviousSong(): Observable<Song | undefined>;
+
+  removeSong(index: number): Song;
 }
 
 export class StaticPlaylist implements Playlist {
@@ -25,8 +27,10 @@ export class StaticPlaylist implements Playlist {
   private _currentIndex = -1;
 
   private currentSongSubject = new BehaviorSubject<Song | undefined>(undefined);
+  private queueSubject: BehaviorSubject<Song[]>;
 
   constructor(private _queue: Song[]) {
+    this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
     if (this._queue.length > 0) {
       this.switchToIndex(0);
     }
@@ -45,7 +49,7 @@ export class StaticPlaylist implements Playlist {
   }
 
   observeQueue(): Observable<Song[]> {
-    return of(this._queue.slice());
+    return this.queueSubject.asObservable();
   }
 
   observeCurrentSong(): Observable<Song | undefined> {
@@ -95,5 +99,18 @@ export class StaticPlaylist implements Playlist {
         return of(undefined);
       }
     });
+  }
+
+  removeSong(index: number): Song {
+    const song = this._queue[index];
+    if (this._currentIndex === index) {
+      this._currentIndex = -1;
+      this.currentSongSubject.next(undefined);
+    } else if (this._currentIndex > index) {
+      this._currentIndex--;
+    }
+    this._queue.splice(index, 1);
+    this.queueSubject.next(this._queue.slice());
+    return song;
   }
 }

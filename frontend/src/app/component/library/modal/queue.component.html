@@ -12,7 +12,7 @@
     <tbody>
     <tr #rows [class.selected]="playbackEvent?.song?.id === song.id"
         *ngFor="let song of queue; let i = index;"
-        (dblclick)="playSong(song)" (mousedown)="onMouseDown($event)">
+        (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
       <td class="track-number">
         <i *ngIf="playbackEvent?.song?.id === song.id"
            [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
@@ -35,6 +35,13 @@
         <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
       </td>
       <td class="duration">{{ song.durationInMinutes }}</td>
+      <td class="controls" ngbDropdown>
+        <button ngbDropdownToggle><i class="fa fa-ellipsis-v"></i></button>
+        <div ngbDropdownMenu class="dropdown-menu" role="menu">
+          <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
+          <button ngbDropdownItem (click)="removeSong(i)"><i class="fa fa-ban"></i>{{ 'queue.removeSongButton' | translate }}</button>
+        </div>
+      </td>
     </tr>
     </tbody>
   </table>

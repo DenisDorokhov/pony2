@@ -209,6 +209,10 @@ export class PlaybackService {
     return this.queueSubject.asObservable();
   }
 
+  removeSongFromQueue(index: number): Song {
+    return this.playlist!.removeSong(index);
+  }
+
   observeCurrentSong(): Observable<Song | undefined> {
     return this.currentSongSubject.asObservable();
   }
@@ -236,6 +240,14 @@ export class PlaybackService {
         }
         this.currentSongSubject.next(song);
       });
+  }
+
+  play(index: number) {
+    if (this.playlist!.currentIndex === index) {
+      this.audioPlayer.play(this.playlist!.currentSong);
+    } else {
+      this.playlist!.switchToIndex(index);
+    }
   }
 
   playOrPause() {

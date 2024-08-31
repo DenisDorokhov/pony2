@@ -35,12 +35,20 @@ tr.selected td {
   }
 }
 
+td:first-child {
+  padding-left: 12px;
+  padding-right: 0;
+}
+
+td:last-child {
+  padding-left: 0;
+  padding-right: 12px;
+}
+
 .track-number {
   width: 40px;
   text-align: center;
   font-weight: bold;
-  padding-left: 12px;
-  padding-right: 0;
 
   .fa-volume-off {
     padding-right: 8px;
@@ -69,14 +77,39 @@ tr.selected td {
 
 .duration {
   width: 0;
-  padding-left: 0;
-  padding-right: 12px;
   text-align: right;
   color: #909090;
 }
 
-button {
+.modal-footer button {
   i {
     margin-right: 2px;
+  }
+}
+
+.controls {
+
+  > button {
+    border: none;
+    background-color: transparent;
+  }
+
+  .dropdown-toggle::after {
+    display: none;
+  }
+
+  .dropdown-menu button i {
+    margin-right: 12px;
+  }
+}
+
+tr.selected .controls {
+
+  > button {
+    color: white;
+  }
+
+  > button:active {
+    color: #f5f5f5;
   }
 }
