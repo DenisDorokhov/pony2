@@ -28,7 +28,7 @@ export default {
       usersButton: 'Users',
       profileButton: 'Profile',
       logOutButton: 'Logout',
-      queueButton: 'Queue & playlists',
+      queueButton: 'Queue & Playlists',
       refreshButton: 'Re-scan',
     },
     album: {
