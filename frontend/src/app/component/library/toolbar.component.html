@@ -2,6 +2,18 @@
   <button type="button" class="btn btn-sm btn-light" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
     <i class="fa fa-list"></i>
   </button>
+  <div ngbDropdown class="btn-group">
+    <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
+      <i class="fa fa-user"></i>
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <li class="username">{{ currentUser?.name }}</li>
+      <li><hr class="dropdown-divider"></li>
+      <button ngbDropdownItem (click)="openProfile()">{{ 'library.toolbar.profileButton' | translate }}</button>
+      <button ngbDropdownItem (click)="signOut()">{{ 'library.toolbar.logOutButton' | translate }}</button>
+    </ul>
+  </div>
   <button *ngIf="currentUser?.role === 'ADMIN'" title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
     <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
   </button>
@@ -15,18 +27,6 @@
       <button ngbDropdownItem (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
       <button ngbDropdownItem (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
       <button ngbDropdownItem (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
-    </ul>
-  </div>
-  <div ngbDropdown class="btn-group">
-    <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
-      <i class="fa fa-user"></i>
-      <span class="caret"></span>
-    </button>
-    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <li class="username">{{ currentUser?.name }}</li>
-      <li><hr class="dropdown-divider"></li>
-      <button ngbDropdownItem (click)="openProfile()">{{ 'library.toolbar.profileButton' | translate }}</button>
-      <button ngbDropdownItem (click)="signOut()">{{ 'library.toolbar.logOutButton' | translate }}</button>
     </ul>
   </div>
   <div>
