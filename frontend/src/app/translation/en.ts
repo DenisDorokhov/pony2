@@ -56,6 +56,8 @@ export default {
   queue: {
     header: 'Playback Queue',
     emptyQueueLabel: 'Your queue is empty :-(',
+    history: 'History',
+    playlists: 'Playlists',
   },
   scanning: {
     header: 'Scanning',

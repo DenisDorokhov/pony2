@@ -10,6 +10,7 @@ export class Song {
   fileExtension: string;
   size: number;
   duration: number;
+  durationInMinutes: string;
   bitRate: number;
   bitRateVariable: boolean;
   discNumber: number | undefined;
@@ -30,6 +31,7 @@ export class Song {
     this.fileExtension = songDto.fileExtension;
     this.size = songDto.size;
     this.duration = songDto.duration;
+    this.durationInMinutes = this.formatSecondsInMinutes(this.duration);
     this.bitRate = songDto.bitRate;
     this.bitRateVariable = songDto.bitRateVariable;
     this.discNumber = songDto.discNumber;
@@ -46,11 +48,7 @@ export class Song {
     return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 
-  get durationInMinutes(): string {
-    return this.formatSecondsInMinutes(this.duration);
-  }
-
-  relativeDurationInMinutes(progress: number) {
+  getRelativeDurationInMinutes(progress: number) {
     return this.formatSecondsInMinutes(this.duration * progress);
   }
 

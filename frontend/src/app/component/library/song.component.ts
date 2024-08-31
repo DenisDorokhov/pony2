@@ -28,7 +28,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input()
   set song(song: Song) {
     this._song = song;
-    this.duration = this.song.durationInMinutes;
     this.selected = this.libraryService.selectedSong?.id === this.song.id;
     if (this.playbackService.lastPlaybackEvent.song?.id === this.song.id) {
       this.playbackState = this.playbackService.lastPlaybackEvent.state;
@@ -41,7 +40,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('container') containerElement!: ElementRef;
 
-  duration: string | undefined;
   selected = false;
   playbackState: PlaybackState | undefined;
 

@@ -11,6 +11,7 @@ import {ImageLoaderComponent} from "../../common/image-loader.component";
 import {LibraryService} from "../../../service/library.service";
 import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
+import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 
 @Component({
   standalone: true,
@@ -20,13 +21,17 @@ import {NoContentIndicatorComponent} from "../../common/no-content-indicator.com
     UnknownArtistPipe,
     UnknownSongPipe,
     ImageLoaderComponent,
-    NoContentIndicatorComponent
+    NoContentIndicatorComponent,
+    UnknownAlbumPipe
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
   styleUrls: ['./queue.component.scss']
 })
 export class QueueComponent implements OnInit, OnDestroy {
+
+  protected readonly PlaybackState = PlaybackState;
+  protected readonly LoadingState = LoadingState;
 
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
@@ -61,7 +66,4 @@ export class QueueComponent implements OnInit, OnDestroy {
       event.preventDefault();
     }
   }
-
-  protected readonly PlaybackState = PlaybackState;
-  protected readonly LoadingState = LoadingState;
 }

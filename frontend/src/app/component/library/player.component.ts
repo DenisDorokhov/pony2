@@ -95,7 +95,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       const progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
       this.progress = progress || 0;
       this.isLoading = true;
-      this.formattedProgress = song.relativeDurationInMinutes(this.progress);
+      this.formattedProgress = song.getRelativeDurationInMinutes(this.progress);
       this.playbackService.seek(this.progress);
     }
   }
@@ -114,7 +114,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.isLoading = playbackEvent.state === PlaybackState.LOADING;
     this.isError = playbackEvent.state === PlaybackState.ERROR;
     this.progress = playbackEvent.progress || 0;
-    this.formattedProgress = playbackEvent.song ? playbackEvent.song.relativeDurationInMinutes(this.progress) : '0:00';
+    this.formattedProgress = playbackEvent.song ? playbackEvent.song.getRelativeDurationInMinutes(this.progress) : '0:00';
     this.formattedDuration = playbackEvent.song ? playbackEvent.song.durationInMinutes : '0:00';
   }
 

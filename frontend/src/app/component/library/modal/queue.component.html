@@ -30,9 +30,23 @@
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
       </td>
       <td class="artist">{{ song.album.artist.name | ponyUnknownArtist }}</td>
-      <td>{{ song.name | ponyUnknownSong }}</td>
+      <td class="song">
+        <div>{{ song.name | ponyUnknownSong }}</div>
+        <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
+      </td>
+      <td class="duration">{{ song.durationInMinutes }}</td>
     </tr>
     </tbody>
   </table>
 
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-dark">
+    <i class="fa fa-history"></i>
+    {{ 'queue.history' | translate }}
+  </button>
+  <button type="button" class="btn btn-outline-dark">
+    <i class="fa fa-bars"></i>
+    {{ 'queue.playlists' | translate }}
+  </button>
 </div>
