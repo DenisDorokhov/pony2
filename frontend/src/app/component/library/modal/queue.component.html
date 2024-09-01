@@ -2,16 +2,23 @@
   <h4 class="modal-title">{{ 'queue.header' | translate }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
-<cdk-virtual-scroll-viewport disabled="true" [itemSize]="76" appendOnly data-pony-image-loader-scroller>
+<cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="76"
+                             (touchmove)="onTouchmove($event)"
+                             (wheel)="onWheel($event)">
 
   <pony-no-content-indicator *ngIf="!queue.length"
                              [message]="'queue.emptyQueueLabel' | translate">
   </pony-no-content-indicator>
 
-  <div cdkDropList cdkDropListAutoScrollDisabled [cdkDropListData]="queue" class="table-container" (cdkDropListDropped)="dropRow($event)">
-    <div cdkDrag class="columns-container" [class.selected]="playbackEvent?.song?.id === song.id"
+  <div cdkDropList cdkDropListAutoScrollDisabled
+       [cdkDropListData]="queue" class="table-container"
+       (cdkDropListDropped)="onDropListDropped($event)">
+    <div id="queueSong_{{ i }}" cdkDrag class="columns-container"
+         [class.selected]="playbackEvent?.song?.id === song.id"
          *cdkVirtualFor="let song of queue; let i = index;"
-         (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
+         (cdkDragStarted)="onDragStarted($event)"
+         (dblclick)="playSongOnDoubleClick($event, i)"
+         (mousedown)="preventDoubleClickDefault($event)">
       <div class="track-number">
         <div class="vertical-align-container">
           <div class="vertical-align-target">

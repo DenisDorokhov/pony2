@@ -12,7 +12,7 @@ import {LibraryService} from "../../../service/library.service";
 import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
-import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDropList} from "@angular/cdk/drag-drop";
+import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 
 @Component({
@@ -106,7 +106,31 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     this.playbackService.removeSongFromQueue(index);
   }
 
-  dropRow(event: CdkDragDrop<any, any>) {
-    this.playbackService.moveSongInQueue(event.previousIndex, event.currentIndex);
+  onDropListDropped(event: CdkDragDrop<any, any>) {
+    const toIndex = this.dragFromIndex! - event.previousIndex + event.currentIndex;
+    this.playbackService.moveSongInQueue(this.dragFromIndex!, toIndex);
+    this.dragFromIndex = undefined;
+  }
+
+  private dragFromIndex: number | undefined;
+
+  onDragStarted(event: CdkDragStart) {
+    this.dragFromIndex = this.resolveDragItemIndex(event.source.element.nativeElement.id);
+  }
+
+  private resolveDragItemIndex(id: string): number {
+    return Number(id.replaceAll('queueSong_', ''));
+  }
+
+  onWheel(event: WheelEvent) {
+    if (this.dragFromIndex !== undefined) {
+      event.preventDefault();
+    }
+  }
+
+  onTouchmove(event: TouchEvent) {
+    if (this.dragFromIndex !== undefined) {
+      event.preventDefault();
+    }
   }
 }
