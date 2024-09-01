@@ -119,8 +119,16 @@ export class StaticPlaylist implements Playlist {
   moveSong(fromIndex: number, toIndex: number): Song {
     if (this._currentIndex === fromIndex) {
       this._currentIndex = toIndex;
-    } else if (this._currentIndex >= toIndex) {
-      this._currentIndex++;
+    } else {
+      if (fromIndex > toIndex) {
+        if (this._currentIndex >= toIndex) {
+          this._currentIndex++;
+        }
+      } else if (fromIndex < toIndex) {
+        if (this._currentIndex <= toIndex) {
+          this._currentIndex--;
+        }
+      }
     }
     const fromSong = this._queue[fromIndex];
     moveItemInArray(this._queue, fromIndex, toIndex);
