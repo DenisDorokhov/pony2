@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren} from "@angular/core";
+import {AfterViewInit, Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TranslateModule} from "@ngx-translate/core";
 import {NgbActiveModal, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
@@ -12,10 +12,8 @@ import {LibraryService} from "../../../service/library.service";
 import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
-import {ScrollingUtils} from "../../../utils/scrolling.utils";
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDropList} from "@angular/cdk/drag-drop";
-import {CdkScrollable} from "@angular/cdk/scrolling";
-import scrollIntoElement = ScrollingUtils.scrollIntoElement;
+import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 
 @Component({
   standalone: true,
@@ -31,8 +29,10 @@ import scrollIntoElement = ScrollingUtils.scrollIntoElement;
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
-    CdkScrollable,
     CdkDragPreview,
+    CdkVirtualScrollViewport,
+    CdkFixedSizeVirtualScroll,
+    CdkVirtualForOf,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
@@ -46,7 +46,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
 
-  @ViewChildren('rows') rowElements!: QueryList<ElementRef>;
+  @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
 
   private subscriptions: Subscription[] = [];
 
@@ -69,13 +69,11 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (this.playbackEvent?.song) {
-      const index = this.queue.findIndex(song => song.id === this.playbackEvent?.song?.id);
-      if (index >= 0) {
-        const selectedElement = this.rowElements.toArray()[index];
-        scrollIntoElement(selectedElement.nativeElement);
+    requestAnimationFrame(() => {
+      if (this.playbackService.currentSongIndex >= 0) {
+        this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * 76 - 230 + 38 + 16);
       }
-    }
+    });
   }
 
   playSongOnDoubleClick(event: MouseEvent, index: number) {
@@ -110,9 +108,5 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   dropRow(event: CdkDragDrop<any, any>) {
     this.playbackService.moveSongInQueue(event.previousIndex, event.currentIndex);
-  }
-
-  trackByIndex(index: number, _: Song) {
-    return index;
   }
 }

@@ -2,15 +2,15 @@
   <h4 class="modal-title">{{ 'queue.header' | translate }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
-<div class="modal-body" cdk-scrollable data-pony-image-loader-scroller>
+<cdk-virtual-scroll-viewport disabled="true" [itemSize]="76" appendOnly data-pony-image-loader-scroller>
 
   <pony-no-content-indicator *ngIf="!queue.length"
                              [message]="'queue.emptyQueueLabel' | translate">
   </pony-no-content-indicator>
 
-  <div cdkDropList class="table-container" (cdkDropListDropped)="dropRow($event)">
-    <div #rows cdkDrag class="columns-container" [class.selected]="playbackEvent?.song?.id === song.id"
-         *ngFor="let song of queue; let i = index; trackBy: trackByIndex"
+  <div cdkDropList cdkDropListAutoScrollDisabled [cdkDropListData]="queue" class="table-container" (cdkDropListDropped)="dropRow($event)">
+    <div cdkDrag class="columns-container" [class.selected]="playbackEvent?.song?.id === song.id"
+         *cdkVirtualFor="let song of queue; let i = index;"
          (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
       <div class="track-number">
         <div class="vertical-align-container">
@@ -72,7 +72,7 @@
     </div>
   </div>
 
-</div>
+</cdk-virtual-scroll-viewport>
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-dark">
     <i class="fa fa-history"></i>

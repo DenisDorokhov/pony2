@@ -205,6 +205,10 @@ export class PlaybackService {
     return this.audioPlayer.lastPlaybackEvent;
   }
 
+  get currentSongIndex(): number {
+    return this.playlist?.currentIndex ?? -1;
+  }
+
   observeQueue(): Observable<Song[]> {
     return this.queueSubject.asObservable();
   }

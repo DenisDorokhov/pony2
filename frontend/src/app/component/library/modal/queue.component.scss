@@ -1,8 +1,5 @@
-.modal-body {
+cdk-virtual-scroll-viewport {
   height: 460px;
-  overflow-y: auto;
-  /* Scrolling performance optimization */
-  transform: translateZ(0);
 }
 
 .vertical-align-container {
@@ -17,13 +14,14 @@
 }
 
 .table-container {
-  padding: 0;
+  padding: 16px;
 }
 
 .columns-container {
   display: flex;
   width: 100%;
   border-radius: 6px;
+  height: 76px;
 }
 
 .track-number {
