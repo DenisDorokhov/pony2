@@ -8,43 +8,69 @@
                              [message]="'queue.emptyQueueLabel' | translate">
   </pony-no-content-indicator>
 
-  <table *ngIf="queue.length > 0" class="table table-borderless">
-    <tbody cdkDropList (cdkDropListDropped)="dropRow($event)">
-    <tr #rows cdkDrag [class.selected]="playbackEvent?.song?.id === song.id"
-        *ngFor="let song of queue; let i = index; trackBy: trackByIndex"
-        (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
-      <td class="track-number" [class.selected]="playbackEvent?.song?.id === song.id">
-        <i *ngIf="playbackEvent?.song?.id === song.id"
-           [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
-           [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
-           class="fa"></i>
-        {{
-          playbackEvent?.song?.id !== song.id || (
-            playbackEvent?.state !== PlaybackState.LOADING &&
-            playbackEvent?.state !== PlaybackState.PLAYING &&
-            playbackEvent?.state !== PlaybackState.PAUSED
-          ) ? i + 1 : ''
-        }}
-      </td>
-      <td class="artwork" [class.selected]="playbackEvent?.song?.id === song.id">
-        <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-      </td>
-      <td class="artist" [class.selected]="playbackEvent?.song?.id === song.id">{{ song.album.artist.name | ponyUnknownArtist }}</td>
-      <td class="song" [class.selected]="playbackEvent?.song?.id === song.id">
-        <div>{{ song.name | ponyUnknownSong }}</div>
-        <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
-      </td>
-      <td class="duration" [class.selected]="playbackEvent?.song?.id === song.id">{{ song.durationInMinutes }}</td>
-      <td ngbDropdown class="options" [class.selected]="playbackEvent?.song?.id === song.id">
-        <button ngbDropdownToggle><i class="fa fa-ellipsis-v"></i></button>
-        <div ngbDropdownMenu class="dropdown-menu" role="menu">
-          <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
-          <button ngbDropdownItem (click)="removeSong(i)"><i class="fa fa-ban"></i>{{ 'queue.removeSongButton' | translate }}</button>
+  <div cdkDropList class="table-container" (cdkDropListDropped)="dropRow($event)">
+    <div #rows cdkDrag class="columns-container" [class.selected]="playbackEvent?.song?.id === song.id"
+         *ngFor="let song of queue; let i = index; trackBy: trackByIndex"
+         (dblclick)="playSongOnDoubleClick($event, i)" (mousedown)="preventDoubleClickDefault($event)">
+      <div class="track-number">
+        <div class="vertical-align-container">
+          <div class="vertical-align-target">
+            <i *ngIf="playbackEvent?.song?.id === song.id"
+               [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
+               [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
+               class="fa"></i>
+            {{
+              playbackEvent?.song?.id !== song.id || (
+                playbackEvent?.state !== PlaybackState.LOADING &&
+                playbackEvent?.state !== PlaybackState.PLAYING &&
+                playbackEvent?.state !== PlaybackState.PAUSED
+              ) ? i + 1 : ''
+            }}
+          </div>
         </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+      </div>
+      <div class="artwork">
+        <div class="vertical-align-container">
+          <div class="vertical-align-target">
+            <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
+          </div>
+        </div>
+      </div>
+      <div class="artist">
+        <div class="vertical-align-container">
+          <div class="vertical-align-target">
+            {{ song.album.artist.name | ponyUnknownArtist }}
+          </div>
+        </div>
+      </div>
+      <div class="song">
+        <div class="vertical-align-container">
+          <div class="vertical-align-target">
+            <div>{{ song.name | ponyUnknownSong }}</div>
+            <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="duration">
+        <div class="vertical-align-container">
+          <div class="vertical-align-target">
+            {{ song.durationInMinutes }}
+          </div>
+        </div>
+      </div>
+      <div ngbDropdown class="options">
+        <div class="vertical-align-container">
+          <div class="vertical-align-target">
+            <button ngbDropdownToggle class="menu"><i class="fa fa-ellipsis-v"></i></button>
+            <div ngbDropdownMenu class="dropdown-menu" role="menu">
+              <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
+              <button ngbDropdownItem (click)="removeSong(i)"><i class="fa fa-ban"></i>{{ 'queue.removeSongButton' | translate }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 <div class="modal-footer">

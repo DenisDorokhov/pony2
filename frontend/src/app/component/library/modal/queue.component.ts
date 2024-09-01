@@ -13,7 +13,7 @@ import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 import {ScrollingUtils} from "../../../utils/scrolling.utils";
-import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from "@angular/cdk/drag-drop";
+import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkScrollable} from "@angular/cdk/scrolling";
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
@@ -32,6 +32,7 @@ import scrollIntoElement = ScrollingUtils.scrollIntoElement;
     CdkDrag,
     CdkDragHandle,
     CdkScrollable,
+    CdkDragPreview,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
