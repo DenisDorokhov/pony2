@@ -44,11 +44,17 @@
         min-width: 336px;
       }
 
+      @media (width <= 1472px) {
+        .player {
+          right: 222px;
+        }
+      }
+
       .toolbar {
         position: absolute;
         top: 20px;
         right: 0;
-        width: 312px;
+        width: 210px;
       }
     }
 
