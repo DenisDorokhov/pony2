@@ -78,7 +78,7 @@ public class FileController implements ErrorHandlingController {
             logger.error("Could not get root cause of exception.", iae);
         }
         String normalizedError = Strings.nullToEmpty(rootCause.getMessage()).toLowerCase();
-        return normalizedError.contains("broken pipe") || normalizedError.contains("connection reset by peer");
+        return normalizedError.contains("broken pipe") || normalizedError.contains("connection reset by peer") || normalizedError.contains("connection was aborted");
     }
 
     @GetMapping(value = "/api/file/artwork/large/{artworkId}", produces = {"image/*", APPLICATION_JSON_VALUE})

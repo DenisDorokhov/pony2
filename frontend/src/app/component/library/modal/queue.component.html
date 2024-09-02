@@ -2,7 +2,7 @@
   <h4 class="modal-title">{{ 'queue.header' | translate }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
-<cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="76"
+<cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
                              (touchmove)="onTouchmove($event)"
                              (wheel)="onWheel($event)">
 
@@ -14,7 +14,7 @@
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
     <div id="queueSong_{{ i }}" cdkDrag class="columns-container"
-         [class.selected]="playbackEvent?.song?.id === song.id"
+         [class.selected]="currentSongIndex === i"
          *cdkVirtualFor="let song of queue; let i = index;"
          (cdkDragStarted)="onDragStarted($event)"
          (dblclick)="playSongOnDoubleClick($event, i)"
@@ -22,12 +22,12 @@
       <div class="track-number">
         <div class="vertical-align-container">
           <div class="vertical-align-target">
-            <i *ngIf="playbackEvent?.song?.id === song.id"
+            <i *ngIf="currentSongIndex === i"
                [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
                [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
                class="fa"></i>
             {{
-              playbackEvent?.song?.id !== song.id || (
+              currentSongIndex !== i || (
                 playbackEvent?.state !== PlaybackState.LOADING &&
                 playbackEvent?.state !== PlaybackState.PLAYING &&
                 playbackEvent?.state !== PlaybackState.PAUSED

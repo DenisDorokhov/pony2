@@ -43,8 +43,13 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly PlaybackState = PlaybackState;
   protected readonly LoadingState = LoadingState;
 
+  protected readonly rowHeight = 76;
+  protected readonly viewPortHeight = 420;
+  protected readonly viewPortPadding = 16;
+
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
+  currentSongIndex: number | undefined;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
 
@@ -66,12 +71,14 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe(queue => this.queue = queue));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.playbackEvent = playbackEvent));
+    this.subscriptions.push(this.playbackService.observeCurrentSong()
+      .subscribe(_ => this.currentSongIndex = this.playbackService.currentSongIndex));
   }
 
   ngAfterViewInit(): void {
     requestAnimationFrame(() => {
       if (this.playbackService.currentSongIndex >= 0) {
-        this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * 76 - 230 + 38 + 16);
+        this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding);
       }
     });
   }
@@ -104,11 +111,13 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   removeSong(index: number) {
     this.playbackService.removeSongFromQueue(index);
+    this.currentSongIndex = this.playbackService.currentSongIndex
   }
 
   onDropListDropped(event: CdkDragDrop<any, any>) {
     const toIndex = this.dragFromIndex! - event.previousIndex + event.currentIndex;
     this.playbackService.moveSongInQueue(this.dragFromIndex!, toIndex);
+    this.currentSongIndex = this.playbackService.currentSongIndex
     this.dragFromIndex = undefined;
   }
 
