@@ -95,12 +95,26 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "name"),
     }))
+    public String getSearchTerms() {
+        return Strings.nullToEmpty(name);
+    }
+
+    @Transient
+    @FullTextField(name = "fallbackSearchTerms", analyzer = "ponyAnalyzer")
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "name"),
+    }))
+    @IndexingDependency(derivedFrom = @ObjectPath({
+            @PropertyValue(propertyName = "year"),
+    }))
     @IndexingDependency(derivedFrom = @ObjectPath({
             @PropertyValue(propertyName = "artist"),
             @PropertyValue(propertyName = "name"),
     }))
-    public String getSearchTerms() {
-        return Strings.nullToEmpty(name);
+    public String getFallbackSearchTerms() {
+        return Strings.nullToEmpty(name) + " " +
+                Strings.nullToEmpty(year != null ? String.valueOf(year) : "") + " " +
+                Strings.nullToEmpty(artist.getName());
     }
 
     @Override

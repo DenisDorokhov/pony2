@@ -44,7 +44,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     @Override
     @Transactional(readOnly = true)
     public List<Album> searchAlbums(LibrarySearchQuery query, int maxResults) {
-        return search(query, maxResults, Album.class, false);
+        return search(query, maxResults, Album.class, true);
     }
 
     @Override

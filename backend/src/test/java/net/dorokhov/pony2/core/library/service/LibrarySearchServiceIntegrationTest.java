@@ -90,8 +90,8 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
 
         Artist artist = artistRepository.save(new Artist().setName("artist"));
 
-        Album album1 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity1"));
-        Album album2 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity2"));
+        Album album1 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity1").setYear(1991));
+        Album album2 = albumRepository.save(new Album().setArtist(artist).setName("the foobar entity2").setYear(1999));
 
         transactionTemplate.executeWithoutResult(status -> {
             assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 10)).containsOnly(album1, album2);
@@ -100,7 +100,8 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
             assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(album1, album2);
             assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(album1);
-            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).isEmpty();
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity"), 10)).containsOnly(album1, album2);
+            assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("artist entity 1999"), 10)).containsExactly(album2);
             assertThat(librarySearchService.searchAlbums(LibrarySearchQuery.of("other"), 10)).isEmpty();
         });
     }
