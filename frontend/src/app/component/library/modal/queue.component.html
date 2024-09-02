@@ -20,60 +20,38 @@
          (dblclick)="playSongOnDoubleClick($event, i)"
          (mousedown)="preventDoubleClickDefault($event)">
       <div class="track-number">
-        <div class="vertical-align-container">
-          <div class="vertical-align-target">
-            <i *ngIf="currentSongIndex === i"
-               [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
-               [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
-               class="fa"></i>
-            {{
-              currentSongIndex !== i || (
-                playbackEvent?.state !== PlaybackState.LOADING &&
-                playbackEvent?.state !== PlaybackState.PLAYING &&
-                playbackEvent?.state !== PlaybackState.PAUSED
-              ) ? i + 1 : ''
-            }}
-          </div>
+        <div>
+          <i *ngIf="currentSongIndex === i"
+             [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
+             [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
+             class="fa"></i>
+          {{
+            currentSongIndex !== i || (
+              playbackEvent?.state !== PlaybackState.LOADING &&
+              playbackEvent?.state !== PlaybackState.PLAYING &&
+              playbackEvent?.state !== PlaybackState.PAUSED
+            ) ? i + 1 : ''
+          }}
         </div>
       </div>
       <div class="artwork">
-        <div class="vertical-align-container">
-          <div class="vertical-align-target">
-            <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-          </div>
-        </div>
+        <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
       </div>
       <div class="artist">
-        <div class="vertical-align-container">
-          <div class="vertical-align-target">
-            {{ song.album.artist.name | ponyUnknownArtist }}
-          </div>
-        </div>
+        <div>{{ song.album.artist.name | ponyUnknownArtist }}</div>
       </div>
       <div class="song">
-        <div class="vertical-align-container">
-          <div class="vertical-align-target">
-            <div>{{ song.name | ponyUnknownSong }}</div>
-            <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
-          </div>
-        </div>
+        <div>{{ song.name | ponyUnknownSong }}</div>
+        <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
       </div>
       <div class="duration">
-        <div class="vertical-align-container">
-          <div class="vertical-align-target">
-            {{ song.durationInMinutes }}
-          </div>
-        </div>
+        {{ song.durationInMinutes }}
       </div>
       <div ngbDropdown class="options">
-        <div class="vertical-align-container">
-          <div class="vertical-align-target">
-            <button ngbDropdownToggle class="menu"><i class="fa fa-ellipsis-v"></i></button>
-            <div ngbDropdownMenu class="dropdown-menu" role="menu">
-              <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
-              <button ngbDropdownItem (click)="removeSong(i)"><i class="fa fa-ban"></i>{{ 'queue.removeSongButton' | translate }}</button>
-            </div>
-          </div>
+        <button ngbDropdownToggle class="menu"><i class="fa fa-ellipsis-v"></i></button>
+        <div ngbDropdownMenu class="dropdown-menu" role="menu">
+          <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
+          <button ngbDropdownItem (click)="removeSong(i)"><i class="fa fa-ban"></i>{{ 'queue.removeSongButton' | translate }}</button>
         </div>
       </div>
     </div>

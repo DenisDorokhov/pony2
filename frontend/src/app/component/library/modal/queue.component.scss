@@ -1,15 +1,8 @@
 cdk-virtual-scroll-viewport {
   height: 420px;
-}
 
-.vertical-align-container {
-  display: table;
-  height: 100%;
-  overflow: hidden;
-
-  .vertical-align-target {
-    display: table-cell;
-    vertical-align: middle;
+  ::ng-deep > div {
+    width: 100%;
   }
 }
 
@@ -28,13 +21,17 @@ cdk-virtual-scroll-viewport {
   text-align: center;
   font-weight: bold;
   padding: 8px 0 8px 12px;
+  line-height: 58px;
 
   .fa-volume-off {
     padding-right: 8px;
   }
 
-  .vertical-align-container {
-    width: 50px;
+  div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 40px;
   }
 }
 
@@ -51,20 +48,35 @@ cdk-virtual-scroll-viewport {
   padding: 8px;
   font-weight: bold;
   text-align: center;
+  max-width: 220px;
+  div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 58px;
+  }
 }
 
 .song {
-  width: 100%;
-  padding: 8px;
+  flex-grow: 1;
+  min-width: 0;
+  padding: 14px 8px 8px 8px;
 
   small {
     color: #909090;
+  }
+
+  div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 }
 
 .duration {
   padding: 8px;
   color: #909090;
+  line-height: 58px;
 }
 
 .options {
@@ -73,7 +85,8 @@ cdk-virtual-scroll-viewport {
   button.menu {
     border: none;
     background-color: transparent;
-    margin-top: 1px;
+    margin-top: 17px;
+    margin-bottom: 17px;
   }
 
   .dropdown-toggle::after {
