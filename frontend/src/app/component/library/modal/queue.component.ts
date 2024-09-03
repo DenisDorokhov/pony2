@@ -1,4 +1,13 @@
-import {AfterViewInit, Component, OnDestroy, OnInit, ViewChild} from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TranslateModule} from "@ngx-translate/core";
 import {NgbActiveModal, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
@@ -53,6 +62,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   currentSongShown = false;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
+  @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
 
   private subscriptions: Subscription[] = [];
 
@@ -77,15 +87,30 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.subscriptions.push(this.viewPort.renderedRangeStream.subscribe(range => {
-      // TODO: check if song is in view port
-      this.currentSongShown = this.currentSongIndex >= range.start && this.currentSongIndex <= range.end;
-    }));
-    requestAnimationFrame(() => {
-      if (this.playbackService.currentSongIndex >= 0) {
-        this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding);
-      }
-    });
+    this.subscriptions.push(this.viewPort.renderedRangeStream.subscribe(() =>
+      requestAnimationFrame(() => this.checkIfCurrentSongShown())));
+    requestAnimationFrame(() => this.scrollToCurrentSong());
+  }
+
+  scrollToCurrentSong() {
+    if (this.playbackService.currentSongIndex >= 0) {
+      this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding);
+    }
+  }
+
+  private checkIfCurrentSongShown() {
+    const currentSongElementIndex = this.linkElements.toArray().findIndex(next => this.resolveDragItemIndex(next.nativeElement.id) === this.playbackService.currentSongIndex);
+    if (currentSongElementIndex >= 0) {
+      const currentSongElement = this.linkElements.toArray()[currentSongElementIndex];
+      this.currentSongShown = this.songElementIntersectsViewPort(currentSongElement);
+    }
+  }
+
+  private songElementIntersectsViewPort(songElementRef: ElementRef): boolean {
+    const viewPortRect = this.viewPort.elementRef.nativeElement.getBoundingClientRect();
+    const currentSongRect = songElementRef.nativeElement.getBoundingClientRect();
+    return (currentSongRect.y > viewPortRect.y && currentSongRect.y < viewPortRect.y + viewPortRect.height) ||
+      (currentSongRect.y + currentSongRect.height > viewPortRect.y && currentSongRect.y < viewPortRect.y + viewPortRect.height);
   }
 
   playSongOnDoubleClick(event: MouseEvent, index: number) {
@@ -146,5 +171,9 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.dragFromIndex !== undefined) {
       event.preventDefault();
     }
+  }
+
+  onScroll() {
+    this.checkIfCurrentSongShown();
   }
 }

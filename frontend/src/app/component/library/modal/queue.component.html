@@ -3,7 +3,7 @@
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
-                             (touchmove)="onTouchmove($event)"
+                             (touchmove)="onTouchmove($event)" (scroll)="onScroll()"
                              (wheel)="onWheel($event)">
 
   <pony-no-content-indicator *ngIf="!queue.length"
@@ -13,7 +13,7 @@
   <div cdkDropList cdkDropListAutoScrollDisabled
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
-    <div id="queueSong_{{ i }}" cdkDrag class="columns-container"
+    <div #songElements id="queueSong_{{ i }}" cdkDrag class="columns-container"
          [class.selected]="currentSongIndex === i"
          *cdkVirtualFor="let song of queue; let i = index;"
          (cdkDragStarted)="onDragStarted($event)"
@@ -59,6 +59,11 @@
 
 </cdk-virtual-scroll-viewport>
 <div class="modal-footer">
+  <span class="scroll-to-current-song">
+    <button [hidden]="currentSongShown" (click)="scrollToCurrentSong()" type="button" class="btn btn-outline-dark btn-sm">
+      {{ 'queue.scrollToCurrentSongButton' | translate }}
+    </button>
+  </span>
   <button type="button" class="btn btn-outline-dark">
     <i class="fa fa-history"></i>
     {{ 'queue.history' | translate }}

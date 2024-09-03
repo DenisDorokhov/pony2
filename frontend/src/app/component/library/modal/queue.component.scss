@@ -127,9 +127,23 @@ cdk-virtual-scroll-viewport {
   }
 }
 
-.modal-footer button {
-  i {
-    margin-right: 2px;
+.modal-footer {
+  position: relative;
+
+  .scroll-to-current-song {
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  button {
+    i {
+      margin-right: 2px;
+    }
   }
 }
 

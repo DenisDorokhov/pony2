@@ -62,6 +62,7 @@ export default {
     playlists: 'Playlists',
     goToSongButton: 'Go to song',
     removeSongButton: 'Remove from queue',
+    scrollToCurrentSongButton: 'Scroll to current song',
   },
   scanning: {
     header: 'Scanning',
