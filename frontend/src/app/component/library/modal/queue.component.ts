@@ -49,7 +49,8 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
-  currentSongIndex: number | undefined;
+  currentSongIndex = -1;
+  currentSongShown = false;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
 
@@ -76,6 +77,10 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    this.subscriptions.push(this.viewPort.renderedRangeStream.subscribe(range => {
+      // TODO: check if song is in view port
+      this.currentSongShown = this.currentSongIndex >= range.start && this.currentSongIndex <= range.end;
+    }));
     requestAnimationFrame(() => {
       if (this.playbackService.currentSongIndex >= 0) {
         this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding);
