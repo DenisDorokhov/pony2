@@ -2,15 +2,16 @@ package net.dorokhov.pony2.core.library.service;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.ExportService;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
+import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
 import org.apache.tika.io.FilenameUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,9 +37,11 @@ public class ExportServiceImpl implements ExportService {
     private static final FileType ARCHIVE_FILE_TYPE = FileType.of("application/zip", "zip");
 
     private final SongRepository songRepository;
+    private final ArtworkStorage artworkStorage;
 
-    public ExportServiceImpl(SongRepository songRepository) {
+    public ExportServiceImpl(SongRepository songRepository, ArtworkStorage artworkStorage) {
         this.songRepository = songRepository;
+        this.artworkStorage = artworkStorage;
     }
 
     @Override
@@ -148,11 +151,13 @@ public class ExportServiceImpl implements ExportService {
         }
 
         ImmutableList.Builder<ZipEntry> builder = ImmutableList.builder();
+        Map<String, Album> albumMap = new HashMap<>();
         for (Song song : songList) {
             File file = song.getFile();
             if (!file.exists()) {
                 continue;
             }
+            albumMap.put(song.getAlbum().getId(), song.getAlbum());
             String currentArtistFileName = buildArtistFileName(song.getAlbum().getArtist());
             String currentAlbumFileName = buildAlbumFileName(song.getAlbum());
             Path path = Paths.get(currentArtistFileName, currentAlbumFileName);
@@ -163,6 +168,15 @@ public class ExportServiceImpl implements ExportService {
             }
             path = path.resolve(buildSongFileName(song));
             builder.add(buildUniqueZipEntry(file, path, builder.build()));
+        }
+        for (Album album : albumMap.values()) {
+            if (album.getArtwork() != null) {
+                ArtworkFiles artworkFiles = artworkStorage.getArtworkFile(album.getArtwork().getId()).orElseThrow();
+                String currentArtistFileName = buildArtistFileName(album.getArtist());
+                String currentAlbumFileName = buildAlbumFileName(album);
+                Path path = Paths.get(currentArtistFileName, currentAlbumFileName).resolve("cover");
+                builder.add(buildUniqueZipEntry(artworkFiles.getLargeFile(), path, builder.build()));
+            }
         }
         return builder.build();
     }
