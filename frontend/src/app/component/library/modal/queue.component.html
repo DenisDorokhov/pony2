@@ -60,7 +60,7 @@
 </cdk-virtual-scroll-viewport>
 <div class="modal-footer">
   <span class="scroll-to-current-song">
-    <button [hidden]="currentSongShown" (click)="scrollToCurrentSong()" type="button" class="btn btn-outline-dark btn-sm">
+    <button [hidden]="currentSongShown || queue.length < 1" (click)="scrollToCurrentSong()" type="button" class="btn btn-outline-dark btn-sm">
       {{ 'queue.scrollToCurrentSongButton' | translate }}
     </button>
   </span>
