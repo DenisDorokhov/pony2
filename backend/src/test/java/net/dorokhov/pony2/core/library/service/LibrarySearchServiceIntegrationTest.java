@@ -1,12 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.IntegrationTest;
-import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.FileType;
-import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.library.domain.LibrarySearchQuery;
-import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibrarySearchService;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
@@ -136,7 +131,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
                 .setFileType(FileType.of("text/plain", "txt"))
                 .setDuration(666L)
                 .setSize(256L)
-                .setName("the foobar entity2 гнёт-ель")
+                .setName("the foobar entity2 don'g гнёт-ель")
                 .setArtistName("артист")
                 .setAlbumArtistName("другой")
                 .setAlbumName("альбом")
@@ -155,7 +150,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("uytn"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнет-ель"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("other"), 10)).isEmpty();
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("don'g"), 10)).containsOnly(song2);
         });
     }
-
 }
