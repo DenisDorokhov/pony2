@@ -17,7 +17,7 @@
       <th scope="col">{{ 'userList.nameColumn' | translate }}</th>
       <th scope="col">{{ 'userList.emailColumn' | translate }}</th>
       <th scope="col">{{ 'userList.roleColumn' | translate }}</th>
-      <th scope="col">{{ 'userList.actionsColumn' | translate }}</th>
+      <th scope="col"></th>
     </tr>
     </thead>
     <tbody>
@@ -28,7 +28,7 @@
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
           <td class="role" [class.admin]="user.role === UserRole.ADMIN">{{ user.role }}</td>
-          <td>
+          <td class="actions">
             <button type="button" class="btn btn-outline-dark" [disabled]="loadingState !== LoadingState.LOADED"
                     (click)="editUser(user)">{{ 'userList.editButton' | translate }}
             </button>

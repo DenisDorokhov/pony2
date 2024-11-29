@@ -131,7 +131,6 @@ export default {
     nameColumn: 'Name',
     emailColumn: 'Email',
     roleColumn: 'Role',
-    actionsColumn: 'Actions',
     editButton: 'Edit',
     deleteButton: 'Delete',
     createUserButton: 'Create User',

@@ -26,8 +26,11 @@ table {
     white-space: nowrap;
 
     button {
-      margin-right: 10px;
+      margin-left: 10px;
     }
+  }
+  td.actions {
+    text-align: right;
   }
 
   .role.admin {
