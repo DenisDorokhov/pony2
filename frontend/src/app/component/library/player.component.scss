@@ -42,21 +42,47 @@
     }
   }
 
-  .progress {
+  .progress-container {
     position: absolute;
     left: 152px;
     right: 84px;
     bottom: 28px;
-    margin-bottom: 0;
     cursor: pointer;
-  }
-  .progress-bar {
-    -webkit-transition: none;
-    -moz-transition: none;
-    -ms-transition: none;
-    -o-transition: none;
-    transition: none;
-    background-color: var(--turquoise);
+
+    .progress {
+      position: absolute;
+      width: 100%;
+      bottom: 0;
+
+      .progress-bar {
+        -webkit-transition: none;
+        -moz-transition: none;
+        -ms-transition: none;
+        -o-transition: none;
+        transition: none;
+        background-color: var(--turquoise);
+      }
+    }
+
+    .mouse-progress {
+      position: absolute;
+      bottom: 20px;
+      background-color: #999;
+      color: white;
+      padding: 0 4px 0 4px;
+      transform: translate(-50%);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .mouse-position {
+      position: absolute;
+      bottom: 0;
+      border-left: 1px solid #999;
+      height: 16px;
+    }
+    .mouse-position.played {
+      border-left: 1px solid white;
+    }
   }
 
   .time {

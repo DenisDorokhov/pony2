@@ -17,8 +17,12 @@
     <a class="title" href="javascript:void(0);" [title]="songTitle" (click)="selectCurrentSong()">{{ songTitle }}</a>
   </div>
 
-  <div class="progress" (click)="seek($event)">
-    <div class="progress-bar progress-bar-info" [style.width]="(progress * 100) + '%'"></div>
+  <div class="progress-container" (mousemove)="onProgressMouseMove($event)" (mouseleave)="onProgressMouseLeave()" (click)="seek($event)">
+    <div class="progress">
+      <div class="progress-bar progress-bar-info" [style.width]="(progress * 100) + '%'"></div>
+    </div>
+    <div class="mouse-progress" [hidden]="!mouseProgress" [style.left]="((mouseProgress || 0) * 100) + '%'">{{ formattedMousePosition }}</div>
+    <div class="mouse-position" [hidden]="!mouseProgress" [class.played]="(mouseProgress || 0) < progress" [style.left]="((mouseProgress || 0) * 100) + '%'"></div>
   </div>
 
   <div class="time">{{ formattedProgress }}</div>

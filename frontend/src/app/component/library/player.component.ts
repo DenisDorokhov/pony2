@@ -23,9 +23,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
   isError = false;
   hasPreviousSong = false;
   hasNextSong = false;
-  progress = 0.0; // 0.0 - 1.0.
+  progress = 0.0; // 0.0 - 1.0
+  mouseProgress: number | undefined; // 0.0 - 1.0
   formattedProgress: string | undefined;
   formattedDuration: string | undefined;
+  formattedMousePosition: string | undefined;
 
   private subscriptions: Subscription[] = [];
 
@@ -137,5 +139,23 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.songTitle = this.translateService.instant('player.noSongTitle');
       this.artworkUrl = undefined;
     }
+  }
+
+  onProgressMouseMove(event: MouseEvent) {
+    const song = this.playbackService.lastPlaybackEvent.song;
+    if (song) {
+      const progressBar = event.currentTarget as Element;
+      const progressBarRect = progressBar.getBoundingClientRect();
+      this.mouseProgress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
+      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress);
+    } else {
+      this.mouseProgress = undefined;
+      this.formattedMousePosition = undefined;
+    }
+  }
+
+  onProgressMouseLeave() {
+    this.mouseProgress = undefined;
+    this.formattedMousePosition = undefined;
   }
 }
