@@ -144,7 +144,7 @@
                     [class.interrupted]="scanJob.status === ScanJobStatus.INTERRUPTED"
           >{{ scanJob.status }}</span></td>
           <td><span class="log-message">{{ scanJob.logMessage?.text }}</span></td>
-          <td>
+          <td class="details-button">
             <button type="button" class="btn btn-outline-dark" [disabled]="scanJob.status !== ScanJobStatus.COMPLETE && scanJob.status !== ScanJobStatus.FAILED"
                     (click)="showDetails(scanJob)">{{ 'scanning.detailsButton' | translate }}
             </button>

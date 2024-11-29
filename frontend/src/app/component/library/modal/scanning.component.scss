@@ -78,7 +78,7 @@ table.log-container {
 
   .log-message {
     display: inline-block;
-    width: 480px;
+    max-width: 480px;
     white-space: nowrap;
     overflow: hidden !important;
     text-overflow: ellipsis;
@@ -89,6 +89,9 @@ table.log-container {
     white-space: nowrap;
     height: 56px;
     vertical-align: middle;
+  }
+  td.details-button {
+    text-align: right;
   }
 }
 

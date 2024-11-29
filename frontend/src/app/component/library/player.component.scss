@@ -73,6 +73,7 @@
       transform: translate(-50%);
       border-radius: 4px;
       font-size: 12px;
+      user-select: none;
     }
     .mouse-position {
       position: absolute;
@@ -81,7 +82,7 @@
       height: 16px;
     }
     .mouse-position.played {
-      border-left: 1px solid white;
+      border-left: 1px solid #e9ecef;
     }
   }
 
