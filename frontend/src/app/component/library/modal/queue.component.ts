@@ -90,7 +90,10 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.playbackEvent = playbackEvent));
     this.subscriptions.push(this.playbackService.observeCurrentSong()
-      .subscribe(_ => this.currentSongIndex = this.playbackService.currentSongIndex));
+      .subscribe(_ => {
+        this.currentSongIndex = this.playbackService.currentSongIndex;
+        this.checkIfCurrentSongShown();
+      }));
   }
 
   ngAfterViewInit(): void {
@@ -101,7 +104,10 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   scrollToCurrentSong() {
     if (this.playbackService.currentSongIndex >= 0) {
-      this.viewPort.scrollToOffset(this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding);
+      const offset = this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding;
+      this.viewPort.scrollToOffset(offset);
+      // Workaround for CdkVirtualScroll bug...
+      setTimeout(() => this.viewPort.scrollToOffset(offset));
     }
   }
 
