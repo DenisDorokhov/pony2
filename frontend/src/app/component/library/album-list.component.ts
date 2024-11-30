@@ -3,7 +3,6 @@ import {Subscription} from 'rxjs';
 import {AlbumSongs, Artist, ArtistSongs, Song} from "../../domain/library.model";
 import {LibraryService, LibraryState} from "../../service/library.service";
 import {PlaybackService} from "../../service/playback.service";
-import {StaticPlaylist} from "../../domain/playlist.model";
 import {LoadingState} from "../../domain/common.model";
 import {TranslateModule} from "@ngx-translate/core";
 import {LoadingIndicatorComponent} from "../common/loading-indicator.component";
@@ -66,11 +65,14 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.artistSongs.albumSongs.forEach(albumSongs =>
             albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
 
-          const playlist = new StaticPlaylist(songs);
+          let index = 0;
           if (song) {
-            playlist.switchToSong(song.id);
+            const targetIndex = songs.findIndex(nextSong => nextSong.id === song.id);
+            if (targetIndex >= 0) {
+              index = targetIndex;
+            }
           }
-          this.playbackService.switchPlaylist(playlist);
+          this.playbackService.switchQueue(songs, index);
         }
       });
   }

@@ -1,10 +1,10 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, defer, interval, Observable, of, Subscription} from 'rxjs';
+import {BehaviorSubject, defer, interval, Observable, of} from 'rxjs';
 import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
 import {Howl, HowlOptions} from "howler";
 import {AuthenticationService} from "./authentication.service";
-import {Playlist} from "../domain/playlist.model";
+import {moveItemInArray} from "@angular/cdk/drag-drop";
 
 export enum PlaybackState {
   STOPPED,
@@ -162,15 +162,14 @@ class AudioPlayer {
 })
 export class PlaybackService {
 
-  private audioPlayer = new AudioPlayer();
+  private _currentIndex = -1;
 
-  private playlist: Playlist | undefined;
+  private audioPlayer = new AudioPlayer();
 
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
   private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
 
-  private queueSubscription: Subscription | undefined;
-  private currentSongSubscription: Subscription | undefined;
+  private _queue: Song[] = [];
 
   constructor(
     private authenticationService: AuthenticationService
@@ -179,10 +178,8 @@ export class PlaybackService {
       .subscribe(() => {
         this.audioPlayer.stop();
         this.currentSongSubject.next(undefined);
+        this._queue = [];
         this.queueSubject.next([]);
-        this.queueSubscription?.unsubscribe();
-        this.currentSongSubscription?.unsubscribe();
-        this.playlist = undefined;
       });
     this.audioPlayer.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
@@ -218,7 +215,21 @@ export class PlaybackService {
   }
 
   get currentSongIndex(): number {
-    return this.playlist?.currentIndex ?? -1;
+    return this._currentIndex ?? -1;
+  }
+
+  switchQueue(queue: Song[], switchToIndex: number) {
+    this._queue = queue;
+    this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
+    this.switchToIndex(switchToIndex);
+  }
+
+  private switchToIndex(index: number): Song {
+    const song = this._queue[index];
+    this._currentIndex = index;
+    this.currentSongSubject.next(song);
+    this.audioPlayer.play(song);
+    return song;
   }
 
   observeQueue(): Observable<Song[]> {
@@ -226,11 +237,37 @@ export class PlaybackService {
   }
 
   removeSongFromQueue(index: number): Song {
-    return this.playlist!.removeSong(index);
+    const song = this._queue[index];
+    if (this._currentIndex === index) {
+      this._currentIndex = -1;
+      this.currentSongSubject.next(undefined);
+      this.audioPlayer.stop();
+    } else if (this._currentIndex > index) {
+      this._currentIndex--;
+    }
+    this._queue.splice(index, 1);
+    this.queueSubject.next(this._queue.slice());
+    return song;
   }
 
   moveSongInQueue(fromIndex: number, toIndex: number): Song {
-    return this.playlist!.moveSong(fromIndex, toIndex);
+    if (this._currentIndex === fromIndex) {
+      this._currentIndex = toIndex;
+    } else {
+      if (fromIndex > toIndex) {
+        if (this._currentIndex >= toIndex) {
+          this._currentIndex++;
+        }
+      } else if (fromIndex < toIndex) {
+        if (this._currentIndex <= toIndex) {
+          this._currentIndex--;
+        }
+      }
+    }
+    const fromSong = this._queue[fromIndex];
+    moveItemInArray(this._queue, fromIndex, toIndex);
+    this.queueSubject.next(this._queue.slice());
+    return fromSong;
   }
 
   observeCurrentSong(): Observable<Song | undefined> {
@@ -241,32 +278,11 @@ export class PlaybackService {
     return this.audioPlayer.observePlaybackEvent();
   }
 
-  switchPlaylist(playlist: Playlist) {
-    if (this.queueSubscription) {
-      this.queueSubscription.unsubscribe();
-    }
-    if (this.currentSongSubscription) {
-      this.currentSongSubscription.unsubscribe();
-    }
-    this.playlist = playlist;
-    this.queueSubscription = playlist.observeQueue()
-      .subscribe(queue => this.queueSubject.next(queue));
-    this.currentSongSubscription = playlist.observeCurrentSong()
-      .subscribe(song => {
-        if (song) {
-          this.audioPlayer.play(song);
-        } else {
-          this.audioPlayer.stop();
-        }
-        this.currentSongSubject.next(song);
-      });
-  }
-
   play(index: number) {
-    if (this.playlist!.currentIndex === index) {
-      this.audioPlayer.play(this.playlist!.currentSong);
+    if (this._currentIndex === index) {
+      this.audioPlayer.play(this.currentSongSubject.value);
     } else {
-      this.playlist!.switchToIndex(index);
+      this.switchToIndex(index);
     }
   }
 
@@ -293,7 +309,7 @@ export class PlaybackService {
   }
 
   hasPreviousSong(): boolean {
-    return this.playlist !== undefined && this.playlist.queue.length > 0;
+    return this._currentIndex > 0 && this._queue.length > 0;
   }
 
   switchToPreviousSong(): Observable<Song | undefined> {
@@ -306,7 +322,7 @@ export class PlaybackService {
         this.lastPlaybackEvent.state === PlaybackState.PLAYING ||
         this.lastPlaybackEvent.state === PlaybackState.PAUSED
       ) {
-        if (!this.playlist!.hasPreviousSong()) {
+        if (!this.hasPreviousSong()) {
           return seekToBeginning();
         }
         if (this.lastPlaybackEvent.progress) {
@@ -319,21 +335,33 @@ export class PlaybackService {
         this.playOrPause();
         return of(this.lastPlaybackEvent.song);
       }
-      return this.playlist!.switchToPreviousSong();
+      return defer(() => {
+        if (this.hasPreviousSong()) {
+          return of(this.switchToIndex(this._currentIndex - 1));
+        } else {
+          return of(undefined);
+        }
+      });
     });
   }
 
   hasNextSong(): boolean {
-    return this.playlist !== undefined && this.playlist.hasNextSong();
+    return this._currentIndex + 1 < this._queue.length;
   }
 
   switchToNextSong(): Observable<Song | undefined> {
-    return this.playlist!.switchToNextSong();
+    return defer(() => {
+      if (this.hasNextSong()) {
+        return of(this.switchToIndex(this._currentIndex + 1));
+      } else {
+        return of(undefined);
+      }
+    });
   }
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
-      this.playlist!.switchToNextSong().subscribe();
+      this.switchToNextSong().subscribe();
     }
     if (
       playbackEvent.state === PlaybackState.LOADING
