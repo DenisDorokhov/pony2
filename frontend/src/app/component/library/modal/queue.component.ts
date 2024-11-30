@@ -56,7 +56,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly LoadingState = LoadingState;
 
   protected readonly rowHeight = 76;
-  protected readonly viewPortHeight = 600;
+  protected readonly viewPortHeight = 532;
   protected readonly viewPortPadding = 16;
 
   queue: Song[] = [];
