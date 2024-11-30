@@ -4,7 +4,7 @@ import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
 import {Howl, HowlOptions} from "howler";
 import {AuthenticationService} from "./authentication.service";
-import {Playlist, PlaylistMode} from "../domain/playlist.model";
+import {Playlist} from "../domain/playlist.model";
 
 export enum PlaybackState {
   STOPPED,
@@ -219,16 +219,6 @@ export class PlaybackService {
 
   get currentSongIndex(): number {
     return this.playlist?.currentIndex ?? -1;
-  }
-
-  get playlistMode(): PlaylistMode {
-    return this.playlist?.mode ?? PlaylistMode.NORMAL;
-  }
-
-  set playlistMode(playlistMode: PlaylistMode) {
-    if (this.playlist) {
-      this.playlist!.mode = playlistMode;
-    }
   }
 
   observeQueue(): Observable<Song[]> {

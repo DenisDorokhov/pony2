@@ -66,7 +66,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.artistSongs.albumSongs.forEach(albumSongs =>
             albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
 
-          const playlist = new StaticPlaylist(songs, this.playbackService.playlistMode);
+          const playlist = new StaticPlaylist(songs);
           if (song) {
             playlist.switchToSong(song.id);
           }

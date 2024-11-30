@@ -9,7 +9,7 @@ import {
   ViewChildren
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {TranslateModule} from "@ngx-translate/core";
+import {TranslateModule, TranslateService} from "@ngx-translate/core";
 import {NgbActiveModal, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
 import {PlaybackEvent, PlaybackService, PlaybackState} from "../../../service/playback.service";
 import {Subscription} from "rxjs";
@@ -24,7 +24,7 @@ import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 import {ReactiveFormsModule} from "@angular/forms";
-import {PlaylistMode} from "../../../domain/playlist.model";
+import {formatDuration} from "../../../utils/format.utils";
 
 @Component({
   standalone: true,
@@ -59,14 +59,12 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly viewPortHeight = 600;
   protected readonly viewPortPadding = 16;
 
-  readonly playlistModes: PlaylistMode[] = [PlaylistMode.NORMAL, PlaylistMode.RANDOM, PlaylistMode.REPEAT_ALL, PlaylistMode.REPEAT_ONE];
-
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
   currentSongIndex = -1;
   currentSongShown = false;
-  playlistMode: PlaylistMode = PlaylistMode.NORMAL;
   selectedIndex = -1;
+  duration: string | undefined;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
@@ -77,6 +75,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     public readonly activeModal: NgbActiveModal,
     private readonly playbackService: PlaybackService,
     private readonly libraryService: LibraryService,
+    private readonly translateService: TranslateService,
   ) {
   }
 
@@ -85,9 +84,11 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.playlistMode = this.playbackService.playlistMode;
     this.subscriptions.push(this.playbackService.observeQueue()
-      .subscribe(queue => this.queue = queue));
+      .subscribe(queue => {
+        this.queue = queue;
+        this.duration = formatDuration(queue.reduce((result: number, song: Song) => result + song.duration, 0), this.translateService);
+      }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.playbackEvent = playbackEvent));
     this.subscriptions.push(this.playbackService.observeCurrentSong()
@@ -198,10 +199,6 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onScroll() {
     this.checkIfCurrentSongShown();
-  }
-
-  applyPlaylistMode(event: Event) {
-    this.playbackService.playlistMode = (event.target as any).value;
   }
 
   selectIndex(i: number) {

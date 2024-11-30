@@ -63,11 +63,7 @@ export default {
     goToSongButton: 'Go to song',
     removeSongButton: 'Remove from queue',
     scrollToCurrentSongButton: 'Scroll to current song',
-    modeLabel: 'Mode:',
-    playlistMode_NORMAL: 'Normal',
-    playlistMode_RANDOM: 'Shuffle',
-    playlistMode_REPEAT_ALL: 'Repeat All',
-    playlistMode_REPEAT_ONE: 'Repeat One',
+    sizeLabel: '{{songCount}} songs ({{duration}})'
   },
   scanning: {
     header: 'Scanning',

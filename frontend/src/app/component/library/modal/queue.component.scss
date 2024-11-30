@@ -145,6 +145,10 @@ cdk-virtual-scroll-viewport {
       margin-right: 2px;
     }
   }
+
+  small {
+    color: var(--bs-gray);
+  }
 }
 
 .cdk-drag-placeholder {
