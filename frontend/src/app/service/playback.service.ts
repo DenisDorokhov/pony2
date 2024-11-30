@@ -74,6 +74,9 @@ class AudioPlayer {
   seek(progress: number) {
     if (this.howl) {
       this.howl.seek(progress * this.lastPlaybackEvent.song!.duration);
+      if (this.lastPlaybackEvent.state === PlaybackState.ENDED) {
+        this.howl.pause();
+      }
     } else {
       throw new Error(`Could not seek: audio is not initialized. Current state: '${this.lastPlaybackEvent.state}'.`);
     }
@@ -290,7 +293,11 @@ export class PlaybackService {
   }
 
   seek(progress: number) {
-    if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
+    if (
+      this.lastPlaybackEvent.state === PlaybackState.PLAYING ||
+      this.lastPlaybackEvent.state === PlaybackState.PAUSED ||
+      this.lastPlaybackEvent.state === PlaybackState.ENDED
+    ) {
       this.audioPlayer.seek(progress);
     }
   }
