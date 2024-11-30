@@ -45,6 +45,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
       .subscribe(song => this.handleSongSwitch(song)));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent)));
+    this.subscriptions.push(this.playbackService.observeQueue()
+      .subscribe(() => {
+        this.hasPreviousSong = this.playbackService.hasPreviousSong();
+        this.hasNextSong = this.playbackService.hasNextSong();
+      }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
       const formElements: string[] = [
         'INPUT', 'LABEL', 'SELECT', 'TEXTAREA', 'BUTTON', 'FIELDSET', 'LEGEND', 'DATALIST', 'OUTPUT', 'OPTION', 'OPTGROUP',
