@@ -173,6 +173,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     this.currentSongIndex = this.playbackService.currentSongIndex;
     this.dragFromIndex = undefined;
     this.selectedIndex = toIndex;
+    this.checkIfCurrentSongShown();
   }
 
   private dragFromIndex: number | undefined;
@@ -183,6 +184,11 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private resolveDragItemIndex(id: string): number {
     return Number(id.replaceAll('queueSong_', ''));
+  }
+
+  onDragMoved() {
+    // Fix sometimes broken layout.
+    this.viewPort.checkViewportSize();
   }
 
   onWheel(event: WheelEvent) {

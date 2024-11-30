@@ -17,6 +17,7 @@
          [class.selected]="selectedIndex === i"
          *cdkVirtualFor="let song of queue; let i = index;"
          (cdkDragStarted)="onDragStarted($event)"
+         (cdkDragMoved)="onDragMoved()"
          (dblclick)="playSongOnDoubleClick($event, i)"
          (mousedown)="selectIndex(i);preventDoubleClickDefault($event);">
       <div class="track-number">
