@@ -14,11 +14,11 @@
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
     <div #songElements id="queueSong_{{ i }}" cdkDrag class="columns-container"
-         [class.selected]="currentSongIndex === i"
+         [class.selected]="selectedIndex === i"
          *cdkVirtualFor="let song of queue; let i = index;"
          (cdkDragStarted)="onDragStarted($event)"
          (dblclick)="playSongOnDoubleClick($event, i)"
-         (mousedown)="preventDoubleClickDefault($event)">
+         (mousedown)="selectIndex(i);preventDoubleClickDefault($event);">
       <div class="track-number">
         <div>
           <i *ngIf="currentSongIndex === i"

@@ -66,6 +66,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   currentSongIndex = -1;
   currentSongShown = false;
   playlistMode: PlaylistMode = PlaylistMode.NORMAL;
+  selectedIndex = -1;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
@@ -104,6 +105,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   scrollToCurrentSong() {
     if (this.playbackService.currentSongIndex >= 0) {
+      this.selectedIndex = this.playbackService.currentSongIndex;
       const offset = this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding;
       this.viewPort.scrollToOffset(offset);
       // Workaround for CdkVirtualScroll bug...
@@ -112,6 +114,10 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private checkIfCurrentSongShown() {
+    if (!this.linkElements) {
+      // View is not initialized yet.
+      return;
+    }
     const currentSongElementIndex = this.linkElements.toArray().findIndex(next => this.resolveDragItemIndex(next.nativeElement.id) === this.playbackService.currentSongIndex);
     if (currentSongElementIndex >= 0) {
       const currentSongElement = this.linkElements.toArray()[currentSongElementIndex];
@@ -154,14 +160,18 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   removeSong(index: number) {
     this.playbackService.removeSongFromQueue(index);
-    this.currentSongIndex = this.playbackService.currentSongIndex
+    this.currentSongIndex = this.playbackService.currentSongIndex;
+    if (this.selectedIndex === index) {
+      this.selectedIndex = -1;
+    }
   }
 
   onDropListDropped(event: CdkDragDrop<any, any>) {
     const toIndex = this.dragFromIndex! - event.previousIndex + event.currentIndex;
     this.playbackService.moveSongInQueue(this.dragFromIndex!, toIndex);
-    this.currentSongIndex = this.playbackService.currentSongIndex
+    this.currentSongIndex = this.playbackService.currentSongIndex;
     this.dragFromIndex = undefined;
+    this.selectedIndex = toIndex;
   }
 
   private dragFromIndex: number | undefined;
@@ -192,5 +202,9 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   applyPlaylistMode(event: Event) {
     this.playbackService.playlistMode = (event.target as any).value;
+  }
+
+  selectIndex(i: number) {
+    this.selectedIndex = i;
   }
 }
