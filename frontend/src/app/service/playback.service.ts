@@ -312,7 +312,10 @@ export class PlaybackService {
       return of(this.lastPlaybackEvent.song);
     };
     return defer(() => {
-      if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
+      if (
+        this.lastPlaybackEvent.state === PlaybackState.PLAYING ||
+        this.lastPlaybackEvent.state === PlaybackState.PAUSED
+      ) {
         if (!this.playlist!.hasPreviousSong()) {
           return seekToBeginning();
         }
@@ -322,6 +325,9 @@ export class PlaybackService {
             return seekToBeginning();
           }
         }
+      } else if (this.lastPlaybackEvent.state === PlaybackState.ENDED) {
+        this.playOrPause();
+        return of(this.lastPlaybackEvent.song);
       }
       return this.playlist!.switchToPreviousSong();
     });
