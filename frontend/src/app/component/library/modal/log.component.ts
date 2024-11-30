@@ -40,12 +40,12 @@ class LogWithException implements LogMessageDto {
 })
 export class LogComponent implements OnInit {
 
-  LoadingState = LoadingState;
-  Level = LogMessageDto.Level;
+  readonly LoadingState = LoadingState;
+  readonly Level = LogMessageDto.Level;
 
   loadingState: LoadingState = LoadingState.LOADING;
 
-  logLevels: LogMessageDto.Level[] = [Level.INFO, Level.WARN, Level.ERROR];
+  readonly logLevels: LogMessageDto.Level[] = [Level.INFO, Level.WARN, Level.ERROR];
 
   logs: LogWithException[] = [];
   page: LogMessagePageDto | undefined;

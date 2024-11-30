@@ -64,12 +64,16 @@
       {{ 'queue.scrollToCurrentSongButton' | translate }}
     </button>
   </span>
-  <button type="button" class="btn btn-outline-dark">
-    <i class="fa fa-history"></i>
-    {{ 'queue.history' | translate }}
-  </button>
-  <button type="button" class="btn btn-outline-dark">
-    <i class="fa fa-bars"></i>
-    {{ 'queue.playlists' | translate }}
-  </button>
+  <label for="playlistMode" class="playlist-mode">{{ 'queue.modeLabel' | translate }}</label>
+  <select id="playlistMode" class="form-select playlist-mode" [value]="playlistMode" (change)="applyPlaylistMode($event)">
+    <option *ngFor="let nextMode of playlistModes" [value]="nextMode" [selected]="playlistMode === nextMode">{{ 'queue.playlistMode_' + nextMode | translate }}</option>
+  </select>
+<!--  <button type="button" class="btn btn-outline-dark">-->
+<!--    <i class="fa fa-history"></i>-->
+<!--    {{ 'queue.history' | translate }}-->
+<!--  </button>-->
+<!--  <button type="button" class="btn btn-outline-dark">-->
+<!--    <i class="fa fa-bars"></i>-->
+<!--    {{ 'queue.playlists' | translate }}-->
+<!--  </button>-->
 </div>

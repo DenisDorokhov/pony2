@@ -98,7 +98,7 @@ export class LibraryScanService {
             this.scanJobProgressSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
-            console.info('Scan job is not running.');
+            console.debug('Scan job is not running.');
             if (this.scanJobProgressSubject.value) {
               const oldScanJob = this.scanJobProgressSubject.value!.scanJob;
               this.scanJobProgressSubject.next(null);

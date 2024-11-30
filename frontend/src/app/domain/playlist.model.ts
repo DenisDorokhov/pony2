@@ -1,13 +1,21 @@
 import {BehaviorSubject, defer, Observable, of} from 'rxjs';
-import {distinctUntilChanged} from 'rxjs/operators';
 import {Song} from './library.model';
 import {moveItemInArray} from "@angular/cdk/drag-drop";
+
+export enum PlaylistMode {
+  NORMAL = 'NORMAL',
+  RANDOM = 'RANDOM',
+  REPEAT_ALL = 'REPEAT_ALL',
+  REPEAT_ONE = 'REPEAT_ONE',
+}
 
 export interface Playlist {
 
   readonly queue: Song[];
   readonly currentIndex: number;
   readonly currentSong: Song | undefined;
+
+  mode: PlaylistMode;
 
   observeQueue(): Observable<Song[]>;
   observeCurrentSong(): Observable<Song | undefined>;
@@ -31,11 +39,22 @@ export class StaticPlaylist implements Playlist {
   private currentSongSubject = new BehaviorSubject<Song | undefined>(undefined);
   private queueSubject: BehaviorSubject<Song[]>;
 
-  constructor(private _queue: Song[]) {
+  constructor(
+    private _queue: Song[],
+    private _mode: PlaylistMode = PlaylistMode.NORMAL
+  ) {
     this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
     if (this._queue.length > 0) {
       this.switchToIndex(0);
     }
+  }
+
+  get mode(): PlaylistMode {
+    return this._mode;
+  }
+
+  set mode(value: PlaylistMode) {
+    this._mode = value;
   }
 
   get queue(): Song[] {
@@ -55,16 +74,15 @@ export class StaticPlaylist implements Playlist {
   }
 
   observeCurrentSong(): Observable<Song | undefined> {
-    return this.currentSongSubject.asObservable()
-      .pipe(distinctUntilChanged());
+    return this.currentSongSubject.asObservable();
   }
 
   hasNextSong(): boolean {
-    return this._currentIndex + 1 < this._queue.length;
+    return this._mode === PlaylistMode.NORMAL ? this._currentIndex + 1 < this._queue.length : this._queue.length > 0;
   }
 
   hasPreviousSong(): boolean {
-    return this._currentIndex > 0 && this._queue.length > 0;
+    return this._mode === PlaylistMode.NORMAL ? this._currentIndex > 0 && this._queue.length > 0 : this._queue.length > 0;
   }
 
   switchToIndex(index: number): Song {
@@ -86,17 +104,47 @@ export class StaticPlaylist implements Playlist {
   switchToNextSong(): Observable<Song | undefined> {
     return defer(() => {
       if (this.hasNextSong()) {
-        return of(this.switchToIndex(this._currentIndex + 1));
+        switch (this._mode) {
+          case PlaylistMode.RANDOM:
+            return of(this.switchToIndex(this.randomInt(0, this._queue.length - 1)));
+          case PlaylistMode.REPEAT_ALL:
+            if (this._currentIndex >= this._queue.length - 1) {
+              return of(this.switchToIndex(0));
+            } else {
+              return of(this.switchToIndex(this._currentIndex + 1));
+            }
+          case PlaylistMode.REPEAT_ONE:
+            return of(this.switchToIndex(this._currentIndex));
+          default:
+            return of(this.switchToIndex(this._currentIndex + 1));
+        }
       } else {
         return of(undefined);
       }
     });
   }
 
+  randomInt(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
   switchToPreviousSong(): Observable<Song | undefined> {
     return defer(() => {
       if (this.hasPreviousSong()) {
-        return of(this.switchToIndex(this._currentIndex - 1));
+        switch (this._mode) {
+          case PlaylistMode.RANDOM:
+            return of(this.switchToIndex(this.randomInt(0, this._queue.length - 1)));
+          case PlaylistMode.REPEAT_ALL:
+            if (this._currentIndex === 0) {
+              return of(this.switchToIndex(this._queue.length - 1));
+            } else {
+              return of(this.switchToIndex(this._currentIndex - 1));
+            }
+          case PlaylistMode.REPEAT_ONE:
+            return of(this.switchToIndex(this._currentIndex));
+          default:
+            return of(this.switchToIndex(this._currentIndex - 1));
+        }
       } else {
         return of(undefined);
       }

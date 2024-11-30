@@ -23,6 +23,8 @@ import {NoContentIndicatorComponent} from "../../common/no-content-indicator.com
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
+import {ReactiveFormsModule} from "@angular/forms";
+import {PlaylistMode} from "../../../domain/playlist.model";
 
 @Component({
   standalone: true,
@@ -42,6 +44,7 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
+    ReactiveFormsModule,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
@@ -53,13 +56,16 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly LoadingState = LoadingState;
 
   protected readonly rowHeight = 76;
-  protected readonly viewPortHeight = 420;
+  protected readonly viewPortHeight = 600;
   protected readonly viewPortPadding = 16;
+
+  readonly playlistModes: PlaylistMode[] = [PlaylistMode.NORMAL, PlaylistMode.RANDOM, PlaylistMode.REPEAT_ALL, PlaylistMode.REPEAT_ONE];
 
   queue: Song[] = [];
   playbackEvent: PlaybackEvent | undefined;
   currentSongIndex = -1;
   currentSongShown = false;
+  playlistMode: PlaylistMode = PlaylistMode.NORMAL;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
@@ -78,6 +84,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.playlistMode = this.playbackService.playlistMode;
     this.subscriptions.push(this.playbackService.observeQueue()
       .subscribe(queue => this.queue = queue));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
@@ -175,5 +182,9 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onScroll() {
     this.checkIfCurrentSongShown();
+  }
+
+  applyPlaylistMode(event: Event) {
+    this.playbackService.playlistMode = (event.target as any).value;
   }
 }
