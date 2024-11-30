@@ -6,6 +6,7 @@ import {Song} from "../../domain/library.model";
 import {LibraryService} from "../../service/library.service";
 import {PageTitleService} from "../../service/page-title.service";
 import {ImageLoaderComponent} from "../common/image-loader.component";
+import {isMobileBrowser} from "../../utils/mobile.utils";
 
 @Component({
   standalone: true,
@@ -142,6 +143,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   onProgressMouseMove(event: MouseEvent) {
+    if (isMobileBrowser()) {
+      return;
+    }
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
       const progressBar = event.currentTarget as Element;
@@ -155,6 +159,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   onProgressMouseLeave() {
+    if (isMobileBrowser()) {
+      return;
+    }
     this.mouseProgress = undefined;
     this.formattedMousePosition = undefined;
   }

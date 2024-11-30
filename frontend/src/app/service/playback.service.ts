@@ -198,6 +198,15 @@ export class PlaybackService {
           this.switchToPreviousSong().subscribe();
         }
       );
+      navigator.mediaSession.setActionHandler(
+        'seekto',
+        details => {
+          if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
+            console.info("Seek request by media session detected.");
+            this.audioPlayer.seek((details.seekTime || 0) / this.lastPlaybackEvent.song!.duration);
+          }
+        }
+      );
     }
   }
 
