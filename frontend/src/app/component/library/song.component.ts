@@ -114,21 +114,26 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         event.preventDefault();
       }
     }));
-    this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event => {
-      if (this.menuContainerElement?.nativeElement) {
-        let checkElement: Node | null = event.target as Node;
-        let clickWithinContainer = false;
-        do {
-          clickWithinContainer = this.menuContainerElement.nativeElement === checkElement;
-          checkElement = (checkElement as Node).parentNode;
-        } while (!clickWithinContainer && checkElement);
-        if (!clickWithinContainer) {
-          this.hideMenu();
-        }
-      }
-    }));
+    this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event =>
+      this.checkIfClickWithinContainer(event)));
+    this.subscriptions.push(fromEvent(window.document.body, 'touchstart').subscribe(event =>
+      this.checkIfClickWithinContainer(event)));
     this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
       this.hideMenu()));
+  }
+
+  private checkIfClickWithinContainer(event: Event) {
+    if (this.menuContainerElement?.nativeElement) {
+      let checkElement: Node | null = event.target as Node;
+      let clickWithinContainer = false;
+      do {
+        clickWithinContainer = this.menuContainerElement.nativeElement === checkElement;
+        checkElement = (checkElement as Node).parentNode;
+      } while (!clickWithinContainer && checkElement);
+      if (!clickWithinContainer) {
+        this.hideMenu();
+      }
+    }
   }
 
   private hideMenu(): void {
