@@ -165,6 +165,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onMenuClick() {
+    // Here we improvise instead of using standard Bootstrap dropdown functionality, as it will be affected by column layout.
     this.showMenu = true;
     const viewContainerRef = resolveAppViewContainerRef(this.applicationRef);
     this.menuEmbeddedViewRef = viewContainerRef.createEmbeddedView(this.menuTemplate);
