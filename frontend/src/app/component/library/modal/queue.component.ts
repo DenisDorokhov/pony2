@@ -100,14 +100,19 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() => {
-      this.optionsDropDowns.toArray().forEach(dropDown => {
-        dropDown.close();
-      });
-    }));
+    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
+      this.closeOptionsDropDowns()));
+    this.subscriptions.push(fromEvent(window.document.body, 'touchstart').subscribe(() =>
+      this.closeOptionsDropDowns()));
     this.subscriptions.push(this.viewPort.renderedRangeStream.subscribe(() =>
       requestAnimationFrame(() => this.checkIfCurrentSongShown())));
     requestAnimationFrame(() => this.scrollToCurrentSong());
+  }
+
+  private closeOptionsDropDowns() {
+    this.optionsDropDowns.toArray().forEach(dropDown => {
+      dropDown.close();
+    });
   }
 
   scrollToCurrentSong() {
