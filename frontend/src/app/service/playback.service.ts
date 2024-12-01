@@ -472,7 +472,7 @@ export class PlaybackService {
       const state = {
         songIds: this._queue.map(next => next.id),
         currentIndex: this._currentIndex,
-        progress: this.lastPlaybackEvent.progress
+        progress: this.lastPlaybackEvent.state === PlaybackState.ENDED ? undefined : this.lastPlaybackEvent.progress
       } as QueueState;
       window.localStorage.setItem(localStorageKey, JSON.stringify(state));
     }
