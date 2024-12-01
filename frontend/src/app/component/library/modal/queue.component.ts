@@ -120,7 +120,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
       this.selectedIndex = this.playbackService.currentSongIndex;
       const offset = this.playbackService.currentSongIndex * this.rowHeight - (this.viewPortHeight / 2) + (this.rowHeight / 2) + this.viewPortPadding;
       this.viewPort.scrollToOffset(offset);
-      // Workaround for CdkVirtualScroll bug...
+      // Workaround for CdkVirtualScroll bug (content total height is calculated incorrectly).
       setTimeout(() => this.viewPort.scrollToOffset(offset));
     }
   }

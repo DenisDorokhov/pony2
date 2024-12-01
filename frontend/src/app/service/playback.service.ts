@@ -35,6 +35,8 @@ class AudioPlayer {
 
   private howl: Howl | undefined;
 
+  private lastSeekValue: number | undefined;
+
   constructor() {
     this.playbackEventSubject = new BehaviorSubject<PlaybackEvent>(new PlaybackEvent(PlaybackState.STOPPED));
     interval(250).subscribe(() => this.fireSongProgressPlaybackEvent());
@@ -92,6 +94,7 @@ class AudioPlayer {
   seekToSeconds(progress: number) {
     if (this.howl) {
       this.howl.seek(progress);
+      this.lastSeekValue = progress;
       if (this.lastPlaybackEvent.state === PlaybackState.ENDED) {
         this.howl.pause();
       }
@@ -113,6 +116,7 @@ class AudioPlayer {
   }
 
   private loadHowlForSong(song: Song) {
+    this.lastSeekValue = undefined;
     this.unloadHowl();
     console.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
     this.firePlaybackEvent(PlaybackState.LOADING, song);
@@ -166,7 +170,8 @@ class AudioPlayer {
     if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
       const seek = this.howl!.seek() as number;
       if (!isNaN(seek)) {
-        const progress = seek / this.lastPlaybackEvent.song!.duration;
+        // Workaround for Howler that returns zero seek value after preloading without playing.
+        const progress = seek > 0 ? seek / this.lastPlaybackEvent.song!.duration : (this.lastSeekValue || 0) / this.lastPlaybackEvent.song!.duration;
         if (this.lastPlaybackEvent.progress !== progress) {
           this.firePlaybackEvent(this.lastPlaybackEvent.state, this.lastPlaybackEvent.song, progress);
         }
