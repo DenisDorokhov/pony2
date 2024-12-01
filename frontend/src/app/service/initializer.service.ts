@@ -34,7 +34,7 @@ export class InitializerService {
           if (installationStatus.installed) {
             return this.authenticationService.authenticate()
               .pipe(
-                mergeMap(() => this.playbackService.loadStoredState()),
+                mergeMap(() => this.playbackService.restoreQueueState()),
                 catchError(() => EMPTY)
               );
           } else {

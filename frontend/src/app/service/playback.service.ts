@@ -164,7 +164,7 @@ class AudioPlayer {
   }
 }
 
-interface StoredPlaybackState {
+interface QueueState {
   songIds: string[];
   currentIndex: number;
   progress: number;
@@ -232,10 +232,9 @@ export class PlaybackService {
     return this._currentIndex ?? -1;
   }
 
-  loadStoredState(): Observable<any | undefined> {
-    const stateJson = window.localStorage.getItem(PlaybackService.STATE_LOCAL_STORAGE_KEY);
-    if (stateJson) {
-      const state = JSON.parse(stateJson) as StoredPlaybackState;
+  restoreQueueState(): Observable<any | undefined> {
+    const state = this.loadQueueState();
+    if (state) {
       return this.libraryService.getSongs(state.songIds).pipe(
         tap(fetchedSongs => {
           const idToSong: {[songId: string]: Song} = fetchedSongs.reduce(function(result: any, song) {
@@ -263,6 +262,24 @@ export class PlaybackService {
     } else {
       return of(undefined);
     }
+  }
+
+  private loadQueueState(): QueueState | undefined {
+    const localStorageKey = this.resolveQueueStateLocalStorageKey();
+    if (localStorageKey) {
+      const stateJson = window.localStorage.getItem(localStorageKey);
+      if (stateJson) {
+        return JSON.parse(stateJson) as QueueState;
+      }
+    }
+    return undefined;
+  }
+
+  private resolveQueueStateLocalStorageKey(): string | undefined {
+    if (this.authenticationService.isAuthenticated) {
+      return PlaybackService.STATE_LOCAL_STORAGE_KEY + '.' + this.authenticationService.currentUser!.id;
+    }
+    return undefined;
   }
 
   switchQueue(queue: Song[], switchToIndex: number) {
@@ -450,11 +467,14 @@ export class PlaybackService {
   }
 
   private storeState() {
-    const state = {
-      songIds: this._queue.map(next => next.id),
-      currentIndex: this._currentIndex,
-      progress: this.lastPlaybackEvent.progress
-    } as StoredPlaybackState;
-    window.localStorage.setItem(PlaybackService.STATE_LOCAL_STORAGE_KEY, JSON.stringify(state));
+    const localStorageKey = this.resolveQueueStateLocalStorageKey();
+    if (localStorageKey) {
+      const state = {
+        songIds: this._queue.map(next => next.id),
+        currentIndex: this._currentIndex,
+        progress: this.lastPlaybackEvent.progress
+      } as QueueState;
+      window.localStorage.setItem(localStorageKey, JSON.stringify(state));
+    }
   }
 }

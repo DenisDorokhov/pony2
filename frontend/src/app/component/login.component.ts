@@ -5,6 +5,8 @@ import {AuthenticationService, Credentials} from "../service/authentication.serv
 import {Router} from "@angular/router";
 import {TranslateModule} from "@ngx-translate/core";
 import {ErrorComponent} from "./common/error.component";
+import {mergeMap, tap} from "rxjs/operators";
+import {PlaybackService} from "../service/playback.service";
 
 @Component({
   standalone: true,
@@ -20,6 +22,7 @@ export class LoginComponent {
 
   constructor(
     private authenticationService: AuthenticationService,
+    private playbackService: PlaybackService,
     private router: Router,
     formBuilder: FormBuilder,
   ) {
@@ -31,9 +34,11 @@ export class LoginComponent {
 
   login() {
     const credentials = <Credentials>this.loginForm.value;
-    this.authenticationService.authenticate(credentials).subscribe({
-      next: user => {
-        console.info(`User ${user.email} has been authenticated.`);
+    this.authenticationService.authenticate(credentials).pipe(
+      tap(user => console.info(`User ${user.email} has been authenticated.`)),
+      mergeMap(() => this.playbackService.restoreQueueState())
+    ).subscribe({
+      next: () => {
         this.error = undefined;
         this.router.navigate(['/library'], {replaceUrl: true});
       },
