@@ -53,6 +53,17 @@ class AudioPlayer {
       }));
   }
 
+  load(song?: Song) {
+    if (song) {
+      this.loadHowlForSong(song);
+    }
+    if (this.howl) {
+      this.howl.load();
+    } else {
+      throw new Error(`Could not load: audio is not initialized. Current state: '${this.lastPlaybackEvent.state}'.`);
+    }
+  }
+
   play(song?: Song) {
     if (song) {
       this.loadHowlForSong(song);
@@ -113,16 +124,16 @@ class AudioPlayer {
         console.info('Audio loaded.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
-      onloaderror: () => {
-        console.error('Audio could not be loaded.');
+      onloaderror: (_, error) => {
+        console.error('Audio could not be loaded: ' + JSON.stringify(error));
         this.firePlaybackEvent(PlaybackState.ERROR, song);
       },
       onplay: () => {
         console.info('Playback started / resumed.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, this.lastPlaybackEvent.progress);
       },
-      onplayerror: () => {
-        console.error('Playback failed.');
+      onplayerror: (_, error) => {
+        console.error('Playback failed: ' + JSON.stringify(error));
         this.firePlaybackEvent(PlaybackState.ERROR, song, this.lastPlaybackEvent.progress);
       },
       onend: () => {
@@ -252,7 +263,7 @@ export class PlaybackService {
             }
           }
           const queue: Song[] = state.songIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
-          this.switchQueue(queue, switchToIndex > -1 ? switchToIndex : 0);
+          this.switchQueue(queue, switchToIndex > -1 ? switchToIndex : 0, false);
           this.audioPlayer.pause();
           if (switchToIndex > -1 && state.progress !== undefined) {
             this.audioPlayer.seekToSeconds(state.progress * idToSong[currentSongId!].duration);
@@ -282,17 +293,21 @@ export class PlaybackService {
     return undefined;
   }
 
-  switchQueue(queue: Song[], switchToIndex: number) {
+  switchQueue(queue: Song[], switchToIndex: number, play = true) {
     this._queue = queue;
     this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
-    this.switchToIndex(switchToIndex);
+    this.switchToIndex(switchToIndex, play);
   }
 
-  private switchToIndex(index: number): Song {
+  private switchToIndex(index: number, play = true): Song {
     const song = this._queue[index];
     this._currentIndex = index;
     this.currentSongSubject.next(song);
-    this.audioPlayer.play(song);
+    if (play) {
+      this.audioPlayer.play(song);
+    } else {
+      this.audioPlayer.load(song);
+    }
     return song;
   }
 
