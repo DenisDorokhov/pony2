@@ -70,6 +70,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   private subscribeToIntersections() {
+    let eventsCount = 0;
     this.ngZone.runOutsideAngular(() => {
       this.intersectionSubscription?.unsubscribe();
       this.intersectionSubscription = this.createIntersectionObservable({
@@ -78,8 +79,15 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
         threshold: 0
       }).pipe(
         filter(entry => {
-          this.isIntersecting = entry.isIntersecting;
-          return entry.isIntersecting;
+          if (eventsCount > 0) {
+            // Workaround for wrong entry.isIntersecting in some Chrome versions.
+            // In such cases event is fired multiple times, so we consider second time a positive intersection.
+            this.isIntersecting = true;
+          } else {
+            this.isIntersecting = entry.isIntersecting;
+          }
+          eventsCount++;
+          return this.isIntersecting;
         })
       ).subscribe(() => {
         if (this.state === ImageLoaderComponentState.PENDING) {
