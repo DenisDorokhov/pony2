@@ -4,7 +4,7 @@ import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Album, Artist, ArtistSongs, SearchResult, Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
-import {ArtistDto, ArtistSongsDto, SearchResultDto} from "../domain/library.dto";
+import {ArtistDto, ArtistSongsDto, SearchResultDto, SongDetailsDto} from "../domain/library.dto";
 
 export enum LibraryState {
   UNKNOWN,
@@ -67,6 +67,21 @@ export class LibraryService {
     return this.httpClient.get<ArtistSongsDto>(`/api/library/artistSongs/${artist}`)
       .pipe(
         map(artistSongsDto => new ArtistSongs(artistSongsDto))
+      );
+  }
+
+  getSongs(songIds: string[]): Observable<Song[]> {
+    return this.httpClient.post<SongDetailsDto[]>('/api/library/songs/fetchByIds', songIds)
+      .pipe(
+        map(songDetails => songDetails.map(songDetails =>
+          new Song(
+            songDetails.song,
+            new Album(
+              songDetails.albumDetails.album,
+              new Artist(songDetails.albumDetails.artist)
+            )
+          ))
+        )
       );
   }
 

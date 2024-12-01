@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.test.SongFixtures.song;
@@ -180,9 +181,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/song/{songIds}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), 
-                SongDetailsDto[].class, song1_1_1.getId() + "," + song2_1_1.getId() + "," + 1000L);
+                "/api/library/songs/fetchByIds", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(List.of(song1_1_1.getId(), song2_1_1.getId(), 1000L), authentication.getAccessToken()),
+                SongDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(list -> {

@@ -25,8 +25,8 @@ public class LibraryController implements ErrorHandlingController {
         this.scanFacade = scanFacade;
     }
     
-    @GetMapping("/api/library/song/{songIds}")
-    public List<SongDetailsDto> getSong(@PathVariable List<String> songIds) {
+    @PostMapping("/api/library/songs/fetchByIds")
+    public List<SongDetailsDto> getSong(@RequestBody List<String> songIds) {
         return libraryFacade.getSongs(songIds);
     }
 

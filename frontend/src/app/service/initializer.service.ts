@@ -4,6 +4,7 @@ import {EMPTY} from 'rxjs';
 import {catchError, mergeMap, tap} from 'rxjs/operators';
 import {InstallationService} from "./installation.service";
 import {AuthenticationService} from "./authentication.service";
+import {PlaybackService} from "./playback.service";
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +15,7 @@ export class InitializerService {
     private translateService: TranslateService,
     private installationService: InstallationService,
     private authenticationService: AuthenticationService,
+    private playbackService: PlaybackService,
   ) {
   }
 
@@ -31,7 +33,10 @@ export class InitializerService {
         mergeMap(installationStatus => {
           if (installationStatus.installed) {
             return this.authenticationService.authenticate()
-              .pipe(catchError(() => EMPTY));
+              .pipe(
+                mergeMap(() => this.playbackService.loadStoredState()),
+                catchError(() => EMPTY)
+              );
           } else {
             return EMPTY;
           }

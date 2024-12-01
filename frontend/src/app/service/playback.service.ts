@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, defer, interval, Observable, of} from 'rxjs';
-import {distinctUntilChanged} from 'rxjs/operators';
+import {distinctUntilChanged, tap} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
 import {Howl, HowlOptions} from "howler";
 import {AuthenticationService} from "./authentication.service";
 import {moveItemInArray} from "@angular/cdk/drag-drop";
+import {LibraryService} from "./library.service";
 
 export enum PlaybackState {
   STOPPED,
@@ -71,9 +72,15 @@ class AudioPlayer {
     }
   }
 
-  seek(progress: number) {
+  seekToPercentage(progress: number) {
+    if (this.lastPlaybackEvent.song) {
+      this.seekToSeconds(progress * this.lastPlaybackEvent.song!.duration);
+    }
+  }
+
+  seekToSeconds(progress: number) {
     if (this.howl) {
-      this.howl.seek(progress * this.lastPlaybackEvent.song!.duration);
+      this.howl.seek(progress);
       if (this.lastPlaybackEvent.state === PlaybackState.ENDED) {
         this.howl.pause();
       }
@@ -157,22 +164,29 @@ class AudioPlayer {
   }
 }
 
+interface StoredPlaybackState {
+  songIds: string[];
+  currentIndex: number;
+  progress: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class PlaybackService {
 
-  private _currentIndex = -1;
+  private static readonly STATE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.state';
 
   private audioPlayer = new AudioPlayer();
-
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
   private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
 
+  private _currentIndex = -1;
   private _queue: Song[] = [];
 
   constructor(
-    private authenticationService: AuthenticationService
+    private authenticationService: AuthenticationService,
+    private libraryService: LibraryService,
   ) {
     this.authenticationService.observeLogout()
       .subscribe(() => {
@@ -203,7 +217,7 @@ export class PlaybackService {
         details => {
           if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
             console.info("Seek request by media session detected.");
-            this.audioPlayer.seek((details.seekTime || 0) / this.lastPlaybackEvent.song!.duration);
+            this.audioPlayer.seekToPercentage((details.seekTime || 0) / this.lastPlaybackEvent.song!.duration);
           }
         }
       );
@@ -216,6 +230,39 @@ export class PlaybackService {
 
   get currentSongIndex(): number {
     return this._currentIndex ?? -1;
+  }
+
+  loadStoredState(): Observable<any | undefined> {
+    const stateJson = window.localStorage.getItem(PlaybackService.STATE_LOCAL_STORAGE_KEY);
+    if (stateJson) {
+      const state = JSON.parse(stateJson) as StoredPlaybackState;
+      return this.libraryService.getSongs(state.songIds).pipe(
+        tap(fetchedSongs => {
+          const idToSong: {[songId: string]: Song} = fetchedSongs.reduce(function(result: any, song) {
+            result[song.id] = song;
+            return result;
+          }, {});
+          const currentSongId = state.currentIndex > -1 ? state.songIds[state.currentIndex] : undefined;
+          let switchToIndex = -1;
+          if (currentSongId && idToSong[currentSongId]) {
+            switchToIndex = state.currentIndex;
+            for (let i = 0; i < state.currentIndex; i++) {
+              if (!idToSong[state.songIds[i]]) {
+                switchToIndex--;
+              }
+            }
+          }
+          const queue: Song[] = state.songIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
+          this.switchQueue(queue, switchToIndex > -1 ? switchToIndex : 0);
+          this.audioPlayer.pause();
+          if (switchToIndex > -1 && state.progress !== undefined) {
+            this.audioPlayer.seekToSeconds(state.progress * idToSong[currentSongId!].duration);
+          }
+        })
+      );
+    } else {
+      return of(undefined);
+    }
   }
 
   switchQueue(queue: Song[], switchToIndex: number) {
@@ -304,7 +351,7 @@ export class PlaybackService {
       this.lastPlaybackEvent.state === PlaybackState.PAUSED ||
       this.lastPlaybackEvent.state === PlaybackState.ENDED
     ) {
-      this.audioPlayer.seek(progress);
+      this.audioPlayer.seekToPercentage(progress);
     }
   }
 
@@ -361,29 +408,38 @@ export class PlaybackService {
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
-      this.switchToNextSong().subscribe();
-    }
-    if (
+      this.switchToNextSong().subscribe(() => this.storeState());
+    } else if (
       playbackEvent.state === PlaybackState.LOADING
       || playbackEvent.state === PlaybackState.PLAYING
       || playbackEvent.state === PlaybackState.PAUSED
     ) {
-      if (navigator && navigator.mediaSession && playbackEvent.song) {
+      this.storeState();
+      if (navigator?.mediaSession) {
         const metadata = new MediaMetadata();
-        if (playbackEvent.song.name) {
+        if (playbackEvent.song?.name) {
           metadata.title = playbackEvent.song.name;
         }
-        if (playbackEvent.song.artistName) {
+        if (playbackEvent.song?.artistName) {
           metadata.artist = playbackEvent.song.artistName;
         }
-        if (playbackEvent.song.album.name) {
+        if (playbackEvent.song?.album.name) {
           metadata.album = playbackEvent.song.album.name + (playbackEvent.song.album.year ? ' (' + playbackEvent.song.album.year + ')' : '');
         }
-        if (playbackEvent.song.album.largeArtworkUrl) {
+        if (playbackEvent.song?.album.largeArtworkUrl) {
           metadata.artwork = [{src: location.protocol + '//' + location.host + playbackEvent.song.album.largeArtworkUrl}];
         }
         navigator.mediaSession.metadata = metadata;
       }
     }
+  }
+
+  private storeState() {
+    const state = {
+      songIds: this._queue.map(next => next.id),
+      currentIndex: this._currentIndex,
+      progress: this.lastPlaybackEvent.progress
+    } as StoredPlaybackState;
+    window.localStorage.setItem(PlaybackService.STATE_LOCAL_STORAGE_KEY, JSON.stringify(state));
   }
 }
