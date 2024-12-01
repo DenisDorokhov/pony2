@@ -1,6 +1,7 @@
-import {Component} from '@angular/core';
+import {Component, ViewContainerRef} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 
+// noinspection JSUnusedGlobalSymbols
 @Component({
   standalone: true,
   selector: 'pony-root',
@@ -8,4 +9,7 @@ import {RouterOutlet} from '@angular/router';
   templateUrl: './app.component.html'
 })
 export class AppComponent {
+  constructor(
+    public viewContainerRef: ViewContainerRef,
+  ) {}
 }

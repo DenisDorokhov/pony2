@@ -160,7 +160,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   removeSong(index: number) {
-    this.playbackService.removeSongFromQueue(index);
+    this.playbackService.removeFromQueue(index);
     this.currentSongIndex = this.playbackService.currentSongIndex;
     if (this.selectedIndex === index) {
       this.selectedIndex = -1;
@@ -169,7 +169,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onDropListDropped(event: CdkDragDrop<any, any>) {
     const toIndex = this.dragFromIndex! - event.previousIndex + event.currentIndex;
-    this.playbackService.moveSongInQueue(this.dragFromIndex!, toIndex);
+    this.playbackService.moveInQueue(this.dragFromIndex!, toIndex);
     this.currentSongIndex = this.playbackService.currentSongIndex;
     this.dragFromIndex = undefined;
     this.selectedIndex = toIndex;

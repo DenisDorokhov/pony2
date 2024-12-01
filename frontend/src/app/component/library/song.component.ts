@@ -1,4 +1,14 @@
-import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {
+  AfterViewInit,
+  ApplicationRef,
+  Component,
+  ElementRef, EmbeddedViewRef,
+  Input,
+  OnDestroy,
+  OnInit,
+  TemplateRef,
+  ViewChild
+} from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {Song} from "../../domain/library.model";
 import {PlaybackService, PlaybackState} from "../../service/playback.service";
@@ -7,10 +17,18 @@ import {LibraryService} from "../../service/library.service";
 import {ScrollingUtils} from "../../utils/scrolling.utils";
 import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
 import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
+import {
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle
+} from "@ng-bootstrap/ng-bootstrap";
+import {resolveAppViewContainerRef} from "../../utils/view.utils";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe],
+  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
   selector: 'pony-song',
   templateUrl: './song.component.html',
   styleUrls: ['./song.component.scss']
@@ -19,7 +37,14 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   PlaybackState = PlaybackState;
 
+  @ViewChild('menuButton') menuButtonElement!: ElementRef;
+  @ViewChild('menuContainer') menuContainerElement!: ElementRef;
+  @ViewChild('menu', {read: TemplateRef}) menuTemplate!: TemplateRef<unknown>;
+
   private _song!: Song;
+
+  showMenuButton = false;
+  showMenu = false;
 
   get song(): Song {
     return this._song;
@@ -39,15 +64,17 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() showArtist = false;
 
   @ViewChild('container') containerElement!: ElementRef;
-
   selected = false;
+
   playbackState: PlaybackState | undefined;
 
+  private menuEmbeddedViewRef: EmbeddedViewRef<any> | undefined;
   private subscriptions: Subscription[] = [];
 
   constructor(
     private libraryService: LibraryService,
-    private playbackService: PlaybackService
+    private playbackService: PlaybackService,
+    private applicationRef: ApplicationRef,
   ) {
   }
 
@@ -70,6 +97,9 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    if (this.selected) {
+      this.containerElement.nativeElement.focus();
+    }
     this.subscriptions.push(this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {
         if (song.id === this.song.id) {
@@ -84,9 +114,27 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         event.preventDefault();
       }
     }));
-    if (this.selected) {
-      this.containerElement.nativeElement.focus();
-    }
+    this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event => {
+      if (this.menuContainerElement?.nativeElement) {
+        let checkElement: Node | null = event.target as Node;
+        let clickWithinContainer = false;
+        do {
+          clickWithinContainer = this.menuContainerElement.nativeElement === checkElement;
+          checkElement = (checkElement as Node).parentNode;
+        } while (!clickWithinContainer && checkElement);
+        if (!clickWithinContainer) {
+          this.hideMenu();
+        }
+      }
+    }));
+    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
+      this.hideMenu()));
+  }
+
+  private hideMenu(): void {
+    this.menuEmbeddedViewRef?.destroy();
+    this.menuEmbeddedViewRef = undefined;
+    this.showMenu = false;
   }
 
   ngOnDestroy(): void {
@@ -106,5 +154,43 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     if (event.detail > 1) {
       event.preventDefault();
     }
+  }
+
+  onMouseMove() {
+    this.showMenuButton = true;
+  }
+
+  onMouseLeave() {
+    this.showMenuButton = false;
+  }
+
+  onMenuClick() {
+    this.showMenu = true;
+    const viewContainerRef = resolveAppViewContainerRef(this.applicationRef);
+    this.menuEmbeddedViewRef = viewContainerRef.createEmbeddedView(this.menuTemplate);
+    const menu = this.menuEmbeddedViewRef.rootNodes[0] as HTMLElement;
+    menu.style.visibility = 'hidden';
+    setTimeout(() => this.adjustMenuPosition());
+  }
+
+  private adjustMenuPosition() {
+    const menuContainer = this.menuContainerElement.nativeElement as HTMLElement;
+    const menuContainerRect = menuContainer.getBoundingClientRect();
+    const menuButton = this.menuButtonElement.nativeElement as HTMLElement;
+    const menuButtonRect = menuButton.getBoundingClientRect();
+    const menu = this.menuEmbeddedViewRef!.rootNodes[0] as HTMLElement;
+    menu.style.top = (menuButtonRect.top + menuButtonRect.height) + 'px';
+    menu.style.left = (menuButtonRect.left - menuContainerRect.width + menuButtonRect.width) + 'px';
+    menu.style.visibility = 'visible';
+  }
+
+  playNext() {
+    this.playbackService.playNext(this.song);
+    this.hideMenu();
+  }
+
+  addToQueue() {
+    this.playbackService.addToQueue(this.song);
+    this.hideMenu();
   }
 }

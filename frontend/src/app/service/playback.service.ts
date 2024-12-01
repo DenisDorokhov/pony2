@@ -283,7 +283,7 @@ export class PlaybackService {
     return this.queueSubject.asObservable();
   }
 
-  removeSongFromQueue(index: number): Song {
+  removeFromQueue(index: number): Song {
     const song = this._queue[index];
     if (this._currentIndex === index) {
       this._currentIndex = -1;
@@ -297,7 +297,7 @@ export class PlaybackService {
     return song;
   }
 
-  moveSongInQueue(fromIndex: number, toIndex: number): Song {
+  moveInQueue(fromIndex: number, toIndex: number): Song {
     if (this._currentIndex === fromIndex) {
       this._currentIndex = toIndex;
     } else {
@@ -315,6 +315,21 @@ export class PlaybackService {
     moveItemInArray(this._queue, fromIndex, toIndex);
     this.queueSubject.next(this._queue.slice());
     return fromSong;
+  }
+
+  addToQueue(song: Song): void {
+    this._queue.push(song);
+    this.queueSubject.next(this._queue.slice());
+  }
+
+  playNext(song: Song): void {
+    if (this._currentIndex === -1) {
+      this._queue.push(song);
+      this.queueSubject.next(this._queue.slice());
+    } else {
+      this._queue.splice(this._currentIndex + 1, 0, song);
+      this.queueSubject.next(this._queue.slice());
+    }
   }
 
   observeCurrentSong(): Observable<Song | undefined> {

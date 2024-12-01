@@ -40,7 +40,9 @@ export default {
       unknownLabel: 'Unknown Artist'
     },
     song: {
-      unknownLabel: 'Unknown Song'
+      unknownLabel: 'Unknown Song',
+      playNext: 'Play next',
+      addToQueue: 'Add to queue'
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {

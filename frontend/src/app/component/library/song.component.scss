@@ -70,6 +70,10 @@
   .artist {
     display: block;
   }
+
+  button.menu {
+    padding-top: 10px;
+  }
 }
 
 .song-container.selected {
@@ -81,5 +85,25 @@
     .fa {
       color: white;
     }
+  }
+}
+
+button.menu {
+  border: none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  width: 30px;
+}
+
+button.menu:active {
+  opacity: 90%;
+}
+
+.menu {
+  position: absolute;
+
+  .dropdown-menu button i {
+    margin-right: 12px;
   }
 }
