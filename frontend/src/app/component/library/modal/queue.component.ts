@@ -10,9 +10,9 @@ import {
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {NgbActiveModal, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal, NgbDropdown, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
 import {PlaybackEvent, PlaybackService, PlaybackState} from "../../../service/playback.service";
-import {Subscription} from "rxjs";
+import {fromEvent, Subscription} from "rxjs";
 import {Song} from "../../../domain/library.model";
 import {UnknownArtistPipe} from "../../../pipe/unknown-artist.pipe";
 import {UnknownSongPipe} from "../../../pipe/unknown-song.pipe";
@@ -68,6 +68,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
+  @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
 
   private subscriptions: Subscription[] = [];
 
@@ -99,6 +100,11 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() => {
+      this.optionsDropDowns.toArray().forEach(dropDown => {
+        dropDown.close();
+      });
+    }));
     this.subscriptions.push(this.viewPort.renderedRangeStream.subscribe(() =>
       requestAnimationFrame(() => this.checkIfCurrentSongShown())));
     requestAnimationFrame(() => this.scrollToCurrentSong());
