@@ -331,6 +331,7 @@ export class PlaybackService {
     }
     this._queue.splice(index, 1);
     this.queueSubject.next(this._queue.slice());
+    this.storeState();
     return song;
   }
 
@@ -351,12 +352,14 @@ export class PlaybackService {
     const fromSong = this._queue[fromIndex];
     moveItemInArray(this._queue, fromIndex, toIndex);
     this.queueSubject.next(this._queue.slice());
+    this.storeState();
     return fromSong;
   }
 
   addToQueue(song: Song): void {
     this._queue.push(song);
     this.queueSubject.next(this._queue.slice());
+    this.storeState();
   }
 
   playNext(song: Song): void {
@@ -367,6 +370,7 @@ export class PlaybackService {
       this._queue.splice(this._currentIndex + 1, 0, song);
       this.queueSubject.next(this._queue.slice());
     }
+    this.storeState();
   }
 
   observeCurrentSong(): Observable<Song | undefined> {
