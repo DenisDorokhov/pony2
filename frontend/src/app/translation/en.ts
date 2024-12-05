@@ -46,7 +46,7 @@ export default {
     song: {
       unknownLabel: 'Unknown Song',
       playNext: 'Play next',
-      addToQueue: 'Add to queue'
+      addToQueue: 'Play last'
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {
@@ -66,7 +66,7 @@ export default {
     emptyQueueLabel: 'Your playback queue is currently empty.',
     goToSongButton: 'Go to song',
     removeSongButton: 'Remove from queue',
-    scrollToCurrentSongButton: 'Scroll to current song',
+    scrollToCurrentSongButton: 'Show current song',
     sizeLabel: '{{songCount}} songs ({{duration}})'
   },
   scanning: {
