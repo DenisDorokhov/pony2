@@ -12,22 +12,26 @@ import {CommonModule} from "@angular/common";
 import {LibraryScanService} from "../../service/library-scan.service";
 import {Subscription} from "rxjs";
 import {FastSearchComponent} from "./fast-search.component";
-import Role = UserDto.Role;
 import {ErrorDto} from "../../domain/common.dto";
 import {QueueComponent} from "./modal/queue.component";
+import {PlaybackMode, PlaybackService} from "../../service/playback.service";
+import Role = UserDto.Role;
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, NgbDropdownModule, CurrentUserComponent, SettingsComponent, ScanningComponent, LogComponent, UserListComponent, FastSearchComponent],
+  imports: [CommonModule, TranslateModule, NgbDropdownModule, FastSearchComponent],
   selector: 'pony-toolbar',
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
 
+  PlaybackMode = PlaybackMode;
+
   currentUser: UserDto | undefined;
 
   scanRunning = false;
+  playbackMode: PlaybackMode;
 
   private scanStatisticsSubscription: Subscription | undefined;
   private authenticationSubscription: Subscription | undefined;
@@ -35,8 +39,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   constructor(
     private libraryScanService: LibraryScanService,
     private authenticationService: AuthenticationService,
+    private playbackService: PlaybackService,
     private modal: NgbModal
   ) {
+    this.playbackMode = this.playbackService.mode;
   }
 
   ngOnInit(): void {
@@ -102,5 +108,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   openQueue() {
     this.modal.open(QueueComponent, { size: 'lg' });
+  }
+
+  setPlaybackMode(mode: PlaybackMode) {
+    this.playbackMode = this.playbackService.mode = mode;
   }
 }

@@ -8,12 +8,12 @@ import {moveItemInArray} from "@angular/cdk/drag-drop";
 import {LibraryService} from "./library.service";
 
 export enum PlaybackState {
-  STOPPED,
-  LOADING,
-  ERROR,
-  PLAYING,
-  PAUSED,
-  ENDED,
+  STOPPED = 'STOPPED',
+  LOADING = 'LOADING',
+  ERROR = 'ERROR',
+  PLAYING = 'PLAYING',
+  PAUSED = 'PAUSED',
+  ENDED = 'ENDED',
 }
 
 export class PlaybackEvent {
@@ -27,6 +27,13 @@ export class PlaybackEvent {
     this.song = song;
     this.progress = progress;
   }
+}
+
+export enum PlaybackMode {
+  NORMAL = 'NORMAL',
+  REPEAT_ALL = 'REPEAT_ALL',
+  REPEAT_ONE = 'REPEAT_ONE',
+  SHUFFLE = 'SHUFFLE',
 }
 
 class AudioPlayer {
@@ -192,6 +199,7 @@ interface QueueState {
 export class PlaybackService {
 
   private static readonly STATE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.state';
+  private static readonly MODE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.mode';
 
   private audioPlayer = new AudioPlayer();
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
@@ -199,11 +207,13 @@ export class PlaybackService {
 
   private _currentIndex = -1;
   private _queue: Song[] = [];
+  private _mode: PlaybackMode;
 
   constructor(
     private authenticationService: AuthenticationService,
     private libraryService: LibraryService,
   ) {
+    this._mode = window.localStorage.getItem(PlaybackService.MODE_LOCAL_STORAGE_KEY) as PlaybackMode || PlaybackMode.NORMAL;
     this.authenticationService.observeLogout()
       .subscribe(() => {
         this.audioPlayer.stop();
@@ -246,6 +256,15 @@ export class PlaybackService {
 
   get currentSongIndex(): number {
     return this._currentIndex ?? -1;
+  }
+
+  get mode(): PlaybackMode {
+    return this._mode;
+  }
+
+  set mode(value: PlaybackMode) {
+    this._mode = value;
+    window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
   }
 
   restoreQueueState(): Observable<any | undefined> {

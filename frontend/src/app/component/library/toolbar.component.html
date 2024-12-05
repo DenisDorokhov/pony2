@@ -1,14 +1,27 @@
 <div class="toolbar-container">
   <div ngbDropdown class="btn-group playback-mode">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
-      <i class="bi bi-vinyl-fill"></i>
+      @switch (playbackMode) {
+        @case (PlaybackMode.NORMAL) {
+          <i class="bi bi-vinyl-fill"></i>
+        }
+        @case (PlaybackMode.REPEAT_ALL) {
+          <i class="bi bi-repeat"></i>
+        }
+        @case (PlaybackMode.REPEAT_ONE) {
+          <i class="bi bi-repeat-1"></i>
+        }
+        @case (PlaybackMode.SHUFFLE) {
+          <i class="bi bi-shuffle"></i>
+        }
+      }
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem><i class="bi bi-vinyl-fill"></i>{{ 'library.toolbar.normalModeButton' | translate }}</button>
-      <button ngbDropdownItem><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
-      <button ngbDropdownItem><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
-      <button ngbDropdownItem><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.NORMAL)"><i class="bi bi-vinyl-fill"></i>{{ 'library.toolbar.normalModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ALL)"><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ONE)"><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.SHUFFLE)"><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
     </ul>
   </div>
   <button type="button" class="btn btn-sm btn-light" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
