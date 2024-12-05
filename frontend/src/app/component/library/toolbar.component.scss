@@ -37,15 +37,16 @@
   }
 
   @keyframes spinner {
-    0% {
+    from {
       transform: rotate(0deg);
     }
-    100% {
-      transform: rotate(359deg);
+    to {
+      transform: rotate(360deg);
     }
   }
 
   .spin {
-    animation: spinner 2s infinite linear;
+    display: inline-block;
+    animation: spinner 2s linear infinite;
   }
 }
