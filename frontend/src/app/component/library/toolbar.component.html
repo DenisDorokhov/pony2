@@ -24,7 +24,7 @@
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.SHUFFLE)"><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
     </ul>
   </div>
-  <button type="button" class="btn btn-sm btn-light" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
+  <button type="button" class="btn btn-sm btn-light queue" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
     <i class="bi bi-list-task"></i>
   </button>
   <div ngbDropdown class="btn-group">

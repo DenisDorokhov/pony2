@@ -48,7 +48,12 @@
   .spin {
     display: inline-block;
     animation: spinner 2s linear infinite;
-    transform-origin: 50% 50.5%;
+    transform-origin: 50% 50.7%;
+  }
+
+  button.refresh, button.queue {
+    padding-top: 5px;
+    padding-bottom: 3px;
   }
 
   .bi {
