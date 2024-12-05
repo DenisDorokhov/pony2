@@ -4,8 +4,8 @@
      (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="play()"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
-    <i [class.bi-volume-up-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"
-       [class.bi-volume-off-fill]="playbackState === PlaybackState.PAUSED"
+    <i [class.bi-volume-up-fill]="playbackState === PlaybackState.PLAYING"
+       [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
        class="bi"></i>
     <span [hidden]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
       {{ song.trackNumber }}

@@ -22,8 +22,8 @@
       <div class="track-number">
         <div>
           <i *ngIf="currentSongIndex === i"
-             [class.bi-volume-up-fill]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
-             [class.bi-volume-off-fill]="playbackEvent?.state === PlaybackState.PAUSED"
+             [class.bi-volume-up-fill]="playbackEvent?.state === PlaybackState.PLAYING"
+             [class.bi-volume-off-fill]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PAUSED"
              class="bi"></i>
           {{
             currentSongIndex !== i || (
