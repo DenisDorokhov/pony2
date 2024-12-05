@@ -6,8 +6,8 @@
        [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
     {{ artist.name | ponyUnknownArtist }}
   </div>
-  <div class="playback-indicator">
-    <i class="fa fa-volume-up" *ngIf="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"></i>
-    <i class="fa fa-volume-off" *ngIf="playbackState === PlaybackState.PAUSED"></i>
+  <div class="playback-indicator" [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING">
+    <i class="bi bi-volume-up-fill" *ngIf="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"></i>
+    <i class="bi bi-volume-off-fill" *ngIf="playbackState === PlaybackState.PAUSED"></i>
   </div>
 </a>

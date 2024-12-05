@@ -30,6 +30,10 @@ export default {
       logOutButton: 'Logout',
       queueButton: 'Queue & Playlists',
       refreshButton: 'Re-scan',
+      normalModeButton: 'Normal',
+      repeatAllModeButton: 'Repeat all',
+      repeatOneModeButton: 'Repeat one',
+      shuffleModeButton: 'Shuffle',
     },
     album: {
       counterHeader: '{{albumCount}} albums, {{songCount}} songs',
@@ -60,8 +64,6 @@ export default {
   queue: {
     header: 'Playback Queue',
     emptyQueueLabel: 'Your playback queue is currently empty.',
-    history: 'History',
-    playlists: 'Playlists',
     goToSongButton: 'Go to song',
     removeSongButton: 'Remove from queue',
     scrollToCurrentSongButton: 'Scroll to current song',

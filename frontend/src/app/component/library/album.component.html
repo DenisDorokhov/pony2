@@ -5,7 +5,7 @@
       {{ albumSongs.album.name | ponyUnknownAlbum }}
       <button (click)="download()"
               type="button" class="btn btn-sm btn-light">
-        <i class="fa fa-download"></i>
+        <i class="bi bi-download"></i>
         Download
       </button>
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>

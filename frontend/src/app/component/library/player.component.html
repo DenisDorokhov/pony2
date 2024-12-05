@@ -2,15 +2,15 @@
 
   <button type="button" class="btn btn-light backward"
           (click)="switchToPreviousSong()" [disabled]="!hasPreviousSong">
-    <i class="fa fa-fast-backward"></i>
+    <i class="bi bi-skip-backward-fill"></i>
   </button>
   <button type="button" class="btn btn-light btn-lg play"
           (click)="playOrPause()">
-    <i [class]="isPlaying ? 'fa fa-pause' : 'fa fa-play'"></i>
+    <i [class]="isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'"></i>
   </button>
   <button type="button" class="btn btn-light forward"
           (click)="switchToNextSong()" [disabled]="!hasNextSong">
-    <i class="fa fa-fast-forward"></i>
+    <i class="bi bi-skip-forward-fill"></i>
   </button>
 
   <div class="title-container">

@@ -22,9 +22,9 @@
       <div class="track-number">
         <div>
           <i *ngIf="currentSongIndex === i"
-             [class.fa-volume-up]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
-             [class.fa-volume-off]="playbackEvent?.state === PlaybackState.PAUSED"
-             class="fa"></i>
+             [class.bi-volume-up-fill]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PLAYING"
+             [class.bi-volume-off-fill]="playbackEvent?.state === PlaybackState.PAUSED"
+             class="bi"></i>
           {{
             currentSongIndex !== i || (
               playbackEvent?.state !== PlaybackState.LOADING &&
@@ -48,10 +48,10 @@
         {{ song.durationInMinutes }}
       </div>
       <div ngbDropdown class="options">
-        <button ngbDropdownToggle class="menu"><i class="fa fa-ellipsis-v"></i></button>
+        <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
         <div ngbDropdownMenu class="dropdown-menu" role="menu">
-          <button ngbDropdownItem (click)="goToSong(song)"><i class="fa fa-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
-          <button ngbDropdownItem (click)="removeSong(i)"><i class="fa fa-ban"></i>{{ 'queue.removeSongButton' | translate }}</button>
+          <button ngbDropdownItem (click)="goToSong(song)"><i class="bi bi-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
+          <button ngbDropdownItem (click)="removeSong(i)"><i class="bi bi-x-circle"></i>{{ 'queue.removeSongButton' | translate }}</button>
         </div>
       </div>
     </div>
@@ -69,12 +69,4 @@
     'queue.sizeLabel' | translate:{ songCount: queue.length, duration }
   }}
   </small>
-<!--  <button type="button" class="btn btn-outline-dark">-->
-<!--    <i class="fa fa-history"></i>-->
-<!--    {{ 'queue.history' | translate }}-->
-<!--  </button>-->
-<!--  <button type="button" class="btn btn-outline-dark">-->
-<!--    <i class="fa fa-bars"></i>-->
-<!--    {{ 'queue.playlists' | translate }}-->
-<!--  </button>-->
 </div>

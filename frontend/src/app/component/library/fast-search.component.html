@@ -2,7 +2,7 @@
 
   <input #input class="form-control" type="text" placeholder="{{ 'fastSearch.searchPlaceholder' | translate }}"
          (input)="onInputChange($event)" (focusin)="onFocusIn()" (keydown)="onInputKeyDown($event)">
-  <i class="fa fa-search ms-3 search-icon"></i>
+  <i class="bi bi-search ms-3 search-icon"></i>
 
   <div tabindex="0" class="search-results focus-ring focus-ring-secondary" #searchResults data-pony-image-loader-scroller
        [hidden]="!open || !searchResult" (keydown)="onInputKeyDown($event)">

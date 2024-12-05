@@ -4,16 +4,16 @@
      (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="play()"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
-    <i [class.fa-volume-up]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"
-       [class.fa-volume-off]="playbackState === PlaybackState.PAUSED"
-       class="fa"></i>
+    <i [class.bi-volume-up-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING"
+       [class.bi-volume-off-fill]="playbackState === PlaybackState.PAUSED"
+       class="bi"></i>
     <span [hidden]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
       {{ song.trackNumber }}
     </span>
   </div>
   <div class="duration">
     <span [hidden]="showMenuButton || showMenu">{{ song.durationInMinutes }}</span>
-    <button #menuButton [hidden]="!showMenuButton && !showMenu" (click)="onMenuClick()" class="menu"><i class="fa fa-ellipsis-v"></i></button>
+    <button #menuButton [hidden]="!showMenuButton && !showMenu" (click)="onMenuClick()" class="menu"><i class="bi bi-three-dots-vertical"></i></button>
   </div>
   <div class="title">{{ song.name | ponyUnknownSong }}</div>
   <div class="artist">{{ song.artistName }}</div>
@@ -22,8 +22,8 @@
 <ng-template #menu>
   <div class="menu dropdown show">
     <div class="dropdown-menu show" role="menu" #menuContainer>
-      <button class="dropdown-item" (click)="playNext()"><i class="fa fa-play-circle"></i>{{ 'library.song.playNext' | translate }}</button>
-      <button class="dropdown-item" (click)="addToQueue()"><i class="fa fa-plus"></i>{{ 'library.song.addToQueue' | translate }}</button>
+      <button class="dropdown-item" (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
+      <button class="dropdown-item" (click)="addToQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.song.addToQueue' | translate }}</button>
     </div>
   </div>
 </ng-template>

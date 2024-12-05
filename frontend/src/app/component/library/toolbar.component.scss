@@ -20,10 +20,32 @@
     margin-left: 6px;
   }
 
+  .playback-mode {
+    .btn {
+      margin-left: 0;
+    }
+    ul i {
+      margin-right: 12px;
+    }
+  }
+
   pony-fast-search {
     display: block;
     margin-top: 6px;
-    width: 210px;
+    width: 217px;
     float: right;
+  }
+
+  @keyframes spinner {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(359deg);
+    }
+  }
+
+  .spin {
+    animation: spinner 2s infinite linear;
   }
 }

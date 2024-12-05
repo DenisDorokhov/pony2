@@ -1,10 +1,22 @@
 <div class="toolbar-container">
+  <div ngbDropdown class="btn-group playback-mode">
+    <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
+      <i class="bi bi-play-circle"></i>
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button ngbDropdownItem><i class="bi bi-play-circle"></i>{{ 'library.toolbar.normalModeButton' | translate }}</button>
+      <button ngbDropdownItem><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
+      <button ngbDropdownItem><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
+      <button ngbDropdownItem><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
+    </ul>
+  </div>
   <button type="button" class="btn btn-sm btn-light" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
-    <i class="fa fa-list"></i>
+    <i class="bi bi-list-task"></i>
   </button>
   <div ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
-      <i class="fa fa-user"></i>
+      <i class="bi bi-person-fill"></i>
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
@@ -15,11 +27,11 @@
     </ul>
   </div>
   <button *ngIf="currentUser?.role === 'ADMIN'" title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
-    <i class="fa fa-refresh" [class.fa-spin]="scanRunning"></i>
+    <i class="bi bi-arrow-clockwise" [class.spin]="scanRunning"></i>
   </button>
   <div *ngIf="currentUser?.role === 'ADMIN'" ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
-      <i class="fa fa-gear"></i>
+      <i class="bi bi-gear-wide"></i>
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
