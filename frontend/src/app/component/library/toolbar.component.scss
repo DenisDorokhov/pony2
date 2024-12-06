@@ -18,6 +18,8 @@
 
   .btn {
     margin-left: 6px;
+    padding-top: 5px;
+    padding-bottom: 3px;
   }
 
   .playback-mode {
@@ -32,7 +34,7 @@
   pony-fast-search {
     display: block;
     margin-top: 4px;
-    width: 226px;
+    width: 228px;
     float: right;
   }
 
@@ -51,11 +53,7 @@
     transform-origin: 50% 50.7%;
   }
 
-  button.refresh, button.queue {
-    padding-top: 5px;
-    padding-bottom: 3px;
-  }
-
+  // Fix animation anchor point.
   .bi {
     font-size: 16px;
     line-height: 15px;
