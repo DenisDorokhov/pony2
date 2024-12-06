@@ -21,7 +21,7 @@ import {LibraryService} from "../../../service/library.service";
 import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
-import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
+import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 import {ReactiveFormsModule} from "@angular/forms";
 import {formatDuration} from "../../../utils/format.utils";
@@ -39,8 +39,6 @@ import {formatDuration} from "../../../utils/format.utils";
     NgbDropdownModule,
     CdkDropList,
     CdkDrag,
-    CdkDragHandle,
-    CdkDragPreview,
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
@@ -89,6 +87,9 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe(queue => {
         this.queue = queue;
         this.duration = formatDuration(queue.reduce((result: number, song: Song) => result + song.duration, 0), this.translateService);
+        if (this.viewPort) {
+          this.viewPort.checkViewportSize();
+        }
       }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.playbackEvent = playbackEvent));

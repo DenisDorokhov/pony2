@@ -287,7 +287,10 @@ export class PlaybackService {
           const currentSong = oldQueue[this._currentIndex];
           this._currentIndex = this._queue.findIndex(next => next.id === currentSong.id);
         }
-        this.queueSubject.next(this._queue);
+        this.queueSubject.next(this._queue.slice());
+        this.originalQueue = undefined;
+      } else {
+        this.originalQueue = undefined;
       }
       this.storeState();
     }
@@ -297,7 +300,7 @@ export class PlaybackService {
     for (let i = 0; i < count; i++) {
       this._queue.push(this.originalQueue![this.randomInt(0, this.originalQueue!.length - 1)]);
     }
-    this.queueSubject.next(this._queue);
+    this.queueSubject.next(this._queue.slice());
   }
 
   private randomInt(min: number, max: number) {
@@ -307,7 +310,7 @@ export class PlaybackService {
   restoreQueueState(): Observable<any | undefined> {
     const state = this.loadQueueState();
     if (state) {
-      return this.libraryService.getSongs(state.songIds).pipe(
+      return this.libraryService.getSongs(state.originalSongIds === undefined ? state.songIds : state.originalSongIds).pipe(
         tap(fetchedSongs => {
           const idToSong: {[songId: string]: Song} = fetchedSongs.reduce(function(result: any, song) {
             result[song.id] = song;
@@ -324,6 +327,9 @@ export class PlaybackService {
             }
           }
           const queue: Song[] = state.songIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
+          if (state.originalSongIds !== undefined) {
+            this.originalQueue = state.originalSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
+          }
           this.switchQueue(queue, switchToIndex > -1 ? switchToIndex : 0, false);
           this.audioPlayer.pause();
           if (switchToIndex > -1 && state.progress !== undefined) {
