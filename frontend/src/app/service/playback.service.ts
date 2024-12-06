@@ -189,6 +189,7 @@ class AudioPlayer {
 
 interface QueueState {
   songIds: string[];
+  originalSongIds: string[] | undefined;
   currentIndex: number;
   progress: number;
 }
@@ -208,6 +209,8 @@ export class PlaybackService {
   private _currentIndex = -1;
   private _queue: Song[] = [];
   private _mode: PlaybackMode;
+
+  private originalQueue: Song[] | undefined;
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -263,8 +266,42 @@ export class PlaybackService {
   }
 
   set mode(value: PlaybackMode) {
-    this._mode = value;
-    window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
+    if (this._mode !== value) {
+      const oldMode = this._mode;
+      this._mode = value;
+      window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
+      if (this._mode === PlaybackMode.SHUFFLE) {
+        this.originalQueue = [...this._queue];
+        this._queue = [];
+        if (this.originalQueue.length > 0) {
+          if (this._currentIndex > -1) {
+            this._queue.push(this.originalQueue[this._currentIndex]);
+            this._currentIndex = 0;
+          }
+          this.addRandomSongsToQueue(19);
+        }
+      } else if (oldMode === PlaybackMode.SHUFFLE) {
+        const oldQueue = [...this._queue];
+        this._queue = this.originalQueue !== undefined ? [...this.originalQueue] : [];
+        if (this._currentIndex > -1) {
+          const currentSong = oldQueue[this._currentIndex];
+          this._currentIndex = this._queue.findIndex(next => next.id === currentSong.id);
+        }
+        this.queueSubject.next(this._queue);
+      }
+      this.storeState();
+    }
+  }
+
+  private addRandomSongsToQueue(count: number) {
+    for (let i = 0; i < count; i++) {
+      this._queue.push(this.originalQueue![this.randomInt(0, this.originalQueue!.length - 1)]);
+    }
+    this.queueSubject.next(this._queue);
+  }
+
+  private randomInt(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   restoreQueueState(): Observable<any | undefined> {
@@ -331,6 +368,9 @@ export class PlaybackService {
       this.audioPlayer.play(song);
     } else {
       this.audioPlayer.load(song);
+    }
+    if (this._mode === PlaybackMode.SHUFFLE && this._currentIndex === this._queue.length - 1) {
+      this.addRandomSongsToQueue(20);
     }
     return song;
   }
@@ -431,7 +471,7 @@ export class PlaybackService {
   }
 
   hasPreviousSong(): boolean {
-    return this._currentIndex > 0 && this._queue.length > 0;
+    return this._mode === PlaybackMode.NORMAL || this._mode === PlaybackMode.SHUFFLE ? this._currentIndex > 0 && this._queue.length > 0 : this._queue.length > 0;
   }
 
   switchToPreviousSong(): Observable<Song | undefined> {
@@ -459,7 +499,18 @@ export class PlaybackService {
       }
       return defer(() => {
         if (this.hasPreviousSong()) {
-          return of(this.switchToIndex(this._currentIndex - 1));
+          switch (this._mode) {
+            case PlaybackMode.REPEAT_ALL:
+              if (this._currentIndex === 0) {
+                return of(this.switchToIndex(this._queue.length - 1));
+              } else {
+                return of(this.switchToIndex(this._currentIndex - 1));
+              }
+            case PlaybackMode.REPEAT_ONE:
+              return of(this.switchToIndex(this._currentIndex));
+            default:
+              return of(this.switchToIndex(this._currentIndex - 1));
+          }
         } else {
           return of(undefined);
         }
@@ -468,13 +519,24 @@ export class PlaybackService {
   }
 
   hasNextSong(): boolean {
-    return this._currentIndex + 1 < this._queue.length;
+    return this._mode === PlaybackMode.NORMAL ? this._currentIndex + 1 < this._queue.length : this._queue.length > 0;
   }
 
   switchToNextSong(): Observable<Song | undefined> {
     return defer(() => {
       if (this.hasNextSong()) {
-        return of(this.switchToIndex(this._currentIndex + 1));
+        switch (this._mode) {
+          case PlaybackMode.REPEAT_ALL:
+            if (this._currentIndex >= this._queue.length - 1) {
+              return of(this.switchToIndex(0));
+            } else {
+              return of(this.switchToIndex(this._currentIndex + 1));
+            }
+          case PlaybackMode.REPEAT_ONE:
+            return of(this.switchToIndex(this._currentIndex));
+          default:
+            return of(this.switchToIndex(this._currentIndex + 1));
+        }
       } else {
         return of(undefined);
       }
@@ -514,6 +576,7 @@ export class PlaybackService {
     if (localStorageKey) {
       const state = {
         songIds: this._queue.map(next => next.id),
+        originalSongIds: this.originalQueue !== undefined ? this.originalQueue.map(next => next.id) : undefined,
         currentIndex: this._currentIndex,
         progress: this.lastPlaybackEvent.state === PlaybackState.ENDED ? undefined : this.lastPlaybackEvent.progress
       } as QueueState;
