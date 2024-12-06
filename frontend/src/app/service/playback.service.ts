@@ -145,7 +145,11 @@ export class PlaybackService {
   restoreQueueState(): Observable<any | undefined> {
     const state = this.loadQueueState();
     if (state) {
-      return this.libraryService.getSongs(state.originalSongIds === undefined ? state.songIds : state.originalSongIds).pipe(
+      let allSongIds = [...state.songIds];
+      if (state.originalSongIds !== undefined) {
+        allSongIds = allSongIds.concat(state.originalSongIds);
+      }
+      return this.libraryService.getSongs(allSongIds).pipe(
         tap(fetchedSongs => {
           const idToSong: {[songId: string]: Song} = fetchedSongs.reduce(function(result: any, song) {
             result[song.id] = song;
@@ -352,8 +356,6 @@ export class PlaybackService {
               } else {
                 return of(this.switchToIndex(this._currentIndex - 1));
               }
-            case PlaybackMode.REPEAT_ONE:
-              return of(this.switchToIndex(this._currentIndex));
             default:
               return of(this.switchToIndex(this._currentIndex - 1));
           }
