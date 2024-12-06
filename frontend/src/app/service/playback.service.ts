@@ -271,29 +271,37 @@ export class PlaybackService {
       this._mode = value;
       window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
       if (this._mode === PlaybackMode.SHUFFLE) {
-        this.originalQueue = [...this._queue];
-        this._queue = [];
-        if (this.originalQueue.length > 0) {
-          if (this._currentIndex > -1) {
-            this._queue.push(this.originalQueue[this._currentIndex]);
-            this._currentIndex = 0;
-          }
-          this.addRandomSongsToQueue(19);
-        }
+        this.shuffleQueue(this._queue);
       } else if (oldMode === PlaybackMode.SHUFFLE) {
-        const oldQueue = [...this._queue];
-        this._queue = this.originalQueue !== undefined ? [...this.originalQueue] : [];
-        if (this._currentIndex > -1) {
-          const currentSong = oldQueue[this._currentIndex];
-          this._currentIndex = this._queue.findIndex(next => next.id === currentSong.id);
-        }
-        this.queueSubject.next(this._queue.slice());
-        this.originalQueue = undefined;
+        this.restoreOriginalQueue();
       } else {
         this.originalQueue = undefined;
       }
       this.storeState();
     }
+  }
+
+  private shuffleQueue(queue: Song[]) {
+    this.originalQueue = [...queue];
+    this._queue = [];
+    if (this.originalQueue.length > 0) {
+      if (this._currentIndex > -1) {
+        this._queue.push(this.originalQueue[this._currentIndex]);
+        this._currentIndex = 0;
+      }
+      this.addRandomSongsToQueue(19);
+    }
+  }
+
+  private restoreOriginalQueue() {
+    const oldQueue = [...this._queue];
+    this._queue = this.originalQueue !== undefined ? [...this.originalQueue] : [];
+    if (this._currentIndex > -1) {
+      const currentSong = oldQueue[this._currentIndex];
+      this._currentIndex = this._queue.findIndex(next => next.id === currentSong.id);
+    }
+    this.queueSubject.next(this._queue.slice());
+    this.originalQueue = undefined;
   }
 
   private addRandomSongsToQueue(count: number) {
@@ -330,7 +338,9 @@ export class PlaybackService {
           if (state.originalSongIds !== undefined) {
             this.originalQueue = state.originalSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
           }
-          this.switchQueue(queue, switchToIndex > -1 ? switchToIndex : 0, false);
+          this._queue = queue;
+          this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
+          this.switchToIndex(switchToIndex > -1 ? switchToIndex : 0, false);
           this.audioPlayer.pause();
           if (switchToIndex > -1 && state.progress !== undefined) {
             this.audioPlayer.seekToSeconds(state.progress * idToSong[currentSongId!].duration);
@@ -364,6 +374,9 @@ export class PlaybackService {
     this._queue = queue;
     this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
     this.switchToIndex(switchToIndex, play);
+    if (this._mode === PlaybackMode.SHUFFLE) {
+      this.shuffleQueue(this._queue);
+    }
   }
 
   private switchToIndex(index: number, play = true): Song {
