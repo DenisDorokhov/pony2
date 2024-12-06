@@ -11,7 +11,7 @@ import {
 import {CommonModule} from "@angular/common";
 import {TranslateModule, TranslateService} from "@ngx-translate/core";
 import {NgbActiveModal, NgbDropdown, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
-import {PlaybackEvent, PlaybackService, PlaybackState} from "../../../service/playback.service";
+import {PlaybackService} from "../../../service/playback.service";
 import {fromEvent, Subscription} from "rxjs";
 import {Song} from "../../../domain/library.model";
 import {UnknownArtistPipe} from "../../../pipe/unknown-artist.pipe";
@@ -25,6 +25,7 @@ import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from "@angular/cdk/drag
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 import {ReactiveFormsModule} from "@angular/forms";
 import {formatDuration} from "../../../utils/format.utils";
+import {PlaybackEvent, PlaybackState} from "../../../service/audio-player.service";
 
 @Component({
   standalone: true,

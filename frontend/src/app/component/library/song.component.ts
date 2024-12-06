@@ -2,7 +2,8 @@ import {
   AfterViewInit,
   ApplicationRef,
   Component,
-  ElementRef, EmbeddedViewRef,
+  ElementRef,
+  EmbeddedViewRef,
   Input,
   OnDestroy,
   OnInit,
@@ -11,24 +12,18 @@ import {
 } from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {Song} from "../../domain/library.model";
-import {PlaybackService, PlaybackState} from "../../service/playback.service";
+import {PlaybackService} from "../../service/playback.service";
 import {TranslateModule} from "@ngx-translate/core";
 import {LibraryService} from "../../service/library.service";
 import {ScrollingUtils} from "../../utils/scrolling.utils";
 import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
 import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
-import {
-  NgbDropdown,
-  NgbDropdownButtonItem,
-  NgbDropdownItem,
-  NgbDropdownMenu,
-  NgbDropdownToggle
-} from "@ng-bootstrap/ng-bootstrap";
 import {resolveAppViewContainerRef} from "../../utils/view.utils";
+import {PlaybackState} from "../../service/audio-player.service";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe],
   selector: 'pony-song',
   templateUrl: './song.component.html',
   styleUrls: ['./song.component.scss']
