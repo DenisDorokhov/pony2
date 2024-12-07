@@ -32,6 +32,7 @@ export class PlaybackService {
   private audioPlayer = new AudioPlayer();
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
   private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
+  private modeSubject: BehaviorSubject<PlaybackMode>;
 
   private _currentIndex = -1;
   private _queue: Song[] = [];
@@ -44,6 +45,7 @@ export class PlaybackService {
     private libraryService: LibraryService,
   ) {
     this._mode = window.localStorage.getItem(PlaybackService.MODE_LOCAL_STORAGE_KEY) as PlaybackMode || PlaybackMode.NORMAL;
+    this.modeSubject = new BehaviorSubject(this._mode);
     this.authenticationService.observeLogout()
       .subscribe(() => {
         this.audioPlayer.stop();
@@ -105,6 +107,7 @@ export class PlaybackService {
         this.originalQueue = undefined;
       }
       this.storeState();
+      this.modeSubject.next(this._mode);
     }
   }
 
@@ -140,6 +143,10 @@ export class PlaybackService {
 
   private randomInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  observeMode(): Observable<PlaybackMode> {
+    return this.modeSubject.asObservable();
   }
 
   restoreQueueState(): Observable<any | undefined> {
