@@ -47,7 +47,8 @@ export default {
     song: {
       unknownLabel: 'Unknown Song',
       playNext: 'Play next',
-      addToQueue: 'Play last'
+      addToQueue: 'Add to queue',
+      createQueue: 'Create queue'
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {

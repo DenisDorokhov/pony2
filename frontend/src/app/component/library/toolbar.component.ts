@@ -33,8 +33,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   scanRunning = false;
   playbackMode: PlaybackMode;
 
-  private scanStatisticsSubscription: Subscription | undefined;
-  private authenticationSubscription: Subscription | undefined;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private libraryScanService: LibraryScanService,
@@ -46,20 +45,20 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.scanStatisticsSubscription = this.libraryScanService.observeScanStatistics().subscribe(scanStatistics => {
+    this.subscriptions.push(this.libraryScanService.observeScanStatistics().subscribe(scanStatistics => {
       if (scanStatistics === null && this.authenticationService.currentUser?.role === Role.ADMIN) {
         this.openScanning();
       }
-    });
-    this.authenticationSubscription = this.authenticationService.observeAuthentication().subscribe(user =>
-      this.currentUser = user);
+    }));
+    this.subscriptions.push(this.authenticationService.observeAuthentication().subscribe(user =>
+      this.currentUser = user));
+    this.subscriptions.push(this.playbackService.observeMode().subscribe(mode => this.playbackMode = mode))
     this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
       this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null);
   }
 
   ngOnDestroy(): void {
-    this.scanStatisticsSubscription?.unsubscribe();
-    this.authenticationSubscription?.unsubscribe();
+    this.subscriptions.forEach(next => next.unsubscribe());
   }
 
   startScanJob() {
@@ -111,6 +110,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   setPlaybackMode(mode: PlaybackMode) {
-    this.playbackMode = this.playbackService.mode = mode;
+    this.playbackService.mode = mode;
   }
 }
