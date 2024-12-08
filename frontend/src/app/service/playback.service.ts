@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, defer, Observable, of} from 'rxjs';
+import {BehaviorSubject, defer, Observable, of, Subscription} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
@@ -40,6 +40,7 @@ export class PlaybackService {
   private _mode: PlaybackMode;
 
   private originalQueue: Song[] | undefined;
+  private queueShuffleSubscription: Subscription | undefined;
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -100,6 +101,8 @@ export class PlaybackService {
       const oldMode = this._mode;
       this._mode = value;
       window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
+      this.queueShuffleSubscription?.unsubscribe();
+      this.queueShuffleSubscription = undefined;
       if (this._mode === PlaybackMode.SHUFFLE) {
         this.shuffleQueue(this._queue);
       }
@@ -126,7 +129,11 @@ export class PlaybackService {
       }
       if (songFetcher) {
         this.queueSubject.next(this._queue.slice());
-        songFetcher().subscribe(songs => this.addFetchedRandomSongsToQueue(songs));
+        this.queueShuffleSubscription?.unsubscribe();
+        this.queueShuffleSubscription = songFetcher().subscribe(songs => {
+          this.addFetchedRandomSongsToQueue(songs);
+          this.queueShuffleSubscription = undefined;
+        });
       } else {
         this.addRandomSongsToQueue(19);
       }
