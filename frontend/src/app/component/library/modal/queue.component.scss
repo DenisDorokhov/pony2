@@ -44,19 +44,6 @@ cdk-virtual-scroll-viewport {
   }
 }
 
-.artist {
-  padding: 8px;
-  font-weight: bold;
-  text-align: center;
-  max-width: 220px;
-  div {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    line-height: 58px;
-  }
-}
-
 .song {
   flex-grow: 1;
   min-width: 0;
@@ -64,6 +51,10 @@ cdk-virtual-scroll-viewport {
 
   small {
     color: #909090;
+
+    b {
+      color: #212529;
+    }
   }
 
   div {
@@ -107,7 +98,7 @@ cdk-virtual-scroll-viewport {
   background-color: var(--blue) !important;
   color: white;
 
-  small {
+  small, small>b {
     color: white;
   }
 

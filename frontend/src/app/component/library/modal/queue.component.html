@@ -14,6 +14,7 @@
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
     <div #songElements id="queueSong_{{ i }}" cdkDrag class="columns-container"
+         title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
          [class.selected]="selectedIndex === i"
          *cdkVirtualFor="let song of queue; let i = index;"
          (cdkDragStarted)="onDragStarted($event)"
@@ -37,12 +38,9 @@
       <div class="artwork">
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
       </div>
-      <div class="artist">
-        <div>{{ song.album.artist.name | ponyUnknownArtist }}</div>
-      </div>
       <div class="song">
         <div>{{ song.name | ponyUnknownSong }}</div>
-        <div><small>{{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
+        <div><small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
       </div>
       <div class="duration">
         {{ song.durationInMinutes }}
