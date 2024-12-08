@@ -34,6 +34,7 @@ export default {
       repeatAllModeButton: 'Repeat all',
       repeatOneModeButton: 'Repeat one',
       shuffleModeButton: 'Shuffle',
+      radioModeButton: 'Radio',
     },
     album: {
       counterHeader: '{{albumCount}} albums, {{songCount}} songs',

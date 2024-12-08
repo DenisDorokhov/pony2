@@ -433,34 +433,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetArtistRandomSongs() {
-
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/randomArtistSongs/{artistId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, artist1.getId(), 3);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(songs ->
-                assertThat(songs).hasSize(3));
-    }
-
-    @Test
-    public void shouldNotGetTooManyArtistRandomSongs() {
-
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/randomArtistSongs/{artistId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, artist1.getId(), 1000);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(songs -> 
-                assertThat(songs).hasSize(30));
-    }
-
-    @Test
     public void shouldGetGenreRandomSongs() {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();

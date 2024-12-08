@@ -94,13 +94,6 @@ public class LibraryFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<SongDetailsDto> getRandomSongsByArtistId(String artistId, int count) {
-        return libraryService.getRandomSongsByArtistId(artistId, count).stream()
-                .map(songs -> SongDetailsDto.of(songs, isAdmin()))
-                .collect(toList());
-    }
-
-    @Transactional(readOnly = true)
     public List<SongDetailsDto> getRandomSongsByGenreId(String genreId, int count) {
         return libraryService.getRandomSongsByGenreId(genreId, count).stream()
                 .map(songs -> SongDetailsDto.of(songs, isAdmin()))

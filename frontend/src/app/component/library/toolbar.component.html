@@ -14,6 +14,9 @@
         @case (PlaybackMode.SHUFFLE) {
           <i class="bi bi-shuffle"></i>
         }
+        @case (PlaybackMode.RADIO) {
+          <i class="bi bi-broadcast-pin"></i>
+        }
       }
       <span class="caret"></span>
     </button>
@@ -22,6 +25,7 @@
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ALL)"><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ONE)"><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.SHUFFLE)"><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.RADIO)"><i class="bi bi-broadcast-pin"></i>{{ 'library.toolbar.radioModeButton' | translate }}</button>
     </ul>
   </div>
   <button type="button" class="btn btn-sm btn-light queue" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">

@@ -60,11 +60,6 @@ public class LibraryController implements ErrorHandlingController {
         return libraryFacade.getRandomSongs(Math.min(count, MAX_RANDOM_COUNT));
     }
 
-    @GetMapping("/api/library/randomArtistSongs/{artistId}")
-    public List<SongDetailsDto> getArtistRandomSongs(@PathVariable String artistId, @RequestParam(defaultValue = "10") int count) {
-        return libraryFacade.getRandomSongsByArtistId(artistId, Math.min(count, MAX_RANDOM_COUNT));
-    }
-
     @GetMapping("/api/library/randomGenreSongs/{genreId}")
     public List<SongDetailsDto> getGenreRandomSongs(@PathVariable String genreId, @RequestParam(defaultValue = "10") int count) {
         return libraryFacade.getRandomSongsByGenreId(genreId, Math.min(count, MAX_RANDOM_COUNT));

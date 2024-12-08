@@ -45,10 +45,6 @@ export class LibraryService {
     });
   }
 
-  get libraryState(): LibraryState {
-    return this.libraryStateSubject.value;
-  }
-
   observeLibraryState(): Observable<LibraryState> {
     return this.libraryStateSubject.asObservable()
       .pipe(distinctUntilChanged());
@@ -73,15 +69,28 @@ export class LibraryService {
   getSongs(songIds: string[]): Observable<Song[]> {
     return this.httpClient.post<SongDetailsDto[]>('/api/library/songs/fetchByIds', songIds)
       .pipe(
-        map(songDetails => songDetails.map(songDetails =>
-          new Song(
-            songDetails.song,
-            new Album(
-              songDetails.albumDetails.album,
-              new Artist(songDetails.albumDetails.artist)
-            )
-          ))
-        )
+        map(songDetails =>
+          songDetails.map(songDetails =>
+            this.songDetailsToSong(songDetails)))
+      );
+  }
+
+  private songDetailsToSong(songDetails: SongDetailsDto): Song {
+    return new Song(
+      songDetails.song,
+      new Album(
+        songDetails.albumDetails.album,
+        new Artist(songDetails.albumDetails.artist)
+      )
+    );
+  }
+
+  getGenreRandomSongs(genreId: string): Observable<Song[]> {
+    return this.httpClient.get<SongDetailsDto[]>('/api/library/randomGenreSongs/' + genreId)
+      .pipe(
+        map(songDetails =>
+          songDetails.map(songDetails =>
+            this.songDetailsToSong(songDetails)))
       );
   }
 

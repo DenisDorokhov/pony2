@@ -12,6 +12,7 @@ export enum PlaybackMode {
   REPEAT_ALL = 'REPEAT_ALL',
   REPEAT_ONE = 'REPEAT_ONE',
   SHUFFLE = 'SHUFFLE',
+  RADIO = 'RADIO',
 }
 
 interface QueueState {
@@ -101,9 +102,13 @@ export class PlaybackService {
       window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
       if (this._mode === PlaybackMode.SHUFFLE) {
         this.shuffleQueue(this._queue);
-      } else if (oldMode === PlaybackMode.SHUFFLE) {
+      }
+      if (this._mode === PlaybackMode.RADIO) {
+        this.shuffleQueue(this._queue, () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId));
+      }
+      if (oldMode === PlaybackMode.SHUFFLE || oldMode === PlaybackMode.RADIO) {
         this.restoreOriginalQueue();
-      } else {
+      } else if (this._mode !== PlaybackMode.SHUFFLE && this._mode !== PlaybackMode.RADIO) {
         this.originalQueue = undefined;
       }
       this.storeState();
@@ -111,7 +116,7 @@ export class PlaybackService {
     }
   }
 
-  private shuffleQueue(queue: Song[]) {
+  private shuffleQueue(queue: Song[], songFetcher?: () => Observable<Song[]>) {
     this.originalQueue = [...queue];
     this._queue = [];
     if (this.originalQueue.length > 0) {
@@ -119,8 +124,18 @@ export class PlaybackService {
         this._queue.push(this.originalQueue[this._currentIndex]);
         this._currentIndex = 0;
       }
-      this.addRandomSongsToQueue(19);
+      if (songFetcher) {
+        this.queueSubject.next(this._queue.slice());
+        songFetcher().subscribe(songs => this.addFetchedRandomSongsToQueue(songs));
+      } else {
+        this.addRandomSongsToQueue(19);
+      }
     }
+  }
+
+  private addFetchedRandomSongsToQueue(songs: Song[]) {
+    songs.forEach(song => this._queue.push(song));
+    this.queueSubject.next(this._queue.slice());
   }
 
   private restoreOriginalQueue() {
@@ -128,7 +143,13 @@ export class PlaybackService {
     this._queue = this.originalQueue !== undefined ? [...this.originalQueue] : [];
     if (this._currentIndex > -1) {
       const currentSong = oldQueue[this._currentIndex];
-      this._currentIndex = this._queue.findIndex(next => next.id === currentSong.id);
+      const currentSongIndex = this._queue.findIndex(next => next.id === currentSong.id);
+      if (currentSongIndex > -1) {
+        this._currentIndex = currentSongIndex;
+      } else {
+        this._queue.unshift(currentSong);
+        this._currentIndex = 0;
+      }
     }
     this.queueSubject.next(this._queue.slice());
     this.originalQueue = undefined;
@@ -177,7 +198,7 @@ export class PlaybackService {
             this.originalQueue = state.originalSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
           }
           this._queue = queue;
-          this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
+          this.queueSubject.next(this._queue.slice());
           this.switchToIndex(switchToIndex > -1 ? switchToIndex : 0, false);
           this.audioPlayer.pause();
           if (switchToIndex > -1 && state.progress !== undefined) {
@@ -210,10 +231,13 @@ export class PlaybackService {
 
   switchQueue(queue: Song[], switchToIndex: number, play = true) {
     this._queue = queue;
-    this.queueSubject = new BehaviorSubject<Song[]>(this._queue.slice());
+    this.queueSubject.next(this._queue.slice());
     this.switchToIndex(switchToIndex, play);
     if (this._mode === PlaybackMode.SHUFFLE) {
       this.shuffleQueue(this._queue);
+    }
+    if (this._mode === PlaybackMode.RADIO) {
+      this.shuffleQueue(this._queue, () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId));
     }
   }
 
@@ -226,8 +250,14 @@ export class PlaybackService {
     } else {
       this.audioPlayer.load(song);
     }
-    if (this._mode === PlaybackMode.SHUFFLE && this._currentIndex === this._queue.length - 1) {
-      this.addRandomSongsToQueue(20);
+    if (this._currentIndex === this._queue.length - 1) {
+      if (this._mode === PlaybackMode.SHUFFLE) {
+        this.addRandomSongsToQueue(20);
+      }
+      if (this._mode === PlaybackMode.RADIO) {
+        this.libraryService.getGenreRandomSongs(this._queue[0].genreId).subscribe(songs =>
+          this.addFetchedRandomSongsToQueue(songs));
+      }
     }
     return song;
   }
@@ -328,7 +358,8 @@ export class PlaybackService {
   }
 
   hasPreviousSong(): boolean {
-    return this._mode === PlaybackMode.NORMAL || this._mode === PlaybackMode.SHUFFLE ? this._currentIndex > 0 && this._queue.length > 0 : this._queue.length > 0;
+    return this._mode === PlaybackMode.NORMAL || this._mode === PlaybackMode.SHUFFLE || this._mode === PlaybackMode.RADIO ?
+      this._currentIndex > 0 && this._queue.length > 0 : this._queue.length > 0;
   }
 
   switchToPreviousSong(): Observable<Song | undefined> {
@@ -374,7 +405,7 @@ export class PlaybackService {
   }
 
   hasNextSong(): boolean {
-    return this._mode === PlaybackMode.NORMAL ? this._currentIndex + 1 < this._queue.length : this._queue.length > 0;
+    return this._mode === PlaybackMode.REPEAT_ONE || this._mode === PlaybackMode.REPEAT_ALL ? this._queue.length > 0 : this._currentIndex + 1 < this._queue.length;
   }
 
   switchToNextSong(): Observable<Song | undefined> {
