@@ -192,7 +192,7 @@ export class LibraryScanService {
         catchError(httpError => {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.CONCURRENT_SCAN) {
-            console.log('Scan job is already running.');
+            console.warn('Scan job is already running.');
             this.updateAndScheduleScanJobProgressUpdate()
           } else {
             this.showScanJobFailedNotification();

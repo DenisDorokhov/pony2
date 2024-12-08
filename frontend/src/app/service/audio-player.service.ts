@@ -114,14 +114,14 @@ export class AudioPlayer {
   private loadHowlForSong(song: Song) {
     this.lastSeekValue = undefined;
     this.unloadHowl();
-    console.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
+    console.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'...`);
     this.firePlaybackEvent(PlaybackState.LOADING, song);
     this.howl = new Howl(<HowlOptions>{
       src: [song.audioUrl],
       format: [song.fileExtension],
       html5: true,
       onload: () => {
-        console.info('Audio loaded.');
+        console.info(`Loaded audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
         this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
       onloaderror: (_, error) => {
@@ -141,7 +141,9 @@ export class AudioPlayer {
         this.firePlaybackEvent(PlaybackState.ENDED, song, this.lastPlaybackEvent.progress);
       },
       onpause: () => {
-        console.info('Playback paused.');
+        if (this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
+          console.info('Playback paused.');
+        }
         this.firePlaybackEvent(PlaybackState.PAUSED, song, this.lastPlaybackEvent.progress);
       }
     });
