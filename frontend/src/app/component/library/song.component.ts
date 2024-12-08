@@ -19,7 +19,7 @@ import {ScrollingUtils} from "../../utils/scrolling.utils";
 import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
 import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
 import {resolveAppViewContainerRef} from "../../utils/view.utils";
-import {PlaybackState} from "../../service/audio-player.service";
+import {PlaybackEvent, PlaybackState} from "../../service/audio-player.service";
 
 @Component({
   standalone: true,
@@ -38,7 +38,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private _song!: Song;
 
-  showMenuButton = false;
+  isMouseOver = false;
   showMenu = false;
 
   get song(): Song {
@@ -50,9 +50,9 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     this._song = song;
     this.selected = this.libraryService.selectedSong?.id === this.song.id;
     if (this.playbackService.lastPlaybackEvent.song?.id === this.song.id) {
-      this.playbackState = this.playbackService.lastPlaybackEvent.state;
+      this.lastPlaybackEvent = this.playbackService.lastPlaybackEvent;
     } else {
-      this.playbackState = undefined;
+      this.lastPlaybackEvent = undefined;
     }
   }
 
@@ -61,7 +61,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('container') containerElement!: ElementRef;
   selected = false;
 
-  playbackState: PlaybackState | undefined;
+  lastPlaybackEvent: PlaybackEvent | undefined;
 
   private menuEmbeddedViewRef: EmbeddedViewRef<any> | undefined;
   private subscriptions: Subscription[] = [];
@@ -84,9 +84,9 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => {
         if (playbackEvent.song && playbackEvent.song.id === this.song.id) {
-          this.playbackState = playbackEvent.state;
+          this.lastPlaybackEvent = playbackEvent;
         } else {
-          this.playbackState = undefined;
+          this.lastPlaybackEvent = undefined;
         }
       }));
   }
@@ -145,8 +145,16 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     this.libraryService.selectSong(this.song);
   }
 
-  play() {
-    this.libraryService.requestSongPlayback(this.song);
+  onDoubleClick(event: MouseEvent) {
+    let checkElement: Element | undefined = event.target as Element;
+    let buttonClick = false;
+    do {
+      buttonClick = checkElement?.tagName === 'BUTTON';
+      checkElement = checkElement.parentNode as Element;
+    } while (!buttonClick && checkElement);
+    if (!buttonClick) {
+      this.libraryService.requestSongPlayback(this.song);
+    }
   }
 
   onMouseDown(event: MouseEvent) {
@@ -157,11 +165,11 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onMouseMove() {
-    this.showMenuButton = true;
+    this.isMouseOver = true;
   }
 
   onMouseLeave() {
-    this.showMenuButton = false;
+    this.isMouseOver = false;
   }
 
   onMenuClick() {
@@ -206,5 +214,13 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     this.playbackService.mode = PlaybackMode.NORMAL;
     this.playbackService.switchQueue([this.song], 0);
     this.hideMenu();
+  }
+
+  onPlaybackClick() {
+    if (this.lastPlaybackEvent?.song?.id === this.song.id) {
+      this.playbackService.playOrPause();
+    } else {
+      this.libraryService.requestSongPlayback(this.song);
+    }
   }
 }

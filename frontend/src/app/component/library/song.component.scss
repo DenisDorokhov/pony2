@@ -17,12 +17,12 @@
     text-align: right;
     color: #909090;
 
-    .bi {
+    >.bi {
       color: #333333;
       margin-right: -4px;
     }
 
-    .bi-volume-off-fill {
+    >.bi-volume-off-fill {
       padding-right: 4px;
     }
   }
@@ -83,6 +83,14 @@
       color: white;
     }
   }
+}
+
+button.playback {
+  border: none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  width: 14px;
 }
 
 button.menu {

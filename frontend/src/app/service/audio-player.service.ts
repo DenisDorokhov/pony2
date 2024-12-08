@@ -141,6 +141,7 @@ export class AudioPlayer {
         this.firePlaybackEvent(PlaybackState.ENDED, song, this.lastPlaybackEvent.progress);
       },
       onpause: () => {
+        // Workaround for duplicate Howler events.
         if (this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
           console.info('Playback paused.');
         }

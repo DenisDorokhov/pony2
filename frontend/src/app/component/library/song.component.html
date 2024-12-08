@@ -1,19 +1,26 @@
 <div #container tabindex="0" class="song-container"
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
      [class.selected]="selected" [class.withArtist]="showArtist"
-     (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="play()"
+     (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="onDoubleClick($event)"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
-    <i [class.bi-volume-up-fill]="playbackState === PlaybackState.PLAYING"
-       [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
+    <button class="playback" [hidden]="!isMouseOver" (click)="onPlaybackClick()">
+      <i class="bi"
+         [class.bi-play-fill]="lastPlaybackEvent?.song?.id != song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
+         [class.bi-pause-fill]="lastPlaybackEvent?.song?.id == song.id && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
+      ></i>
+    </button>
+    <i [hidden]="isMouseOver"
+       [class.bi-volume-up-fill]="lastPlaybackEvent?.state === PlaybackState.PLAYING"
+       [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
        class="bi"></i>
-    <span [hidden]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
+    <span [hidden]="isMouseOver || lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.PAUSED">
       {{ song.trackNumber }}
     </span>
   </div>
   <div class="duration">
-    <span [hidden]="showMenuButton || showMenu">{{ song.durationInMinutes }}</span>
-    <button #menuButton [hidden]="!showMenuButton && !showMenu" (click)="onMenuClick()" class="menu"><i class="bi bi-three-dots-vertical"></i></button>
+    <span [hidden]="isMouseOver || showMenu">{{ song.durationInMinutes }}</span>
+    <button #menuButton [hidden]="!isMouseOver && !showMenu" (click)="onMenuClick()" class="menu"><i class="bi bi-three-dots-vertical"></i></button>
   </div>
   <div class="title">{{ song.name | ponyUnknownSong }}</div>
   <div class="artist">{{ song.artistName }}</div>
