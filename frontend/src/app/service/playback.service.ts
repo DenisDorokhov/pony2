@@ -16,8 +16,8 @@ export enum PlaybackMode {
 }
 
 interface QueueState {
-  songIds: string[];
-  originalSongIds: string[] | undefined;
+  queueSongIds: string[];
+  originalQueueSongIds: string[] | undefined;
   currentIndex: number;
   progress: number;
 }
@@ -98,21 +98,25 @@ export class PlaybackService {
 
   set mode(value: PlaybackMode) {
     if (this._mode !== value) {
-      const oldMode = this._mode;
       this._mode = value;
       window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
       this.queueShuffleSubscription?.unsubscribe();
       this.queueShuffleSubscription = undefined;
       if (this._mode === PlaybackMode.SHUFFLE) {
-        this.shuffleQueue(this._queue);
+        this.shuffleQueue(this.originalQueue !== undefined ? this.originalQueue : this._queue);
       }
       if (this._mode === PlaybackMode.RADIO) {
-        this.shuffleQueue(this._queue, () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId));
+        this.shuffleQueue(
+          this.originalQueue !== undefined ? this.originalQueue : this._queue,
+          () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId)
+        );
       }
-      if (oldMode === PlaybackMode.SHUFFLE || oldMode === PlaybackMode.RADIO) {
+      if (this.originalQueue !== undefined && (
+          this._mode === PlaybackMode.NORMAL ||
+          this._mode === PlaybackMode.REPEAT_ALL ||
+          this._mode === PlaybackMode.REPEAT_ONE
+      )) {
         this.restoreOriginalQueue();
-      } else if (this._mode !== PlaybackMode.SHUFFLE && this._mode !== PlaybackMode.RADIO) {
-        this.originalQueue = undefined;
       }
       this.storeState();
       this.modeSubject.next(this._mode);
@@ -180,9 +184,9 @@ export class PlaybackService {
   restoreQueueState(): Observable<any | undefined> {
     const state = this.loadQueueState();
     if (state) {
-      let allSongIds = [...state.songIds];
-      if (state.originalSongIds !== undefined) {
-        allSongIds = allSongIds.concat(state.originalSongIds);
+      let allSongIds = [...state.queueSongIds];
+      if (state.originalQueueSongIds !== undefined) {
+        allSongIds = allSongIds.concat(state.originalQueueSongIds);
       }
       return this.libraryService.getSongs(allSongIds).pipe(
         tap(fetchedSongs => {
@@ -190,19 +194,19 @@ export class PlaybackService {
             result[song.id] = song;
             return result;
           }, {});
-          const currentSongId = state.currentIndex > -1 ? state.songIds[state.currentIndex] : undefined;
+          const currentSongId = state.currentIndex > -1 ? state.queueSongIds[state.currentIndex] : undefined;
           let switchToIndex = -1;
           if (currentSongId && idToSong[currentSongId]) {
             switchToIndex = state.currentIndex;
             for (let i = 0; i < state.currentIndex; i++) {
-              if (!idToSong[state.songIds[i]]) {
+              if (!idToSong[state.queueSongIds[i]]) {
                 switchToIndex--;
               }
             }
           }
-          const queue: Song[] = state.songIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
-          if (state.originalSongIds !== undefined) {
-            this.originalQueue = state.originalSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
+          const queue: Song[] = state.queueSongIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
+          if (state.originalQueueSongIds !== undefined) {
+            this.originalQueue = state.originalQueueSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
           }
           this._queue = queue;
           this.queueSubject.next(this._queue.slice());
@@ -468,8 +472,8 @@ export class PlaybackService {
     const localStorageKey = this.resolveQueueStateLocalStorageKey();
     if (localStorageKey) {
       const state = {
-        songIds: this._queue.map(next => next.id),
-        originalSongIds: this.originalQueue !== undefined ? this.originalQueue.map(next => next.id) : undefined,
+        queueSongIds: this._queue.map(next => next.id),
+        originalQueueSongIds: this.originalQueue !== undefined ? this.originalQueue.map(next => next.id) : undefined,
         currentIndex: this._currentIndex,
         progress: this.lastPlaybackEvent.state === PlaybackState.ENDED ? undefined : this.lastPlaybackEvent.progress
       } as QueueState;
