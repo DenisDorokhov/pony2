@@ -22,6 +22,7 @@ import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -76,6 +77,9 @@ public class FileController implements ErrorHandlingController {
             rootCause = Throwables.getRootCause(e);
         } catch (IllegalArgumentException iae) {
             logger.error("Could not get root cause of exception.", iae);
+        }
+        if (rootCause instanceof SocketTimeoutException) {
+            return true;
         }
         String normalizedError = Strings.nullToEmpty(rootCause.getMessage()).toLowerCase();
         return normalizedError.contains("broken pipe") || normalizedError.contains("connection reset by peer") || normalizedError.contains("connection was aborted");

@@ -3,7 +3,7 @@
 </div>
 <div class="modal-body">
 
-  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING"></div>
+  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
@@ -86,6 +86,7 @@
 </div>
 <div class="modal-footer">
   <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
   <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
 </div>

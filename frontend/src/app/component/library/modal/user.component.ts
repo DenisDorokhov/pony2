@@ -11,10 +11,11 @@ import {Observable} from "rxjs";
 import {AuthenticationService} from "../../../service/authentication.service";
 import {LoadingState} from "../../../domain/common.model";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
+import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ReactiveFormsModule, ErrorContainerComponent, LoadingIndicatorComponent],
+  imports: [TranslateModule, CommonModule, ReactiveFormsModule, ErrorContainerComponent, LoadingIndicatorComponent, ErrorIndicatorComponent],
   selector: 'pony-user',
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss']
@@ -85,7 +86,7 @@ export class UserComponent implements OnInit {
         this.activeModal.close(user);
       },
       error: error => {
-        this.loadingState = LoadingState.LOADED;
+        this.loadingState = LoadingState.ERROR;
         this.error = error;
       }
     });
