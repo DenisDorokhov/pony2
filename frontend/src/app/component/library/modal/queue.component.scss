@@ -37,6 +37,13 @@ cdk-virtual-scroll-viewport {
     overflow: hidden;
     width: 40px;
   }
+
+  button.playback {
+    border: none;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 .artwork {

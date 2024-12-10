@@ -19,15 +19,22 @@
          *cdkVirtualFor="let song of queue; let i = index;"
          (cdkDragStarted)="onDragStarted($event)"
          (dblclick)="playSongOnDoubleClick($event, i)"
-         (mousedown)="selectIndex(i);preventDoubleClickDefault($event);">
+         (mousedown)="selectIndex(i);preventDoubleClickDefault($event);"
+         (mousemove)="onMouseMove(i)" (mouseleave)="onMouseLeave(i)">
       <div class="track-number">
         <div>
-          <i *ngIf="currentSongIndex === i"
+          <button class="playback" *ngIf="mouseOverIndex === i" (click)="onPlaybackClick(i)">
+            <i class="bi"
+               [class.bi-play-fill]="lastPlaybackEvent?.song?.id != song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
+               [class.bi-pause-fill]="lastPlaybackEvent?.song?.id == song.id && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
+            ></i>
+          </button>
+          <i *ngIf="mouseOverIndex !== i && currentSongIndex === i"
              [class.bi-volume-up-fill]="lastPlaybackEvent?.state === PlaybackState.PLAYING"
              [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
              class="bi"></i>
           {{
-            currentSongIndex !== i || (
+            (mouseOverIndex !== i && currentSongIndex !== i) || (
               lastPlaybackEvent?.state !== PlaybackState.LOADING &&
               lastPlaybackEvent?.state !== PlaybackState.PLAYING &&
               lastPlaybackEvent?.state !== PlaybackState.PAUSED

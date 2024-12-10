@@ -64,6 +64,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   currentSongShown = false;
   selectedIndex = -1;
   duration: string | undefined;
+  mouseOverIndex: number | undefined;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
@@ -217,5 +218,23 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   selectIndex(i: number) {
     this.selectedIndex = i;
+  }
+
+  onMouseMove(i: number) {
+    this.mouseOverIndex = i;
+  }
+
+  onMouseLeave(i: number) {
+    if (this.mouseOverIndex === i) {
+      this.mouseOverIndex = undefined;
+    }
+  }
+
+  onPlaybackClick(i: number) {
+    if (this.currentSongIndex === i) {
+      this.playbackService.playOrPause();
+    } else {
+      this.playbackService.play(i);
+    }
   }
 }
