@@ -44,7 +44,10 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   @ViewChild('searchResults') searchResultsElement!: ElementRef;
   @ViewChildren('links') linkElements!: QueryList<ElementRef>;
 
-  private searchSubject = new Subject<string>();
+  private inputChangeSubject = new Subject<string>();
+  private searchRequestSubject = new Subject<string>();
+
+  private lastSearchQuery: string | undefined;
 
   private subscriptions: Subscription[] = [];
 
@@ -59,11 +62,15 @@ export class FastSearchComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
 
-    this.subscriptions.push(this.searchSubject.pipe(
+    this.subscriptions.push(this.inputChangeSubject.pipe(
       map(value => value.trim()),
       debounceTime(200),
       distinctUntilChanged(),
+    ).subscribe(query => this.searchRequestSubject.next(query)));
+
+    this.subscriptions.push(this.searchRequestSubject.pipe(
       mergeMap(query => {
+        this.lastSearchQuery = query;
         if (query.length > 1) {
           return this.libraryService.search(query);
         } else {
@@ -123,10 +130,13 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   onInputChange(event: Event) {
-    this.searchSubject.next((event.target as any).value);
+    this.inputChangeSubject.next((event.target as any).value);
   }
 
   onFocusIn() {
+    if (!this.open && this.lastSearchQuery) {
+      this.searchRequestSubject.next(this.lastSearchQuery);
+    }
     this.open = true;
   }
 
