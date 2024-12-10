@@ -34,11 +34,12 @@
              [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
              class="bi"></i>
           {{
-            (mouseOverIndex !== i && currentSongIndex !== i) || (
-              lastPlaybackEvent?.state !== PlaybackState.LOADING &&
-              lastPlaybackEvent?.state !== PlaybackState.PLAYING &&
-              lastPlaybackEvent?.state !== PlaybackState.PAUSED
-            ) ? i + 1 : ''
+            mouseOverIndex !== i && (
+              currentSongIndex !== i || (
+                lastPlaybackEvent?.state !== PlaybackState.LOADING &&
+                lastPlaybackEvent?.state !== PlaybackState.PLAYING &&
+                lastPlaybackEvent?.state !== PlaybackState.PAUSED
+              )) ? i + 1 : ''
           }}
         </div>
       </div>
