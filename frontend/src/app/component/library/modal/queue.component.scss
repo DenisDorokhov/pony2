@@ -19,9 +19,13 @@ cdk-virtual-scroll-viewport {
 
 .track-number {
   text-align: center;
-  font-weight: bold;
   padding: 8px 0 8px 12px;
   line-height: 58px;
+  color: #909090;
+
+  .bi {
+    color: #212529;
+  }
 
   .bi-volume-off-fill {
     padding-right: 8px;
@@ -100,6 +104,14 @@ cdk-virtual-scroll-viewport {
 
   small, small>b {
     color: white;
+  }
+
+  .track-number {
+    color: white;
+
+    .bi {
+      color: white;
+    }
   }
 
   .duration {

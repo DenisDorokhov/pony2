@@ -59,7 +59,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly viewPortPadding = 16;
 
   queue: Song[] = [];
-  playbackEvent: PlaybackEvent | undefined;
+  lastPlaybackEvent: PlaybackEvent | undefined;
   currentSongIndex = -1;
   currentSongShown = false;
   selectedIndex = -1;
@@ -93,7 +93,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
-      .subscribe(playbackEvent => this.playbackEvent = playbackEvent));
+      .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
     this.subscriptions.push(this.playbackService.observeCurrentSong()
       .subscribe(_ => {
         this.currentSongIndex = this.playbackService.currentSongIndex;

@@ -23,14 +23,14 @@
       <div class="track-number">
         <div>
           <i *ngIf="currentSongIndex === i"
-             [class.bi-volume-up-fill]="playbackEvent?.state === PlaybackState.PLAYING"
-             [class.bi-volume-off-fill]="playbackEvent?.state === PlaybackState.LOADING || playbackEvent?.state === PlaybackState.PAUSED"
+             [class.bi-volume-up-fill]="lastPlaybackEvent?.state === PlaybackState.PLAYING"
+             [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
              class="bi"></i>
           {{
             currentSongIndex !== i || (
-              playbackEvent?.state !== PlaybackState.LOADING &&
-              playbackEvent?.state !== PlaybackState.PLAYING &&
-              playbackEvent?.state !== PlaybackState.PAUSED
+              lastPlaybackEvent?.state !== PlaybackState.LOADING &&
+              lastPlaybackEvent?.state !== PlaybackState.PLAYING &&
+              lastPlaybackEvent?.state !== PlaybackState.PAUSED
             ) ? i + 1 : ''
           }}
         </div>
