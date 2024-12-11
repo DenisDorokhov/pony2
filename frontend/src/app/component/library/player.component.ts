@@ -30,6 +30,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   formattedProgress: string | undefined;
   formattedDuration: string | undefined;
   formattedMousePosition: string | undefined;
+  queue: Song[] = [];
 
   private subscriptions: Subscription[] = [];
 
@@ -47,13 +48,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent)));
     this.subscriptions.push(this.playbackService.observeQueue()
-      .subscribe(() => {
-        this.hasPreviousSong = this.playbackService.hasPreviousSong();
+      .subscribe(queue => {
+        this.queue = queue;
+        this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 1;
         this.hasNextSong = this.playbackService.hasNextSong();
       }));
     this.subscriptions.push(this.playbackService.observeMode()
       .subscribe(() => {
-        this.hasPreviousSong = this.playbackService.hasPreviousSong();
+        this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 1;
         this.hasNextSong = this.playbackService.hasNextSong();
       }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
@@ -73,7 +75,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         }
         if (event.key === 'ArrowLeft') {
           if (this.playbackService.hasPreviousSong()) {
-            this.playbackService.switchToPreviousSong().subscribe();
+            this.playbackService.rewindToBeginningOrSwitchToPreviousSong().subscribe();
           }
           event.preventDefault();
         }
@@ -86,7 +88,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   switchToPreviousSong() {
-    this.playbackService.switchToPreviousSong().subscribe();
+    this.playbackService.rewindToBeginningOrSwitchToPreviousSong().subscribe();
   }
 
   playOrPause() {
@@ -133,7 +135,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   private handleSongSwitch(song: Song | undefined) {
-    this.hasPreviousSong = this.playbackService.hasPreviousSong();
+    this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 1;
     this.hasNextSong = this.playbackService.hasNextSong();
     this.pageTitleService.song = song;
     if (song) {

@@ -15,7 +15,36 @@
     h4 {
       margin-top: 0;
       border-bottom: 1px solid #ddd;
-      padding-bottom: 8px;
+      padding-bottom: 2px;
+
+      span, small {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      span {
+        font-size: 24px;
+        display: inline-block;
+        line-height: 32px;
+        max-width: 700px;
+      }
+
+      @media (0 <= width < 1060px) {
+        span {
+          max-width: 350px;
+        }
+      }
+      @media (1060px <= width < 1200px) {
+        span {
+          max-width: 400px;
+        }
+      }
+      @media (1200px <= width < 1472px) {
+        span {
+          max-width: 550px;
+        }
+      }
 
       button {
         margin-left: 5px;
@@ -25,6 +54,9 @@
       small {
         font-weight: normal;
         color: #909090;
+        display: inline-block;
+        line-height: 30px;
+        padding-left: 6px;
       }
     }
   }

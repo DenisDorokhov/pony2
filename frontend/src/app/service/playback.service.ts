@@ -69,7 +69,7 @@ export class PlaybackService {
         'previoustrack',
         () => {
           console.info("Previous track by media key detected.");
-          this.switchToPreviousSong().subscribe();
+          this.rewindToBeginningOrSwitchToPreviousSong().subscribe();
         }
       );
       navigator.mediaSession.setActionHandler(
@@ -373,7 +373,7 @@ export class PlaybackService {
       this._currentIndex > 0 && this._queue.length > 0 : this._queue.length > 0;
   }
 
-  switchToPreviousSong(): Observable<Song | undefined> {
+  rewindToBeginningOrSwitchToPreviousSong(): Observable<Song | undefined> {
     const seekToBeginning = () => {
       this.seek(0);
       return of(this.lastPlaybackEvent.song);

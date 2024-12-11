@@ -2,11 +2,10 @@
   <pony-image-loader [url]="albumSongs.album.largeArtworkUrl"></pony-image-loader>
   <div class="song-list-container">
     <h4>
-      {{ albumSongs.album.name | ponyUnknownAlbum }}
+      <span title="{{ albumSongs.album.name | ponyUnknownAlbum }}">{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
       <button (click)="download()"
               type="button" class="btn btn-sm btn-light">
         <i class="bi bi-download"></i>
-        Download
       </button>
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
     </h4>
