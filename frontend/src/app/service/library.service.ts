@@ -85,8 +85,8 @@ export class LibraryService {
     );
   }
 
-  getGenreRandomSongs(genreId: string): Observable<Song[]> {
-    return this.httpClient.get<SongDetailsDto[]>('/api/library/randomGenreSongs/' + genreId)
+  getGenreRandomSongs(genreId: string, count: number): Observable<Song[]> {
+    return this.httpClient.get<SongDetailsDto[]>('/api/library/randomGenreSongs/' + genreId + '?count=' + count)
       .pipe(
         map(songDetails =>
           songDetails.map(songDetails =>

@@ -30,6 +30,8 @@ export class PlaybackService {
   private static readonly STATE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.state';
   private static readonly MODE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.mode';
 
+  private static readonly RANDOM_SONGS_COUNT = 20;
+
   private audioPlayer = new AudioPlayer();
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
   private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
@@ -108,7 +110,7 @@ export class PlaybackService {
       if (this._mode === PlaybackMode.RADIO) {
         this.shuffleQueue(
           this.originalQueue !== undefined ? this.originalQueue : this._queue,
-          () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId)
+          () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId, PlaybackService.RANDOM_SONGS_COUNT - 1)
         );
       }
       if (this.originalQueue !== undefined && (
@@ -139,7 +141,7 @@ export class PlaybackService {
           this.queueShuffleSubscription = undefined;
         });
       } else {
-        this.addRandomSongsToQueue(19);
+        this.addRandomSongsToQueue(PlaybackService.RANDOM_SONGS_COUNT - 1);
       }
     }
   }
@@ -248,7 +250,7 @@ export class PlaybackService {
       this.shuffleQueue(this._queue);
     }
     if (this._mode === PlaybackMode.RADIO) {
-      this.shuffleQueue(this._queue, () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId));
+      this.shuffleQueue(this._queue, () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId, PlaybackService.RANDOM_SONGS_COUNT - 1));
     }
   }
 
@@ -263,10 +265,10 @@ export class PlaybackService {
     }
     if (this._currentIndex === this._queue.length - 1) {
       if (this._mode === PlaybackMode.SHUFFLE) {
-        this.addRandomSongsToQueue(20);
+        this.addRandomSongsToQueue(PlaybackService.RANDOM_SONGS_COUNT);
       }
       if (this._mode === PlaybackMode.RADIO) {
-        this.libraryService.getGenreRandomSongs(this._queue[0].genreId).subscribe(songs =>
+        this.libraryService.getGenreRandomSongs(this._queue[0].genreId, PlaybackService.RANDOM_SONGS_COUNT).subscribe(songs =>
           this.addFetchedRandomSongsToQueue(songs));
       }
     }
