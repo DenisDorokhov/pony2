@@ -263,6 +263,11 @@ export class PlaybackService {
     } else {
       this.audioPlayer.load(song);
     }
+    this.addRandomSongsToQueueIfNeeded();
+    return song;
+  }
+
+  private addRandomSongsToQueueIfNeeded() {
     if (this._currentIndex === this._queue.length - 1) {
       if (this._mode === PlaybackMode.SHUFFLE) {
         this.addRandomSongsToQueue(PlaybackService.RANDOM_SONGS_COUNT);
@@ -272,7 +277,6 @@ export class PlaybackService {
           this.addFetchedRandomSongsToQueue(songs));
       }
     }
-    return song;
   }
 
   observeQueue(): Observable<Song[]> {
@@ -291,6 +295,7 @@ export class PlaybackService {
     this._queue.splice(index, 1);
     this.queueSubject.next(this._queue.slice());
     this.storeState();
+    this.addRandomSongsToQueueIfNeeded();
     return song;
   }
 
@@ -312,6 +317,7 @@ export class PlaybackService {
     moveItemInArray(this._queue, fromIndex, toIndex);
     this.queueSubject.next(this._queue.slice());
     this.storeState();
+    this.addRandomSongsToQueueIfNeeded();
     return fromSong;
   }
 
