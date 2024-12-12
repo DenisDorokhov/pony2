@@ -1,11 +1,12 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, defer, Observable, of, Subscription} from 'rxjs';
+import {BehaviorSubject, Observable, of, Subscription} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {Song} from "../domain/library.model";
 import {AuthenticationService} from "./authentication.service";
 import {moveItemInArray} from "@angular/cdk/drag-drop";
 import {LibraryService} from "./library.service";
 import {AudioPlayer, PlaybackEvent, PlaybackState} from "./audio-player.service";
+import {BrowserNotificationService} from "./browser-notification.service";
 
 export enum PlaybackMode {
   NORMAL = 'NORMAL',
@@ -47,6 +48,7 @@ export class PlaybackService {
   constructor(
     private authenticationService: AuthenticationService,
     private libraryService: LibraryService,
+    private browserNotificationService: BrowserNotificationService,
   ) {
     this._mode = window.localStorage.getItem(PlaybackService.MODE_LOCAL_STORAGE_KEY) as PlaybackMode || PlaybackMode.NORMAL;
     this.modeSubject = new BehaviorSubject(this._mode);
@@ -64,14 +66,14 @@ export class PlaybackService {
         'nexttrack',
         () => {
           console.info("Next track by media key detected.");
-          this.switchToNextSong().subscribe();
+          this.switchToNextSong();
         }
       );
       navigator.mediaSession.setActionHandler(
         'previoustrack',
         () => {
           console.info("Previous track by media key detected.");
-          this.rewindToBeginningOrSwitchToPreviousSong().subscribe();
+          this.rewindToBeginningOrSwitchToPreviousSong();
         }
       );
       navigator.mediaSession.setActionHandler(
@@ -381,76 +383,74 @@ export class PlaybackService {
       this._currentIndex > 0 && this._queue.length > 0 : this._queue.length > 0;
   }
 
-  rewindToBeginningOrSwitchToPreviousSong(): Observable<Song | undefined> {
+  rewindToBeginningOrSwitchToPreviousSong(): Song | undefined {
     const seekToBeginning = () => {
       this.seek(0);
-      return of(this.lastPlaybackEvent.song);
+      return this.lastPlaybackEvent.song;
     };
-    return defer(() => {
-      if (
-        this.lastPlaybackEvent.state === PlaybackState.PLAYING ||
-        this.lastPlaybackEvent.state === PlaybackState.PAUSED
-      ) {
-        if (!this.hasPreviousSong()) {
+    if (
+      this.lastPlaybackEvent.state === PlaybackState.PLAYING ||
+      this.lastPlaybackEvent.state === PlaybackState.PAUSED
+    ) {
+      if (!this.hasPreviousSong()) {
+        return seekToBeginning();
+      }
+      if (this.lastPlaybackEvent.progress) {
+        const secondsSinceStart = Math.ceil(this.lastPlaybackEvent.progress * this.lastPlaybackEvent.song!.duration);
+        if (secondsSinceStart > 3) {
           return seekToBeginning();
         }
-        if (this.lastPlaybackEvent.progress) {
-          const secondsSinceStart = Math.ceil(this.lastPlaybackEvent.progress * this.lastPlaybackEvent.song!.duration);
-          if (secondsSinceStart > 3) {
-            return seekToBeginning();
-          }
-        }
-      } else if (this.lastPlaybackEvent.state === PlaybackState.ENDED) {
-        this.playOrPause();
-        return of(this.lastPlaybackEvent.song);
       }
-      return defer(() => {
-        if (this.hasPreviousSong()) {
-          switch (this._mode) {
-            case PlaybackMode.REPEAT_ALL:
-              if (this._currentIndex === 0) {
-                return of(this.switchToIndex(this._queue.length - 1));
-              } else {
-                return of(this.switchToIndex(this._currentIndex - 1));
-              }
-            default:
-              return of(this.switchToIndex(this._currentIndex - 1));
+    } else if (this.lastPlaybackEvent.state === PlaybackState.ENDED) {
+      this.playOrPause();
+      return this.lastPlaybackEvent.song;
+    }
+    if (this.hasPreviousSong()) {
+      switch (this._mode) {
+        case PlaybackMode.REPEAT_ALL:
+          if (this._currentIndex === 0) {
+            return this.switchToIndex(this._queue.length - 1);
+          } else {
+            return this.switchToIndex(this._currentIndex - 1);
           }
-        } else {
-          return of(undefined);
-        }
-      });
-    });
+        default:
+          return this.switchToIndex(this._currentIndex - 1);
+      }
+    } else {
+      return undefined;
+    }
   }
 
   hasNextSong(): boolean {
     return this._mode === PlaybackMode.REPEAT_ONE || this._mode === PlaybackMode.REPEAT_ALL ? this._queue.length > 0 : this._currentIndex + 1 < this._queue.length;
   }
 
-  switchToNextSong(): Observable<Song | undefined> {
-    return defer(() => {
-      if (this.hasNextSong()) {
-        switch (this._mode) {
-          case PlaybackMode.REPEAT_ALL:
-            if (this._currentIndex >= this._queue.length - 1) {
-              return of(this.switchToIndex(0));
-            } else {
-              return of(this.switchToIndex(this._currentIndex + 1));
-            }
-          case PlaybackMode.REPEAT_ONE:
-            return of(this.switchToIndex(this._currentIndex));
-          default:
-            return of(this.switchToIndex(this._currentIndex + 1));
-        }
-      } else {
-        return of(undefined);
+  switchToNextSong(): Song | undefined {
+    if (this.hasNextSong()) {
+      switch (this._mode) {
+        case PlaybackMode.REPEAT_ALL:
+          if (this._currentIndex >= this._queue.length - 1) {
+            return this.switchToIndex(0);
+          } else {
+            return this.switchToIndex(this._currentIndex + 1);
+          }
+        case PlaybackMode.REPEAT_ONE:
+          return this.switchToIndex(this._currentIndex);
+        default:
+          return this.switchToIndex(this._currentIndex + 1);
       }
-    });
+    } else {
+      return undefined;
+    }
   }
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
-      this.switchToNextSong().subscribe(() => this.storeState());
+      const song = this.switchToNextSong()
+      this.storeState();
+      if (song) {
+        this.browserNotificationService.showSongNotification(song);
+      }
     } else if (
       playbackEvent.state === PlaybackState.LOADING
       || playbackEvent.state === PlaybackState.PLAYING

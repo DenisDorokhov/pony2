@@ -69,13 +69,13 @@ export class PlayerComponent implements OnInit, OnDestroy {
         }
         if (event.key === 'ArrowRight') {
           if (this.playbackService.hasNextSong()) {
-            this.playbackService.switchToNextSong().subscribe();
+            this.playbackService.switchToNextSong();
           }
           event.preventDefault();
         }
         if (event.key === 'ArrowLeft') {
           if (this.playbackService.hasPreviousSong()) {
-            this.playbackService.rewindToBeginningOrSwitchToPreviousSong().subscribe();
+            this.playbackService.rewindToBeginningOrSwitchToPreviousSong();
           }
           event.preventDefault();
         }
@@ -88,7 +88,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   switchToPreviousSong() {
-    this.playbackService.rewindToBeginningOrSwitchToPreviousSong().subscribe();
+    this.playbackService.rewindToBeginningOrSwitchToPreviousSong();
   }
 
   playOrPause() {
@@ -100,7 +100,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   switchToNextSong() {
-    this.playbackService.switchToNextSong().subscribe();
+    this.playbackService.switchToNextSong();
   }
 
   seek(event: MouseEvent) {
