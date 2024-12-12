@@ -13,7 +13,7 @@
   <div cdkDropList cdkDropListAutoScrollDisabled
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
-    <div #songElements id="queueSong_{{ i }}" cdkDrag class="columns-container"
+    <div #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled" class="columns-container"
          title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
          [class.selected]="selectedIndex === i"
          *cdkVirtualFor="let song of queue; let i = index;"

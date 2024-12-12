@@ -26,6 +26,7 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
 import {ReactiveFormsModule} from "@angular/forms";
 import {formatDuration} from "../../../utils/format.utils";
 import {PlaybackEvent, PlaybackState} from "../../../service/audio-player.service";
+import {isMobileBrowser} from "../../../utils/mobile.utils";
 
 @Component({
   standalone: true,
@@ -65,6 +66,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedIndex = -1;
   duration: string | undefined;
   mouseOverIndex: number | undefined;
+  dragEnabled = true;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
@@ -85,6 +87,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.dragEnabled = !isMobileBrowser();
     this.subscriptions.push(this.playbackService.observeQueue()
       .subscribe(queue => {
         this.queue = queue;
