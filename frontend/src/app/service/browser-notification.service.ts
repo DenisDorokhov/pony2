@@ -12,12 +12,17 @@ export class BrowserNotificationService {
   constructor(
     private translateService: TranslateService,
   ) {
-    document.addEventListener("visibilitychange", () =>
-      this.appInForeground = !document.hidden);
+    window.addEventListener('blur', () => {
+      this.appInForeground = false;
+    });
+    window.addEventListener('focus', () => {
+      this.appInForeground = true;
+    });
   }
 
   showSongNotification(song: Song) {
     if (this.appInForeground) {
+      console.debug('Not showing browser notification: application is in the background.')
       return;
     }
     const artistName = song.artistName ?? this.translateService.instant('library.artist.unknownLabel');
