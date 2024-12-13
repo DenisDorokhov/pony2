@@ -11,6 +11,7 @@ import {ToolbarComponent} from "./toolbar.component";
 import {ArtistListComponent} from "./artist-list.component";
 import {AlbumListComponent} from "./album-list.component";
 import {formatDuration, formatFileSize} from "../../utils/format.utils";
+import {BrowserNotificationService} from "../../service/browser-notification.service";
 
 @Component({
   standalone: true,
@@ -32,7 +33,8 @@ export class LibraryComponent implements OnInit, OnDestroy {
     private router: Router,
     private authenticationService: AuthenticationService,
     private libraryScanService: LibraryScanService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private browserNotificationService: BrowserNotificationService,
   ) {
   }
 
@@ -49,6 +51,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
         this.duration = this.calculateDuration();
       });
     this.libraryScanService.updateScanStatistics().subscribe();
+    this.browserNotificationService.requestPermission().subscribe();
   }
 
   ngOnDestroy(): void {

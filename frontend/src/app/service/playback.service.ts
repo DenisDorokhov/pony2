@@ -262,6 +262,7 @@ export class PlaybackService {
     this.currentSongSubject.next(song);
     if (play) {
       this.audioPlayer.play(song);
+      this.browserNotificationService.showSongNotification(song);
     } else {
       this.audioPlayer.load(song);
     }
@@ -446,11 +447,8 @@ export class PlaybackService {
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
-      const song = this.switchToNextSong()
+      this.switchToNextSong()
       this.storeState();
-      if (song) {
-        this.browserNotificationService.showSongNotification(song);
-      }
     } else if (
       playbackEvent.state === PlaybackState.LOADING
       || playbackEvent.state === PlaybackState.PLAYING
