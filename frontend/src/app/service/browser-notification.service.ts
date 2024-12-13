@@ -55,11 +55,10 @@ export class BrowserNotificationService {
     }
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
-        const notification = new Notification(this.translateService.instant('player.noSongTitle'),
+        const notification = new Notification(this.translateService.instant('player.songTitle', {artistName, songName}),
           {
             icon: song.album.largeArtworkUrl,
-            body: this.translateService.instant('player.songTitle', {artistName, songName}) + '\n' +
-              albumName
+            body: albumName
           });
         notification.onclick = () => {
           window.parent.parent.focus();
