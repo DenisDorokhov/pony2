@@ -19,8 +19,8 @@ public final class SongDto extends BaseDto<SongDto> {
     private Integer trackNumber;
 
     private String name;
-
     private String artistName;
+    private String genreName;
 
     private String albumId;
     private String genreId;
@@ -128,6 +128,16 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
+    @Nullable
+    public String getGenreName() {
+        return genreName;
+    }
+
+    public SongDto setGenreName(@Nullable String genreName) {
+        this.genreName = genreName;
+        return this;
+    }
+
     public String getAlbumId() {
         return albumId;
     }
@@ -162,6 +172,7 @@ public final class SongDto extends BaseDto<SongDto> {
                 .setTrackNumber(song.getTrackNumber())
                 .setName(song.getName())
                 .setArtistName(song.getArtistName())
+                .setGenreName(song.getGenreName())
                 .setAlbumId(song.getAlbum().getId())
                 .setGenreId(song.getGenre().getId());
     }

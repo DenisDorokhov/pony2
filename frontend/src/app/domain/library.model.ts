@@ -17,6 +17,7 @@ export class Song {
   trackNumber: number | undefined;
   name: string | undefined;
   artistName: string | undefined;
+  genreName: string | undefined;
   genreId: string;
   album: Album;
   audioUrl: string;
@@ -38,6 +39,7 @@ export class Song {
     this.trackNumber = songDto.trackNumber;
     this.name = songDto.name;
     this.artistName = songDto.artistName;
+    this.genreName = songDto.genreName;
     this.genreId = songDto.genreId;
     this.album = album;
     this.audioUrl = '/api/file/audio/' + this.id;

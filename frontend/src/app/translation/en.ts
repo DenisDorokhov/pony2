@@ -36,6 +36,9 @@ export default {
       shuffleModeButton: 'Shuffle',
       radioModeButton: 'Radio',
     },
+    genre: {
+      unknownLabel: 'Unknown Genre'
+    },
     album: {
       counterHeader: '{{albumCount}} albums, {{songCount}} songs',
       discLabel: 'Disc {{discNumber}}',

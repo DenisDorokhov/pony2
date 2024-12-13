@@ -43,6 +43,7 @@ export interface SongDto {
   trackNumber: number | undefined;
   name: string | undefined;
   artistName: string | undefined;
+  genreName: string | undefined;
   albumId: string;
   genreId: string;
 }

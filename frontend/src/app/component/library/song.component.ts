@@ -20,10 +20,11 @@ import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
 import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
 import {resolveAppViewContainerRef} from "../../utils/view.utils";
 import {PlaybackEvent, PlaybackState} from "../../service/audio-player.service";
+import {UnknownGenrePipe} from "../../pipe/unknown-genre.pipe";
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe],
+  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe],
   selector: 'pony-song',
   templateUrl: './song.component.html',
   styleUrls: ['./song.component.scss']

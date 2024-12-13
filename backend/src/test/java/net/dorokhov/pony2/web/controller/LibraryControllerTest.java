@@ -581,6 +581,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getTrackNumber()).isEqualTo(song.getTrackNumber());
         assertThat(dto.getName()).isEqualTo(song.getName());
         assertThat(dto.getArtistName()).isEqualTo("bar");
+        assertThat(dto.getGenreName()).isEqualTo(song.getGenreName());
         assertThat(dto.getAlbumId()).isEqualTo(song.getAlbum().getId());
         assertThat(dto.getGenreId()).isEqualTo(song.getGenre().getId());
     }

@@ -27,6 +27,7 @@ import {ReactiveFormsModule} from "@angular/forms";
 import {formatDuration} from "../../../utils/format.utils";
 import {PlaybackEvent, PlaybackState} from "../../../service/audio-player.service";
 import {isMobileBrowser} from "../../../utils/mobile.utils";
+import {UnknownGenrePipe} from "../../../pipe/unknown-genre.pipe";
 
 @Component({
   standalone: true,
@@ -45,6 +46,7 @@ import {isMobileBrowser} from "../../../utils/mobile.utils";
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
     ReactiveFormsModule,
+    UnknownGenrePipe,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
