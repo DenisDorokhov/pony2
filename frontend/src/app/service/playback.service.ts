@@ -486,4 +486,17 @@ export class PlaybackService {
       window.localStorage.setItem(localStorageKey, JSON.stringify(state));
     }
   }
+
+  createQueue(song: Song) {
+    this.mode = PlaybackMode.NORMAL;
+    this._queue = [];
+    this._queue.push(song);
+    this.queueSubject.next(this._queue.slice());
+    this._currentIndex = 0;
+    if (song.id !== this.currentSongSubject.value?.id) {
+      this.currentSongSubject.next(song);
+      this.audioPlayer.play(song);
+      this.browserNotificationService.showSongNotification(song);
+    }
+  }
 }

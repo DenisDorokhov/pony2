@@ -50,12 +50,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.playbackService.observeQueue()
       .subscribe(queue => {
         this.queue = queue;
-        this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 1;
+        this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 0;
         this.hasNextSong = this.playbackService.hasNextSong();
       }));
     this.subscriptions.push(this.playbackService.observeMode()
       .subscribe(() => {
-        this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 1;
+        this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 0;
         this.hasNextSong = this.playbackService.hasNextSong();
       }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
@@ -135,7 +135,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   private handleSongSwitch(song: Song | undefined) {
-    this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 1;
+    this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 0;
     this.hasNextSong = this.playbackService.hasNextSong();
     this.pageTitleService.song = song;
     if (song) {

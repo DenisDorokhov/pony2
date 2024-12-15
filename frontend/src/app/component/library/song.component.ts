@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {Song} from "../../domain/library.model";
-import {PlaybackMode, PlaybackService} from "../../service/playback.service";
+import {PlaybackService} from "../../service/playback.service";
 import {TranslateModule} from "@ngx-translate/core";
 import {LibraryService} from "../../service/library.service";
 import {ScrollingUtils} from "../../utils/scrolling.utils";
@@ -212,8 +212,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   createQueue() {
-    this.playbackService.mode = PlaybackMode.NORMAL;
-    this.playbackService.switchQueue([this.song], 0);
+    this.playbackService.createQueue(this.song);
     this.hideMenu();
   }
 
