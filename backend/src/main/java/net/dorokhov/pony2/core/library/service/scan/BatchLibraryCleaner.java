@@ -47,6 +47,8 @@ public class BatchLibraryCleaner {
     private final GenreRepository genreRepository;
     private final ArtworkRepository artworkRepository;
     private final ArtworkStorage artworkStorage;
+    private final PlaylistSongRepository playlistSongRepository;
+
     private final int cleaningFetchingBufferSize;
     private final int cleaningDeletionBufferSize;
 
@@ -60,6 +62,7 @@ public class BatchLibraryCleaner {
             GenreRepository genreRepository,
             ArtworkRepository artworkRepository,
             ArtworkStorage artworkStorage,
+            PlaylistSongRepository playlistSongRepository,
             @Value("${pony.scan.cleaningFetchingBufferSize}") int cleaningFetchingBufferSize,
             @Value("${pony.scan.cleaningDeletionBufferSize}") int cleaningDeletionBufferSize,
             PlatformTransactionManager transactionManager
@@ -72,6 +75,7 @@ public class BatchLibraryCleaner {
         this.genreRepository = genreRepository;
         this.artworkRepository = artworkRepository;
         this.artworkStorage = artworkStorage;
+        this.playlistSongRepository = playlistSongRepository;
         this.cleaningFetchingBufferSize = cleaningFetchingBufferSize;
         this.cleaningDeletionBufferSize = cleaningDeletionBufferSize;
 
@@ -106,6 +110,7 @@ public class BatchLibraryCleaner {
                 for (String id : chunk) {
                     songRepository.findById(id).ifPresent(song -> {
                         logger.debug("Deleting song '{}': file '{}' not found.", song, song.getPath());
+                        playlistSongRepository.deleteBySongId(song.getId());
                         songRepository.delete(song);
                         libraryCleaner.deleteAlbumIfUnused(song.getAlbum());
                         libraryCleaner.deleteArtistIfUnused(song.getAlbum().getArtist());
