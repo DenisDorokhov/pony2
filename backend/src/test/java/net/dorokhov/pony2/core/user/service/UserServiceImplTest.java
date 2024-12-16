@@ -10,6 +10,7 @@ import net.dorokhov.pony2.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony2.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony2.api.user.service.exception.UserNotFoundException;
 import net.dorokhov.pony2.core.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,14 +26,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
@@ -44,6 +46,20 @@ public class UserServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(userRepository.save(any())).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0, User.class);
+            if (user.getId() == null) {
+                return user.setId(UUID.randomUUID().toString());
+            } else {
+                return user;
+            }
+        });
+    }
 
     @Test
     public void shouldGetById() {
@@ -105,7 +121,6 @@ public class UserServiceImplTest {
     public void shouldCreateUser() throws DuplicateEmailException {
 
         when(passwordEncoder.encode("somePassword")).thenReturn("encodedPassword");
-        when(userRepository.save(any())).thenAnswer(returnsFirstArg());
         UserCreationCommand command = new UserCreationCommand()
                 .setName("someName")
                 .setEmail("someEmail")

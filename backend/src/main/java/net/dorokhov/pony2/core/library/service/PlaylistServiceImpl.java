@@ -18,21 +18,52 @@ public class PlaylistServiceImpl implements PlaylistService {
         this.playlistRepository = playlistRepository;
     }
 
-    @Override
     @Transactional(readOnly = true)
+    @Override
+    public List<Playlist> getByUserId(String userId) {
+        return playlistRepository.findByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public List<Playlist> getByUserIdAndType(String userId, Playlist.Type type) {
         return playlistRepository.findByUserIdAndType(userId, type);
     }
 
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public Optional<Playlist> getById(String id) {
         return playlistRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
     @Override
+    public Optional<Playlist> lockById(String id) {
+        return playlistRepository.findLockedById(id);
+    }
+
     @Transactional
+    @Override
     public Playlist save(Playlist playlist) {
         return playlistRepository.save(playlist);
+    }
+
+    @Override
+    public void deleteByUserId(String userId) {
+        playlistRepository.deleteByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Playlist lockOneByType(String userId, Playlist.Type type) {
+        List<Playlist> playlists = playlistRepository.findByUserIdAndType(userId, type);
+        if (playlists.isEmpty()) {
+            throw new IllegalStateException("Playlist of type '" + type + "' not found.");
+        }
+        if (playlists.size() > 1) {
+            throw new IllegalStateException("Multiple playlists of type '" + type + "' found.");
+        }
+        return playlistRepository.findLockedById(playlists.getFirst().getId())
+                .orElseThrow(() -> new IllegalStateException("Playlist of type '" + type + "' not found."));
     }
 }

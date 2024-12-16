@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import net.dorokhov.pony2.api.library.domain.Playlist;
 
 import java.util.List;
 
@@ -43,9 +42,6 @@ public class PlaylistUpdateCommandDto {
     private String name;
 
     @NotNull
-    private Playlist.Type type;
-
-    @NotNull
     @Valid
     private List<PlaylistSongId> songIds;
 
@@ -64,15 +60,6 @@ public class PlaylistUpdateCommandDto {
 
     public PlaylistUpdateCommandDto setName(String name) {
         this.name = name;
-        return this;
-    }
-
-    public Playlist.Type getType() {
-        return type;
-    }
-
-    public PlaylistUpdateCommandDto setType(Playlist.Type type) {
-        this.type = type;
         return this;
     }
 

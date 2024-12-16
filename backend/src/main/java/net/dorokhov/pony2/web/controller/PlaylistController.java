@@ -25,28 +25,42 @@ public class PlaylistController {
         this.playlistFacade = playlistFacade;
     }
 
-    @GetMapping("/api/playlist/list/{type}")
-    public List<PlaylistDto> getByType(@PathVariable Playlist.Type type) {
-        return playlistFacade.getByType(type);
+    @GetMapping("/api/playlists")
+    public List<PlaylistDto> getByType(@RequestParam(required = false) Playlist.Type type) {
+        if (type != null) {
+            return playlistFacade.getByType(type);
+        } else {
+            return playlistFacade.getAll();
+        }
     }
 
-    @GetMapping("/api/playlist/{playlistId}")
+    @GetMapping("/api/playlists/{playlistId}")
     public PlaylistSongsDto getByType(@PathVariable String playlistId) throws AccessDeniedException, ObjectNotFoundException {
         return playlistFacade.getById(playlistId);
     }
 
-    @PostMapping("/api/playlist")
+    @PostMapping("/api/playlists")
     public PlaylistSongsDto create(@Valid @RequestBody PlaylistCreationCommandDto command) {
         return playlistFacade.create(command);
     }
 
-    @PutMapping("/api/playlist")
+    @PutMapping("/api/playlists")
     public PlaylistSongsDto update(@Valid @RequestBody PlaylistUpdateCommandDto command) throws AccessDeniedException, ObjectNotFoundException {
         return playlistFacade.update(command);
     }
 
-    @PostMapping("/api/playlist/{playlistId}/addSong/{songId}")
-    public PlaylistSongsDto addSong(@PathVariable String playlistId, @PathVariable String songId) throws AccessDeniedException, ObjectNotFoundException {
-        return playlistFacade.addSong(playlistId, songId);
+    @PostMapping("/api/playlists/{playlistId}/addSong/{songId}")
+    public void addSong(@PathVariable String playlistId, @PathVariable String songId) throws AccessDeniedException, ObjectNotFoundException {
+        playlistFacade.addSong(playlistId, songId);
+    }
+
+    @PostMapping("/api/playlists/likeSong/{songId}")
+    public void likeSong(@PathVariable String songId) throws ObjectNotFoundException {
+        playlistFacade.likeSong(songId);
+    }
+
+    @PostMapping("/api/playlists/addSongToHistory/{songId}")
+    public void addSongToHistory(@PathVariable String songId) throws ObjectNotFoundException {
+        playlistFacade.addToHistory(songId);
     }
 }
