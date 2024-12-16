@@ -31,6 +31,7 @@ public class Playlist extends BaseEntity<Playlist> {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @OrderBy("sort")
     private List<PlaylistSong> songs = new ArrayList<>();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

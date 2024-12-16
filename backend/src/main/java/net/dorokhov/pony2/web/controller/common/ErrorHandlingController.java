@@ -6,6 +6,7 @@ import net.dorokhov.pony2.web.controller.exception.BadRequestException;
 import net.dorokhov.pony2.web.dto.ErrorDto;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
+import net.dorokhov.pony2.web.service.exception.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static net.dorokhov.pony2.web.dto.ErrorDto.Code.ACCESS_DENIED;
 
 public interface ErrorHandlingController {
 
@@ -97,6 +99,14 @@ public interface ErrorHandlingController {
                     .setCode(Code.NOT_FOUND)
                     .setMessage(e.getMessage())
                     .setArguments(argumentsBuilder.build());
+        }
+
+        @ExceptionHandler(AccessDeniedException.class)
+        @ResponseStatus(HttpStatus.FORBIDDEN)
+        public Object onAccessDeniedError(AccessDeniedException e) {
+            return new ErrorDto()
+                    .setCode(ACCESS_DENIED)
+                    .setMessage("Access denied.");
         }
 
         @ExceptionHandler(Exception.class)
