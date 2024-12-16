@@ -2,7 +2,12 @@ package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.domain.Playlist;
 import net.dorokhov.pony2.api.library.service.PlaylistService;
+import net.dorokhov.pony2.api.user.domain.User;
+import net.dorokhov.pony2.api.user.domain.UserCreatedEvent;
+import net.dorokhov.pony2.api.user.domain.UserDeletingEvent;
+import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.core.library.repository.PlaylistRepository;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +18,14 @@ import java.util.Optional;
 public class PlaylistServiceImpl implements PlaylistService {
 
     private final PlaylistRepository playlistRepository;
+    private final UserService userService;
 
-    public PlaylistServiceImpl(PlaylistRepository playlistRepository) {
+    public PlaylistServiceImpl(
+            PlaylistRepository playlistRepository,
+            UserService userService
+    ) {
         this.playlistRepository = playlistRepository;
+        this.userService = userService;
     }
 
     @Transactional(readOnly = true)
@@ -48,11 +58,6 @@ public class PlaylistServiceImpl implements PlaylistService {
         return playlistRepository.save(playlist);
     }
 
-    @Override
-    public void deleteByUserId(String userId) {
-        playlistRepository.deleteByUserId(userId);
-    }
-
     @Transactional(readOnly = true)
     @Override
     public Playlist lockOneByType(String userId, Playlist.Type type) {
@@ -65,5 +70,25 @@ public class PlaylistServiceImpl implements PlaylistService {
         }
         return playlistRepository.findLockedById(playlists.getFirst().getId())
                 .orElseThrow(() -> new IllegalStateException("Playlist of type '" + type + "' not found."));
+    }
+
+    @Transactional
+    @EventListener(UserCreatedEvent.class)
+    public void onUserCreated(UserCreatedEvent event) {
+        User user = userService.getById(event.getUserId()).orElseThrow();
+        playlistRepository.save(new Playlist()
+                .setName(Playlist.Type.HISTORY.name())
+                .setType(Playlist.Type.HISTORY)
+                .setUser(user));
+        playlistRepository.save(new Playlist()
+                .setName(Playlist.Type.LIKE.name())
+                .setType(Playlist.Type.LIKE)
+                .setUser(user));
+    }
+
+    @Transactional
+    @EventListener(UserDeletingEvent.class)
+    public void onUserDeleting(UserDeletingEvent event) {
+        playlistRepository.deleteByUserId(event.getUserId());
     }
 }

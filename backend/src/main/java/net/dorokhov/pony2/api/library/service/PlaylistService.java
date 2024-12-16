@@ -12,5 +12,4 @@ public interface PlaylistService {
     Optional<Playlist> lockById(String id);
     Playlist lockOneByType(String userId, Playlist.Type type);
     Playlist save(Playlist playlist);
-    void deleteByUserId(String userId);
 }
