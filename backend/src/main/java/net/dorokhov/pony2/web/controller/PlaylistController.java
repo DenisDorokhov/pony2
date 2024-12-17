@@ -39,6 +39,11 @@ public class PlaylistController {
         return playlistFacade.getById(playlistId);
     }
 
+    @DeleteMapping("/api/playlists/{playlistId}")
+    public PlaylistSongsDto delete(@PathVariable String playlistId) throws AccessDeniedException, ObjectNotFoundException {
+        return playlistFacade.delete(playlistId);
+    }
+
     @PostMapping("/api/playlists")
     public PlaylistSongsDto create(@Valid @RequestBody PlaylistCreationCommandDto command) {
         return playlistFacade.create(command);
@@ -50,17 +55,17 @@ public class PlaylistController {
     }
 
     @PostMapping("/api/playlists/{playlistId}/addSong/{songId}")
-    public void addSong(@PathVariable String playlistId, @PathVariable String songId) throws AccessDeniedException, ObjectNotFoundException {
-        playlistFacade.addSong(playlistId, songId);
+    public PlaylistSongsDto addSong(@PathVariable String playlistId, @PathVariable String songId) throws AccessDeniedException, ObjectNotFoundException {
+        return playlistFacade.addSong(playlistId, songId);
     }
 
     @PostMapping("/api/playlists/likeSong/{songId}")
-    public void likeSong(@PathVariable String songId) throws ObjectNotFoundException {
-        playlistFacade.likeSong(songId);
+    public PlaylistSongsDto likeSong(@PathVariable String songId) throws ObjectNotFoundException {
+        return playlistFacade.likeSong(songId);
     }
 
     @PostMapping("/api/playlists/addSongToHistory/{songId}")
-    public void addSongToHistory(@PathVariable String songId) throws ObjectNotFoundException {
-        playlistFacade.addToHistory(songId);
+    public PlaylistSongsDto addSongToHistory(@PathVariable String songId) throws ObjectNotFoundException {
+        return playlistFacade.addToHistory(songId);
     }
 }

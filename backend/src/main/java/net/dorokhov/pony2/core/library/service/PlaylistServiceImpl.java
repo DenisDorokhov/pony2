@@ -58,6 +58,12 @@ public class PlaylistServiceImpl implements PlaylistService {
         return playlistRepository.save(playlist);
     }
 
+    @Transactional
+    @Override
+    public void delete(String id) {
+        playlistRepository.deleteById(id);
+    }
+
     @Transactional(readOnly = true)
     @Override
     public Playlist lockOneByType(String userId, Playlist.Type type) {

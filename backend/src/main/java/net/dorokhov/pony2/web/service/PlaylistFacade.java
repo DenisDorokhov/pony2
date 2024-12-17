@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 @Service
 public class PlaylistFacade {
@@ -51,12 +53,17 @@ public class PlaylistFacade {
 
     @Transactional(readOnly = true)
     public PlaylistSongsDto getById(String id) throws ObjectNotFoundException, AccessDeniedException {
-        Playlist playlist = playlistService.getById(id)
+        Playlist playlist = getAndValidatePlaylist(id, playlistService::getById);
+        return PlaylistSongsDto.of(playlist, isAdmin());
+    }
+
+    private Playlist getAndValidatePlaylist(String id, Function<String, Optional<Playlist>> fetcher) throws ObjectNotFoundException, AccessDeniedException {
+        Playlist playlist = fetcher.apply(id)
                 .orElseThrow(() -> new ObjectNotFoundException(Playlist.class, id));
         if (!Objects.equals(playlist.getUser().getId(), userContext.getAuthenticatedUser().getId())) {
             throw new AccessDeniedException();
         }
-        return PlaylistSongsDto.of(playlist, isAdmin());
+        return playlist;
     }
 
     private boolean isAdmin() {
@@ -83,18 +90,14 @@ public class PlaylistFacade {
 
     @Transactional
     public PlaylistSongsDto update(PlaylistUpdateCommandDto command) throws ObjectNotFoundException, AccessDeniedException {
-        Playlist foundPlaylist = playlistService.lockById(command.getId())
-                .orElseThrow(() -> new ObjectNotFoundException(Playlist.class, command.getId()));
-        if (!Objects.equals(foundPlaylist.getUser().getId(), userContext.getAuthenticatedUser().getId())) {
-            throw new AccessDeniedException();
-        }
-        if (foundPlaylist.getType() != Playlist.Type.NORMAL) {
+        Playlist storedPlaylist = getAndValidatePlaylist(command.getId(), playlistService::lockById);
+        if (storedPlaylist.getType() != Playlist.Type.NORMAL) {
             throw new AccessDeniedException();
         }
         Playlist playlist = new Playlist()
                 .setId(command.getId())
                 .setName(command.getName())
-                .setType(foundPlaylist.getType());
+                .setType(storedPlaylist.getType());
         AtomicInteger sort = new AtomicInteger(0);
         playlist.setSongs(command.getSongIds().stream()
                 .flatMap(songId -> libraryService.getSongById(songId.getSongId())
@@ -111,13 +114,9 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public void addSong(String playlistId, String songId) throws ObjectNotFoundException, AccessDeniedException {
-        Playlist playlist = playlistService.lockById(playlistId)
-                .orElseThrow(() -> new ObjectNotFoundException(Playlist.class, playlistId));
-        if (!Objects.equals(playlist.getUser().getId(), userContext.getAuthenticatedUser().getId())) {
-            throw new AccessDeniedException();
-        }
-        addToPlaylist(playlist, songId);
+    public PlaylistSongsDto addSong(String playlistId, String songId) throws ObjectNotFoundException, AccessDeniedException {
+        Playlist playlist = getAndValidatePlaylist(playlistId, playlistService::lockById);
+        return PlaylistSongsDto.of(addToPlaylist(playlist, songId), isAdmin());
     }
 
     private Playlist addToPlaylist(Playlist playlist, String songId) throws ObjectNotFoundException {
@@ -135,8 +134,8 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public void likeSong(String songId) throws ObjectNotFoundException {
-        addToPlaylist(Playlist.Type.LIKE, songId);
+    public PlaylistSongsDto likeSong(String songId) throws ObjectNotFoundException {
+        return PlaylistSongsDto.of(addToPlaylist(Playlist.Type.LIKE, songId), isAdmin());
     }
 
     private Playlist addToPlaylist(Playlist.Type type, String songId) throws ObjectNotFoundException {
@@ -145,7 +144,7 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public void addToHistory(String songId) throws ObjectNotFoundException {
+    public PlaylistSongsDto addToHistory(String songId) throws ObjectNotFoundException {
         Playlist playlist = addToPlaylist(Playlist.Type.HISTORY, songId);
         if (playlist.getSongs().size() > MAX_HISTORY_PLAYLIST_SIZE) {
             for (int i = 0; i < MAX_HISTORY_PLAYLIST_SIZE; i++) {
@@ -156,5 +155,13 @@ public class PlaylistFacade {
                     playlistSong.setSort(sort.getAndIncrement()));
             playlistService.save(playlist);
         }
+        return PlaylistSongsDto.of(playlist, isAdmin());
+    }
+
+    @Transactional
+    public PlaylistSongsDto delete(String playlistId) throws ObjectNotFoundException, AccessDeniedException {
+        PlaylistSongsDto result = PlaylistSongsDto.of(getAndValidatePlaylist(playlistId, playlistService::lockById), isAdmin());
+        playlistService.delete(playlistId);
+        return result;
     }
 }
