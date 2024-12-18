@@ -138,6 +138,13 @@ public class PlaylistFacade {
         return PlaylistSongsDto.of(addToPlaylist(Playlist.Type.LIKE, songId), isAdmin());
     }
 
+    @Transactional
+    public PlaylistSongsDto unlikeSong(String songId) {
+        Playlist playlist = playlistService.lockOneByType(userContext.getAuthenticatedUser().getId(), Playlist.Type.LIKE);
+        playlist.getSongs().removeIf(playlistSong -> playlistSong.getSong().getId().equals(songId));
+        return PlaylistSongsDto.of(playlistService.save(playlist), isAdmin());
+    }
+
     private Playlist addToPlaylist(Playlist.Type type, String songId) throws ObjectNotFoundException {
         Playlist playlist = playlistService.lockOneByType(userContext.getAuthenticatedUser().getId(), type);
         return addToPlaylist(playlist, songId);

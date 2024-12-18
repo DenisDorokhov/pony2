@@ -35,7 +35,7 @@ public class PlaylistController {
     }
 
     @GetMapping("/api/playlists/{playlistId}")
-    public PlaylistSongsDto getByType(@PathVariable String playlistId) throws AccessDeniedException, ObjectNotFoundException {
+    public PlaylistSongsDto getById(@PathVariable String playlistId) throws AccessDeniedException, ObjectNotFoundException {
         return playlistFacade.getById(playlistId);
     }
 
@@ -62,6 +62,11 @@ public class PlaylistController {
     @PostMapping("/api/playlists/likeSong/{songId}")
     public PlaylistSongsDto likeSong(@PathVariable String songId) throws ObjectNotFoundException {
         return playlistFacade.likeSong(songId);
+    }
+
+    @DeleteMapping("/api/playlists/likeSong/{songId}")
+    public PlaylistSongsDto unlikeSong(@PathVariable String songId) {
+        return playlistFacade.unlikeSong(songId);
     }
 
     @PostMapping("/api/playlists/addSongToHistory/{songId}")
