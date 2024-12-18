@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     TZ=${TIMEZONE:-UTC}
 
-RUN apt update && apt upgrade -y && apt install tzdata openjdk-21-jdk -y && \
+RUN apt install tzdata openjdk-21-jdk -y && \
     useradd -m pony
 
 COPY backend /home/pony/src/backend
