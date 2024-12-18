@@ -2,12 +2,12 @@ package net.dorokhov.pony2.web.controller;
 
 import jakarta.validation.Valid;
 import net.dorokhov.pony2.api.library.domain.Playlist;
+import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.PlaylistCreationCommandDto;
 import net.dorokhov.pony2.web.dto.PlaylistDto;
 import net.dorokhov.pony2.web.dto.PlaylistSongsDto;
 import net.dorokhov.pony2.web.dto.PlaylistUpdateCommandDto;
 import net.dorokhov.pony2.web.service.PlaylistFacade;
-import net.dorokhov.pony2.web.service.exception.AccessDeniedException;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(produces = APPLICATION_JSON_VALUE)
-public class PlaylistController {
+public class PlaylistController implements ErrorHandlingController {
 
     private final PlaylistFacade playlistFacade;
 
@@ -35,12 +35,12 @@ public class PlaylistController {
     }
 
     @GetMapping("/api/playlists/{playlistId}")
-    public PlaylistSongsDto getById(@PathVariable String playlistId) throws AccessDeniedException, ObjectNotFoundException {
+    public PlaylistSongsDto getById(@PathVariable String playlistId) throws ObjectNotFoundException {
         return playlistFacade.getById(playlistId);
     }
 
     @DeleteMapping("/api/playlists/{playlistId}")
-    public PlaylistSongsDto delete(@PathVariable String playlistId) throws AccessDeniedException, ObjectNotFoundException {
+    public PlaylistSongsDto delete(@PathVariable String playlistId) throws ObjectNotFoundException {
         return playlistFacade.delete(playlistId);
     }
 
@@ -50,12 +50,12 @@ public class PlaylistController {
     }
 
     @PutMapping("/api/playlists")
-    public PlaylistSongsDto update(@Valid @RequestBody PlaylistUpdateCommandDto command) throws AccessDeniedException, ObjectNotFoundException {
+    public PlaylistSongsDto update(@Valid @RequestBody PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
         return playlistFacade.update(command);
     }
 
     @PostMapping("/api/playlists/{playlistId}/addSong/{songId}")
-    public PlaylistSongsDto addSong(@PathVariable String playlistId, @PathVariable String songId) throws AccessDeniedException, ObjectNotFoundException {
+    public PlaylistSongsDto addSong(@PathVariable String playlistId, @PathVariable String songId) throws ObjectNotFoundException {
         return playlistFacade.addSong(playlistId, songId);
     }
 
