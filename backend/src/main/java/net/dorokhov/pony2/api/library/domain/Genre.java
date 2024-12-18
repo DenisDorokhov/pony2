@@ -80,6 +80,8 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
                 .add("name", name)
                 .add("artwork", artwork)
                 .toString();

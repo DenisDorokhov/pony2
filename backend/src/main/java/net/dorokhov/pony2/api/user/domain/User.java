@@ -80,6 +80,8 @@ public class User extends BaseEntity<User> implements Serializable {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
                 .add("name", name)
                 .add("email", email)
                 .add("roles", roles)

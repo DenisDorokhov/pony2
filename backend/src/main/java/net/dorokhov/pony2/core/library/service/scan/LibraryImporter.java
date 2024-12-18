@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -182,8 +183,9 @@ public class LibraryImporter {
                 importAlbumArtwork(album, artwork);
             }
             return savedSong;
+        } else {
+            return songRepository.save(songToSave.setUpdateDate(LocalDateTime.now()));
         }
-        return existingSong;
     }
 
     private boolean shouldImportAlbumArtwork(Album album, Artwork artwork) {

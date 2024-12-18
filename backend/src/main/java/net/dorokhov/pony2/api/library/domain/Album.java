@@ -130,6 +130,8 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
                 .add("name", name)
                 .add("year", year)
                 .add("artwork", artwork)

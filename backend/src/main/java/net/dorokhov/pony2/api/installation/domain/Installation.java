@@ -30,6 +30,8 @@ public class Installation extends BaseEntity<Installation> implements Serializab
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
                 .add("version", version)
                 .toString();
     }
