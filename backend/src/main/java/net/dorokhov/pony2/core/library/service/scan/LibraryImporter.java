@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -65,47 +67,75 @@ public class LibraryImporter {
         Genre overriddenGenre = null;
         Artwork overriddenArtwork = null;
 
-        boolean shouldSave = false;
+        List<String> saveReasons = new ArrayList<>();
 
         Song songToSave;
         if (existingSong != null) {
             songToSave = existingSong;
         } else {
             songToSave = new Song().setPath(audioNode.getFile().getAbsolutePath());
-            shouldSave = true;
+            saveReasons.add("Song does not exist.");
         }
         if (existingSong != null) {
-            if (!Objects.equals(existingSong.getFileType(), audioData.getFileType()) ||
-                    !Objects.equals(existingSong.getSize(), audioData.getSize()) ||
-                    !Objects.equals(existingSong.getDuration(), audioData.getDuration()) ||
-                    !Objects.equals(existingSong.getBitRate(), audioData.getBitRate()) ||
-                    !Objects.equals(existingSong.getBitRateVariable(), audioData.isBitRateVariable()) ||
-                    !Objects.equals(existingSong.getDiscNumber(), audioData.getDiscNumber()) ||
-                    !Objects.equals(existingSong.getDiscCount(), audioData.getDiscCount()) ||
-                    !Objects.equals(existingSong.getTrackNumber(), audioData.getTrackNumber()) ||
-                    !Objects.equals(existingSong.getTrackCount(), audioData.getTrackCount()) ||
-                    !Objects.equals(existingSong.getName(), audioData.getTitle()) ||
-                    !Objects.equals(existingSong.getGenreName(), audioData.getGenre()) ||
-                    !Objects.equals(existingSong.getArtistName(), audioData.getArtist()) ||
-                    !Objects.equals(existingSong.getAlbumArtistName(), audioData.getAlbumArtist()) ||
-                    !Objects.equals(existingSong.getAlbumName(), audioData.getAlbum()) ||
-                    !Objects.equals(existingSong.getYear(), audioData.getYear())) {
-                shouldSave = true;
+            if (!Objects.equals(existingSong.getFileType(), audioData.getFileType())) {
+                saveReasons.add("File type changed from '%s' to '%s'.".formatted(existingSong.getFileType(), audioData.getFileType()));
+            }
+            if (!Objects.equals(existingSong.getSize(), audioData.getSize())) {
+                saveReasons.add("File size changed from '%s' to '%s'.".formatted(existingSong.getSize(), audioData.getSize()));
+            }
+            if (!Objects.equals(existingSong.getDuration(), audioData.getDuration())) {
+                saveReasons.add("Duration changed from '%s' to '%s'.".formatted(existingSong.getDuration(), audioData.getDuration()));
+            }
+            if (!Objects.equals(existingSong.getBitRate(), audioData.getBitRate())) {
+                saveReasons.add("Bit rate changed from '%s' to '%s'.".formatted(existingSong.getBitRate(), audioData.getBitRate()));
+            }
+            if (!Objects.equals(existingSong.getBitRateVariable(), audioData.isBitRateVariable())) {
+                saveReasons.add("Bit rate variable changed from '%s' to '%s'.".formatted(existingSong.getBitRateVariable(), audioData.isBitRateVariable()));
+            }
+            if (!Objects.equals(existingSong.getDiscNumber(), audioData.getDiscNumber())) {
+                saveReasons.add("Disc number changed from '%s' to '%s'.".formatted(existingSong.getDiscNumber(), audioData.getDiscNumber()));
+            }
+            if (!Objects.equals(existingSong.getDiscCount(), audioData.getDiscCount())) {
+                saveReasons.add("Disc count changed from '%s' to '%s'.".formatted(existingSong.getDiscCount(), audioData.getDiscCount()));
+            }
+            if (!Objects.equals(existingSong.getTrackNumber(), audioData.getTrackNumber())) {
+                saveReasons.add("Track number changed from '%s' to '%s'.".formatted(existingSong.getTrackNumber(), audioData.getTrackNumber()));
+            }
+            if (!Objects.equals(existingSong.getTrackCount(), audioData.getTrackCount())) {
+                saveReasons.add("Track count changed from '%s' to '%s'.".formatted(existingSong.getTrackCount(), audioData.getTrackCount()));
+            }
+            if (!Objects.equals(existingSong.getName(), audioData.getTitle())) {
+                saveReasons.add("Name changed from '%s' to '%s'.".formatted(existingSong.getName(), audioData.getTitle()));
+            }
+            if (!Objects.equals(existingSong.getGenreName(), audioData.getGenre())) {
+                saveReasons.add("Genre name changed from '%s' to '%s'.".formatted(existingSong.getGenreName(), audioData.getGenre()));
+            }
+            if (!Objects.equals(existingSong.getArtistName(), audioData.getArtist())) {
+                saveReasons.add("Artist name changed from '%s' to '%s'.".formatted(existingSong.getArtistName(), audioData.getArtist()));
+            }
+            if (!Objects.equals(existingSong.getAlbumArtistName(), audioData.getAlbumArtist())) {
+                saveReasons.add("Album artist name changed from '%s' to '%s'.".formatted(existingSong.getAlbumArtistName(), audioData.getAlbumArtist()));
+            }
+            if (!Objects.equals(existingSong.getAlbumName(), audioData.getAlbum())) {
+                saveReasons.add("Album name changed from '%s' to '%s'.".formatted(existingSong.getAlbumName(), audioData.getAlbum()));
+            }
+            if (!Objects.equals(existingSong.getYear(), audioData.getYear())) {
+                saveReasons.add("Year changed from '%s' to '%s'.".formatted(existingSong.getYear(), audioData.getYear()));
             }
             if (!Objects.equals(existingSong.getGenre(), genre)) {
                 overriddenGenre = existingSong.getGenre();
-                shouldSave = true;
+                saveReasons.add("Genre changed from '%s' to '%s'.".formatted(existingSong.getGenre(), genre));
             }
             if (!Objects.equals(existingSong.getAlbum(), album)) {
                 overriddenAlbum = existingSong.getAlbum();
-                shouldSave = true;
+                saveReasons.add("Album changed from '%s' to '%s'.".formatted(existingSong.getAlbum(), album));
             }
             if (!Objects.equals(existingSong.getArtwork(), artwork)) {
                 overriddenArtwork = existingSong.getArtwork();
-                shouldSave = true;
+                saveReasons.add("Artwork changed from '%s' to '%s'.".formatted(existingSong.getArtwork(), artwork));
             }
         }
-        if (shouldSave) {
+        if (!saveReasons.isEmpty()) {
 
             songToSave
                     .setFileType(audioData.getFileType())
@@ -129,9 +159,9 @@ public class LibraryImporter {
 
             Song savedSong = songRepository.save(songToSave);
             if (existingSong != null) {
-                logger.debug("Updating song '{}': '{}'.", existingSong, savedSong);
+                logger.debug("{} Updating song '{}': '{}'.", String.join(" ", saveReasons), existingSong, savedSong);
             } else {
-                logger.debug("Creating song '{}'.", savedSong);
+                logger.debug("{} Creating song '{}'.", String.join(" ", saveReasons), savedSong);
             }
             if (overriddenAlbum != null) {
                 libraryCleaner.deleteAlbumIfUnused(overriddenAlbum);
@@ -140,9 +170,11 @@ public class LibraryImporter {
             if (overriddenGenre != null) {
                 libraryCleaner.deleteGenreIfUnused(overriddenGenre);
             }
-            if (overriddenArtwork != null &&
-                    libraryCleaner.deleteArtworkIfUnused(overriddenArtwork) &&
-                    Objects.equals(album.getArtwork(), overriddenArtwork)) {
+            if (
+                    overriddenArtwork != null &&
+                            libraryCleaner.deleteArtworkIfUnused(overriddenArtwork) &&
+                            Objects.equals(album.getArtwork(), overriddenArtwork)
+            ) {
                 albumRepository.save(album
                         .setArtwork(null));
             }
