@@ -3,6 +3,8 @@ package net.dorokhov.pony2.core.library.service.scan;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import static java.util.Collections.unmodifiableList;
 
 @Component
 public class BatchLibraryImportPlanner {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static class Plan {
 
@@ -65,6 +69,11 @@ public class BatchLibraryImportPlanner {
         if (songModificationDate == null) {
             songModificationDate = song.getCreationDate();
         }
-        return songModificationDate.isBefore(fileModificationDate);
+        boolean result = songModificationDate.isBefore(fileModificationDate);
+        if (result) {
+            logger.debug("Song file has been modified, file modification date '{}' is later than song modification date '{}': {}.",
+                    fileModificationDate, songModificationDate, song);
+        }
+        return result;
     }
 }

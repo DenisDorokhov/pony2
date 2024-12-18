@@ -15,7 +15,8 @@ import static net.dorokhov.pony2.test.ArtworkFixtures.artworkFiles;
 import static net.dorokhov.pony2.test.ReadableAudioDataFixtures.readableAudioData;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
@@ -281,12 +282,13 @@ public class LibraryImporterSongTest extends AbstractLibraryImporterTest {
     }
 
     @Test
-    public void shouldSkipSongIfNothingChanged() {
+    public void shouldSaveUpdateDateIfNothingChanged() {
 
         ReadableAudioData audioData = mockExistingSong(builder -> builder);
 
         libraryImporter.importAudioData(audioNode(), audioData);
 
-        verify(songRepository, never()).save(any());
+        verify(songRepository).save(songCaptor.capture());
+        assertThat(songCaptor.getValue().getUpdateDate()).isNotNull();
     }
 }

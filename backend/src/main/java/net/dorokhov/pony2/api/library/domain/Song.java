@@ -342,6 +342,8 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
+                .add("creationDate", creationDate)
+                .add("updateDate", updateDate)
                 .add("path", path)
                 .add("fileType", fileType)
                 .add("name", name)
