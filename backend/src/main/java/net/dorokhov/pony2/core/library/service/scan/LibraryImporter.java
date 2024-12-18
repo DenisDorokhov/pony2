@@ -184,6 +184,7 @@ public class LibraryImporter {
             }
             return savedSong;
         } else {
+            logger.debug("No changes found, storing new update date for song '{}'.", songToSave);
             return songRepository.save(songToSave.setUpdateDate(LocalDateTime.now()));
         }
     }
