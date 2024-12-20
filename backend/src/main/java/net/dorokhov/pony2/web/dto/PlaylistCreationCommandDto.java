@@ -3,6 +3,7 @@ package net.dorokhov.pony2.web.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import net.dorokhov.pony2.api.library.domain.PlaylistCreationCommand;
 
 import java.util.List;
 
@@ -31,5 +32,12 @@ public class PlaylistCreationCommandDto {
     public PlaylistCreationCommandDto setSongIds(List<String> songIds) {
         this.songIds = songIds;
         return this;
+    }
+
+    public PlaylistCreationCommand convert(String userId) {
+        return new PlaylistCreationCommand()
+                .setName(name)
+                .setUserId(userId)
+                .setSongIds(songIds);
     }
 }

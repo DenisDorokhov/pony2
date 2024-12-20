@@ -246,7 +246,7 @@ CREATE TABLE playlist (
   creation_date TIMESTAMP(9) NOT NULL,
   update_date TIMESTAMP(9),
 
-  name VARCHAR (255) NOT NULL,
+  name VARCHAR (255),
   type VARCHAR (255) NOT NULL,
   pony_user_id CHAR(36) NOT NULL,
 

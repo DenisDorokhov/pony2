@@ -19,7 +19,7 @@ public class Playlist extends BaseEntity<Playlist> {
         HISTORY,
     }
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name")
     private String name;
 
     @Column(name = "type", nullable = false)

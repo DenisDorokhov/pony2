@@ -16,7 +16,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -142,7 +141,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetAllPlaylists() {
+    public void shouldGetAllNormalPlaylists() {
 
         Playlist savedPlaylist = new Playlist()
                 .setName("playlist1")
@@ -165,50 +164,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<PlaylistDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistDto[].class);
-
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(playlists -> {
-            assertThat(playlists).hasSize(3);
-            assertThat(Arrays.stream(playlists).map(PlaylistDto::getType).toList())
-                    .containsExactlyInAnyOrder(Playlist.Type.NORMAL, Playlist.Type.LIKE, Playlist.Type.HISTORY);
-            for (PlaylistDto playlist : playlists) {
-                assertThat(playlist.getCreationDate()).isNotNull();
-                assertThat(playlist.getUpdateDate()).isNull();
-                if (playlist.getType() == Playlist.Type.NORMAL) {
-                    assertThat(playlist.getId()).isEqualTo(savedPlaylist.getId());
-                    assertThat(playlist.getName()).isEqualTo("playlist1");
-                }
-            }
-        });
-    }
-
-    @Test
-    public void shouldGetAllPlaylistsByType() {
-
-        Playlist savedPlaylist = new Playlist()
-                .setName("playlist1")
-                .setType(Playlist.Type.NORMAL)
-                .setUser(user);
-        playlistRepository.save(savedPlaylist
-                .setSongs(List.of(
-                        new PlaylistSong()
-                                .setPlaylist(savedPlaylist)
-                                .setSort(0)
-                                .setSong(song1_1_1),
-                        new PlaylistSong()
-                                .setPlaylist(savedPlaylist)
-                                .setSort(1)
-                                .setSong(song1_1_2),
-                        new PlaylistSong()
-                                .setPlaylist(savedPlaylist)
-                                .setSort(2)
-                                .setSong(song1_2_1)
-                )));
-
-        ResponseEntity<PlaylistDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists?type=NORMAL", HttpMethod.GET,
+                "/api/playlists/normal", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -225,7 +181,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetPlaylistById() {
+    public void shouldGetNormalPlaylistById() {
 
         Playlist savedPlaylist = new Playlist()
                 .setName("playlist1")
@@ -248,7 +204,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.GET,
+                "/api/playlists/normal/{playlistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -296,7 +252,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailGettingPlaylistOfOtherUser() throws DuplicateEmailException {
+    public void shouldFailGettingNormalPlaylistOfOtherUser() throws DuplicateEmailException {
 
         User otherUser = userService.create(new UserCreationCommand()
                 .setName("Plain User")
@@ -325,24 +281,24 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.GET,
+                "/api/playlists/normal/{playlistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void shouldFailGettingNotExistingPlaylist() {
+    public void shouldFailGettingNotExistingNormalPlaylist() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.GET,
+                "/api/playlists/normal/{playlistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void shouldDeletePlaylist() {
+    public void shouldDeleteNormalPlaylist() {
 
         Playlist savedPlaylist = new Playlist()
                 .setName("playlist1")
@@ -365,7 +321,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.DELETE,
+                "/api/playlists/normal/{playlistId}", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
 
         assertThat(playlistRepository.existsById(savedPlaylist.getId())).isFalse();
@@ -396,7 +352,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailDeletingPlaylistOfOtherUser() throws DuplicateEmailException {
+    public void shouldFailDeletingNormalPlaylistOfOtherUser() throws DuplicateEmailException {
 
         User otherUser = userService.create(new UserCreationCommand()
                 .setName("Plain User")
@@ -425,7 +381,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.DELETE,
+                "/api/playlists/normal/{playlistId}", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
 
         assertThat(playlistRepository.existsById(savedPlaylist.getId())).isTrue();
@@ -434,24 +390,24 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailDeletingNotExistingPlaylist() {
+    public void shouldFailDeletingNotExistingNormalPlaylist() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.DELETE,
+                "/api/playlists/normal/{playlistId}", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void shouldCreatePlaylist() {
+    public void shouldCreateNormalPlaylist() {
 
         PlaylistCreationCommandDto command = new PlaylistCreationCommandDto()
                 .setName("playlist1")
                 .setSongIds(List.of(song1_1_1.getId(), song1_1_2.getId(), song1_2_1.getId()));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.POST,
+                "/api/playlists/normal", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -486,7 +442,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         PlaylistCreationCommandDto command = new PlaylistCreationCommandDto();
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.POST,
+                "/api/playlists/normal", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
@@ -500,7 +456,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldUpdatePlaylist() {
+    public void shouldUpdateNormalPlaylist() {
 
         Playlist savedPlaylist = new Playlist()
                 .setName("playlist1")
@@ -520,17 +476,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 .setId(savedPlaylist.getId())
                 .setName("playlist2")
                 .setSongIds(List.of(
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_2.getId()),
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setId(idSong1_2_1)
                                 .setSongId(song1_2_1.getId())
                 ));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
+                "/api/playlists/normal", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -577,7 +533,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto();
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
+                "/api/playlists/normal", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
@@ -591,7 +547,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailUpdatingPlaylistOfOtherUser() throws DuplicateEmailException {
+    public void shouldFailUpdatingNormalPlaylistOfOtherUser() throws DuplicateEmailException {
 
         User otherUser = userService.create(new UserCreationCommand()
                 .setName("Plain User")
@@ -615,41 +571,41 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 .setId(savedPlaylist.getId())
                 .setName("playlist2")
                 .setSongIds(List.of(
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_2.getId())
                 ));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
+                "/api/playlists/normal", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void shouldFailUpdatingNotExistingPlaylist() {
+    public void shouldFailUpdatingNotExistingNormalPlaylist() {
 
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId("foobar")
                 .setName("playlist2")
                 .setSongIds(List.of(
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
-                        new PlaylistUpdateCommandDto.PlaylistSongId()
+                        new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_2.getId())
                 ));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
+                "/api/playlists/normal", HttpMethod.PUT,
                 apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void shouldAddSongToPlaylist() {
+    public void shouldAddSongToNormalPlaylist() {
 
         Playlist savedPlaylist = new Playlist()
                 .setName("playlist1")
@@ -664,7 +620,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/addSong/{songId}", HttpMethod.POST,
+                "/api/playlists/normal/{playlistId}/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId(), song1_1_2.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -690,7 +646,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailAddingSongToPlaylistOfOtherUser() throws DuplicateEmailException {
+    public void shouldFailAddingSongToNormalPlaylistOfOtherUser() throws DuplicateEmailException {
 
         User otherUser = userService.create(new UserCreationCommand()
                 .setName("Plain User")
@@ -711,27 +667,78 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/addSong/{songId}", HttpMethod.POST,
+                "/api/playlists/normal/{playlistId}/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class, savedPlaylist.getId(), song1_1_2.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void shouldFailAddingSongToNotExistingPlaylist() {
+    public void shouldFailAddingSongToNotExistingNormalPlaylist() {
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/addSong/{songId}", HttpMethod.POST,
+                "/api/playlists/normal/{playlistId}/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class, "foobar", song1_1_2.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
 
     @Test
+    public void shouldGetLikePlaylist() {
+
+        Playlist storedPlaylist = playlistRepository.findByUserIdAndType(user.getId(), Playlist.Type.LIKE).stream()
+                .findFirst()
+                .orElseThrow();
+        playlistRepository.save(storedPlaylist
+                .setSongs(List.of(
+                        new PlaylistSong()
+                                .setPlaylist(storedPlaylist)
+                                .setSort(0)
+                                .setSong(song1_1_1),
+                        new PlaylistSong()
+                                .setPlaylist(storedPlaylist)
+                                .setSort(1)
+                                .setSong(song1_1_2),
+                        new PlaylistSong()
+                                .setPlaylist(storedPlaylist)
+                                .setSort(2)
+                                .setSong(song1_2_1)
+                )));
+
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/like", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(playlistSongs -> {
+            assertThat(playlistSongs.getPlaylist()).satisfies(playlist -> {
+                assertThat(playlist.getId()).isEqualTo(storedPlaylist.getId());
+                assertThat(playlist.getCreationDate()).isNotNull();
+                assertThat(playlist.getUpdateDate()).isNull();
+                assertThat(playlist.getName()).isNull();
+                assertThat(playlist.getType()).isEqualTo(Playlist.Type.LIKE);
+            });
+            assertThat(playlistSongs.getSongs()).hasSize(3);
+            assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                checkSongDto(song.getSong(), song1_1_1);
+            });
+            assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                checkSongDto(song.getSong(), song1_1_2);
+            });
+            assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                checkSongDto(song.getSong(), song1_2_1);
+            });
+        });
+    }
+
+    @Test
     public void shouldLikeSong() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/likeSong/{songId}", HttpMethod.POST,
+                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -741,7 +748,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 assertThat(playlistRepository.existsById(playlist.getId())).isTrue();
                 assertThat(playlist.getCreationDate()).isNotNull();
                 assertThat(playlist.getUpdateDate()).isNotNull();
-                assertThat(playlist.getName()).isNotNull();
+                assertThat(playlist.getName()).isNull();
                 assertThat(playlist.getType()).isEqualTo(Playlist.Type.LIKE);
             });
             assertThat(playlistSongs.getSongs()).hasSize(1);
@@ -756,7 +763,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     public void shouldFailLikingNotExistingSong() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/likeSong/{songId}", HttpMethod.POST,
+                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
@@ -768,12 +775,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         ResponseEntity<PlaylistSongsDto> response;
 
         response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/likeSong/{songId}", HttpMethod.POST,
+                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
 
         response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/likeSong/{songId}", HttpMethod.DELETE,
+                "/api/playlists/like/songs/{songId}", HttpMethod.DELETE,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -783,7 +790,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 assertThat(playlistRepository.existsById(playlist.getId())).isTrue();
                 assertThat(playlist.getCreationDate()).isNotNull();
                 assertThat(playlist.getUpdateDate()).isNotNull();
-                assertThat(playlist.getName()).isNotNull();
+                assertThat(playlist.getName()).isNull();
                 assertThat(playlist.getType()).isEqualTo(Playlist.Type.LIKE);
             });
             assertThat(playlistSongs.getSongs()).isEmpty();
@@ -791,10 +798,61 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldGetHistoryPlaylist() {
+
+        Playlist storedPlaylist = playlistRepository.findByUserIdAndType(user.getId(), Playlist.Type.HISTORY).stream()
+                .findFirst()
+                .orElseThrow();
+        playlistRepository.save(storedPlaylist
+                .setSongs(List.of(
+                        new PlaylistSong()
+                                .setPlaylist(storedPlaylist)
+                                .setSort(0)
+                                .setSong(song1_1_1),
+                        new PlaylistSong()
+                                .setPlaylist(storedPlaylist)
+                                .setSort(1)
+                                .setSong(song1_1_2),
+                        new PlaylistSong()
+                                .setPlaylist(storedPlaylist)
+                                .setSort(2)
+                                .setSong(song1_2_1)
+                )));
+
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/history", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(playlistSongs -> {
+            assertThat(playlistSongs.getPlaylist()).satisfies(playlist -> {
+                assertThat(playlist.getId()).isEqualTo(storedPlaylist.getId());
+                assertThat(playlist.getCreationDate()).isNotNull();
+                assertThat(playlist.getUpdateDate()).isNull();
+                assertThat(playlist.getName()).isNull();
+                assertThat(playlist.getType()).isEqualTo(Playlist.Type.HISTORY);
+            });
+            assertThat(playlistSongs.getSongs()).hasSize(3);
+            assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                checkSongDto(song.getSong(), song1_1_1);
+            });
+            assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                checkSongDto(song.getSong(), song1_1_2);
+            });
+            assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                checkSongDto(song.getSong(), song1_2_1);
+            });
+        });
+    }
+
+    @Test
     public void shouldAddSongToHistory() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/addSongToHistory/{songId}", HttpMethod.POST,
+                "/api/playlists/history/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -804,7 +862,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 assertThat(playlistRepository.existsById(playlist.getId())).isTrue();
                 assertThat(playlist.getCreationDate()).isNotNull();
                 assertThat(playlist.getUpdateDate()).isNotNull();
-                assertThat(playlist.getName()).isNotNull();
+                assertThat(playlist.getName()).isNull();
                 assertThat(playlist.getType()).isEqualTo(Playlist.Type.HISTORY);
             });
             assertThat(playlistSongs.getSongs()).hasSize(1);
@@ -819,7 +877,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     public void shouldFailAddingNotExistingSongToHistory() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/addSongToHistory/{songId}", HttpMethod.POST,
+                "/api/playlists/history/songs/{songId}", HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);

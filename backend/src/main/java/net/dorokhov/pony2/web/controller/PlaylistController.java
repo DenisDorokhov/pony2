@@ -25,51 +25,57 @@ public class PlaylistController implements ErrorHandlingController {
         this.playlistFacade = playlistFacade;
     }
 
-    @GetMapping("/api/playlists")
-    public List<PlaylistDto> getByType(@RequestParam(required = false) Playlist.Type type) {
-        if (type != null) {
-            return playlistFacade.getByType(type);
-        } else {
-            return playlistFacade.getAll();
-        }
+    @GetMapping("/api/playlists/normal")
+    public List<PlaylistDto> getNormalPlaylists() {
+        return playlistFacade.getPlaylistsByType(Playlist.Type.NORMAL);
     }
 
-    @GetMapping("/api/playlists/{playlistId}")
-    public PlaylistSongsDto getById(@PathVariable String playlistId) throws ObjectNotFoundException {
-        return playlistFacade.getById(playlistId);
+    @GetMapping("/api/playlists/normal/{playlistId}")
+    public PlaylistSongsDto getNormalPlaylistById(@PathVariable String playlistId) throws ObjectNotFoundException {
+        return playlistFacade.getNormalPlaylistById(playlistId);
     }
 
-    @DeleteMapping("/api/playlists/{playlistId}")
-    public PlaylistSongsDto delete(@PathVariable String playlistId) throws ObjectNotFoundException {
-        return playlistFacade.delete(playlistId);
+    @PostMapping("/api/playlists/normal")
+    public PlaylistSongsDto createNormalPlaylists(@Valid @RequestBody PlaylistCreationCommandDto command) {
+        return playlistFacade.createNormalPlaylist(command);
     }
 
-    @PostMapping("/api/playlists")
-    public PlaylistSongsDto create(@Valid @RequestBody PlaylistCreationCommandDto command) {
-        return playlistFacade.create(command);
+    @PutMapping("/api/playlists/normal")
+    public PlaylistSongsDto updateNormalPlaylists(@Valid @RequestBody PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
+        return playlistFacade.updateNormalPlaylist(command);
     }
 
-    @PutMapping("/api/playlists")
-    public PlaylistSongsDto update(@Valid @RequestBody PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
-        return playlistFacade.update(command);
+    @PostMapping("/api/playlists/normal/{playlistId}/songs/{songId}")
+    public PlaylistSongsDto addSongToNormalPlaylists(@PathVariable String playlistId, @PathVariable String songId) throws ObjectNotFoundException {
+        return playlistFacade.addSongToNormalPlaylist(playlistId, songId);
     }
 
-    @PostMapping("/api/playlists/{playlistId}/addSong/{songId}")
-    public PlaylistSongsDto addSong(@PathVariable String playlistId, @PathVariable String songId) throws ObjectNotFoundException {
-        return playlistFacade.addSong(playlistId, songId);
+    @DeleteMapping("/api/playlists/normal/{playlistId}")
+    public PlaylistSongsDto deleteNormalPlaylist(@PathVariable String playlistId) throws ObjectNotFoundException {
+        return playlistFacade.deleteNormalPlaylist(playlistId);
     }
 
-    @PostMapping("/api/playlists/likeSong/{songId}")
+    @GetMapping("/api/playlists/like")
+    public PlaylistSongsDto getLikePlaylist() {
+        return playlistFacade.getLikePlaylist();
+    }
+
+    @PostMapping("/api/playlists/like/songs/{songId}")
     public PlaylistSongsDto likeSong(@PathVariable String songId) throws ObjectNotFoundException {
         return playlistFacade.likeSong(songId);
     }
 
-    @DeleteMapping("/api/playlists/likeSong/{songId}")
-    public PlaylistSongsDto unlikeSong(@PathVariable String songId) {
+    @DeleteMapping("/api/playlists/like/songs/{songId}")
+    public PlaylistSongsDto unlikeSong(@PathVariable String songId) throws ObjectNotFoundException {
         return playlistFacade.unlikeSong(songId);
     }
 
-    @PostMapping("/api/playlists/addSongToHistory/{songId}")
+    @GetMapping("/api/playlists/history")
+    public PlaylistSongsDto getHistoryPlaylist() {
+        return playlistFacade.getHistoryPlaylist();
+    }
+
+    @PostMapping("/api/playlists/history/songs/{songId}")
     public PlaylistSongsDto addSongToHistory(@PathVariable String songId) throws ObjectNotFoundException {
         return playlistFacade.addToHistory(songId);
     }
