@@ -48,6 +48,7 @@ public class BatchLibraryCleaner {
     private final ArtworkRepository artworkRepository;
     private final ArtworkStorage artworkStorage;
     private final PlaylistSongRepository playlistSongRepository;
+    private final PlaybackHistorySongRepository playbackHistorySongRepository;
 
     private final int cleaningFetchingBufferSize;
     private final int cleaningDeletionBufferSize;
@@ -63,6 +64,7 @@ public class BatchLibraryCleaner {
             ArtworkRepository artworkRepository,
             ArtworkStorage artworkStorage,
             PlaylistSongRepository playlistSongRepository,
+            PlaybackHistorySongRepository playbackHistorySongRepository,
             @Value("${pony.scan.cleaningFetchingBufferSize}") int cleaningFetchingBufferSize,
             @Value("${pony.scan.cleaningDeletionBufferSize}") int cleaningDeletionBufferSize,
             PlatformTransactionManager transactionManager
@@ -76,6 +78,7 @@ public class BatchLibraryCleaner {
         this.artworkRepository = artworkRepository;
         this.artworkStorage = artworkStorage;
         this.playlistSongRepository = playlistSongRepository;
+        this.playbackHistorySongRepository = playbackHistorySongRepository;
         this.cleaningFetchingBufferSize = cleaningFetchingBufferSize;
         this.cleaningDeletionBufferSize = cleaningDeletionBufferSize;
 
@@ -111,6 +114,7 @@ public class BatchLibraryCleaner {
                     songRepository.findById(id).ifPresent(song -> {
                         logger.debug("Deleting song '{}': file '{}' not found.", song, song.getPath());
                         playlistSongRepository.deleteBySongId(song.getId());
+                        playbackHistorySongRepository.deleteBySongId(song.getId());
                         songRepository.delete(song);
                         libraryCleaner.deleteAlbumIfUnused(song.getAlbum());
                         libraryCleaner.deleteArtistIfUnused(song.getAlbum().getArtist());

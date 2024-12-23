@@ -266,3 +266,15 @@ CREATE TABLE playlist_song (
   FOREIGN KEY (playlist_id) REFERENCES playlist (id),
   FOREIGN KEY (song_id) REFERENCES song (id)
 );
+
+CREATE TABLE playback_history_song (
+
+  id CHAR(36) PRIMARY KEY,
+  creation_date TIMESTAMP(9) NOT NULL,
+
+  pony_user_id CHAR(36) NOT NULL,
+  song_id CHAR(36) NOT NULL,
+
+  FOREIGN KEY (pony_user_id) REFERENCES pony_user (id),
+  FOREIGN KEY (song_id) REFERENCES song (id)
+);

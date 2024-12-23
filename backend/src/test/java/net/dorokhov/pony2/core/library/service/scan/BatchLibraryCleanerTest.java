@@ -59,6 +59,8 @@ public class BatchLibraryCleanerTest {
     private ArtworkStorage artworkStorage;
     @Mock
     private PlaylistSongRepository playlistSongRepository;
+    @Mock
+    private PlaybackHistorySongRepository playbackHistorySongRepository;
 
     private final PlatformTransactionManager transactionManager = transactionManager();
 
@@ -73,6 +75,7 @@ public class BatchLibraryCleanerTest {
                 artworkRepository,
                 artworkStorage,
                 playlistSongRepository,
+                playbackHistorySongRepository,
                 1,
                 1,
                 transactionManager
@@ -108,12 +111,14 @@ public class BatchLibraryCleanerTest {
         verify(songRepository, times(2)).delete(any());
 
         verify(playlistSongRepository).deleteBySongId(eq("3"));
+        verify(playbackHistorySongRepository).deleteBySongId(eq("3"));
         verify(songRepository).delete(song3);
         verify(libraryCleaner).deleteArtistIfUnused(song3.getAlbum().getArtist());
         verify(libraryCleaner).deleteAlbumIfUnused(song3.getAlbum());
         verify(libraryCleaner).deleteGenreIfUnused(song3.getGenre());
 
         verify(playlistSongRepository).deleteBySongId(eq("4"));
+        verify(playbackHistorySongRepository).deleteBySongId(eq("4"));
         verify(songRepository).delete(song4);
         verify(libraryCleaner).deleteArtistIfUnused(song4.getAlbum().getArtist());
         verify(libraryCleaner).deleteAlbumIfUnused(song4.getAlbum());
