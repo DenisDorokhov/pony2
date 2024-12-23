@@ -257,6 +257,7 @@ CREATE TABLE playlist_song (
 
   id CHAR(36) PRIMARY KEY,
 
+  creation_date TIMESTAMP(9) NOT NULL,
   sort INT NOT NULL,
 
   playlist_id CHAR(36) NOT NULL,

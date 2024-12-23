@@ -4,6 +4,8 @@ import com.google.common.base.MoreObjects;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDateTime;
+
 import static jakarta.persistence.GenerationType.UUID;
 
 @Entity
@@ -14,6 +16,10 @@ public class PlaylistSong {
     @GeneratedValue(strategy = UUID)
     @Column(name = "id")
     private String id;
+
+    @Column(name = "creation_date", nullable = false, updatable = false)
+    @NotNull
+    private LocalDateTime creationDate;
 
     @Column(name = "sort", nullable = false)
     private int sort;
@@ -33,6 +39,15 @@ public class PlaylistSong {
 
     public PlaylistSong setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public PlaylistSong setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
         return this;
     }
 
@@ -61,6 +76,11 @@ public class PlaylistSong {
     public PlaylistSong setSong(Song song) {
         this.song = song;
         return this;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        creationDate = LocalDateTime.now();
     }
 
     @Override

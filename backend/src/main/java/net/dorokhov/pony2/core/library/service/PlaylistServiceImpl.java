@@ -73,9 +73,6 @@ public class PlaylistServiceImpl implements PlaylistService {
         if (playlist.getType() == Playlist.Type.LIKE) {
             // TODO: implement
         }
-        if (playlist.getType() == Playlist.Type.HISTORY) {
-            // TODO: implement
-        }
         return playlist;
     }
 
@@ -94,12 +91,21 @@ public class PlaylistServiceImpl implements PlaylistService {
         AtomicInteger sort = new AtomicInteger(0);
         playlist.setSongs(command.getSongIds().stream()
                 .flatMap(songId -> libraryService.getSongById(songId.getSongId())
-                        .map(song -> new PlaylistSong()
-                                .setId(songId.getId())
-                                .setPlaylist(playlist)
-                                .setSort(sort.getAndIncrement())
-                                .setSong(song)
-                        )
+                        .map(song -> {
+                            PlaylistSong playlistSong = null;
+                            if (songId.getId() != null) {
+                                playlistSong = storedPlaylist.getSongs().stream()
+                                        .filter(next -> next.getId().equals(songId.getId()))
+                                        .findFirst()
+                                        .orElse(null);
+                            }
+                            return new PlaylistSong()
+                                    .setId(playlistSong != null ? playlistSong.getId() : null)
+                                    .setCreationDate(playlistSong != null ? playlistSong.getCreationDate() : null)
+                                    .setPlaylist(playlist)
+                                    .setSort(sort.getAndIncrement())
+                                    .setSong(song);
+                        })
                         .stream()
                 )
                 .toList());

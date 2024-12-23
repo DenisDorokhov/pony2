@@ -219,14 +219,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(3);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_2_1);
             });
         });
@@ -338,14 +341,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(3);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_2_1);
             });
         });
@@ -423,14 +429,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(3);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_2_1);
             });
         });
@@ -502,14 +511,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(3);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isEqualTo(idSong1_2_1);
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_2_1);
             });
         });
@@ -636,10 +648,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(2);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
         });
@@ -721,14 +735,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(3);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_2_1);
             });
         });
@@ -754,6 +771,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(1);
             assertThat(playlistSongs.getSongs().getFirst()).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
         });
@@ -835,14 +853,17 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(3);
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_2_1);
             });
         });
@@ -868,6 +889,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs()).hasSize(1);
             assertThat(playlistSongs.getSongs().getFirst()).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
                 checkSongDto(song.getSong(), song1_1_1);
             });
         });
