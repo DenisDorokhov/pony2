@@ -16,7 +16,6 @@ public class Playlist extends BaseEntity<Playlist> {
     public enum Type {
         NORMAL,
         LIKE,
-        HISTORY,
     }
 
     @Column(name = "name")

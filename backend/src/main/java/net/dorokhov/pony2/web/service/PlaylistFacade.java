@@ -97,23 +97,23 @@ public class PlaylistFacade {
 
     @Transactional
     public PlaylistSongsDto getLikePlaylist() {
-        return PlaylistSongsDto.of(getAndValidatePlaylist(Playlist.Type.LIKE), isAdmin());
+        return PlaylistSongsDto.of(getAndValidateLikePlaylist(), isAdmin());
     }
 
-    private Playlist getAndValidatePlaylist(Playlist.Type type) {
-        List<Playlist> playlists = playlistService.getByUserIdAndType(userContext.getAuthenticatedUser().getId(), type);
+    private Playlist getAndValidateLikePlaylist() {
+        List<Playlist> playlists = playlistService.getByUserIdAndType(userContext.getAuthenticatedUser().getId(), Playlist.Type.LIKE);
         if (playlists.isEmpty()) {
-            throw new IllegalStateException("Playlist of type '" + type + "' not found.");
+            throw new IllegalStateException("Like playlist of user '" + userContext.getAuthenticatedUser().getId() + "' not found.");
         }
         if (playlists.size() > 1) {
-            throw new IllegalStateException("Multiple playlists of type '" + type + "' found.");
+            throw new IllegalStateException("Multiple like playlists of user '" + userContext.getAuthenticatedUser().getId() + "' found.");
         }
         return playlists.getFirst();
     }
 
     @Transactional
     public PlaylistSongsDto likeSong(String songId) throws ObjectNotFoundException {
-        Playlist playlist = getAndValidatePlaylist(Playlist.Type.LIKE);
+        Playlist playlist = getAndValidateLikePlaylist();
         try {
             return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlist.getId(), songId), isAdmin());
         } catch (PlaylistNotFoundException e) {
@@ -125,28 +125,11 @@ public class PlaylistFacade {
 
     @Transactional
     public PlaylistSongsDto unlikeSong(String songId) throws ObjectNotFoundException {
-        Playlist playlist = getAndValidatePlaylist(Playlist.Type.LIKE);
+        Playlist playlist = getAndValidateLikePlaylist();
         try {
             return PlaylistSongsDto.of(playlistService.removeSongFromPlaylist(playlist.getId(), songId), isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlist.getId());
-        }
-    }
-
-    @Transactional
-    public PlaylistSongsDto getHistoryPlaylist() {
-        return PlaylistSongsDto.of(getAndValidatePlaylist(Playlist.Type.HISTORY), isAdmin());
-    }
-
-    @Transactional
-    public PlaylistSongsDto addToHistory(String songId) throws ObjectNotFoundException {
-        Playlist playlist = getAndValidatePlaylist(Playlist.Type.HISTORY);
-        try {
-            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlist.getId(), songId), isAdmin());
-        } catch (PlaylistNotFoundException e) {
-            throw new ObjectNotFoundException(Playlist.class, playlist.getId());
-        } catch (SongNotFoundException e) {
-            throw new ObjectNotFoundException(Song.class, songId);
         }
     }
 }

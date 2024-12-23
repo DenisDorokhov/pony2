@@ -155,9 +155,6 @@ public class PlaylistServiceImpl implements PlaylistService {
     public void onUserCreated(UserCreatedEvent event) {
         User user = userService.getById(event.getUserId()).orElseThrow();
         playlistRepository.save(new Playlist()
-                .setType(Playlist.Type.HISTORY)
-                .setUser(user));
-        playlistRepository.save(new Playlist()
                 .setType(Playlist.Type.LIKE)
                 .setUser(user));
     }

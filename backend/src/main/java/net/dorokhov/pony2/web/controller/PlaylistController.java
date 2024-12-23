@@ -69,14 +69,4 @@ public class PlaylistController implements ErrorHandlingController {
     public PlaylistSongsDto unlikeSong(@PathVariable String songId) throws ObjectNotFoundException {
         return playlistFacade.unlikeSong(songId);
     }
-
-    @GetMapping("/api/playlists/history")
-    public PlaylistSongsDto getHistoryPlaylist() {
-        return playlistFacade.getHistoryPlaylist();
-    }
-
-    @PostMapping("/api/playlists/history/songs/{songId}")
-    public PlaylistSongsDto addSongToHistory(@PathVariable String songId) throws ObjectNotFoundException {
-        return playlistFacade.addToHistory(songId);
-    }
 }
