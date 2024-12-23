@@ -778,6 +778,35 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldFilterOutDuplicatesWhenLikingSong() {
+
+        apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(playlistSongs -> {
+            assertThat(playlistSongs.getPlaylist()).satisfies(playlist -> {
+                assertThat(playlist.getId()).isNotNull();
+                assertThat(playlistRepository.existsById(playlist.getId())).isTrue();
+                assertThat(playlist.getCreationDate()).isNotNull();
+                assertThat(playlist.getUpdateDate()).isNotNull();
+                assertThat(playlist.getName()).isNull();
+                assertThat(playlist.getType()).isEqualTo(Playlist.Type.LIKE);
+            });
+            assertThat(playlistSongs.getSongs()).hasSize(1);
+            assertThat(playlistSongs.getSongs().getFirst()).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
+                checkSongDto(song.getSong(), song1_1_1);
+            });
+        });
+    }
+
+    @Test
     public void shouldFailLikingNotExistingSong() {
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(

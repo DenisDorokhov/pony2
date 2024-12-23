@@ -15,9 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 
 @Service
 public class PlaylistServiceImpl implements PlaylistService {
@@ -56,24 +54,36 @@ public class PlaylistServiceImpl implements PlaylistService {
                 .setType(Playlist.Type.NORMAL)
                 .setUser(userService.getById(command.getUserId())
                         .orElseThrow(() -> new IllegalArgumentException("User '" + command.getUserId() + "' not found.")));
-        AtomicInteger sort = new AtomicInteger(0);
         playlist.setSongs(command.getSongIds().stream()
                 .flatMap(songId -> libraryService.getSongById(songId)
                         .map(song -> new PlaylistSong()
                                 .setPlaylist(playlist)
-                                .setSort(sort.getAndIncrement())
                                 .setSong(song)
                         )
                         .stream())
                 .toList());
-        return playlistRepository.save(normalizePlaylist(playlist));
+        return normalizeAndSavePlaylist(playlist);
     }
 
-    private Playlist normalizePlaylist(Playlist playlist) {
-        if (playlist.getType() == Playlist.Type.LIKE) {
-            // TODO: implement
+    private Playlist normalizeAndSavePlaylist(Playlist playlist) {
+        Playlist savedPlaylist = playlistRepository.save(playlist);
+        int sort = 0;
+        Set<String> songIds = new HashSet<>();
+        Set<Integer> duplicateIndices = new HashSet<>();
+        for (int i = 0; i < savedPlaylist.getSongs().size(); i++) {
+            PlaylistSong playlistSong = savedPlaylist.getSongs().get(i);
+            playlistSong.setSort(sort++);
+            if (songIds.contains(playlistSong.getSong().getId())) {
+                duplicateIndices.add(i);
+            }
+            songIds.add(playlistSong.getSong().getId());
         }
-        return playlist;
+        if (savedPlaylist.getType() == Playlist.Type.LIKE) {
+            duplicateIndices.stream()
+                    .sorted(Collections.reverseOrder())
+                    .forEach(index -> savedPlaylist.getSongs().remove((int) index));
+        }
+        return savedPlaylist;
     }
 
     @Transactional
@@ -88,7 +98,6 @@ public class PlaylistServiceImpl implements PlaylistService {
                 .setName(command.getName())
                 .setType(storedPlaylist.getType())
                 .setUser(storedPlaylist.getUser());
-        AtomicInteger sort = new AtomicInteger(0);
         playlist.setSongs(command.getSongIds().stream()
                 .flatMap(songId -> libraryService.getSongById(songId.getSongId())
                         .map(song -> {
@@ -103,13 +112,12 @@ public class PlaylistServiceImpl implements PlaylistService {
                                     .setId(playlistSong != null ? playlistSong.getId() : null)
                                     .setCreationDate(playlistSong != null ? playlistSong.getCreationDate() : null)
                                     .setPlaylist(playlist)
-                                    .setSort(sort.getAndIncrement())
                                     .setSong(song);
                         })
                         .stream()
                 )
                 .toList());
-        return playlistRepository.save(normalizePlaylist(playlist));
+        return normalizeAndSavePlaylist(playlist);
     }
 
     @Transactional
@@ -120,15 +128,11 @@ public class PlaylistServiceImpl implements PlaylistService {
         playlist.setUpdateDate(LocalDateTime.now());
         Song song = libraryService.getSongById(songId)
                 .orElseThrow(() -> new SongNotFoundException(songId));
-        AtomicInteger sort = new AtomicInteger(0);
-        playlist.getSongs().forEach(playlistSong ->
-                playlistSong.setSort(sort.getAndIncrement()));
         playlist.getSongs().add(new PlaylistSong()
                 .setPlaylist(playlist)
-                .setSort(sort.getAndIncrement())
                 .setSong(song)
         );
-        return playlistRepository.save(normalizePlaylist(playlist));
+        return normalizeAndSavePlaylist(playlist);
     }
 
     @Transactional
@@ -137,7 +141,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         Playlist playlist = playlistRepository.findLockedById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
         playlist.getSongs().removeIf(playlistSong -> playlistSong.getSong().getId().equals(songId));
-        return playlistRepository.save(normalizePlaylist(playlist));
+        return normalizeAndSavePlaylist(playlist);
     }
 
     @Transactional
