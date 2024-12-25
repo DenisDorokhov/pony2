@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {TranslateService} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {PlaybackService} from "../../service/playback.service";
 import {Song} from "../../domain/library.model";
@@ -8,16 +8,19 @@ import {PageTitleService} from "../../service/page-title.service";
 import {ImageLoaderComponent} from "../common/image-loader.component";
 import {isMobileBrowser} from "../../utils/mobile.utils";
 import {PlaybackEvent, PlaybackState} from "../../service/audio-player.service";
+import {PlaylistService} from "../../service/playlist.service";
+import {NotificationService} from "../../service/notification.service";
 
 @Component({
   standalone: true,
-  imports: [ImageLoaderComponent],
+  imports: [ImageLoaderComponent, TranslateModule],
   selector: 'pony-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss']
 })
 export class PlayerComponent implements OnInit, OnDestroy {
 
+  song: Song | undefined;
   songTitle: string | undefined;
   artworkUrl: string | undefined;
   isPlaying = false;
@@ -31,6 +34,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   formattedDuration: string | undefined;
   formattedMousePosition: string | undefined;
   queue: Song[] = [];
+  isLikedSong = false;
 
   private subscriptions: Subscription[] = [];
 
@@ -39,6 +43,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private libraryService: LibraryService,
     private translateService: TranslateService,
     private pageTitleService: PageTitleService,
+    private playlistService: PlaylistService,
+    private notificationServce: NotificationService,
   ) {
   }
 
@@ -81,6 +87,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
         }
       }
     }));
+    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(() => this.refreshLikeState()));
+  }
+
+  private refreshLikeState() {
+    this.isLikedSong = !this.song || this.playlistService.isLikedSong(this.song.id);
   }
 
   ngOnDestroy(): void {
@@ -137,6 +148,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private handleSongSwitch(song: Song | undefined) {
     this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 0;
     this.hasNextSong = this.playbackService.hasNextSong();
+    this.song = song;
     this.pageTitleService.song = song;
     if (song) {
       let artistName = song ? song.artistName : undefined;
@@ -153,6 +165,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.songTitle = this.translateService.instant('player.noSongTitle');
       this.artworkUrl = undefined;
     }
+    this.refreshLikeState();
   }
 
   onProgressMouseMove(event: MouseEvent) {
@@ -177,5 +190,31 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
     this.mouseProgress = undefined;
     this.formattedMousePosition = undefined;
+  }
+
+  onLikeClick() {
+    if (this.isLikedSong) {
+      this.isLikedSong = false;
+      this.playlistService.unlikeSong(this.song!.id).subscribe({
+        error: () => {
+          this.isLikedSong = true;
+          this.notificationServce.error(
+            this.translateService.instant('player.unlikeNotificationTitle'),
+            this.translateService.instant('player.unlikeNotificationTextFailure')
+          );
+        }
+      });
+    } else {
+      this.isLikedSong = true;
+      this.playlistService.likeSong(this.song!.id).subscribe({
+        error: () => {
+          this.isLikedSong = false;
+          this.notificationServce.error(
+            this.translateService.instant('player.likeNotificationTitle'),
+            this.translateService.instant('player.likeNotificationTextFailure')
+          );
+        }
+      });
+    }
   }
 }

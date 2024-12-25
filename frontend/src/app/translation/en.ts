@@ -55,7 +55,6 @@ export default {
       selectOrCreatePlaylist: 'Add to playlist',
       addToPlaylist: 'Add to "{{name}}"',
       addToPlaylistNotificationTitle: 'Playlists',
-      addToPlaylistNotificationTextSuccess: 'Song added to playlist.',
       addToPlaylistNotificationTextFailure: 'Could not add song to playlist!',
     },
     noMusicLabel: 'Your library is empty :-(',
@@ -70,6 +69,12 @@ export default {
   player: {
     noSongTitle: 'Pony - Music Streamer',
     songTitle: '{{artistName}} - {{songName}}',
+    likedSongButtonTooltip: 'Delete song from favorites',
+    notLikedSongButtonTooltip: 'Add song to favorites',
+    likeNotificationTitle: 'Playlists',
+    likeNotificationTextFailure: 'Could not add song to favorites!',
+    unlikeNotificationTitle: 'Playlists',
+    unlikeNotificationTextFailure: 'Could not remove song from favorites!',
   },
   queue: {
     header: 'Playback Queue',

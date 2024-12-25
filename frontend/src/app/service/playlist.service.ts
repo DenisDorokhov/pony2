@@ -42,6 +42,14 @@ export class PlaylistService {
       .slice(0, 3);
   }
 
+  isLikedSong(songId: string): boolean {
+    const likePlaylist = this.likePlaylistSongsSubject.value;
+    if (likePlaylist) {
+      return likePlaylist.songs.filter(next => next.song.id === songId).length > 0;
+    }
+    return false;
+  }
+
   observePlaylists(): Observable<Playlist[]> {
     return this.playlistsSubject.asObservable();
   }
@@ -78,6 +86,20 @@ export class PlaylistService {
   addToPlaylist(playlistId: string, songId: string): Observable<PlaylistSongs> {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/normal/' + playlistId + '/songs/' + songId, null).pipe(
       map(dto => new PlaylistSongs(dto)),
+    );
+  }
+
+  likeSong(songId: string): Observable<PlaylistSongs> {
+    return this.httpClient.post<PlaylistSongsDto>('/api/playlists/like/songs/' + songId, null).pipe(
+      map(dto => new PlaylistSongs(dto)),
+      tap(likedSongs => this.likePlaylistSongsSubject.next(likedSongs)),
+    );
+  }
+
+  unlikeSong(songId: string): Observable<PlaylistSongs> {
+    return this.httpClient.delete<PlaylistSongsDto>('/api/playlists/like/songs/' + songId).pipe(
+      map(dto => new PlaylistSongs(dto)),
+      tap(likedSongs => this.likePlaylistSongsSubject.next(likedSongs)),
     );
   }
 }
