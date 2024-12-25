@@ -44,7 +44,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private translateService: TranslateService,
     private pageTitleService: PageTitleService,
     private playlistService: PlaylistService,
-    private notificationServce: NotificationService,
+    private notificationService: NotificationService,
   ) {
   }
 
@@ -87,7 +87,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
         }
       }
     }));
-    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(() => this.refreshLikeState()));
+    this.subscriptions.push(this.playlistService.observeLikePlaylist()
+      .subscribe(() => this.refreshLikeState()));
   }
 
   private refreshLikeState() {
@@ -198,7 +199,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.playlistService.unlikeSong(this.song!.id).subscribe({
         error: () => {
           this.isLikedSong = true;
-          this.notificationServce.error(
+          this.notificationService.error(
             this.translateService.instant('player.unlikeNotificationTitle'),
             this.translateService.instant('player.unlikeNotificationTextFailure')
           );
@@ -209,7 +210,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.playlistService.likeSong(this.song!.id).subscribe({
         error: () => {
           this.isLikedSong = false;
-          this.notificationServce.error(
+          this.notificationService.error(
             this.translateService.instant('player.likeNotificationTitle'),
             this.translateService.instant('player.likeNotificationTextFailure')
           );

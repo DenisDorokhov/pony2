@@ -60,7 +60,7 @@
       background-color: transparent;
       margin: 0;
       padding: 0;
-      width: 36px;
+      width: 30px;
     }
 
     button.menu:active {
@@ -76,6 +76,24 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  .title.like-shown {
+    padding-right: 70px;
+  }
+
+  .like-container {
+    position: absolute;
+    right: 52px;
+    height: 26px;
+
+    button {
+      border: none;
+      background-color: transparent;
+      margin: 0;
+      padding: 0;
+      color: #fcba03;
+    }
   }
 
   .artist {

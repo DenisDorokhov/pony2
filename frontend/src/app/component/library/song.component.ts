@@ -47,6 +47,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   isMouseOver = false;
   showMenu = false;
   topPlaylists: Playlist[] = [];
+  isLikedSong = false;
 
   get song(): Song {
     return this._song;
@@ -102,6 +103,12 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       }));
     this.subscriptions.push(this.playlistService.observePlaylists()
       .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists()));
+    this.subscriptions.push(this.playlistService.observeLikePlaylist()
+      .subscribe(() => this.refreshLikeState()));
+  }
+
+  private refreshLikeState() {
+    this.isLikedSong = !this.song || this.playlistService.isLikedSong(this.song.id);
   }
 
   ngAfterViewInit(): void {
@@ -257,5 +264,31 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
       ),
     });
+  }
+
+  onLikeClick() {
+    if (this.isLikedSong) {
+      this.isLikedSong = false;
+      this.playlistService.unlikeSong(this.song!.id).subscribe({
+        error: () => {
+          this.isLikedSong = true;
+          this.notificationService.error(
+            this.translateService.instant('library.song.unlikeNotificationTitle'),
+            this.translateService.instant('library.song.unlikeNotificationTextFailure')
+          );
+        }
+      });
+    } else {
+      this.isLikedSong = true;
+      this.playlistService.likeSong(this.song!.id).subscribe({
+        error: () => {
+          this.isLikedSong = false;
+          this.notificationService.error(
+            this.translateService.instant('library.song.likeNotificationTitle'),
+            this.translateService.instant('library.song.likeNotificationTextFailure')
+          );
+        }
+      });
+    }
   }
 }

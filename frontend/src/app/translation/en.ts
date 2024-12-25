@@ -56,6 +56,12 @@ export default {
       addToPlaylist: 'Add to "{{name}}"',
       addToPlaylistNotificationTitle: 'Playlists',
       addToPlaylistNotificationTextFailure: 'Could not add song to playlist!',
+      likedSongButtonTooltip: 'Delete song from favorites',
+      notLikedSongButtonTooltip: 'Add song to favorites',
+      likeNotificationTitle: 'Playlists',
+      likeNotificationTextFailure: 'Could not add song to favorites!',
+      unlikeNotificationTitle: 'Playlists',
+      unlikeNotificationTextFailure: 'Could not remove song from favorites!',
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {

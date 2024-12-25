@@ -18,11 +18,17 @@
        [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
        class="bi"></i>
   </div>
+  <div class="like-container" [hidden]="!isMouseOver && !isLikedSong">
+    <button [title]="isLikedSong ? ('library.song.likedSongButtonTooltip' | translate) : ('library.song.notLikedSongButtonTooltip' | translate)"
+            (click)="onLikeClick()">
+      <i class="bi" [class.bi-star-fill]="isLikedSong" [class.bi-star]="!isLikedSong"></i>
+    </button>
+  </div>
   <div class="duration">
     <span [hidden]="isMouseOver || showMenu">{{ song.durationInMinutes }}</span>
     <button #menuButton [hidden]="!isMouseOver && !showMenu" (click)="onMenuClick()" class="menu"><i class="bi bi-three-dots-vertical"></i></button>
   </div>
-  <div class="title">{{ song.name | ponyUnknownSong }}</div>
+  <div class="title" [class.like-shown]="isMouseOver || isLikedSong">{{ song.name | ponyUnknownSong }}</div>
   <div class="artist">{{ song.artistName }}</div>
 </div>
 
