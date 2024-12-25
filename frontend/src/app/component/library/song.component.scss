@@ -16,6 +16,9 @@
     background-position: center right !important;
     text-align: right;
     color: #909090;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 
     >.bi {
       color: #333333;
@@ -29,17 +32,40 @@
     span {
       margin-right: 4px;
     }
+
+    button.playback {
+      border: none;
+      background-color: transparent;
+      margin: 0;
+      padding: 0;
+      width: 12px;
+    }
   }
 
   .duration {
     position: absolute;
     right: 0;
-    width: 50px;
+    width: 54px;
     height: 26px;
     padding-left: 5px;
-    padding-right: 5px;
+    padding-right: 8px;
     color: #909090;
     text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+
+    button.menu {
+      border: none;
+      background-color: transparent;
+      margin: 0;
+      padding: 0;
+      width: 36px;
+    }
+
+    button.menu:active {
+      opacity: 90%;
+    }
   }
 
   .title {
@@ -88,26 +114,6 @@
       color: white;
     }
   }
-}
-
-button.playback {
-  border: none;
-  background-color: transparent;
-  margin: 0;
-  padding: 0;
-  width: 12px;
-}
-
-button.menu {
-  border: none;
-  background-color: transparent;
-  margin: 0;
-  padding: 0;
-  width: 28px;
-}
-
-button.menu:active {
-  opacity: 90%;
 }
 
 div.menu {
