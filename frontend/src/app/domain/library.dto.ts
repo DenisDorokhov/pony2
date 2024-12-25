@@ -216,3 +216,30 @@ export interface SearchResultDto {
   albumDetails: AlbumDetailsDto[];
   songDetails: SongDetailsDto[];
 }
+
+export interface PlaylistDto {
+  id: string;
+  creationDate: string;
+  updateDate: string | undefined;
+  name: string | undefined;
+  type: PlaylistDto.Type;
+}
+
+export namespace PlaylistDto {
+
+  export enum Type {
+    NORMAL = 'NORMAL',
+    LIKE = 'LIKE',
+  }
+}
+
+export interface PlaylistSongDto {
+  id: string;
+  creationDate: string;
+  song: SongDetailsDto;
+}
+
+export interface PlaylistSongsDto {
+  playlist: PlaylistDto;
+  songs: PlaylistSongDto[];
+}

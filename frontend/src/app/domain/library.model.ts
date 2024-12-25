@@ -1,4 +1,13 @@
-import {AlbumDto, AlbumSongsDto, ArtistDto, ArtistSongsDto, SearchResultDto, SongDto} from './library.dto';
+import {
+  AlbumDto,
+  AlbumSongsDto,
+  ArtistDto,
+  ArtistSongsDto,
+  PlaylistDto,
+  PlaylistSongDto, PlaylistSongsDto,
+  SearchResultDto,
+  SongDto
+} from './library.dto';
 
 export class Song {
 
@@ -199,5 +208,46 @@ export class SearchResult {
           new Artist(songDetails.albumDetails.artist)
         )
       ));
+  }
+}
+
+export class Playlist {
+
+  id: string;
+  creationDate: Date;
+  updateDate: Date | undefined;
+  name: string | undefined;
+  type: PlaylistDto.Type;
+
+  constructor(dto: PlaylistDto) {
+    this.id = dto.id;
+    this.creationDate = new Date(dto.creationDate);
+    this.updateDate = dto.updateDate ? new Date(dto.updateDate) : undefined;
+    this.name = dto.name;
+    this.type = dto.type;
+  }
+}
+
+export class PlaylistSong {
+
+  id: string;
+  creationDate: Date;
+  song: Song;
+
+  constructor(dto: PlaylistSongDto) {
+    this.id = dto.id;
+    this.creationDate = new Date(dto.creationDate);
+    this.song = new Song(dto.song.song, new Album(dto.song.albumDetails.album, new Artist(dto.song.albumDetails.artist)));
+  }
+}
+
+export class PlaylistSongs {
+
+  playlist: Playlist;
+  songs: PlaylistSong[];
+
+  constructor(dto: PlaylistSongsDto) {
+    this.playlist = new Playlist(dto.playlist);
+    this.songs = dto.songs.map(song => new PlaylistSong(song));
   }
 }

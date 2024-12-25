@@ -220,19 +220,44 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_2_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
             });
         });
+    }
+
+    private void checkArtistDto(ArtistDto dto, Artist artist) {
+        assertThat(dto.getId()).isEqualTo(artist.getId());
+        assertThat(dto.getCreationDate()).isEqualTo(artist.getCreationDate());
+        assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
+        assertThat(dto.getName()).isEqualTo(artist.getName());
+        assertThat(dto.getArtworkId()).isNull();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private void checkAlbumDto(AlbumDto dto, Album album) {
+        assertThat(dto.getId()).isEqualTo(album.getId());
+        assertThat(dto.getCreationDate()).isEqualTo(album.getCreationDate());
+        assertThat(dto.getUpdateDate()).isEqualTo(album.getUpdateDate());
+        assertThat(dto.getName()).isEqualTo(album.getName());
+        assertThat(dto.getYear()).isEqualTo(album.getYear());
+        assertThat(dto.getArtworkId()).isNull();
+        assertThat(dto.getArtistId()).isEqualTo(album.getArtist().getId());
     }
 
     private void checkSongDto(SongDto dto, Song song) {
@@ -342,17 +367,23 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_2_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
             });
         });
     }
@@ -430,17 +461,23 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_2_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
             });
         });
     }
@@ -512,17 +549,23 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isEqualTo(idSong1_2_1);
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_2_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
             });
         });
     }
@@ -649,12 +692,16 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
         });
     }
@@ -736,17 +783,23 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
             assertThat(playlistSongs.getSongs().get(2)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_2_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
             });
         });
     }
@@ -772,7 +825,9 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().getFirst()).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
         });
     }
@@ -801,7 +856,9 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(playlistSongs.getSongs().getFirst()).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
         });
     }

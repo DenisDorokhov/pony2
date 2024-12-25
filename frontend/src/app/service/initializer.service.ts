@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
-import {EMPTY} from 'rxjs';
+import {EMPTY, forkJoin} from 'rxjs';
 import {catchError, mergeMap, tap} from 'rxjs/operators';
 import {InstallationService} from "./installation.service";
 import {AuthenticationService} from "./authentication.service";
 import {PlaybackService} from "./playback.service";
+import {PlaylistService} from "./playlist.service";
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,7 @@ export class InitializerService {
     private installationService: InstallationService,
     private authenticationService: AuthenticationService,
     private playbackService: PlaybackService,
+    private playlistService: PlaylistService,
   ) {
   }
 
@@ -34,8 +36,11 @@ export class InitializerService {
           if (installationStatus.installed) {
             return this.authenticationService.authenticate()
               .pipe(
-                mergeMap(() => this.playbackService.restoreQueueState()),
-                catchError(() => EMPTY)
+                mergeMap(() => forkJoin({
+                  queueState: this.playbackService.restoreQueueState(),
+                  playlist: this.playlistService.initialize(),
+                })),
+                catchError(() => EMPTY),
               );
           } else {
             return EMPTY;
@@ -48,7 +53,7 @@ export class InitializerService {
           error: () => {
             (window as any).ponyBootstrapError = true;
           }
-        })
+        }),
       )
       .toPromise();
   }
