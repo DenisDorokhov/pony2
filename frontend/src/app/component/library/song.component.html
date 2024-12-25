@@ -4,6 +4,9 @@
      (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="onDoubleClick($event)"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
+    <span [hidden]="isMouseOver || lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.PAUSED">
+      {{ song.trackNumber }}
+    </span>
     <button class="playback" [hidden]="!isMouseOver" (click)="onPlaybackClick()">
       <i class="bi"
          [class.bi-play-fill]="lastPlaybackEvent?.song?.id != song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
@@ -14,9 +17,6 @@
        [class.bi-volume-up-fill]="lastPlaybackEvent?.state === PlaybackState.PLAYING"
        [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
        class="bi"></i>
-    <span [hidden]="isMouseOver || lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.PAUSED">
-      {{ song.trackNumber }}
-    </span>
   </div>
   <div class="duration">
     <span [hidden]="isMouseOver || showMenu">{{ song.durationInMinutes }}</span>

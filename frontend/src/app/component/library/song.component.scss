@@ -25,6 +25,10 @@
     >.bi-volume-off-fill {
       padding-right: 4px;
     }
+
+    span {
+      margin-right: 4px;
+    }
   }
 
   .duration {
@@ -35,6 +39,7 @@
     padding-left: 5px;
     padding-right: 5px;
     color: #909090;
+    text-align: right;
   }
 
   .title {
@@ -98,14 +103,14 @@ button.menu {
   background-color: transparent;
   margin: 0;
   padding: 0;
-  width: 30px;
+  width: 28px;
 }
 
 button.menu:active {
   opacity: 90%;
 }
 
-.menu {
+div.menu {
   position: absolute;
 
   .dropdown-menu button {
