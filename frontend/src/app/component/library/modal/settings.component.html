@@ -21,17 +21,17 @@
           <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
                  [class.is-invalid]="libraryFoldersContainer.hasErrors" [placeholder]="'settings.libraryFoldersPlaceholder' | translate">
           <span class="input-group-btn">
-                <button type="button" class="btn btn-light add"
-                        [disabled]="formLibraryFolders.controls.length >= 5"
-                        (click)="addLibraryFolder()">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-                <button type="button" class="btn btn-light remove"
-                        [disabled]="formLibraryFolders.controls.length <= 1"
-                        (click)="removeLibraryFolder(i)">
-                  <i class="bi bi-dash-lg"></i>
-                </button>
-              </span>
+            <button type="button" class="btn btn-light add"
+                    [disabled]="formLibraryFolders.controls.length >= 5"
+                    (click)="addLibraryFolder()">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+            <button type="button" class="btn btn-light remove"
+                    [disabled]="formLibraryFolders.controls.length <= 1"
+                    (click)="removeLibraryFolder(i)">
+              <i class="bi bi-dash-lg"></i>
+            </button>
+          </span>
         </div>
       </pony-error-container>
     </div>

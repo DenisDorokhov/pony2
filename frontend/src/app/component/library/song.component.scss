@@ -108,7 +108,15 @@ button.menu:active {
 .menu {
   position: absolute;
 
-  .dropdown-menu button i {
-    margin-right: 12px;
+  .dropdown-menu button {
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 250px;
+
+    i {
+      margin-right: 12px;
+    }
   }
 }

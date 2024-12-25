@@ -87,7 +87,6 @@ export default {
   playlistAddSong: {
     header: 'Select Playlist',
     saveButton: 'Add Song',
-    selectPlaylistLabel: 'Playlist:',
     createPlaylistButton: 'New Playlist',
     notificationTitle: 'Playlists',
     notificationTextSuccess: 'Song added to playlist.',

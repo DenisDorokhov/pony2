@@ -36,7 +36,9 @@ export class PlaylistService {
   getTopPlaylists(): Playlist[] {
     const lastPlaylists = [...this.playlistsSubject.value];
     return lastPlaylists
-      .sort((p1, p2) => p1.creationDate.getTime() > p2.creationDate.getTime() ? -1 : 1)
+      .sort((p1, p2) =>
+        (p1.updateDate ?? p1.creationDate).getTime() > (p2.updateDate ?? p2.creationDate).getTime() ? -1 : 1
+      )
       .slice(0, 3);
   }
 

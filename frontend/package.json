@@ -19,7 +19,7 @@
     "@angular/platform-browser": "18.1.0",
     "@angular/platform-browser-dynamic": "18.1.0",
     "@angular/router": "18.1.0",
-    "@ng-bootstrap/ng-bootstrap": "17.0.0",
+    "@ng-bootstrap/ng-bootstrap": "17.0.1",
     "@ngx-translate/core": "15.0.0",
     "@popperjs/core": "2.11.8",
     "@types/howler": "2.2.11",

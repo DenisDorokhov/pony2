@@ -7,7 +7,6 @@
 
   <form>
     <div class="mb-3">
-      <label for="playlist" class="form-label">{{ 'playlistAddSong.selectPlaylistLabel' | translate }}</label>
       <select id="playlist" class="form-select" (change)="onPlaylistChange($event)">
         @for (playlist of playlists; track playlist.id) {
           <option [value]="playlist">{{ playlist.name }}</option>
