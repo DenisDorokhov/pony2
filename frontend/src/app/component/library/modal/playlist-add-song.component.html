@@ -21,6 +21,7 @@
   <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING && savingState !== LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR && savingState !== LoadingState.ERROR"></pony-error-indicator>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-secondary" (click)="createPlaylist()">{{ 'playlistAddSong.createPlaylistButton' | translate }}</button>
   <button type="button" class="btn btn-primary"
           [disabled]="loadingState === LoadingState.LOADING || savingState === LoadingState.LOADING || playlists.length < 1"
           (click)="save()">{{ 'playlistAddSong.saveButton' | translate }}</button>

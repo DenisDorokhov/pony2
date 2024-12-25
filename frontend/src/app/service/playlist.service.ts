@@ -3,7 +3,8 @@ import {HttpClient} from "@angular/common/http";
 import {BehaviorSubject, forkJoin, Observable, Subscription} from "rxjs";
 import {Playlist, PlaylistSongs} from "../domain/library.model";
 import {PlaylistCreateCommandDto, PlaylistDto, PlaylistSongsDto, PlaylistUpdateCommandDto} from "../domain/library.dto";
-import {map, tap} from "rxjs/operators";
+import {catchError, map, tap} from "rxjs/operators";
+import {ErrorDto} from "../domain/common.dto";
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +35,9 @@ export class PlaylistService {
 
   getTopPlaylists(): Playlist[] {
     const lastPlaylists = [...this.playlistsSubject.value];
-    return lastPlaylists.sort((p1, p2) => p1.creationDate.getTime() > p2.creationDate.getTime() ? 1 : -1);
+    return lastPlaylists
+      .sort((p1, p2) => p1.creationDate.getTime() > p2.creationDate.getTime() ? -1 : 1)
+      .slice(0, 3);
   }
 
   observePlaylists(): Observable<Playlist[]> {
@@ -58,6 +61,7 @@ export class PlaylistService {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/normal', command).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(() => this.requestPlaylists().subscribe()),
+      catchError(ErrorDto.observableFromHttpErrorResponse)
     );
   }
 
@@ -65,6 +69,7 @@ export class PlaylistService {
     return this.httpClient.put<PlaylistSongsDto>('/api/playlists/normal', command).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(() => this.requestPlaylists().subscribe()),
+      catchError(ErrorDto.observableFromHttpErrorResponse)
     );
   }
 

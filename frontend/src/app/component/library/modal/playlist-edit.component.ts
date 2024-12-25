@@ -72,13 +72,13 @@ export class PlaylistEditComponent implements OnInit {
     }
     this.loadingState = LoadingState.LOADING;
     observable.subscribe({
-      next: user => {
+      next: playlist => {
         this.loadingState = LoadingState.LOADED;
-        this.activeModal.close(user);
+        this.activeModal.close(playlist);
       },
       error: error => {
-        this.loadingState = LoadingState.ERROR;
         this.error = error;
+        this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
       }
     });
   }

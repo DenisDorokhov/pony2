@@ -4,10 +4,11 @@ import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
 import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
 import {Component, Input, OnInit} from "@angular/core";
 import {LoadingState} from "../../../domain/common.model";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {PlaylistService} from "../../../service/playlist.service";
 import {Playlist, Song} from "../../../domain/library.model";
 import {NotificationService} from "../../../service/notification.service";
+import {PlaylistEditComponent} from "./playlist-edit.component";
 
 @Component({
   standalone: true,
@@ -33,10 +34,15 @@ export class PlaylistAddSongComponent implements OnInit {
     private readonly playlistService: PlaylistService,
     private readonly translateService: TranslateService,
     private readonly notificationService: NotificationService,
+    private readonly modal: NgbModal,
   ) {
   }
 
   ngOnInit(): void {
+    this.reload();
+  }
+
+  private reload() {
     this.loadingState = LoadingState.LOADING;
     this.playlistService.requestPlaylists().subscribe({
       next: playlists => {
@@ -45,7 +51,7 @@ export class PlaylistAddSongComponent implements OnInit {
         this.loadingState = LoadingState.LOADED;
       },
       error: () => this.loadingState = LoadingState.ERROR,
-    })
+    });
   }
 
   save() {
@@ -71,5 +77,20 @@ export class PlaylistAddSongComponent implements OnInit {
 
   onPlaylistChange(event: Event) {
     this.selectedPlaylist = (event.target as any).value;
+  }
+
+  createPlaylist() {
+    const modalRef = this.modal.open(PlaylistEditComponent);
+    const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
+    playlistEditComponent.songs = [this.song];
+    modalRef.closed.subscribe((playlist: Playlist | undefined) => {
+      if (playlist) {
+        this.notificationService.success(
+          this.translateService.instant('playlistAddSong.notificationTitle'),
+          this.translateService.instant('playlistAddSong.notificationTextSuccess'),
+        );
+        this.activeModal.close();
+      }
+    })
   }
 }

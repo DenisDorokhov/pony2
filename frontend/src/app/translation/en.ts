@@ -52,7 +52,7 @@ export default {
       playNext: 'Play next',
       addToQueue: 'Add to queue',
       createQueue: 'Create queue',
-      selectOrCreatePlaylist: 'Add to playlist...',
+      selectOrCreatePlaylist: 'Add to playlist',
       addToPlaylist: 'Add to "{{name}}"',
       addToPlaylistNotificationTitle: 'Playlists',
       addToPlaylistNotificationTextSuccess: 'Song added to playlist.',
@@ -87,7 +87,8 @@ export default {
   playlistAddSong: {
     header: 'Select Playlist',
     saveButton: 'Add Song',
-    selectPlaylistLabel: 'Select playlist:',
+    selectPlaylistLabel: 'Playlist:',
+    createPlaylistButton: 'New Playlist',
     notificationTitle: 'Playlists',
     notificationTextSuccess: 'Song added to playlist.',
     notificationTextFailure: 'Could not add song to playlist!',

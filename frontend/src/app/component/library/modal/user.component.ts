@@ -86,8 +86,8 @@ export class UserComponent implements OnInit {
         this.activeModal.close(user);
       },
       error: error => {
-        this.loadingState = LoadingState.ERROR;
         this.error = error;
+        this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
       }
     });
   }
