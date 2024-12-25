@@ -11,7 +11,7 @@
   .track-number {
     position: absolute;
     left: 0;
-    width: 35px !important;
+    width: 43px !important;
     height: 26px !important;
     background-position: center right !important;
     text-align: right;
@@ -20,23 +20,24 @@
     white-space: nowrap;
     overflow: hidden;
 
-    >.bi {
-      color: #333333;
-      margin-right: -4px;
-    }
-
-    >.bi-volume-off-fill {
-      padding-right: 4px;
-    }
-
     span {
-      margin-right: 4px;
+      margin-right: 2px;
+    }
+
+    .playback-indicator {
+      color: #333333;
+      margin: 0;
+      margin-right: 3px;
+
+      .bi-volume-up-fill {
+        margin-right: -4px;
+      }
     }
 
     button.playback {
       border: none;
       background-color: transparent;
-      margin: 0;
+      margin-right: 6px;
       padding: 0;
       width: 12px;
     }
@@ -60,11 +61,7 @@
       background-color: transparent;
       margin: 0;
       padding: 0;
-      width: 30px;
-    }
-
-    button.menu:active {
-      opacity: 90%;
+      width: 34px;
     }
   }
 
@@ -79,7 +76,7 @@
   }
 
   .title.like-shown {
-    padding-right: 70px;
+    padding-right: 72px;
   }
 
   .like-container {
@@ -126,12 +123,21 @@
   background-color: var(--blue) !important;
 
   .track-number, .title, .artist, .duration {
-    color: white;
+    color: white !important;
 
     .bi {
       color: white;
     }
   }
+}
+
+.song-container.track-10 {
+}
+
+.song-container.track-100 {
+}
+
+.song-container.duration-10 {
 }
 
 div.menu {
