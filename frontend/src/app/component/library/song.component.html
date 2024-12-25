@@ -2,9 +2,6 @@
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.genreName | ponyUnknownGenre }}] [{{ song.sizeMb }} MB] [{{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
      [class.selected]="selected"
      [class.withArtist]="showArtist"
-     [class.duration-10]="song.duration >= 600"
-     [class.track-10]="(song.trackNumber ?? 0) >= 10"
-     [class.track-100]="(song.trackNumber ?? 0) >= 100"
      (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="onDoubleClick($event)"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
