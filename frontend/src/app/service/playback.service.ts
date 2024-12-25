@@ -7,6 +7,7 @@ import {moveItemInArray} from "@angular/cdk/drag-drop";
 import {LibraryService} from "./library.service";
 import {AudioPlayer, PlaybackEvent, PlaybackState} from "./audio-player.service";
 import {BrowserNotificationService} from "./browser-notification.service";
+import {PlaybackHistoryService} from "./playback-history.service";
 
 export enum PlaybackMode {
   NORMAL = 'NORMAL',
@@ -46,9 +47,10 @@ export class PlaybackService {
   private queueShuffleSubscription: Subscription | undefined;
 
   constructor(
-    private authenticationService: AuthenticationService,
-    private libraryService: LibraryService,
-    private browserNotificationService: BrowserNotificationService,
+    private readonly authenticationService: AuthenticationService,
+    private readonly libraryService: LibraryService,
+    private readonly browserNotificationService: BrowserNotificationService,
+    private readonly playbackHistoryService: PlaybackHistoryService,
   ) {
     this._mode = window.localStorage.getItem(PlaybackService.MODE_LOCAL_STORAGE_KEY) as PlaybackMode || PlaybackMode.NORMAL;
     this.modeSubject = new BehaviorSubject(this._mode);
@@ -262,6 +264,7 @@ export class PlaybackService {
     this.currentSongSubject.next(song);
     if (play) {
       this.audioPlayer.play(song);
+      this.playbackHistoryService.addSongToHistory(song.id).subscribe();
       this.browserNotificationService.showSongNotification(song);
     } else {
       this.audioPlayer.load(song);
@@ -351,7 +354,9 @@ export class PlaybackService {
 
   play(index: number) {
     if (this._currentIndex === index) {
-      this.audioPlayer.play(this.currentSongSubject.value);
+      const song = this.currentSongSubject.value!;
+      this.audioPlayer.play(song);
+      this.playbackHistoryService.addSongToHistory(song.id).subscribe();
     } else {
       this.switchToIndex(index);
     }
@@ -361,8 +366,10 @@ export class PlaybackService {
     if (this.lastPlaybackEvent.state !== PlaybackState.STOPPED) {
       if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
         this.audioPlayer.pause();
-      } else if (this.lastPlaybackEvent.state === PlaybackState.ERROR) {
-        this.audioPlayer.play(this.lastPlaybackEvent.song);
+      } else if (this.lastPlaybackEvent.state === PlaybackState.ERROR && this.lastPlaybackEvent.song) {
+        const song = this.lastPlaybackEvent.song;
+        this.audioPlayer.play(song);
+        this.playbackHistoryService.addSongToHistory(song.id).subscribe();
       } else {
         this.audioPlayer.play();
       }
@@ -496,6 +503,7 @@ export class PlaybackService {
     if (song.id !== this.currentSongSubject.value?.id) {
       this.currentSongSubject.next(song);
       this.audioPlayer.play(song);
+      this.playbackHistoryService.addSongToHistory(song.id).subscribe();
       this.browserNotificationService.showSongNotification(song);
     }
   }

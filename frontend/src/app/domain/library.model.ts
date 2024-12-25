@@ -2,7 +2,7 @@ import {
   AlbumDto,
   AlbumSongsDto,
   ArtistDto,
-  ArtistSongsDto,
+  ArtistSongsDto, PlaybackHistorySongDto,
   PlaylistDto,
   PlaylistSongDto, PlaylistSongsDto,
   SearchResultDto,
@@ -249,5 +249,18 @@ export class PlaylistSongs {
   constructor(dto: PlaylistSongsDto) {
     this.playlist = new Playlist(dto.playlist);
     this.songs = dto.songs.map(song => new PlaylistSong(song));
+  }
+}
+
+export class PlaybackHistorySong {
+
+  id: string;
+  creationDate: Date;
+  song: Song;
+
+  constructor(dto: PlaybackHistorySongDto) {
+    this.id = dto.id;
+    this.creationDate = new Date(dto.creationDate);
+    this.song = new Song(dto.song.song, new Album(dto.song.albumDetails.album, new Artist(dto.song.albumDetails.artist)));
   }
 }

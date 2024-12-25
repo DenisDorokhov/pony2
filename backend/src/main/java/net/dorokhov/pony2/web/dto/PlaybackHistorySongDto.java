@@ -8,7 +8,7 @@ public class PlaybackHistorySongDto {
 
     private String id;
     private LocalDateTime creationDate;
-    private SongDto song;
+    private SongDetailsDto song;
 
     public String getId() {
         return id;
@@ -28,11 +28,11 @@ public class PlaybackHistorySongDto {
         return this;
     }
 
-    public SongDto getSong() {
+    public SongDetailsDto getSong() {
         return song;
     }
 
-    public PlaybackHistorySongDto setSong(SongDto song) {
+    public PlaybackHistorySongDto setSong(SongDetailsDto song) {
         this.song = song;
         return this;
     }
@@ -41,6 +41,6 @@ public class PlaybackHistorySongDto {
         return new PlaybackHistorySongDto()
                 .setId(playlistSong.getId())
                 .setCreationDate(playlistSong.getCreationDate())
-                .setSong(SongDto.of(playlistSong.getSong(), isAdmin));
+                .setSong(SongDetailsDto.of(playlistSong.getSong(), isAdmin));
     }
 }

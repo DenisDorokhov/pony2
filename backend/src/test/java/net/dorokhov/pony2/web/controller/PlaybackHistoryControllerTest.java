@@ -6,9 +6,7 @@ import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.core.library.repository.*;
-import net.dorokhov.pony2.web.dto.AuthenticationDto;
-import net.dorokhov.pony2.web.dto.PlaybackHistorySongDto;
-import net.dorokhov.pony2.web.dto.SongDto;
+import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PlaylistHistoryControllerTest extends InstallingIntegrationTest {
+public class PlaybackHistoryControllerTest extends InstallingIntegrationTest {
 
     @Autowired
     private ApiTemplate apiTemplate;
@@ -162,19 +160,44 @@ public class PlaylistHistoryControllerTest extends InstallingIntegrationTest {
             assertThat(history[0]).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_2_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
             });
             assertThat(history[1]).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_2);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
             assertThat(history[2]).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
-                checkSongDto(song.getSong(), song1_1_1);
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
         });
+    }
+
+    private void checkArtistDto(ArtistDto dto, Artist artist) {
+        assertThat(dto.getId()).isEqualTo(artist.getId());
+        assertThat(dto.getCreationDate()).isEqualTo(artist.getCreationDate());
+        assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
+        assertThat(dto.getName()).isEqualTo(artist.getName());
+        assertThat(dto.getArtworkId()).isNull();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private void checkAlbumDto(AlbumDto dto, Album album) {
+        assertThat(dto.getId()).isEqualTo(album.getId());
+        assertThat(dto.getCreationDate()).isEqualTo(album.getCreationDate());
+        assertThat(dto.getUpdateDate()).isEqualTo(album.getUpdateDate());
+        assertThat(dto.getName()).isEqualTo(album.getName());
+        assertThat(dto.getYear()).isEqualTo(album.getYear());
+        assertThat(dto.getArtworkId()).isNull();
+        assertThat(dto.getArtistId()).isEqualTo(album.getArtist().getId());
     }
 
     private void checkSongDto(SongDto dto, Song song) {
@@ -204,10 +227,12 @@ public class PlaylistHistoryControllerTest extends InstallingIntegrationTest {
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaybackHistorySongDto.class, song1_1_1.getId());
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(playbackHistorySong -> {
-            assertThat(playbackHistorySong.getId()).isNotNull();
-            assertThat(playbackHistorySong.getCreationDate()).isNotNull();
-            checkSongDto(playbackHistorySong.getSong(), song1_1_1);
+        assertThat(response.getBody()).satisfies(song -> {
+            assertThat(song.getId()).isNotNull();
+            assertThat(song.getCreationDate()).isNotNull();
+            checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+            checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+            checkSongDto(song.getSong().getSong(), song1_1_1);
         });
     }
 

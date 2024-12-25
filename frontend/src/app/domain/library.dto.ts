@@ -263,3 +263,9 @@ export namespace PlaylistUpdateCommandDto {
     songId: string;
   }
 }
+
+export interface PlaybackHistorySongDto {
+  id: string;
+  creationDate: string;
+  song: SongDetailsDto;
+}
