@@ -25,6 +25,7 @@ import {PlaylistService} from "../../service/playlist.service";
 import {NotificationService} from "../../service/notification.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {PlaylistEditComponent} from "./modal/playlist-edit.component";
+import {PlaylistAddSongComponent} from "./modal/playlist-add-song.component";
 
 @Component({
   standalone: true,
@@ -238,7 +239,9 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   selectOrCreatePlaylist() {
     this.hideMenu();
     if (this.topPlaylists.length > 0) {
-      // TODO: update playlist
+      const modalRef = this.modal.open(PlaylistAddSongComponent);
+      const playlistEditComponent: PlaylistAddSongComponent = modalRef.componentInstance;
+      playlistEditComponent.song = this.song;
     } else {
       const modalRef = this.modal.open(PlaylistEditComponent);
       const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;

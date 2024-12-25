@@ -1,0 +1,27 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'playlistAddSong.header' | translate }}</h4>
+</div>
+<div class="modal-body">
+
+  <div class="blocking-overlay" [hidden]="loadingState === LoadingState.LOADED && (savingState === LoadingState.EMPTY || savingState === LoadingState.ERROR)"></div>
+
+  <form>
+    <div class="mb-3">
+      <label for="playlist" class="form-label">{{ 'playlistAddSong.selectPlaylistLabel' | translate }}</label>
+      <select id="playlist" class="form-select" (change)="onPlaylistChange($event)">
+        @for (playlist of playlists; track playlist.id) {
+          <option [value]="playlist">{{ playlist.name }}</option>
+        }
+      </select>
+    </div>
+  </form>
+
+</div>
+<div class="modal-footer">
+  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING && savingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR && savingState !== LoadingState.ERROR"></pony-error-indicator>
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-primary"
+          [disabled]="loadingState === LoadingState.LOADING || savingState === LoadingState.LOADING || playlists.length < 1"
+          (click)="save()">{{ 'playlistAddSong.saveButton' | translate }}</button>
+</div>

@@ -56,7 +56,7 @@ export default {
       addToPlaylist: 'Add to "{{name}}"',
       addToPlaylistNotificationTitle: 'Playlists',
       addToPlaylistNotificationTextSuccess: 'Song added to playlist.',
-      addToPlaylistNotificationTextFailure: 'Could not add song to playlist.',
+      addToPlaylistNotificationTextFailure: 'Could not add song to playlist!',
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {
@@ -83,6 +83,14 @@ export default {
     editHeader: 'Edit Playlist',
     createHeader: 'Create Playlist',
     nameLabel: 'Title:'
+  },
+  playlistAddSong: {
+    header: 'Select Playlist',
+    saveButton: 'Add Song',
+    selectPlaylistLabel: 'Select playlist:',
+    notificationTitle: 'Playlists',
+    notificationTextSuccess: 'Song added to playlist.',
+    notificationTextFailure: 'Could not add song to playlist!',
   },
   scanning: {
     header: 'Scanning',
