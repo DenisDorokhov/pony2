@@ -1,12 +1,12 @@
 package net.dorokhov.pony2.web.dto;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import net.dorokhov.pony2.api.library.domain.PlaylistUpdateCommand;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PlaylistUpdateCommandDto {
@@ -49,9 +49,8 @@ public class PlaylistUpdateCommandDto {
     @Size(max = 255)
     private String name;
 
-    @NotNull
     @Valid
-    private List<SongId> songIds;
+    private List<SongId> overriddenSongIds;
 
     public String getId() {
         return id;
@@ -71,12 +70,13 @@ public class PlaylistUpdateCommandDto {
         return this;
     }
 
-    public List<SongId> getSongIds() {
-        return songIds;
+    @Nullable
+    public List<SongId> getOverriddenSongIds() {
+        return overriddenSongIds;
     }
 
-    public PlaylistUpdateCommandDto setSongIds(List<SongId> songIds) {
-        this.songIds = songIds;
+    public PlaylistUpdateCommandDto setOverriddenSongIds(List<SongId> overriddenSongIds) {
+        this.overriddenSongIds = overriddenSongIds;
         return this;
     }
 
@@ -84,8 +84,8 @@ public class PlaylistUpdateCommandDto {
         return new PlaylistUpdateCommand()
                 .setId(id)
                 .setName(name)
-                .setSongIds(songIds != null ? songIds.stream()
+                .setOverriddenSongIds(overriddenSongIds != null ? overriddenSongIds.stream()
                         .map(SongId::convert)
-                        .toList() : new ArrayList<>());
+                        .toList() : null);
     }
 }

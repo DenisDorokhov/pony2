@@ -1,0 +1,20 @@
+.modal-body {
+  padding-bottom: 0;
+}
+
+.blocking-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+label {
+  font-weight: bold;
+}
+
+pony-loading-indicator, pony-error-indicator {
+  position: absolute;
+  left: 10px;
+}

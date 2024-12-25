@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.api.library.domain;
 
-import java.util.ArrayList;
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 public class PlaylistUpdateCommand {
@@ -31,7 +32,7 @@ public class PlaylistUpdateCommand {
 
     private String id;
     private String name;
-    private List<SongId> songIds;
+    private List<SongId> overriddenSongIds;
 
     public String getId() {
         return id;
@@ -42,6 +43,7 @@ public class PlaylistUpdateCommand {
         return this;
     }
 
+    @Nullable
     public String getName() {
         return name;
     }
@@ -51,15 +53,13 @@ public class PlaylistUpdateCommand {
         return this;
     }
 
-    public List<SongId> getSongIds() {
-        if (songIds == null) {
-            songIds = new ArrayList<>();
-        }
-        return songIds;
+    @Nullable
+    public List<SongId> getOverriddenSongIds() {
+        return overriddenSongIds;
     }
 
-    public PlaylistUpdateCommand setSongIds(List<SongId> songIds) {
-        this.songIds = songIds;
+    public PlaylistUpdateCommand setOverriddenSongIds(List<SongId> overriddenSongIds) {
+        this.overriddenSongIds = overriddenSongIds;
         return this;
     }
 }

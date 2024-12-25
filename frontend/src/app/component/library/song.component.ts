@@ -11,9 +11,9 @@ import {
   ViewChild
 } from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
-import {Song} from "../../domain/library.model";
+import {Playlist, Song} from "../../domain/library.model";
 import {PlaybackService} from "../../service/playback.service";
-import {TranslateModule} from "@ngx-translate/core";
+import {TranslateModule, TranslateService} from "@ngx-translate/core";
 import {LibraryService} from "../../service/library.service";
 import {ScrollingUtils} from "../../utils/scrolling.utils";
 import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
@@ -21,6 +21,10 @@ import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
 import {resolveAppViewContainerRef} from "../../utils/view.utils";
 import {PlaybackEvent, PlaybackState} from "../../service/audio-player.service";
 import {UnknownGenrePipe} from "../../pipe/unknown-genre.pipe";
+import {PlaylistService} from "../../service/playlist.service";
+import {NotificationService} from "../../service/notification.service";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {PlaylistEditComponent} from "./modal/playlist-edit.component";
 
 @Component({
   standalone: true,
@@ -41,6 +45,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   isMouseOver = false;
   showMenu = false;
+  topPlaylists: Playlist[] = [];
 
   get song(): Song {
     return this._song;
@@ -68,9 +73,13 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private libraryService: LibraryService,
-    private playbackService: PlaybackService,
-    private applicationRef: ApplicationRef,
+    private readonly libraryService: LibraryService,
+    private readonly playbackService: PlaybackService,
+    private readonly applicationRef: ApplicationRef,
+    private readonly playlistService: PlaylistService,
+    private readonly notificationService: NotificationService,
+    private readonly translateService: TranslateService,
+    private readonly modal: NgbModal,
   ) {
   }
 
@@ -90,6 +99,8 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
           this.lastPlaybackEvent = undefined;
         }
       }));
+    this.subscriptions.push(this.playlistService.observePlaylists()
+      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists()));
   }
 
   ngAfterViewInit(): void {
@@ -222,5 +233,30 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.libraryService.requestSongPlayback(this.song);
     }
+  }
+
+  selectOrCreatePlaylist() {
+    this.hideMenu();
+    if (this.topPlaylists.length > 0) {
+      // TODO: update playlist
+    } else {
+      const modalRef = this.modal.open(PlaylistEditComponent);
+      const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
+      playlistEditComponent.songs = [this.song];
+    }
+  }
+
+  addToPlaylist(playlist: Playlist) {
+    this.hideMenu();
+    this.playlistService.addToPlaylist(playlist.id, this.song.id).subscribe({
+      next: () => this.notificationService.success(
+        this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
+        this.translateService.instant('library.song.addToPlaylistNotificationTextSuccess'),
+      ),
+      error: () => this.notificationService.error(
+        this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
+        this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
+      ),
+    });
   }
 }

@@ -51,7 +51,12 @@ export default {
       unknownLabel: 'Unknown Song',
       playNext: 'Play next',
       addToQueue: 'Add to queue',
-      createQueue: 'Create queue'
+      createQueue: 'Create queue',
+      selectOrCreatePlaylist: 'Add to playlist...',
+      addToPlaylist: 'Add to "{{name}}"',
+      addToPlaylistNotificationTitle: 'Playlists',
+      addToPlaylistNotificationTextSuccess: 'Song added to playlist.',
+      addToPlaylistNotificationTextFailure: 'Could not add song to playlist.',
     },
     noMusicLabel: 'Your library is empty :-(',
     scanStatistics: {
@@ -73,6 +78,11 @@ export default {
     removeSongButton: 'Remove from queue',
     scrollToCurrentSongButton: 'Show current song',
     sizeLabel: '{{songCount}} songs ({{duration}})'
+  },
+  playlistEdit: {
+    editHeader: 'Edit Playlist',
+    createHeader: 'Create Playlist',
+    nameLabel: 'Title:'
   },
   scanning: {
     header: 'Scanning',

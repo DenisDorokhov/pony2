@@ -521,7 +521,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId(savedPlaylist.getId())
                 .setName("playlist2")
-                .setSongIds(List.of(
+                .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
                         new PlaylistUpdateCommandDto.SongId()
@@ -571,6 +571,52 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldUpdateNormalPlaylistWithoutOverridingSongs() {
+
+        Playlist savedPlaylist = new Playlist()
+                .setName("playlist1")
+                .setType(Playlist.Type.NORMAL)
+                .setUser(user);
+        playlistRepository.save(savedPlaylist
+                .setSongs(List.of(
+                        new PlaylistSong()
+                                .setPlaylist(savedPlaylist)
+                                .setSort(0)
+                                .setSong(song1_2_1)
+                )));
+
+        String idSong1_2_1 = savedPlaylist.getSongs().getFirst().getId();
+
+        PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
+                .setId(savedPlaylist.getId())
+                .setName("playlist2");
+
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/normal", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(playlistSongs -> {
+            assertThat(playlistSongs.getPlaylist()).satisfies(playlist -> {
+                assertThat(playlist.getId()).isNotNull();
+                assertThat(playlistRepository.existsById(playlist.getId())).isTrue();
+                assertThat(playlist.getCreationDate()).isNotNull();
+                assertThat(playlist.getUpdateDate()).isNotNull();
+                assertThat(playlist.getName()).isEqualTo("playlist2");
+                assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
+            });
+            assertThat(playlistSongs.getSongs()).hasSize(1);
+            assertThat(playlistSongs.getSongs().getFirst()).satisfies(song -> {
+                assertThat(song.getId()).isEqualTo(idSong1_2_1);
+                assertThat(song.getCreationDate()).isNotNull();
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                checkSongDto(song.getSong().getSong(), song1_2_1);
+            });
+        });
+    }
+
+    @Test
     public void shouldValidatePlaylistUpdateCommand() {
 
         Playlist savedPlaylist = new Playlist()
@@ -585,7 +631,10 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto();
+        PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
+                .setOverriddenSongIds(List.of(
+                        new PlaylistUpdateCommandDto.SongId()
+                ));
 
         ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/playlists/normal", HttpMethod.PUT,
@@ -597,7 +646,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(3);
             assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("id", "name", "songIds");
+                    .containsExactlyInAnyOrder("id", "name", "overriddenSongIds[0].songId");
         });
     }
 
@@ -625,7 +674,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId(savedPlaylist.getId())
                 .setName("playlist2")
-                .setSongIds(List.of(
+                .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
                         new PlaylistUpdateCommandDto.SongId()
@@ -645,7 +694,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId("foobar")
                 .setName("playlist2")
-                .setSongIds(List.of(
+                .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
                         new PlaylistUpdateCommandDto.SongId()
@@ -747,7 +796,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLikePlaylist() {
 
-        Playlist storedPlaylist = playlistRepository.findByUserIdAndType(user.getId(), Playlist.Type.LIKE).stream()
+        Playlist storedPlaylist = playlistRepository.findByUserIdAndTypeOrderByName(user.getId(), Playlist.Type.LIKE).stream()
                 .findFirst()
                 .orElseThrow();
         playlistRepository.save(storedPlaylist

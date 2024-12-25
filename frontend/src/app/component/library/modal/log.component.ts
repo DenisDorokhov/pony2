@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {NgbActiveModal, NgbInputDatepicker} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {TranslateModule} from "@ngx-translate/core";
 import {LogService} from "../../../service/log.service";
 import {LoadingState} from "../../../domain/common.model";
@@ -33,7 +33,7 @@ class LogWithException implements LogMessageDto {
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, NgbInputDatepicker, FormsModule, ReactiveFormsModule],
+  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, FormsModule, ReactiveFormsModule],
   selector: 'pony-log',
   templateUrl: './log.component.html',
   styleUrls: ['./log.component.scss']

@@ -11,6 +11,6 @@ import java.util.Optional;
 public interface PlaylistRepository extends JpaRepository<Playlist, String> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Playlist> findLockedById(String id);
-    List<Playlist> findByUserIdAndType(String userId, Playlist.Type type);
+    List<Playlist> findByUserIdAndTypeOrderByName(String userId, Playlist.Type type);
     void deleteByUserId(String userId);
 }

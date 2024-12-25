@@ -1,0 +1,39 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ playlist ? ('playlistEdit.editHeader' | translate) : ('playlistEdit.createHeader' | translate) }}</h4>
+</div>
+<div class="modal-body">
+
+  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+
+    <input type="hidden" formControlName="id">
+
+    <div class="mb-3" [hidden]="!playlist?.creationDate">
+      <label class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
+      <div>{{ playlist?.creationDate | date:('shared.dateTimeFormat' | translate) }}</div>
+    </div>
+
+    <div class="mb-3" [hidden]="!playlist?.updateDate">
+      <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
+      <div>{{ playlist?.updateDate | date:('shared.dateTimeFormat' | translate) }}</div>
+    </div>
+
+    <div class="mb-3">
+      <pony-error-container #nameContainer class="form-group" [error]="error" [field]="'name'">
+        <label for="name" class="form-label">{{ 'playlistEdit.nameLabel' | translate }}</label>
+        <input id="name" formControlName="name" type="text" class="form-control"
+               [class.is-invalid]="nameContainer.hasErrors">
+      </pony-error-container>
+    </div>
+
+    <input type="submit" hidden />
+
+  </form>
+</div>
+<div class="modal-footer">
+  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
+</div>

@@ -37,7 +37,7 @@ public class PlaylistServiceImpl implements PlaylistService {
     @Transactional(readOnly = true)
     @Override
     public List<Playlist> getByUserIdAndType(String userId, Playlist.Type type) {
-        return playlistRepository.findByUserIdAndType(userId, type);
+        return playlistRepository.findByUserIdAndTypeOrderByName(userId, type);
     }
 
     @Transactional(readOnly = true)
@@ -98,25 +98,29 @@ public class PlaylistServiceImpl implements PlaylistService {
                 .setName(command.getName())
                 .setType(storedPlaylist.getType())
                 .setUser(storedPlaylist.getUser());
-        playlist.setSongs(command.getSongIds().stream()
-                .flatMap(songId -> libraryService.getSongById(songId.getSongId())
-                        .map(song -> {
-                            PlaylistSong playlistSong = null;
-                            if (songId.getId() != null) {
-                                playlistSong = storedPlaylist.getSongs().stream()
-                                        .filter(next -> next.getId().equals(songId.getId()))
-                                        .findFirst()
-                                        .orElse(null);
-                            }
-                            return new PlaylistSong()
-                                    .setId(playlistSong != null ? playlistSong.getId() : null)
-                                    .setCreationDate(playlistSong != null ? playlistSong.getCreationDate() : null)
-                                    .setPlaylist(playlist)
-                                    .setSong(song);
-                        })
-                        .stream()
-                )
-                .toList());
+        if (command.getOverriddenSongIds() == null) {
+            playlist.setSongs(storedPlaylist.getSongs());
+        } else {
+            playlist.setSongs(command.getOverriddenSongIds().stream()
+                    .flatMap(songId -> libraryService.getSongById(songId.getSongId())
+                            .map(song -> {
+                                PlaylistSong playlistSong = null;
+                                if (songId.getId() != null) {
+                                    playlistSong = storedPlaylist.getSongs().stream()
+                                            .filter(next -> next.getId().equals(songId.getId()))
+                                            .findFirst()
+                                            .orElse(null);
+                                }
+                                return new PlaylistSong()
+                                        .setId(playlistSong != null ? playlistSong.getId() : null)
+                                        .setCreationDate(playlistSong != null ? playlistSong.getCreationDate() : null)
+                                        .setPlaylist(playlist)
+                                        .setSong(song);
+                            })
+                            .stream()
+                    )
+                    .toList());
+        }
         return normalizeAndSavePlaylist(playlist);
     }
 
