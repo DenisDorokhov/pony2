@@ -87,8 +87,11 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.subscriptions.push(this.libraryService.observeSelectedSong()
-      .subscribe(song => {
-        this.selected = song != null && song.id === this.song.id;
+      .subscribe(songSelection => {
+        this.selected = songSelection != null && songSelection.song.id === this.song.id;
+        if (this.selected && songSelection?.play) {
+          this.libraryService.requestSongPlayback(this.song);
+        }
         if (this.selected && this.containerElement) {
           this.containerElement.nativeElement.focus();
         }

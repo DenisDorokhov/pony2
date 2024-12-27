@@ -100,6 +100,16 @@ export class Song {
     }
     return 0;
   }
+
+  static equals(song1: Song | undefined, song2: Song | undefined): boolean {
+    if (song1 === song2) {
+      return true;
+    }
+    if (!song1 || !song2) {
+      return false;
+    }
+    return song1.id === song2.id;
+  }
 }
 
 export class Album {

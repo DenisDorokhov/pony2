@@ -12,6 +12,11 @@ export enum LibraryState {
   EMPTY,
 }
 
+export interface SongSelection {
+  song: Song;
+  play: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -22,7 +27,7 @@ export class LibraryService {
   private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
 
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
-  private selectedSongSubject = new BehaviorSubject<Song | undefined>(undefined);
+  private selectedSongSubject = new BehaviorSubject<SongSelection | undefined>(undefined);
 
   private scrollToArtistRequestSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private scrollToAlbumRequestSubject = new BehaviorSubject<Album | undefined>(undefined);
@@ -137,24 +142,18 @@ export class LibraryService {
   }
 
   get selectedSong(): Song | undefined {
-    return this.selectedSongSubject.value;
+    return this.selectedSongSubject.value?.song;
   }
 
-  observeSelectedSong(): Observable<Song | undefined> {
+  observeSelectedSong(): Observable<SongSelection | undefined> {
     return this.selectedSongSubject.asObservable()
-      .pipe(distinctUntilChanged((song1, song2) => {
-        if (song1 === song2) {
-          return true;
-        }
-        if (!song1 || !song2) {
-          return false;
-        }
-        return song1.id === song2.id;
-      }));
+      .pipe(distinctUntilChanged((songSelection1, songSelection2) =>
+        Song.equals(songSelection1?.song, songSelection2?.song) && songSelection1?.play === songSelection2?.play
+      ));
   }
 
-  selectSong(song: Song) {
-    this.selectedSongSubject.next(song);
+  selectSong(song: Song, play = false) {
+    this.selectedSongSubject.next({ song, play });
   }
 
   deselectSong() {

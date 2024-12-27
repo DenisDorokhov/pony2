@@ -1,5 +1,5 @@
 <div class="columns-container"
-     title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} || {{ song.genreName | ponyUnknownGenre }} || {{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s{{ song.path ? '\n' + song.path : '' }}"
+     title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.genreName | ponyUnknownGenre }}] [{{ song.sizeMb }} MB] [{{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
      [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number" *ngIf="showIndex">
     <div>
