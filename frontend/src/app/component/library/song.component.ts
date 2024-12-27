@@ -86,7 +86,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.lastPlaybackEvent = this.playbackService.lastPlaybackEvent;
     this.subscriptions.push(this.libraryService.observeSelectedSong()
       .subscribe(songSelection => {
         this.selected = songSelection != null && songSelection.song.id === this.song.id;
@@ -94,7 +93,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
           if (songSelection?.play) {
             if (this.song.id !== this.playbackService.currentSong?.id) {
               this.libraryService.requestSongPlayback(this.song);
-            } else if (this.lastPlaybackEvent?.state !== PlaybackState.PLAYING) {
+            } else if (this.playbackService.currentPlaybackState !== PlaybackState.PLAYING) {
               this.playbackService.playOrPause();
             }
           }

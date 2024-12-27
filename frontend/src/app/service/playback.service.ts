@@ -102,6 +102,10 @@ export class PlaybackService {
     return this._currentIndex > -1 ? this._queue[this._currentIndex] : undefined;
   }
 
+  get currentPlaybackState(): PlaybackState | undefined {
+    return this.lastPlaybackEvent?.state;
+  }
+
   get mode(): PlaybackMode {
     return this._mode;
   }
