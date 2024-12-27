@@ -11,6 +11,7 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
 import {LargeSongComponent} from "./common/large-song.component";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
 import {LibraryService} from "../../../service/library.service";
+import {PlaybackMode, PlaybackService} from "../../../service/playback.service";
 
 @Component({
   standalone: true,
@@ -45,6 +46,7 @@ export class HistoryComponent implements OnInit {
     public readonly activeModal: NgbActiveModal,
     private readonly playbackHistoryService: PlaybackHistoryService,
     private readonly libraryService: LibraryService,
+    private readonly playbackService: PlaybackService,
   ) {
   }
 
@@ -69,6 +71,8 @@ export class HistoryComponent implements OnInit {
       checkElement = (checkElement as Node).parentNode;
     } while (!isButtonClick && checkElement);
     if (!isButtonClick) {
+      this.playbackService.mode = PlaybackMode.RADIO;
+      this.playbackService.switchQueue([song], 0);
       this.goToSong(song);
     }
   }
