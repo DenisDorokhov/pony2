@@ -57,6 +57,7 @@ export default {
       selectOrCreatePlaylist: 'Add to playlist',
       addToPlaylist: 'Add to "{{name}}"',
       addToPlaylistNotificationTitle: 'Playlists',
+      addToPlaylistNotificationTextSuccess: 'Song added to playlist.',
       addToPlaylistNotificationTextFailure: 'Could not add song to playlist!',
       likedSongButtonTooltip: 'Delete song from favorites',
       notLikedSongButtonTooltip: 'Add song to favorites',
