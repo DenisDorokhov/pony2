@@ -27,8 +27,12 @@ cdk-virtual-scroll-viewport {
     color: #212529;
   }
 
-  .bi-volume-off-fill {
-    padding-right: 8px;
+  .playback-indicator.bi-volume-off-fill {
+      margin-left: -1px;
+  }
+
+  .playback-indicator.bi-volume-up-fill {
+      margin-left: 7px;
   }
 
   div {

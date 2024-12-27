@@ -4,10 +4,11 @@
      [class.withArtist]="showArtist"
      [class.duration-10]="song.duration >= 600"
      [class.track-10]="(song.trackNumber ?? 0) >= 10"
+     [class.track-100]="(song.trackNumber ?? 0) >= 100"
      (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="onDoubleClick($event)"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
-    <span [hidden]="isMouseOver || lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.PAUSED">
+    <span class="value" [hidden]="isMouseOver || lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.PAUSED">
       {{ song.trackNumber }}
     </span>
     <button class="playback" [hidden]="!isMouseOver" (click)="onPlaybackClick()">

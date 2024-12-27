@@ -23,16 +23,16 @@
          (mousemove)="onMouseMove(i)" (mouseleave)="onMouseLeave(i)">
       <div class="track-number">
         <div>
-          <button class="playback" *ngIf="mouseOverIndex === i" (click)="onPlaybackClick(i)">
+          <button class="playback" [hidden]="mouseOverIndex !== i" (click)="onPlaybackClick(i)">
             <i class="bi"
                [class.bi-play-fill]="lastPlaybackEvent?.song?.id != song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
                [class.bi-pause-fill]="lastPlaybackEvent?.song?.id == song.id && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
             ></i>
           </button>
-          <i *ngIf="mouseOverIndex !== i && currentSongIndex === i"
+          <i [hidden]="mouseOverIndex === i || currentSongIndex !== i"
              [class.bi-volume-up-fill]="lastPlaybackEvent?.state === PlaybackState.PLAYING"
              [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
-             class="bi"></i>
+             class="bi playback-indicator"></i>
           {{
             mouseOverIndex !== i && (
               currentSongIndex !== i || (
