@@ -12,11 +12,15 @@ import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
+
+import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 @Service
 public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
@@ -40,12 +44,14 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
         striped = Striped.lazyWeakLock(10);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public PlaybackHistoryStatistics getStatistics(String userId) {
         return new PlaybackHistoryStatistics()
                 .setTotalCount(playbackHistorySongRepository.countByUserId(userId));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<PlaybackHistorySong> getHistory(String userId) {
         return playbackHistorySongRepository.findByUserId(userId, PageRequest.of(0, MAX_HISTORY_ENTRIES,
@@ -53,6 +59,7 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
                 .getContent();
     }
 
+    @Transactional
     @Override
     public PlaybackHistorySong addSongToHistory(String userId, String songId) throws SongNotFoundException {
         Song song = libraryService.getSongById(songId)
@@ -71,7 +78,12 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
                             .setUser(userService.getById(userId)
                                     .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found.")))));
                 } finally {
-                    lock.unlock();
+                    registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCompletion(int status) {
+                            lock.unlock();
+                        }
+                    });
                 }
             } else {
                 throw new IllegalStateException("Could not acquire lock to add song to history.");
