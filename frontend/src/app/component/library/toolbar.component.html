@@ -28,9 +28,16 @@
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.RADIO)"><i class="bi bi-broadcast-pin"></i>{{ 'library.toolbar.radioModeButton' | translate }}</button>
     </ul>
   </div>
-  <button type="button" class="btn btn-sm btn-light queue" title="{{ 'library.toolbar.queueButton' | translate }}" (click)="openQueue()">
-    <i class="bi bi-list-task"></i>
-  </button>
+  <div ngbDropdown class="btn-group">
+    <button ngbDropdownToggle type="button" class="btn btn-sm btn-light queue" data-toggle="dropdown">
+      <i class="bi bi-list-task"></i>
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button ngbDropdownItem (click)="openQueue()">{{ 'library.toolbar.queueButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openPlaylists()">{{ 'library.toolbar.playlistsButton' | translate }}</button>
+    </ul>
+  </div>
   <div ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
       <i class="bi bi-person-fill"></i>

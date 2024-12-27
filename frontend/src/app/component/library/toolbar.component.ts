@@ -112,4 +112,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   setPlaybackMode(mode: PlaybackMode) {
     this.playbackService.mode = mode;
   }
+
+  openPlaylists() {
+    // TODO: implement
+  }
 }
