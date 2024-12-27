@@ -150,33 +150,37 @@ public class PlaybackHistoryControllerTest extends InstallingIntegrationTest {
                 .setSong(song1_2_1)
                 .setUser(user));
 
-        ResponseEntity<PlaybackHistorySongDto[]> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<PlaybackHistoryDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/history", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaybackHistorySongDto[].class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaybackHistoryDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(history -> {
-            assertThat(history).hasSize(3);
-            assertThat(history[0]).satisfies(song -> {
-                assertThat(song.getId()).isNotNull();
-                assertThat(song.getCreationDate()).isNotNull();
-                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
-                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
-                checkSongDto(song.getSong().getSong(), song1_2_1);
-            });
-            assertThat(history[1]).satisfies(song -> {
-                assertThat(song.getId()).isNotNull();
-                assertThat(song.getCreationDate()).isNotNull();
-                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
-                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
-                checkSongDto(song.getSong().getSong(), song1_1_2);
-            });
-            assertThat(history[2]).satisfies(song -> {
-                assertThat(song.getId()).isNotNull();
-                assertThat(song.getCreationDate()).isNotNull();
-                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
-                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
-                checkSongDto(song.getSong().getSong(), song1_1_1);
+            assertThat(history.getStatistics()).satisfies(statistics ->
+                    assertThat(statistics.getTotalCount()).isEqualTo(3));
+            assertThat(history.getSongs()).satisfies(historySongs -> {
+                assertThat(historySongs).hasSize(3);
+                assertThat(historySongs.get(0)).satisfies(song -> {
+                    assertThat(song.getId()).isNotNull();
+                    assertThat(song.getCreationDate()).isNotNull();
+                    checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                    checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_2);
+                    checkSongDto(song.getSong().getSong(), song1_2_1);
+                });
+                assertThat(historySongs.get(1)).satisfies(song -> {
+                    assertThat(song.getId()).isNotNull();
+                    assertThat(song.getCreationDate()).isNotNull();
+                    checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                    checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                    checkSongDto(song.getSong().getSong(), song1_1_2);
+                });
+                assertThat(historySongs.get(2)).satisfies(song -> {
+                    assertThat(song.getId()).isNotNull();
+                    assertThat(song.getCreationDate()).isNotNull();
+                    checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                    checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                    checkSongDto(song.getSong().getSong(), song1_1_1);
+                });
             });
         });
     }

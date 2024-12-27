@@ -2,9 +2,12 @@ import {
   AlbumDto,
   AlbumSongsDto,
   ArtistDto,
-  ArtistSongsDto, PlaybackHistorySongDto,
+  ArtistSongsDto,
+  PlaybackHistoryDto,
+  PlaybackHistorySongDto,
   PlaylistDto,
-  PlaylistSongDto, PlaylistSongsDto,
+  PlaylistSongDto,
+  PlaylistSongsDto,
   SearchResultDto,
   SongDto
 } from './library.dto';
@@ -262,5 +265,25 @@ export class PlaybackHistorySong {
     this.id = dto.id;
     this.creationDate = new Date(dto.creationDate);
     this.song = new Song(dto.song.song, new Album(dto.song.albumDetails.album, new Artist(dto.song.albumDetails.artist)));
+  }
+}
+
+export class PlaybackHistoryStatistics {
+
+  totalCount: number;
+
+  constructor(dto: PlaybackHistoryDto.Statistics) {
+    this.totalCount = dto.totalCount;
+  }
+}
+
+export class PlaybackHistory {
+
+  songs: PlaybackHistorySong[];
+  statistics: PlaybackHistoryStatistics;
+
+  constructor(dto: PlaybackHistoryDto) {
+    this.songs = dto.songs.map(next => new PlaybackHistorySong(next));
+    this.statistics = new PlaybackHistoryStatistics(dto.statistics);
   }
 }

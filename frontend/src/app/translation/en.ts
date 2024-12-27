@@ -31,6 +31,7 @@ export default {
       refreshButton: 'Re-scan',
       queueButton: 'Queue',
       playlistsButton: 'Playlists',
+      historyButton: 'History',
       normalModeButton: 'Normal',
       repeatAllModeButton: 'Repeat all',
       repeatOneModeButton: 'Repeat one',
@@ -84,12 +85,14 @@ export default {
     unlikeNotificationTextFailure: 'Could not remove song from favorites!',
   },
   queue: {
-    header: 'Queue',
+    header: 'Playback Queue',
     emptyQueueLabel: 'Your playback queue is currently empty.',
-    goToSongButton: 'Go to song',
-    removeSongButton: 'Remove from queue',
     scrollToCurrentSongButton: 'Show current song',
     sizeLabel: '{{songCount}} songs ({{duration}})'
+  },
+  largeSong: {
+    goToSongButton: 'Go to song',
+    removeSongButton: 'Remove from queue',
   },
   playlistEdit: {
     editHeader: 'Edit Playlist',
@@ -103,6 +106,11 @@ export default {
     notificationTitle: 'Playlists',
     notificationTextSuccess: 'Song added to playlist.',
     notificationTextFailure: 'Could not add song to playlist!',
+  },
+  history: {
+    header: 'Playback History',
+    noHistoryLabel: 'No songs played yet.',
+    statisticsLabel: 'Showing {{count}} or {{totalCount}} total songs played',
   },
   scanning: {
     header: 'Scanning',

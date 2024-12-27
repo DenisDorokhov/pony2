@@ -1,8 +1,8 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {PlaybackHistorySongDto} from "../domain/library.dto";
+import {PlaybackHistoryDto, PlaybackHistorySongDto} from "../domain/library.dto";
 import {map} from "rxjs/operators";
-import {PlaybackHistorySong} from "../domain/library.model";
+import {PlaybackHistory, PlaybackHistorySong} from "../domain/library.model";
 import {Observable} from "rxjs";
 
 @Injectable({
@@ -13,6 +13,12 @@ export class PlaybackHistoryService {
   constructor(
     private httpClient: HttpClient,
   ) {
+  }
+
+  getHistory(): Observable<PlaybackHistory> {
+    return this.httpClient.get<PlaybackHistoryDto>('/api/history').pipe(
+      map(dto => new PlaybackHistory(dto))
+    );
   }
 
   addSongToHistory(songId: string): Observable<PlaybackHistorySong> {

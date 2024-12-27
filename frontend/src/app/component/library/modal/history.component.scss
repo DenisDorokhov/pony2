@@ -1,0 +1,21 @@
+cdk-virtual-scroll-viewport {
+  height: 532px;
+
+  ::ng-deep > div {
+    width: 100%;
+  }
+}
+
+.table-container {
+  padding: 16px;
+}
+
+.modal-footer {
+  justify-content: space-between;
+
+  small {
+    text-align: right;
+    flex-grow: 1;
+    color: var(--bs-gray);
+  };
+}

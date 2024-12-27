@@ -16,6 +16,7 @@ import {ErrorDto} from "../../domain/common.dto";
 import {QueueComponent} from "./modal/queue.component";
 import {PlaybackMode, PlaybackService} from "../../service/playback.service";
 import Role = UserDto.Role;
+import {HistoryComponent} from "./modal/history.component";
 
 @Component({
   standalone: true,
@@ -115,5 +116,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   openPlaylists() {
     // TODO: implement
+  }
+
+  openHistory() {
+    this.modal.open(HistoryComponent, { size: 'lg' });
   }
 }

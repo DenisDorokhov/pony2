@@ -14,7 +14,7 @@
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
 
-    <pony-single-column-song
+    <pony-large-song
       [index]="i" [song]="song"
       [selected]="selectedIndex === i" [isCurrentSong]="currentSongIndex === i" [playbackState]="lastPlaybackEvent?.state"
       #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"

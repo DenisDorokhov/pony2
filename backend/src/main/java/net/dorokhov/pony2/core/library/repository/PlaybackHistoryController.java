@@ -1,12 +1,11 @@
 package net.dorokhov.pony2.core.library.repository;
 
 import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
+import net.dorokhov.pony2.web.dto.PlaybackHistoryDto;
 import net.dorokhov.pony2.web.dto.PlaybackHistorySongDto;
 import net.dorokhov.pony2.web.service.PlaybackHistoryFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -21,7 +20,7 @@ public class PlaybackHistoryController implements ErrorHandlingController {
     }
 
     @GetMapping("/api/history")
-    public List<PlaybackHistorySongDto> getHistory() {
+    public PlaybackHistoryDto getHistory() {
         return playbackHistoryFacade.getHistory();
     }
 

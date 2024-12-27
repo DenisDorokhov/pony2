@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.domain.PlaybackHistorySong;
+import net.dorokhov.pony2.api.library.domain.PlaybackHistoryStatistics;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.PlaybackHistoryService;
@@ -30,6 +31,12 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
         this.playbackHistorySongRepository = playbackHistorySongRepository;
         this.libraryService = libraryService;
         this.userService = userService;
+    }
+
+    @Override
+    public PlaybackHistoryStatistics getStatistics(String userId) {
+        return new PlaybackHistoryStatistics()
+                .setTotalCount(playbackHistorySongRepository.countByUserId(userId));
     }
 
     @Override

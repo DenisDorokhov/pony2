@@ -1,5 +1,4 @@
 import {PageDto} from "./common.dto";
-import SongId = PlaylistUpdateCommandDto.SongId;
 
 export interface AlbumDto {
   id: string;
@@ -253,7 +252,7 @@ export interface PlaylistCreateCommandDto {
 export interface PlaylistUpdateCommandDto {
   id: string;
   name: string;
-  overriddenSongIds: SongId[] | undefined;
+  overriddenSongIds: PlaylistUpdateCommandDto.SongId[] | undefined;
 }
 
 export namespace PlaylistUpdateCommandDto {
@@ -268,4 +267,15 @@ export interface PlaybackHistorySongDto {
   id: string;
   creationDate: string;
   song: SongDetailsDto;
+}
+
+export interface PlaybackHistoryDto {
+  songs: PlaybackHistorySongDto[];
+  statistics: PlaybackHistoryDto.Statistics;
+}
+
+export namespace PlaybackHistoryDto {
+  export interface Statistics {
+    totalCount: number;
+  }
 }

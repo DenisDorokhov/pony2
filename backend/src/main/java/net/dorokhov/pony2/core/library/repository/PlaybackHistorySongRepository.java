@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PlaybackHistorySongRepository extends JpaRepository<PlaybackHistorySong, String> {
+    long countByUserId(String userId);
     Page<PlaybackHistorySong> findByUserId(String userId, Pageable pageable);
     void deleteBySongId(String songId);
 }

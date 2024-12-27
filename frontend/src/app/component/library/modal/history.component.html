@@ -1,0 +1,35 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'history.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight">
+
+  <pony-no-content-indicator *ngIf="playbackHistory?.songs?.length === 0"
+                             [message]="'history.noHistoryLabel' | translate">
+  </pony-no-content-indicator>
+
+  <div class="table-container" *ngIf="playbackHistory?.songs?.length ?? 0">
+
+    <pony-large-song
+      [index]="i" [song]="playbackHistorySong.song"
+      [selected]="selectedIndex === i"
+      *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"
+      (dblclick)="onSongDoubleClick($event, playbackHistorySong.song)"
+      (mousedown)="selectIndex(i);preventDoubleClickDefault($event);"
+      (goToSongRequested)="goToSong(playbackHistorySong.song)"
+    />
+
+  </div>
+
+</cdk-virtual-scroll-viewport>
+
+<div class="modal-footer">
+  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <small [hidden]="!playbackHistory">
+    {{
+      'history.statisticsLabel' | translate:{ count: playbackHistory?.songs?.length, totalCount: playbackHistory?.statistics?.totalCount }
+    }}
+  </small>
+</div>

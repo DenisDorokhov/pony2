@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {NgbActiveModal, NgbDropdown, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
+import {NgbActiveModal, NgbDropdown} from "@ng-bootstrap/ng-bootstrap";
 import {PlaybackService} from "../../../service/playback.service";
 import {fromEvent, Subscription} from "rxjs";
 import {Song} from "../../../domain/library.model";
@@ -30,13 +30,12 @@ import {LargeSongComponent} from "./common/large-song.component";
     CommonModule,
     TranslateModule,
     NoContentIndicatorComponent,
-    NgbDropdownModule,
     CdkDropList,
     CdkDrag,
     CdkVirtualScrollViewport,
-    CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
     LargeSongComponent,
+    CdkFixedSizeVirtualScroll,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
@@ -46,7 +45,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected readonly LoadingState = LoadingState;
 
-  protected readonly rowHeight = 76;
+  protected readonly rowHeight = LargeSongComponent.HEIGHT;
   protected readonly viewPortHeight = 532;
   protected readonly viewPortPadding = 16;
 

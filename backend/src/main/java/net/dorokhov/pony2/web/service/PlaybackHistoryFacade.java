@@ -4,12 +4,11 @@ import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.service.PlaybackHistoryService;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
+import net.dorokhov.pony2.web.dto.PlaybackHistoryDto;
 import net.dorokhov.pony2.web.dto.PlaybackHistorySongDto;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class PlaybackHistoryFacade {
@@ -26,10 +25,13 @@ public class PlaybackHistoryFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<PlaybackHistorySongDto> getHistory() {
-        return playbackHistoryService.getHistory(userContext.getAuthenticatedUser().getId()).stream()
-                .map(playbackHistorySong -> PlaybackHistorySongDto.of(playbackHistorySong, isAdmin()))
-                .toList();
+    public PlaybackHistoryDto getHistory() {
+        String userId = userContext.getAuthenticatedUser().getId();
+        return new PlaybackHistoryDto()
+                .setStatistics(PlaybackHistoryDto.Statistics.of(playbackHistoryService.getStatistics(userId)))
+                .setSongs(playbackHistoryService.getHistory(userId).stream()
+                        .map(playbackHistorySong -> PlaybackHistorySongDto.of(playbackHistorySong, isAdmin()))
+                        .toList());
     }
 
     private boolean isAdmin() {

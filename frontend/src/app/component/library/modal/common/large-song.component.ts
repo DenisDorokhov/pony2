@@ -32,11 +32,15 @@ import {
     NgbDropdownMenu,
     NgbDropdownToggle,
   ],
-  selector: 'pony-single-column-song',
+  selector: 'pony-large-song',
   templateUrl: './large-song.component.html',
   styleUrls: ['./large-song.component.scss']
 })
 export class LargeSongComponent {
+
+  static readonly HEIGHT = 76;
+
+  readonly PlaybackState = PlaybackState;
 
   @Input()
   index!: number;
@@ -57,8 +61,6 @@ export class LargeSongComponent {
   removalRequested = new EventEmitter<number>();
 
   isMouseOver = false;
-
-  protected readonly PlaybackState = PlaybackState;
 
   onMouseMove() {
     this.isMouseOver = true;
