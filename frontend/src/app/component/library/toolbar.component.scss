@@ -22,12 +22,15 @@
     padding-bottom: 3px;
   }
 
-  .playback-mode, .lists {
-    .btn {
-      margin-left: 0;
-    }
+  .btn-group {
     ul i {
       margin-right: 12px;
+    }
+  }
+
+  .btn-group:first-child {
+    .btn {
+      margin-left: 0;
     }
   }
 

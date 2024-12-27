@@ -1,5 +1,5 @@
 <div class="toolbar-container">
-  <div ngbDropdown class="btn-group playback-mode">
+  <div ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
       @switch (playbackMode) {
         @case (PlaybackMode.NORMAL) {
@@ -28,7 +28,7 @@
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.RADIO)"><i class="bi bi-broadcast-pin"></i>{{ 'library.toolbar.radioModeButton' | translate }}</button>
     </ul>
   </div>
-  <div ngbDropdown class="btn-group lists">
+  <div ngbDropdown class="btn-group">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light queue" data-toggle="dropdown">
       <i class="bi bi-list-task"></i>
       <span class="caret"></span>
@@ -47,8 +47,8 @@
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
       <li class="username">{{ currentUser?.name }}</li>
       <li><hr class="dropdown-divider"></li>
-      <button ngbDropdownItem (click)="openProfile()">{{ 'library.toolbar.profileButton' | translate }}</button>
-      <button ngbDropdownItem (click)="signOut()">{{ 'library.toolbar.logOutButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openProfile()"><i class="bi bi-person-lines-fill"></i>{{ 'library.toolbar.profileButton' | translate }}</button>
+      <button ngbDropdownItem (click)="signOut()"><i class="bi bi-box-arrow-right"></i>{{ 'library.toolbar.logOutButton' | translate }}</button>
     </ul>
   </div>
   <button *ngIf="currentUser?.role === 'ADMIN'" title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
@@ -60,10 +60,10 @@
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem (click)="openScanning()">{{ 'library.toolbar.scanningButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openLog()">{{ 'library.toolbar.logButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openUsers()">{{ 'library.toolbar.usersButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openSettings()">{{ 'library.toolbar.settingsButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openScanning()"><i class="bi bi-binoculars-fill"></i>{{ 'library.toolbar.scanningButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openLog()"><i class="bi bi-voicemail"></i>{{ 'library.toolbar.logButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openUsers()"><i class="bi bi-people-fill"></i>{{ 'library.toolbar.usersButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openSettings()"><i class="bi bi-sliders"></i>{{ 'library.toolbar.settingsButton' | translate }}</button>
     </ul>
   </div>
   <div>
