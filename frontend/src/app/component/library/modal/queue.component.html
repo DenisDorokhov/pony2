@@ -13,54 +13,20 @@
   <div cdkDropList cdkDropListAutoScrollDisabled
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
-    <div #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled" class="columns-container"
-         title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} || {{ song.genreName | ponyUnknownGenre }} || {{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s{{ song.path ? '\n' + song.path : '' }}"
-         [class.selected]="selectedIndex === i"
-         *cdkVirtualFor="let song of queue; let i = index;"
-         (cdkDragStarted)="onDragStarted($event)"
-         (dblclick)="playSongOnDoubleClick($event, i)"
-         (mousedown)="selectIndex(i);preventDoubleClickDefault($event);"
-         (mousemove)="onMouseMove(i)" (mouseleave)="onMouseLeave(i)">
-      <div class="track-number">
-        <div>
-          <button class="playback" [hidden]="mouseOverIndex !== i" (click)="onPlaybackClick(i)">
-            <i class="bi"
-               [class.bi-play-fill]="currentSongIndex !== i || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
-               [class.bi-pause-fill]="currentSongIndex === i && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
-            ></i>
-          </button>
-          <i [hidden]="mouseOverIndex === i || currentSongIndex !== i"
-             [class.bi-volume-up-fill]="lastPlaybackEvent?.state === PlaybackState.PLAYING"
-             [class.bi-volume-off-fill]="lastPlaybackEvent?.state === PlaybackState.LOADING || lastPlaybackEvent?.state === PlaybackState.PAUSED"
-             class="bi playback-indicator"></i>
-          {{
-            mouseOverIndex !== i && (
-              currentSongIndex !== i || (
-                lastPlaybackEvent?.state !== PlaybackState.LOADING &&
-                lastPlaybackEvent?.state !== PlaybackState.PLAYING &&
-                lastPlaybackEvent?.state !== PlaybackState.PAUSED
-              )) ? i + 1 : ''
-          }}
-        </div>
-      </div>
-      <div class="artwork">
-        <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-      </div>
-      <div class="song">
-        <div>{{ song.name | ponyUnknownSong }}</div>
-        <div><small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
-      </div>
-      <div class="duration">
-        {{ song.durationInMinutes }}
-      </div>
-      <div ngbDropdown class="options">
-        <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
-        <div ngbDropdownMenu class="dropdown-menu" role="menu">
-          <button ngbDropdownItem (click)="goToSong(song)"><i class="bi bi-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
-          <button ngbDropdownItem (click)="removeSong(i)"><i class="bi bi-x-circle"></i>{{ 'queue.removeSongButton' | translate }}</button>
-        </div>
-      </div>
-    </div>
+
+    <pony-single-column-song
+      [index]="i" [song]="song"
+      [selected]="selectedIndex === i" [isCurrentSong]="currentSongIndex === i" [playbackState]="lastPlaybackEvent?.state"
+      #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"
+      *cdkVirtualFor="let song of queue; let i = index;"
+      (cdkDragStarted)="onDragStarted($event)"
+      (dblclick)="playSongOnDoubleClick($event, i)"
+      (mousedown)="selectIndex(i);preventDoubleClickDefault($event);"
+      (playbackRequested)="onPlaybackClick(i)"
+      (goToSongRequested)="goToSong(song)"
+      (removalRequested)="removeSong(i)"
+    />
+
   </div>
 
 </cdk-virtual-scroll-viewport>

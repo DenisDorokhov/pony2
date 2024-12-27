@@ -1,0 +1,43 @@
+<div class="columns-container"
+     title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} || {{ song.genreName | ponyUnknownGenre }} || {{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s{{ song.path ? '\n' + song.path : '' }}"
+     [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
+  <div class="track-number">
+    <div>
+      <button class="playback" [hidden]="!isMouseOver" (click)="onPlaybackClick()">
+        <i class="bi"
+           [class.bi-play-fill]="!isCurrentSong || (playbackState !== PlaybackState.PLAYING && playbackState !== PlaybackState.LOADING)"
+           [class.bi-pause-fill]="isCurrentSong && (playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.LOADING)"
+        ></i>
+      </button>
+      <i [hidden]="isMouseOver || !isCurrentSong"
+         [class.bi-volume-up-fill]="playbackState === PlaybackState.PLAYING"
+         [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
+         class="bi playback-indicator"></i>
+      {{
+        !isMouseOver && (
+          !isCurrentSong || (
+            playbackState !== PlaybackState.LOADING &&
+            playbackState !== PlaybackState.PLAYING &&
+            playbackState !== PlaybackState.PAUSED
+          )) ? index : ''
+      }}
+    </div>
+  </div>
+  <div class="artwork">
+    <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
+  </div>
+  <div class="song">
+    <div>{{ song.name | ponyUnknownSong }}</div>
+    <div><small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
+  </div>
+  <div class="duration">
+    {{ song.durationInMinutes }}
+  </div>
+  <div ngbDropdown class="options">
+    <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
+    <div ngbDropdownMenu class="dropdown-menu" role="menu">
+      <button ngbDropdownItem (click)="goToSong()"><i class="bi bi-arrow-right"></i>{{ 'queue.goToSongButton' | translate }}</button>
+      <button ngbDropdownItem (click)="removeSong()"><i class="bi bi-x-circle"></i>{{ 'queue.removeSongButton' | translate }}</button>
+    </div>
+  </div>
+</div>

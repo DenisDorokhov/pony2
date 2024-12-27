@@ -14,37 +14,29 @@ import {NgbActiveModal, NgbDropdown, NgbDropdownModule} from "@ng-bootstrap/ng-b
 import {PlaybackService} from "../../../service/playback.service";
 import {fromEvent, Subscription} from "rxjs";
 import {Song} from "../../../domain/library.model";
-import {UnknownArtistPipe} from "../../../pipe/unknown-artist.pipe";
-import {UnknownSongPipe} from "../../../pipe/unknown-song.pipe";
-import {ImageLoaderComponent} from "../../common/image-loader.component";
 import {LibraryService} from "../../../service/library.service";
 import {LoadingState} from "../../../domain/common.model";
 import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
-import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
 import {formatDuration} from "../../../utils/format.utils";
-import {PlaybackEvent, PlaybackState} from "../../../service/audio-player.service";
+import {PlaybackEvent} from "../../../service/audio-player.service";
 import {isMobileBrowser} from "../../../utils/mobile.utils";
-import {UnknownGenrePipe} from "../../../pipe/unknown-genre.pipe";
+import {SingleColumnSongComponent} from "./single-column-song.component";
 
 @Component({
   standalone: true,
   imports: [
     CommonModule,
     TranslateModule,
-    UnknownArtistPipe,
-    UnknownSongPipe,
-    ImageLoaderComponent,
     NoContentIndicatorComponent,
-    UnknownAlbumPipe,
     NgbDropdownModule,
     CdkDropList,
     CdkDrag,
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
-    UnknownGenrePipe,
+    SingleColumnSongComponent,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
@@ -52,7 +44,6 @@ import {UnknownGenrePipe} from "../../../pipe/unknown-genre.pipe";
 })
 export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  protected readonly PlaybackState = PlaybackState;
   protected readonly LoadingState = LoadingState;
 
   protected readonly rowHeight = 76;
@@ -65,11 +56,10 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   currentSongShown = false;
   selectedIndex = -1;
   duration: string | undefined;
-  mouseOverIndex: number | undefined;
   dragEnabled = true;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
-  @ViewChildren('songElements') linkElements!: QueryList<ElementRef>;
+  @ViewChildren('songElements', { read: ElementRef }) linkElements!: QueryList<ElementRef>;
   @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
 
   private subscriptions: Subscription[] = [];
@@ -221,16 +211,6 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
   selectIndex(i: number) {
     this.selectedIndex = i;
-  }
-
-  onMouseMove(i: number) {
-    this.mouseOverIndex = i;
-  }
-
-  onMouseLeave(i: number) {
-    if (this.mouseOverIndex === i) {
-      this.mouseOverIndex = undefined;
-    }
   }
 
   onPlaybackClick(i: number) {

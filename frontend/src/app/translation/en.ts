@@ -84,7 +84,7 @@ export default {
     unlikeNotificationTextFailure: 'Could not remove song from favorites!',
   },
   queue: {
-    header: 'Playback Queue',
+    header: 'Queue',
     emptyQueueLabel: 'Your playback queue is currently empty.',
     goToSongButton: 'Go to song',
     removeSongButton: 'Remove from queue',
