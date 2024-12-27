@@ -109,7 +109,7 @@ export default {
   },
   history: {
     header: 'Playback History',
-    noHistoryLabel: 'No songs played yet.',
+    noHistoryLabel: 'No songs played yet :-(',
     statisticsLabel: 'Showing {{count}} or {{totalCount}} total songs played',
   },
   scanning: {
