@@ -22,7 +22,7 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
 import {formatDuration} from "../../../utils/format.utils";
 import {PlaybackEvent} from "../../../service/audio-player.service";
 import {isMobileBrowser} from "../../../utils/mobile.utils";
-import {SingleColumnSongComponent} from "./single-column-song.component";
+import {LargeSongComponent} from "./common/large-song.component";
 
 @Component({
   standalone: true,
@@ -36,7 +36,7 @@ import {SingleColumnSongComponent} from "./single-column-song.component";
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
-    SingleColumnSongComponent,
+    LargeSongComponent,
   ],
   selector: 'pony-queue',
   templateUrl: './queue.component.html',
