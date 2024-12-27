@@ -28,15 +28,15 @@
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.RADIO)"><i class="bi bi-broadcast-pin"></i>{{ 'library.toolbar.radioModeButton' | translate }}</button>
     </ul>
   </div>
-  <div ngbDropdown class="btn-group">
+  <div ngbDropdown class="btn-group lists">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light queue" data-toggle="dropdown">
       <i class="bi bi-list-task"></i>
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem (click)="openQueue()">{{ 'library.toolbar.queueButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openPlaylists()">{{ 'library.toolbar.playlistsButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openHistory()">{{ 'library.toolbar.historyButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openPlaylists()"><i class="bi bi-file-earmark-music"></i>{{ 'library.toolbar.playlistsButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openQueue()"><i class="bi bi-list-ol"></i>{{ 'library.toolbar.queueButton' | translate }}</button>
+      <button ngbDropdownItem (click)="openHistory()"><i class="bi bi-clock-history"></i>{{ 'library.toolbar.historyButton' | translate }}</button>
     </ul>
   </div>
   <div ngbDropdown class="btn-group">
