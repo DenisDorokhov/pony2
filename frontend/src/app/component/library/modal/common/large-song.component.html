@@ -30,6 +30,12 @@
     <div>{{ song.name | ponyUnknownSong }}</div>
     <div><small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
   </div>
+  <div class="playback-indicator" *ngIf="!showIndex">
+    <i [hidden]="!isCurrentSong"
+       [class.bi-volume-up-fill]="playbackState === PlaybackState.PLAYING"
+       [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
+       class="bi playback-indicator"></i>
+  </div>
   <div class="duration" *ngIf="showDuration">
     {{ song.durationInMinutes }}
   </div>

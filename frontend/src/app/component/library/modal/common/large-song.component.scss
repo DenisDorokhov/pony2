@@ -67,6 +67,11 @@
   }
 }
 
+div.playback-indicator {
+  width: 24px;
+  line-height: 75px;
+}
+
 .duration {
   padding: 8px;
   color: #909090;
@@ -111,6 +116,10 @@
     .bi {
       color: white;
     }
+  }
+
+  div.playback-indicator {
+    color: white;
   }
 
   .duration {
