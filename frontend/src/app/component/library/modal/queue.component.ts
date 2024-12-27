@@ -23,7 +23,6 @@ import {NoContentIndicatorComponent} from "../../common/no-content-indicator.com
 import {UnknownAlbumPipe} from "../../../pipe/unknown-album.pipe";
 import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
-import {ReactiveFormsModule} from "@angular/forms";
 import {formatDuration} from "../../../utils/format.utils";
 import {PlaybackEvent, PlaybackState} from "../../../service/audio-player.service";
 import {isMobileBrowser} from "../../../utils/mobile.utils";
@@ -45,7 +44,6 @@ import {UnknownGenrePipe} from "../../../pipe/unknown-genre.pipe";
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
-    ReactiveFormsModule,
     UnknownGenrePipe,
   ],
   selector: 'pony-queue',

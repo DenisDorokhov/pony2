@@ -25,8 +25,8 @@
         <div>
           <button class="playback" [hidden]="mouseOverIndex !== i" (click)="onPlaybackClick(i)">
             <i class="bi"
-               [class.bi-play-fill]="lastPlaybackEvent?.song?.id != song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
-               [class.bi-pause-fill]="lastPlaybackEvent?.song?.id == song.id && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
+               [class.bi-play-fill]="currentSongIndex !== i || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
+               [class.bi-pause-fill]="currentSongIndex === i && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
             ></i>
           </button>
           <i [hidden]="mouseOverIndex === i || currentSongIndex !== i"
