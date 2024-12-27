@@ -161,7 +161,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   goToSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
-    this.libraryService.startScrollToSong(song);
+    this.libraryService.requestScrollToSong(song);
     this.activeModal.close();
   }
 

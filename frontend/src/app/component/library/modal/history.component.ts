@@ -87,7 +87,7 @@ export class HistoryComponent implements OnInit {
   goToSong(song: Song, play = false) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song, play);
-    this.libraryService.startScrollToSong(song);
+    this.libraryService.requestScrollToSong(song);
     this.activeModal.close();
   }
 }

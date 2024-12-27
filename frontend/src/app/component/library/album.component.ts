@@ -64,7 +64,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
         if (album.id === this.albumSongs.album.id) {
           var song = this.discs[0].songs[0];
           this.libraryService.selectSong(song);
-          this.libraryService.startScrollToSong(song);
+          this.libraryService.requestScrollToSong(song);
           this.libraryService.finishScrollToAlbum();
         }
       });

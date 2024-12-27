@@ -152,6 +152,13 @@ export class LibraryService {
       ));
   }
 
+  finishSongSelection() {
+    if (this.selectedSongSubject.value) {
+      // Avoid repeated playback after behavior subject re-dispatch.
+      this.selectedSongSubject.value.play = false;
+    }
+  }
+
   selectSong(song: Song, play = false) {
     this.selectedSongSubject.next({ song, play });
   }
@@ -173,7 +180,7 @@ export class LibraryService {
       .pipe(filter(artist => artist !== undefined));
   }
 
-  startScrollToArtist(artist: Artist) {
+  requestScrollToArtist(artist: Artist) {
     this.scrollToArtistRequestSubject.next(artist);
   }
 
@@ -186,7 +193,7 @@ export class LibraryService {
       .pipe(filter(album => album !== undefined));
   }
 
-  startScrollToAlbum(album: Album) {
+  requestScrollToAlbum(album: Album) {
     this.scrollToAlbumRequestSubject.next(album);
   }
 
@@ -199,7 +206,7 @@ export class LibraryService {
       .pipe(filter(song => song !== undefined));
   }
 
-  startScrollToSong(song: Song) {
+  requestScrollToSong(song: Song) {
     this.scrollToSongRequestSubject.next(song);
   }
 

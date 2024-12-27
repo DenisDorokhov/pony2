@@ -213,21 +213,21 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   selectSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
-    this.libraryService.startScrollToSong(song);
+    this.libraryService.requestScrollToSong(song);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
     this.open = false;
   }
 
   selectAlbum(album: Album) {
     this.libraryService.selectArtistAndMakeDefault(album.artist);
-    this.libraryService.startScrollToAlbum(album);
+    this.libraryService.requestScrollToAlbum(album);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
     this.open = false;
   }
 
   selectArtist(artist: Artist) {
     this.libraryService.selectArtistAndMakeDefault(artist);
-    this.libraryService.startScrollToArtist(artist);
+    this.libraryService.requestScrollToArtist(artist);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
     this.open = false;
   }

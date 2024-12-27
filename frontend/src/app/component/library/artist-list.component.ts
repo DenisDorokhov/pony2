@@ -67,7 +67,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
             const oldSelectedArtist = this.libraryService.selectedArtist;
             const selectedArtist = this.libraryService.selectDefaultArtist(artists)!;
             if (!Artist.equals(selectedArtist, oldSelectedArtist)) {
-              this.libraryService.startScrollToArtist(selectedArtist);
+              this.libraryService.requestScrollToArtist(selectedArtist);
             }
           } else {
             this.loadingState = LoadingState.EMPTY;

@@ -98,6 +98,10 @@ export class PlaybackService {
     return this._currentIndex ?? -1;
   }
 
+  get currentSong(): Song | undefined {
+    return this._currentIndex > -1 ? this._queue[this._currentIndex] : undefined;
+  }
+
   get mode(): PlaybackMode {
     return this._mode;
   }
