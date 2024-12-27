@@ -1,7 +1,7 @@
 <div class="columns-container"
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} || {{ song.genreName | ponyUnknownGenre }} || {{ song.sizeMb }} MB, {{ song.bitRate }} kbit/s{{ song.path ? '\n' + song.path : '' }}"
      [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
-  <div class="track-number">
+  <div class="track-number" *ngIf="showIndex">
     <div>
       <button class="playback" [hidden]="!isMouseOver || !playbackRequested.observed" (click)="onPlaybackClick()">
         <i class="bi"
@@ -30,7 +30,7 @@
     <div>{{ song.name | ponyUnknownSong }}</div>
     <div><small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
   </div>
-  <div class="duration">
+  <div class="duration" *ngIf="showDuration">
     {{ song.durationInMinutes }}
   </div>
   <div ngbDropdown class="options">

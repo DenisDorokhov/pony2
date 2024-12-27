@@ -52,6 +52,10 @@ export class LargeSongComponent {
   isCurrentSong = false;
   @Input()
   playbackState: PlaybackState | undefined;
+  @Input()
+  showIndex = true;
+  @Input()
+  showDuration = true;
 
   @Output()
   playbackRequested = new EventEmitter<number>();
