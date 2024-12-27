@@ -78,11 +78,9 @@ public class PlaylistServiceImpl implements PlaylistService {
             }
             songIds.add(playlistSong.getSong().getId());
         }
-        if (savedPlaylist.getType() == Playlist.Type.LIKE) {
-            duplicateIndices.stream()
-                    .sorted(Collections.reverseOrder())
-                    .forEach(index -> savedPlaylist.getSongs().remove((int) index));
-        }
+        duplicateIndices.stream()
+                .sorted(Collections.reverseOrder())
+                .forEach(index -> savedPlaylist.getSongs().remove((int) index));
         return savedPlaylist;
     }
 

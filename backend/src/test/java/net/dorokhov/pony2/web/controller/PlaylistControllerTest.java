@@ -756,6 +756,56 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldFilterOutDuplicatesWhenAddSongToNormalPlaylist() {
+
+        Playlist savedPlaylist = new Playlist()
+                .setName("playlist1")
+                .setType(Playlist.Type.NORMAL)
+                .setUser(user);
+        playlistRepository.save(savedPlaylist
+                .setSongs(List.of(
+                        new PlaylistSong()
+                                .setPlaylist(savedPlaylist)
+                                .setSort(0)
+                                .setSong(song1_1_1)
+                )));
+
+        apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/normal/{playlistId}/songs/{songId}", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId(), song1_1_2.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists/normal/{playlistId}/songs/{songId}", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId(), song1_1_2.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(playlistSongs -> {
+            assertThat(playlistSongs.getPlaylist()).satisfies(playlist -> {
+                assertThat(playlist.getId()).isNotNull();
+                assertThat(playlistRepository.existsById(playlist.getId())).isTrue();
+                assertThat(playlist.getCreationDate()).isNotNull();
+                assertThat(playlist.getUpdateDate()).isNotNull();
+                assertThat(playlist.getName()).isEqualTo("playlist1");
+                assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
+            });
+            assertThat(playlistSongs.getSongs()).hasSize(2);
+            assertThat(playlistSongs.getSongs().get(0)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
+            });
+            assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
+                assertThat(song.getId()).isNotNull();
+                assertThat(song.getCreationDate()).isNotNull();
+                checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
+                checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
+            });
+        });
+    }
+
+    @Test
     public void shouldFailAddingSongToNormalPlaylistOfOtherUser() throws DuplicateEmailException {
 
         User otherUser = userService.create(new UserCreationCommand()
