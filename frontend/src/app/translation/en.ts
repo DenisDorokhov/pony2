@@ -93,7 +93,7 @@ export default {
   },
   largeSong: {
     goToSongButton: 'Go to song',
-    removeSongButton: 'Remove from queue',
+    removeSongButton: 'Remove song',
   },
   playlistEdit: {
     editHeader: 'Edit Playlist',
@@ -121,7 +121,6 @@ export default {
     deletionConfirmation: 'Are you sure to delete selected playlist?',
     notificationTitle: 'Playlists',
     notificationTextDeletionSuccess: 'Playlist deleted.',
-    notificationTextDeletionFailure: 'Could not delete selected playlist!',
   },
   scanning: {
     header: 'Scanning',

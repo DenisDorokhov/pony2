@@ -19,6 +19,7 @@ import {isMobileBrowser} from '../../../utils/mobile.utils';
 import {PlaybackService} from '../../../service/playback.service';
 import {LibraryService} from '../../../service/library.service';
 import {PlaybackEvent} from '../../../service/audio-player.service';
+import {PlaylistUpdateCommandDto} from '../../../domain/library.dto';
 
 @Component({
   standalone: true,
@@ -107,23 +108,13 @@ export class PlaylistComponent implements OnInit, OnDestroy {
             this.translateService.instant('playlist.notificationTextDeletionSuccess'),
           );
         },
-        error: () => {
-          this.secondaryLoadingState = LoadingState.LOADED;
-          this.notificationService.error(
-            this.translateService.instant('playlist.notificationTitle'),
-            this.translateService.instant('playlist.notificationTextDeletionFailure'),
-          );
-        }
+        error: () => this.secondaryLoadingState = LoadingState.ERROR
       });
     }
   }
 
   onPlaylistChange() {
     this.loadSongs();
-  }
-
-  createPlaylist() {
-    this.modal.open(PlaylistEditComponent);
   }
 
   playSongOnDoubleClick(event: MouseEvent, index: number) {
@@ -153,10 +144,29 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   removeSong(index: number) {
-    // TODO: implement
-    if (this.selectedIndex === index) {
-      this.selectedIndex = -1;
-    }
+    const command: PlaylistUpdateCommandDto = {
+      id: this.selectedPlaylistSongs!.playlist.id,
+      name: this.selectedPlaylistSongs!.playlist.name!,
+      overriddenSongIds: this.selectedPlaylistSongs!.songs
+        .filter((_, nextIndex) => index !== nextIndex)
+        .map(next => {
+          return {
+            id: next.id,
+            songId: next.song.id
+          } as PlaylistUpdateCommandDto.SongId;
+        })
+    };
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.playlistService.updatePlaylist(command).subscribe({
+      next: playlistSongs => {
+        this.secondaryLoadingState = LoadingState.LOADED;
+        this.selectedPlaylistSongs = playlistSongs;
+        if (this.selectedIndex === index) {
+          this.selectedIndex = -1;
+        }
+      },
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
   }
 
   onDropListDropped(event: CdkDragDrop<any, any>) {
