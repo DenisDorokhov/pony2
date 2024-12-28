@@ -17,7 +17,7 @@
   <pony-no-content-indicator *ngIf="primaryLoadingState === LoadingState.LOADED && !playlists.length"
                              [message]="'playlist.noPlaylistsLabel' | translate">
   </pony-no-content-indicator>
-  <pony-no-content-indicator *ngIf="primaryLoadingState === LoadingState.LOADED && !(selectedPlaylistSongs?.songs?.length ?? 0)"
+  <pony-no-content-indicator *ngIf="primaryLoadingState === LoadingState.LOADED && playlists.length && !(selectedPlaylistSongs?.songs?.length ?? 0)"
                              [message]="'playlist.noSongsLabel' | translate">
   </pony-no-content-indicator>
 

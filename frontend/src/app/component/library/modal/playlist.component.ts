@@ -71,14 +71,19 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   private loadSongs() {
-    this.primaryLoadingState = LoadingState.LOADING;
-    this.playlistService.getPlaylist(this.selectedPlaylist!.id).subscribe({
-      next: playlistSongs => {
-        this.primaryLoadingState = LoadingState.LOADED;
-        this.selectedPlaylistSongs = playlistSongs;
-      },
-      error: () => this.primaryLoadingState = LoadingState.ERROR
-    });
+    if (this.selectedPlaylist) {
+      this.primaryLoadingState = LoadingState.LOADING;
+      this.playlistService.getPlaylist(this.selectedPlaylist.id).subscribe({
+        next: playlistSongs => {
+          this.primaryLoadingState = LoadingState.LOADED;
+          this.selectedPlaylistSongs = playlistSongs;
+        },
+        error: () => this.primaryLoadingState = LoadingState.ERROR
+      });
+    } else {
+      this.primaryLoadingState = LoadingState.LOADED;
+      this.selectedPlaylistSongs = undefined;
+    }
   }
 
   edit() {

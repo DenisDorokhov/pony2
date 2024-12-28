@@ -99,6 +99,7 @@ export class PlaylistService {
   addToPlaylist(playlistId: string, songId: string): Observable<PlaylistSongs> {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/normal/' + playlistId + '/songs/' + songId, null).pipe(
       map(dto => new PlaylistSongs(dto)),
+      tap(() => this.requestPlaylists().subscribe()),
     );
   }
 
