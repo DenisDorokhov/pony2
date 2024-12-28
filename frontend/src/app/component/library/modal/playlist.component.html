@@ -21,7 +21,7 @@
                              [message]="'playlist.noSongsLabel' | translate">
   </pony-no-content-indicator>
 
-  <div *ngIf="(selectedPlaylistSongs?.songs?.length ?? 0)" cdkDropList cdkDropListAutoScrollDisabled
+  <div [hidden]="!(selectedPlaylistSongs?.songs?.length ?? 0) || primaryLoadingState !== LoadingState.LOADED" cdkDropList cdkDropListAutoScrollDisabled
        [cdkDropListData]="selectedPlaylistSongs?.songs" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
 
@@ -46,7 +46,6 @@
   <pony-loading-indicator [hidden]="secondaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator [hidden]="secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">{{ 'shared.closeButton' | translate }}</button>
-  <button type="button" class="btn btn-secondary" (click)="createPlaylist()">{{ 'playlist.createButton' | translate }}</button>
   <button type="button" class="btn btn-danger" (click)="delete()"
           [hidden]="!selectedPlaylist" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'playlist.deleteButton' | translate }}</button>
 </div>

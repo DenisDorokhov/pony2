@@ -60,7 +60,7 @@ export class PlaylistEditComponent implements OnInit {
             id: undefined,
             songId: song.id
           } as SongId;
-        }) ?? [],
+        }),
       };
       observable = this.playlistService.updatePlaylist(command);
     } else {

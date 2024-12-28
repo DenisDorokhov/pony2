@@ -63,22 +63,26 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.dragEnabled = !isMobileBrowser();
     this.subscriptions.push(this.playlistService.observePlaylists().subscribe(playlists => {
       this.playlists = playlists;
+      const oldSelectedPlaylist = this.selectedPlaylist;
       this.selectedPlaylist = this.playlists.length > 0 ? this.playlistService.getTopPlaylists()[0] : undefined;
-      this.loadSongs();
+      this.loadSongs(!this.selectedPlaylist || this.selectedPlaylist.id !== oldSelectedPlaylist?.id);
     }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }
 
-  private loadSongs() {
+  private loadSongs(showLoading = true) {
     if (this.selectedPlaylist) {
-      this.primaryLoadingState = LoadingState.LOADING;
+      console.info(showLoading);
+      this.primaryLoadingState = showLoading ? LoadingState.LOADING : LoadingState.LOADED;
       this.playlistService.getPlaylist(this.selectedPlaylist.id).subscribe({
         next: playlistSongs => {
           this.primaryLoadingState = LoadingState.LOADED;
           this.selectedPlaylistSongs = playlistSongs;
         },
-        error: () => this.primaryLoadingState = LoadingState.ERROR
+        error: () => {
+          this.primaryLoadingState = showLoading ? LoadingState.ERROR : LoadingState.LOADED;
+        }
       });
     } else {
       this.primaryLoadingState = LoadingState.LOADED;
