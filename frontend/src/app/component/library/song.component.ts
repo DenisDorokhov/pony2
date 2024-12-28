@@ -11,21 +11,21 @@ import {
   ViewChild
 } from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
-import {Playlist, Song} from "../../domain/library.model";
-import {PlaybackService} from "../../service/playback.service";
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {LibraryService} from "../../service/library.service";
-import {ScrollingUtils} from "../../utils/scrolling.utils";
-import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
-import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
-import {resolveAppViewContainerRef} from "../../utils/view.utils";
-import {PlaybackEvent, PlaybackState} from "../../service/audio-player.service";
-import {UnknownGenrePipe} from "../../pipe/unknown-genre.pipe";
-import {PlaylistService} from "../../service/playlist.service";
-import {NotificationService} from "../../service/notification.service";
-import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {PlaylistEditComponent} from "./modal/playlist-edit.component";
-import {PlaylistAddSongComponent} from "./modal/playlist-add-song.component";
+import {Playlist, Song} from '../../domain/library.model';
+import {PlaybackService} from '../../service/playback.service';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {LibraryService} from '../../service/library.service';
+import {ScrollingUtils} from '../../utils/scrolling.utils';
+import {UnknownSongPipe} from '../../pipe/unknown-song.pipe';
+import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
+import {resolveAppViewContainerRef} from '../../utils/view.utils';
+import {PlaybackEvent, PlaybackState} from '../../service/audio-player.service';
+import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
+import {PlaylistService} from '../../service/playlist.service';
+import {NotificationService} from '../../service/notification.service';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {PlaylistEditComponent} from './modal/playlist-edit.component';
+import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 
 @Component({
   standalone: true,

@@ -1,10 +1,10 @@
-import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
-import {BehaviorSubject, forkJoin, Observable, Subscription} from "rxjs";
-import {Playlist, PlaylistSongs} from "../domain/library.model";
-import {PlaylistCreateCommandDto, PlaylistDto, PlaylistSongsDto, PlaylistUpdateCommandDto} from "../domain/library.dto";
-import {catchError, map, tap} from "rxjs/operators";
-import {ErrorDto} from "../domain/common.dto";
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject, forkJoin, Observable, Subscription} from 'rxjs';
+import {Playlist, PlaylistSongs} from '../domain/library.model';
+import {PlaylistCreateCommandDto, PlaylistDto, PlaylistSongsDto, PlaylistUpdateCommandDto} from '../domain/library.dto';
+import {catchError, map, tap} from 'rxjs/operators';
+import {ErrorDto} from '../domain/common.dto';
 
 @Injectable({
   providedIn: 'root'

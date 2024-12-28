@@ -1,21 +1,20 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {TranslateModule} from "@ngx-translate/core";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
-import {LibraryScanService} from "../../../service/library-scan.service";
-import {ScanJobDto, ScanJobProgressDto, ScanProgressDto} from "../../../domain/library.dto";
-import {LoadingState} from "../../../domain/common.model";
-import {CommonModule} from "@angular/common";
-import {ErrorDto, PageDto} from "../../../domain/common.dto";
-import {Subscription} from "rxjs";
-import {LibraryService} from "../../../service/library.service";
-import {ScanJobComponent} from "./scan-job.component";
+import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {TranslateModule} from '@ngx-translate/core';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LibraryScanService} from '../../../service/library-scan.service';
+import {ScanJobDto, ScanJobProgressDto, ScanProgressDto} from '../../../domain/library.dto';
+import {LoadingState} from '../../../domain/common.model';
+import {CommonModule} from '@angular/common';
+import {ErrorDto, PageDto} from '../../../domain/common.dto';
+import {Subscription} from 'rxjs';
+import {LibraryService} from '../../../service/library.service';
+import {ScanJobComponent} from './scan-job.component';
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent],
+  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
   selector: 'pony-scanning',
   templateUrl: './scanning.component.html',
   styleUrls: ['./scanning.component.scss']
@@ -129,6 +128,6 @@ export class ScanningComponent implements OnInit, OnDestroy {
 
   showDetails(scanJob: ScanJobDto) {
     const modalRef = this.modal.open(ScanJobComponent, { size: 'lg' });
-    (<ScanJobComponent>modalRef.componentInstance).scanJob = scanJob;
+    (modalRef.componentInstance as ScanJobComponent).scanJob = scanJob;
   }
 }

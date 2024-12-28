@@ -14,13 +14,13 @@ import {
   timer
 } from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
-import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from "../domain/library.dto";
-import {AuthenticationService} from "./authentication.service";
-import {ErrorDto, OptionalResponseDto} from "../domain/common.dto";
-import {LibraryService} from "./library.service";
-import {NotificationService} from "./notification.service";
-import {TranslateService} from "@ngx-translate/core";
-import {UserDto} from "../domain/user.dto";
+import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from '../domain/library.dto';
+import {AuthenticationService} from './authentication.service';
+import {ErrorDto, OptionalResponseDto} from '../domain/common.dto';
+import {LibraryService} from './library.service';
+import {NotificationService} from './notification.service';
+import {TranslateService} from '@ngx-translate/core';
+import {UserDto} from '../domain/user.dto';
 import Status = ScanJobDto.Status;
 import Role = UserDto.Role;
 
@@ -88,7 +88,7 @@ export class LibraryScanService {
           if (optionalResponse.present) {
             console.debug('Scan job progress updated.');
             if (!this.refreshRequestSubscription) {
-              console.info("Scheduling auto-refresh during scan job running.");
+              console.info('Scheduling auto-refresh during scan job running.');
               this.refreshRequestSubscription = timer(0, 10000).pipe(
                 tap(() => {
                   this.libraryService.requestRefresh();
@@ -105,7 +105,7 @@ export class LibraryScanService {
               this.showScanJobEndedNotification(oldScanJob!.id!);
             }
             if (this.refreshRequestSubscription) {
-              console.info("Scan job finished, cancelling auto-refresh.");
+              console.info('Scan job finished, cancelling auto-refresh.');
               this.libraryService.requestRefresh();
               this.refreshRequestSubscription.unsubscribe();
               this.refreshRequestSubscription = undefined;
@@ -193,7 +193,7 @@ export class LibraryScanService {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.CONCURRENT_SCAN) {
             console.warn('Scan job is already running.');
-            this.updateAndScheduleScanJobProgressUpdate()
+            this.updateAndScheduleScanJobProgressUpdate();
           } else {
             this.showScanJobFailedNotification();
           }

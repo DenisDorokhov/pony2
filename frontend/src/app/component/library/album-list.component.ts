@@ -1,16 +1,16 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {AlbumSongs, Artist, ArtistSongs, Song} from "../../domain/library.model";
-import {LibraryService, LibraryState} from "../../service/library.service";
-import {PlaybackService} from "../../service/playback.service";
-import {LoadingState} from "../../domain/common.model";
-import {TranslateModule} from "@ngx-translate/core";
-import {LoadingIndicatorComponent} from "../common/loading-indicator.component";
-import {ErrorIndicatorComponent} from "../common/error-indicator.component";
-import {NoContentIndicatorComponent} from "../common/no-content-indicator.component";
-import {AlbumComponent} from "./album.component";
-import {CommonModule} from "@angular/common";
-import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
+import {AlbumSongs, Artist, ArtistSongs, Song} from '../../domain/library.model';
+import {LibraryService, LibraryState} from '../../service/library.service';
+import {PlaybackService} from '../../service/playback.service';
+import {LoadingState} from '../../domain/common.model';
+import {TranslateModule} from '@ngx-translate/core';
+import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
+import {ErrorIndicatorComponent} from '../common/error-indicator.component';
+import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
+import {AlbumComponent} from './album.component';
+import {CommonModule} from '@angular/common';
+import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 
 @Component({
   standalone: true,
@@ -85,11 +85,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.songPlaybackRequestSubscription?.unsubscribe();
   }
 
-  trackByIndex(index: number, _: AlbumSongs) {
+  trackByIndex(index: number) {
     return index;
   }
 
-  private loadArtistSongs(artist: Artist, refreshing: boolean = false) {
+  private loadArtistSongs(artist: Artist, refreshing = false) {
     if (refreshing) {
       console.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`);
     } else {

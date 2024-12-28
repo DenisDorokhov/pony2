@@ -1,15 +1,15 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {fromEvent, Subscription} from 'rxjs';
-import {PlaybackService} from "../../service/playback.service";
-import {Song} from "../../domain/library.model";
-import {LibraryService} from "../../service/library.service";
-import {PageTitleService} from "../../service/page-title.service";
-import {ImageLoaderComponent} from "../common/image-loader.component";
-import {isMobileBrowser} from "../../utils/mobile.utils";
-import {PlaybackEvent, PlaybackState} from "../../service/audio-player.service";
-import {PlaylistService} from "../../service/playlist.service";
-import {NotificationService} from "../../service/notification.service";
+import {PlaybackService} from '../../service/playback.service';
+import {Song} from '../../domain/library.model';
+import {LibraryService} from '../../service/library.service';
+import {PageTitleService} from '../../service/page-title.service';
+import {ImageLoaderComponent} from '../common/image-loader.component';
+import {isMobileBrowser} from '../../utils/mobile.utils';
+import {PlaybackEvent, PlaybackState} from '../../service/audio-player.service';
+import {PlaylistService} from '../../service/playlist.service';
+import {NotificationService} from '../../service/notification.service';
 
 @Component({
   standalone: true,

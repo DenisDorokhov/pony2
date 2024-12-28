@@ -1,4 +1,4 @@
-import {PageDto} from "./common.dto";
+import {PageDto} from './common.dto';
 
 export interface UserDto {
   id: string;

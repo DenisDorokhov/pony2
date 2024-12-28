@@ -13,8 +13,8 @@
     </span>
     <button class="playback" [hidden]="!isMouseOver" (click)="onPlaybackClick()">
       <i class="bi"
-         [class.bi-play-fill]="lastPlaybackEvent?.song?.id != song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
-         [class.bi-pause-fill]="lastPlaybackEvent?.song?.id == song.id && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
+         [class.bi-play-fill]="lastPlaybackEvent?.song?.id !== song.id || (lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.LOADING)"
+         [class.bi-pause-fill]="lastPlaybackEvent?.song?.id === song.id && (lastPlaybackEvent?.state === PlaybackState.PLAYING || lastPlaybackEvent?.state === PlaybackState.LOADING)"
       ></i>
     </button>
     <span class="playback-indicator" [hidden]="isMouseOver || (lastPlaybackEvent?.state !== PlaybackState.LOADING && lastPlaybackEvent?.state !== PlaybackState.PLAYING && lastPlaybackEvent?.state !== PlaybackState.PAUSED)">

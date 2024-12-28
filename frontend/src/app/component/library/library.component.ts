@@ -2,16 +2,16 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {Subscription} from 'rxjs';
-import {ScanStatisticsDto} from "../../domain/library.dto";
-import {AuthenticationService} from "../../service/authentication.service";
-import {LibraryScanService} from "../../service/library-scan.service";
-import {CommonModule} from "@angular/common";
-import {PlayerComponent} from "./player.component";
-import {ToolbarComponent} from "./toolbar.component";
-import {ArtistListComponent} from "./artist-list.component";
-import {AlbumListComponent} from "./album-list.component";
-import {formatDuration, formatFileSize} from "../../utils/format.utils";
-import {BrowserNotificationService} from "../../service/browser-notification.service";
+import {ScanStatisticsDto} from '../../domain/library.dto';
+import {AuthenticationService} from '../../service/authentication.service';
+import {LibraryScanService} from '../../service/library-scan.service';
+import {CommonModule} from '@angular/common';
+import {PlayerComponent} from './player.component';
+import {ToolbarComponent} from './toolbar.component';
+import {ArtistListComponent} from './artist-list.component';
+import {AlbumListComponent} from './album-list.component';
+import {formatDuration, formatFileSize} from '../../utils/format.utils';
+import {BrowserNotificationService} from '../../service/browser-notification.service';
 
 @Component({
   standalone: true,

@@ -8,7 +8,7 @@ import translationEn from '../translation/en';
 })
 export class TranslateLoaderService implements TranslateLoader {
 
-  private translations: Map<string, any> = new Map();
+  private translations = new Map<string, any>();
 
   constructor() {
     this.translations.set('en', translationEn);

@@ -1,20 +1,20 @@
-import {Component, EventEmitter, Input, Output} from "@angular/core";
-import {CommonModule} from "@angular/common";
-import {TranslateModule} from "@ngx-translate/core";
-import {UnknownArtistPipe} from "../../../../pipe/unknown-artist.pipe";
-import {UnknownSongPipe} from "../../../../pipe/unknown-song.pipe";
-import {ImageLoaderComponent} from "../../../common/image-loader.component";
-import {UnknownAlbumPipe} from "../../../../pipe/unknown-album.pipe";
-import {UnknownGenrePipe} from "../../../../pipe/unknown-genre.pipe";
-import {Song} from "../../../../domain/library.model";
-import {PlaybackState} from "../../../../service/audio-player.service";
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
+import {UnknownArtistPipe} from '../../../../pipe/unknown-artist.pipe';
+import {UnknownSongPipe} from '../../../../pipe/unknown-song.pipe';
+import {ImageLoaderComponent} from '../../../common/image-loader.component';
+import {UnknownAlbumPipe} from '../../../../pipe/unknown-album.pipe';
+import {UnknownGenrePipe} from '../../../../pipe/unknown-genre.pipe';
+import {Song} from '../../../../domain/library.model';
+import {PlaybackState} from '../../../../service/audio-player.service';
 import {
   NgbDropdown,
   NgbDropdownButtonItem,
   NgbDropdownItem,
   NgbDropdownMenu,
   NgbDropdownToggle
-} from "@ng-bootstrap/ng-bootstrap";
+} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   standalone: true,

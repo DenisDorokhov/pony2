@@ -1,18 +1,18 @@
 import {Component, OnInit} from '@angular/core';
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {ConfigService} from "../../../service/config.service";
-import {LoadingState} from "../../../domain/common.model";
-import {ConfigDto} from "../../../domain/config.dto";
-import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
-import {ErrorDto} from "../../../domain/common.dto";
-import {AutoFocusDirective} from "../../common/auto-focus.directive";
-import {ErrorContainerComponent} from "../../common/error-container.component";
-import {CommonModule} from "@angular/common";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {LibraryScanService} from "../../../service/library-scan.service";
-import {NotificationService} from "../../../service/notification.service";
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {ConfigService} from '../../../service/config.service';
+import {LoadingState} from '../../../domain/common.model';
+import {ConfigDto} from '../../../domain/config.dto';
+import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {ErrorDto} from '../../../domain/common.dto';
+import {AutoFocusDirective} from '../../common/auto-focus.directive';
+import {ErrorContainerComponent} from '../../common/error-container.component';
+import {CommonModule} from '@angular/common';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {LibraryScanService} from '../../../service/library-scan.service';
+import {NotificationService} from '../../../service/notification.service';
 
 @Component({
   standalone: true,
@@ -73,7 +73,7 @@ export class SettingsComponent implements OnInit{
   }
 
   save() {
-    const configToSave = <ConfigDto>this.form.value;
+    const configToSave = this.form.value as ConfigDto;
     this.loadingState = LoadingState.LOADING;
     this.configService.saveConfig(configToSave).subscribe({
       next: config => {
@@ -93,6 +93,6 @@ export class SettingsComponent implements OnInit{
         this.error = error;
         this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
       }
-    })
+    });
   }
 }

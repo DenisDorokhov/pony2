@@ -2,9 +2,9 @@ import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest}
 import {Injectable} from '@angular/core';
 import {Observable, throwError} from 'rxjs';
 import {TokenStorageService} from './token-storage.service';
-import {catchError} from "rxjs/operators";
-import {NotificationService} from "./notification.service";
-import {TranslateService} from "@ngx-translate/core";
+import {catchError} from 'rxjs/operators';
+import {NotificationService} from './notification.service';
+import {TranslateService} from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root'

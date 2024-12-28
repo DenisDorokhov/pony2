@@ -1,11 +1,11 @@
-import { Routes } from '@angular/router';
-import {NotInstalledGuard} from "./service/not-installed-guard.service";
-import {InstalledGuard} from "./service/installed-guard.service";
-import {AuthenticatedGuard} from "./service/authenticated-guard.service";
-import {NotAuthenticatedGuard} from "./service/not-authenticated-guard.service";
-import {InstallationComponent} from "./component/installation.component";
-import {LibraryComponent} from "./component/library/library.component";
-import {LoginComponent} from "./component/login.component";
+import {Routes} from '@angular/router';
+import {NotInstalledGuard} from './service/not-installed-guard.service';
+import {InstalledGuard} from './service/installed-guard.service';
+import {AuthenticatedGuard} from './service/authenticated-guard.service';
+import {NotAuthenticatedGuard} from './service/not-authenticated-guard.service';
+import {InstallationComponent} from './component/installation.component';
+import {LibraryComponent} from './component/library/library.component';
+import {LoginComponent} from './component/login.component';
 
 export const routes: Routes = [
   {path: 'install', component: InstallationComponent, canMatch: [NotInstalledGuard]},

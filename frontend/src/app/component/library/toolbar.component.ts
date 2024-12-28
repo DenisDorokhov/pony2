@@ -4,19 +4,19 @@ import {LogComponent} from './modal/log.component';
 import {ScanningComponent} from './modal/scanning.component';
 import {SettingsComponent} from './modal/settings.component';
 import {UserListComponent} from './modal/user-list.component';
-import {UserDto} from "../../domain/user.dto";
-import {AuthenticationService} from "../../service/authentication.service";
-import {TranslateModule} from "@ngx-translate/core";
-import {NgbDropdownModule, NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {CommonModule} from "@angular/common";
-import {LibraryScanService} from "../../service/library-scan.service";
-import {Subscription} from "rxjs";
-import {FastSearchComponent} from "./fast-search.component";
-import {ErrorDto} from "../../domain/common.dto";
-import {QueueComponent} from "./modal/queue.component";
-import {PlaybackMode, PlaybackService} from "../../service/playback.service";
+import {UserDto} from '../../domain/user.dto';
+import {AuthenticationService} from '../../service/authentication.service';
+import {TranslateModule} from '@ngx-translate/core';
+import {NgbDropdownModule, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {CommonModule} from '@angular/common';
+import {LibraryScanService} from '../../service/library-scan.service';
+import {Subscription} from 'rxjs';
+import {FastSearchComponent} from './fast-search.component';
+import {ErrorDto} from '../../domain/common.dto';
+import {QueueComponent} from './modal/queue.component';
+import {PlaybackMode, PlaybackService} from '../../service/playback.service';
+import {HistoryComponent} from './modal/history.component';
 import Role = UserDto.Role;
-import {HistoryComponent} from "./modal/history.component";
 
 @Component({
   standalone: true,
@@ -53,7 +53,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     }));
     this.subscriptions.push(this.authenticationService.observeAuthentication().subscribe(user =>
       this.currentUser = user));
-    this.subscriptions.push(this.playbackService.observeMode().subscribe(mode => this.playbackMode = mode))
+    this.subscriptions.push(this.playbackService.observeMode().subscribe(mode => this.playbackMode = mode));
     this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
       this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null);
   }

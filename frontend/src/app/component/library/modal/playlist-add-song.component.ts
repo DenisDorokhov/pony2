@@ -1,14 +1,14 @@
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {CommonModule} from "@angular/common";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {Component, Input, OnInit} from "@angular/core";
-import {LoadingState} from "../../../domain/common.model";
-import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {PlaylistService} from "../../../service/playlist.service";
-import {Playlist, Song} from "../../../domain/library.model";
-import {NotificationService} from "../../../service/notification.service";
-import {PlaylistEditComponent} from "./playlist-edit.component";
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {CommonModule} from '@angular/common';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {Component, Input, OnInit} from '@angular/core';
+import {LoadingState} from '../../../domain/common.model';
+import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {PlaylistService} from '../../../service/playlist.service';
+import {Playlist, Song} from '../../../domain/library.model';
+import {NotificationService} from '../../../service/notification.service';
+import {PlaylistEditComponent} from './playlist-edit.component';
 
 @Component({
   standalone: true,
@@ -91,6 +91,6 @@ export class PlaylistAddSongComponent implements OnInit {
         );
         this.activeModal.close();
       }
-    })
+    });
   }
 }

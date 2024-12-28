@@ -1,15 +1,15 @@
 import {Component, OnInit} from '@angular/core';
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {NgbActiveModal, NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {UserDto, UserPageDto} from "../../../domain/user.dto";
-import {CommonModule} from "@angular/common";
-import {UserService} from "../../../service/user.service";
-import {LoadingState} from "../../../domain/common.model";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {UserComponent} from "./user.component";
-import {AuthenticationService} from "../../../service/authentication.service";
-import {NotificationService} from "../../../service/notification.service";
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {UserDto, UserPageDto} from '../../../domain/user.dto';
+import {CommonModule} from '@angular/common';
+import {UserService} from '../../../service/user.service';
+import {LoadingState} from '../../../domain/common.model';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {UserComponent} from './user.component';
+import {AuthenticationService} from '../../../service/authentication.service';
+import {NotificationService} from '../../../service/notification.service';
 
 @Component({
   standalone: true,
@@ -105,7 +105,7 @@ export class UserListComponent implements OnInit {
             this.translateService.instant('userList.userDeletionNotificationFailed'),
           );
         }
-      })
+      });
     }
   }
 }

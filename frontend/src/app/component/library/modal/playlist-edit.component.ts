@@ -1,17 +1,17 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {TranslateModule} from "@ngx-translate/core";
-import {CommonModule} from "@angular/common";
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {LoadingState} from "../../../domain/common.model";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {Playlist, PlaylistSongs, Song} from "../../../domain/library.model";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {ErrorDto} from "../../../domain/common.dto";
-import {PlaylistService} from "../../../service/playlist.service";
-import {Observable} from "rxjs";
-import {PlaylistCreateCommandDto, PlaylistUpdateCommandDto} from "../../../domain/library.dto";
-import {ErrorContainerComponent} from "../../common/error-container.component";
+import {Component, Input, OnInit} from '@angular/core';
+import {TranslateModule} from '@ngx-translate/core';
+import {CommonModule} from '@angular/common';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {LoadingState} from '../../../domain/common.model';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {Playlist, PlaylistSongs, Song} from '../../../domain/library.model';
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {ErrorDto} from '../../../domain/common.dto';
+import {PlaylistService} from '../../../service/playlist.service';
+import {Observable} from 'rxjs';
+import {PlaylistCreateCommandDto, PlaylistUpdateCommandDto} from '../../../domain/library.dto';
+import {ErrorContainerComponent} from '../../common/error-container.component';
 import SongId = PlaylistUpdateCommandDto.SongId;
 
 @Component({

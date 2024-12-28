@@ -1,12 +1,12 @@
-import {Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
-import {AlbumSongs, Song} from "../../domain/library.model";
-import {SongListComponent} from "./song-list.component";
-import {TranslateModule} from "@ngx-translate/core";
-import {ImageLoaderComponent} from "../common/image-loader.component";
-import {CommonModule} from "@angular/common";
-import {LibraryService} from "../../service/library.service";
-import {Subscription} from "rxjs";
-import {UnknownAlbumPipe} from "../../pipe/unknown-album.pipe";
+import {Component, Input, OnChanges, OnDestroy, OnInit} from '@angular/core';
+import {AlbumSongs, Song} from '../../domain/library.model';
+import {SongListComponent} from './song-list.component';
+import {TranslateModule} from '@ngx-translate/core';
+import {ImageLoaderComponent} from '../common/image-loader.component';
+import {CommonModule} from '@angular/common';
+import {LibraryService} from '../../service/library.service';
+import {Subscription} from 'rxjs';
+import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 
 interface Disc {
   discNumber: number | undefined;
@@ -62,7 +62,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
     this.scrollToAlbumRequestSubscription = this.libraryService.observeScrollToAlbumRequest()
       .subscribe(album => {
         if (album.id === this.albumSongs.album.id) {
-          var song = this.discs[0].songs[0];
+          const song = this.discs[0].songs[0];
           this.libraryService.selectSong(song);
           this.libraryService.requestScrollToSong(song);
           this.libraryService.finishScrollToAlbum();
@@ -70,7 +70,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
       });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges() {
     this.splitAlbumsIntoDiscs();
   }
 
@@ -78,7 +78,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
     window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', '');
   }
 
-  trackByIndex(index: number, _: Disc) {
+  trackByIndex(index: number) {
     return index;
   }
 

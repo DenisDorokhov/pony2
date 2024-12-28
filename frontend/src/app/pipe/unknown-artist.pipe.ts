@@ -1,5 +1,5 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {TranslateService} from "@ngx-translate/core";
+import {Pipe, PipeTransform} from '@angular/core';
+import {TranslateService} from '@ngx-translate/core';
 
 @Pipe({
   standalone: true,
@@ -12,7 +12,7 @@ export class UnknownArtistPipe implements PipeTransform {
   ) {
   }
 
-  transform(value: any, ...args: any[]): any {
+  transform(value: any): any {
     return value ? value : this.translateService.instant('library.artist.unknownLabel');
   }
 }

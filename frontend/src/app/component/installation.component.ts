@@ -1,14 +1,14 @@
-import {Component} from "@angular/core";
-import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
-import {ErrorDto} from "../domain/common.dto";
-import {InstallationService} from "../service/installation.service";
-import {Router} from "@angular/router";
-import {InstallationCommandDto} from "../domain/installation.dto";
-import {ErrorComponent} from "./common/error.component";
-import {ErrorContainerComponent} from "./common/error-container.component";
-import {TranslateModule} from "@ngx-translate/core";
-import {CommonModule} from "@angular/common";
-import {AutoFocusDirective} from "./common/auto-focus.directive";
+import {Component} from '@angular/core';
+import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {ErrorDto} from '../domain/common.dto';
+import {InstallationService} from '../service/installation.service';
+import {Router} from '@angular/router';
+import {InstallationCommandDto} from '../domain/installation.dto';
+import {ErrorComponent} from './common/error.component';
+import {ErrorContainerComponent} from './common/error-container.component';
+import {TranslateModule} from '@ngx-translate/core';
+import {CommonModule} from '@angular/common';
+import {AutoFocusDirective} from './common/auto-focus.directive';
 
 @Component({
   standalone: true,
@@ -52,7 +52,7 @@ export class InstallationComponent {
   }
 
   install() {
-    const installationCommand = <InstallationCommandDto>this.form.value;
+    const installationCommand = this.form.value as InstallationCommandDto;
     installationCommand.startScanJobAfterInstallation = true;
     this.installationService.install(installationCommand).subscribe({
       next: installation => {

@@ -6,7 +6,8 @@
     "start": "npx -p @angular/cli ng serve --proxy-config proxy.conf.json",
     "build": "npx -p @angular/cli ng build",
     "watch": "npx -p @angular/cli ng build --watch --configuration development",
-    "test": "npx -p @angular/cli ng test --watch false"
+    "test": "npx -p @angular/cli ng test --watch false",
+    "lint": "npx -p @angular/cli ng lint"
   },
   "private": true,
   "dependencies": {
@@ -38,12 +39,15 @@
     "@angular/compiler-cli": "18.1.0",
     "@angular/localize": "18.1.0",
     "@types/jasmine": "5.1.4",
+    "angular-eslint": "19.0.2",
+    "eslint": "^9.16.0",
     "jasmine-core": "5.1.2",
     "karma": "6.4.3",
     "karma-chrome-launcher": "3.2.0",
     "karma-coverage": "2.2.1",
     "karma-jasmine": "5.1.0",
     "karma-jasmine-html-reporter": "2.1.0",
-    "typescript": "5.5.3"
+    "typescript": "5.5.3",
+    "typescript-eslint": "8.18.0"
   }
 }

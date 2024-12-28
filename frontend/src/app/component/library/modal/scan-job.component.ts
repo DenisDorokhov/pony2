@@ -1,9 +1,9 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {CommonModule} from "@angular/common";
-import {LogMessageDto, ScanJobDto} from "../../../domain/library.dto";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {formatDuration, formatFileSize} from "../../../utils/format.utils";
+import {Component, Input, OnInit} from '@angular/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {CommonModule} from '@angular/common';
+import {LogMessageDto, ScanJobDto} from '../../../domain/library.dto';
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {formatDuration, formatFileSize} from '../../../utils/format.utils';
 
 @Component({
   standalone: true,

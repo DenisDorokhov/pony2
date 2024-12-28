@@ -1,7 +1,7 @@
-import {BehaviorSubject, interval, Observable} from "rxjs";
-import {Howl, HowlOptions} from "howler";
-import {distinctUntilChanged} from "rxjs/operators";
-import {Song} from "../domain/library.model";
+import {BehaviorSubject, interval, Observable} from 'rxjs';
+import {Howl} from 'howler';
+import {distinctUntilChanged} from 'rxjs/operators';
+import {Song} from '../domain/library.model';
 
 export enum PlaybackState {
   STOPPED = 'STOPPED',
@@ -116,7 +116,7 @@ export class AudioPlayer {
     this.unloadHowl();
     console.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'...`);
     this.firePlaybackEvent(PlaybackState.LOADING, song);
-    this.howl = new Howl(<HowlOptions>{
+    this.howl = new Howl({
       src: [song.audioUrl],
       format: [song.fileExtension],
       html5: true,
@@ -151,11 +151,11 @@ export class AudioPlayer {
     // Workaround for Howler bug: https://github.com/goldfire/howler.js/issues/1175
     if (navigator && navigator.mediaSession) {
       navigator.mediaSession.setActionHandler('play', () => {
-        console.info("Play by media key detected.");
+        console.info('Play by media key detected.');
         this.howl?.play();
       });
       navigator.mediaSession.setActionHandler('pause', () => {
-        console.info("Pause by media key detected.");
+        console.info('Pause by media key detected.');
         this.howl?.pause();
       });
     }

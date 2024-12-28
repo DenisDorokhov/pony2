@@ -1,4 +1,4 @@
-import {TranslateService} from "@ngx-translate/core";
+import {TranslateService} from '@ngx-translate/core';
 
 export function formatFileSize(bytes: number, translateService: TranslateService) {
   const gigabytes = bytes / 1_000_000_000;

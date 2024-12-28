@@ -3,7 +3,7 @@ import {Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {InstallationCommandDto, InstallationDto, InstallationStatusDto} from '../domain/installation.dto';
-import {ErrorDto} from "../domain/common.dto";
+import {ErrorDto} from '../domain/common.dto';
 
 @Injectable({
   providedIn: 'root'

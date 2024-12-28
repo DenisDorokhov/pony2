@@ -1,17 +1,17 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {TranslateModule} from "@ngx-translate/core";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {UserCreateCommandDto, UserDto, UserUpdateCommandDto} from "../../../domain/user.dto";
-import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
-import {ErrorDto} from "../../../domain/common.dto";
-import {ErrorContainerComponent} from "../../common/error-container.component";
-import {CommonModule} from "@angular/common";
-import {UserService} from "../../../service/user.service";
-import {Observable} from "rxjs";
-import {AuthenticationService} from "../../../service/authentication.service";
-import {LoadingState} from "../../../domain/common.model";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
+import {TranslateModule} from '@ngx-translate/core';
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {UserCreateCommandDto, UserDto, UserUpdateCommandDto} from '../../../domain/user.dto';
+import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {ErrorDto} from '../../../domain/common.dto';
+import {ErrorContainerComponent} from '../../common/error-container.component';
+import {CommonModule} from '@angular/common';
+import {UserService} from '../../../service/user.service';
+import {Observable} from 'rxjs';
+import {AuthenticationService} from '../../../service/authentication.service';
+import {LoadingState} from '../../../domain/common.model';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 
 @Component({
   standalone: true,

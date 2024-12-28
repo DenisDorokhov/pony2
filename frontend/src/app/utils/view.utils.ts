@@ -1,4 +1,4 @@
-import {ApplicationRef, ViewContainerRef} from "@angular/core";
+import {ApplicationRef, ViewContainerRef} from '@angular/core';
 
 export function resolveAppViewContainerRef(applicationRef: ApplicationRef): ViewContainerRef {
   const appInstance = applicationRef.components[0].instance;

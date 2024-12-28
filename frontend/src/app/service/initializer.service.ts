@@ -2,10 +2,10 @@ import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {EMPTY, forkJoin} from 'rxjs';
 import {catchError, mergeMap, tap} from 'rxjs/operators';
-import {InstallationService} from "./installation.service";
-import {AuthenticationService} from "./authentication.service";
-import {PlaybackService} from "./playback.service";
-import {PlaylistService} from "./playlist.service";
+import {InstallationService} from './installation.service';
+import {AuthenticationService} from './authentication.service';
+import {PlaybackService} from './playback.service';
+import {PlaylistService} from './playlist.service';
 
 @Injectable({
   providedIn: 'root'

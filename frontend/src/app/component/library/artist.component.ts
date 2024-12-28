@@ -1,14 +1,14 @@
 import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {Artist} from "../../domain/library.model";
-import {LibraryService} from "../../service/library.service";
-import {PlaybackService} from "../../service/playback.service";
-import {ScrollingUtils} from "../../utils/scrolling.utils";
-import {ImageLoaderComponent} from "../common/image-loader.component";
-import {TranslateModule} from "@ngx-translate/core";
-import {CommonModule} from "@angular/common";
-import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
-import {PlaybackState} from "../../service/audio-player.service";
+import {Artist} from '../../domain/library.model';
+import {LibraryService} from '../../service/library.service';
+import {PlaybackService} from '../../service/playback.service';
+import {ScrollingUtils} from '../../utils/scrolling.utils';
+import {ImageLoaderComponent} from '../common/image-loader.component';
+import {TranslateModule} from '@ngx-translate/core';
+import {CommonModule} from '@angular/common';
+import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
+import {PlaybackState} from '../../service/audio-player.service';
 
 @Component({
   standalone: true,

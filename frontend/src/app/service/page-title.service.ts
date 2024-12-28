@@ -2,7 +2,7 @@ import {Injectable, NgZone} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription, timer} from 'rxjs';
 import {takeWhile, tap} from 'rxjs/operators';
-import {Song} from "../domain/library.model";
+import {Song} from '../domain/library.model';
 
 class StringScroller {
 

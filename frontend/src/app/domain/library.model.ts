@@ -92,10 +92,10 @@ export class Song {
     if ((song1.trackNumber ?? 0) < (song2.trackNumber ?? 0)) {
       return -1;
     }
-    if ((song1.name ?? "") > (song2.name ?? "")) {
+    if ((song1.name ?? '') > (song2.name ?? '')) {
       return 1;
     }
-    if ((song1.name ?? "") < (song2.name ?? "")) {
+    if ((song1.name ?? '') < (song2.name ?? '')) {
       return -1;
     }
     return 0;

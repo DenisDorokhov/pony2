@@ -1,13 +1,13 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, of, Subscription} from 'rxjs';
 import {tap} from 'rxjs/operators';
-import {Song} from "../domain/library.model";
-import {AuthenticationService} from "./authentication.service";
-import {moveItemInArray} from "@angular/cdk/drag-drop";
-import {LibraryService} from "./library.service";
-import {AudioPlayer, PlaybackEvent, PlaybackState} from "./audio-player.service";
-import {BrowserNotificationService} from "./browser-notification.service";
-import {PlaybackHistoryService} from "./playback-history.service";
+import {Song} from '../domain/library.model';
+import {AuthenticationService} from './authentication.service';
+import {moveItemInArray} from '@angular/cdk/drag-drop';
+import {LibraryService} from './library.service';
+import {AudioPlayer, PlaybackEvent, PlaybackState} from './audio-player.service';
+import {BrowserNotificationService} from './browser-notification.service';
+import {PlaybackHistoryService} from './playback-history.service';
 
 export enum PlaybackMode {
   NORMAL = 'NORMAL',
@@ -67,14 +67,14 @@ export class PlaybackService {
       navigator.mediaSession.setActionHandler(
         'nexttrack',
         () => {
-          console.info("Next track by media key detected.");
+          console.info('Next track by media key detected.');
           this.switchToNextSong();
         }
       );
       navigator.mediaSession.setActionHandler(
         'previoustrack',
         () => {
-          console.info("Previous track by media key detected.");
+          console.info('Previous track by media key detected.');
           this.rewindToBeginningOrSwitchToPreviousSong();
         }
       );
@@ -82,7 +82,7 @@ export class PlaybackService {
         'seekto',
         details => {
           if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
-            console.info("Seek request by media session detected.");
+            console.info('Seek request by media session detected.');
             this.audioPlayer.seekToPercentage((details.seekTime || 0) / this.lastPlaybackEvent.song!.duration);
           }
         }
@@ -204,7 +204,7 @@ export class PlaybackService {
       }
       return this.libraryService.getSongs(allSongIds).pipe(
         tap(fetchedSongs => {
-          const idToSong: {[songId: string]: Song} = fetchedSongs.reduce(function(result: any, song) {
+          const idToSong: Record<string, Song> = fetchedSongs.reduce(function(result: any, song) {
             result[song.id] = song;
             return result;
           }, {});
@@ -462,7 +462,7 @@ export class PlaybackService {
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
-      this.switchToNextSong()
+      this.switchToNextSong();
       this.storeState();
     } else if (
       playbackEvent.state === PlaybackState.LOADING

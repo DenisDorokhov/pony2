@@ -1,16 +1,16 @@
-import {Component, OnInit} from "@angular/core";
-import {CommonModule} from "@angular/common";
-import {TranslateModule} from "@ngx-translate/core";
-import {NgbActiveModal, NgbDropdownModule} from "@ng-bootstrap/ng-bootstrap";
-import {PlaybackHistory, Song} from "../../../domain/library.model";
-import {LoadingState} from "../../../domain/common.model";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {PlaybackHistoryService} from "../../../service/playback-history.service";
-import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
-import {LargeSongComponent} from "./common/large-song.component";
-import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
-import {LibraryService} from "../../../service/library.service";
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
+import {NgbActiveModal, NgbDropdownModule} from '@ng-bootstrap/ng-bootstrap';
+import {PlaybackHistory, Song} from '../../../domain/library.model';
+import {LoadingState} from '../../../domain/common.model';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {PlaybackHistoryService} from '../../../service/playback-history.service';
+import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+import {LargeSongComponent} from './common/large-song.component';
+import {NoContentIndicatorComponent} from '../../common/no-content-indicator.component';
+import {LibraryService} from '../../../service/library.service';
 
 @Component({
   standalone: true,

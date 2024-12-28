@@ -2,9 +2,9 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
-import {Album, Artist, ArtistSongs, SearchResult, Song} from "../domain/library.model";
-import {AuthenticationService} from "./authentication.service";
-import {ArtistDto, ArtistSongsDto, SearchResultDto, SongDetailsDto} from "../domain/library.dto";
+import {Album, Artist, ArtistSongs, SearchResult, Song} from '../domain/library.model';
+import {AuthenticationService} from './authentication.service';
+import {ArtistDto, ArtistSongsDto, SearchResultDto, SongDetailsDto} from '../domain/library.dto';
 
 export enum LibraryState {
   UNKNOWN,

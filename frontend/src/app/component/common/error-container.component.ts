@@ -1,7 +1,7 @@
-import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {ErrorDto} from "../../domain/common.dto";
-import {ErrorTranslationService} from "../../service/error-translation.service";
-import {CommonModule} from "@angular/common";
+import {Component, Input, OnChanges} from '@angular/core';
+import {ErrorDto} from '../../domain/common.dto';
+import {ErrorTranslationService} from '../../service/error-translation.service';
+import {CommonModule} from '@angular/common';
 
 @Component({
   standalone: true,
@@ -21,7 +21,7 @@ export class ErrorContainerComponent implements OnChanges {
   constructor(private errorTranslationService: ErrorTranslationService) {
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges() {
     this.errorMessages = this.fetchErrorMessages().sort();
     this.hasErrors = this.errorMessages.length > 0;
   }

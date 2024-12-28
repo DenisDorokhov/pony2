@@ -1,9 +1,9 @@
-import {Injectable} from "@angular/core";
-import {TranslateService} from "@ngx-translate/core";
-import {Song} from "../domain/library.model";
-import {from, Observable, of} from "rxjs";
-import {tap} from "rxjs/operators";
-import {isMobileBrowser} from "../utils/mobile.utils";
+import {Injectable} from '@angular/core';
+import {TranslateService} from '@ngx-translate/core';
+import {Song} from '../domain/library.model';
+import {from, Observable, of} from 'rxjs';
+import {tap} from 'rxjs/operators';
+import {isMobileBrowser} from '../utils/mobile.utils';
 
 @Injectable({
   providedIn: 'root'
@@ -40,11 +40,11 @@ export class BrowserNotificationService {
 
   showSongNotification(song: Song) {
     if (this.appInForeground) {
-      console.debug('Not showing browser notification: application is in the background.')
+      console.debug('Not showing browser notification: application is in the background.');
       return;
     }
     if (isMobileBrowser()) {
-      console.debug('Not showing browser notification: mobile browser.')
+      console.debug('Not showing browser notification: mobile browser.');
       return;
     }
     const artistName = song.artistName ?? this.translateService.instant('library.artist.unknownLabel');

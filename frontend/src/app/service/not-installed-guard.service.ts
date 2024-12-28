@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {CanMatch, GuardResult, MaybeAsync, Router} from '@angular/router';
 import {map, tap} from 'rxjs/operators';
-import {InstallationService} from "./installation.service";
+import {InstallationService} from './installation.service';
 
 @Injectable({
   providedIn: 'root'

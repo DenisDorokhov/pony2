@@ -1,9 +1,9 @@
-import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
-import {PlaybackHistoryDto, PlaybackHistorySongDto} from "../domain/library.dto";
-import {map} from "rxjs/operators";
-import {PlaybackHistory, PlaybackHistorySong} from "../domain/library.model";
-import {Observable} from "rxjs";
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {PlaybackHistoryDto, PlaybackHistorySongDto} from '../domain/library.dto';
+import {map} from 'rxjs/operators';
+import {PlaybackHistory, PlaybackHistorySong} from '../domain/library.model';
+import {Observable} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'

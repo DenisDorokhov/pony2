@@ -3,8 +3,8 @@ import {Injectable} from '@angular/core';
 import {BehaviorSubject, defer, Observable, Subject, throwError} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
 import {TokenStorageService} from './token-storage.service';
-import {AuthenticationDto, UserDto} from "../domain/user.dto";
-import {ErrorDto} from "../domain/common.dto";
+import {AuthenticationDto, UserDto} from '../domain/user.dto';
+import {ErrorDto} from '../domain/common.dto';
 
 export class Credentials {
   email: string | undefined;

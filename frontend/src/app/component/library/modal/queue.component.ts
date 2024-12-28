@@ -7,22 +7,22 @@ import {
   QueryList,
   ViewChild,
   ViewChildren
-} from "@angular/core";
-import {CommonModule} from "@angular/common";
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
-import {NgbActiveModal, NgbDropdown} from "@ng-bootstrap/ng-bootstrap";
-import {PlaybackService} from "../../../service/playback.service";
-import {fromEvent, Subscription} from "rxjs";
-import {Song} from "../../../domain/library.model";
-import {LibraryService} from "../../../service/library.service";
-import {LoadingState} from "../../../domain/common.model";
-import {NoContentIndicatorComponent} from "../../common/no-content-indicator.component";
-import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from "@angular/cdk/drag-drop";
-import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
-import {formatDuration} from "../../../utils/format.utils";
-import {PlaybackEvent} from "../../../service/audio-player.service";
-import {isMobileBrowser} from "../../../utils/mobile.utils";
-import {LargeSongComponent} from "./common/large-song.component";
+} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {NgbActiveModal, NgbDropdown} from '@ng-bootstrap/ng-bootstrap';
+import {PlaybackService} from '../../../service/playback.service';
+import {fromEvent, Subscription} from 'rxjs';
+import {Song} from '../../../domain/library.model';
+import {LibraryService} from '../../../service/library.service';
+import {LoadingState} from '../../../domain/common.model';
+import {NoContentIndicatorComponent} from '../../common/no-content-indicator.component';
+import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from '@angular/cdk/drag-drop';
+import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+import {formatDuration} from '../../../utils/format.utils';
+import {PlaybackEvent} from '../../../service/audio-player.service';
+import {isMobileBrowser} from '../../../utils/mobile.utils';
+import {LargeSongComponent} from './common/large-song.component';
 
 @Component({
   standalone: true,
@@ -88,7 +88,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
     this.subscriptions.push(this.playbackService.observeCurrentSong()
-      .subscribe(_ => {
+      .subscribe(() => {
         this.currentSongIndex = this.playbackService.currentSongIndex;
         this.checkIfCurrentSongShown();
       }));

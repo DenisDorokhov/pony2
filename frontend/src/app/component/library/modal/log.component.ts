@@ -1,13 +1,13 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {TranslateModule} from "@ngx-translate/core";
-import {LogService} from "../../../service/log.service";
-import {LoadingState} from "../../../domain/common.model";
-import {LogMessageDto, LogMessagePageDto} from "../../../domain/library.dto";
-import {CommonModule, DatePipe} from "@angular/common";
-import {ErrorIndicatorComponent} from "../../common/error-indicator.component";
-import {LoadingIndicatorComponent} from "../../common/loading-indicator.component";
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {TranslateModule} from '@ngx-translate/core';
+import {LogService} from '../../../service/log.service';
+import {LoadingState} from '../../../domain/common.model';
+import {LogMessageDto, LogMessagePageDto} from '../../../domain/library.dto';
+import {CommonModule, DatePipe} from '@angular/common';
+import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import Level = LogMessageDto.Level;
 
 class LogWithException implements LogMessageDto {

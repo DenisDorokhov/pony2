@@ -1,16 +1,16 @@
-import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from "@angular/core";
-import {TranslateModule} from "@ngx-translate/core";
-import {CommonModule} from "@angular/common";
-import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from "rxjs";
-import {distinctUntilChanged, map} from "rxjs/operators";
-import {LibraryService} from "../../service/library.service";
-import {Album, Artist, SearchResult, Song} from "../../domain/library.model";
-import {ImageLoaderComponent} from "../common/image-loader.component";
-import {ScrollingUtils} from "../../utils/scrolling.utils";
+import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {TranslateModule} from '@ngx-translate/core';
+import {CommonModule} from '@angular/common';
+import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from 'rxjs';
+import {distinctUntilChanged, map} from 'rxjs/operators';
+import {LibraryService} from '../../service/library.service';
+import {Album, Artist, SearchResult, Song} from '../../domain/library.model';
+import {ImageLoaderComponent} from '../common/image-loader.component';
+import {ScrollingUtils} from '../../utils/scrolling.utils';
+import {UnknownSongPipe} from '../../pipe/unknown-song.pipe';
+import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
+import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
-import {UnknownSongPipe} from "../../pipe/unknown-song.pipe";
-import {UnknownArtistPipe} from "../../pipe/unknown-artist.pipe";
-import {UnknownAlbumPipe} from "../../pipe/unknown-album.pipe";
 
 class NavigationItem {
 
@@ -37,7 +37,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   searchResult: SearchResult | undefined;
 
   navigationItems: NavigationItem[] = [];
-  idToNavigationItem: {[key: string]: NavigationItem} = {};
+  idToNavigationItem: Record<string, NavigationItem> = {};
 
   @ViewChild('container') containerElement!: ElementRef;
   @ViewChild('input') inputElement!: ElementRef;
@@ -158,7 +158,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         this.moveNavigationIndex(4, false, false);
         event.preventDefault();
         break;
-      case 'Enter':
+      case 'Enter': {
         const selectedIndex = this.indexOfSelectedNavigationItem();
         if (selectedIndex !== undefined) {
           this.navigationItems[selectedIndex].activate();
@@ -166,6 +166,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         }
         event.preventDefault();
         break;
+      }
       case 'Escape':
         this.open = false;
         this.inputElement.nativeElement.blur();

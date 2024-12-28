@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
-import {ErrorDto} from "../domain/common.dto";
+import {ErrorDto} from '../domain/common.dto';
 
 @Injectable({
   providedIn: 'root'

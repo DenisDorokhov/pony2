@@ -1,14 +1,14 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {Artist} from "../../domain/library.model";
-import {LibraryService} from "../../service/library.service";
-import {LoadingState} from "../../domain/common.model";
-import {TranslateModule} from "@ngx-translate/core";
-import {LoadingIndicatorComponent} from "../common/loading-indicator.component";
-import {CommonModule} from "@angular/common";
-import {ErrorIndicatorComponent} from "../common/error-indicator.component";
-import {NoContentIndicatorComponent} from "../common/no-content-indicator.component";
-import {ArtistComponent} from "./artist.component";
+import {Artist} from '../../domain/library.model';
+import {LibraryService} from '../../service/library.service';
+import {LoadingState} from '../../domain/common.model';
+import {TranslateModule} from '@ngx-translate/core';
+import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
+import {CommonModule} from '@angular/common';
+import {ErrorIndicatorComponent} from '../common/error-indicator.component';
+import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
+import {ArtistComponent} from './artist.component';
 
 @Component({
   standalone: true,
@@ -47,7 +47,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     return artist.id;
   }
 
-  private loadArtists(refreshing: boolean = false) {
+  private loadArtists(refreshing = false) {
     if (refreshing) {
       console.info('Refreshing artists...');
     } else {

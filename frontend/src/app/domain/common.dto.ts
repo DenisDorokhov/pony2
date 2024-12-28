@@ -41,9 +41,9 @@ export namespace ErrorDto {
 
   export function fromHttpErrorResponse(error: HttpErrorResponse): ErrorDto {
     if (typeof error.error === 'object') {
-      return <ErrorDto>error.error;
+      return error.error as ErrorDto;
     } else {
-      return <ErrorDto>{
+      return {
         code: ErrorDto.Code.UNEXPECTED,
         message: 'Unexpected error occurred.',
         arguments: [],

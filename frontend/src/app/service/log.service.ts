@@ -1,7 +1,7 @@
-import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
-import {LogMessageDto, LogMessagePageDto} from "../domain/library.dto";
-import {Observable} from "rxjs";
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {LogMessageDto, LogMessagePageDto} from '../domain/library.dto';
+import {Observable} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'

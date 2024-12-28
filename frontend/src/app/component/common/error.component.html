@@ -1,4 +1,4 @@
-<div *ngIf="error && ignoredCodes.indexOf(error.code) == -1"
+<div *ngIf="error && ignoredCodes.indexOf(error.code) === -1"
      class="alert alert-danger">
   <strong>{{ 'shared.errorsHeader' | translate }}</strong>
   <ul>

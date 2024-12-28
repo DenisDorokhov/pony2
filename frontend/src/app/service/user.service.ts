@@ -1,15 +1,15 @@
-import {Injectable} from "@angular/core";
-import {Observable} from "rxjs";
+import {Injectable} from '@angular/core';
+import {Observable} from 'rxjs';
 import {
   CurrentUserUpdateCommandDto,
   UserCreateCommandDto,
   UserDto,
   UserPageDto,
   UserUpdateCommandDto
-} from "../domain/user.dto";
-import {HttpClient} from "@angular/common/http";
-import {catchError} from "rxjs/operators";
-import {ErrorDto} from "../domain/common.dto";
+} from '../domain/user.dto';
+import {HttpClient} from '@angular/common/http';
+import {catchError} from 'rxjs/operators';
+import {ErrorDto} from '../domain/common.dto';
 
 @Injectable({
   providedIn: 'root'

@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {Observable, Subscription} from 'rxjs';
 import {filter} from 'rxjs/operators';
-import {CommonModule} from "@angular/common";
+import {CommonModule} from '@angular/common';
 
 enum ImageLoaderComponentState {
   EMPTY, PENDING, LOADING, ERROR, LOADED
@@ -109,7 +109,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     return undefined;
   }
 
-  private createIntersectionObservable(intersectionOptions: any): Observable<IntersectionObserverEntry> {
+  private createIntersectionObservable(intersectionOptions: IntersectionObserverInit): Observable<IntersectionObserverEntry> {
     return new Observable(subscriber => {
       const intersectionObserver = new IntersectionObserver(
         (entries) => subscriber.next(entries[0]),

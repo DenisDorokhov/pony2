@@ -1,4 +1,4 @@
-import {PageDto} from "./common.dto";
+import {PageDto} from './common.dto';
 
 export interface AlbumDto {
   id: string;
@@ -86,7 +86,7 @@ export namespace LogMessageDto {
     if (!logMessage) {
       return undefined;
     }
-    const regExp = /{}/g
+    const regExp = /{}/g;
     const argCount = ((logMessage.pattern || '').match(regExp) || []).length;
     if (argCount < logMessage.arguments.length) {
       return logMessage.arguments[logMessage.arguments.length - 1];
