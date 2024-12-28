@@ -12,7 +12,9 @@
   <div class="table-container" *ngIf="playbackHistory?.songs?.length ?? 0">
 
     <pony-large-song
-      [index]="i" [song]="playbackHistorySong.song" [showIndex]="false" [showDuration]="false"
+      [index]="i" [song]="playbackHistorySong.song"
+      [isCurrentSong]="playbackHistorySong.song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
+      [showIndex]="false" [showDuration]="false"
       [selected]="selectedIndex === i"
       *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"
       (dblclick)="onSongDoubleClick($event, playbackHistorySong.song)"

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdownModule} from '@ng-bootstrap/ng-bootstrap';
@@ -11,6 +11,9 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
 import {LargeSongComponent} from './common/large-song.component';
 import {NoContentIndicatorComponent} from '../../common/no-content-indicator.component';
 import {LibraryService} from '../../../service/library.service';
+import {PlaybackEvent} from "../../../service/audio-player.service";
+import {PlaybackService} from "../../../service/playback.service";
+import {Subscription} from "rxjs";
 
 @Component({
   standalone: true,
@@ -31,7 +34,7 @@ import {LibraryService} from '../../../service/library.service';
   templateUrl: './history.component.html',
   styleUrls: ['./history.component.scss']
 })
-export class HistoryComponent implements OnInit {
+export class HistoryComponent implements OnInit, OnDestroy {
 
   readonly LoadingState = LoadingState;
 
@@ -40,12 +43,20 @@ export class HistoryComponent implements OnInit {
   loadingState: LoadingState = LoadingState.LOADING;
   playbackHistory: PlaybackHistory | undefined;
   selectedIndex = -1;
+  lastPlaybackEvent: PlaybackEvent | undefined;
+
+  private subscriptions: Subscription[] = [];
 
   constructor(
     public readonly activeModal: NgbActiveModal,
     private readonly playbackHistoryService: PlaybackHistoryService,
     private readonly libraryService: LibraryService,
+    private readonly playbackService: PlaybackService,
   ) {
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
   ngOnInit(): void {
@@ -59,6 +70,8 @@ export class HistoryComponent implements OnInit {
         this.loadingState = LoadingState.ERROR;
       }
     });
+    this.subscriptions.push(this.playbackService.observePlaybackEvent()
+      .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }
 
   onSongDoubleClick(event: MouseEvent, song: Song) {
