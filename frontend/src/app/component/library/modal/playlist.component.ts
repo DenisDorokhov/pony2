@@ -14,7 +14,7 @@ import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {LargeSongComponent} from './common/large-song.component';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
-import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList} from '@angular/cdk/drag-drop';
+import {CdkDrag, CdkDragDrop, CdkDragStart, CdkDropList, moveItemInArray} from '@angular/cdk/drag-drop';
 import {isMobileBrowser} from '../../../utils/mobile.utils';
 import {PlaybackService} from '../../../service/playback.service';
 import {LibraryService} from '../../../service/library.service';
@@ -72,17 +72,24 @@ export class PlaylistComponent implements OnInit, OnDestroy {
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }
 
-  private loadSongs(showLoading = true) {
+  private loadSongs(primaryLoading = true) {
     if (this.selectedPlaylist) {
-      console.info(showLoading);
-      this.primaryLoadingState = showLoading ? LoadingState.LOADING : LoadingState.LOADED;
+      if (primaryLoading) {
+        this.primaryLoadingState = LoadingState.LOADING;
+      } else {
+        this.secondaryLoadingState = LoadingState.LOADING;
+      }
       this.playlistService.getPlaylist(this.selectedPlaylist.id).subscribe({
         next: playlistSongs => {
-          this.primaryLoadingState = LoadingState.LOADED;
+          this.primaryLoadingState = this.secondaryLoadingState = LoadingState.LOADED;
           this.selectedPlaylistSongs = playlistSongs;
         },
         error: () => {
-          this.primaryLoadingState = showLoading ? LoadingState.ERROR : LoadingState.LOADED;
+          if (primaryLoading) {
+            this.primaryLoadingState = LoadingState.ERROR;
+          } else {
+            this.secondaryLoadingState = LoadingState.ERROR;
+          }
         }
       });
     } else {
@@ -171,9 +178,27 @@ export class PlaylistComponent implements OnInit, OnDestroy {
 
   onDropListDropped(event: CdkDragDrop<any, any>) {
     const toIndex = this.dragFromIndex! - event.previousIndex + event.currentIndex;
-    // TODO: implement
+    const songs = [...this.selectedPlaylistSongs!.songs];
+    moveItemInArray(songs, this.dragFromIndex!, toIndex);
     this.dragFromIndex = undefined;
+    this.selectedPlaylistSongs!.songs = songs;
     this.selectedIndex = toIndex;
+    const command: PlaylistUpdateCommandDto = {
+      id: this.selectedPlaylistSongs!.playlist.id,
+      name: this.selectedPlaylistSongs!.playlist.name!,
+      overriddenSongIds: this.selectedPlaylistSongs!.songs
+        .map(next => {
+          return {
+            id: next.id,
+            songId: next.song.id
+          } as PlaylistUpdateCommandDto.SongId;
+        })
+    };
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.playlistService.updatePlaylist(command).subscribe({
+      next: () => this.secondaryLoadingState = LoadingState.LOADED,
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
   }
 
   private dragFromIndex: number | undefined;
@@ -183,7 +208,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   private resolveDragItemIndex(id: string): number {
-    return Number(id.replaceAll('queueSong_', ''));
+    return Number(id.replaceAll('playlistSong_', ''));
   }
 
   onWheel(event: WheelEvent) {

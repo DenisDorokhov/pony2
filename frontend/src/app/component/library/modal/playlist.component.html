@@ -6,7 +6,8 @@
       <option [ngValue]="playlist">{{ playlist.name }}</option>
     }
   </select>
-  <button type="button" class="btn btn-light edit" (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
+  <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING"
+          (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
 </div>
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
                              (touchmove)="onTouchmove($event)" (wheel)="onWheel($event)">
@@ -29,7 +30,7 @@
       [index]="i" [song]="playlistSong.song"
       [selected]="selectedIndex === i"
       [isCurrentSong]="playlistSong.song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
-      id="playlistSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"
+      id="playlistSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled || secondaryLoadingState === LoadingState.LOADING"
       *cdkVirtualFor="let playlistSong of selectedPlaylistSongs?.songs; let i = index;"
       (cdkDragStarted)="onDragStarted($event)"
       (dblclick)="playSongOnDoubleClick($event, i)"
