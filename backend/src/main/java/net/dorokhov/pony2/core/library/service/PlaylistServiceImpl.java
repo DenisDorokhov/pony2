@@ -36,6 +36,12 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     @Transactional(readOnly = true)
     @Override
+    public List<Playlist> getByUserId(String userId) {
+        return playlistRepository.findByUserIdOrderByName(userId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public List<Playlist> getByUserIdAndType(String userId, Playlist.Type type) {
         return playlistRepository.findByUserIdAndTypeOrderByName(userId, type);
     }

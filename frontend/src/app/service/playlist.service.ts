@@ -61,43 +61,48 @@ export class PlaylistService {
   requestPlaylists(): Observable<Playlist[]> {
     this.requestPlaylistsSubscription?.unsubscribe();
     this.requestPlaylistsSubscription = undefined;
-    return this.httpClient.get<PlaylistDto[]>('/api/playlists/normal').pipe(
+    return this.httpClient.get<PlaylistDto[]>('/api/playlists').pipe(
       map(dtos => dtos.map(dto => new Playlist(dto))),
       tap(playlists => this.playlistsSubject.next(playlists)),
     );
   }
 
   getPlaylist(playlistId: string): Observable<PlaylistSongs> {
-    return this.httpClient.get<PlaylistSongsDto>('/api/playlists/normal/' + playlistId).pipe(
+    return this.httpClient.get<PlaylistSongsDto>('/api/playlists/' + playlistId).pipe(
       map(dto => new PlaylistSongs(dto))
     );
   }
 
-  createPlaylist(command: PlaylistCreateCommandDto): Observable<PlaylistSongs> {
+  createNormalPlaylist(command: PlaylistCreateCommandDto): Observable<PlaylistSongs> {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/normal', command).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(() => this.requestPlaylists().subscribe()),
-      catchError(ErrorDto.observableFromHttpErrorResponse)
+      catchError(ErrorDto.observableFromHttpErrorResponse),
     );
   }
 
   updatePlaylist(command: PlaylistUpdateCommandDto): Observable<PlaylistSongs> {
-    return this.httpClient.put<PlaylistSongsDto>('/api/playlists/normal', command).pipe(
+    return this.httpClient.put<PlaylistSongsDto>('/api/playlists', command).pipe(
       map(dto => new PlaylistSongs(dto)),
-      tap(() => this.requestPlaylists().subscribe()),
-      catchError(ErrorDto.observableFromHttpErrorResponse)
+      tap(playlistSongs => {
+        if (playlistSongs.playlist.type === PlaylistDto.Type.LIKE) {
+          this.likePlaylistSongsSubject.next(playlistSongs);
+        }
+        this.requestPlaylists().subscribe();
+      }),
+      catchError(ErrorDto.observableFromHttpErrorResponse),
     );
   }
 
-  deletePlaylist(playlistId: string): Observable<PlaylistSongs> {
+  deleteNormalPlaylist(playlistId: string): Observable<PlaylistSongs> {
     return this.httpClient.delete<PlaylistSongsDto>('/api/playlists/normal/' + playlistId).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(() => this.requestPlaylists().subscribe()),
     );
   }
 
-  addToPlaylist(playlistId: string, songId: string): Observable<PlaylistSongs> {
-    return this.httpClient.post<PlaylistSongsDto>('/api/playlists/normal/' + playlistId + '/songs/' + songId, null).pipe(
+  addSongToPlaylist(playlistId: string, songId: string): Observable<PlaylistSongs> {
+    return this.httpClient.post<PlaylistSongsDto>('/api/playlists/' + playlistId + '/songs/' + songId, null).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(() => this.requestPlaylists().subscribe()),
     );

@@ -57,7 +57,7 @@ export class PlaylistAddSongComponent implements OnInit {
 
   save() {
     this.savingState = LoadingState.LOADING;
-    this.playlistService.addToPlaylist(this.selectedPlaylist!.id, this.song.id).subscribe({
+    this.playlistService.addSongToPlaylist(this.selectedPlaylist!.id, this.song.id).subscribe({
       next: () => {
         this.savingState = LoadingState.LOADED;
         this.notificationService.success(

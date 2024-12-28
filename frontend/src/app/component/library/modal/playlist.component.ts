@@ -107,7 +107,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   delete() {
     if (window.confirm(this.translateService.instant('playlist.deletionConfirmation'))) {
       this.secondaryLoadingState = LoadingState.LOADING;
-      this.playlistService.deletePlaylist(this.selectedPlaylist!.id).subscribe({
+      this.playlistService.deleteNormalPlaylist(this.selectedPlaylist!.id).subscribe({
         next: () => {
           this.secondaryLoadingState = LoadingState.LOADED;
           this.notificationService.success(

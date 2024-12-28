@@ -68,7 +68,7 @@ export class PlaylistEditComponent implements OnInit {
         name: formValue.name,
         songIds: this.songs?.map(song => song.id) ?? [],
       };
-      observable = this.playlistService.createPlaylist(command);
+      observable = this.playlistService.createNormalPlaylist(command);
     }
     this.loadingState = LoadingState.LOADING;
     observable.subscribe({

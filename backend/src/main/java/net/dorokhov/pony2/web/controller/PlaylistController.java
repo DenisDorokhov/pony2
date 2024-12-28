@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
 import jakarta.validation.Valid;
-import net.dorokhov.pony2.api.library.domain.Playlist;
 import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.PlaylistCreationCommandDto;
 import net.dorokhov.pony2.web.dto.PlaylistDto;
@@ -25,29 +24,29 @@ public class PlaylistController implements ErrorHandlingController {
         this.playlistFacade = playlistFacade;
     }
 
-    @GetMapping("/api/playlists/normal")
-    public List<PlaylistDto> getNormalPlaylists() {
-        return playlistFacade.getPlaylistsByType(Playlist.Type.NORMAL);
+    @GetMapping("/api/playlists")
+    public List<PlaylistDto> getPlaylists() {
+        return playlistFacade.getPlaylists();
     }
 
-    @GetMapping("/api/playlists/normal/{playlistId}")
-    public PlaylistSongsDto getNormalPlaylistById(@PathVariable String playlistId) throws ObjectNotFoundException {
-        return playlistFacade.getNormalPlaylistById(playlistId);
+    @GetMapping("/api/playlists/{playlistId}")
+    public PlaylistSongsDto getPlaylistById(@PathVariable String playlistId) throws ObjectNotFoundException {
+        return playlistFacade.getPlaylistById(playlistId);
+    }
+
+    @PutMapping("/api/playlists")
+    public PlaylistSongsDto updatePlaylist(@Valid @RequestBody PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
+        return playlistFacade.updatePlaylist(command);
+    }
+
+    @PostMapping("/api/playlists/{playlistId}/songs/{songId}")
+    public PlaylistSongsDto addSongToPlaylists(@PathVariable String playlistId, @PathVariable String songId) throws ObjectNotFoundException {
+        return playlistFacade.addSongToPlaylist(playlistId, songId);
     }
 
     @PostMapping("/api/playlists/normal")
-    public PlaylistSongsDto createNormalPlaylists(@Valid @RequestBody PlaylistCreationCommandDto command) {
+    public PlaylistSongsDto createNormalPlaylist(@Valid @RequestBody PlaylistCreationCommandDto command) {
         return playlistFacade.createNormalPlaylist(command);
-    }
-
-    @PutMapping("/api/playlists/normal")
-    public PlaylistSongsDto updateNormalPlaylists(@Valid @RequestBody PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
-        return playlistFacade.updateNormalPlaylist(command);
-    }
-
-    @PostMapping("/api/playlists/normal/{playlistId}/songs/{songId}")
-    public PlaylistSongsDto addSongToNormalPlaylists(@PathVariable String playlistId, @PathVariable String songId) throws ObjectNotFoundException {
-        return playlistFacade.addSongToNormalPlaylist(playlistId, songId);
     }
 
     @DeleteMapping("/api/playlists/normal/{playlistId}")

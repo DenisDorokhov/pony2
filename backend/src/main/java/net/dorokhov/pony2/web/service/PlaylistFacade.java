@@ -32,24 +32,21 @@ public class PlaylistFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<PlaylistDto> getPlaylistsByType(Playlist.Type type) {
-        return playlistService.getByUserIdAndType(userContext.getAuthenticatedUser().getId(), type).stream()
+    public List<PlaylistDto> getPlaylists() {
+        return playlistService.getByUserId(userContext.getAuthenticatedUser().getId()).stream()
                 .map(PlaylistDto::of)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public PlaylistSongsDto getNormalPlaylistById(String id) throws ObjectNotFoundException {
-        Playlist playlist = getAndValidateNormalPlaylist(id);
+    public PlaylistSongsDto getPlaylistById(String id) throws ObjectNotFoundException {
+        Playlist playlist = getAndValidatePlaylist(id);
         return PlaylistSongsDto.of(playlist, isAdmin());
     }
 
-    private Playlist getAndValidateNormalPlaylist(String id) throws ObjectNotFoundException {
+    private Playlist getAndValidatePlaylist(String id) throws ObjectNotFoundException {
         Playlist playlist = playlistService.getById(id)
                 .orElseThrow(() -> new ObjectNotFoundException(Playlist.class, id));
-        if (playlist.getType() != Playlist.Type.NORMAL) {
-            throw new ObjectNotFoundException(Playlist.class, id);
-        }
         if (!Objects.equals(playlist.getUser().getId(), userContext.getAuthenticatedUser().getId())) {
             throw new ObjectNotFoundException(Playlist.class, id);
         }
@@ -67,8 +64,8 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public PlaylistSongsDto updateNormalPlaylist(PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
-        getAndValidateNormalPlaylist(command.getId());
+    public PlaylistSongsDto updatePlaylist(PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
+        getAndValidatePlaylist(command.getId());
         try {
             return PlaylistSongsDto.of(playlistService.updateNormalPlaylist(command.convert()), isAdmin());
         } catch (PlaylistNotFoundException e) {
@@ -77,8 +74,8 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public PlaylistSongsDto addSongToNormalPlaylist(String playlistId, String songId) throws ObjectNotFoundException {
-        getAndValidateNormalPlaylist(playlistId);
+    public PlaylistSongsDto addSongToPlaylist(String playlistId, String songId) throws ObjectNotFoundException {
+        getAndValidatePlaylist(playlistId);
         try {
             return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlistId, songId), isAdmin());
         } catch (PlaylistNotFoundException e) {
@@ -90,7 +87,11 @@ public class PlaylistFacade {
 
     @Transactional
     public PlaylistSongsDto deleteNormalPlaylist(String playlistId) throws ObjectNotFoundException {
-        PlaylistSongsDto result = PlaylistSongsDto.of(getAndValidateNormalPlaylist(playlistId), isAdmin());
+        Playlist playlist = getAndValidatePlaylist(playlistId);
+        if (playlist.getType() != Playlist.Type.NORMAL) {
+            throw new ObjectNotFoundException(Playlist.class, playlistId);
+        }
+        PlaylistSongsDto result = PlaylistSongsDto.of(playlist, isAdmin());
         playlistService.delete(playlistId);
         return result;
     }

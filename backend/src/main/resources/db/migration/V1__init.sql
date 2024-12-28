@@ -253,6 +253,7 @@ CREATE TABLE playlist (
   FOREIGN KEY (pony_user_id) REFERENCES pony_user (id)
 );
 
+CREATE INDEX index_playlist_pony_user_id_name ON playlist (pony_user_id, name);
 CREATE INDEX index_playlist_pony_user_id_type_name ON playlist (pony_user_id, type, name);
 
 CREATE TABLE playlist_song (

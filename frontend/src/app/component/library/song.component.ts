@@ -275,7 +275,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   addToPlaylist(playlist: Playlist) {
-    this.playlistService.addToPlaylist(playlist.id, this.song.id).subscribe({
+    this.playlistService.addSongToPlaylist(playlist.id, this.song.id).subscribe({
       next: () => this.notificationService.success(
         this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
         this.translateService.instant('library.song.addToPlaylistNotificationTextSuccess'),
