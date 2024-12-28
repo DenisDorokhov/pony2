@@ -62,21 +62,11 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
     @Transactional
     @Override
     public PlaybackHistorySong addSongToHistory(String userId, String songId) throws SongNotFoundException {
-        Song song = libraryService.getSongById(songId)
-                .orElseThrow(() -> new SongNotFoundException(songId));
         Lock lock = striped.get(userId);
         try {
             if (lock.tryLock(30, TimeUnit.SECONDS)) {
                 try {
-                    Optional<PlaybackHistorySong> duplicateSong = playbackHistorySongRepository.findByUserId(userId,
-                                    PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "creationDate"))
-                            ).stream()
-                            .filter(lastSong -> lastSong.getSong().getId().equals(songId))
-                            .findAny();
-                    return duplicateSong.orElseGet(() -> playbackHistorySongRepository.save(new PlaybackHistorySong()
-                            .setSong(song)
-                            .setUser(userService.getById(userId)
-                                    .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found.")))));
+                    return doAddSongToHistory(userId, songId);
                 } finally {
                     registerSynchronization(new TransactionSynchronization() {
                         @Override
@@ -91,5 +81,19 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private PlaybackHistorySong doAddSongToHistory(String userId, String songId) throws SongNotFoundException {
+        Song song = libraryService.getSongById(songId)
+                .orElseThrow(() -> new SongNotFoundException(songId));
+        Optional<PlaybackHistorySong> duplicateSong = playbackHistorySongRepository.findByUserId(userId,
+                        PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "creationDate")))
+                .stream()
+                .filter(lastSong -> lastSong.getSong().getId().equals(songId))
+                .findAny();
+        return duplicateSong.orElseGet(() -> playbackHistorySongRepository.save(new PlaybackHistorySong()
+                .setSong(song)
+                .setUser(userService.getById(userId)
+                        .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found.")))));
     }
 }
