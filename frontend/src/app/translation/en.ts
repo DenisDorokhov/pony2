@@ -98,7 +98,7 @@ export default {
   playlistEdit: {
     editHeader: 'Edit Playlist',
     createHeader: 'Create Playlist',
-    nameLabel: 'Title:'
+    nameLabel: 'Title:',
   },
   playlistAddSong: {
     header: 'Select Playlist',
@@ -112,6 +112,17 @@ export default {
     header: 'Playback History',
     noHistoryLabel: 'No songs played yet :-(',
     statisticsLabel: 'Showing {{count}} or {{totalCount}} total songs played',
+  },
+  playlist: {
+    header: 'Playlists',
+    noPlaylistsLabel: 'No playlists found.',
+    noSongsLabel: 'Playlist is empty.',
+    createButton: 'New Playlist',
+    deleteButton: 'Delete',
+    deletionConfirmation: 'Are you sure to delete selected playlist?',
+    notificationTitle: 'Playlists',
+    notificationTextDeletionSuccess: 'Playlist deleted.',
+    notificationTextDeletionFailure: 'Could not delete selected playlist!',
   },
   scanning: {
     header: 'Scanning',
@@ -231,6 +242,7 @@ export default {
     currentPageLabel: 'Page {{pageIndex}} of {{totalPages}}',
     creationDateLabel: 'Creation Date:',
     updateDateLabel: 'Update Date:',
+    closeButton: 'Close',
     cancelButton: 'Cancel',
     saveButton: 'Save',
     duration: {

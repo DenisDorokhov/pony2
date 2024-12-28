@@ -5,15 +5,13 @@
 
   <div class="blocking-overlay" [hidden]="loadingState === LoadingState.LOADED && (savingState === LoadingState.EMPTY || savingState === LoadingState.ERROR)"></div>
 
-  <form>
-    <div class="mb-3">
-      <select id="playlist" class="form-select" (change)="onPlaylistChange($event)">
-        @for (playlist of playlists; track playlist.id) {
-          <option [value]="playlist">{{ playlist.name }}</option>
-        }
-      </select>
-    </div>
-  </form>
+  <div class="mb-3">
+    <select id="playlist" class="form-select" [(ngModel)]="selectedPlaylist">
+      @for (playlist of playlists; track playlist.id) {
+        <option [ngValue]="playlist">{{ playlist.name }}</option>
+      }
+    </select>
+  </div>
 
 </div>
 <div class="modal-footer">

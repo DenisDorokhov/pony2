@@ -9,10 +9,11 @@ import {PlaylistService} from '../../../service/playlist.service';
 import {Playlist, Song} from '../../../domain/library.model';
 import {NotificationService} from '../../../service/notification.service';
 import {PlaylistEditComponent} from './playlist-edit.component';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent],
+  imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule],
   selector: 'pony-playlist-add-song',
   templateUrl: './playlist-add-song.component.html',
   styleUrls: ['./playlist-add-song.component.scss']
@@ -73,10 +74,6 @@ export class PlaylistAddSongComponent implements OnInit {
         );
       }
     });
-  }
-
-  onPlaylistChange(event: Event) {
-    this.selectedPlaylist = (event.target as any).value;
   }
 
   createPlaylist() {

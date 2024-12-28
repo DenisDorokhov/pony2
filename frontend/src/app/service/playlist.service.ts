@@ -67,6 +67,12 @@ export class PlaylistService {
     );
   }
 
+  getPlaylist(playlistId: string): Observable<PlaylistSongs> {
+    return this.httpClient.get<PlaylistSongsDto>('/api/playlists/normal/' + playlistId).pipe(
+      map(dto => new PlaylistSongs(dto))
+    );
+  }
+
   createPlaylist(command: PlaylistCreateCommandDto): Observable<PlaylistSongs> {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/normal', command).pipe(
       map(dto => new PlaylistSongs(dto)),
@@ -80,6 +86,13 @@ export class PlaylistService {
       map(dto => new PlaylistSongs(dto)),
       tap(() => this.requestPlaylists().subscribe()),
       catchError(ErrorDto.observableFromHttpErrorResponse)
+    );
+  }
+
+  deletePlaylist(playlistId: string): Observable<PlaylistSongs> {
+    return this.httpClient.delete<PlaylistSongsDto>('/api/playlists/normal/' + playlistId).pipe(
+      map(dto => new PlaylistSongs(dto)),
+      tap(() => this.requestPlaylists().subscribe()),
     );
   }
 

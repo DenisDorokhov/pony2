@@ -254,7 +254,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   selectOrCreatePlaylist() {
-    this.hideMenu();
     if (this.topPlaylists.length > 0) {
       const modalRef = this.modal.open(PlaylistAddSongComponent);
       const playlistAddSongComponent: PlaylistAddSongComponent = modalRef.componentInstance;
@@ -272,10 +271,10 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
+    this.hideMenu();
   }
 
   addToPlaylist(playlist: Playlist) {
-    this.hideMenu();
     this.playlistService.addToPlaylist(playlist.id, this.song.id).subscribe({
       next: () => this.notificationService.success(
         this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
@@ -286,6 +285,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
       ),
     });
+    this.hideMenu();
   }
 
   onLikeClick() {

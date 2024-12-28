@@ -10,7 +10,7 @@
                              [message]="'queue.emptyQueueLabel' | translate">
   </pony-no-content-indicator>
 
-  <div cdkDropList cdkDropListAutoScrollDisabled
+  <div *ngIf="queue.length" cdkDropList cdkDropListAutoScrollDisabled
        [cdkDropListData]="queue" class="table-container"
        (cdkDropListDropped)="onDropListDropped($event)">
 

@@ -43,11 +43,11 @@ import {LargeSongComponent} from './common/large-song.component';
 })
 export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  protected readonly LoadingState = LoadingState;
+  readonly LoadingState = LoadingState;
 
-  protected readonly rowHeight = LargeSongComponent.HEIGHT;
-  protected readonly viewPortHeight = 532;
-  protected readonly viewPortPadding = 16;
+  readonly rowHeight = LargeSongComponent.HEIGHT;
+  readonly viewPortHeight = 532;
+  readonly viewPortPadding = 16;
 
   queue: Song[] = [];
   lastPlaybackEvent: PlaybackEvent | undefined;
