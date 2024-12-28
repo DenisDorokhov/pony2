@@ -70,6 +70,10 @@
 div.playback-indicator {
   width: 24px;
   line-height: 75px;
+
+  .bi-volume-up-fill {
+    margin-left: 4px;
+  }
 }
 
 .duration {

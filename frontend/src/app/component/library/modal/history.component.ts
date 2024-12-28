@@ -11,9 +11,9 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
 import {LargeSongComponent} from './common/large-song.component';
 import {NoContentIndicatorComponent} from '../../common/no-content-indicator.component';
 import {LibraryService} from '../../../service/library.service';
-import {PlaybackEvent} from "../../../service/audio-player.service";
-import {PlaybackService} from "../../../service/playback.service";
-import {Subscription} from "rxjs";
+import {PlaybackEvent} from '../../../service/audio-player.service';
+import {PlaybackService} from '../../../service/playback.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   standalone: true,
