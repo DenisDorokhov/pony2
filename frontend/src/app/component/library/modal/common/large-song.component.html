@@ -3,7 +3,7 @@
      [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number" *ngIf="showIndex">
     <div>
-      <button class="playback" [hidden]="!isMouseOver || !playbackRequested.observed" (click)="onPlaybackClick()">
+      <button class="playback" [hidden]="!isMouseOver || !playOrPauseRequested.observed" (click)="onPlaybackClick()">
         <i class="bi"
            [class.bi-play-fill]="!isCurrentSong || (playbackState !== PlaybackState.PLAYING && playbackState !== PlaybackState.LOADING)"
            [class.bi-pause-fill]="isCurrentSong && (playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.LOADING)"
@@ -14,7 +14,7 @@
          [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
          class="bi playback-indicator"></i>
       {{
-        (!isMouseOver || !playbackRequested.observed) && (
+        (!isMouseOver || !playOrPauseRequested.observed) && (
           !isCurrentSong || (
             playbackState !== PlaybackState.LOADING &&
             playbackState !== PlaybackState.PLAYING &&

@@ -11,7 +11,19 @@ button.edit {
   margin-left: 6px;
 }
 
-.modal-body {
-  padding: 0;
+cdk-virtual-scroll-viewport {
   height: 462px;
+
+  ::ng-deep > div {
+    width: 100%;
+  }
+}
+
+.table-container {
+  padding: 16px;
+  min-height: 462px;
+}
+
+pony-large-song {
+  display: block;
 }

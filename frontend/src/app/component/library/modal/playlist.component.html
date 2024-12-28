@@ -8,30 +8,45 @@
   </select>
   <button type="button" class="btn btn-light edit" (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
 </div>
-<div class="modal-body">
+<cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
+                             (touchmove)="onTouchmove($event)" (wheel)="onWheel($event)">
 
-  <pony-loading-indicator [hidden]="songsLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
-  <pony-error-indicator [hidden]="songsLoadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <pony-loading-indicator [hidden]="primaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="primaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
 
-  <pony-no-content-indicator *ngIf="songsLoadingState === LoadingState.LOADED && !playlists.length"
+  <pony-no-content-indicator *ngIf="primaryLoadingState === LoadingState.LOADED && !playlists.length"
                              [message]="'playlist.noPlaylistsLabel' | translate">
   </pony-no-content-indicator>
-  <pony-no-content-indicator *ngIf="songsLoadingState === LoadingState.LOADED && !(selectedPlaylistSongs?.songs?.length ?? 0)"
+  <pony-no-content-indicator *ngIf="primaryLoadingState === LoadingState.LOADED && !(selectedPlaylistSongs?.songs?.length ?? 0)"
                              [message]="'playlist.noSongsLabel' | translate">
   </pony-no-content-indicator>
 
-  <div class="table-container" *ngIf="(selectedPlaylistSongs?.songs?.length ?? 0)">
+  <div *ngIf="(selectedPlaylistSongs?.songs?.length ?? 0)" cdkDropList cdkDropListAutoScrollDisabled
+       [cdkDropListData]="selectedPlaylistSongs?.songs" class="table-container"
+       (cdkDropListDropped)="onDropListDropped($event)">
 
-    Not implemented.
+    <pony-large-song
+      [index]="i" [song]="playlistSong.song"
+      [selected]="selectedIndex === i"
+      [isCurrentSong]="playlistSong.song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
+      id="playlistSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"
+      *cdkVirtualFor="let playlistSong of selectedPlaylistSongs?.songs; let i = index;"
+      (cdkDragStarted)="onDragStarted($event)"
+      (dblclick)="playSongOnDoubleClick($event, i)"
+      (mousedown)="selectIndex(i);preventDoubleClickDefault($event);"
+      (playOrPauseRequested)="onPlaybackClick(i)"
+      (goToSongRequested)="goToSong(playlistSong.song)"
+      (removalRequested)="removeSong(i)"
+    />
 
   </div>
 
-</div>
+</cdk-virtual-scroll-viewport>
 <div class="modal-footer">
-  <pony-loading-indicator [hidden]="deletionLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
-  <pony-error-indicator [hidden]="deletionLoadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <pony-loading-indicator [hidden]="secondaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">{{ 'shared.closeButton' | translate }}</button>
   <button type="button" class="btn btn-secondary" (click)="createPlaylist()">{{ 'playlist.createButton' | translate }}</button>
   <button type="button" class="btn btn-danger" (click)="delete()"
-          [hidden]="!selectedPlaylist" [disabled]="deletionLoadingState === LoadingState.LOADING">{{ 'playlist.deleteButton' | translate }}</button>
+          [hidden]="!selectedPlaylist" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'playlist.deleteButton' | translate }}</button>
 </div>

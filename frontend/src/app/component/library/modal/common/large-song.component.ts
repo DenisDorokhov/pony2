@@ -58,7 +58,7 @@ export class LargeSongComponent {
   showDuration = true;
 
   @Output()
-  playbackRequested = new EventEmitter<number>();
+  playOrPauseRequested = new EventEmitter<number>();
   @Output()
   goToSongRequested = new EventEmitter<number>();
   @Output()
@@ -75,7 +75,7 @@ export class LargeSongComponent {
   }
 
   onPlaybackClick() {
-    this.playbackRequested.emit(this.index);
+    this.playOrPauseRequested.emit(this.index);
   }
 
   goToSong() {
