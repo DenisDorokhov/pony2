@@ -25,16 +25,16 @@ cdk-virtual-scroll-viewport {
   ::ng-deep > div {
     width: 100%;
   }
+
+  pony-loading-indicator, pony-error-indicator {
+    display: block;
+    padding-top: 32px;
+  }
 }
 
 .table-container {
   padding: 16px;
   min-height: 462px;
-}
-
-pony-loading-indicator, pony-error-indicator {
-  display: block;
-  padding-top: 32px;
 }
 
 pony-large-song {
@@ -54,6 +54,11 @@ pony-large-song {
 }
 
 .modal-footer {
+
+  small {
+    color: var(--bs-gray);
+  }
+
   .spacer {
     flex-grow: 1;
   }

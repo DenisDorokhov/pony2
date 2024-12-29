@@ -122,6 +122,7 @@ export default {
     deletionConfirmation: 'Are you sure to delete selected playlist?',
     notificationTitle: 'Playlists',
     notificationTextDeletionSuccess: 'Playlist deleted.',
+    sizeLabel: '{{songCount}} songs ({{duration}})',
   },
   scanning: {
     header: 'Scanning',

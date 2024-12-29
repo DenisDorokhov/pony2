@@ -4,7 +4,7 @@ import {CommonModule} from '@angular/common';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistService} from '../../../service/playlist.service';
 import {Subscription} from 'rxjs';
-import {Playlist, PlaylistSongs, Song} from '../../../domain/library.model';
+import {Playlist, PlaylistSong, PlaylistSongs, Song} from '../../../domain/library.model';
 import {PlaylistEditComponent} from './playlist-edit.component';
 import {FormsModule} from '@angular/forms';
 import {LoadingState} from '../../../domain/common.model';
@@ -20,6 +20,7 @@ import {PlaybackService} from '../../../service/playback.service';
 import {LibraryService} from '../../../service/library.service';
 import {PlaybackEvent} from '../../../service/audio-player.service';
 import {PlaylistDto, PlaylistUpdateCommandDto} from '../../../domain/library.dto';
+import {formatDuration} from '../../../utils/format.utils';
 
 @Component({
   standalone: true,
@@ -43,6 +44,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   selectedIndex = -1;
   dragEnabled = true;
   lastPlaybackEvent: PlaybackEvent | undefined;
+  duration: string | undefined;
 
   private subscriptions: Subscription[] = [];
 
@@ -84,6 +86,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
         next: playlistSongs => {
           this.primaryLoadingState = this.secondaryLoadingState = LoadingState.LOADED;
           this.selectedPlaylistSongs = playlistSongs;
+          this.duration = formatDuration(playlistSongs.songs.reduce((result: number, song: PlaylistSong) => result + song.song.duration, 0), this.translateService);
         },
         error: () => {
           if (primaryLoading) {
