@@ -58,6 +58,8 @@ export class LargeSongComponent {
   showDuration = true;
 
   @Output()
+  doubleClick = new EventEmitter<number>();
+  @Output()
   playOrPauseRequested = new EventEmitter<number>();
   @Output()
   goToSongRequested = new EventEmitter<number>();
@@ -84,5 +86,24 @@ export class LargeSongComponent {
 
   removeSong() {
     this.removalRequested.emit(this.index);
+  }
+
+  onDoubleClick(event: MouseEvent) {
+    let checkElement: Node | null = event.target as Node;
+    let isButtonClick = false;
+    do {
+      isButtonClick = checkElement.nodeName === 'BUTTON';
+      checkElement = (checkElement as Node).parentNode;
+    } while (!isButtonClick && checkElement);
+    if (!isButtonClick) {
+      this.doubleClick.emit(this.index);
+    }
+  }
+
+  preventDoubleClickDefault(event: MouseEvent) {
+    // Disable text selection on double click.
+    if (event.detail > 1) {
+      event.preventDefault();
+    }
   }
 }

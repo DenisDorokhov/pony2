@@ -1,6 +1,7 @@
 <div class="columns-container"
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.genreName | ponyUnknownGenre }}] [{{ song.sizeMb }} MB] [{{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
-     [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
+     [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()"
+     (dblclick)="onDoubleClick($event)" (mousedown)="preventDoubleClickDefault($event)">
   <div class="track-number" *ngIf="showIndex">
     <div>
       <button class="playback" [hidden]="!isMouseOver || !playOrPauseRequested.observed" (click)="onPlaybackClick()">

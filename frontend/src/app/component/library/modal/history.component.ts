@@ -74,27 +74,12 @@ export class HistoryComponent implements OnInit, OnDestroy {
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }
 
-  onSongDoubleClick(event: MouseEvent, song: Song) {
-    let checkElement: Node | null = event.target as Node;
-    let isButtonClick = false;
-    do {
-      isButtonClick = checkElement.nodeName === 'BUTTON';
-      checkElement = (checkElement as Node).parentNode;
-    } while (!isButtonClick && checkElement);
-    if (!isButtonClick) {
-      this.goToSong(song, true);
-    }
+  onSongDoubleClick(song: Song) {
+    this.goToSong(song, true);
   }
 
   selectIndex(i: number) {
     this.selectedIndex = i;
-  }
-
-  preventDoubleClickDefault(event: MouseEvent) {
-    // Disable text selection on double click.
-    if (event.detail > 1) {
-      event.preventDefault();
-    }
   }
 
   goToSong(song: Song, play = false) {

@@ -139,23 +139,8 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
       (currentSongRect.y + currentSongRect.height > viewPortRect.y && currentSongRect.y < viewPortRect.y + viewPortRect.height);
   }
 
-  playSongOnDoubleClick(event: MouseEvent, index: number) {
-    let checkElement: Node | null = event.target as Node;
-    let isButtonClick = false;
-    do {
-      isButtonClick = checkElement.nodeName === 'BUTTON';
-      checkElement = (checkElement as Node).parentNode;
-    } while (!isButtonClick && checkElement);
-    if (!isButtonClick) {
-      this.playbackService.play(index);
-    }
-  }
-
-  preventDoubleClickDefault(event: MouseEvent) {
-    // Disable text selection on double click.
-    if (event.detail > 1) {
-      event.preventDefault();
-    }
+  playSongOnDoubleClick(index: number) {
+    this.playbackService.play(index);
   }
 
   goToSong(song: Song) {

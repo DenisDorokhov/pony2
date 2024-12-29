@@ -125,23 +125,8 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.loadSongs();
   }
 
-  playSongOnDoubleClick(event: MouseEvent, index: number) {
-    let checkElement: Node | null = event.target as Node;
-    let isButtonClick = false;
-    do {
-      isButtonClick = checkElement.nodeName === 'BUTTON';
-      checkElement = (checkElement as Node).parentNode;
-    } while (!isButtonClick && checkElement);
-    if (!isButtonClick) {
-      this.playbackService.switchQueue(this.selectedPlaylistSongs!.songs.map(next => next.song), index);
-    }
-  }
-
-  preventDoubleClickDefault(event: MouseEvent) {
-    // Disable text selection on double click.
-    if (event.detail > 1) {
-      event.preventDefault();
-    }
+  playSongOnDoubleClick(index: number) {
+    this.playbackService.switchQueue(this.selectedPlaylistSongs!.songs.map(next => next.song), index);
   }
 
   goToSong(song: Song) {

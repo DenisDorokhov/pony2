@@ -17,8 +17,8 @@
       [showIndex]="false" [showDuration]="false"
       [selected]="selectedIndex === i"
       *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"
-      (dblclick)="onSongDoubleClick($event, playbackHistorySong.song)"
-      (mousedown)="selectIndex(i);preventDoubleClickDefault($event);"
+      (doubleClick)="onSongDoubleClick(playbackHistorySong.song)"
+      (mousedown)="selectIndex(i)"
       (goToSongRequested)="goToSong(playbackHistorySong.song)"
     />
 
