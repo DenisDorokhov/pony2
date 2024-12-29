@@ -10,7 +10,7 @@
       }
     }
   </select>
-  <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING"
+  <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING || selectedPlaylist?.type === PlaylistDto.Type.LIKE"
           (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
 </div>
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
@@ -52,6 +52,6 @@
   <pony-error-indicator [hidden]="secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
   <div class="spacer"></div>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">{{ 'shared.closeButton' | translate }}</button>
-  <button type="button" class="btn btn-danger" (click)="delete()"
-          [hidden]="!selectedPlaylist" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'playlist.deleteButton' | translate }}</button>
+  <button type="button" class="btn btn-danger" (click)="delete()" [hidden]="!selectedPlaylist"
+          [disabled]="secondaryLoadingState === LoadingState.LOADING || selectedPlaylist?.type === PlaylistDto.Type.LIKE">{{ 'playlist.deleteButton' | translate }}</button>
 </div>

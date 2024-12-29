@@ -28,6 +28,11 @@ cdk-virtual-scroll-viewport {
   min-height: 462px;
 }
 
+pony-loading-indicator, pony-error-indicator {
+  display: block;
+  padding-top: 32px;
+}
+
 pony-large-song {
   display: block;
 }

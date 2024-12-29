@@ -113,6 +113,7 @@ export class PlaylistService {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/like/songs/' + songId, null).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(likedSongs => this.likePlaylistSongsSubject.next(likedSongs)),
+      tap(() => this.requestPlaylists().subscribe()),
     );
   }
 
@@ -120,6 +121,7 @@ export class PlaylistService {
     return this.httpClient.delete<PlaylistSongsDto>('/api/playlists/like/songs/' + songId).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(likedSongs => this.likePlaylistSongsSubject.next(likedSongs)),
+      tap(() => this.requestPlaylists().subscribe()),
     );
   }
 }
