@@ -26,6 +26,7 @@ public interface PlaylistService {
 
     record RestoredPlaylists(
             List<Playlist> playlists,
-            List<String> notFoundSongs
+            List<String> notFoundUserEmails,
+            List<String> notFoundSongPaths
     ) {}
 }

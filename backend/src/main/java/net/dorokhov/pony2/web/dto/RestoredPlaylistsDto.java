@@ -31,7 +31,8 @@ public class RestoredPlaylistsDto {
     }
 
     private List<UserPlaylist> userPlaylists;
-    private List<String> notFoundSongs;
+    private List<String> notFoundUserEmails;
+    private List<String> notFoundSongPaths;
 
     public List<UserPlaylist> getUserPlaylists() {
         return userPlaylists;
@@ -42,12 +43,21 @@ public class RestoredPlaylistsDto {
         return this;
     }
 
-    public List<String> getNotFoundSongs() {
-        return notFoundSongs;
+    public List<String> getNotFoundUserEmails() {
+        return notFoundUserEmails;
     }
 
-    public RestoredPlaylistsDto setNotFoundSongs(List<String> notFoundSongs) {
-        this.notFoundSongs = notFoundSongs;
+    public RestoredPlaylistsDto setNotFoundUserEmails(List<String> notFoundUserEmails) {
+        this.notFoundUserEmails = notFoundUserEmails;
+        return this;
+    }
+
+    public List<String> getNotFoundSongPaths() {
+        return notFoundSongPaths;
+    }
+
+    public RestoredPlaylistsDto setNotFoundSongPaths(List<String> notFoundSongPaths) {
+        this.notFoundSongPaths = notFoundSongPaths;
         return this;
     }
 
@@ -58,6 +68,7 @@ public class RestoredPlaylistsDto {
                                 .setUserId(playlist.getUser().getId())
                                 .setPlaylist(PlaylistDto.of(playlist)))
                         .toList())
-                .setNotFoundSongs(restoredPlaylists.notFoundSongs());
+                .setNotFoundUserEmails(restoredPlaylists.notFoundUserEmails())
+                .setNotFoundSongPaths(restoredPlaylists.notFoundSongPaths());
     }
 }
