@@ -21,11 +21,10 @@ public interface PlaylistService {
     Playlist removeSongFromPlaylist(String id, String songId) throws PlaylistNotFoundException;
     void delete(String id);
 
-    String backupPlaylists(String userId);
-    RestoredPlaylists restorePlaylists(String userId, String backup);
+    String backupPlaylists();
+    RestoredPlaylists restorePlaylists(String backup);
 
     record RestoredPlaylists(
-            String userId,
             List<Playlist> playlists,
             List<String> notFoundSongs
     ) {}

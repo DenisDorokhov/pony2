@@ -176,12 +176,16 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     @Transactional(readOnly = true)
     @Override
-    public String backupPlaylists(String userId) {
-        List<BackupPlaylist> backup = getByUserId(userId).stream()
-                .map(BackupPlaylist::of)
-                .toList();
+    public String backupPlaylists() {
+        Map<String, List<BackupPlaylist>> userIdToBackup = new HashMap<>();
+        for (User user : userService.getAll()) {
+            List<BackupPlaylist> backup = getByUserId(user.getId()).stream()
+                    .map(BackupPlaylist::of)
+                    .toList();
+            userIdToBackup.put(user.getId(), backup);
+        }
         try {
-            return new ObjectMapper().writeValueAsString(backup);
+            return new ObjectMapper().writeValueAsString(userIdToBackup);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -189,43 +193,45 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     @Transactional
     @Override
-    public RestoredPlaylists restorePlaylists(String userId, String backup) {
+    public RestoredPlaylists restorePlaylists(String backup) {
 
-        List<BackupPlaylist> decodedBackup;
+        Map<String, List<BackupPlaylist>> userIdToBackup;
         try {
-            decodedBackup = new ObjectMapper().readValue(backup, new TypeReference<>() {
+            userIdToBackup = new ObjectMapper().readValue(backup, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
-        User user = userService.getById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found."));
         List<Playlist> restoredPlaylists = new ArrayList<>();
         LinkedHashSet<String> notFoundSongs = new LinkedHashSet<>();
-        for (BackupPlaylist backupPlaylist : decodedBackup) {
-            Playlist playlist = new Playlist()
-                    .setName(generateRestoredPlaylistName(backupPlaylist))
-                    .setType(backupPlaylist.type())
-                    .setUser(user);
-            playlist.setSongs(backupPlaylist.songPaths().stream()
-                    .map(path -> {
-                        Song song = songRepository.findByPath(path);
-                        if (song == null) {
-                            logger.warn("Playlist '{}' will not be fully restored: song '{}' not found.", backupPlaylist.name(), song);
-                            notFoundSongs.add(path);
-                        }
-                        return song;
-                    })
-                    .filter(Objects::nonNull)
-                    .map(song -> new PlaylistSong()
-                            .setPlaylist(playlist)
-                            .setSong(song)
-                    )
-                    .toList());
-            restoredPlaylists.add(normalizeAndSavePlaylist(playlist));
+        for (String userId : userIdToBackup.keySet()) {
+            User user = userService.getById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found."));
+            for (BackupPlaylist backupPlaylist : userIdToBackup.get(userId)) {
+                Playlist playlist = new Playlist()
+                        .setName(generateRestoredPlaylistName(backupPlaylist))
+                        .setType(backupPlaylist.type())
+                        .setUser(user);
+                playlist.setSongs(backupPlaylist.songPaths().stream()
+                        .map(path -> {
+                            Song song = songRepository.findByPath(path);
+                            if (song == null) {
+                                logger.warn("Playlist '{}' will not be fully restored: song '{}' not found.", backupPlaylist.name(), song);
+                                notFoundSongs.add(path);
+                            }
+                            return song;
+                        })
+                        .filter(Objects::nonNull)
+                        .map(song -> new PlaylistSong()
+                                .setPlaylist(playlist)
+                                .setSong(song)
+                        )
+                        .toList());
+                restoredPlaylists.add(normalizeAndSavePlaylist(playlist));
+            }
         }
-        return new RestoredPlaylists(userId, restoredPlaylists, new ArrayList<>(notFoundSongs));
+        return new RestoredPlaylists(restoredPlaylists, new ArrayList<>(notFoundSongs));
     }
 
     private String generateRestoredPlaylistName(BackupPlaylist backupPlaylist) {

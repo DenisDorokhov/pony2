@@ -6,15 +6,39 @@ import java.util.List;
 
 public class RestoredPlaylistsDto {
 
-    private List<PlaylistDto> playlists;
-    private List<String> notFoundSongs;
+    public static class UserPlaylist {
 
-    public List<PlaylistDto> getPlaylists() {
-        return playlists;
+        private String userId;
+        private PlaylistDto playlist;
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public UserPlaylist setUserId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public PlaylistDto getPlaylist() {
+            return playlist;
+        }
+
+        public UserPlaylist setPlaylist(PlaylistDto playlist) {
+            this.playlist = playlist;
+            return this;
+        }
     }
 
-    public RestoredPlaylistsDto setPlaylists(List<PlaylistDto> playlists) {
-        this.playlists = playlists;
+    private List<UserPlaylist> userPlaylists;
+    private List<String> notFoundSongs;
+
+    public List<UserPlaylist> getUserPlaylists() {
+        return userPlaylists;
+    }
+
+    public RestoredPlaylistsDto setUserPlaylists(List<UserPlaylist> userPlaylists) {
+        this.userPlaylists = userPlaylists;
         return this;
     }
 
@@ -29,8 +53,10 @@ public class RestoredPlaylistsDto {
 
     public static RestoredPlaylistsDto of(PlaylistService.RestoredPlaylists restoredPlaylists) {
         return new RestoredPlaylistsDto()
-                .setPlaylists(restoredPlaylists.playlists().stream()
-                        .map(PlaylistDto::of)
+                .setUserPlaylists(restoredPlaylists.playlists().stream()
+                        .map(playlist -> new UserPlaylist()
+                                .setUserId(playlist.getUser().getId())
+                                .setPlaylist(PlaylistDto.of(playlist)))
                         .toList())
                 .setNotFoundSongs(restoredPlaylists.notFoundSongs());
     }

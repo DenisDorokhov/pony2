@@ -17,13 +17,13 @@ public class PlaylistAdminController {
         this.playlistFacade = playlistFacade;
     }
 
-    @GetMapping("/api/admin/playlists/backup/{userId}")
-    public String backup(@PathVariable String userId) {
-        return playlistFacade.backupPlaylists(userId);
+    @GetMapping("/api/admin/playlists/backup")
+    public String backup() {
+        return playlistFacade.backupPlaylists();
     }
 
-    @PostMapping("/api/admin/playlists/restore/{userId}")
-    public RestoredPlaylistsDto backup(@PathVariable String userId, @RequestParam("file") MultipartFile file) {
-        return playlistFacade.restorePlaylists(userId, file);
+    @PostMapping("/api/admin/playlists/restore")
+    public RestoredPlaylistsDto backup(@RequestParam("file") MultipartFile file) {
+        return playlistFacade.restorePlaylists(file);
     }
 }

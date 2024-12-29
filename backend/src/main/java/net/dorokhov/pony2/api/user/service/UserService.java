@@ -10,6 +10,7 @@ import net.dorokhov.pony2.api.user.service.exception.UserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -18,7 +19,8 @@ public interface UserService {
     Optional<User> getByEmail(String email);
 
     Page<User> getAll(Pageable pageable);
-    
+    List<User> getAll();
+
     boolean checkUserPassword(String id, String password) throws UserNotFoundException;
 
     User create(UserCreationCommand command) throws DuplicateEmailException;
