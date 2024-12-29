@@ -625,6 +625,33 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldNotUpdateLikePlaylistName() {
+
+        Playlist likePlaylist = playlistRepository.findByUserIdAndType(user.getId(), Playlist.Type.LIKE, Sort.by("name"))
+                .getFirst();
+
+        PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
+                .setId(likePlaylist.getId())
+                .setOverrideName("overriddenName");
+
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(playlistSongs -> {
+            assertThat(playlistSongs.getPlaylist()).satisfies(playlist -> {
+                assertThat(playlist.getId()).isNotNull();
+                assertThat(playlist.getCreationDate()).isNotNull();
+                assertThat(playlist.getUpdateDate()).isNotNull();
+                assertThat(playlist.getName()).isNull();
+                assertThat(playlist.getType()).isEqualTo(Playlist.Type.LIKE);
+            });
+            assertThat(playlistSongs.getSongs()).isEmpty();
+        });
+    }
+
+    @Test
     public void shouldValidatePlaylistUpdateCommand() {
 
         Playlist savedPlaylist = new Playlist()

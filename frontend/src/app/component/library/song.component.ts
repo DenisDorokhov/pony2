@@ -263,24 +263,12 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       const modalRef = this.modal.open(PlaylistEditComponent);
       const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
       playlistEditComponent.songs = [this.song];
-      modalRef.closed.subscribe((playlist: Playlist) => {
-        if (playlist) {
-          this.notificationService.success(
-            this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
-            this.translateService.instant('library.song.addToPlaylistNotificationTextSuccess'),
-          );
-        }
-      });
     }
     this.hideMenu();
   }
 
   addToPlaylist(playlist: Playlist) {
     this.playlistService.addSongToPlaylist(playlist.id, this.song.id).subscribe({
-      next: () => this.notificationService.success(
-        this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
-        this.translateService.instant('library.song.addToPlaylistNotificationTextSuccess'),
-      ),
       error: () => this.notificationService.error(
         this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
         this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),

@@ -61,10 +61,6 @@ export class PlaylistAddSongComponent implements OnInit {
     this.playlistService.addSongToPlaylist(this.selectedPlaylist!.id, this.song.id).subscribe({
       next: () => {
         this.savingState = LoadingState.LOADED;
-        this.notificationService.success(
-          this.translateService.instant('playlistAddSong.notificationTitle'),
-          this.translateService.instant('playlistAddSong.notificationTextSuccess'),
-        );
         this.activeModal.close();
       },
       error: () => {
@@ -83,10 +79,6 @@ export class PlaylistAddSongComponent implements OnInit {
     playlistEditComponent.songs = [this.song];
     modalRef.closed.subscribe((playlist: Playlist | undefined) => {
       if (playlist) {
-        this.notificationService.success(
-          this.translateService.instant('playlistAddSong.notificationTitle'),
-          this.translateService.instant('playlistAddSong.notificationTextSuccess'),
-        );
         this.activeModal.close();
       }
     });

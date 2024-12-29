@@ -10,7 +10,7 @@
       }
     }
   </select>
-  <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING || selectedPlaylist?.type === PlaylistDto.Type.LIKE"
+  <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING || selectedPlaylist.type === PlaylistDto.Type.LIKE"
           (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
 </div>
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"

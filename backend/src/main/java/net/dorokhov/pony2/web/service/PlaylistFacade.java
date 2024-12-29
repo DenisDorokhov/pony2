@@ -67,7 +67,7 @@ public class PlaylistFacade {
     public PlaylistSongsDto updatePlaylist(PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
         getAndValidatePlaylist(command.getId());
         try {
-            return PlaylistSongsDto.of(playlistService.updateNormalPlaylist(command.convert()), isAdmin());
+            return PlaylistSongsDto.of(playlistService.updatePlaylist(command.convert()), isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, command.getId());
         }

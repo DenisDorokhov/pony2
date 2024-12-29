@@ -54,7 +54,7 @@ export class PlaylistEditComponent implements OnInit {
     if (this.playlist) {
       const command: PlaylistUpdateCommandDto = {
         id: formValue.id,
-        name: formValue.name,
+        overrideName: formValue.name,
         overriddenSongIds: this.songs?.map(song => {
           return {
             id: undefined,

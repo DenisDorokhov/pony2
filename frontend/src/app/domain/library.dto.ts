@@ -251,7 +251,7 @@ export interface PlaylistCreateCommandDto {
 
 export interface PlaylistUpdateCommandDto {
   id: string;
-  name: string;
+  overrideName: string;
   overriddenSongIds: PlaylistUpdateCommandDto.SongId[] | undefined;
 }
 

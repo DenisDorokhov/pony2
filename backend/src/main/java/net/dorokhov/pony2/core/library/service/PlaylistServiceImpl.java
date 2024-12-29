@@ -93,16 +93,20 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     @Transactional
     @Override
-    public Playlist updateNormalPlaylist(PlaylistUpdateCommand command) throws PlaylistNotFoundException {
+    public Playlist updatePlaylist(PlaylistUpdateCommand command) throws PlaylistNotFoundException {
         Playlist storedPlaylist = playlistRepository.findLockedById(command.getId())
                 .orElseThrow(() -> new PlaylistNotFoundException(command.getId()));
         Playlist playlist = new Playlist()
                 .setId(command.getId())
                 .setCreationDate(storedPlaylist.getCreationDate())
                 .setUpdateDate(LocalDateTime.now())
-                .setName(command.getOverrideName() != null ? command.getOverrideName() : storedPlaylist.getName())
                 .setType(storedPlaylist.getType())
                 .setUser(storedPlaylist.getUser());
+        if (command.getOverrideName() != null && storedPlaylist.getType() == Playlist.Type.NORMAL) {
+            playlist.setName(command.getOverrideName());
+        } else {
+            playlist.setName(storedPlaylist.getName());
+        }
         if (command.getOverriddenSongIds() == null) {
             playlist.setSongs(storedPlaylist.getSongs());
         } else {

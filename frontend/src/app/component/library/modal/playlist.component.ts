@@ -142,7 +142,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   removeSong(index: number) {
     const command: PlaylistUpdateCommandDto = {
       id: this.selectedPlaylistSongs!.playlist.id,
-      name: this.selectedPlaylistSongs!.playlist.name!,
+      overrideName: this.selectedPlaylistSongs!.playlist.name!,
       overriddenSongIds: this.selectedPlaylistSongs!.songs
         .filter((_, nextIndex) => index !== nextIndex)
         .map(next => {
@@ -174,7 +174,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.selectedIndex = toIndex;
     const command: PlaylistUpdateCommandDto = {
       id: this.selectedPlaylistSongs!.playlist.id,
-      name: this.selectedPlaylistSongs!.playlist.name!,
+      overrideName: this.selectedPlaylistSongs!.playlist.name!,
       overriddenSongIds: this.selectedPlaylistSongs!.songs
         .map(next => {
           return {
