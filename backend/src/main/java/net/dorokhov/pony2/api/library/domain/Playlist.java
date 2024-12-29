@@ -22,6 +22,8 @@ public class Playlist extends BaseEntity<Playlist> {
     private String name;
 
     @Column(name = "type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @NotNull
     private Type type;
 
     @OneToMany(
@@ -31,6 +33,7 @@ public class Playlist extends BaseEntity<Playlist> {
             orphanRemoval = true
     )
     @OrderBy("sort")
+    @NotNull
     private List<PlaylistSong> songs = new ArrayList<>();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

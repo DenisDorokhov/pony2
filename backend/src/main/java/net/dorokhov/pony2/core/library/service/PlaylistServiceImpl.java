@@ -11,6 +11,7 @@ import net.dorokhov.pony2.core.library.repository.PlaylistRepository;
 import net.dorokhov.pony2.core.library.service.exception.PlaylistNotFoundException;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,13 +38,13 @@ public class PlaylistServiceImpl implements PlaylistService {
     @Transactional(readOnly = true)
     @Override
     public List<Playlist> getByUserId(String userId) {
-        return playlistRepository.findByUserIdOrderByName(userId);
+        return playlistRepository.findByUserId(userId, Sort.by("type", "name"));
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<Playlist> getByUserIdAndType(String userId, Playlist.Type type) {
-        return playlistRepository.findByUserIdAndTypeOrderByName(userId, type);
+        return playlistRepository.findByUserIdAndType(userId, type, Sort.by("name"));
     }
 
     @Transactional(readOnly = true)
@@ -99,7 +100,7 @@ public class PlaylistServiceImpl implements PlaylistService {
                 .setId(command.getId())
                 .setCreationDate(storedPlaylist.getCreationDate())
                 .setUpdateDate(LocalDateTime.now())
-                .setName(command.getName())
+                .setName(command.getOverrideName() != null ? command.getOverrideName() : storedPlaylist.getName())
                 .setType(storedPlaylist.getType())
                 .setUser(storedPlaylist.getUser());
         if (command.getOverriddenSongIds() == null) {

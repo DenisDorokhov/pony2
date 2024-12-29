@@ -31,7 +31,7 @@ public class PlaylistUpdateCommand {
     }
 
     private String id;
-    private String name;
+    private String overrideName;
     private List<SongId> overriddenSongIds;
 
     public String getId() {
@@ -44,12 +44,12 @@ public class PlaylistUpdateCommand {
     }
 
     @Nullable
-    public String getName() {
-        return name;
+    public String getOverrideName() {
+        return overrideName;
     }
 
-    public PlaylistUpdateCommand setName(String name) {
-        this.name = name;
+    public PlaylistUpdateCommand setOverrideName(String overrideName) {
+        this.overrideName = overrideName;
         return this;
     }
 

@@ -2,7 +2,6 @@ package net.dorokhov.pony2.web.dto;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import net.dorokhov.pony2.api.library.domain.PlaylistUpdateCommand;
@@ -45,9 +44,8 @@ public class PlaylistUpdateCommandDto {
     @NotNull
     private String id;
 
-    @NotBlank
-    @Size(max = 255)
-    private String name;
+    @Size(min = 1, max = 255)
+    private String overrideName;
 
     @Valid
     private List<SongId> overriddenSongIds;
@@ -61,12 +59,12 @@ public class PlaylistUpdateCommandDto {
         return this;
     }
 
-    public String getName() {
-        return name;
+    public String getOverrideName() {
+        return overrideName;
     }
 
-    public PlaylistUpdateCommandDto setName(String name) {
-        this.name = name;
+    public PlaylistUpdateCommandDto setOverrideName(String overrideName) {
+        this.overrideName = overrideName;
         return this;
     }
 
@@ -83,7 +81,7 @@ public class PlaylistUpdateCommandDto {
     public PlaylistUpdateCommand convert() {
         return new PlaylistUpdateCommand()
                 .setId(id)
-                .setName(name)
+                .setOverrideName(overrideName)
                 .setOverriddenSongIds(overriddenSongIds != null ? overriddenSongIds.stream()
                         .map(SongId::convert)
                         .toList() : null);

@@ -12,6 +12,7 @@ import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -527,7 +528,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
 
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId(savedPlaylist.getId())
-                .setName("playlist2")
+                .setOverrideName("playlist2")
                 .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
@@ -596,7 +597,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
 
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId(savedPlaylist.getId())
-                .setName("playlist2");
+                .setOverrideName("playlist2");
 
         ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
                 "/api/playlists", HttpMethod.PUT,
@@ -639,6 +640,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 )));
 
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
+                .setOverrideName("a".repeat(256))
                 .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                 ));
@@ -653,7 +655,44 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(3);
             assertThat(error.getFieldViolations().stream()
                     .map(ErrorDto.FieldViolation::getField).distinct())
-                    .containsExactlyInAnyOrder("id", "name", "overriddenSongIds[0].songId");
+                    .containsExactlyInAnyOrder("id", "overrideName", "overriddenSongIds[0].songId");
+        });
+
+        command = new PlaylistUpdateCommandDto()
+                .setOverrideName("a")
+                .setOverriddenSongIds(List.of(
+                        new PlaylistUpdateCommandDto.SongId()
+                ));
+
+        response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(2);
+            assertThat(error.getFieldViolations().stream()
+                    .map(ErrorDto.FieldViolation::getField).distinct())
+                    .containsExactlyInAnyOrder("id", "overriddenSongIds[0].songId");
+        });
+
+        command = new PlaylistUpdateCommandDto()
+                .setOverriddenSongIds(List.of(
+                        new PlaylistUpdateCommandDto.SongId()
+                ));
+
+        response = apiTemplate.getRestTemplate().exchange(
+                "/api/playlists", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations().size()).isGreaterThanOrEqualTo(2);
+            assertThat(error.getFieldViolations().stream()
+                    .map(ErrorDto.FieldViolation::getField).distinct())
+                    .containsExactlyInAnyOrder("id", "overriddenSongIds[0].songId");
         });
     }
 
@@ -680,7 +719,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
 
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId(savedPlaylist.getId())
-                .setName("playlist2")
+                .setOverrideName("playlist2")
                 .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
@@ -700,7 +739,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
 
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId("foobar")
-                .setName("playlist2")
+                .setOverrideName("playlist2")
                 .setOverriddenSongIds(List.of(
                         new PlaylistUpdateCommandDto.SongId()
                                 .setSongId(song1_1_1.getId()),
@@ -853,7 +892,7 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetLikePlaylist() {
 
-        Playlist storedPlaylist = playlistRepository.findByUserIdAndTypeOrderByName(user.getId(), Playlist.Type.LIKE).stream()
+        Playlist storedPlaylist = playlistRepository.findByUserIdAndType(user.getId(), Playlist.Type.LIKE, Sort.by("name")).stream()
                 .findFirst()
                 .orElseThrow();
         playlistRepository.save(storedPlaylist
