@@ -33,9 +33,10 @@ export class PlaylistService {
     );
   }
 
-  getTopPlaylists(): Playlist[] {
+  getTopPlaylists(type?: PlaylistDto.Type): Playlist[] {
     const lastPlaylists = [...this.playlistsSubject.value];
     return lastPlaylists
+      .filter(next => type ? next.type === type : true)
       .sort((p1, p2) =>
         (p1.updateDate ?? p1.creationDate).getTime() > (p2.updateDate ?? p2.creationDate).getTime() ? -1 : 1
       )

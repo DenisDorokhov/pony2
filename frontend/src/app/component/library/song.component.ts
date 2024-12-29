@@ -26,6 +26,7 @@ import {NotificationService} from '../../service/notification.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
+import {PlaylistDto} from '../../domain/library.dto';
 
 @Component({
   standalone: true,
@@ -112,7 +113,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }));
     this.subscriptions.push(this.playlistService.observePlaylists()
-      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists()));
+      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
     this.subscriptions.push(this.playlistService.observeLikePlaylist()
       .subscribe(() => this.refreshLikeState()));
   }

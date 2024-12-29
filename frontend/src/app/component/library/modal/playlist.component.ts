@@ -19,7 +19,7 @@ import {isMobileBrowser} from '../../../utils/mobile.utils';
 import {PlaybackService} from '../../../service/playback.service';
 import {LibraryService} from '../../../service/library.service';
 import {PlaybackEvent} from '../../../service/audio-player.service';
-import {PlaylistUpdateCommandDto} from '../../../domain/library.dto';
+import {PlaylistDto, PlaylistUpdateCommandDto} from '../../../domain/library.dto';
 
 @Component({
   standalone: true,
@@ -31,6 +31,7 @@ import {PlaylistUpdateCommandDto} from '../../../domain/library.dto';
 export class PlaylistComponent implements OnInit, OnDestroy {
 
   readonly LoadingState = LoadingState;
+  readonly PlaylistDto = PlaylistDto;
 
   readonly rowHeight = LargeSongComponent.HEIGHT;
 

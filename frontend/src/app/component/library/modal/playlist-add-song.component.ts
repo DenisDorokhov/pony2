@@ -10,6 +10,7 @@ import {Playlist, Song} from '../../../domain/library.model';
 import {NotificationService} from '../../../service/notification.service';
 import {PlaylistEditComponent} from './playlist-edit.component';
 import {FormsModule} from '@angular/forms';
+import {PlaylistDto} from '../../../domain/library.dto';
 
 @Component({
   standalone: true,
@@ -47,7 +48,7 @@ export class PlaylistAddSongComponent implements OnInit {
     this.loadingState = LoadingState.LOADING;
     this.playlistService.requestPlaylists().subscribe({
       next: playlists => {
-        this.playlists = playlists;
+        this.playlists = playlists.filter(next => next.type === PlaylistDto.Type.NORMAL);
         this.selectedPlaylist = this.playlists.length > 0 ? this.playlists[0] : undefined;
         this.loadingState = LoadingState.LOADED;
       },

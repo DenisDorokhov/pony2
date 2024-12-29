@@ -1,9 +1,13 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ 'playlist.header' | translate }}</h4>
-  <select *ngIf="playlists.length > 0" class="form-select"
+  <select *ngIf="playlists.length > 0" class="form-select" [class.like]="selectedPlaylist?.type === PlaylistDto.Type.LIKE"
           [(ngModel)]="selectedPlaylist" (ngModelChange)="onPlaylistChange()">
     @for (playlist of playlists; track playlist.id) {
-      <option [ngValue]="playlist">{{ playlist.name }}</option>
+      @if (playlist.type === PlaylistDto.Type.NORMAL) {
+        <option [ngValue]="playlist">{{ playlist.name }}</option>
+      } @else {
+        <option [ngValue]="playlist" class="like">{{ 'playlist.likePlaylistLabel' | translate }}</option>
+      }
     }
   </select>
   <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING"

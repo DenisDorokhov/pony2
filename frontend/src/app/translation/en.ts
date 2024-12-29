@@ -117,6 +117,7 @@ export default {
     header: 'Playlists',
     noPlaylistsLabel: 'No playlists found.',
     noSongsLabel: 'Playlist is empty.',
+    likePlaylistLabel: 'Favorites',
     deleteButton: 'Delete',
     deletionConfirmation: 'Are you sure to delete selected playlist?',
     notificationTitle: 'Playlists',
