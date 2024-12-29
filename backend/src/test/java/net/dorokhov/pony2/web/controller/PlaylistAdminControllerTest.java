@@ -8,6 +8,7 @@ import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
+import net.dorokhov.pony2.web.dto.PlaylistBackupDto;
 import net.dorokhov.pony2.web.dto.RestoredPlaylistsDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -181,50 +182,53 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<String> backupResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<PlaylistBackupDto> backupResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/playlists/backup", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistBackupDto.class);
 
         assertThat(backupResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(backupResponse.getBody()).satisfies(backup -> {
+        assertThat(backupResponse.getBody()).satisfies(dto -> {
+            assertThat(dto.getFileContent()).isNotNull();
+            assertThat(dto.getFileContent()).satisfies(backup -> {
 
-            File file = tempFolder.resolve("playlist-backup").toFile();
-            Files.write(backup.getBytes(StandardCharsets.UTF_8), file);
+                File file = tempFolder.resolve("playlist-backup").toFile();
+                Files.write(backup.getBytes(StandardCharsets.UTF_8), file);
 
-            MultiValueMap<String, Object> request = new LinkedMultiValueMap<>();
-            request.add("file", new FileSystemResource(file));
+                MultiValueMap<String, Object> request = new LinkedMultiValueMap<>();
+                request.add("file", new FileSystemResource(file));
 
-            ResponseEntity<RestoredPlaylistsDto> restoreResponse = apiTemplate.getRestTemplate().exchange(
-                    "/api/admin/playlists/restore", HttpMethod.POST,
-                    apiTemplate.createHeaderRequest(request, authentication.getAccessToken(), new HttpHeaders()), RestoredPlaylistsDto.class);
+                ResponseEntity<RestoredPlaylistsDto> restoreResponse = apiTemplate.getRestTemplate().exchange(
+                        "/api/admin/playlists/restore", HttpMethod.POST,
+                        apiTemplate.createHeaderRequest(request, authentication.getAccessToken(), new HttpHeaders()), RestoredPlaylistsDto.class);
 
-            assertThat(restoreResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-            assertThat(restoreResponse.getBody()).satisfies(restoredPlaylists -> {
-                assertThat(restoredPlaylists.getUserPlaylists()).hasSize(2);
-                assertThat(restoredPlaylists.getUserPlaylists()).element(0).satisfies(userPlaylist -> {
-                    assertThat(userPlaylist.getUserId()).isEqualTo(user.getId());
-                    assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
-                        assertThat(playlist.getId()).isNotNull();
-                        assertThat(playlist.getCreationDate()).isNotNull();
-                        assertThat(playlist.getUpdateDate()).isNull();
-                        assertThat(playlist.getName()).endsWith(" LIKE");
-                        assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
-                        // TODO: verify like playlist
+                assertThat(restoreResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+                assertThat(restoreResponse.getBody()).satisfies(restoredPlaylists -> {
+                    assertThat(restoredPlaylists.getUserPlaylists()).hasSize(2);
+                    assertThat(restoredPlaylists.getUserPlaylists()).element(0).satisfies(userPlaylist -> {
+                        assertThat(userPlaylist.getUserId()).isEqualTo(user.getId());
+                        assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
+                            assertThat(playlist.getId()).isNotNull();
+                            assertThat(playlist.getCreationDate()).isNotNull();
+                            assertThat(playlist.getUpdateDate()).isNull();
+                            assertThat(playlist.getName()).endsWith(" LIKE");
+                            assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
+                            // TODO: verify like playlist
+                        });
                     });
-                });
-                assertThat(restoredPlaylists.getUserPlaylists()).element(1).satisfies(userPlaylist -> {
-                    assertThat(userPlaylist.getUserId()).isEqualTo(user.getId());
-                    assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
-                        assertThat(playlist.getId()).isNotNull();
-                        assertThat(playlist.getCreationDate()).isNotNull();
-                        assertThat(playlist.getUpdateDate()).isNull();
-                        assertThat(playlist.getName()).endsWith("playlist1");
-                        assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
-                        // TODO: verify normal playlist
+                    assertThat(restoredPlaylists.getUserPlaylists()).element(1).satisfies(userPlaylist -> {
+                        assertThat(userPlaylist.getUserId()).isEqualTo(user.getId());
+                        assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
+                            assertThat(playlist.getId()).isNotNull();
+                            assertThat(playlist.getCreationDate()).isNotNull();
+                            assertThat(playlist.getUpdateDate()).isNull();
+                            assertThat(playlist.getName()).endsWith("playlist1");
+                            assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
+                            // TODO: verify normal playlist
+                        });
                     });
+                    assertThat(restoredPlaylists.getNotFoundUserEmails()).isEmpty();
+                    assertThat(restoredPlaylists.getNotFoundSongPaths()).isEmpty();
                 });
-                assertThat(restoredPlaylists.getNotFoundUserEmails()).isEmpty();
-                assertThat(restoredPlaylists.getNotFoundSongPaths()).isEmpty();
             });
         });
     }
