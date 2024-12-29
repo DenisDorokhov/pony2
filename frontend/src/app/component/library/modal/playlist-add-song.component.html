@@ -5,7 +5,7 @@
 
   <div class="blocking-overlay" [hidden]="loadingState === LoadingState.LOADED && (savingState === LoadingState.EMPTY || savingState === LoadingState.ERROR)"></div>
 
-  <div class="mb-3">
+  <div class="mb-3 select-container">
     <select id="playlist" class="form-select" [(ngModel)]="selectedPlaylist">
       @for (playlist of playlists; track playlist.id) {
         <option [ngValue]="playlist">{{ playlist.name }}</option>

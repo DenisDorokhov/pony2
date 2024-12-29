@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ 'playlist.header' | translate }}</h4>
+  <h4 class="modal-title"><i class="bi bi-file-earmark-music"></i>{{ 'playlist.header' | translate }}</h4>
   <select *ngIf="playlists.length > 0" class="form-select" [class.like]="selectedPlaylist?.type === PlaylistDto.Type.LIKE"
           [(ngModel)]="selectedPlaylist" (ngModelChange)="onPlaylistChange()">
     @for (playlist of playlists; track playlist.id) {
