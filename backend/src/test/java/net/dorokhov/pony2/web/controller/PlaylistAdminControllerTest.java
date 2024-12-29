@@ -212,7 +212,12 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                             assertThat(playlist.getUpdateDate()).isNull();
                             assertThat(playlist.getName()).endsWith(" LIKE");
                             assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
-                            // TODO: verify like playlist
+                            getTransactionTemplate().executeWithoutResult(transactionStatus ->
+                                    assertThat(playlistRepository.findById(playlist.getId())).hasValueSatisfying(foundPlaylist ->
+                                            assertThat(foundPlaylist.getSongs().stream()
+                                                    .map(PlaylistSong::getSong)
+                                                    .map(Song::getPath)
+                                                    .toList()).containsExactlyInAnyOrder("song1_1_1", "song1_1_2")));
                         });
                     });
                     assertThat(restoredPlaylists.getUserPlaylists()).element(1).satisfies(userPlaylist -> {
@@ -223,7 +228,12 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                             assertThat(playlist.getUpdateDate()).isNull();
                             assertThat(playlist.getName()).endsWith("playlist1");
                             assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
-                            // TODO: verify normal playlist
+                            getTransactionTemplate().executeWithoutResult(transactionStatus ->
+                                    assertThat(playlistRepository.findById(playlist.getId())).hasValueSatisfying(foundPlaylist ->
+                                            assertThat(foundPlaylist.getSongs().stream()
+                                                    .map(PlaylistSong::getSong)
+                                                    .map(Song::getPath)
+                                                    .toList()).containsExactlyInAnyOrder("song1_1_1", "song1_1_2", "song1_2_1")));
                         });
                     });
                     assertThat(restoredPlaylists.getNotFoundUserEmails()).isEmpty();
