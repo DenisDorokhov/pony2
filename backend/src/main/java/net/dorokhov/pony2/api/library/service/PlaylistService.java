@@ -10,12 +10,23 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PlaylistService {
+
     List<Playlist> getByUserId(String userId);
     List<Playlist> getByUserIdAndType(String userId, Playlist.Type type);
     Optional<Playlist> getById(String id);
+
     Playlist createNormalPlaylist(PlaylistCreationCommand command);
     Playlist updatePlaylist(PlaylistUpdateCommand command) throws PlaylistNotFoundException;
     Playlist addSongToPlaylist(String id, String songId) throws PlaylistNotFoundException, SongNotFoundException;
     Playlist removeSongFromPlaylist(String id, String songId) throws PlaylistNotFoundException;
     void delete(String id);
+
+    String backupPlaylists(String userId);
+    RestoredPlaylists restorePlaylists(String userId, String backup);
+
+    record RestoredPlaylists(
+            String userId,
+            List<Playlist> playlists,
+            List<String> notFoundSongs
+    ) {}
 }

@@ -6,16 +6,21 @@ import net.dorokhov.pony2.api.library.service.PlaylistService;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.core.library.service.exception.PlaylistNotFoundException;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
-import net.dorokhov.pony2.web.dto.PlaylistCreationCommandDto;
-import net.dorokhov.pony2.web.dto.PlaylistDto;
-import net.dorokhov.pony2.web.dto.PlaylistSongsDto;
-import net.dorokhov.pony2.web.dto.PlaylistUpdateCommandDto;
+import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
 public class PlaylistFacade {
@@ -131,6 +136,28 @@ public class PlaylistFacade {
             return PlaylistSongsDto.of(playlistService.removeSongFromPlaylist(playlist.getId(), songId), isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlist.getId());
+        }
+    }
+
+    @Transactional
+    public String backupPlaylists(String userId) {
+        return playlistService.backupPlaylists(userId);
+    }
+
+    @Transactional
+    public RestoredPlaylistsDto restorePlaylists(String userId, MultipartFile backupFile) {
+        String backup;
+        try {
+            backup = readResource(backupFile.getResource());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return RestoredPlaylistsDto.of(playlistService.restorePlaylists(userId, backup));
+    }
+
+    private String readResource(Resource resource) throws IOException {
+        try (Reader reader = new InputStreamReader(resource.getInputStream(), UTF_8)) {
+            return FileCopyUtils.copyToString(reader);
         }
     }
 }

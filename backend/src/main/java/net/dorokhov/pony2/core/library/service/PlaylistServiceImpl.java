@@ -1,5 +1,8 @@
 package net.dorokhov.pony2.core.library.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.PlaylistService;
@@ -8,8 +11,11 @@ import net.dorokhov.pony2.api.user.domain.UserCreatedEvent;
 import net.dorokhov.pony2.api.user.domain.UserDeletingEvent;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.core.library.repository.PlaylistRepository;
+import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.exception.PlaylistNotFoundException;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -21,16 +27,21 @@ import java.util.*;
 @Service
 public class PlaylistServiceImpl implements PlaylistService {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final PlaylistRepository playlistRepository;
+    private final SongRepository songRepository;
     private final UserService userService;
     private final LibraryService libraryService;
 
     public PlaylistServiceImpl(
             PlaylistRepository playlistRepository,
+            SongRepository songRepository,
             UserService userService,
             LibraryService libraryService
     ) {
         this.playlistRepository = playlistRepository;
+        this.songRepository = songRepository;
         this.userService = userService;
         this.libraryService = libraryService;
     }
@@ -163,6 +174,70 @@ public class PlaylistServiceImpl implements PlaylistService {
         playlistRepository.findLockedById(id).ifPresent(playlistRepository::delete);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public String backupPlaylists(String userId) {
+        List<BackupPlaylist> backup = getByUserId(userId).stream()
+                .map(BackupPlaylist::of)
+                .toList();
+        try {
+            return new ObjectMapper().writeValueAsString(backup);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Transactional
+    @Override
+    public RestoredPlaylists restorePlaylists(String userId, String backup) {
+
+        List<BackupPlaylist> decodedBackup;
+        try {
+            decodedBackup = new ObjectMapper().readValue(backup, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        User user = userService.getById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found."));
+        List<Playlist> restoredPlaylists = new ArrayList<>();
+        LinkedHashSet<String> notFoundSongs = new LinkedHashSet<>();
+        for (BackupPlaylist backupPlaylist : decodedBackup) {
+            Playlist playlist = new Playlist()
+                    .setName(generateRestoredPlaylistName(backupPlaylist))
+                    .setType(backupPlaylist.type())
+                    .setUser(user);
+            playlist.setSongs(backupPlaylist.songPaths().stream()
+                    .map(path -> {
+                        Song song = songRepository.findByPath(path);
+                        if (song == null) {
+                            logger.warn("Playlist '{}' will not be fully restored: song '{}' not found.", backupPlaylist.name(), song);
+                            notFoundSongs.add(path);
+                        }
+                        return song;
+                    })
+                    .filter(Objects::nonNull)
+                    .map(song -> new PlaylistSong()
+                            .setPlaylist(playlist)
+                            .setSong(song)
+                    )
+                    .toList());
+            restoredPlaylists.add(normalizeAndSavePlaylist(playlist));
+        }
+        return new RestoredPlaylists(userId, restoredPlaylists, new ArrayList<>(notFoundSongs));
+    }
+
+    private String generateRestoredPlaylistName(BackupPlaylist backupPlaylist) {
+        String result;
+        if (backupPlaylist.type() == Playlist.Type.NORMAL) {
+            result = "[RESTORED %s] %s".formatted(LocalDateTime.now().toString(), backupPlaylist.name());
+        } else {
+            result = "[RESTORED %s] %s".formatted(LocalDateTime.now().toString(), backupPlaylist.type());
+        }
+        return result.substring(0, Math.min(result.length(), 255));
+    }
+
     @Transactional
     @EventListener(UserCreatedEvent.class)
     public void onUserCreated(UserCreatedEvent event) {
@@ -176,5 +251,21 @@ public class PlaylistServiceImpl implements PlaylistService {
     @EventListener(UserDeletingEvent.class)
     public void onUserDeleting(UserDeletingEvent event) {
         playlistRepository.deleteByUserId(event.getUserId());
+    }
+
+    record BackupPlaylist (
+            String name,
+            Playlist.Type type,
+            List<String> songPaths
+    ) {
+        static BackupPlaylist of(Playlist playlist) {
+            return new BackupPlaylist(
+                    playlist.getName(), playlist.getType(),
+                    playlist.getSongs().stream()
+                            .map(PlaylistSong::getSong)
+                            .map(Song::getPath)
+                            .toList()
+            );
+        }
     }
 }
