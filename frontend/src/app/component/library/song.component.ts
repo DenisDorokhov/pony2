@@ -219,8 +219,8 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     const menuButton = this.menuButtonElement.nativeElement as HTMLElement;
     const menuButtonRect = menuButton.getBoundingClientRect();
     const menu = this.menuEmbeddedViewRef!.rootNodes[0] as HTMLElement;
-    if (menuButtonRect.top + menuButtonRect.height + menuContainerRect.height > window.innerHeight) {
-      const menuTop = menuButtonRect.top - menuContainerRect.height;
+    if (menuButtonRect.bottom + menuButtonRect.height + menuContainerRect.height > window.innerHeight) {
+      const menuTop = Math.max(0, menuButtonRect.top - menuContainerRect.height);
       menu.style.top = menuTop + 'px';
     } else {
       const menuTop = menuButtonRect.top + menuButtonRect.height;
