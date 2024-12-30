@@ -15,6 +15,12 @@ select {
   }
 }
 
+@media (width <= 1000px) {
+  select {
+    width: 240px;
+  }
+}
+
 button.edit {
   margin-left: 6px;
 }
