@@ -2,9 +2,20 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, forkJoin, Observable, Subscription} from 'rxjs';
 import {Playlist, PlaylistSongs} from '../domain/library.model';
-import {PlaylistCreateCommandDto, PlaylistDto, PlaylistSongsDto, PlaylistUpdateCommandDto} from '../domain/library.dto';
+import {
+  PlaylistCreateCommandDto,
+  PlaylistDto,
+  PlaylistSongsDto,
+  PlaylistUpdateCommandDto,
+  RestoredPlaylistsDto
+} from '../domain/library.dto';
 import {catchError, map, tap} from 'rxjs/operators';
 import {ErrorDto} from '../domain/common.dto';
+import FileSaver from 'file-saver';
+
+interface PlaylistBackupDto {
+  fileContent: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -121,6 +132,24 @@ export class PlaylistService {
     return this.httpClient.delete<PlaylistSongsDto>('/api/playlists/like/songs/' + songId).pipe(
       map(dto => new PlaylistSongs(dto)),
       tap(likedSongs => this.likePlaylistSongsSubject.next(likedSongs)),
+      tap(() => this.requestPlaylists().subscribe()),
+    );
+  }
+
+  backupPlaylists(): Observable<void> {
+    return this.httpClient.get<PlaylistBackupDto>('/api/admin/playlists/backup').pipe(
+      map(backup => {
+        const file = new File([backup.fileContent], 'playlists-backup.json', {type: 'text/plain;charset=utf-8'});
+        FileSaver.saveAs(file);
+      }),
+      map(() => undefined),
+    );
+  }
+
+  restorePlaylists(file: File): Observable<RestoredPlaylistsDto> {
+    const formData: FormData = new FormData();
+    formData.append('file', file, file.name);
+    return this.httpClient.post<RestoredPlaylistsDto>('/api/admin/playlists/restore', formData).pipe(
       tap(() => this.requestPlaylists().subscribe()),
     );
   }

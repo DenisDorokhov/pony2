@@ -3,7 +3,23 @@
 </div>
 <div class="modal-body">
 
-  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
+  <div class="blocking-overlay" [hidden]="primaryLoadingState !== LoadingState.LOADING && primaryLoadingState !== LoadingState.ERROR"></div>
+
+  <div class="backup">
+    <div class="mb-3">
+      <label class="form-label">{{ 'settings.backupPlaylistsLabel' | translate }}</label>
+      <div><button class="btn btn-primary" (click)="createBackup()" [disabled]="secondaryLoadingState !== LoadingState.LOADED">{{ 'settings.createBackupButton' | translate }}</button></div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'settings.restorePlaylistsLabel' | translate }}</label>
+      <div>
+        <input type="file" class="form-control" (change)="onBackupFileChange($event)">
+        <button class="btn btn-primary restore" (click)="restoreBackup()" [disabled]="!backupFileToRestore">
+          {{ 'settings.restoreBackupButton' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
@@ -42,8 +58,8 @@
 
 </div>
 <div class="modal-footer">
-  <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
-  <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <pony-loading-indicator [hidden]="primaryLoadingState !== LoadingState.LOADING && secondaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator [hidden]="primaryLoadingState !== LoadingState.ERROR && secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
-  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="primaryLoadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
 </div>

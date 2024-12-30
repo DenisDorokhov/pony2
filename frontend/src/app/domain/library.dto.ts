@@ -1,4 +1,5 @@
 import {PageDto} from './common.dto';
+import UserPlaylist = RestoredPlaylistsDto.UserPlaylist;
 
 export interface AlbumDto {
   id: string;
@@ -277,5 +278,18 @@ export interface PlaybackHistoryDto {
 export namespace PlaybackHistoryDto {
   export interface Statistics {
     totalCount: number;
+  }
+}
+
+export interface RestoredPlaylistsDto {
+  userPlaylists: UserPlaylist[];
+  notFoundUserEmails: string[];
+  notFoundSongPaths: string[];
+}
+
+export namespace RestoredPlaylistsDto {
+  export interface UserPlaylist {
+    userEmail: string;
+    playlist: PlaylistDto;
   }
 }

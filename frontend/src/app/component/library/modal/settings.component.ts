@@ -13,6 +13,7 @@ import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {LibraryScanService} from '../../../service/library-scan.service';
 import {NotificationService} from '../../../service/notification.service';
+import {PlaylistService} from '../../../service/playlist.service';
 
 @Component({
   standalone: true,
@@ -30,8 +31,10 @@ export class SettingsComponent implements OnInit{
   form: FormGroup;
   formLibraryFolders: FormArray;
   error: ErrorDto | undefined;
+  backupFileToRestore: File | undefined;
 
-  loadingState = LoadingState.LOADING;
+  primaryLoadingState = LoadingState.LOADING;
+  secondaryLoadingState = LoadingState.LOADED;
 
   constructor(
     public readonly activeModal: NgbActiveModal,
@@ -40,6 +43,7 @@ export class SettingsComponent implements OnInit{
     private readonly translateService: TranslateService,
     private readonly libraryScanService: LibraryScanService,
     private readonly notificationService: NotificationService,
+    private readonly playlistService: PlaylistService,
   ) {
     this.formLibraryFolders = formBuilder.array([
       formBuilder.group({path: ''})
@@ -56,10 +60,10 @@ export class SettingsComponent implements OnInit{
         this.formLibraryFolders.clear();
         this.config.libraryFolders.forEach(next =>
           this.formLibraryFolders.push(this.formBuilder.group({path: next.path})));
-        this.loadingState = LoadingState.LOADED;
+        this.primaryLoadingState = LoadingState.LOADED;
       },
       error: () => {
-        this.loadingState = LoadingState.ERROR;
+        this.primaryLoadingState = LoadingState.ERROR;
       }
     });
   }
@@ -74,10 +78,10 @@ export class SettingsComponent implements OnInit{
 
   save() {
     const configToSave = this.form.value as ConfigDto;
-    this.loadingState = LoadingState.LOADING;
+    this.primaryLoadingState = LoadingState.LOADING;
     this.configService.saveConfig(configToSave).subscribe({
       next: config => {
-        this.loadingState = LoadingState.LOADED;
+        this.primaryLoadingState = LoadingState.LOADED;
         if (JSON.stringify(this.config!.libraryFolders) !== JSON.stringify(config.libraryFolders)) {
           this.notificationService.success(
             this.translateService.instant('notification.settingsTitle'),
@@ -91,8 +95,39 @@ export class SettingsComponent implements OnInit{
       },
       error: error => {
         this.error = error;
-        this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
+        this.primaryLoadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
       }
     });
+  }
+
+  createBackup() {
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.playlistService.backupPlaylists().subscribe({
+      next: () => this.secondaryLoadingState = LoadingState.LOADED,
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
+  }
+
+  restoreBackup() {
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.playlistService.restorePlaylists(this.backupFileToRestore!).subscribe({
+      next: dto => {
+        this.secondaryLoadingState = LoadingState.LOADED;
+        let message = this.translateService.instant('settings.restoreBackupSuccess', { count: dto.userPlaylists.length });
+        if (dto.notFoundUserEmails.length > 0) {
+          message += '\n' + this.translateService.instant('settings.restoreBackupUserEmailsNotFound', { values: dto.notFoundUserEmails.join(', ') });
+        }
+        if (dto.notFoundSongPaths.length > 0) {
+          message += '\n' + this.translateService.instant('settings.restoreBackupSongPathsNotFound', { values: dto.notFoundSongPaths.join(', ') });
+        }
+        window.alert(message);
+      },
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
+  }
+
+  onBackupFileChange(event: Event) {
+    const fileList = (event.target as any).files as FileList;
+    this.backupFileToRestore = fileList.item(0) ?? undefined;
   }
 }

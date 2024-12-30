@@ -205,7 +205,7 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                 assertThat(restoreResponse.getBody()).satisfies(restoredPlaylists -> {
                     assertThat(restoredPlaylists.getUserPlaylists()).hasSize(2);
                     assertThat(restoredPlaylists.getUserPlaylists()).element(0).satisfies(userPlaylist -> {
-                        assertThat(userPlaylist.getUserId()).isEqualTo(user.getId());
+                        assertThat(userPlaylist.getUserEmail()).isEqualTo(user.getId());
                         assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
                             assertThat(playlist.getId()).isNotNull();
                             assertThat(playlist.getCreationDate()).isNotNull();
@@ -221,7 +221,7 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                         });
                     });
                     assertThat(restoredPlaylists.getUserPlaylists()).element(1).satisfies(userPlaylist -> {
-                        assertThat(userPlaylist.getUserId()).isEqualTo(user.getId());
+                        assertThat(userPlaylist.getUserEmail()).isEqualTo(user.getId());
                         assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
                             assertThat(playlist.getId()).isNotNull();
                             assertThat(playlist.getCreationDate()).isNotNull();

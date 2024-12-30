@@ -8,15 +8,15 @@ public class RestoredPlaylistsDto {
 
     public static class UserPlaylist {
 
-        private String userId;
+        private String userEmail;
         private PlaylistDto playlist;
 
-        public String getUserId() {
-            return userId;
+        public String getUserEmail() {
+            return userEmail;
         }
 
-        public UserPlaylist setUserId(String userId) {
-            this.userId = userId;
+        public UserPlaylist setUserEmail(String userEmail) {
+            this.userEmail = userEmail;
             return this;
         }
 
@@ -65,7 +65,7 @@ public class RestoredPlaylistsDto {
         return new RestoredPlaylistsDto()
                 .setUserPlaylists(restoredPlaylists.playlists().stream()
                         .map(playlist -> new UserPlaylist()
-                                .setUserId(playlist.getUser().getId())
+                                .setUserEmail(playlist.getUser().getEmail())
                                 .setPlaylist(PlaylistDto.of(playlist)))
                         .toList())
                 .setNotFoundUserEmails(restoredPlaylists.notFoundUserEmails())
