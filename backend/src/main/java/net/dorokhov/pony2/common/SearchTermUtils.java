@@ -5,18 +5,20 @@ import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SearchTermUtils {
 
-    private static final Pattern PATTERN_ACRONYM = Pattern.compile("(\\p{L}+)\\.");
+    private static final Pattern PATTERN_ACRONYM = Pattern.compile("(\\p{L}+)[.'-_]");
+    private static final Set<String> ACRONYM_SEPARATORS = Set.of(".", "'", "-", "_");
 
     public static String prepareForIndexing(@Nullable String value) {
         String normalizedValue = Strings.nullToEmpty(value);
         StringBuilder result = new StringBuilder(normalizedValue);
         for (String word : normalizedValue.split("\\s+")) {
-            if (word.contains(".")) {
+            if (ACRONYM_SEPARATORS.stream().anyMatch(word::contains)) {
                 Matcher matcher = PATTERN_ACRONYM.matcher(Strings.nullToEmpty(word + "."));
                 boolean hasMatches = false;
                 List<String> acronymTerms = new ArrayList<>();

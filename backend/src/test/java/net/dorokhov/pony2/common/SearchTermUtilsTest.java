@@ -25,5 +25,11 @@ class SearchTermUtilsTest {
                 .isEqualTo("Simple sentence. And another one. And sentence one");
         assertThat(SearchTermUtils.prepareForIndexing("Simple sentence.And another one without space."))
                 .isEqualTo("Simple sentence.And another one without space. sentence And sentenceAnd space");
+        assertThat(SearchTermUtils.prepareForIndexing("Don't speak"))
+                .isEqualTo("Don't speak Don t Dont");
+        assertThat(SearchTermUtils.prepareForIndexing("rock-n-roll"))
+                .isEqualTo("rock-n-roll rock n roll rocknroll");
+        assertThat(SearchTermUtils.prepareForIndexing("i_am_programmer"))
+                .isEqualTo("i_am_programmer i am programmer iamprogrammer");
     }
 }

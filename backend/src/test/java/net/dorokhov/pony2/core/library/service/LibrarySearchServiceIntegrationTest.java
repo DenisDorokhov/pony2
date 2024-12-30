@@ -117,7 +117,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
                 .setFileType(FileType.of("text/plain", "txt"))
                 .setDuration(666L)
                 .setSize(256L)
-                .setName("the foobar entity1")
+                .setName("the foobar entity1 underscore_separated_words")
                 .setArtistName("артист")
                 .setAlbumArtistName("другой")
                 .setAlbumName("альбом")
@@ -144,6 +144,9 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("underscore_separated"), 10)).containsExactly(song1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("underscore_separated_"), 10)).containsExactly(song1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("underscore separated words"), 10)).containsExactly(song1);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("артист, другой . entity2"), 10)).containsExactly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнёт"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("гнет"), 10)).containsOnly(song2);
