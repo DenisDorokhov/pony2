@@ -140,19 +140,19 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public String backupPlaylists(String userId) {
-        return playlistService.backupPlaylists(userId);
+    public PlaylistBackupDto backupPlaylists() {
+        return PlaylistBackupDto.of(playlistService.backupPlaylists());
     }
 
     @Transactional
-    public RestoredPlaylistsDto restorePlaylists(String userId, MultipartFile backupFile) {
+    public RestoredPlaylistsDto restorePlaylists(MultipartFile backupFile) {
         String backup;
         try {
             backup = readResource(backupFile.getResource());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return RestoredPlaylistsDto.of(playlistService.restorePlaylists(userId, backup));
+        return RestoredPlaylistsDto.of(playlistService.restorePlaylists(backup));
     }
 
     private String readResource(Resource resource) throws IOException {

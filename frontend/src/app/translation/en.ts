@@ -219,9 +219,16 @@ export default {
   },
   settings: {
     header: 'Settings',
+    backupPlaylistsLabel: 'Backup playlists:',
+    createBackupButton: 'Create Backup',
+    restorePlaylistsLabel: 'Restore playlists:',
+    restoreBackupButton: 'Restore Backup',
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
     startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',
+    restoreBackupSuccess: '{{ count }} playlists have been restored.',
+    restoreBackupUserEmailsNotFound: 'The following user emails were not found: {{ values }}',
+    restoreBackupSongPathsNotFound: 'The following song files were not found: {{ values }}',
   },
   log: {
     header: 'Log',
