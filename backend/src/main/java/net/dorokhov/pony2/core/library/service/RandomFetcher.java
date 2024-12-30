@@ -23,8 +23,11 @@ public class RandomFetcher {
         ArrayList<T> result = new ArrayList<>();
         Random random = new Random();
 
-        long totalCount = repository.fetchCount();
         while (result.size() < count) {
+            long totalCount = repository.fetchCount();
+            if (totalCount == 0) {
+                return new ArrayList<>();
+            }
             int pageIndex = random.nextInt((int) Math.min(totalCount, Integer.MAX_VALUE));
             List<T> page = repository.fetchContent(PageRequest.of(pageIndex, 1));
             if (!page.isEmpty()) {

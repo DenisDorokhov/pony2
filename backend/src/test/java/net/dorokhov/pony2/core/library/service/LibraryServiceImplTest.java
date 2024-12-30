@@ -94,7 +94,7 @@ public class LibraryServiceImplTest {
     public void shouldGetSongsByGenreId() {
 
         List<Song> songs = ImmutableList.of(song(), song());
-        when(songRepository.findByGenreId(any(), any())).thenReturn(new PageImpl<>(songs));
+        when(songRepository.findPageByGenreId(any(), any())).thenReturn(new PageImpl<>(songs));
 
         Page<Song> result = libraryService.getSongsByGenreId("1", 0);
 
@@ -163,7 +163,7 @@ public class LibraryServiceImplTest {
     @SuppressWarnings("unchecked")
     public void shouldGetRandomSongsByGenreId() {
 
-        when(songRepository.findByGenreId(any(), any())).thenReturn(new PageImpl<>(emptyList()));
+        when(songRepository.findByGenreId(any(), any())).thenReturn(emptyList());
         List<Song> songs = new ArrayList<>();
         when(randomFetcher.fetch(eq(5), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
             RandomFetcher.Repository<?> repository = invocation.getArgument(1);

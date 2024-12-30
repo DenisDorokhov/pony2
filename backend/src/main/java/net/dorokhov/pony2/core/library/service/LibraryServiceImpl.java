@@ -1,9 +1,6 @@
 package net.dorokhov.pony2.core.library.service;
 
-import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
-import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -16,10 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,7 +68,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public Page<Song> getSongsByGenreId(String genreId, int pageIndex) {
-        return songRepository.findByGenreId(genreId, PageRequest.of(pageIndex, PAGE_SIZE,
+        return songRepository.findPageByGenreId(genreId, PageRequest.of(pageIndex, PAGE_SIZE,
                 Sort.by("album.year", "album.name", "discNumber", "trackNumber", "name")));
     }
 
@@ -139,16 +133,35 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public List<Song> getRandomSongsByGenreId(String genreId, int count) {
+        Set<String> excludeArtistIds = new HashSet<>();
         return randomFetcher.fetch(count, new RandomFetcher.Repository<>() {
 
             @Override
             public long fetchCount() {
-                return songRepository.countByGenreId(genreId);
+                long result = excludeArtistIds.isEmpty() ? songRepository.countByGenreId(genreId) :
+                        songRepository.countByGenreIdAndAlbumArtistIdNotIn(genreId, excludeArtistIds);
+                if (result == 0 && !excludeArtistIds.isEmpty()) {
+                    excludeArtistIds.clear();
+                    result = songRepository.countByGenreId(genreId);
+                }
+                return result;
             }
 
             @Override
             public List<Song> fetchContent(Pageable pageable) {
-                return songRepository.findByGenreId(genreId, pageable).getContent();
+                List<Song> result = excludeArtistIds.isEmpty() ? songRepository.findByGenreId(genreId, pageable) :
+                        songRepository.findByGenreIdAndAlbumArtistIdNotIn(genreId, excludeArtistIds, pageable);
+                if (result.isEmpty() && !excludeArtistIds.isEmpty()) {
+                    excludeArtistIds.clear();
+                    result = songRepository.findByGenreId(genreId, pageable);
+                } else {
+                    excludeArtistIds.addAll(result.stream()
+                            .map(Song::getAlbum)
+                            .map(Album::getArtist)
+                            .map(Artist::getId)
+                            .collect(Collectors.toSet()));
+                }
+                return result;
             }
         });
     }
