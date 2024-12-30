@@ -244,7 +244,10 @@ public class PlaylistServiceImpl implements PlaylistService {
                     }
                     restoredPlaylists.add(normalizeAndSavePlaylist(playlist));
                 }
-            }, () -> notFoundUserEmails.add(userEmail));
+            }, () -> {
+                logger.warn("Playlists will not be fully restored: user '{}' not found.", userEmail);
+                notFoundUserEmails.add(userEmail);
+            });
         }
         return new RestoredPlaylists(restoredPlaylists, new ArrayList<>(notFoundUserEmails), new ArrayList<>(notFoundSongs));
     }

@@ -139,7 +139,7 @@ export class PlaylistService {
   backupPlaylists(): Observable<void> {
     return this.httpClient.get<PlaylistBackupDto>('/api/admin/playlists/backup').pipe(
       map(backup => {
-        const file = new File([backup.fileContent], 'playlists-backup.json', {type: 'text/plain;charset=utf-8'});
+        const file = new File([backup.fileContent], 'playlists-' + window.location.host + '-' + new Date().toISOString(), {type: 'text/plain;charset=utf-8'});
         FileSaver.saveAs(file);
       }),
       map(() => undefined),
