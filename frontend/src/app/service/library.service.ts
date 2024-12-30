@@ -4,7 +4,7 @@ import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Album, Artist, ArtistSongs, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
-import {ArtistDto, ArtistSongsDto, SearchResultDto, SongDetailsDto} from '../domain/library.dto';
+import {ArtistDto, ArtistSongsDto, RandomSongsRequestDto, SearchResultDto, SongDetailsDto} from '../domain/library.dto';
 
 export enum LibraryState {
   UNKNOWN,
@@ -90,8 +90,8 @@ export class LibraryService {
     );
   }
 
-  getGenreRandomSongs(genreId: string, count: number): Observable<Song[]> {
-    return this.httpClient.get<SongDetailsDto[]>('/api/library/randomGenreSongs/' + genreId + '?count=' + count)
+  getRandomSongs(request: RandomSongsRequestDto): Observable<Song[]> {
+    return this.httpClient.post<SongDetailsDto[]>('/api/library/fetchRandomSongs', request)
       .pipe(
         map(songDetails =>
           songDetails.map(songDetails =>

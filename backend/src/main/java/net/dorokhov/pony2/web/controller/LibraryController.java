@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
+import jakarta.validation.Valid;
 import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.LibraryFacade;
@@ -14,8 +15,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(produces = APPLICATION_JSON_VALUE)
 public class LibraryController implements ErrorHandlingController {
-
-    private final static int MAX_RANDOM_COUNT = 30;
 
     private final LibraryFacade libraryFacade;
     private final ScanFacade scanFacade;
@@ -55,14 +54,9 @@ public class LibraryController implements ErrorHandlingController {
         return libraryFacade.search(query);
     }
 
-    @GetMapping("/api/library/randomSongs")
-    public List<SongDetailsDto> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
-        return libraryFacade.getRandomSongs(Math.min(count, MAX_RANDOM_COUNT));
-    }
-
-    @GetMapping("/api/library/randomGenreSongs/{genreId}")
-    public List<SongDetailsDto> getGenreRandomSongs(@PathVariable String genreId, @RequestParam(defaultValue = "10") int count) {
-        return libraryFacade.getRandomSongsByGenreId(genreId, Math.min(count, MAX_RANDOM_COUNT));
+    @PostMapping("/api/library/fetchRandomSongs")
+    public List<SongDetailsDto> getGenreRandomSongs(@Valid @RequestBody RandomSongsRequestDto request) {
+        return libraryFacade.getRandomSongs(request);
     }
 
     @GetMapping("/api/library/scanStatus")

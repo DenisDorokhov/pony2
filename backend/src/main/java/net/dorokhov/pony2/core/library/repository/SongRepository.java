@@ -15,13 +15,15 @@ import java.util.Set;
 
 public interface SongRepository extends JpaRepository<Song, String> {
 
+    long countByAlbumArtistIdNotIn(Set<String> excludeArtistIds);
+
+    long countByGenreIdIn(List<String> genreIds);
+
     long countByGenreId(String genreId);
 
-    long countByGenreIdAndAlbumArtistIdNotIn(String genreId, Set<String> artistIds);
+    long countByGenreIdInAndAlbumArtistIdNotIn(List<String> genreIds, Set<String> excludeArtistIds);
 
     long countByAlbumId(String albumId);
-
-    long countByAlbumArtistId(String artistId);
 
     long countByArtworkId(@Nullable String artworkId);
 
@@ -39,19 +41,21 @@ public interface SongRepository extends JpaRepository<Song, String> {
 
     Song findByPath(String path);
 
+    List<Song> findAllBy(Pageable pageable);
+
     List<Song> findByAlbumId(String albumId, Sort sort);
 
     List<Song> findByAlbumArtistId(String artistId, Sort sort);
 
-    List<Song> findByAlbumArtistId(String artistId, Pageable pageable);
+    List<Song> findByAlbumArtistIdNotIn(Set<String> excludeArtistIds, Pageable pageable);
 
     Page<Song> findPageByGenreId(String genreId, Pageable pageable);
 
-    List<Song> findByGenreId(String genreId, Pageable pageable);
+    List<Song> findByGenreIdIn(List<String> genreIds, Pageable pageable);
 
     Page<Song> findByGenreIdAndArtworkNotNull(String genreId, Pageable pageable);
 
-    List<Song> findByGenreIdAndAlbumArtistIdNotIn(String genreId, Set<String> artistIds, Pageable pageable);
+    List<Song> findByGenreIdInAndAlbumArtistIdNotIn(List<String> genreIds, Set<String> excludeArtistIds, Pageable pageable);
 
     Song findFirstByAlbumIdAndArtworkNotNull(String albumId);
 

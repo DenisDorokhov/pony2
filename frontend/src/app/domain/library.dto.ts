@@ -293,3 +293,9 @@ export namespace RestoredPlaylistsDto {
     playlist: PlaylistDto;
   }
 }
+
+export interface RandomSongsRequestDto {
+  count: number;
+  lastArtistId?: string;
+  genreIds: string[];
+}

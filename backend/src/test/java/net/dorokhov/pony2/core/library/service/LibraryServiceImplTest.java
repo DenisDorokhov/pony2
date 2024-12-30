@@ -1,10 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
-import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
@@ -126,44 +123,7 @@ public class LibraryServiceImplTest {
     @SuppressWarnings("unchecked")
     public void shouldGetRandomSongs() {
 
-        when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(emptyList()));
-        List<Song> songs = new ArrayList<>();
-        when(randomFetcher.fetch(eq(2), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
-            RandomFetcher.Repository<?> repository = invocation.getArgument(1);
-            repository.fetchCount();
-            repository.fetchContent(PageRequest.of(0, 1));
-            return songs;
-        });
-
-        assertThat(libraryService.getRandomSongs(2)).isSameAs(songs);
-
-        verify(songRepository).count();
-        verify(songRepository).findAll((Pageable) any());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void shouldGetRandomSongsByArtistId() {
-
-        List<Song> songs = new ArrayList<>();
-        when(randomFetcher.fetch(eq(4), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
-            RandomFetcher.Repository<?> repository = invocation.getArgument(1);
-            repository.fetchCount();
-            repository.fetchContent(PageRequest.of(0, 1));
-            return songs;
-        });
-
-        assertThat(libraryService.getRandomSongsByArtistId("1", 4)).isSameAs(songs);
-
-        verify(songRepository).countByAlbumArtistId("1");
-        verify(songRepository).findByAlbumArtistId(eq("1"), (Pageable) any());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void shouldGetRandomSongsByGenreId() {
-
-        when(songRepository.findByGenreId(any(), any())).thenReturn(emptyList());
+        when(songRepository.findByGenreIdIn(any(), any())).thenReturn(emptyList());
         List<Song> songs = new ArrayList<>();
         when(randomFetcher.fetch(eq(5), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
             RandomFetcher.Repository<?> repository = invocation.getArgument(1);
@@ -172,9 +132,13 @@ public class LibraryServiceImplTest {
             return songs;
         });
 
-        assertThat(libraryService.getRandomSongsByGenreId("1", 5)).isSameAs(songs);
+        assertThat(libraryService.getRandomSongs(new RandomSongsRequest()
+                .setLastArtistId(null)
+                .setGenreIds(List.of("1"))
+                .setCount(5))
+        ).isSameAs(songs);
 
-        verify(songRepository).countByGenreId("1");
-        verify(songRepository).findByGenreId(eq("1"), any());
+        verify(songRepository).countByGenreIdIn(eq(List.of("1")));
+        verify(songRepository).findByGenreIdIn(eq(List.of("1")), any());
     }
 }

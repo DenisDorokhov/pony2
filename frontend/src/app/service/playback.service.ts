@@ -8,6 +8,7 @@ import {LibraryService} from './library.service';
 import {AudioPlayer, PlaybackEvent, PlaybackState} from './audio-player.service';
 import {BrowserNotificationService} from './browser-notification.service';
 import {PlaybackHistoryService} from './playback-history.service';
+import {RandomSongsRequestDto} from '../domain/library.dto';
 
 export enum PlaybackMode {
   NORMAL = 'NORMAL',
@@ -122,7 +123,15 @@ export class PlaybackService {
       if (this._mode === PlaybackMode.RADIO) {
         this.shuffleQueue(
           this.originalQueue !== undefined ? this.originalQueue : this._queue,
-          () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId, PlaybackService.RANDOM_SONGS_COUNT - 1)
+          () => {
+            const genreIds = this._queue.map(next => next.genreId);
+            const request = {
+              count: PlaybackService.RANDOM_SONGS_COUNT - 1,
+              genreIds: Array.from(new Set<string>(genreIds).values()),
+              lastArtistId: this._queue[0].album.artist.id
+            } as RandomSongsRequestDto;
+            return this.libraryService.getRandomSongs(request);
+          }
         );
       }
       if (this.originalQueue !== undefined && (
@@ -262,7 +271,13 @@ export class PlaybackService {
       this.shuffleQueue(this._queue);
     }
     if (this._mode === PlaybackMode.RADIO) {
-      this.shuffleQueue(this._queue, () => this.libraryService.getGenreRandomSongs(this._queue[0].genreId, PlaybackService.RANDOM_SONGS_COUNT - 1));
+      const genreIds = this._queue.map(next => next.genreId);
+      const request = {
+        count: PlaybackService.RANDOM_SONGS_COUNT - 1,
+        genreIds: Array.from(new Set<string>(genreIds).values()),
+        lastArtistId: this._queue[0].album.artist.id
+      } as RandomSongsRequestDto;
+      this.shuffleQueue(this._queue, () => this.libraryService.getRandomSongs(request));
     }
   }
 
@@ -287,7 +302,13 @@ export class PlaybackService {
         this.addRandomSongsToQueue(PlaybackService.RANDOM_SONGS_COUNT);
       }
       if (this._mode === PlaybackMode.RADIO) {
-        this.libraryService.getGenreRandomSongs(this._queue[0].genreId, PlaybackService.RANDOM_SONGS_COUNT).subscribe(songs =>
+        const genreIds = this._queue.map(next => next.genreId);
+        const request = {
+          count: PlaybackService.RANDOM_SONGS_COUNT,
+          genreIds: Array.from(new Set<string>(genreIds).values()),
+          lastArtistId: this._queue[0].album.artist.id
+        } as RandomSongsRequestDto;
+        this.libraryService.getRandomSongs(request).subscribe(songs =>
           this.addFetchedRandomSongsToQueue(songs));
       }
     }

@@ -409,9 +409,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
+        RandomSongsRequestDto request = new RandomSongsRequestDto()
+                .setCount(3);
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/randomSongs?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, 3);
+                "/api/library/fetchRandomSongs", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), SongDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -423,13 +425,13 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/randomSongs?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, 1000);
+        RandomSongsRequestDto request = new RandomSongsRequestDto()
+                .setCount(1000);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/fetchRandomSongs", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), ErrorDto.class);
 
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(songs -> 
-                assertThat(songs).hasSize(30));
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -437,9 +439,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
+        RandomSongsRequestDto request = new RandomSongsRequestDto()
+                .setCount(3)
+                .setGenreIds(List.of(genre1.getId()));
         ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/randomGenreSongs/{genreId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, genre1.getId(), 3);
+                "/api/library/fetchRandomSongs", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), SongDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -451,13 +456,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/randomGenreSongs/{genreId}?count={count}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SongDetailsDto[].class, genre1.getId(), 1000);
+        RandomSongsRequestDto request = new RandomSongsRequestDto()
+                .setCount(1000)
+                .setGenreIds(List.of(genre1.getId()));
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/fetchRandomSongs", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), ErrorDto.class);
 
-        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(response.getBody()).satisfies(songs -> 
-                assertThat(songs).hasSize(30));
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
     }
 
     @Test

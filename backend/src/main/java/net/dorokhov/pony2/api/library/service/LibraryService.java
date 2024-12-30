@@ -1,9 +1,6 @@
 package net.dorokhov.pony2.api.library.service;
 
-import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
-import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.*;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -27,9 +24,5 @@ public interface LibraryService {
 
     Optional<ArtworkFiles> getArtworkFilesById(String id);
 
-    List<Song> getRandomSongs(int count);
-
-    List<Song> getRandomSongsByArtistId(String artistId, int count);
-
-    List<Song> getRandomSongsByGenreId(String genreId, int count);
+    List<Song> getRandomSongs(RandomSongsRequest request);
 }

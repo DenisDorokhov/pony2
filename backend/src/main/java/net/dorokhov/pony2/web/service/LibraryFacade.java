@@ -17,7 +17,7 @@ import static java.util.stream.Collectors.toList;
 public class LibraryFacade {
 
     private final static int SEARCH_RESULT_COUNT = 20;
-    
+
     private final LibraryService libraryService;
     private final LibrarySearchService librarySearchService;
     private final UserContext userContext;
@@ -87,15 +87,8 @@ public class LibraryFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<SongDetailsDto> getRandomSongs(int count) {
-        return libraryService.getRandomSongs(count).stream()
-                .map(songs -> SongDetailsDto.of(songs, isAdmin()))
-                .collect(toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<SongDetailsDto> getRandomSongsByGenreId(String genreId, int count) {
-        return libraryService.getRandomSongsByGenreId(genreId, count).stream()
+    public List<SongDetailsDto> getRandomSongs(RandomSongsRequestDto request) {
+        return libraryService.getRandomSongs(request.convert()).stream()
                 .map(songs -> SongDetailsDto.of(songs, isAdmin()))
                 .collect(toList());
     }
