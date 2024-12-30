@@ -227,8 +227,8 @@ export default {
     libraryFoldersPlaceholder: 'Enter full folder path',
     startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',
     restoreBackupSuccess: '{{ count }} playlists have been restored.',
-    restoreBackupUserEmailsNotFound: 'The following users were not found: {{ values }}',
-    restoreBackupSongPathsNotFound: 'The following song files were not found: {{ values }}',
+    restoreBackupUserEmailsNotFound: 'The following users were not found: {{ values }}.',
+    restoreBackupSongPathsNotFound: 'The following song files were not found: {{ values }}.',
   },
   log: {
     header: 'Log',
