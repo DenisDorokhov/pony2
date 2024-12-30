@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.api.library.domain;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
@@ -15,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static net.dorokhov.pony2.common.SearchTermUtils.prepareForIndexing;
 
 @Indexed
 @Entity
@@ -96,7 +96,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return Strings.nullToEmpty(name);
+        return prepareForIndexing(name);
     }
 
     @Transient
@@ -112,9 +112,9 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
             @PropertyValue(propertyName = "name"),
     }))
     public String getFallbackSearchTerms() {
-        return Strings.nullToEmpty(name) + " " +
-                Strings.nullToEmpty(year != null ? String.valueOf(year) : "") + " " +
-                Strings.nullToEmpty(artist.getName());
+        return prepareForIndexing(name) + " " +
+                prepareForIndexing(year != null ? String.valueOf(year) : "") + " " +
+                prepareForIndexing(artist.getName());
     }
 
     @Override

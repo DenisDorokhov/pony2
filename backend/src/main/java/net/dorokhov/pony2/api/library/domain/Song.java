@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.api.library.domain;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
@@ -12,6 +11,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import java.io.File;
 import java.io.Serializable;
+
+import static net.dorokhov.pony2.common.SearchTermUtils.prepareForIndexing;
 
 @Indexed
 @Entity
@@ -295,7 +296,7 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return Strings.nullToEmpty(name);
+        return prepareForIndexing(name);
     }
 
     @Transient
@@ -313,9 +314,9 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
             @PropertyValue(propertyName = "albumName"),
     }))
     public String getFallbackSearchTerms() {
-        return Strings.nullToEmpty(name) + " " +
-                Strings.nullToEmpty(artistName) + " " +
-                Strings.nullToEmpty(albumArtistName);
+        return prepareForIndexing(name) + " " +
+                prepareForIndexing(artistName) + " " +
+                prepareForIndexing(albumArtistName);
     }
 
     @PostLoad

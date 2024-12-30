@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.api.library.domain;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import com.google.common.collect.Ordering;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -13,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static net.dorokhov.pony2.common.SearchTermUtils.prepareForIndexing;
 
 @Indexed
 @Entity
@@ -67,7 +68,7 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return Strings.nullToEmpty(name);
+        return prepareForIndexing(name);
     }
 
     @Override
