@@ -191,6 +191,13 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
             assertThat(dto.getFileContent()).isNotNull();
             assertThat(dto.getFileContent()).satisfies(backup -> {
 
+                playlistRepository.save(likePlaylist.setSongs(List.of(
+                        new PlaylistSong()
+                                .setPlaylist(likePlaylist)
+                                .setSort(0)
+                                .setSong(song2_1_1)
+                )));
+
                 File file = tempFolder.resolve("playlist-backup").toFile();
                 Files.write(backup.getBytes(StandardCharsets.UTF_8), file);
 
@@ -209,15 +216,15 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                         assertThat(userPlaylist.getPlaylist()).satisfies(playlist -> {
                             assertThat(playlist.getId()).isNotNull();
                             assertThat(playlist.getCreationDate()).isNotNull();
-                            assertThat(playlist.getUpdateDate()).isNull();
-                            assertThat(playlist.getName()).endsWith(" LIKE");
-                            assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
+                            assertThat(playlist.getUpdateDate()).isNotNull();
+                            assertThat(playlist.getName()).isNull();
+                            assertThat(playlist.getType()).isEqualTo(Playlist.Type.LIKE);
                             getTransactionTemplate().executeWithoutResult(transactionStatus ->
                                     assertThat(playlistRepository.findById(playlist.getId())).hasValueSatisfying(foundPlaylist ->
                                             assertThat(foundPlaylist.getSongs().stream()
                                                     .map(PlaylistSong::getSong)
                                                     .map(Song::getPath)
-                                                    .toList()).containsExactlyInAnyOrder("song1_1_1", "song1_1_2")));
+                                                    .toList()).containsExactlyInAnyOrder("song2_1_1", "song1_1_1", "song1_1_2")));
                         });
                     });
                     assertThat(restoredPlaylists.getUserPlaylists()).element(1).satisfies(userPlaylist -> {
@@ -226,7 +233,7 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                             assertThat(playlist.getId()).isNotNull();
                             assertThat(playlist.getCreationDate()).isNotNull();
                             assertThat(playlist.getUpdateDate()).isNull();
-                            assertThat(playlist.getName()).endsWith("playlist1");
+                            assertThat(playlist.getName()).isEqualTo("playlist1");
                             assertThat(playlist.getType()).isEqualTo(Playlist.Type.NORMAL);
                             getTransactionTemplate().executeWithoutResult(transactionStatus ->
                                     assertThat(playlistRepository.findById(playlist.getId())).hasValueSatisfying(foundPlaylist ->

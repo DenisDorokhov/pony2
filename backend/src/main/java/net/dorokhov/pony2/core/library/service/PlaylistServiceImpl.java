@@ -209,11 +209,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         for (String userEmail : userEmailToBackup.keySet()) {
             userService.getByEmail(userEmail).ifPresentOrElse(user -> {
                 for (BackupPlaylist backupPlaylist : userEmailToBackup.get(userEmail)) {
-                    Playlist playlist = new Playlist()
-                            .setName(generateRestoredPlaylistName(backupPlaylist))
-                            .setType(Playlist.Type.NORMAL)
-                            .setUser(user);
-                    playlist.setSongs(backupPlaylist.songPaths().stream()
+                    List<Song> songs = backupPlaylist.songPaths().stream()
                             .map(path -> {
                                 Song song = songRepository.findByPath(path);
                                 if (song == null) {
@@ -223,26 +219,34 @@ public class PlaylistServiceImpl implements PlaylistService {
                                 return song;
                             })
                             .filter(Objects::nonNull)
-                            .map(song -> new PlaylistSong()
-                                    .setPlaylist(playlist)
-                                    .setSong(song)
-                            )
-                            .toList());
+                            .toList();
+                    Playlist playlist;
+                    if (backupPlaylist.type() == Playlist.Type.LIKE) {
+                        playlist = getByUserIdAndType(user.getId(), Playlist.Type.LIKE).getFirst();
+                        playlist.setUpdateDate(LocalDateTime.now());
+                        playlist.getSongs().addAll(songs.stream()
+                                .map(song -> new PlaylistSong()
+                                        .setPlaylist(playlist)
+                                        .setSong(song)
+                                )
+                                .toList());
+                    } else {
+                        playlist = new Playlist()
+                                .setName(backupPlaylist.name())
+                                .setType(Playlist.Type.NORMAL)
+                                .setUser(user);
+                        playlist.setSongs(songs.stream()
+                                .map(song -> new PlaylistSong()
+                                        .setPlaylist(playlist)
+                                        .setSong(song)
+                                )
+                                .toList());
+                    }
                     restoredPlaylists.add(normalizeAndSavePlaylist(playlist));
                 }
             }, () -> notFoundUserEmails.add(userEmail));
         }
         return new RestoredPlaylists(restoredPlaylists, new ArrayList<>(notFoundUserEmails), new ArrayList<>(notFoundSongs));
-    }
-
-    private String generateRestoredPlaylistName(BackupPlaylist backupPlaylist) {
-        String result;
-        if (backupPlaylist.type() == Playlist.Type.NORMAL) {
-            result = "[RESTORED %s] %s".formatted(LocalDateTime.now().toString(), backupPlaylist.name());
-        } else {
-            result = "[RESTORED %s] %s".formatted(LocalDateTime.now().toString(), backupPlaylist.type());
-        }
-        return result.substring(0, Math.min(result.length(), 255));
     }
 
     @Transactional
