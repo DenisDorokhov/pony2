@@ -138,7 +138,7 @@ export default {
       errorLabel: 'could not start scan job :-(',
       startingLabel: 'starting...',
       preparingLabel: 'preparing...',
-      searchingMediaLabel: 'searching media...',
+      searchingMediaLabel: 'searching song files...',
       cleaningSongsLabel: 'looking for deleted songs...',
       cleaningSongsWithProgressLabel: 'cleaning songs: {{percentage}}% ({{itemsComplete}} of {{itemsTotal}} files processed)...',
       cleaningArtworksLabel: 'looking for deleted artworks...',
@@ -227,7 +227,7 @@ export default {
     libraryFoldersPlaceholder: 'Enter full folder path',
     startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',
     restoreBackupSuccess: '{{ count }} playlists have been restored.',
-    restoreBackupUserEmailsNotFound: 'The following user emails were not found: {{ values }}',
+    restoreBackupUserEmailsNotFound: 'The following users were not found: {{ values }}',
     restoreBackupSongPathsNotFound: 'The following song files were not found: {{ values }}',
   },
   log: {

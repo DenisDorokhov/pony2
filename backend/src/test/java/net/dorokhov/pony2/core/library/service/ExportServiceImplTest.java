@@ -155,7 +155,7 @@ public class ExportServiceImplTest {
                 .setDiscNumber(null)
                 .setTrackNumber(null)
                 .setPath(songFile4.getPath());
-        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
+        when(songRepository.findByAlbumId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
         ExportBundle exportBundle = exportService.exportAlbum("1");
 
@@ -202,7 +202,7 @@ public class ExportServiceImplTest {
                 .setName(null)
                 .setFileType(FileType.of("audio/mpeg", "mp3"))
                 .setPath(songFile1.getPath());
-        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2));
+        when(songRepository.findByAlbumId(any(), any())).thenReturn(ImmutableList.of(song1, song2));
 
         ExportBundle exportBundle = exportService.exportAlbum("1");
 
@@ -267,7 +267,7 @@ public class ExportServiceImplTest {
                 .setName("song4")
                 .setTrackNumber(1)
                 .setPath(songFile4.getPath());
-        when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
+        when(songRepository.findByArtistId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
         ExportBundle exportBundle = exportService.exportArtist("1");
 
@@ -316,7 +316,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldReturnNullIfAlbumNotFound() {
 
-        when(songRepository.findByAlbumId(any(), (Sort) any())).thenReturn(emptyList());
+        when(songRepository.findByAlbumId(any(), any())).thenReturn(emptyList());
 
         assertThat(exportService.exportAlbum("1")).isNull();
     }
@@ -324,7 +324,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldFailIfArtistNotFound() {
 
-        when(songRepository.findByAlbumArtistId(any(), (Sort) any())).thenReturn(emptyList());
+        when(songRepository.findByArtistId(any(), any())).thenReturn(emptyList());
 
         assertThat(exportService.exportArtist("1")).isNull();
     }

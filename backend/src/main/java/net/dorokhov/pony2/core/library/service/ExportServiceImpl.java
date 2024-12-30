@@ -96,7 +96,7 @@ public class ExportServiceImpl implements ExportService {
     @Nullable
     public ExportBundle exportArtist(String id) {
 
-        List<Song> songList = songRepository.findByAlbumArtistId(id,
+        List<Song> songList = songRepository.findByArtistId(id,
                 Sort.by("album.year", "album.name", "discNumber", "trackNumber", "name"));
         if (songList.isEmpty()) {
             return null;

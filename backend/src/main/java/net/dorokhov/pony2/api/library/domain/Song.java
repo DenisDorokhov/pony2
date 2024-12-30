@@ -91,6 +91,11 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
     @NotNull
     private Genre genre;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "artist_id", nullable = false)
+    @NotNull
+    private Artist artist;
+
     @Transient
     private FileType fileType;
 
@@ -262,6 +267,7 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
 
     public Song setAlbum(Album album) {
         this.album = album;
+        this.artist = album != null ? album.getArtist() : null;
         return this;
     }
 
@@ -271,6 +277,15 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
 
     public Song setGenre(Genre genre) {
         this.genre = genre;
+        return this;
+    }
+
+    public Artist getArtist() {
+        return artist;
+    }
+
+    public Song setArtist(Artist artist) {
+        this.artist = artist;
         return this;
     }
 

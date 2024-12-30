@@ -228,13 +228,14 @@ CREATE TABLE song (
   song_year INT,
 
   artwork_id CHAR(36),
-
   album_id CHAR(36) NOT NULL,
   genre_id CHAR(36) NOT NULL,
+  artist_id CHAR(36) NOT NULL,
 
+  FOREIGN KEY (artwork_id) REFERENCES artwork (id),
   FOREIGN KEY (album_id) REFERENCES album (id),
   FOREIGN KEY (genre_id) REFERENCES genre (id),
-  FOREIGN KEY (artwork_id) REFERENCES artwork (id),
+  FOREIGN KEY (artist_id) REFERENCES artist (id),
 
   UNIQUE (path)
 );

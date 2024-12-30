@@ -1,13 +1,11 @@
 package net.dorokhov.pony2.core.library.service;
 
-import com.google.common.base.Stopwatch;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -109,48 +107,42 @@ public class LibraryServiceImpl implements LibraryService {
             excludeArtistIds.add(request.getLastArtistId());
         }
         if (!request.getGenreIds().isEmpty()) {
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            try {
-                return randomFetcher.fetch(request.getCount(), new RandomFetcher.Repository<>() {
+            return randomFetcher.fetch(request.getCount(), new RandomFetcher.Repository<>() {
 
-                    @Override
-                    public long fetchCount() {
-                        long result = excludeArtistIds.isEmpty() ? songRepository.countByGenreIdIn(request.getGenreIds()) :
-                                songRepository.countByGenreIdInAndAlbumArtistIdNotIn(request.getGenreIds(), excludeArtistIds);
-                        if (result == 0 && !excludeArtistIds.isEmpty()) {
-                            excludeArtistIds.clear();
-                            result = songRepository.countByGenreIdIn(request.getGenreIds());
-                        }
-                        return result;
+                @Override
+                public long fetchCount() {
+                    long result = excludeArtistIds.isEmpty() ? songRepository.countByGenreIdIn(request.getGenreIds()) :
+                            songRepository.countByGenreIdInAndArtistIdNotIn(request.getGenreIds(), excludeArtistIds);
+                    if (result == 0 && !excludeArtistIds.isEmpty()) {
+                        excludeArtistIds.clear();
+                        result = songRepository.countByGenreIdIn(request.getGenreIds());
                     }
+                    return result;
+                }
 
-                    @Override
-                    public List<Song> fetchContent(Pageable pageable) {
-                        List<Song> result = excludeArtistIds.isEmpty() ? songRepository.findByGenreIdIn(request.getGenreIds(), pageable) :
-                                songRepository.findByGenreIdInAndAlbumArtistIdNotIn(request.getGenreIds(), excludeArtistIds, pageable);
-                        if (result.isEmpty() && !excludeArtistIds.isEmpty()) {
-                            excludeArtistIds.clear();
-                            result = songRepository.findByGenreIdIn(request.getGenreIds(), pageable);
-                        } else {
-                            excludeArtistIds.addAll(result.stream()
-                                    .map(Song::getAlbum)
-                                    .map(Album::getArtist)
-                                    .map(Artist::getId)
-                                    .collect(Collectors.toSet()));
-                        }
-                        return result;
+                @Override
+                public List<Song> fetchContent(Pageable pageable) {
+                    List<Song> result = excludeArtistIds.isEmpty() ? songRepository.findByGenreIdIn(request.getGenreIds(), pageable) :
+                            songRepository.findByGenreIdInAndArtistIdNotIn(request.getGenreIds(), excludeArtistIds, pageable);
+                    if (result.isEmpty() && !excludeArtistIds.isEmpty()) {
+                        excludeArtistIds.clear();
+                        result = songRepository.findByGenreIdIn(request.getGenreIds(), pageable);
+                    } else {
+                        excludeArtistIds.addAll(result.stream()
+                                .map(Song::getArtist)
+                                .map(Artist::getId)
+                                .collect(Collectors.toSet()));
                     }
-                });
-            } finally {
-                LoggerFactory.getLogger(getClass()).info("Elapsed {}", stopwatch.elapsed());
-            }
+                    return result;
+                }
+            });
         } else {
             return randomFetcher.fetch(request.getCount(), new RandomFetcher.Repository<>() {
 
                 @Override
                 public long fetchCount() {
                     long result = excludeArtistIds.isEmpty() ? songRepository.count() :
-                            songRepository.countByAlbumArtistIdNotIn(excludeArtistIds);
+                            songRepository.countByArtistIdNotIn(excludeArtistIds);
                     if (result == 0 && !excludeArtistIds.isEmpty()) {
                         excludeArtistIds.clear();
                         result = songRepository.count();
@@ -161,7 +153,7 @@ public class LibraryServiceImpl implements LibraryService {
                 @Override
                 public List<Song> fetchContent(Pageable pageable) {
                     List<Song> result = excludeArtistIds.isEmpty() ? songRepository.findAllBy(pageable) :
-                            songRepository.findByAlbumArtistIdNotIn(excludeArtistIds, pageable);
+                            songRepository.findByArtistIdNotIn(excludeArtistIds, pageable);
                     if (result.isEmpty() && !excludeArtistIds.isEmpty()) {
                         excludeArtistIds.clear();
                         result = songRepository.findAllBy(pageable);
