@@ -21,6 +21,17 @@ select {
   }
 }
 
+@media (width <= 450px) {
+  select {
+    width: 160px;
+  }
+  .modal-footer {
+    small {
+      display: none;
+    }
+  }
+}
+
 button.edit {
   margin-left: 6px;
 }
