@@ -9,6 +9,8 @@ import {ErrorContainerComponent} from './common/error-container.component';
 import {TranslateModule} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {AutoFocusDirective} from './common/auto-focus.directive';
+import {mergeMap} from 'rxjs';
+import {AuthenticationService, Credentials} from '../service/authentication.service';
 
 @Component({
   standalone: true,
@@ -28,6 +30,7 @@ export class InstallationComponent {
 
   constructor(
     private installationService: InstallationService,
+    private authenticationService: AuthenticationService,
     private formBuilder: FormBuilder,
     private router: Router
   ) {
@@ -54,15 +57,18 @@ export class InstallationComponent {
   install() {
     const installationCommand = this.form.value as InstallationCommandDto;
     installationCommand.startScanJobAfterInstallation = true;
-    this.installationService.install(installationCommand).subscribe({
-      next: installation => {
+    this.installationService.install(installationCommand).pipe(
+      mergeMap(installation => {
         console.info(`Version ${installation.version} has been installed.`);
         this.error = undefined;
-        this.router.navigate(['/login'], {replaceUrl: true});
-      },
-      error: error => {
-        this.error = error;
-      }
+        return this.authenticationService.authenticate({
+          email: installationCommand.adminEmail,
+          password: installationCommand.adminPassword,
+        } as Credentials);
+      })
+    ).subscribe({
+      next: () => this.router.navigate(['/library'], {replaceUrl: true}),
+      error: error => this.error = error
     });
   }
 }
