@@ -55,15 +55,17 @@ export class PlaybackService {
   ) {
     this._mode = window.localStorage.getItem(PlaybackService.MODE_LOCAL_STORAGE_KEY) as PlaybackMode || PlaybackMode.NORMAL;
     this.modeSubject = new BehaviorSubject(this._mode);
-    this.authenticationService.observeLogout()
-      .subscribe(() => {
+    this.authenticationService.observeLogout().subscribe(() => {
         this.audioPlayer.stop();
         this.currentSongSubject.next(undefined);
         this._queue = [];
+        this.originalQueue = undefined;
+        this.queueShuffleSubscription?.unsubscribe();
+        this.queueShuffleSubscription = undefined;
         this.queueSubject.next([]);
       });
-    this.audioPlayer.observePlaybackEvent()
-      .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent));
+    this.audioPlayer.observePlaybackEvent().subscribe(playbackEvent =>
+      this.handlePlaybackEvent(playbackEvent));
     if (navigator && navigator.mediaSession) {
       navigator.mediaSession.setActionHandler(
         'nexttrack',

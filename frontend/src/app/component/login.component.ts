@@ -7,6 +7,8 @@ import {TranslateModule} from '@ngx-translate/core';
 import {ErrorComponent} from './common/error.component';
 import {mergeMap, tap} from 'rxjs/operators';
 import {PlaybackService} from '../service/playback.service';
+import {forkJoin} from 'rxjs';
+import {PlaylistService} from '../service/playlist.service';
 
 @Component({
   standalone: true,
@@ -23,6 +25,7 @@ export class LoginComponent {
   constructor(
     private authenticationService: AuthenticationService,
     private playbackService: PlaybackService,
+    private playlistService: PlaylistService,
     private router: Router,
     formBuilder: FormBuilder,
   ) {
@@ -36,7 +39,10 @@ export class LoginComponent {
     const credentials = this.loginForm.value as Credentials;
     this.authenticationService.authenticate(credentials).pipe(
       tap(user => console.info(`User ${user.email} has been authenticated.`)),
-      mergeMap(() => this.playbackService.restoreQueueState())
+      mergeMap(() => forkJoin({
+        queueState: this.playbackService.restoreQueueState(),
+        playlist: this.playlistService.initialize(),
+      })),
     ).subscribe({
       next: () => {
         this.error = undefined;

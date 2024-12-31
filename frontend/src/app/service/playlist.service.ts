@@ -12,6 +12,7 @@ import {
 import {catchError, map, tap} from 'rxjs/operators';
 import {ErrorDto} from '../domain/common.dto';
 import FileSaver from 'file-saver';
+import {AuthenticationService} from './authentication.service';
 
 interface PlaylistBackupDto {
   fileContent: string;
@@ -29,7 +30,12 @@ export class PlaylistService {
 
   constructor(
     private httpClient: HttpClient,
+    private authenticationService: AuthenticationService,
   ) {
+    this.authenticationService.observeLogout().subscribe(() => {
+      this.playlistsSubject.next([]);
+      this.likePlaylistSongsSubject.next(undefined);
+    });
   }
 
   initialize(): Observable<void> {
