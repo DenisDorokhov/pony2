@@ -57,7 +57,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input()
   set song(song: Song) {
     this._song = song;
-    this.selected = this.libraryService.selectedSong?.id === this.song.id;
+    this.selected = this.libraryService.selectedSong?.sourceId === this.song.sourceId;
     if (this.playbackService.lastPlaybackEvent.song?.id === this.song.id) {
       this.lastPlaybackEvent = this.playbackService.lastPlaybackEvent;
     } else {
@@ -89,7 +89,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.subscriptions.push(this.libraryService.observeSelectedSong()
       .subscribe(songSelection => {
-        this.selected = songSelection != null && songSelection.song.id === this.song.id;
+        this.selected = songSelection != null && songSelection.song.sourceId === this.song.sourceId;
         if (this.selected) {
           if (songSelection?.play) {
             if (this.song.id !== this.playbackService.currentSong?.id) {
@@ -128,7 +128,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this.subscriptions.push(this.libraryService.observeScrollToSongRequest()
       .subscribe(song => {
-        if (song.id === this.song.id) {
+        if (song.sourceId === this.song.sourceId) {
           ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
           this.libraryService.finishScrollToSong();
         }

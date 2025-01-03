@@ -15,6 +15,7 @@ import {
 export class Song {
 
   id: string;
+  sourceId: string | undefined;
   creationDate: Date;
   updateDate: Date | undefined;
   path: string | undefined;
@@ -35,8 +36,9 @@ export class Song {
   audioUrl: string;
   sizeMb: number;
 
-  constructor(songDto: SongDto, album: Album) {
+  constructor(songDto: SongDto, album: Album, sourceId?: string) {
     this.id = songDto.id;
+    this.sourceId = sourceId ?? this.id;
     this.creationDate = new Date(songDto.creationDate);
     this.updateDate = songDto.updateDate ? new Date(songDto.updateDate) : undefined;
     this.path = songDto.path;
@@ -108,7 +110,7 @@ export class Song {
     if (!song1 || !song2) {
       return false;
     }
-    return song1.id === song2.id;
+    return song1.id === song2.id && song1.sourceId === song2.sourceId;
   }
 }
 
@@ -250,7 +252,7 @@ export class PlaylistSong {
   constructor(dto: PlaylistSongDto) {
     this.id = dto.id;
     this.creationDate = new Date(dto.creationDate);
-    this.song = new Song(dto.song.song, new Album(dto.song.albumDetails.album, new Artist(dto.song.albumDetails.artist)));
+    this.song = new Song(dto.song.song, new Album(dto.song.albumDetails.album, new Artist(dto.song.albumDetails.artist)), dto.id);
   }
 }
 

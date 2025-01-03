@@ -1,6 +1,6 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {AlbumSongs, Artist, ArtistSongs, Song} from '../../domain/library.model';
+import {AlbumSongs, Artist, ArtistSongs, PlaylistSongs, Song} from '../../domain/library.model';
 import {LibraryService, LibraryState} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
@@ -11,10 +11,12 @@ import {NoContentIndicatorComponent} from '../common/no-content-indicator.compon
 import {AlbumComponent} from './album.component';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
+import {PlaylistService} from '../../service/playlist.service';
+import {LikeAlbumComponent} from './like-album.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, LikeAlbumComponent],
   selector: 'pony-album-list',
   templateUrl: './album-list.component.html',
   styleUrls: ['./album-list.component.scss']
@@ -25,9 +27,14 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   loadingState = LoadingState.LOADING;
   artistSongs!: ArtistSongs;
+  likeSongs: Song[] = [];
 
   albumCount = 0;
   songCount = 0;
+
+  @ViewChild('albumListContainer') albumListContainerElement!: ElementRef;
+
+  private likePlaylist: PlaylistSongs | undefined;
 
   private artistSongsSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
@@ -35,7 +42,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   private libraryStateSubscription: Subscription | undefined;
   private songPlaybackRequestSubscription: Subscription | undefined;
 
-  constructor(private libraryService: LibraryService, private playbackService: PlaybackService) {
+  constructor(
+    private readonly libraryService: LibraryService,
+    private readonly playbackService: PlaybackService,
+    private readonly playlistService: PlaylistService,
+  ) {
   }
 
   ngOnInit(): void {
@@ -75,6 +86,17 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.playbackService.switchQueue(songs, index);
         }
       });
+    this.playlistService.observeLikePlaylist().subscribe(playlistSongs => {
+      this.likePlaylist = playlistSongs;
+      this.refreshLikeSongs();
+    });
+  }
+
+  private refreshLikeSongs() {
+    if (this.artistSongs) {
+      this.likeSongs = this.likePlaylist?.songs.map(playlistSong => playlistSong.song)
+        .filter(song => song.album.artist.id === this.artistSongs.artist.id) ?? [];
+    }
   }
 
   ngOnDestroy(): void {
@@ -111,6 +133,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             album.songs.sort(Song.compare);
             album.songs.forEach(() => this.songCount++);
           });
+          this.refreshLikeSongs();
           this.loadingState = LoadingState.LOADED;
           console.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },

@@ -46,6 +46,9 @@ export default {
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown Album'
     },
+    likeAlbum : {
+      title: 'Favorites'
+    },
     artist: {
       unknownLabel: 'Unknown Artist'
     },
