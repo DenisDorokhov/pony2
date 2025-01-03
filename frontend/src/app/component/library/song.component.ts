@@ -63,6 +63,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.lastPlaybackEvent = undefined;
     }
+    this.refreshLikeState();
   }
 
   @Input() showArtist = false;

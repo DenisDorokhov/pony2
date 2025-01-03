@@ -47,7 +47,7 @@ export default {
       unknownLabel: 'Unknown Album'
     },
     likeAlbum : {
-      title: 'Favorites'
+      title: 'Artist Favorites'
     },
     artist: {
       unknownLabel: 'Unknown Artist'

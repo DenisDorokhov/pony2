@@ -9,11 +9,11 @@ import {nullSafeNormalizedEquals} from '../../utils/common.utils';
 @Component({
   standalone: true,
   imports: [CommonModule, TranslateModule, ImageLoaderComponent, SongListComponent],
-  selector: 'pony-like-album',
-  templateUrl: './like-album.component.html',
-  styleUrls: ['./like-album.component.scss']
+  selector: 'pony-top-songs-album',
+  templateUrl: './top-songs-album.component.html',
+  styleUrls: ['./top-songs-album.component.scss']
 })
-export class LikeAlbumComponent implements OnInit {
+export class TopSongsAlbumComponent implements OnInit {
 
   @Input()
   songs: Song[] = [];

@@ -12,11 +12,11 @@ import {AlbumComponent} from './album.component';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaylistService} from '../../service/playlist.service';
-import {LikeAlbumComponent} from './like-album.component';
+import {TopSongsAlbumComponent} from './top-songs-album.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, LikeAlbumComponent],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, TopSongsAlbumComponent],
   selector: 'pony-album-list',
   templateUrl: './album-list.component.html',
   styleUrls: ['./album-list.component.scss']
@@ -89,6 +89,12 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.playlistService.observeLikePlaylist().subscribe(playlistSongs => {
       this.likePlaylist = playlistSongs;
       this.refreshLikeSongs();
+      if (this.albumListContainerElement) {
+        const scrollBottom = this.albumListContainerElement.nativeElement.scrollHeight - this.albumListContainerElement.nativeElement.scrollTop;
+        setTimeout(() => {
+          this.albumListContainerElement.nativeElement.scrollTop = Math.ceil(this.albumListContainerElement.nativeElement.scrollHeight - scrollBottom);
+        });
+      }
     });
   }
 

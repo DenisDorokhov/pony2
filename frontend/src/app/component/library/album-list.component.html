@@ -18,7 +18,7 @@
       </small></h5>
   </div>
   <div *ngIf="loadingState === LoadingState.LOADED" #albumListContainer class="panel-body album-list-container" data-pony-image-loader-scroller>
-    <pony-like-album *ngIf="likeSongs.length > 0" [songs]="likeSongs" [artworkUrl]="artistSongs.artist.largeArtworkUrl"></pony-like-album>
+    <pony-top-songs-album *ngIf="likeSongs.length > 0" [songs]="likeSongs" [artworkUrl]="artistSongs.artist.largeArtworkUrl"></pony-top-songs-album>
     <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album"></pony-album>
   </div>
 </div>
