@@ -92,7 +92,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
       if (this.albumListContainerElement) {
         const scrollBottom = this.albumListContainerElement.nativeElement.scrollHeight - this.albumListContainerElement.nativeElement.scrollTop;
         setTimeout(() => {
-          this.albumListContainerElement.nativeElement.scrollTop = Math.ceil(this.albumListContainerElement.nativeElement.scrollHeight - scrollBottom);
+          this.albumListContainerElement.nativeElement.scrollTop = Math.round(this.albumListContainerElement.nativeElement.scrollHeight - scrollBottom);
         });
       }
     });
