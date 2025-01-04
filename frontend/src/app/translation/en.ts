@@ -148,6 +148,8 @@ export default {
       importingWithProgressLabel: 'importing songs: {{percentage}}% ({{itemsComplete}} of {{itemsTotal}} files processed)...',
       searchingArtworksLabel: 'searching artworks...',
       searchingArtworksWithProgressLabel: 'searching artworks: {{percentage}}% ({{itemsComplete}} of {{itemsTotal}} files processed)...',
+      cleaningArtistGenresLabel: 'cleaning artist genres...',
+      cleaningArtistGenresWithProgressLabel: 'cleaning artist genres: {{percentage}}% ({{itemsComplete}} of {{itemsTotal}} files processed)...',
     },
   },
   scanJob: {

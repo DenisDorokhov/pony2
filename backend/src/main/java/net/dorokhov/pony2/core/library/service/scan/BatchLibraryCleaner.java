@@ -187,4 +187,25 @@ public class BatchLibraryCleaner {
             logger.error("Could not call progress observer {}.", observer, e);
         }
     }
+
+    public void cleanArtistGenres(ProgressObserver progressObserver) {
+        AtomicInteger counter = new AtomicInteger();
+        transactionTemplate.execute(transactionStatus -> {
+            List<Artist> artists = artistRepository.findAll();
+            for (Artist artist : artists) {
+                Set<String> songGenreIds = artist.getSongs().stream()
+                        .map(Song::getGenre)
+                        .map(Genre::getId)
+                        .collect(Collectors.toSet());
+                List<ArtistGenre> genresToRemove = artist.getGenres().stream()
+                        .filter(genre -> !songGenreIds.contains(genre.getGenre().getId())).toList();
+                for (ArtistGenre genreToRemove : genresToRemove) {
+                    logger.debug("Removing genre '{}' from artist '{}'.", genreToRemove.getGenre(), artist);
+                    artist.getGenres().remove(genreToRemove);
+                }
+                notifyObserver(progressObserver, counter.incrementAndGet(), artists.size());
+            }
+            return null;
+        });
+    }
 }

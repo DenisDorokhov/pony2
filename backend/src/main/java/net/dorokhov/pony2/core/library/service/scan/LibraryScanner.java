@@ -165,6 +165,12 @@ public class LibraryScanner {
                 progressScan(FULL_SEARCHING_ARTWORKS, targetFolders,
                         ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
+        logService.info(logger, "Cleaning artist genres...");
+        progressScan(FULL_CLEANING_ARTIST_GENRES, targetFolders, null, observer);
+        batchLibraryCleaner.cleanArtistGenres((itemsComplete, itemsTotal) ->
+                progressScan(FULL_CLEANING_ARTIST_GENRES, targetFolders,
+                        ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
+
         return new AudioFileProcessingResultImpl(ScanType.FULL, failedFiles, audioNodes.size());
     }
 
@@ -192,6 +198,12 @@ public class LibraryScanner {
         progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles, null, observer);
         batchLibraryArtworkFinder.findAllArtworks((itemsComplete, itemsTotal) ->
                 progressScan(EDIT_SEARCHING_ARTWORKS, targetFiles,
+                        ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
+
+        logService.info(logger, "Cleaning artist genres...");
+        progressScan(EDIT_CLEANING_ARTIST_GENRES, targetFiles, null, observer);
+        batchLibraryCleaner.cleanArtistGenres((itemsComplete, itemsTotal) ->
+                progressScan(EDIT_CLEANING_ARTIST_GENRES, targetFiles,
                         ScanProgress.Value.of(itemsComplete, itemsTotal), observer));
 
         return new AudioFileProcessingResultImpl(ScanType.EDIT, failedFiles, commands.size());

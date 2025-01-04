@@ -1,8 +1,7 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony2.api.library.domain.Artwork;
-import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.core.library.ProgressObserverFixture;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -24,8 +23,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
@@ -190,6 +191,32 @@ public class BatchLibraryCleanerTest {
     }
 
     @Test
+    public void shouldCleanNotExistingGenres() {
+
+        Artist artist = new Artist()
+                .setSongs(List.of(
+                        new Song().setGenre(new Genre().setId("1"))
+                ))
+                .setGenres(newArrayList(
+                        new ArtistGenre()
+                                .setId("1_1").setGenre(new Genre().setId("1")),
+                        new ArtistGenre()
+                                .setId("2_2").setGenre(new Genre().setId("2"))
+                ));
+        when(artistRepository.findAll()).thenReturn(List.of(artist));
+
+        ProgressObserverFixture observer = new ProgressObserverFixture();
+        batchLibraryCleaner.cleanArtistGenres(observer);
+
+        assertThat(artist.getGenres()).hasSize(1);
+        assertThat(artist.getGenres().getFirst()).satisfies(genre ->
+                assertThat(genre.getId()).isEqualTo("1_1"));
+
+        assertThat(observer.size()).isEqualTo(1);
+        observer.assertThatAt(0, 1, 1);
+    }
+
+    @Test
     public void shouldNotFailSongsCleanupOnObserverException() {
         when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(song())));
         batchLibraryCleaner.cleanSongs(emptyList(), (itemsComplete, itemsTotal) -> {
@@ -201,6 +228,14 @@ public class BatchLibraryCleanerTest {
     public void shouldNotFailArtworksCleanupOnObserverException() {
         when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(artwork())));
         batchLibraryCleaner.cleanArtworks(emptyList(), (itemsComplete, itemsTotal) -> {
+            throw new RuntimeException();
+        });
+    }
+
+    @Test
+    public void shouldNotFailArtistGenresCleanupOnObserverException() {
+        when(artistRepository.findAll()).thenReturn(ImmutableList.of(new Artist()));
+        batchLibraryCleaner.cleanArtistGenres((itemsComplete, itemsTotal) -> {
             throw new RuntimeException();
         });
     }

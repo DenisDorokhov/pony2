@@ -17,16 +17,18 @@ public final class ScanProgress {
 
     public enum Step {
 
-        FULL_PREPARING(FULL, 0, 6),
-        FULL_SEARCHING_MEDIA(FULL, 1, 6),
-        FULL_CLEANING_SONGS(FULL, 2, 6),
-        FULL_CLEANING_ARTWORKS(FULL, 3, 6),
-        FULL_IMPORTING(FULL, 4, 6),
-        FULL_SEARCHING_ARTWORKS(FULL, 5, 6),
+        FULL_PREPARING(FULL, 0, 7),
+        FULL_SEARCHING_MEDIA(FULL, 1, 7),
+        FULL_CLEANING_SONGS(FULL, 2, 7),
+        FULL_CLEANING_ARTWORKS(FULL, 3, 7),
+        FULL_IMPORTING(FULL, 4, 7),
+        FULL_SEARCHING_ARTWORKS(FULL, 5, 7),
+        FULL_CLEANING_ARTIST_GENRES(FULL, 6, 7),
 
-        EDIT_PREPARING(EDIT, 0, 3),
-        EDIT_WRITING(EDIT, 1, 3),
-        EDIT_SEARCHING_ARTWORKS(EDIT, 2, 3),
+        EDIT_PREPARING(EDIT, 0, 4),
+        EDIT_WRITING(EDIT, 1, 4),
+        EDIT_SEARCHING_ARTWORKS(EDIT, 2, 4),
+        EDIT_CLEANING_ARTIST_GENRES(EDIT, 3, 4),
         ;
 
         private final ScanType scanType;

@@ -130,6 +130,11 @@ public class LibraryScannerTest {
             observer.onProgress(1, 2);
             return null;
         }).when(batchLibraryArtworkFinder).findAllArtworks(any());
+        doAnswer(invocation -> {
+            ProgressObserver observer = invocation.getArgument(0);
+            observer.onProgress(1, 3);
+            return null;
+        }).when(batchLibraryCleaner).cleanArtistGenres(any());
 
         ScanObserver scanObserver = new ScanObserver();
         assertThat(libraryScanner.scan(ImmutableList.of(tempFolder.toFile()), scanObserver::observe))
@@ -140,7 +145,7 @@ public class LibraryScannerTest {
         verify(batchLibraryImporter).readAndImport(eq(ImmutableList.of(audioNode1)), any());
         verify(batchLibraryImporter).readAndImport(eq(ImmutableList.of(audioNode2)), any());
 
-        assertThat(scanObserver.size()).isEqualTo(11);
+        assertThat(scanObserver.size()).isEqualTo(13);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
                 checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_PREPARING));
         scanObserver.assertThatProgressAtIndexSatisfies(1, scanProgress ->
@@ -163,6 +168,10 @@ public class LibraryScannerTest {
                 checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_SEARCHING_ARTWORKS));
         scanObserver.assertThatProgressAtIndexSatisfies(10, scanProgress ->
                 checkScanProgress(scanProgress, Value.of(1, 2), ScanProgress.Step.FULL_SEARCHING_ARTWORKS));
+        scanObserver.assertThatProgressAtIndexSatisfies(11, scanProgress ->
+                checkScanProgress(scanProgress, null, ScanProgress.Step.FULL_CLEANING_ARTIST_GENRES));
+        scanObserver.assertThatProgressAtIndexSatisfies(12, scanProgress ->
+                checkScanProgress(scanProgress, Value.of(1, 3), ScanProgress.Step.FULL_CLEANING_ARTIST_GENRES));
     }
 
     @Test
@@ -215,7 +224,7 @@ public class LibraryScannerTest {
         assertThat(commands2).hasSize(1);
         assertThat(commands2).first().satisfies(command -> assertThat(command.getAudioNode()).isSameAs(audioNode2));
 
-        assertThat(scanObserver.size()).isEqualTo(6);
+        assertThat(scanObserver.size()).isEqualTo(7);
         scanObserver.assertThatProgressAtIndexSatisfies(0, scanProgress ->
                 checkEditProgress(scanProgress, null, ScanProgress.Step.EDIT_PREPARING, file1, file2));
         scanObserver.assertThatProgressAtIndexSatisfies(1, scanProgress ->

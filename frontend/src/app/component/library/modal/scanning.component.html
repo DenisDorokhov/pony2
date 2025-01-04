@@ -73,6 +73,19 @@
                   {{ 'scanning.scanJobProgress.searchingArtworksLabel' | translate }}
                 }
               }
+              @case (Step.FULL_CLEANING_ARTIST_GENRES) {
+                @if (scanJobProgress.scanProgress?.value) {
+                  {{
+                    'scanning.scanJobProgress.cleaningArtistGenresWithProgressLabel' | translate:{
+                      percentage: (scanJobProgress.scanProgress!.value!.itemsComplete / scanJobProgress.scanProgress!.value!.itemsTotal * 100).toFixed(0),
+                      itemsComplete: scanJobProgress.scanProgress!.value!.itemsComplete,
+                      itemsTotal: scanJobProgress.scanProgress!.value!.itemsTotal
+                    }
+                  }}
+                } @else {
+                  {{ 'scanning.scanJobProgress.cleaningArtistGenresLabel' | translate }}
+                }
+              }
               @default {
                 {{ 'scanning.scanJobProgress.preparingLabel' | translate }}
               }
