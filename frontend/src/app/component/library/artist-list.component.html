@@ -8,10 +8,10 @@
   <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
                              [message]="'library.noMusicLabel' | translate">
   </pony-no-content-indicator>
-  <div *ngIf="loadingState === LoadingState.LOADED"
+  <div *ngIf="loadingState === LoadingState.LOADED" #scroller
        class="list-container" data-pony-image-loader-scroller>
     <div class="list-group">
-      <pony-artist *ngFor="let artist of artists | ponyArtistGenreFilter:selectedGenre; trackBy: trackByArtist" [artist]="artist"></pony-artist>
+      <pony-artist *ngFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
     </div>
   </div>
 </div>

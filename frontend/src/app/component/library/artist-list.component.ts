@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist, Genre} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
@@ -10,12 +10,11 @@ import {ErrorIndicatorComponent} from '../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
 import {ArtistComponent} from './artist.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {ArtistGenreFilterPipe} from '../../pipe/artist-genre-filter.pipe';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, ReactiveFormsModule, FormsModule, ArtistGenreFilterPipe, UnknownGenrePipe],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, ReactiveFormsModule, FormsModule, UnknownGenrePipe],
   selector: 'pony-artist-list',
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
@@ -26,8 +25,11 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
+  filteredArtists: Artist[] = [];
   genres: Genre[] = [];
   selectedGenre: Genre | undefined;
+
+  @ViewChild('scroller') scrollerElement!: ElementRef;
 
   private artistsSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
@@ -74,6 +76,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: artists => {
           this.artists = artists;
+          this.filterArtists();
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
             console.info(`${artists.length} artists loaded.`);
@@ -98,7 +101,20 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       });
   }
 
+  private filterArtists() {
+    this.filteredArtists = this.selectedGenre ? this.artists.filter(artist =>
+      artist.genres.findIndex(artistGenre =>
+        artistGenre.id === this.selectedGenre!.id) > -1
+    ) : this.artists;
+  }
+
   onSelectedGenreChange() {
-    this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!);
+    this.filterArtists();
+    if (this.scrollerElement) {
+      this.scrollerElement.nativeElement.scrollTop = 0;
+    }
+    if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
+      this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!);
+    }
   }
 }
