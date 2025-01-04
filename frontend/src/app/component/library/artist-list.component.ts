@@ -59,7 +59,11 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   }
 
   private loadGenres() {
-    this.libraryService.getGenres().subscribe(genres => this.genres = genres);
+    this.libraryService.getGenres().subscribe(genres => {
+      this.genres = genres;
+      this.selectedGenre = this.genres.filter(genre => genre.id === this.selectedGenre?.id)[0];
+      this.filterArtists();
+    });
   }
 
   private loadArtists(refreshing = false) {
