@@ -1,4 +1,8 @@
 <div class="panel panel-default">
+  <select class="form-select" [(ngModel)]="selectedGenre" (ngModelChange)="onSelectedGenreChange()">
+    <option [ngValue]="undefined">{{ 'library.artist.allGenresLabel' | translate }}</option>
+    <option [ngValue]="genre" *ngFor="let genre of genres">{{ genre.name | ponyUnknownGenre }}</option>
+  </select>
   <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
   <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
@@ -7,7 +11,7 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="list-container" data-pony-image-loader-scroller>
     <div class="list-group">
-      <pony-artist *ngFor="let artist of artists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
+      <pony-artist *ngFor="let artist of artists | ponyArtistGenreFilter:selectedGenre; trackBy: trackByArtist" [artist]="artist"></pony-artist>
     </div>
   </div>
 </div>

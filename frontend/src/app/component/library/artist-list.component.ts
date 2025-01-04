@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {Artist} from '../../domain/library.model';
+import {Artist, Genre} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {LoadingState} from '../../domain/common.model';
 import {TranslateModule} from '@ngx-translate/core';
@@ -9,10 +9,13 @@ import {CommonModule} from '@angular/common';
 import {ErrorIndicatorComponent} from '../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
 import {ArtistComponent} from './artist.component';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {ArtistGenreFilterPipe} from '../../pipe/artist-genre-filter.pipe';
+import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, ReactiveFormsModule, FormsModule, ArtistGenreFilterPipe, UnknownGenrePipe],
   selector: 'pony-artist-list',
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
@@ -23,17 +26,23 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
+  genres: Genre[] = [];
+  selectedGenre: Genre | undefined;
 
   private artistsSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
 
-  constructor(private libraryService: LibraryService) {
+  constructor(
+    private readonly libraryService: LibraryService
+  ) {
   }
 
   ngOnInit(): void {
+    this.loadGenres();
     this.loadArtists();
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest()
       .subscribe(() => {
+        this.loadGenres();
         this.loadArtists(true);
       });
   }
@@ -45,6 +54,10 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   trackByArtist(_: number, artist: Artist) {
     return artist.id;
+  }
+
+  private loadGenres() {
+    this.libraryService.getGenres().subscribe(genres => this.genres = genres);
   }
 
   private loadArtists(refreshing = false) {
@@ -83,5 +96,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
           console.error(`Could not load artists: "${error.message}".`);
         }
       });
+  }
+
+  onSelectedGenreChange() {
+    this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!);
   }
 }

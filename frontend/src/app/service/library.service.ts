@@ -2,9 +2,16 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
-import {Album, Artist, ArtistSongs, SearchResult, Song} from '../domain/library.model';
+import {Album, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
-import {ArtistDto, ArtistSongsDto, RandomSongsRequestDto, SearchResultDto, SongDetailsDto} from '../domain/library.dto';
+import {
+  ArtistDto,
+  ArtistSongsDto,
+  GenreDto,
+  RandomSongsRequestDto,
+  SearchResultDto,
+  SongDetailsDto
+} from '../domain/library.dto';
 
 export enum LibraryState {
   UNKNOWN,
@@ -53,6 +60,13 @@ export class LibraryService {
   observeLibraryState(): Observable<LibraryState> {
     return this.libraryStateSubject.asObservable()
       .pipe(distinctUntilChanged());
+  }
+
+  getGenres(): Observable<Genre[]> {
+    return this.httpClient.get<GenreDto[]>('/api/library/genres')
+      .pipe(
+        map(genreDtos => genreDtos.map(genreDto => new Genre(genreDto))),
+      );
   }
 
   getArtists(): Observable<Artist[]> {

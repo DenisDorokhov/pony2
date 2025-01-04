@@ -177,6 +177,7 @@ public class LibraryImporter {
             if (overriddenGenre != null) {
                 if (libraryCleaner.deleteGenreIfUnused(overriddenGenre)) {
                     Genre deletedGenre = overriddenGenre;
+                    // Remove from the artist as well, otherwise Hibernate will complain on commit.
                     album.getArtist().getGenres().stream()
                             .filter(artistGenre -> Objects.equals(artistGenre.getGenre().getId(), deletedGenre.getId()))
                             .findFirst()

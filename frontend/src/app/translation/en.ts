@@ -47,6 +47,7 @@ export default {
       unknownLabel: 'Unknown Album'
     },
     artist: {
+      allGenresLabel: 'All Artists',
       unknownLabel: 'Unknown Artist'
     },
     song: {
