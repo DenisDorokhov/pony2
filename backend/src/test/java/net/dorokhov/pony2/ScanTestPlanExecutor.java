@@ -235,6 +235,29 @@ public class ScanTestPlanExecutor {
                                         .toList());
                     });
                 }
+                for (ScanTestPlan.ExpectedData.Genre expectedGenre : expectedArtist.getGenres()) {
+                    List<Genre> foundGenres = artist.getGenres().stream()
+                            .map(ArtistGenre::getGenre)
+                            .filter(genre -> Objects.equals(genre.getName(), expectedGenre.getName()))
+                            .toList();
+                    assertThat(foundGenres).hasSize(1);
+                    assertThat(foundGenres).first().satisfies(genre -> {
+                        if (expectedGenre.getArtworkPath() != null) {
+                            assertThat(genre.getArtwork()).satisfies(artwork ->
+                                    assertThat(artwork.getSourceUri())
+                                            .isEqualTo(expectedArtworkPathToUri(expectedGenre.getArtworkPath(), context)));
+                        } else {
+                            assertThat(genre.getArtwork()).isNull();
+                        }
+                        List<Song> songs = genre.getSongs();
+                        assertThat(songs).hasSize(expectedGenre.getSongPaths().size());
+                        assertThat(songs.stream().map(Song::getPath))
+                                .containsAll(expectedGenre.getSongPaths().stream()
+                                        .map(relativePath -> new File(context.getRootFolder().getAbsolutePath(), relativePath))
+                                        .map(File::getAbsolutePath)
+                                        .toList());
+                    });
+                }
             });
         }
     }

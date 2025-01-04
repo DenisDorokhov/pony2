@@ -158,6 +158,12 @@ public class LibraryImporter {
                     .setGenre(genre)
                     .setArtwork(artwork);
 
+            if (!album.getArtist().hasGenre(genre.getId())) {
+                album.getArtist().getGenres().add(new ArtistGenre()
+                        .setArtist(album.getArtist())
+                        .setGenre(genre));
+            }
+
             Song savedSong = songRepository.save(songToSave);
             if (existingSong != null) {
                 logger.debug("{} Updating song '{}': '{}'.", String.join(" ", saveReasons), existingSong, savedSong);
@@ -169,7 +175,13 @@ public class LibraryImporter {
                 libraryCleaner.deleteArtistIfUnused(overriddenAlbum.getArtist());
             }
             if (overriddenGenre != null) {
-                libraryCleaner.deleteGenreIfUnused(overriddenGenre);
+                if (libraryCleaner.deleteGenreIfUnused(overriddenGenre)) {
+                    Genre deletedGenre = overriddenGenre;
+                    album.getArtist().getGenres().stream()
+                            .filter(artistGenre -> Objects.equals(artistGenre.getGenre().getId(), deletedGenre.getId()))
+                            .findFirst()
+                            .ifPresent(artistGenre -> album.getArtist().getGenres().remove(artistGenre));
+                }
             }
             if (
                     overriddenArtwork != null &&

@@ -29,6 +29,9 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "genre")
     private List<Song> songs = new ArrayList<>();
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "genre")
+    private List<ArtistGenre> artists = new ArrayList<>();
+
     @Nullable
     public String getName() {
         return name;
@@ -58,6 +61,15 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
 
     public Genre setSongs(List<Song> songs) {
         this.songs = songs;
+        return this;
+    }
+
+    public List<ArtistGenre> getArtists() {
+        return artists;
+    }
+
+    public Genre setArtists(List<ArtistGenre> artists) {
+        this.artists = artists;
         return this;
     }
 

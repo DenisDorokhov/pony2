@@ -1,8 +1,7 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
 import com.google.common.collect.Lists;
-import net.dorokhov.pony2.api.library.domain.Artwork;
-import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.common.UriUtils;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;

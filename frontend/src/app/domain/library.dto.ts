@@ -22,6 +22,7 @@ export interface ArtistDto {
   updateDate: string | undefined;
   name: string | undefined;
   artworkId: string | undefined;
+  genres: GenreDto[],
 }
 
 export interface ArtistSongsDto {
@@ -196,6 +197,9 @@ export interface LogMessagePageDto extends PageDto {
 }
 
 export interface GenreDto {
+  id: string;
+  creationDate: string;
+  updateDate: string | undefined;
   name: string | undefined;
   artworkId: string | undefined;
 }

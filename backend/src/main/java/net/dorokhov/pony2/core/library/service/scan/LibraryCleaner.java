@@ -4,10 +4,7 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.repository.GenreRepository;
-import net.dorokhov.pony2.core.library.repository.SongRepository;
+import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +20,7 @@ public class LibraryCleaner {
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
     private final GenreRepository genreRepository;
+    private final ArtistGenreRepository artistGenreRepository;
     private final ArtworkStorage artworkStorage;
 
     public LibraryCleaner(
@@ -30,19 +28,21 @@ public class LibraryCleaner {
             AlbumRepository albumRepository,
             ArtistRepository artistRepository,
             GenreRepository genreRepository,
+            ArtistGenreRepository artistGenreRepository,
             ArtworkStorage artworkStorage
     ) {
-
         this.songRepository = songRepository;
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.genreRepository = genreRepository;
+        this.artistGenreRepository = artistGenreRepository;
         this.artworkStorage = artworkStorage;
     }
 
     @Transactional
     public boolean deleteArtistIfUnused(Artist artist) {
         if (albumRepository.countByArtistId(artist.getId()) == 0) {
+            artistGenreRepository.deleteByArtistId(artist.getId());
             artistRepository.deleteById(artist.getId());
             logger.debug("Deleting artist '{}'.", artist);
             return true;
@@ -63,6 +63,7 @@ public class LibraryCleaner {
     @Transactional
     public boolean deleteGenreIfUnused(Genre genre) {
         if (songRepository.countByGenreId(genre.getId()) == 0) {
+            artistGenreRepository.deleteByGenreId(genre.getId());
             genreRepository.deleteById(genre.getId());
             logger.debug("Deleting genre '{}'.", genre);
             return true;

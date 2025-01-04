@@ -348,11 +348,13 @@ public final class ScanTestPlan {
             private final String name;
             private final String artworkPath;
             private final List<Album> albums;
+            private final List<Genre> genres;
 
-            public Artist(@Nullable String name, @Nullable String artworkPath, List<Album> albums) {
+            public Artist(@Nullable String name, @Nullable String artworkPath, List<Album> albums, List<Genre> genres) {
                 this.name = name;
                 this.artworkPath = artworkPath;
                 this.albums = unmodifiableList(albums);
+                this.genres = unmodifiableList(genres);
             }
 
             @Nullable
@@ -367,6 +369,10 @@ public final class ScanTestPlan {
 
             public List<Album> getAlbums() {
                 return albums;
+            }
+
+            public List<Genre> getGenres() {
+                return genres;
             }
         }
 

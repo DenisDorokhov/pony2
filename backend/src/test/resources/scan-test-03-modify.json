@@ -106,6 +106,15 @@
               "unknown.mp3"
             ]
           }
+        ],
+        "genres": [
+          {
+            "name": null,
+            "artworkPath": "embedded:/unknown.mp3",
+            "songPaths": [
+              "unknown.mp3"
+            ]
+          }
         ]
       },
       {
@@ -146,6 +155,50 @@
               "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
               "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
               "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3"
+            ]
+          }
+        ],
+        "genres": [
+          {
+            "name": "Crazy Metal",
+            "artworkPath": "embedded:/Hard Times/1986 - Very First/01 - Why me.mp3",
+            "songPaths": [
+              "Hard Times/1986 - Very First/01 - Why me.mp3",
+              "Hard Times/1986 - Very First/02 - I don't know.mp3",
+              "Hard Times/1986 - Very First/03 - About love.mp3",
+              "Hard Times/1986 - Very First/04 - About death.mp3",
+              "Hard Times/1986 - Very First/05 - About dirty things.mp3",
+              "Hard Times/1986 - Very First/06 - About chicks.mp3",
+              "Hard Times/1986 - Very First/07 - Some politics.mp3",
+              "Hard Times/1986 - Very First/08 - Suicide.mp3",
+              "Hard Times/1986 - Very First/09 - My little pony.mp3",
+              "Hard Times/1986 - Very First/10 - I am an alcoholic.mp3"
+            ]
+          },
+          {
+            "name": "Beer Rock",
+            "artworkPath": null,
+            "songPaths": [
+              "Hard Times/2000 - Best Ever And Forever/CD1/01 - I am the best.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/02 - I am drunk.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/03 - Hangover.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/04 - Your music is junk.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/05 - Beer.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/06 - Vodka.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/07 - Drugs.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/08 - Sex.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/09 - Violence.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/10 - You don't want to hear that.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/11 - Worse than hangover.mp3",
+              "Hard Times/2000 - Best Ever And Forever/CD1/12 - Better than Weißbier.mp3"
+            ]
+          },
+          {
+            "name": "Engineering realism",
+            "artworkPath": null,
+            "songPaths": [
               "Hard Times/2000 - Best Ever And Forever/CD2/01 - Bonus for software developers.mp3",
               "Hard Times/2000 - Best Ever And Forever/CD2/02 - I never write tests (my bad habit).mp3"
             ]

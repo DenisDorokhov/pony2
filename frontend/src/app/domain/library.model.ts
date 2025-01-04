@@ -3,6 +3,7 @@ import {
   AlbumSongsDto,
   ArtistDto,
   ArtistSongsDto,
+  GenreDto,
   PlaybackHistoryDto,
   PlaybackHistorySongDto,
   PlaylistDto,
@@ -159,7 +160,7 @@ export class AlbumSongs {
   }
 }
 
-export class Artist {
+export class Genre {
 
   id: string;
   creationDate: Date;
@@ -169,6 +170,28 @@ export class Artist {
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
 
+  constructor(genreDto: GenreDto) {
+    this.id = genreDto.id;
+    this.creationDate = new Date(genreDto.creationDate);
+    this.updateDate = genreDto.updateDate ? new Date(genreDto.updateDate) : undefined;
+    this.name = genreDto.name;
+    this.artworkId = genreDto.artworkId;
+    this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
+    this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
+  }
+}
+
+export class Artist {
+
+  id: string;
+  creationDate: Date;
+  updateDate: Date | undefined;
+  name: string | undefined;
+  artworkId: string | undefined;
+  smallArtworkUrl: string | undefined;
+  largeArtworkUrl: string | undefined;
+  genres: Genre[];
+
   constructor(artistDto: ArtistDto) {
     this.id = artistDto.id;
     this.creationDate = new Date(artistDto.creationDate);
@@ -177,6 +200,7 @@ export class Artist {
     this.artworkId = artistDto.artworkId;
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
+    this.genres = artistDto.genres.map(genreDto => new Genre(genreDto));
   }
 
   static equals(artist1: Artist | undefined, artist2: Artist | undefined) {

@@ -4,10 +4,7 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.repository.GenreRepository;
-import net.dorokhov.pony2.core.library.repository.SongRepository;
+import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,11 +30,13 @@ public class LibraryCleanerTest {
     @Mock
     private GenreRepository genreRepository;
     @Mock
+    private ArtistGenreRepository artistGenreRepository;
+    @Mock
     private ArtworkStorage artworkStorage;
 
     @BeforeEach
     public void setUp() {
-        libraryCleaner = new LibraryCleaner(songRepository, albumRepository, artistRepository, genreRepository, artworkStorage);
+        libraryCleaner = new LibraryCleaner(songRepository, albumRepository, artistRepository, genreRepository, artistGenreRepository, artworkStorage);
     }
 
     @Test
@@ -50,9 +49,11 @@ public class LibraryCleanerTest {
         when(albumRepository.countByArtistId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist1)).isTrue();
+        verify(artistGenreRepository).deleteByArtistId("1");
         verify(artistRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist2)).isFalse();
+        verify(artistGenreRepository, never()).deleteByArtistId("2");
         verify(artistRepository, never()).deleteById("2");
     }
 
@@ -84,9 +85,11 @@ public class LibraryCleanerTest {
         when(songRepository.countByGenreId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteGenreIfUnused(genre1)).isTrue();
+        verify(artistGenreRepository).deleteByGenreId("1");
         verify(genreRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteGenreIfUnused(genre2)).isFalse();
+        verify(artistGenreRepository, never()).deleteByArtistId("2");
         verify(genreRepository, never()).deleteById("2");
     }
 

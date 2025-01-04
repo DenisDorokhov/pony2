@@ -178,6 +178,21 @@ CREATE TABLE artist (
 
 CREATE INDEX index_artist_name ON artist(name);
 
+CREATE TABLE artist_genre (
+
+  id CHAR(36) PRIMARY KEY,
+
+  creation_date TIMESTAMP(9) NOT NULL,
+
+  artist_id CHAR(36) NOT NULL,
+  genre_id CHAR(36) NOT NULL,
+
+  FOREIGN KEY (artist_id) REFERENCES artist (id),
+  FOREIGN KEY (genre_id) REFERENCES genre (id),
+
+  UNIQUE (artist_id, genre_id)
+);
+
 CREATE TABLE album (
 
   id CHAR(36) PRIMARY KEY,

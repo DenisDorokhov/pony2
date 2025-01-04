@@ -5,7 +5,7 @@ import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {ScrollingUtils} from '../../utils/scrolling.utils';
 import {ImageLoaderComponent} from '../common/image-loader.component';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaybackState} from '../../service/audio-player.service';
@@ -21,6 +21,8 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
   PlaybackState = PlaybackState;
 
+  genreNames: string[] = [];
+
   private _artist!: Artist;
 
   get artist(): Artist {
@@ -30,6 +32,12 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
   @Input()
   set artist(artist: Artist) {
     this._artist = artist;
+    this.genreNames = this.artist.genres.map(genre => {
+      if (genre.name) {
+        return genre.name;
+      }
+      return this.translateService.instant('library.genre.unknownLabel');
+    });
     this.selected = this.libraryService.selectedArtist?.id === this.artist.id;
     if (this.playbackService.lastPlaybackEvent.song?.album.artist.id === this.artist.id) {
       this.playbackState = this.playbackService.lastPlaybackEvent.state;
@@ -50,8 +58,9 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
   private playbackEventSubscription: Subscription | undefined;
 
   constructor(
-    private libraryService: LibraryService,
-    private playbackService: PlaybackService
+    private readonly libraryService: LibraryService,
+    private readonly playbackService: PlaybackService,
+    private readonly translateService: TranslateService,
   ) {
   }
 

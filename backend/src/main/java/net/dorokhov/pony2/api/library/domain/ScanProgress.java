@@ -26,7 +26,8 @@ public final class ScanProgress {
 
         EDIT_PREPARING(EDIT, 0, 3),
         EDIT_WRITING(EDIT, 1, 3),
-        EDIT_SEARCHING_ARTWORKS(EDIT, 2, 3);
+        EDIT_SEARCHING_ARTWORKS(EDIT, 2, 3),
+        ;
 
         private final ScanType scanType;
         private final int stepNumber;
