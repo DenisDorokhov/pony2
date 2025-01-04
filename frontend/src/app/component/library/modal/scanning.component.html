@@ -113,6 +113,9 @@
               @case (Step.FULL_SEARCHING_ARTWORKS) {
                 <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
               }
+              @case (Step.FULL_CLEANING_ARTIST_GENRES) {
+                <div role="progressbar" class="progress-bar" [style.width]="scanProgressValue + '%'"></div>
+              }
             }
           } @else if (scanJobProgress) {
             <div role="progressbar" class="progress-bar progress-bar-striped progress-bar-animated"

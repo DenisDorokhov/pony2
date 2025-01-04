@@ -203,7 +203,17 @@ public class BatchLibraryCleanerTest {
                         new ArtistGenre()
                                 .setId("2_2").setGenre(new Genre().setId("2"))
                 ));
-        when(artistRepository.findAll()).thenReturn(List.of(artist));
+        when(artistRepository.findAll()).thenReturn(List.of(
+                artist,
+                new Artist()
+                        .setSongs(List.of(
+                                new Song().setGenre(new Genre().setId("1"))
+                        ))
+                        .setGenres(newArrayList(
+                                new ArtistGenre()
+                                        .setId("1_1").setGenre(new Genre().setId("1"))
+                        ))
+        ));
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
         batchLibraryCleaner.cleanArtistGenres(observer);
@@ -212,8 +222,9 @@ public class BatchLibraryCleanerTest {
         assertThat(artist.getGenres().getFirst()).satisfies(genre ->
                 assertThat(genre.getId()).isEqualTo("1_1"));
 
-        assertThat(observer.size()).isEqualTo(1);
-        observer.assertThatAt(0, 1, 1);
+        assertThat(observer.size()).isEqualTo(2);
+        observer.assertThatAt(0, 1, 2);
+        observer.assertThatAt(1, 2, 2);
     }
 
     @Test
