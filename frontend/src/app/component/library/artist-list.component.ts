@@ -118,7 +118,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       this.scrollerElement.nativeElement.scrollTop = 0;
     }
     if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
-      this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!);
+      requestAnimationFrame(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
     }
   }
 }
