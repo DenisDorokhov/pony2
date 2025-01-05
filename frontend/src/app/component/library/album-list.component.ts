@@ -11,6 +11,7 @@ import {NoContentIndicatorComponent} from '../common/no-content-indicator.compon
 import {AlbumComponent} from './album.component';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
+import {PlaylistService} from '../../service/playlist.service';
 
 @Component({
   standalone: true,
@@ -28,36 +29,39 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   albumCount = 0;
   songCount = 0;
+  likeCount = 0;
 
   private artistSongsSubscription: Subscription | undefined;
-  private refreshRequestSubscription: Subscription | undefined;
-  private selectedArtistSubscription: Subscription | undefined;
-  private libraryStateSubscription: Subscription | undefined;
-  private songPlaybackRequestSubscription: Subscription | undefined;
 
-  constructor(private libraryService: LibraryService, private playbackService: PlaybackService) {
+  private subscriptions: Subscription[] = [];
+
+  constructor(
+    private readonly libraryService: LibraryService,
+    private readonly playbackService: PlaybackService,
+    private readonly playlistService: PlaylistService,
+  ) {
   }
 
   ngOnInit(): void {
-    this.refreshRequestSubscription = this.libraryService.observeRefreshRequest()
+    this.subscriptions.push(this.libraryService.observeRefreshRequest()
       .subscribe(() => {
         if (this.libraryService.selectedArtist) {
           this.loadArtistSongs(this.libraryService.selectedArtist, true);
         }
-      });
-    this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
+      }));
+    this.subscriptions.push(this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         if (artist) {
           this.loadArtistSongs(artist);
         }
-      });
-    this.libraryStateSubscription = this.libraryService.observeLibraryState()
+      }));
+    this.subscriptions.push(this.libraryService.observeLibraryState()
       .subscribe(libraryState => {
         if (libraryState === LibraryState.EMPTY) {
           this.loadingState = LoadingState.EMPTY;
         }
-      });
-    this.songPlaybackRequestSubscription = this.libraryService.observeSongPlaybackRequest()
+      }));
+    this.subscriptions.push(this.libraryService.observeSongPlaybackRequest()
       .subscribe(song => {
         if (this.artistSongs) {
 
@@ -74,15 +78,18 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           }
           this.playbackService.switchQueue(songs, index);
         }
-      });
+      }));
+    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist =>
+      this.likeCount = likePlaylist.songs
+        .map(next => next.song)
+        .filter(song => song.album.artist.id === this.artistSongs.artist.id)
+        .length
+    ));
   }
 
   ngOnDestroy(): void {
     this.artistSongsSubscription?.unsubscribe();
-    this.refreshRequestSubscription?.unsubscribe();
-    this.selectedArtistSubscription?.unsubscribe();
-    this.libraryStateSubscription?.unsubscribe();
-    this.songPlaybackRequestSubscription?.unsubscribe();
+    this.subscriptions.forEach(next => next.unsubscribe());
   }
 
   trackByIndex(index: number) {

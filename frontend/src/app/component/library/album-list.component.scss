@@ -22,6 +22,15 @@
     padding-left: 15px;
     line-height: 36px;
 
+    button {
+      border: 1px solid #ddd;
+      margin-bottom: 4px;
+
+      i {
+        padding-right: 6px;
+      }
+    }
+
     small {
       float: right;
       font-size: 0.7em;
