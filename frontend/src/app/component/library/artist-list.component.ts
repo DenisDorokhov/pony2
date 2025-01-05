@@ -9,12 +9,18 @@ import {CommonModule} from '@angular/common';
 import {ErrorIndicatorComponent} from '../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
 import {ArtistComponent} from './artist.component';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
+import {
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle
+} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, ReactiveFormsModule, FormsModule, UnknownGenrePipe],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, UnknownGenrePipe, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem],
   selector: 'pony-artist-list',
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
@@ -136,7 +142,8 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSelectedGenreChange() {
+  onGenreClick(genre: Genre | undefined) {
+    this.selectedGenre = genre;
     this.filterArtists();
     if (this.scrollerElement) {
       this.scrollerElement.nativeElement.scrollTop = 0;

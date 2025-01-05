@@ -1,8 +1,22 @@
 <div class="panel panel-default">
-  <select class="form-select" [(ngModel)]="selectedGenre" (ngModelChange)="onSelectedGenreChange()">
-    <option [ngValue]="undefined">{{ 'library.artist.allGenresLabel' | translate }} ({{ artists.length }})</option>
-    <option [ngValue]="genre" *ngFor="let genre of genres">{{ genre.name | ponyUnknownGenre }} ({{ genreCounter[genre.id] }})</option>
-  </select>
+  <div ngbDropdown class="btn-group genre">
+    <button ngbDropdownToggle type="button" class="genre">
+      @if (selectedGenre === undefined) {
+        {{ 'library.artist.allGenresLabel' | translate }}
+      } @else {
+        {{ selectedGenre.name | ponyUnknownGenre }}
+      }
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button ngbDropdownItem [class.selected]="!selectedGenre" (click)="onGenreClick(undefined)">
+        {{ 'library.artist.allGenresLabel' | translate }} ({{ artists.length }})
+      </button>
+      <button *ngFor="let genre of genres" ngbDropdownItem [class.selected]="selectedGenre?.id === genre.id" (click)="onGenreClick(genre)">
+        {{ genre.name | ponyUnknownGenre }} ({{ genreCounter[genre.id] }})
+      </button>
+    </ul>
+  </div>
   <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
   <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
