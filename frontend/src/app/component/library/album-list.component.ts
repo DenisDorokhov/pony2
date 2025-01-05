@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {AlbumSongs, Artist, ArtistSongs, Song} from '../../domain/library.model';
+import {AlbumSongs, Artist, ArtistSongs, PlaylistSongs, Song} from '../../domain/library.model';
 import {LibraryService, LibraryState} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
@@ -31,8 +31,8 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   songCount = 0;
   likeCount = 0;
 
+  private likePlaylist: PlaylistSongs | undefined;
   private artistSongsSubscription: Subscription | undefined;
-
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -79,12 +79,17 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.playbackService.switchQueue(songs, index);
         }
       }));
-    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist =>
-      this.likeCount = likePlaylist.songs
-        .map(next => next.song)
-        .filter(song => song.album.artist.id === this.artistSongs.artist.id)
-        .length
-    ));
+    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist => {
+      this.likePlaylist = likePlaylist;
+      this.countLikes();
+    }));
+  }
+
+  private countLikes() {
+    this.likeCount = this.likePlaylist?.songs
+      .map(next => next.song)
+      .filter(song => song.album.artist.id === this.artistSongs.artist.id)
+      .length ?? 0;
   }
 
   ngOnDestroy(): void {
@@ -118,6 +123,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             album.songs.sort(Song.compare);
             album.songs.forEach(() => this.songCount++);
           });
+          this.countLikes();
           this.loadingState = LoadingState.LOADED;
           console.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },

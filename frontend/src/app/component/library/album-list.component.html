@@ -7,7 +7,7 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
     <h5 class="panel-title">
-      {{ artistSongs.artist.name | ponyUnknownArtist }}&nbsp;
+      {{ artistSongs.artist.name | ponyUnknownArtist }}
       <button *ngIf="likeCount > 0" class="btn btn-sm btn-light"><i class="bi bi-star-fill"></i>{{ likeCount }}</button>
       <small>
         {{
