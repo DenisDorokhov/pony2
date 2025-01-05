@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-<title th:text="${status}">404 NOT_FOUND</title>
+<title th:text="${status + ' ' + statusDescription}">404 Not Found</title>
 </head>
 <body>
 
-<div th:text="${status}">404 NOT_FOUND</div>
+<h1 th:text="${statusDescription}">Not Found</h1>
+<p>See the logfile for details.</p>
+<hr>
+<address>pony2</address>
 
 </body>
 </html>

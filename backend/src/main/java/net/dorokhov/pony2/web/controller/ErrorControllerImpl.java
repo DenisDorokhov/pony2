@@ -17,7 +17,9 @@ public class ErrorControllerImpl implements ErrorController {
 
     @GetMapping("/error")
     public String error(HttpServletRequest request, Model model) {
-        model.addAttribute("status", getStatus(request));
+        HttpStatus status = getStatus(request);
+        model.addAttribute("status", status.value());
+        model.addAttribute("statusDescription", status.getReasonPhrase());
         return "error";
     }
 
