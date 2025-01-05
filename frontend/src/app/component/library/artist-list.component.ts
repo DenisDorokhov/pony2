@@ -61,8 +61,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   private loadGenres() {
     this.libraryService.getGenres().subscribe(genres => {
       this.genres = genres;
+      const oldSelectedGenre = this.selectedGenre;
       this.selectedGenre = this.genres.filter(genre => genre.id === this.selectedGenre?.id)[0];
-      this.filterArtists();
+      this.filterArtists(oldSelectedGenre?.id !== this.selectedGenre?.id);
     });
   }
 
@@ -105,11 +106,20 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       });
   }
 
-  private filterArtists() {
+  private filterArtists(scrollToSelectedArtist = false) {
     this.filteredArtists = this.selectedGenre ? this.artists.filter(artist =>
       artist.genres.findIndex(artistGenre =>
         artistGenre.id === this.selectedGenre!.id) > -1
     ) : this.artists;
+    if (scrollToSelectedArtist) {
+      this.scrollToSelectedArtist();
+    }
+  }
+
+  private scrollToSelectedArtist() {
+    if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
+      setTimeout(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
+    }
   }
 
   onSelectedGenreChange() {
@@ -117,8 +127,6 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     if (this.scrollerElement) {
       this.scrollerElement.nativeElement.scrollTop = 0;
     }
-    if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
-      setTimeout(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
-    }
+    this.scrollToSelectedArtist();
   }
 }
