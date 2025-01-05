@@ -28,6 +28,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   filteredArtists: Artist[] = [];
   genres: Genre[] = [];
   selectedGenre: Genre | undefined;
+  genreCounter: Record<string, number> = {};
 
   @ViewChild('scroller') scrollerElement!: ElementRef;
 
@@ -81,6 +82,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: artists => {
           this.artists = artists;
+          this.reloadGenreCounter();
           this.filterArtists();
           if (artists.length > 0) {
             this.loadingState = LoadingState.LOADED;
@@ -104,6 +106,18 @@ export class ArtistListComponent implements OnInit, OnDestroy {
           console.error(`Could not load artists: "${error.message}".`);
         }
       });
+  }
+
+  private reloadGenreCounter() {
+    this.genreCounter = {};
+    for (const artist of this.artists) {
+      for (const genre of artist.genres) {
+        if (this.genreCounter[genre.id] === undefined) {
+          this.genreCounter[genre.id] = 0;
+        }
+        this.genreCounter[genre.id]++;
+      }
+    }
   }
 
   private filterArtists(scrollToSelectedArtist = false) {

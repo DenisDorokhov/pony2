@@ -1,7 +1,7 @@
 <div class="panel panel-default">
   <select class="form-select" [(ngModel)]="selectedGenre" (ngModelChange)="onSelectedGenreChange()">
-    <option [ngValue]="undefined">{{ 'library.artist.allGenresLabel' | translate }}</option>
-    <option [ngValue]="genre" *ngFor="let genre of genres">{{ genre.name | ponyUnknownGenre }}</option>
+    <option [ngValue]="undefined">{{ 'library.artist.allGenresLabel' | translate }} ({{ artists.length }})</option>
+    <option [ngValue]="genre" *ngFor="let genre of genres">{{ genre.name | ponyUnknownGenre }} ({{ genreCounter[genre.id] }})</option>
   </select>
   <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
