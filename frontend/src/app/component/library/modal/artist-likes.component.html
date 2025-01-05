@@ -1,0 +1,31 @@
+<div class="modal-header">
+  <h4 class="modal-title"><i class="bi bi-star-fill"></i>{{ 'artistLikes.header' | translate:{ artistName: artistSongs.artist.name } }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight">
+
+  <div class="table-container" *ngIf="songs.length">
+
+    <pony-large-song
+      [index]="i" [song]="song"
+      [isCurrentSong]="song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
+      [showIndex]="false" [showDuration]="false"
+      [selected]="selectedIndex === i"
+      *cdkVirtualFor="let song of songs; let i = index;"
+      (doubleClick)="onSongDoubleClick(i)"
+      (mousedown)="selectIndex(i)"
+      (goToSongRequested)="goToSong(song)"
+    />
+
+  </div>
+
+</cdk-virtual-scroll-viewport>
+
+<div class="modal-footer">
+  <small>
+    {{
+      'artistLikes.statisticsLabel' | translate:{ artistName: artistSongs.artist.name, count: songs.length }
+    }}
+  </small>
+</div>

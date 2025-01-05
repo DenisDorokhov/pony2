@@ -110,7 +110,11 @@ export default {
   history: {
     header: 'Playback History',
     noHistoryLabel: 'No songs played yet :-(',
-    statisticsLabel: 'Showing {{count}} or {{totalCount}} total songs played',
+    statisticsLabel: '{{count}} of {{totalCount}} total songs in playback history',
+  },
+  artistLikes: {
+    header: '{{ artistName }}',
+    statisticsLabel: '{{ count }} favorite songs of {{ artistName }}',
   },
   playlist: {
     header: 'Playlists',

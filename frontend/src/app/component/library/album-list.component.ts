@@ -12,6 +12,8 @@ import {AlbumComponent} from './album.component';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaylistService} from '../../service/playlist.service';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {ArtistLikesComponent} from './modal/artist-likes.component';
 
 @Component({
   standalone: true,
@@ -39,6 +41,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     private readonly libraryService: LibraryService,
     private readonly playbackService: PlaybackService,
     private readonly playlistService: PlaylistService,
+    private modal: NgbModal,
   ) {
   }
 
@@ -88,7 +91,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   private countLikes() {
     this.likeCount = this.likePlaylist?.songs
       .map(next => next.song)
-      .filter(song => song.album.artist.id === this.artistSongs.artist.id)
+      .filter(song => song.album.artist.id === this.artistSongs?.artist.id)
       .length ?? 0;
   }
 
@@ -134,5 +137,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           console.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
       });
+  }
+
+  openArtistLikes() {
+    const modalRef = this.modal.open(ArtistLikesComponent, { size: 'lg' });
+    const userComponent: ArtistLikesComponent = modalRef.componentInstance;
+    userComponent.artistSongs = this.artistSongs;
   }
 }

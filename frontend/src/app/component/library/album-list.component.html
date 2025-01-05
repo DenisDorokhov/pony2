@@ -8,7 +8,7 @@
        class="panel-heading">
     <h5 class="panel-title">
       {{ artistSongs.artist.name | ponyUnknownArtist }}
-      <button *ngIf="likeCount > 0" class="btn btn-sm btn-light"><i class="bi bi-star-fill"></i>{{ likeCount }}</button>
+      <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i class="bi bi-star-fill"></i>{{ likeCount }}</button>
       <small>
         {{
           'library.album.counterHeader' | translate:{
