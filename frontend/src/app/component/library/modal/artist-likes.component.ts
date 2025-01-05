@@ -54,7 +54,10 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
   }
 
   onSongDoubleClick(index: number) {
-    this.playbackService.switchQueue(this.songs, index);
+    const songs: Song[] = [...this.songs];
+    this.artistSongs.albumSongs.forEach(albumSongs =>
+      albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
+    this.playbackService.switchQueue(songs, index);
   }
 
   selectIndex(i: number) {
