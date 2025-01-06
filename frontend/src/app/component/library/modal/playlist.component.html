@@ -12,6 +12,31 @@
   </select>
   <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING || selectedPlaylist.type === PlaylistDto.Type.LIKE"
           (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
+  <div ngbDropdown class="btn-group">
+    <button type="button" class="btn btn-light filter" ngbDropdownToggle data-toggle="dropdown"
+            [disabled]="secondaryLoadingState === LoadingState.LOADING || !selectedPlaylistSongs?.songs?.length"
+            *ngIf="selectedPlaylistSongs">
+      <i class="bi" [class.bi-funnel-fill]="selectedGenre" [class.bi-funnel]="!selectedGenre"></i>
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button ngbDropdownItem [class.selected]="!selectedGenre"
+              [title]="'playlist.allGenresLabel' | translate"
+              (click)="selectGenre(undefined)">
+        {{ 'playlist.allGenresLabel' | translate }} ({{ selectedPlaylistSongs?.songs?.length ?? 0 }})
+      </button>
+      <button *ngIf="selectedGenre" ngbDropdownItem class="selected"
+              [title]="selectedGenre.name | ponyUnknownGenre"
+              (click)="selectGenre(selectedGenre)">
+        {{ selectedGenre.name | ponyUnknownGenre }} ({{ genreCounter[selectedGenre.id] }})
+      </button>
+      <button *ngFor="let genre of genres" [hidden]="!genreCounter[genre.id] || genre.id === selectedGenre?.id" ngbDropdownItem
+              [title]="genre.name | ponyUnknownGenre"
+              (click)="selectGenre(genre)">
+        {{ genre.name | ponyUnknownGenre }} ({{ genreCounter[genre.id] }})
+      </button>
+    </ul>
+  </div>
 </div>
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
                              (touchmove)="onTouchmove($event)" (wheel)="onWheel($event)">
@@ -34,8 +59,8 @@
       [index]="i" [song]="playlistSong.song"
       [selected]="selectedIndex === i"
       [isCurrentSong]="playlistSong.song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
-      id="playlistSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled || secondaryLoadingState === LoadingState.LOADING"
-      *cdkVirtualFor="let playlistSong of selectedPlaylistSongs?.songs; let i = index;"
+      id="playlistSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled || selectedGenre || secondaryLoadingState === LoadingState.LOADING"
+      *cdkVirtualFor="let playlistSong of (selectedGenre ? filteredSongs : selectedPlaylistSongs?.songs); let i = index;"
       (cdkDragStarted)="onDragStarted($event)"
       (doubleClick)="playSongOnDoubleClick(i)"
       (mousedown)="selectIndex(i)"

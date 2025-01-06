@@ -1,10 +1,18 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
-import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbActiveModal,
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle,
+  NgbModal
+} from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistService} from '../../../service/playlist.service';
 import {Subscription} from 'rxjs';
-import {Playlist, PlaylistSong, PlaylistSongs, Song} from '../../../domain/library.model';
+import {Genre, Playlist, PlaylistSong, PlaylistSongs, Song} from '../../../domain/library.model';
 import {PlaylistEditComponent} from './playlist-edit.component';
 import {FormsModule} from '@angular/forms';
 import {LoadingState} from '../../../domain/common.model';
@@ -21,10 +29,11 @@ import {LibraryService} from '../../../service/library.service';
 import {PlaybackEvent} from '../../../service/audio-player.service';
 import {PlaylistDto, PlaylistUpdateCommandDto} from '../../../domain/library.dto';
 import {formatDuration} from '../../../utils/format.utils';
+import {UnknownGenrePipe} from '../../../pipe/unknown-genre.pipe';
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, FormsModule, NoContentIndicatorComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport, CdkDropList, CdkDrag, CdkVirtualForOf],
+  imports: [TranslateModule, CommonModule, FormsModule, NoContentIndicatorComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport, CdkDropList, CdkDrag, CdkVirtualForOf, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownButtonItem, NgbDropdownItem, UnknownGenrePipe],
   selector: 'pony-playlist',
   templateUrl: './playlist.component.html',
   styleUrls: ['./playlist.component.scss']
@@ -45,6 +54,10 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   dragEnabled = true;
   lastPlaybackEvent: PlaybackEvent | undefined;
   duration: string | undefined;
+  genres: Genre[] = [];
+  selectedGenre: Genre | undefined;
+  genreCounter: Record<string, number> = {};
+  filteredSongs: PlaylistSong[] = [];
 
   private subscriptions: Subscription[] = [];
 
@@ -73,6 +86,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
+    this.libraryService.getGenres().subscribe(genres => this.genres = genres);
   }
 
   private loadSongs(primaryLoading = true) {
@@ -86,6 +100,8 @@ export class PlaylistComponent implements OnInit, OnDestroy {
         next: playlistSongs => {
           this.primaryLoadingState = this.secondaryLoadingState = LoadingState.LOADED;
           this.selectedPlaylistSongs = playlistSongs;
+          this.reloadGenreCounter();
+          this.filterSongs();
           this.duration = formatDuration(playlistSongs.songs.reduce((result: number, song: PlaylistSong) => result + song.song.duration, 0), this.translateService);
         },
         error: () => {
@@ -99,6 +115,17 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     } else {
       this.primaryLoadingState = LoadingState.LOADED;
       this.selectedPlaylistSongs = undefined;
+      this.reloadGenreCounter();
+      this.filterSongs();
+    }
+  }
+
+  private filterSongs() {
+    if (!this.selectedGenre || !this.selectedPlaylistSongs) {
+      this.filteredSongs = this.selectedPlaylistSongs?.songs ?? [];
+    } else {
+      this.filteredSongs = this.selectedPlaylistSongs!.songs
+        .filter(next => next.song.genreId === this.selectedGenre?.id);
     }
   }
 
@@ -125,11 +152,29 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   onPlaylistChange() {
+    this.selectGenre(undefined);
     this.loadSongs();
   }
 
+  selectGenre(genre: Genre | undefined) {
+    this.selectedGenre = genre;
+    this.filterSongs();
+  }
+
+  private reloadGenreCounter() {
+    this.genreCounter = {};
+    if (this.selectedPlaylistSongs) {
+      for (const song of this.selectedPlaylistSongs.songs) {
+        if (this.genreCounter[song.song.genreId] === undefined) {
+          this.genreCounter[song.song.genreId] = 0;
+        }
+        this.genreCounter[song.song.genreId]++;
+      }
+    }
+  }
+
   playSongOnDoubleClick(index: number) {
-    this.playbackService.switchQueue(this.selectedPlaylistSongs!.songs.map(next => next.song), index);
+    this.playbackService.switchQueue(this.filteredSongs.map(next => next.song), index);
   }
 
   goToSong(song: Song) {
@@ -157,6 +202,8 @@ export class PlaylistComponent implements OnInit, OnDestroy {
       next: playlistSongs => {
         this.secondaryLoadingState = LoadingState.LOADED;
         this.selectedPlaylistSongs = playlistSongs;
+        this.reloadGenreCounter();
+        this.filterSongs();
         if (this.selectedIndex === index) {
           this.selectedIndex = -1;
         }

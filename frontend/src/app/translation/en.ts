@@ -128,6 +128,7 @@ export default {
     notificationTitle: 'Playlists',
     notificationTextDeletionSuccess: 'Playlist deleted.',
     sizeLabel: '{{songCount}} songs ({{duration}})',
+    allGenresLabel: 'All Genres',
   },
   scanning: {
     header: 'Scanning',

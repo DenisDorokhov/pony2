@@ -17,13 +17,13 @@ select {
 
 @media (width <= 1000px) {
   select {
-    width: 240px;
+    width: 200px;
   }
 }
 
 @media (width <= 450px) {
   select {
-    width: 160px;
+    width: 120px;
   }
   .modal-footer {
     small {
@@ -32,7 +32,27 @@ select {
   }
 }
 
-button.edit {
+.btn-group {
+  ul {
+    max-width: 252px;
+    max-height: 260px;
+    overflow-y: auto;
+    text-align: center;
+
+    button {
+      max-width: 252px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    button.selected {
+      font-weight: bold;
+    }
+  }
+}
+
+button.edit, button.filter {
   margin-left: 6px;
 }
 
