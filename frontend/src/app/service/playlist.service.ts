@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, forkJoin, Observable, Subscription} from 'rxjs';
+import {BehaviorSubject, forkJoin, Observable} from 'rxjs';
 import {Playlist, PlaylistSongs} from '../domain/library.model';
 import {
   PlaylistCreateCommandDto,
@@ -13,6 +13,7 @@ import {catchError, map, tap} from 'rxjs/operators';
 import {ErrorDto} from '../domain/common.dto';
 import FileSaver from 'file-saver';
 import {AuthenticationService} from './authentication.service';
+import {LibraryService} from './library.service';
 
 interface PlaylistBackupDto {
   fileContent: string;
@@ -26,27 +27,40 @@ export class PlaylistService {
   playlistsSubject = new BehaviorSubject<Playlist[]>([]);
   likePlaylistSongsSubject = new BehaviorSubject<PlaylistSongs | undefined>(undefined);
 
-  private requestPlaylistsSubscription: Subscription | undefined;
-
   constructor(
     private httpClient: HttpClient,
     private authenticationService: AuthenticationService,
+    private libraryService: LibraryService,
   ) {
     this.authenticationService.observeLogout().subscribe(() => {
       this.playlistsSubject.next([]);
       this.likePlaylistSongsSubject.next(undefined);
     });
+    this.libraryService.observeRefreshRequest().subscribe(() => {
+      if (this.authenticationService.isAuthenticated) {
+        this.requestLikePlaylist().subscribe();
+        this.requestPlaylists().subscribe();
+      }
+    });
   }
 
   initialize(): Observable<void> {
     return forkJoin({
-      likePlaylist: this.httpClient.get<PlaylistSongsDto>('/api/playlists/like').pipe(
-        map(dto => new PlaylistSongs(dto)),
-        tap(likePlaylistSongs => this.likePlaylistSongsSubject.next(likePlaylistSongs)),
-      ),
+      likePlaylist: this.requestLikePlaylist(),
       playlists: this.requestPlaylists(),
     }).pipe(
       map(() => undefined),
+    );
+  }
+
+  requestLikePlaylist(): Observable<PlaylistSongs> {
+    return this.httpClient.get<PlaylistSongsDto>('/api/playlists/like').pipe(
+      map(dto => new PlaylistSongs(dto)),
+      tap(likePlaylistSongs => {
+        if (this.authenticationService.isAuthenticated) {
+          this.likePlaylistSongsSubject.next(likePlaylistSongs);
+        }
+      }),
     );
   }
 
@@ -77,11 +91,13 @@ export class PlaylistService {
   }
 
   requestPlaylists(): Observable<Playlist[]> {
-    this.requestPlaylistsSubscription?.unsubscribe();
-    this.requestPlaylistsSubscription = undefined;
     return this.httpClient.get<PlaylistDto[]>('/api/playlists').pipe(
       map(dtos => dtos.map(dto => new Playlist(dto))),
-      tap(playlists => this.playlistsSubject.next(playlists)),
+      tap(playlists => {
+        if (this.authenticationService.isAuthenticated) {
+          this.playlistsSubject.next(playlists);
+        }
+      }),
     );
   }
 

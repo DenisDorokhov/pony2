@@ -58,6 +58,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   set song(song: Song) {
     this._song = song;
     this.selected = this.libraryService.selectedSong?.id === this.song.id;
+    this.refreshLikeState();
     if (this.playbackService.lastPlaybackEvent.song?.id === this.song.id) {
       this.lastPlaybackEvent = this.playbackService.lastPlaybackEvent;
     } else {
