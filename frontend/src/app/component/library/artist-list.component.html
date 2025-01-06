@@ -9,10 +9,14 @@
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem [class.selected]="!selectedGenre" (click)="onGenreClick(undefined)">
+      <button ngbDropdownItem [class.selected]="!selectedGenre"
+              [title]="'library.artist.allGenresLabel' | translate"
+              (click)="onGenreClick(undefined)">
         {{ 'library.artist.allGenresLabel' | translate }} ({{ artists.length }})
       </button>
-      <button *ngFor="let genre of genres" ngbDropdownItem [class.selected]="selectedGenre?.id === genre.id" (click)="onGenreClick(genre)">
+      <button *ngFor="let genre of genres" ngbDropdownItem [class.selected]="selectedGenre?.id === genre.id"
+              [title]="genre.name | ponyUnknownGenre"
+              (click)="onGenreClick(genre)">
         {{ genre.name | ponyUnknownGenre }} ({{ genreCounter[genre.id] }})
       </button>
     </ul>
