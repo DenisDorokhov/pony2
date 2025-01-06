@@ -115,6 +115,8 @@ export default {
   artistLikes: {
     header: '{{ artistName }}',
     statisticsLabel: '{{ count }} favorite songs of {{ artistName }}',
+    unlikeNotificationTitle: 'Playlists',
+    unlikeNotificationTextFailure: 'Could not remove song from favorites!',
   },
   playlist: {
     header: 'Playlists',

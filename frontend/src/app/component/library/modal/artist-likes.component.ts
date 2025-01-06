@@ -1,5 +1,5 @@
 import {Component, Input, OnDestroy, OnInit} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {LargeSongComponent} from './common/large-song.component';
 import {ArtistSongs, Song} from '../../../domain/library.model';
@@ -10,6 +10,7 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {PlaybackService} from '../../../service/playback.service';
 import {PlaybackEvent} from '../../../service/audio-player.service';
 import {LibraryService} from '../../../service/library.service';
+import {NotificationService} from '../../../service/notification.service';
 
 @Component({
   standalone: true,
@@ -36,6 +37,8 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
     private readonly playlistService: PlaylistService,
     private readonly playbackService: PlaybackService,
     private readonly libraryService: LibraryService,
+    private readonly notificationService: NotificationService,
+    private readonly translateService: TranslateService,
   ) {
   }
 
@@ -69,5 +72,16 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
     this.libraryService.selectSong(song);
     this.libraryService.requestScrollToSong(song);
     this.activeModal.close();
+  }
+
+  onRemovalRequested(song: Song) {
+    this.playlistService.unlikeSong(song.id).subscribe({
+      error: () => {
+        this.notificationService.error(
+          this.translateService.instant('artistLikes.unlikeNotificationTitle'),
+          this.translateService.instant('artistLikes.unlikeNotificationTextFailure')
+        );
+      }
+    });
   }
 }
