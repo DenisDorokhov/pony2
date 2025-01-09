@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface SongRepository extends JpaRepository<Song, String> {
@@ -42,6 +43,8 @@ public interface SongRepository extends JpaRepository<Song, String> {
     Song findByPath(String path);
 
     List<Song> findAllBy(Pageable pageable);
+
+    Optional<Song> findFirstByAlbumId(String albumId);
 
     List<Song> findByAlbumId(String albumId, Sort sort);
 

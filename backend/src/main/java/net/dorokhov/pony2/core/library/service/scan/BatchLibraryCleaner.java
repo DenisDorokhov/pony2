@@ -23,10 +23,7 @@ import java.io.File;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -109,9 +106,11 @@ public class BatchLibraryCleaner {
         AtomicInteger counter = new AtomicInteger();
         for (List<String> chunk : Lists.partition(songsToDelete, cleaningDeletionBufferSize)) {
             transactionTemplate.execute(transactionStatus -> {
+                Set<String> albumIds = new HashSet<>();
                 for (String id : chunk) {
                     songRepository.findById(id).ifPresent(song -> {
                         logger.debug("Deleting song '{}': file '{}' not found.", song, song.getPath());
+                        albumIds.add(song.getAlbum().getId());
                         playlistSongRepository.deleteBySongId(song.getId());
                         playbackHistorySongRepository.deleteBySongId(song.getId());
                         songRepository.delete(song);
@@ -123,6 +122,10 @@ public class BatchLibraryCleaner {
                         }
                     });
                     notifyObserver(progressObserver, counter.incrementAndGet(), songsToDelete.size());
+                }
+                for (String albumId : albumIds) {
+                    songRepository.findFirstByAlbumId(albumId).ifPresent(song ->
+                            albumRepository.save(song.getAlbum().setYear(song.getYear())));
                 }
                 return null;
             });
