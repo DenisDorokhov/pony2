@@ -152,7 +152,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         playlist.setUpdateDate(LocalDateTime.now());
         Song song = libraryService.getSongById(songId)
                 .orElseThrow(() -> new SongNotFoundException(songId));
-        playlist.getSongs().add(new PlaylistSong()
+        playlist.getSongs().addFirst(new PlaylistSong()
                 .setPlaylist(playlist)
                 .setSong(song)
         );
