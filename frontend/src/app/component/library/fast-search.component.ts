@@ -85,25 +85,22 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         }
       })
     ).subscribe(searchResult => {
-      this.searchResult = searchResult;
-      this.navigationItems = [];
-      this.idToNavigationItem = {};
+      this.updateSearchResult(searchResult);
       this.searchResult?.artists.forEach(artist => {
-        const navigationItem = new NavigationItem(artist.id, () => this.selectArtist(artist));
+        const navigationItem = new NavigationItem(artist.id, () => this.goToArtist(artist));
         this.navigationItems.push(navigationItem);
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
       this.searchResult?.songs.forEach(song => {
-        const navigationItem = new NavigationItem(song.id, () => this.selectSong(song));
+        const navigationItem = new NavigationItem(song.id, () => this.goToSong(song));
         this.navigationItems.push(navigationItem);
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
       this.searchResult?.albums.forEach(album => {
-        const navigationItem = new NavigationItem(album.id, () => this.selectAlbum(album));
+        const navigationItem = new NavigationItem(album.id, () => this.goToAlbum(album));
         this.navigationItems.push(navigationItem);
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
-      this.searchResultsElement.nativeElement.scrollTop = 0;
       if (this.navigationItems.length > 0) {
         this.selectNavigationItem(0);
       }
@@ -117,7 +114,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         checkElement = (checkElement as Node).parentNode;
       } while (!clickWithinContainer && checkElement);
       if (!clickWithinContainer) {
-        this.open = false;
+        this.close();
       }
     }));
 
@@ -127,6 +124,19 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         event.preventDefault();
       }
     }));
+  }
+
+  private close() {
+    this.updateSearchResult(undefined);
+    this.open = false;
+  }
+
+  private updateSearchResult(searchResult: SearchResult | undefined) {
+    this.searchResult = searchResult;
+    this.navigationItems = [];
+    this.idToNavigationItem = {};
+    this.searchResultsElement.nativeElement.scrollTop = 0;
+    requestAnimationFrame(() => this.searchResultsElement.nativeElement.scrollTop = 0);
   }
 
   onInputChange(event: Event) {
@@ -168,7 +178,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         break;
       }
       case 'Escape':
-        this.open = false;
+        this.close();
         this.inputElement.nativeElement.blur();
         event.preventDefault();
         break;
@@ -212,25 +222,37 @@ export class FastSearchComponent implements OnInit, OnDestroy {
   }
 
   selectSong(song: Song) {
+    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
+  }
+
+  goToSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
     this.libraryService.requestScrollToSong(song);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
-    this.open = false;
+    this.close();
   }
 
   selectAlbum(album: Album) {
+    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
+  }
+
+  goToAlbum(album: Album) {
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
-    this.open = false;
+    this.close();
   }
 
   selectArtist(artist: Artist) {
+    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
+  }
+
+  goToArtist(artist: Artist) {
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.requestScrollToArtist(artist);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
-    this.open = false;
+    this.close();
   }
 
   trackByArtist() {

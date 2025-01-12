@@ -12,7 +12,7 @@
       <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
            title="{{ artist.name | ponyUnknownArtist }}"
            *ngFor="let artist of searchResult?.artists; trackBy:trackByArtist"
-           (click)="selectArtist(artist)">
+           (mousedown)="selectArtist(artist)" (click)="goToArtist(artist)">
         <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
         <div class="text no-description">
           {{ artist.name | ponyUnknownArtist }}
@@ -26,7 +26,7 @@
            title="{{ song.name | ponyUnknownSong }}
 {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
            *ngFor="let song of searchResult?.songs; trackBy:trackBySong"
-           (click)="selectSong(song)">
+           (mousedown)="selectSong(song)" (click)="goToSong(song)">
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
         <div class="text">
           <div>{{ song.name | ponyUnknownSong }}</div>
@@ -43,7 +43,7 @@
            title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
 {{ album.artist.name | ponyUnknownArtist }}"
            *ngFor="let album of searchResult?.albums; trackBy:trackByAlbum"
-           (click)="selectAlbum(album)">
+           (mousedown)="selectAlbum(album)" (click)="goToAlbum(album)">
         <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
         <div class="text">
           <div>{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
