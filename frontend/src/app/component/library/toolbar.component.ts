@@ -87,7 +87,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   signOut() {
-    console.info('Signing out...');
     this.authenticationService.logout().subscribe();
   }
 

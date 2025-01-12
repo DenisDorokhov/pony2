@@ -23,11 +23,12 @@
 
   button.genre {
     border: 0;
-    height: 37px;
+    line-height: 36px;
+    padding-top: 0;
+    padding-bottom: 0;
     width: 312px;
     font-weight: 500;
     font-size: 1.25rem;
-    padding-top: 2.5px;
     background-color: #f5f5f5;
     color: var(--bs-heading-color);
     border-bottom: 1px solid #ddd;

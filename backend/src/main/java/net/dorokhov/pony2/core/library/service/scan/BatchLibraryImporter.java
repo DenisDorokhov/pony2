@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.*;
@@ -93,7 +94,6 @@ public class BatchLibraryImporter {
             @Qualifier(LIBRARY_IMPORT_EXECUTOR) Executor executor,
             PlatformTransactionManager transactionManager
     ) {
-
         this.batchLibraryImportPlanner = batchLibraryImportPlanner;
         this.audioTagger = audioTagger;
         this.libraryImporter = libraryImporter;
@@ -217,6 +217,7 @@ public class BatchLibraryImporter {
             importedSongs.stream()
                     .map(Song::getAlbum)
                     .map(Album::getArtist)
+                    .collect(Collectors.toSet())
                     .forEach(libraryArtworkFinder::findAndSaveArtistArtwork);
             return new ImportResult(importedSongs, failedFiles);
         });

@@ -38,8 +38,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   @ViewChild('scroller') scrollerElement!: ElementRef;
 
-  private artistsSubscription: Subscription | undefined;
-  private refreshRequestSubscription: Subscription | undefined;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private readonly libraryService: LibraryService
@@ -47,71 +46,37 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadGenres();
-    this.loadArtists();
-    this.refreshRequestSubscription = this.libraryService.observeRefreshRequest()
-      .subscribe(() => {
-        this.loadGenres();
-        this.loadArtists(true);
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.artistsSubscription?.unsubscribe();
-    this.refreshRequestSubscription?.unsubscribe();
-  }
-
-  trackByArtist(_: number, artist: Artist) {
-    return artist.id;
-  }
-
-  private loadGenres() {
-    this.libraryService.getGenres().subscribe(genres => {
+    this.subscriptions.push(this.libraryService.observeGenres().subscribe(genres => {
       this.genres = genres;
       const oldSelectedGenre = this.selectedGenre;
       this.selectedGenre = this.genres.filter(genre => genre.id === this.selectedGenre?.id)[0];
       this.filterArtists(oldSelectedGenre?.id !== this.selectedGenre?.id);
-    });
+    }));
+    this.subscriptions.push(this.libraryService.observeArtists().subscribe(artists => {
+      this.artists = artists;
+      this.reloadGenreCounter();
+      this.filterArtists();
+      if (artists.length > 0) {
+        this.loadingState = LoadingState.LOADED;
+        const oldSelectedArtist = this.libraryService.selectedArtist;
+        const selectedArtist = this.libraryService.selectDefaultArtist(artists)!;
+        if (!Artist.equals(selectedArtist, oldSelectedArtist)) {
+          this.libraryService.requestScrollToArtist(selectedArtist);
+        }
+      } else {
+        this.loadingState = LoadingState.EMPTY;
+        this.libraryService.deselectArtist();
+        this.libraryService.deselectSong();
+      }
+    }));
   }
 
-  private loadArtists(refreshing = false) {
-    if (refreshing) {
-      console.info('Refreshing artists...');
-    } else {
-      console.info('Loading artists...');
-      this.loadingState = LoadingState.LOADING;
-    }
-    if (this.artistsSubscription) {
-      this.artistsSubscription.unsubscribe();
-    }
-    this.artistsSubscription = this.libraryService.getArtists()
-      .subscribe({
-        next: artists => {
-          this.artists = artists;
-          this.reloadGenreCounter();
-          this.filterArtists();
-          if (artists.length > 0) {
-            this.loadingState = LoadingState.LOADED;
-            console.info(`${artists.length} artists loaded.`);
-            const oldSelectedArtist = this.libraryService.selectedArtist;
-            const selectedArtist = this.libraryService.selectDefaultArtist(artists)!;
-            if (!Artist.equals(selectedArtist, oldSelectedArtist)) {
-              this.libraryService.requestScrollToArtist(selectedArtist);
-            }
-          } else {
-            this.loadingState = LoadingState.EMPTY;
-            console.info(`No artists found.`);
-            this.libraryService.deselectArtist();
-            this.libraryService.deselectSong();
-          }
-        },
-        error: error => {
-          if (!refreshing) {
-            this.loadingState = LoadingState.ERROR;
-          }
-          console.error(`Could not load artists: "${error.message}".`);
-        }
-      });
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
+  }
+
+  trackByArtist(_: number, artist: Artist) {
+    return artist.id;
   }
 
   private reloadGenreCounter() {

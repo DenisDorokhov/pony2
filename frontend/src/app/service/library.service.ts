@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import {BehaviorSubject, forkJoin, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Album, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
@@ -12,12 +12,6 @@ import {
   SearchResultDto,
   SongDetailsDto
 } from '../domain/library.dto';
-
-export enum LibraryState {
-  UNKNOWN,
-  NON_EMPTY,
-  EMPTY,
-}
 
 export interface SongSelection {
   song: Song;
@@ -31,8 +25,6 @@ export class LibraryService {
 
   private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
 
-  private libraryStateSubject = new BehaviorSubject<LibraryState>(LibraryState.UNKNOWN);
-
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<SongSelection | undefined>(undefined);
 
@@ -43,38 +35,56 @@ export class LibraryService {
   private refreshRequestSubject = new Subject<void>();
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
 
+  private genresSubject = new BehaviorSubject<Genre[]>([]);
+  private artistsSubject = new BehaviorSubject<Artist[]>([]);
+
   constructor(
     private authenticationService: AuthenticationService,
     private httpClient: HttpClient
   ) {
     this.authenticationService.observeLogout().subscribe(() => {
-      this.libraryStateSubject.next(LibraryState.UNKNOWN);
       this.selectedArtistSubject.next(undefined);
       this.selectedSongSubject.next(undefined);
       this.scrollToArtistRequestSubject.next(undefined);
       this.scrollToSongRequestSubject.next(undefined);
       this.storeDefaultArtistId(undefined);
     });
+    this.observeRefreshRequest().subscribe(() => {
+      this.requestGenres().subscribe();
+      this.requestArtists().subscribe();
+    });
   }
 
-  observeLibraryState(): Observable<LibraryState> {
-    return this.libraryStateSubject.asObservable()
-      .pipe(distinctUntilChanged());
+  initialize(): Observable<void> {
+    return forkJoin({
+      likePlaylist: this.requestGenres(),
+      playlists: this.requestArtists(),
+    }).pipe(
+      map(() => undefined),
+    );
   }
 
-  getGenres(): Observable<Genre[]> {
+  observeGenres(): Observable<Genre[]> {
+    return this.genresSubject.asObservable();
+  }
+
+  requestGenres(): Observable<Genre[]> {
     return this.httpClient.get<GenreDto[]>('/api/library/genres')
       .pipe(
         map(genreDtos => genreDtos.map(genreDto => new Genre(genreDto))),
+        tap(genres => this.genresSubject.next(genres)),
       );
   }
 
-  getArtists(): Observable<Artist[]> {
+  observeArtists(): Observable<Artist[]> {
+    return this.artistsSubject.asObservable();
+  }
+
+  requestArtists(): Observable<Artist[]> {
     return this.httpClient.get<ArtistDto[]>('/api/library/artists')
       .pipe(
         map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto))),
-        tap(artists =>
-          this.libraryStateSubject.next(artists.length > 0 ? LibraryState.NON_EMPTY : LibraryState.EMPTY))
+        tap(artists => this.artistsSubject.next(artists)),
       );
   }
 

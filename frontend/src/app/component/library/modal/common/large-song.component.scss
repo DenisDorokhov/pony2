@@ -101,6 +101,10 @@ div.playback-indicator {
   }
 }
 
+.columns-container.current {
+  background-color: #ffffee;
+}
+
 .columns-container:hover {
   background-color: #f5f5f5;
   cursor: pointer;

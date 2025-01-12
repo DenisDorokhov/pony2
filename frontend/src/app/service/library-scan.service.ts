@@ -86,7 +86,6 @@ export class LibraryScanService {
       .pipe(
         map(optionalResponse => {
           if (optionalResponse.present) {
-            console.debug('Scan job progress updated.');
             if (!this.refreshRequestSubscription) {
               console.info('Scheduling auto-refresh during scan job running.');
               this.refreshRequestSubscription = timer(0, 10000).pipe(
@@ -98,7 +97,6 @@ export class LibraryScanService {
             this.scanJobProgressSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {
-            console.debug('Scan job is not running.');
             if (this.scanJobProgressSubject.value) {
               const oldScanJob = this.scanJobProgressSubject.value!.scanJob;
               this.scanJobProgressSubject.next(null);
@@ -117,12 +115,10 @@ export class LibraryScanService {
   }
 
   updateScanStatistics(): Observable<ScanStatisticsDto | null> {
-    console.info('Updating scan statistics...');
     return this.httpClient.get<OptionalResponseDto<ScanStatisticsDto>>('/api/library/scanStatistics')
       .pipe(
         map(optionalResponse => {
           if (optionalResponse.present) {
-            console.info('Scan statistics updated.');
             this.scanStatisticsSubject.next(optionalResponse.value!);
             return optionalResponse.value!;
           } else {

@@ -58,8 +58,7 @@ export class InstallationComponent {
     const installationCommand = this.form.value as InstallationCommandDto;
     installationCommand.startScanJobAfterInstallation = true;
     this.installationService.install(installationCommand).pipe(
-      mergeMap(installation => {
-        console.info(`Version ${installation.version} has been installed.`);
+      mergeMap(() => {
         this.error = undefined;
         return this.authenticationService.authenticate({
           email: installationCommand.adminEmail,

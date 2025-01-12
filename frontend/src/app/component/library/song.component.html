@@ -1,5 +1,6 @@
 <div #container tabindex="0" class="song-container"
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.genreName | ponyUnknownGenre }}] [{{ song.sizeMb }} MB] [{{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
+     [class.current]="lastPlaybackEvent?.song?.id === song.id"
      [class.selected]="selected"
      [class.withArtist]="showArtist"
      [class.duration-10]="song.duration >= 600"

@@ -53,10 +53,15 @@
   }
 }
 
+.list-group-item.current {
+  background-color: #ffffee;
+}
+
 .list-group-item:hover {
   background-color: #f5f5f5;
 }
 
-.list-group-item.active {
+.list-group-item.selected {
   background-color: var(--blue);
+  color: white;
 }

@@ -173,6 +173,8 @@ public class LibraryImporter {
             if (overriddenAlbum != null) {
                 libraryCleaner.deleteAlbumIfUnused(overriddenAlbum);
                 libraryCleaner.deleteArtistIfUnused(overriddenAlbum.getArtist());
+                songRepository.findFirstByAlbumId(overriddenAlbum.getId()).ifPresent(song ->
+                        albumRepository.save(song.getAlbum().setYear(song.getYear())));
             }
             if (overriddenGenre != null) {
                 if (libraryCleaner.deleteGenreIfUnused(overriddenGenre)) {

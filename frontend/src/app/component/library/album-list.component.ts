@@ -1,7 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {AlbumSongs, Artist, ArtistSongs, PlaylistSongs, Song} from '../../domain/library.model';
-import {LibraryService, LibraryState} from '../../service/library.service';
+import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
 import {TranslateModule} from '@ngx-translate/core';
@@ -58,9 +58,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.loadArtistSongs(artist);
         }
       }));
-    this.subscriptions.push(this.libraryService.observeLibraryState()
-      .subscribe(libraryState => {
-        if (libraryState === LibraryState.EMPTY) {
+    this.subscriptions.push(this.libraryService.observeArtists()
+      .subscribe(artists => {
+        if (artists.length == 0) {
           this.loadingState = LoadingState.EMPTY;
         }
       }));
@@ -105,10 +105,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   private loadArtistSongs(artist: Artist, refreshing = false) {
-    if (refreshing) {
-      console.info(`Refreshing albums of artist ${artist.id} -> '${artist.name}'...`);
-    } else {
-      console.info(`Loading albums of artist ${artist.id} -> '${artist.name}'...`);
+    if (!refreshing) {
       this.loadingState = LoadingState.LOADING;
     }
     if (this.artistSongsSubscription) {
@@ -128,13 +125,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           });
           this.countLikes();
           this.loadingState = LoadingState.LOADED;
-          console.info(`${artistSongs.albumSongs.length} albums have been loaded for artist ${artist.id} -> '${artist.name}'.`);
         },
-        error: error => {
+        error: () => {
           if (!refreshing) {
             this.loadingState = LoadingState.ERROR;
           }
-          console.error(`Could not load albums of artist ${artist.id} -> '${artist.name}': "${error.message}".`);
         }
       });
   }
