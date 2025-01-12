@@ -6,6 +6,7 @@ import {InstallationService} from './installation.service';
 import {AuthenticationService} from './authentication.service';
 import {PlaybackService} from './playback.service';
 import {PlaylistService} from './playlist.service';
+import {LibraryService} from './library.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,12 +19,11 @@ export class InitializerService {
     private authenticationService: AuthenticationService,
     private playbackService: PlaybackService,
     private playlistService: PlaylistService,
+    private libraryService: LibraryService,
   ) {
   }
 
   initialize(): Promise<any> {
-
-    console.info('Application started.');
 
     this.translateService.setDefaultLang('en');
     this.translateService.use('en');
@@ -38,6 +38,7 @@ export class InitializerService {
               .pipe(
                 mergeMap(() => forkJoin({
                   queueState: this.playbackService.restoreQueueState(),
+                  library: this.libraryService.initialize(),
                   playlist: this.playlistService.initialize(),
                 })),
                 catchError(() => EMPTY),

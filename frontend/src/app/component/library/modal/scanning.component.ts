@@ -43,7 +43,8 @@ export class ScanningComponent implements OnInit, OnDestroy {
     private libraryService: LibraryService,
     private modal: NgbModal,
     public activeModal: NgbActiveModal,
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
@@ -60,10 +61,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
         }
         this.scanJobProgressLoadingState = LoadingState.LOADED;
       },
-      error: error => {
-        this.scanJobProgressLoadingState = LoadingState.ERROR;
-        console.error(`Could not load scan job progress: "${error.message}".`);
-      }
+      error: () => this.scanJobProgressLoadingState = LoadingState.ERROR
     });
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {
       this.loadScanJobs(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 5);
@@ -127,7 +125,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
   }
 
   showDetails(scanJob: ScanJobDto) {
-    const modalRef = this.modal.open(ScanJobComponent, { size: 'lg' });
+    const modalRef = this.modal.open(ScanJobComponent, {size: 'lg'});
     (modalRef.componentInstance as ScanJobComponent).scanJob = scanJob;
   }
 }

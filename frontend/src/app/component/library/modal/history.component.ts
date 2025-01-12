@@ -65,10 +65,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
         this.loadingState = LoadingState.LOADED;
         this.playbackHistory = playbackHistory;
       },
-      error: error => {
-        console.error(JSON.stringify(error));
-        this.loadingState = LoadingState.ERROR;
-      }
+      error: () => this.loadingState = LoadingState.ERROR
     });
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));

@@ -40,7 +40,6 @@ export class BrowserNotificationService {
 
   showSongNotification(song: Song) {
     if (this.appInForeground) {
-      console.debug('Not showing browser notification: application is in the background.');
       return;
     }
     if (isMobileBrowser()) {

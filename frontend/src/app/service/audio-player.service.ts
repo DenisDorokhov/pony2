@@ -114,14 +114,12 @@ export class AudioPlayer {
   private loadHowlForSong(song: Song) {
     this.lastSeekValue = undefined;
     this.unloadHowl();
-    console.info(`Loading audio '${song.id} -> ${song.artistName} - ${song.name}'...`);
     this.firePlaybackEvent(PlaybackState.LOADING, song);
     this.howl = new Howl({
       src: [song.audioUrl],
       format: [song.fileExtension],
       html5: true,
       onload: () => {
-        console.info(`Loaded audio '${song.id} -> ${song.artistName} - ${song.name}'.`);
         this.firePlaybackEvent(PlaybackState.PLAYING, song, 0);
       },
       onloaderror: (_, error) => {
@@ -129,7 +127,6 @@ export class AudioPlayer {
         this.firePlaybackEvent(PlaybackState.ERROR, song);
       },
       onplay: () => {
-        console.info('Playback started / resumed.');
         this.firePlaybackEvent(PlaybackState.PLAYING, song, this.lastPlaybackEvent.progress);
       },
       onplayerror: (_, error) => {
@@ -137,27 +134,17 @@ export class AudioPlayer {
         this.firePlaybackEvent(PlaybackState.ERROR, song, this.lastPlaybackEvent.progress);
       },
       onend: () => {
-        console.info('Playback finished.');
         this.firePlaybackEvent(PlaybackState.ENDED, song, this.lastPlaybackEvent.progress);
       },
       onpause: () => {
         // Workaround for duplicate Howler events.
-        if (this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
-          console.info('Playback paused.');
-        }
         this.firePlaybackEvent(PlaybackState.PAUSED, song, this.lastPlaybackEvent.progress);
       }
     });
     // Workaround for Howler bug: https://github.com/goldfire/howler.js/issues/1175
     if (navigator && navigator.mediaSession) {
-      navigator.mediaSession.setActionHandler('play', () => {
-        console.info('Play by media key detected.');
-        this.howl?.play();
-      });
-      navigator.mediaSession.setActionHandler('pause', () => {
-        console.info('Pause by media key detected.');
-        this.howl?.pause();
-      });
+      navigator.mediaSession.setActionHandler('play', () => this.howl?.play());
+      navigator.mediaSession.setActionHandler('pause', () => this.howl?.pause());
     }
   }
 

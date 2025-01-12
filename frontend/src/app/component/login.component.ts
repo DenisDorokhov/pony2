@@ -9,6 +9,7 @@ import {mergeMap, tap} from 'rxjs/operators';
 import {PlaybackService} from '../service/playback.service';
 import {forkJoin} from 'rxjs';
 import {PlaylistService} from '../service/playlist.service';
+import {LibraryService} from '../service/library.service';
 
 @Component({
   standalone: true,
@@ -26,6 +27,7 @@ export class LoginComponent {
     private authenticationService: AuthenticationService,
     private playbackService: PlaybackService,
     private playlistService: PlaylistService,
+    private libraryService: LibraryService,
     private router: Router,
     formBuilder: FormBuilder,
   ) {
@@ -41,6 +43,7 @@ export class LoginComponent {
       tap(user => console.info(`User ${user.email} has been authenticated.`)),
       mergeMap(() => forkJoin({
         queueState: this.playbackService.restoreQueueState(),
+        library: this.libraryService.initialize(),
         playlist: this.playlistService.initialize(),
       })),
     ).subscribe({
@@ -48,10 +51,7 @@ export class LoginComponent {
         this.error = undefined;
         this.router.navigate(['/library'], {replaceUrl: true});
       },
-      error: (error: ErrorDto) => {
-        console.error(`Authentication failed: "${error.message}".`);
-        this.error = error;
-      }
+      error: (error: ErrorDto) => this.error = error
     });
   }
 }

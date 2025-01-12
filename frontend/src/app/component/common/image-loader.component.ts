@@ -124,7 +124,6 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   private startLoading() {
     this.ngZone.run(() => {
-      // console.log(`Loading ${new Date()} -> '${this.url}'.`);
       this.state = ImageLoaderComponentState.LOADING;
       this.intersectionSubscription?.unsubscribe();
       this.intersectionSubscription = undefined;
@@ -136,13 +135,11 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   onLoaded() {
-    // console.log(`Loaded ${new Date()} -> '${this.url}'.`);
     this.state = ImageLoaderComponentState.LOADED;
     ImageLoaderComponent.LOADED_URLS.add(this._url!);
   }
 
   onError() {
-    console.error(`Could not load image ${new Date()} -> '${this._url}'.`);
     this.state = ImageLoaderComponentState.ERROR;
   }
 
