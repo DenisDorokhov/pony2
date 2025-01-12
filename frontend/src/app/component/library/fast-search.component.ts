@@ -104,7 +104,7 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
       this.searchResultsElement.nativeElement.scrollTop = 0;
-      setTimeout(() => this.searchResultsElement.nativeElement.scrollTop = 0);
+      setTimeout(() => this.searchResultsElement.nativeElement.scrollTop = 0, 10);
       if (this.navigationItems.length > 0) {
         this.selectNavigationItem(0);
       }
