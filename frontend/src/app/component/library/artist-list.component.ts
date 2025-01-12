@@ -69,10 +69,6 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         this.libraryService.deselectSong();
       }
     }));
-    this.subscriptions.push(this.libraryService.observeRefreshRequest().subscribe(() => {
-      this.libraryService.requestGenres().subscribe();
-      this.libraryService.requestArtists().subscribe();
-    }));
   }
 
   ngOnDestroy(): void {

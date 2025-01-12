@@ -49,6 +49,10 @@ export class LibraryService {
       this.scrollToSongRequestSubject.next(undefined);
       this.storeDefaultArtistId(undefined);
     });
+    this.observeRefreshRequest().subscribe(() => {
+      this.requestGenres().subscribe();
+      this.requestArtists().subscribe();
+    });
   }
 
   initialize(): Observable<void> {
