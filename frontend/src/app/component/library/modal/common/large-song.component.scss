@@ -106,6 +106,10 @@ div.playback-indicator {
   cursor: pointer;
 }
 
+.columns-container.current {
+  background-color: #ffffde;
+}
+
 .columns-container.selected {
   background-color: var(--blue) !important;
   color: white;
