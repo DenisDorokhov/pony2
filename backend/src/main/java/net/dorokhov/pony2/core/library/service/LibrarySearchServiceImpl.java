@@ -15,10 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class LibrarySearchServiceImpl implements LibrarySearchService {
@@ -60,9 +57,9 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                 .replaceAll(notUncodeLetterAndDigitRegex, " ")
                 .toLowerCase()
                 .split("\\s+");
-        List<T> result = new ArrayList<>(search(maxResults, clazz, normalWords, "searchTerms"));
-        if (useFallbackQuery && result.isEmpty()) {
-            result.addAll(search(maxResults, clazz, normalWords, "fallbackSearchTerms"));
+        Set<T> result = new LinkedHashSet<>(search(maxResults, clazz, normalWords, "searchTerms"));
+        if (useFallbackQuery && result.size() < maxResults) {
+            result.addAll(search(maxResults - result.size(), clazz, normalWords, "fallbackSearchTerms"));
         }
         if (result.isEmpty()) {
             String[] englishToRussianLayoutWords = englishToRussianLayout(query.getText())
@@ -86,8 +83,9 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                 result.addAll(search(maxResults, clazz, russianToEnglishLayoutWords, "fallbackSearchTerms"));
             }
         }
-        Collections.sort(result);
-        return result;
+        return result.stream()
+                .sorted()
+                .toList();
     }
 
     private String englishToRussianLayout(String query) {
