@@ -86,7 +86,10 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
-    this.libraryService.getGenres().subscribe(genres => this.genres = genres);
+    this.subscriptions.push(this.libraryService.observeGenres().subscribe(genres => {
+      this.genres = genres;
+      this.selectedGenre = this.genres.filter(genre => genre.id === this.selectedGenre?.id)[0];
+    }));
   }
 
   private loadSongs(primaryLoading = true) {

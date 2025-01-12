@@ -14,7 +14,7 @@
           (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
   <div ngbDropdown class="btn-group">
     <button type="button" class="btn btn-light filter" ngbDropdownToggle data-toggle="dropdown"
-            [disabled]="secondaryLoadingState === LoadingState.LOADING || !selectedPlaylistSongs?.songs?.length"
+            [disabled]="secondaryLoadingState === LoadingState.LOADING || !selectedPlaylistSongs.songs.length"
             *ngIf="selectedPlaylistSongs">
       <i class="bi" [class.bi-funnel-fill]="selectedGenre" [class.bi-funnel]="!selectedGenre"></i>
       <span class="caret"></span>
