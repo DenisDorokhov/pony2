@@ -15,6 +15,7 @@
       *cdkVirtualFor="let song of songs; let i = index;"
       (doubleClick)="onSongDoubleClick(i)"
       (mousedown)="selectIndex(i)"
+      (playOrPauseRequested)="onPlaybackClick(i)"
       (goToSongRequested)="goToSong(song)"
       (removalRequested)="onRemovalRequested(song)"
     />

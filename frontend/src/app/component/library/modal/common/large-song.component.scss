@@ -29,13 +29,6 @@
     overflow: hidden;
     width: 40px;
   }
-
-  button.playback {
-    border: none;
-    background-color: transparent;
-    margin: 0;
-    padding: 0;
-  }
 }
 
 .artwork {
@@ -65,6 +58,13 @@
     white-space: nowrap;
     overflow: hidden;
   }
+}
+
+button.playback {
+  border: none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
 }
 
 div.playback-indicator {
@@ -126,7 +126,7 @@ div.playback-indicator {
     }
   }
 
-  div.playback-indicator {
+  button.playback, div.playback-indicator {
     color: white;
   }
 

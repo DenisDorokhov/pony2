@@ -67,6 +67,14 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
     this.selectedIndex = i;
   }
 
+  onPlaybackClick(index: number) {
+    if (this.songs[index].id === this.lastPlaybackEvent?.song?.id) {
+      this.playbackService.playOrPause();
+    } else {
+      this.playbackService.switchQueue(this.songs, index);
+    }
+  }
+
   goToSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);

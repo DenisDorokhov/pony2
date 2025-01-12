@@ -79,6 +79,15 @@ export class HistoryComponent implements OnInit, OnDestroy {
     this.selectedIndex = i;
   }
 
+  onPlaybackClick(index: number) {
+    const playlistSong = this.playbackHistory!.songs[index];
+    if (playlistSong.song.id === this.lastPlaybackEvent?.song?.id) {
+      this.playbackService.playOrPause();
+    } else {
+      this.playbackService.switchQueue(this.playbackHistory!.songs.map(next => next.song), index);
+    }
+  }
+
   goToSong(song: Song, play = false) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song, play);
