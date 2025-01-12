@@ -84,7 +84,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
     if (playlistSong.song.id === this.lastPlaybackEvent?.song?.id) {
       this.playbackService.playOrPause();
     } else {
-      this.playbackService.switchQueue(this.playbackHistory!.songs.map(next => next.song), index);
+      this.goToSong(playlistSong.song);
     }
   }
 

@@ -56,7 +56,7 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }
 
-  onSongDoubleClick(index: number) {
+  switchQueue(index: number) {
     const songs: Song[] = [...this.songs];
     this.artistSongs.albumSongs.forEach(albumSongs =>
       albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
@@ -71,7 +71,7 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
     if (this.songs[index].id === this.lastPlaybackEvent?.song?.id) {
       this.playbackService.playOrPause();
     } else {
-      this.playbackService.switchQueue(this.songs, index);
+      this.switchQueue(index);
     }
   }
 
