@@ -7,6 +7,8 @@ import {CommonModule} from '@angular/common';
 import {LibraryService} from '../../service/library.service';
 import {Subscription} from 'rxjs';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
+import {ArtworkComponent} from './modal/artwork.component';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 interface Disc {
   discNumber: number | undefined;
@@ -50,7 +52,8 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
   private scrollToAlbumRequestSubscription: Subscription | undefined;
 
   constructor(
-    private readonly libraryService: LibraryService
+    private readonly libraryService: LibraryService,
+    private readonly modal: NgbModal,
   ) {
   }
 
@@ -111,5 +114,13 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
       this.discs.push(disc);
     });
     this.discs.sort(compareDiscs);
+  }
+
+  openArtwork() {
+    if (this.albumSongs.album.largeArtworkUrl) {
+      const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
+      const userComponent: ArtworkComponent = modalRef.componentInstance;
+      userComponent.url = this.albumSongs.album.largeArtworkUrl;
+    }
   }
 }

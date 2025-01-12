@@ -38,6 +38,6 @@
   </div>
   <div class="duration">{{ formattedDuration }}</div>
 
-  <pony-image-loader [url]="artworkUrl"></pony-image-loader>
+  <pony-image-loader [class.pointer]="artworkUrl" [url]="artworkUrl" (click)="openArtwork()"></pony-image-loader>
 
 </div>

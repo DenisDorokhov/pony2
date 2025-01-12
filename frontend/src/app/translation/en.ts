@@ -247,6 +247,9 @@ export default {
     messageColumn: 'Message',
     levelFilterLabel: 'Level:',
   },
+  artwork: {
+    header: 'Artwork',
+  },
   shared: {
     errorsHeader: 'Errors',
     loadingIndicatorLabel: 'Loading...',

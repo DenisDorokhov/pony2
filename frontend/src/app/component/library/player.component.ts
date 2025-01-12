@@ -10,6 +10,8 @@ import {isMobileBrowser} from '../../utils/mobile.utils';
 import {PlaybackEvent, PlaybackState} from '../../service/audio-player.service';
 import {PlaylistService} from '../../service/playlist.service';
 import {NotificationService} from '../../service/notification.service';
+import {ArtworkComponent} from './modal/artwork.component';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   standalone: true,
@@ -39,12 +41,13 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private playbackService: PlaybackService,
-    private libraryService: LibraryService,
-    private translateService: TranslateService,
-    private pageTitleService: PageTitleService,
-    private playlistService: PlaylistService,
-    private notificationService: NotificationService,
+    private readonly playbackService: PlaybackService,
+    private readonly libraryService: LibraryService,
+    private readonly translateService: TranslateService,
+    private readonly pageTitleService: PageTitleService,
+    private readonly playlistService: PlaylistService,
+    private readonly notificationService: NotificationService,
+    private readonly modal: NgbModal,
   ) {
   }
 
@@ -216,6 +219,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
           );
         }
       });
+    }
+  }
+
+  openArtwork() {
+    if (this.artworkUrl) {
+      const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
+      const userComponent: ArtworkComponent = modalRef.componentInstance;
+      userComponent.url = this.artworkUrl;
     }
   }
 }

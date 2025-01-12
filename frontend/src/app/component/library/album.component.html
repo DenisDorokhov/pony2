@@ -1,5 +1,6 @@
 <div class="album-container">
-  <pony-image-loader [url]="albumSongs.album.largeArtworkUrl"></pony-image-loader>
+  <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl"
+                     [url]="albumSongs.album.largeArtworkUrl" (click)="openArtwork()"></pony-image-loader>
   <div class="song-list-container">
     <h4>
       <span title="{{ albumSongs.album.name | ponyUnknownAlbum }}">{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
