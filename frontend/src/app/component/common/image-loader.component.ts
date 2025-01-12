@@ -42,8 +42,10 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
       this._url = url;
       if (url) {
         if (ImageLoaderComponent.LOADED_URLS.has(url)) {
+          this.animate = false;
           this.state = ImageLoaderComponentState.LOADED;
         } else {
+          this.animate = true;
           this.state = ImageLoaderComponentState.PENDING;
           if (this.isIntersecting) {
             this.startLoading();
