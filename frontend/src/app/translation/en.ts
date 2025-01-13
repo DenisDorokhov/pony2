@@ -216,6 +216,8 @@ export default {
     passwordLabel: 'Password:',
     repeatPasswordLabel: 'Repeat password:',
     roleLabel: 'Role:',
+    adminLabel: 'Admin',
+    userLabel: 'User',
     newPasswordPlaceholder: 'Leave empty to keep old password',
   },
   currentUser: {

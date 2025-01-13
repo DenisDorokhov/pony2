@@ -23,12 +23,12 @@ import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 export class UserComponent implements OnInit {
 
   LoadingState = LoadingState;
+  UserDto = UserDto;
 
   @Input()
   user: UserDto | undefined;
 
   form!: FormGroup;
-  roles = [UserDto.Role.USER, UserDto.Role.ADMIN];
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADED;
 

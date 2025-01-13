@@ -36,14 +36,16 @@
     </div>
 
     <div class="mb-3">
+      <label class="form-label">{{ 'user.roleLabel' | translate }}</label>
       <pony-error-container #roleContainer class="form-group" [error]="error" [field]="'role'">
-        <label for="role" class="form-label">{{ 'user.roleLabel' | translate }}</label>
-        <select id="role" formControlName="role" class="form-control"
-                [class.is-invalid]="roleContainer.hasErrors">
-          <option *ngFor="let role of roles" [ngValue]="role">
-            {{ role }}
-          </option>
-        </select>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" id="roleAdmin" formControlName="role" [class.is-invalid]="roleContainer.hasErrors" [value]="UserDto.Role.ADMIN">
+          <label class="form-check-label" for="roleAdmin">{{ 'user.adminLabel' | translate }}</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" id="roleUser" formControlName="role" [class.is-invalid]="roleContainer.hasErrors" [value]="UserDto.Role.USER">
+          <label class="form-check-label" for="roleUser">{{ 'user.userLabel' | translate }}</label>
+        </div>
       </pony-error-container>
     </div>
 

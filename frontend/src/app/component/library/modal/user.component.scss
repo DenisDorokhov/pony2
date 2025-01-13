@@ -14,6 +14,10 @@ label {
   font-weight: bold;
 }
 
+label.form-check-label {
+  font-weight: normal;
+}
+
 pony-loading-indicator, pony-error-indicator {
   position: absolute;
   left: 10px;
