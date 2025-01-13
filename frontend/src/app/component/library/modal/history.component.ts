@@ -71,8 +71,12 @@ export class HistoryComponent implements OnInit, OnDestroy {
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }
 
-  onSongDoubleClick(song: Song) {
-    this.goToSong(song, true);
+  onSongDoubleClick(index: number) {
+    this.switchQueue(index);
+  }
+
+  private switchQueue(index: number) {
+    this.playbackService.switchQueue(this.playbackHistory!.songs.map(next => next.song), index);
   }
 
   selectIndex(i: number) {
@@ -84,13 +88,13 @@ export class HistoryComponent implements OnInit, OnDestroy {
     if (playlistSong.song.id === this.lastPlaybackEvent?.song?.id) {
       this.playbackService.playOrPause();
     } else {
-      this.goToSong(playlistSong.song, true);
+      this.switchQueue(index);
     }
   }
 
-  goToSong(song: Song, play = false) {
+  goToSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
-    this.libraryService.selectSong(song, play);
+    this.libraryService.selectSong(song);
     this.libraryService.requestScrollToSong(song);
     this.activeModal.close();
   }
