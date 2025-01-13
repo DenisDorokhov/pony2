@@ -68,7 +68,8 @@ button.playback {
 }
 
 div.playback-indicator {
-  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
   line-height: 75px;
 
   .bi-volume-up-fill {
