@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, forkJoin, Observable, Subject} from 'rxjs';
+import {BehaviorSubject, forkJoin, Observable, of, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Album, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
@@ -24,6 +24,7 @@ export interface SongSelection {
 export class LibraryService {
 
   private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
+  private static readonly SELECTED_SONG_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.selectedSongId';
 
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<SongSelection | undefined>(undefined);
@@ -70,9 +71,26 @@ export class LibraryService {
     return forkJoin({
       likePlaylist: this.requestGenres(),
       playlists: this.requestArtists(),
+      selectedSong: this.restoreSelectedSong()
     }).pipe(
       map(() => undefined),
     );
+  }
+
+  private restoreSelectedSong(): Observable<Song | undefined> {
+    const selectedSongId = window.localStorage.getItem(LibraryService.SELECTED_SONG_ID_LOCAL_STORAGE_KEY) ?? undefined;
+    if (selectedSongId) {
+      return this.getSongs([selectedSongId]).pipe(
+        map(songs => songs.length ? songs[0] : undefined),
+        tap(song => {
+          if (song) {
+            this.selectedSongSubject.next({ song, play: false });
+          }
+        }),
+      );
+    } else {
+      return of(undefined);
+    }
   }
 
   observeGenres(): Observable<Genre[]> {
@@ -196,10 +214,20 @@ export class LibraryService {
 
   selectSong(song: Song, play = false) {
     this.selectedSongSubject.next({ song, play });
+    this.storeSelectedSongId(song.id);
+  }
+
+  private storeSelectedSongId(songId: string | undefined) {
+    if (songId) {
+      window.localStorage.setItem(LibraryService.SELECTED_SONG_ID_LOCAL_STORAGE_KEY, songId);
+    } else {
+      window.localStorage.removeItem(LibraryService.SELECTED_SONG_ID_LOCAL_STORAGE_KEY);
+    }
   }
 
   deselectSong() {
     this.selectedSongSubject.next(undefined);
+    this.storeSelectedSongId(undefined);
   }
 
   observeSongPlaybackRequest(): Observable<Song | undefined> {
