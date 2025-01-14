@@ -110,9 +110,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   onGenreClick(genre: Genre | undefined) {
     this.selectedGenre = genre;
     this.filterArtists();
-    if (this.scrollerElement) {
-      this.scrollerElement.nativeElement.scrollTop = 0;
-    }
+    this.scrollerElement.nativeElement.scrollTop = 0;
     this.scrollToSelectedArtist();
   }
 }

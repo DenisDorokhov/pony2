@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {
@@ -58,6 +58,8 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   selectedGenre: Genre | undefined;
   genreCounter: Record<string, number> = {};
   filteredSongs: PlaylistSong[] = [];
+
+  @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
 
   private subscriptions: Subscription[] = [];
 
@@ -157,11 +159,13 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   onPlaylistChange() {
     this.selectGenre(undefined);
     this.loadSongs();
+    this.viewPort.scrollToOffset(0);
   }
 
   selectGenre(genre: Genre | undefined) {
     this.selectedGenre = genre;
     this.filterSongs();
+    this.viewPort.scrollToOffset(0);
   }
 
   private reloadGenreCounter() {
