@@ -38,6 +38,8 @@ export class LibraryService {
   private genresSubject = new BehaviorSubject<Genre[]>([]);
   private artistsSubject = new BehaviorSubject<Artist[]>([]);
 
+  private appInForeground = true;
+
   constructor(
     private authenticationService: AuthenticationService,
     private httpClient: HttpClient
@@ -52,6 +54,15 @@ export class LibraryService {
     this.observeRefreshRequest().subscribe(() => {
       this.requestGenres().subscribe();
       this.requestArtists().subscribe();
+    });
+    window.addEventListener('blur', () => {
+      this.appInForeground = false;
+    });
+    window.addEventListener('focus', () => {
+      if (!this.appInForeground) {
+        this.requestRefresh();
+      }
+      this.appInForeground = true;
     });
   }
 
