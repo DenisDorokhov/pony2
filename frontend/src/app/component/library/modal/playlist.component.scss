@@ -32,6 +32,12 @@ select {
   }
 }
 
+@media (width <= 400px) {
+  select {
+    width: 90px;
+  }
+}
+
 .btn-group {
   ul {
     max-width: 252px;
