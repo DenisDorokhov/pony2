@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service.scan;
 
 import com.google.common.collect.Lists;
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.UriUtils;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -45,6 +46,7 @@ public class BatchLibraryCleaner {
     private final ArtworkStorage artworkStorage;
     private final PlaylistSongRepository playlistSongRepository;
     private final PlaybackHistorySongRepository playbackHistorySongRepository;
+    private final LogService logService;
 
     private final int cleaningFetchingBufferSize;
     private final int cleaningDeletionBufferSize;
@@ -61,6 +63,7 @@ public class BatchLibraryCleaner {
             ArtworkStorage artworkStorage,
             PlaylistSongRepository playlistSongRepository,
             PlaybackHistorySongRepository playbackHistorySongRepository,
+            LogService logService,
             @Value("${pony.scan.cleaningFetchingBufferSize}") int cleaningFetchingBufferSize,
             @Value("${pony.scan.cleaningDeletionBufferSize}") int cleaningDeletionBufferSize,
             PlatformTransactionManager transactionManager
@@ -75,6 +78,7 @@ public class BatchLibraryCleaner {
         this.artworkStorage = artworkStorage;
         this.playlistSongRepository = playlistSongRepository;
         this.playbackHistorySongRepository = playbackHistorySongRepository;
+        this.logService = logService;
         this.cleaningFetchingBufferSize = cleaningFetchingBufferSize;
         this.cleaningDeletionBufferSize = cleaningDeletionBufferSize;
 
@@ -111,6 +115,11 @@ public class BatchLibraryCleaner {
                     songRepository.findById(id).ifPresent(song -> {
                         logger.debug("Deleting song '{}': file '{}' not found.", song, song.getPath());
                         albumIds.add(song.getAlbum().getId());
+                        playlistSongRepository.findBySongId(song.getId()).stream()
+                                .map(PlaylistSong::getPlaylist)
+                                .collect(Collectors.toSet())
+                                .forEach(playlist ->
+                                        logService.warn(logger, "Song '{}' deleted from playlists: {}.", song, playlist));
                         playlistSongRepository.deleteBySongId(song.getId());
                         playbackHistorySongRepository.deleteBySongId(song.getId());
                         songRepository.delete(song);

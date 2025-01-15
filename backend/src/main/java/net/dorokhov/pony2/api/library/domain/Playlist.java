@@ -80,9 +80,9 @@ public class Playlist extends BaseEntity<Playlist> {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("name", name)
+                .add("id", id)
                 .add("type", type)
-                .add("user", user)
+                .add("name", name)
                 .toString();
     }
 }
