@@ -55,6 +55,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.libraryService.observeSelectedArtist()
       .subscribe(artist => {
         if (artist) {
+          if (this.artistSongs) {
+            this.libraryService.deselectSong();
+          }
           this.loadArtistSongs(artist);
         }
       }));

@@ -108,7 +108,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   playOrPause() {
     if (this.playbackService.lastPlaybackEvent.state === PlaybackState.STOPPED) {
-      this.libraryService.requestSongPlayback(this.libraryService.selectedSong);
+      this.libraryService.requestSongPlayback();
     } else {
       this.playbackService.playOrPause();
     }
