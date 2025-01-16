@@ -212,30 +212,34 @@ export class PlaybackService {
             result[song.id] = song;
             return result;
           }, {});
-          const currentSongId = state.currentIndex > -1 ? state.queueSongIds[state.currentIndex] : undefined;
-          let switchToIndex = -1;
-          if (currentSongId && idToSong[currentSongId]) {
-            switchToIndex = state.currentIndex;
-            for (let i = 0; i < state.currentIndex; i++) {
-              if (!idToSong[state.queueSongIds[i]]) {
-                switchToIndex--;
+          const queue: Song[] = state.queueSongIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
+          if (queue.length > 0) {
+            if (state.originalQueueSongIds !== undefined) {
+              this.originalQueue = state.originalQueueSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
+            }
+            this._queue = queue;
+            this.queueSubject.next(this._queue.slice());
+            const currentSongId = state.currentIndex > -1 ? state.queueSongIds[state.currentIndex] : undefined;
+            let switchToIndex = -1;
+            if (currentSongId && idToSong[currentSongId]) {
+              switchToIndex = state.currentIndex;
+              for (let i = 0; i < state.currentIndex; i++) {
+                if (!idToSong[state.queueSongIds[i]]) {
+                  switchToIndex--;
+                }
               }
             }
-          }
-          const queue: Song[] = state.queueSongIds.flatMap(songId => idToSong[songId] ? [idToSong[songId]] : []);
-          if (state.originalQueueSongIds !== undefined) {
-            this.originalQueue = state.originalQueueSongIds.flatMap(songId => idToSong[songId] ? idToSong[songId] : []);
-          }
-          this._queue = queue;
-          this.queueSubject.next(this._queue.slice());
-          this.switchToIndex(switchToIndex > -1 ? switchToIndex : 0, false);
-          this.audioPlayer.pause();
-          if (switchToIndex > -1 && state.progress !== undefined) {
-            this.audioPlayer.seekToSeconds(state.progress * idToSong[currentSongId!].duration);
-            const song = queue[switchToIndex];
-            if (this.libraryService.defaultArtistId === song.album.artist.id) {
-              this.libraryService.selectSong(song);
-              this.libraryService.requestScrollToSong(song);
+            if (switchToIndex > -1) {
+              this.switchToIndex(switchToIndex, false);
+              const song = queue[switchToIndex];
+              if (this.libraryService.defaultArtistId === song.album.artist.id) {
+                this.libraryService.selectSong(song);
+                this.libraryService.requestScrollToSong(song);
+              }
+              this.audioPlayer.pause();
+              if (state.progress !== undefined) {
+                this.audioPlayer.seekToSeconds(state.progress * idToSong[currentSongId!].duration);
+              }
             }
           }
         })

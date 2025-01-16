@@ -108,7 +108,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
       disc.songs.sort(Song.compare);
       disc.songs.forEach(song => {
         if (!disc.showArtist) {
-          disc.showArtist = !nullSafeNormalizedEquals(song.artistName, this.albumSongs.album.artist.name);
+          disc.showArtist = song.artistName !== undefined && !nullSafeNormalizedEquals(song.artistName, this.albumSongs.album.artist.name);
         }
       });
       this.discs.push(disc);
