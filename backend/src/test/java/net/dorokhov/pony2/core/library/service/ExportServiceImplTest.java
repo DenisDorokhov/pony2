@@ -267,7 +267,7 @@ public class ExportServiceImplTest {
                 .setName("song4")
                 .setTrackNumber(1)
                 .setPath(songFile4.getPath());
-        when(songRepository.findByArtistId(any(), any())).thenReturn(ImmutableList.of(song1, song2, song3, song4));
+        when(songRepository.findByArtistId(any(), any(Sort.class))).thenReturn(ImmutableList.of(song1, song2, song3, song4));
 
         ExportBundle exportBundle = exportService.exportArtist("1");
 
@@ -324,7 +324,7 @@ public class ExportServiceImplTest {
     @Test
     public void shouldFailIfArtistNotFound() {
 
-        when(songRepository.findByArtistId(any(), any())).thenReturn(emptyList());
+        when(songRepository.findByArtistId(any(), any(Sort.class))).thenReturn(emptyList());
 
         assertThat(exportService.exportArtist("1")).isNull();
     }

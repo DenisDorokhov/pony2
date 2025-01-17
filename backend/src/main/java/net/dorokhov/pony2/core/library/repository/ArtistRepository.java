@@ -9,8 +9,12 @@ import org.springframework.data.jpa.repository.Query;
 
 import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ArtistRepository extends JpaRepository<Artist, String> {
+
+    @Query("SELECT id FROM Artist")
+    List<String> findAllIds();
 
     long countByArtworkId(@Nullable String artworkId);
 

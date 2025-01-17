@@ -1,7 +1,11 @@
 package net.dorokhov.pony2.core.library.service;
 
 import com.google.common.collect.ImmutableList;
-import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
+import net.dorokhov.pony2.api.library.domain.Genre;
+import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
@@ -11,19 +15,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Collections.emptyList;
 import static net.dorokhov.pony2.test.ArtworkFixtures.artwork;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyIterable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class LibraryServiceImplTest {
@@ -35,6 +41,8 @@ public class LibraryServiceImplTest {
     private GenreRepository genreRepository;
     @Mock
     private ArtistRepository artistRepository;
+    @Mock
+    private ArtistGenreRepository artistGenreRepository;
     @Mock
     private SongRepository songRepository;
     @Mock
@@ -117,28 +125,5 @@ public class LibraryServiceImplTest {
         List<Song> result = libraryService.getSongsByIds(ImmutableList.of("1", "2"));
 
         assertThat(result).isEqualTo(songs);
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void shouldGetRandomSongs() {
-
-        when(songRepository.findByGenreIdIn(any(), any())).thenReturn(emptyList());
-        List<Song> songs = new ArrayList<>();
-        when(randomFetcher.fetch(eq(5), (RandomFetcher.Repository<Song>) any())).thenAnswer(invocation -> {
-            RandomFetcher.Repository<?> repository = invocation.getArgument(1);
-            repository.fetchCount();
-            repository.fetchContent(PageRequest.of(0, 1));
-            return songs;
-        });
-
-        assertThat(libraryService.getRandomSongs(new RandomSongsRequest()
-                .setLastArtistId(null)
-                .setGenreIds(List.of("1"))
-                .setCount(5))
-        ).isSameAs(songs);
-
-        verify(songRepository).countByGenreIdIn(eq(List.of("1")));
-        verify(songRepository).findByGenreIdIn(eq(List.of("1")), any());
     }
 }
