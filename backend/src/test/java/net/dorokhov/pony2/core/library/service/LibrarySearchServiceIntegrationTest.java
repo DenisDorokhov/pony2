@@ -131,7 +131,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
                 .setFileType(FileType.of("text/plain", "txt"))
                 .setDuration(666L)
                 .setSize(256L)
-                .setName("the foobar entity2 don'g b-52's гнёт-ель")
+                .setName("the foobar entity2 don'g b-52's гнёт-ель 1'33\"")
                 .setArtistName("артист")
                 .setAlbumArtistName("другой")
                 .setAlbumName("альбом")
@@ -158,6 +158,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("dong"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b-52's"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b52s"), 10)).containsOnly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("1'33\""), 10)).containsOnly(song2);
         });
     }
 }

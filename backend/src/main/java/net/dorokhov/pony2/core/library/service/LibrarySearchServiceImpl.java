@@ -1,10 +1,8 @@
 package net.dorokhov.pony2.core.library.service;
 
-import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.library.domain.Song;
-import net.dorokhov.pony2.api.library.domain.LibrarySearchQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibrarySearchService;
 import net.dorokhov.pony2.core.library.service.search.EnglishToRussianLayoutMappingRegistry;
 import net.dorokhov.pony2.core.library.service.search.RussianToEnglishLayoutMappingRegistry;
@@ -12,14 +10,18 @@ import net.dorokhov.pony2.core.library.service.search.TransliterationMappingRegi
 import org.hibernate.search.mapper.orm.Search;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 
-import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import static net.dorokhov.pony2.core.library.LibraryConfig.LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR;
 
 @Service
 public class LibrarySearchServiceImpl implements LibrarySearchService {
@@ -27,11 +29,20 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final EntityManager entityManager;
+    private final EntityManagerFactory entityManagerFactory;
+    private final Executor executor;
 
-    private final Lock reIndexLock = new ReentrantLock();
+    // ReentrantLock doesn't fit here, because we release in different thread.
+    private final Semaphore reIndexSemaphore = new Semaphore(1);
 
-    public LibrarySearchServiceImpl(EntityManager entityManager) {
+    public LibrarySearchServiceImpl(
+            EntityManager entityManager,
+            EntityManagerFactory entityManagerFactory,
+            @Qualifier(LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR) Executor executor
+    ) {
         this.entityManager = entityManager;
+        this.entityManagerFactory = entityManagerFactory;
+        this.executor = executor;
     }
 
     @Override
@@ -134,21 +145,23 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     }
 
     @Override
-    public void reIndex() {
-        if (!reIndexLock.tryLock()) {
+    public void reIndexAsync() {
+        if (!reIndexSemaphore.tryAcquire()) {
             throw new IllegalStateException("Concurrent re-building of library search index.");
         }
-        try {
-            logger.info("Re-building index...");
+        executor.execute(() -> {
             try {
-                Search.session(entityManager).massIndexer().startAndWait();
-                logger.info("Re-building library search index done.");
-            } catch (InterruptedException e) {
-                logger.error("Mass indexer has been interrupted.", e);
-                throw new RuntimeException(e);
+                logger.info("Re-building index...");
+                try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
+                    Search.session(entityManager).massIndexer().startAndWait();
+                    logger.info("Re-building library search index done.");
+                } catch (InterruptedException e) {
+                    logger.error("Re-building library search index has been interrupted.", e);
+                    throw new RuntimeException(e);
+                }
+            } finally {
+                reIndexSemaphore.release();
             }
-        } finally {
-            reIndexLock.unlock();
-        }
+        });
     }
 }

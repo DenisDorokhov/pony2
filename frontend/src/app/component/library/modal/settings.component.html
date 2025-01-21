@@ -8,16 +8,20 @@
   <div class="backup">
     <div class="mb-3">
       <label class="form-label">{{ 'settings.backupPlaylistsLabel' | translate }}</label>
-      <div><button class="btn btn-primary" (click)="createBackup()" [disabled]="secondaryLoadingState !== LoadingState.LOADED">{{ 'settings.createBackupButton' | translate }}</button></div>
+      <div><button class="btn btn-primary" (click)="createBackup()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}</button></div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'settings.restorePlaylistsLabel' | translate }}</label>
       <div>
         <input type="file" class="form-control" (change)="onBackupFileChange($event)">
-        <button class="btn btn-primary restore" (click)="restoreBackup()" [disabled]="!backupFileToRestore">
+        <button class="btn btn-primary restore" (click)="restoreBackup()" [disabled]="!backupFileToRestore || secondaryLoadingState === LoadingState.LOADING">
           {{ 'settings.restoreBackupButton' | translate }}
         </button>
       </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'settings.reBuildSearchIndexLabel' | translate }}</label>
+      <div><button class="btn btn-primary" (click)="reBuildSearchIndex()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}</button></div>
     </div>
   </div>
 

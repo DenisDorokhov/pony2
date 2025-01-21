@@ -33,5 +33,9 @@ class SearchTermUtilsTest {
                 .isEqualTo("i_am_programmer i am programmer iamprogrammer");
         assertThat(SearchTermUtils.prepareForIndexing("The B-52's"))
                 .isEqualTo("The B-52's B 52 s B52s");
+        assertThat(SearchTermUtils.prepareForIndexing("1'33\" Until"))
+                .isEqualTo("1'33\" Until 1 33 133");
+        assertThat(SearchTermUtils.prepareForIndexing("1'33 Until"))
+                .isEqualTo("1'33 Until 1 33 133");
     }
 }

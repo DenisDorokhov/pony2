@@ -10,6 +10,7 @@ public class LibraryConfig {
     
     public static final String SCAN_JOB_EXECUTOR = "scanJobExecutor";
     public static final String LIBRARY_IMPORT_EXECUTOR = "libraryImportExecutor";
+    public static final String LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR = "librarySearchIndexRebuildExecutor";
 
     private final int importThreadPoolSize;
     
@@ -27,9 +28,15 @@ public class LibraryConfig {
         return buildThreadPoolExecutor(LIBRARY_IMPORT_EXECUTOR, importThreadPoolSize);
     }
 
+    @Bean(LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR)
+    public ThreadPoolTaskExecutor librarySearchIndexRebuildExecutor() {
+        return buildThreadPoolExecutor(LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR, 1);
+    }
+
     private ThreadPoolTaskExecutor buildThreadPoolExecutor(String beanName, int poolSize) {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(poolSize);
+        taskExecutor.setMaxPoolSize(poolSize);
         taskExecutor.setThreadNamePrefix(beanName + "-");
         return taskExecutor;
     }

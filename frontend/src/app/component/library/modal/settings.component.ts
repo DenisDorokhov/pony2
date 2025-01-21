@@ -14,6 +14,7 @@ import {LoadingIndicatorComponent} from '../../common/loading-indicator.componen
 import {LibraryScanService} from '../../../service/library-scan.service';
 import {NotificationService} from '../../../service/notification.service';
 import {PlaylistService} from '../../../service/playlist.service';
+import {LibraryService} from '../../../service/library.service';
 
 @Component({
   standalone: true,
@@ -44,6 +45,7 @@ export class SettingsComponent implements OnInit{
     private readonly libraryScanService: LibraryScanService,
     private readonly notificationService: NotificationService,
     private readonly playlistService: PlaylistService,
+    private readonly libraryService: LibraryService,
   ) {
     this.formLibraryFolders = formBuilder.array([
       formBuilder.group({path: ''})
@@ -129,5 +131,19 @@ export class SettingsComponent implements OnInit{
   onBackupFileChange(event: Event) {
     const fileList = (event.target as any).files as FileList;
     this.backupFileToRestore = fileList.item(0) ?? undefined;
+  }
+
+  reBuildSearchIndex() {
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.libraryService.reBuildSearchIndex().subscribe({
+      next: () => {
+        this.secondaryLoadingState = LoadingState.LOADED;
+        this.notificationService.success(
+          this.translateService.instant('notification.settingsTitle'),
+          this.translateService.instant('notification.reBuildIndexStartedText')
+        );
+      },
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
   }
 }

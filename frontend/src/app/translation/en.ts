@@ -235,6 +235,8 @@ export default {
     createBackupButton: 'Create Backup',
     restorePlaylistsLabel: 'Restore playlists:',
     restoreBackupButton: 'Restore Backup',
+    reBuildSearchIndexLabel: 'Re-build search index:',
+    reBuildSearchIndexButton: 'Re-Build Index',
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
     startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',
@@ -297,6 +299,7 @@ export default {
     scanJobAlreadyRunningText: 'Failed!',
     settingsTitle: 'Settings',
     settingsUpdatedText: 'Updated!',
+    reBuildIndexStartedText: 'Started re-building of search index.',
   },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).

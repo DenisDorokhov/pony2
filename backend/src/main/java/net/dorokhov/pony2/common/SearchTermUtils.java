@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 
 public class SearchTermUtils {
 
-    private static final Pattern PATTERN_ACRONYM = Pattern.compile("([\\p{L}\\p{N}]+)[.'-_]");
-    private static final Set<String> ACRONYM_SEPARATORS = Set.of(".", "'", "-", "_");
+    private static final Pattern PATTERN_ACRONYM = Pattern.compile("([\\p{L}\\p{N}]+)[.'-_\"]");
+    private static final Set<String> ACRONYM_SEPARATORS = Set.of(".", "'", "-", "_", "\"");
 
     public static String prepareForIndexing(@Nullable String value) {
         String normalizedValue = Strings.nullToEmpty(value);

@@ -18,5 +18,5 @@ public interface LibrarySearchService {
     
     List<Song> searchSongs(LibrarySearchQuery query, int maxResults);
 
-    void reIndex();
+    void reIndexAsync();
 }

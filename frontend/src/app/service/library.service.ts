@@ -267,4 +267,8 @@ export class LibraryService {
         map(searchResultDto => new SearchResult(searchResultDto))
       );
   }
+
+  reBuildSearchIndex(): Observable<void> {
+    return this.httpClient.post<void>('/api/admin/library/reBuildSearchIndex', null);
+  }
 }
