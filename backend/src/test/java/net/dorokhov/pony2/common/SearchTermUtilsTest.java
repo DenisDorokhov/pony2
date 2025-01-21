@@ -31,5 +31,7 @@ class SearchTermUtilsTest {
                 .isEqualTo("rock-n-roll rock n roll rocknroll");
         assertThat(SearchTermUtils.prepareForIndexing("i_am_programmer"))
                 .isEqualTo("i_am_programmer i am programmer iamprogrammer");
+        assertThat(SearchTermUtils.prepareForIndexing("The B-52's"))
+                .isEqualTo("The B-52's B 52 s B52s");
     }
 }
