@@ -12,17 +12,12 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface SongRepository extends JpaRepository<Song, String> {
 
-    long countByArtistIdNotIn(Set<String> excludeArtistIds);
-
-    long countByGenreIdIn(List<String> genreIds);
-
     long countByGenreId(String genreId);
 
-    long countByGenreIdInAndArtistIdNotIn(List<String> genreIds, Set<String> excludeArtistIds);
+    long countByArtistId(String artistId);
 
     long countByAlbumId(String albumId);
 
@@ -42,23 +37,17 @@ public interface SongRepository extends JpaRepository<Song, String> {
 
     Song findByPath(String path);
 
-    List<Song> findAllBy(Pageable pageable);
-
     Optional<Song> findFirstByAlbumId(String albumId);
 
     List<Song> findByAlbumId(String albumId, Sort sort);
 
     List<Song> findByArtistId(String artistId, Sort sort);
 
-    List<Song> findByArtistIdNotIn(Set<String> excludeArtistIds, Pageable pageable);
+    List<Song> findByArtistId(String artistId, Pageable pageable);
 
     Page<Song> findPageByGenreId(String genreId, Pageable pageable);
 
-    List<Song> findByGenreIdIn(List<String> genreIds, Pageable pageable);
-
     Page<Song> findByGenreIdAndArtworkNotNull(String genreId, Pageable pageable);
-
-    List<Song> findByGenreIdInAndArtistIdNotIn(List<String> genreIds, Set<String> excludeArtistIds, Pageable pageable);
 
     Song findFirstByAlbumIdAndArtworkNotNull(String albumId);
 

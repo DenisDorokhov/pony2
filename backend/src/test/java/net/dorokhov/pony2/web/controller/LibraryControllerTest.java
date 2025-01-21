@@ -91,12 +91,20 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     .setArtwork(artworkFiles.getArtwork())
                     .setName("foo genre2"));
 
-            artist1 = artistRepository.save(new Artist()
+            artist1 = new Artist()
                     .setArtwork(artworkFiles.getArtwork())
-                    .setName("foo artist1"));
-            artist2 = artistRepository.save(new Artist()
+                    .setName("foo artist1");
+            artist1.setGenres(List.of(new ArtistGenre()
+                    .setArtist(artist1)
+                    .setGenre(genre1)));
+            artist1 = artistRepository.save(artist1);
+            artist2 = new Artist()
                     .setArtwork(artworkFiles.getArtwork())
-                    .setName("foo artist2"));
+                    .setName("foo artist2");
+            artist2.setGenres(List.of(new ArtistGenre()
+                    .setArtist(artist2)
+                    .setGenre(genre2)));
+            artist2 = artistRepository.save(artist2);
 
             album1_1 = albumRepository.save(new Album()
                     .setYear(1986)

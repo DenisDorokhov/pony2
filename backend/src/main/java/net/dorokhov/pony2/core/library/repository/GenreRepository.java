@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.repository;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -7,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
 
 public interface GenreRepository extends JpaRepository<Genre, String> {
