@@ -17,4 +17,6 @@ public interface LibrarySearchService {
     List<Album> searchAlbums(LibrarySearchQuery query, int maxResults);
     
     List<Song> searchSongs(LibrarySearchQuery query, int maxResults);
+
+    void reIndex();
 }

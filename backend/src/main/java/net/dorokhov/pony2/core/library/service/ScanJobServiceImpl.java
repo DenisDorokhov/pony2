@@ -58,6 +58,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     private final AtomicReference<ScanJobProgress> scanJobProgressReference = new AtomicReference<>();
 
+    // ReentrantLock doesn't fit here, because we release in different thread.
     private final Semaphore scanJobSemaphore = new Semaphore(1);
 
     public ScanJobServiceImpl(

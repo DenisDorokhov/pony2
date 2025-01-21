@@ -4,6 +4,7 @@ import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
+import net.dorokhov.pony2.web.service.LibraryFacade;
 import net.dorokhov.pony2.web.service.ScanFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.core.Ordered;
@@ -32,9 +33,14 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     private final ScanFacade scanFacade;
+    private final LibraryFacade libraryFacade;
 
-    public LibraryAdminController(ScanFacade scanFacade) {
+    public LibraryAdminController(
+            ScanFacade scanFacade,
+            LibraryFacade libraryFacade
+    ) {
         this.scanFacade = scanFacade;
+        this.libraryFacade = libraryFacade;
     }
 
     @GetMapping("/api/admin/library/scanJobProgress")
@@ -60,5 +66,10 @@ public class LibraryAdminController implements ErrorHandlingController {
     @PostMapping("/api/admin/library/scanJobs")
     public ScanJobDto startScanJob() throws ConcurrentScanException {
         return scanFacade.startScanJob();
+    }
+
+    @PostMapping("/api/admin/library/reBuildSearchIndex")
+    public void reBuildSearchIndex() {
+        libraryFacade.reBuildSearchIndexAsync();
     }
 }

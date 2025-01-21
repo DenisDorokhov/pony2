@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,5 +92,10 @@ public class LibraryFacade {
         return libraryService.getRandomSongs(request.convert()).stream()
                 .map(songs -> SongDetailsDto.of(songs, isAdmin()))
                 .collect(toList());
+    }
+
+    @Async
+    public void reBuildSearchIndexAsync() {
+        librarySearchService.reIndex();
     }
 }

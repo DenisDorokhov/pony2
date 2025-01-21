@@ -10,17 +10,25 @@ import net.dorokhov.pony2.core.library.service.search.EnglishToRussianLayoutMapp
 import net.dorokhov.pony2.core.library.service.search.RussianToEnglishLayoutMappingRegistry;
 import net.dorokhov.pony2.core.library.service.search.TransliterationMappingRegistry;
 import org.hibernate.search.mapper.orm.Search;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class LibrarySearchServiceImpl implements LibrarySearchService {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final EntityManager entityManager;
+
+    private final Lock reIndexLock = new ReentrantLock();
 
     public LibrarySearchServiceImpl(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -51,10 +59,10 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     }
 
     private <T extends Comparable<T>> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, boolean useFallbackQuery) {
-        String notUncodeLetterAndDigitRegex = "[^\\p{L}\\s0-9']";
+        String nonUnicodeLetterAndDigitRegex = "[^\\p{L}\\s\\p{N}]";
         String[] normalWords = query.getText()
                 .trim()
-                .replaceAll(notUncodeLetterAndDigitRegex, " ")
+                .replaceAll(nonUnicodeLetterAndDigitRegex, " ")
                 .toLowerCase()
                 .split("\\s+");
         Set<T> result = new LinkedHashSet<>(search(maxResults, clazz, normalWords, "searchTerms"));
@@ -64,7 +72,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
         if (result.isEmpty()) {
             String[] englishToRussianLayoutWords = englishToRussianLayout(query.getText())
                     .trim()
-                    .replaceAll(notUncodeLetterAndDigitRegex, " ")
+                    .replaceAll(nonUnicodeLetterAndDigitRegex, " ")
                     .toLowerCase()
                     .split("\\s+");
             result.addAll(search(maxResults, clazz, englishToRussianLayoutWords, "searchTerms"));
@@ -75,7 +83,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
         if (result.isEmpty()) {
             String[] russianToEnglishLayoutWords = russianToEnglishLayout(query.getText())
                     .trim()
-                    .replaceAll(notUncodeLetterAndDigitRegex, " ")
+                    .replaceAll(nonUnicodeLetterAndDigitRegex, " ")
                     .toLowerCase()
                     .split("\\s+");
             result.addAll(search(maxResults, clazz, russianToEnglishLayoutWords, "searchTerms"));
@@ -123,5 +131,24 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
             word = word.replace(from, mapping.get(from));
         }
         return word;
+    }
+
+    @Override
+    public void reIndex() {
+        if (!reIndexLock.tryLock()) {
+            throw new IllegalStateException("Concurrent re-building of library search index.");
+        }
+        try {
+            logger.info("Re-building index...");
+            try {
+                Search.session(entityManager).massIndexer().startAndWait();
+                logger.info("Re-building library search index done.");
+            } catch (InterruptedException e) {
+                logger.error("Mass indexer has been interrupted.", e);
+                throw new RuntimeException(e);
+            }
+        } finally {
+            reIndexLock.unlock();
+        }
     }
 }
