@@ -8,16 +8,14 @@ import net.dorokhov.pony2.core.library.service.search.EnglishToRussianLayoutMapp
 import net.dorokhov.pony2.core.library.service.search.RussianToEnglishLayoutMappingRegistry;
 import net.dorokhov.pony2.core.library.service.search.TransliterationMappingRegistry;
 import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
@@ -25,6 +23,8 @@ import static net.dorokhov.pony2.core.library.LibraryConfig.LIBRARY_SEARCH_INDEX
 
 @Service
 public class LibrarySearchServiceImpl implements LibrarySearchService {
+
+    private static final String NON_UNICODE_LETTER_AND_DIGIT_REGEX = "[^\\p{L}\\s\\p{N}]";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -70,41 +70,38 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     }
 
     private <T extends Comparable<T>> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, boolean useFallbackQuery) {
-        String nonUnicodeLetterAndDigitRegex = "[^\\p{L}\\s\\p{N}]";
-        String[] normalWords = query.getText()
-                .trim()
-                .replaceAll(nonUnicodeLetterAndDigitRegex, " ")
-                .toLowerCase()
-                .split("\\s+");
-        Set<T> result = new LinkedHashSet<>(search(maxResults, clazz, normalWords, "searchTerms"));
+        SearchSession session = Search.session(entityManager);
+        String[] wordsSeparatedBySymbols = splitWords(query.getText());
+        Set<T> result = new LinkedHashSet<>(search(session, maxResults, clazz, wordsSeparatedBySymbols, "searchTerms"));
         if (useFallbackQuery && result.size() < maxResults) {
-            result.addAll(search(maxResults - result.size(), clazz, normalWords, "fallbackSearchTerms"));
+            result.addAll(search(session, maxResults - result.size(), clazz, wordsSeparatedBySymbols, "fallbackSearchTerms"));
         }
         if (result.isEmpty()) {
-            String[] englishToRussianLayoutWords = englishToRussianLayout(query.getText())
-                    .trim()
-                    .replaceAll(nonUnicodeLetterAndDigitRegex, " ")
-                    .toLowerCase()
-                    .split("\\s+");
-            result.addAll(search(maxResults, clazz, englishToRussianLayoutWords, "searchTerms"));
-            if (useFallbackQuery && result.isEmpty()) {
-                result.addAll(search(maxResults, clazz, englishToRussianLayoutWords, "fallbackSearchTerms"));
+            String[] englishToRussianWordsSeparatedBySymbols = splitWords(englishToRussianLayout(query.getText()));
+            result.addAll(search(session, maxResults, clazz, englishToRussianWordsSeparatedBySymbols, "searchTerms"));
+            if (useFallbackQuery && result.size() < maxResults) {
+                result.addAll(search(session, maxResults - result.size(), clazz, englishToRussianWordsSeparatedBySymbols, "fallbackSearchTerms"));
             }
         }
         if (result.isEmpty()) {
-            String[] russianToEnglishLayoutWords = russianToEnglishLayout(query.getText())
-                    .trim()
-                    .replaceAll(nonUnicodeLetterAndDigitRegex, " ")
-                    .toLowerCase()
-                    .split("\\s+");
-            result.addAll(search(maxResults, clazz, russianToEnglishLayoutWords, "searchTerms"));
-            if (useFallbackQuery && result.isEmpty()) {
-                result.addAll(search(maxResults, clazz, russianToEnglishLayoutWords, "fallbackSearchTerms"));
+            String[] russianToEnglishWordsSeparatedBySymbols = splitWords(russianToEnglishLayout(query.getText()));
+            result.addAll(search(session, maxResults, clazz, russianToEnglishWordsSeparatedBySymbols, "searchTerms"));
+            if (useFallbackQuery && result.size() < maxResults) {
+                result.addAll(search(session, maxResults - result.size(), clazz, russianToEnglishWordsSeparatedBySymbols, "fallbackSearchTerms"));
             }
         }
         return result.stream()
                 .sorted()
                 .toList();
+    }
+
+    private String[] splitWords(String query) {
+        return Arrays.stream(query.trim()
+                        .replaceAll("\\s+", " ")
+                        .toLowerCase()
+                        .split("\\s+"))
+                .map(word -> word.replaceAll(NON_UNICODE_LETTER_AND_DIGIT_REGEX, ""))
+                .toArray(String[]::new);
     }
 
     private String englishToRussianLayout(String query) {
@@ -123,8 +120,8 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
         return query;
     }
 
-    private <T extends Comparable<T>> List<T> search(int maxResults, Class<T> clazz, String[] words, String field) {
-        return Search.session(entityManager).search(clazz)
+    private <T extends Comparable<T>> List<T> search(SearchSession session, int maxResults, Class<T> clazz, String[] words, String field) {
+        return session.search(clazz)
                 .where((f, root) -> {
                     for (String word : words) {
                         root.add(f.wildcard()

@@ -157,6 +157,7 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("don g"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("dong"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b-52's"), 10)).containsOnly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b-52s"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b52s"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("1'33\""), 10)).containsOnly(song2);
         });

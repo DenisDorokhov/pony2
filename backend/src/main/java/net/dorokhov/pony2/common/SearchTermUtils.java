@@ -19,7 +19,7 @@ public class SearchTermUtils {
         StringBuilder result = new StringBuilder(normalizedValue);
         for (String word : normalizedValue.split("\\s+")) {
             if (ACRONYM_SEPARATORS.stream().anyMatch(word::contains)) {
-                Matcher matcher = PATTERN_ACRONYM.matcher(Strings.nullToEmpty(word + "."));
+                Matcher matcher = PATTERN_ACRONYM.matcher(Strings.nullToEmpty(word) + ".");
                 boolean hasMatches = false;
                 List<String> acronymTerms = new ArrayList<>();
                 while (matcher.find()) {
