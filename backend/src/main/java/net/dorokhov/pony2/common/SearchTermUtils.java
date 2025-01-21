@@ -5,20 +5,18 @@ import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SearchTermUtils {
 
     private static final Pattern SUB_WORD_PATTERN = Pattern.compile("([\\p{L}\\p{N}]+)[^\\p{L}\\p{N}]");
-    private static final Set<String> SUB_WORD_SEPARATORS = Set.of(".", "'", "-", "_", "\"");
 
     public static String prepareForIndexing(@Nullable String value) {
         String normalizedValue = Strings.nullToEmpty(value);
         StringBuilder result = new StringBuilder(normalizedValue);
         for (String word : normalizedValue.split("\\s+")) {
-            if (SUB_WORD_SEPARATORS.stream().anyMatch(word::contains)) {
+            if (word.matches(".+[^\\p{L}\\p{N}].+")) {
                 Matcher matcher = SUB_WORD_PATTERN.matcher(Strings.nullToEmpty(word) + ".");
                 boolean hasMatches = false;
                 List<String> subWordTerms = new ArrayList<>();

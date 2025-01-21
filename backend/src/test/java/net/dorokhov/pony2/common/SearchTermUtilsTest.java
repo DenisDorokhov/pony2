@@ -22,9 +22,9 @@ class SearchTermUtilsTest {
         assertThat(SearchTermUtils.prepareForIndexing("Back in the U.S.S.R"))
                 .isEqualTo("Back in the U.S.S.R U S S R USSR");
         assertThat(SearchTermUtils.prepareForIndexing("Simple sentence. And another one. And"))
-                .isEqualTo("Simple sentence. And another one. And sentence one");
+                .isEqualTo("Simple sentence. And another one. And");
         assertThat(SearchTermUtils.prepareForIndexing("Simple sentence.And another one without space."))
-                .isEqualTo("Simple sentence.And another one without space. sentence And sentenceAnd space");
+                .isEqualTo("Simple sentence.And another one without space. sentence And sentenceAnd");
         assertThat(SearchTermUtils.prepareForIndexing("Don't speak"))
                 .isEqualTo("Don't speak Don t Dont");
         assertThat(SearchTermUtils.prepareForIndexing("rock-n-roll"))
@@ -37,5 +37,7 @@ class SearchTermUtilsTest {
                 .isEqualTo("1'33\" Until 1 33 133");
         assertThat(SearchTermUtils.prepareForIndexing("1'33 Until"))
                 .isEqualTo("1'33 Until 1 33 133");
+        assertThat(SearchTermUtils.prepareForIndexing("AC/DC"))
+                .isEqualTo("AC/DC AC DC ACDC");
     }
 }
