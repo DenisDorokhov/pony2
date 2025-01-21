@@ -11,25 +11,25 @@ import java.util.regex.Pattern;
 
 public class SearchTermUtils {
 
-    private static final Pattern PATTERN_ACRONYM = Pattern.compile("([\\p{L}\\p{N}]+)[.'-_\"]");
-    private static final Set<String> ACRONYM_SEPARATORS = Set.of(".", "'", "-", "_", "\"");
+    private static final Pattern SUB_WORD_PATTERN = Pattern.compile("([\\p{L}\\p{N}]+)[^\\p{L}\\p{N}]");
+    private static final Set<String> SUB_WORD_SEPARATORS = Set.of(".", "'", "-", "_", "\"");
 
     public static String prepareForIndexing(@Nullable String value) {
         String normalizedValue = Strings.nullToEmpty(value);
         StringBuilder result = new StringBuilder(normalizedValue);
         for (String word : normalizedValue.split("\\s+")) {
-            if (ACRONYM_SEPARATORS.stream().anyMatch(word::contains)) {
-                Matcher matcher = PATTERN_ACRONYM.matcher(Strings.nullToEmpty(word) + ".");
+            if (SUB_WORD_SEPARATORS.stream().anyMatch(word::contains)) {
+                Matcher matcher = SUB_WORD_PATTERN.matcher(Strings.nullToEmpty(word) + ".");
                 boolean hasMatches = false;
-                List<String> acronymTerms = new ArrayList<>();
+                List<String> subWordTerms = new ArrayList<>();
                 while (matcher.find()) {
                     hasMatches = true;
                     String letterWithoutDot = matcher.group(1);
                     result.append(" ").append(letterWithoutDot);
-                    acronymTerms.add(letterWithoutDot);
+                    subWordTerms.add(letterWithoutDot);
                 }
-                if (hasMatches && acronymTerms.size() > 1) {
-                    result.append(" ").append(String.join("", acronymTerms.toArray(new String[]{})));
+                if (hasMatches && subWordTerms.size() > 1) {
+                    result.append(" ").append(String.join("", subWordTerms.toArray(new String[]{})));
                 }
             }
         }
