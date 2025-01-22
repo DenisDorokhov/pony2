@@ -3,14 +3,13 @@
   <h4 class="modal-title"><i class="bi bi-file-earmark-music"></i>{{ 'playlist.header' | translate }}</h4>
 
   <div ngbDropdown class="btn-group playlist">
-    <button ngbDropdownToggle type="button" class="btn btn-light" [class.like]="selectedPlaylist?.type === PlaylistDto.Type.LIKE">
+    <button ngbDropdownToggle type="button" class="btn btn-light">
       {{ selectedPlaylist?.type === PlaylistDto.Type.NORMAL ? (selectedPlaylist?.name ?? '') : ('playlist.likePlaylistLabel' | translate) }}
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
       <button *ngFor="let playlist of playlists" ngbDropdownItem
               [class.selected]="playlist.id === selectedPlaylist?.id"
-              [class.like]="playlist.type === PlaylistDto.Type.LIKE"
               (click)="selectPlaylist(playlist)">
         {{ playlist.type === PlaylistDto.Type.NORMAL ? playlist.name : ('playlist.likePlaylistLabel' | translate) }}
       </button>
