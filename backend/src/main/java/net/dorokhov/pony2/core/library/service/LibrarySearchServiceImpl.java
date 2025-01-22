@@ -76,22 +76,22 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
     private <T extends Comparable<T>> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, boolean useFallbackQuery) {
         SearchSession session = Search.session(entityManager);
         List<Term> terms = extractTerms(query.getText());
-        Set<T> result = new LinkedHashSet<>(search(session, maxResults, clazz, terms, "searchTerms"));
+        Set<T> result = new LinkedHashSet<>(search(session, maxResults, clazz, terms, "searchTerms").stream().sorted().toList());
         if (useFallbackQuery && result.size() < maxResults) {
-            result.addAll(search(session, maxResults - result.size(), clazz, terms, "fallbackSearchTerms"));
+            result.addAll(search(session, maxResults - result.size(), clazz, terms, "fallbackSearchTerms").stream().sorted().toList());
         }
         if (result.isEmpty()) {
             List<Term> englishToRussianTerms = extractTerms(englishToRussianLayout(query.getText()));
-            result.addAll(search(session, maxResults, clazz, englishToRussianTerms, "searchTerms"));
+            result.addAll(search(session, maxResults, clazz, englishToRussianTerms, "searchTerms").stream().sorted().toList());
             if (useFallbackQuery && result.size() < maxResults) {
-                result.addAll(search(session, maxResults - result.size(), clazz, englishToRussianTerms, "fallbackSearchTerms"));
+                result.addAll(search(session, maxResults - result.size(), clazz, englishToRussianTerms, "fallbackSearchTerms").stream().sorted().toList());
             }
         }
         if (result.isEmpty()) {
             List<Term> russianToEnglishTerms = extractTerms(russianToEnglishLayout(query.getText()));
-            result.addAll(search(session, maxResults, clazz, russianToEnglishTerms, "searchTerms"));
+            result.addAll(search(session, maxResults, clazz, russianToEnglishTerms, "searchTerms").stream().sorted().toList());
             if (useFallbackQuery && result.size() < maxResults) {
-                result.addAll(search(session, maxResults - result.size(), clazz, russianToEnglishTerms, "fallbackSearchTerms"));
+                result.addAll(search(session, maxResults - result.size(), clazz, russianToEnglishTerms, "fallbackSearchTerms").stream().sorted().toList());
             }
         }
         return result.stream()
