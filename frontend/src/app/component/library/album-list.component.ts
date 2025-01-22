@@ -4,7 +4,7 @@ import {AlbumSongs, Artist, ArtistSongs, PlaylistSongs, Song} from '../../domain
 import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
@@ -28,6 +28,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   loadingState = LoadingState.LOADING;
   artistSongs!: ArtistSongs;
+  genreNames: string[] = [];
 
   albumCount = 0;
   songCount = 0;
@@ -41,7 +42,8 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     private readonly libraryService: LibraryService,
     private readonly playbackService: PlaybackService,
     private readonly playlistService: PlaylistService,
-    private modal: NgbModal,
+    private readonly translateService: TranslateService,
+    private readonly modal: NgbModal,
   ) {
   }
 
@@ -120,6 +122,12 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.albumCount = 0;
           this.songCount = 0;
           this.artistSongs = artistSongs;
+          this.genreNames = this.artistSongs.artist.genres.map(genre => {
+            if (genre.name) {
+              return genre.name;
+            }
+            return this.translateService.instant('library.genre.unknownLabel');
+          });
           this.artistSongs.albumSongs.sort(AlbumSongs.compare);
           this.artistSongs.albumSongs.forEach(album => {
             this.albumCount++;
