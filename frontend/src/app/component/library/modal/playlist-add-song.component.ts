@@ -4,7 +4,15 @@ import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {Component, Input, OnInit} from '@angular/core';
 import {LoadingState} from '../../../domain/common.model';
-import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbActiveModal,
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle,
+  NgbModal
+} from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistService} from '../../../service/playlist.service';
 import {Playlist, Song} from '../../../domain/library.model';
 import {NotificationService} from '../../../service/notification.service';
@@ -14,7 +22,7 @@ import {PlaylistDto} from '../../../domain/library.dto';
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule],
+  imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
   selector: 'pony-playlist-add-song',
   templateUrl: './playlist-add-song.component.html',
   styleUrls: ['./playlist-add-song.component.scss']
@@ -82,5 +90,9 @@ export class PlaylistAddSongComponent implements OnInit {
         this.activeModal.close();
       }
     });
+  }
+
+  selectPlaylist(playlist: Playlist) {
+    this.selectedPlaylist = playlist;
   }
 }

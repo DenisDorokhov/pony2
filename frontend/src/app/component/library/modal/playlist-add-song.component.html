@@ -6,11 +6,17 @@
   <div class="blocking-overlay" [hidden]="loadingState === LoadingState.LOADED && (savingState === LoadingState.EMPTY || savingState === LoadingState.ERROR)"></div>
 
   <div class="mb-3 select-container">
-    <select id="playlist" class="form-select" [(ngModel)]="selectedPlaylist">
-      @for (playlist of playlists; track playlist.id) {
-        <option [ngValue]="playlist">{{ playlist.name }}</option>
-      }
-    </select>
+    <div ngbDropdown class="btn-group">
+      <button ngbDropdownToggle type="button" class="btn btn-light">
+        {{ selectedPlaylist?.name ?? '' }}
+        <span class="caret"></span>
+      </button>
+      <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+        <button *ngFor="let playlist of playlists" ngbDropdownItem [class.selected]="playlist.id === selectedPlaylist?.id" (click)="selectPlaylist(playlist)">
+          {{ playlist.name }}
+        </button>
+      </ul>
+    </div>
   </div>
 
 </div>
