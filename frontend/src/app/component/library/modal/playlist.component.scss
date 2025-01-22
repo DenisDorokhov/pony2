@@ -6,23 +6,40 @@ h4 {
   }
 }
 
-select {
+.btn-group.playlist {
   margin-left: 6px;
   width: 350px;
 
-  &.like, option.like {
+  button {
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    height: 38px;
+  }
+
+  .dropdown-toggle::after {
+    float: right;
+    margin-top: 10px;
+  }
+
+  .dropdown-menu {
+    min-width: 100%;
+  }
+
+  .like {
     font-weight: bold;
   }
 }
 
 @media (width <= 1000px) {
-  select {
+  .btn-group.playlist {
     width: 200px;
   }
 }
 
 @media (width <= 450px) {
-  select {
+  .btn-group.playlist {
     width: 120px;
   }
   .modal-footer {
@@ -33,12 +50,12 @@ select {
 }
 
 @media (width <= 400px) {
-  select {
+  .btn-group.filter {
     width: 90px;
   }
 }
 
-.btn-group {
+.btn-group.filter {
   ul {
     max-width: 252px;
     max-height: 260px;

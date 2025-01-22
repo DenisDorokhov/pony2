@@ -1,18 +1,26 @@
 <div class="modal-header">
+
   <h4 class="modal-title"><i class="bi bi-file-earmark-music"></i>{{ 'playlist.header' | translate }}</h4>
-  <select *ngIf="playlists.length > 0" class="form-select" [class.like]="selectedPlaylist?.type === PlaylistDto.Type.LIKE"
-          [(ngModel)]="selectedPlaylist" (ngModelChange)="onPlaylistChange()">
-    @for (playlist of playlists; track playlist.id) {
-      @if (playlist.type === PlaylistDto.Type.NORMAL) {
-        <option [ngValue]="playlist">{{ playlist.name }}</option>
-      } @else {
-        <option [ngValue]="playlist" class="like">{{ 'playlist.likePlaylistLabel' | translate }}</option>
-      }
-    }
-  </select>
+
+  <div ngbDropdown class="btn-group playlist">
+    <button ngbDropdownToggle type="button" class="btn btn-light" [class.like]="selectedPlaylist?.type === PlaylistDto.Type.LIKE">
+      {{ selectedPlaylist?.type === PlaylistDto.Type.NORMAL ? (selectedPlaylist?.name ?? '') : ('playlist.likePlaylistLabel' | translate) }}
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button *ngFor="let playlist of playlists" ngbDropdownItem
+              [class.selected]="playlist.id === selectedPlaylist?.id"
+              [class.like]="playlist.type === PlaylistDto.Type.LIKE"
+              (click)="selectPlaylist(playlist)">
+        {{ playlist.type === PlaylistDto.Type.NORMAL ? playlist.name : ('playlist.likePlaylistLabel' | translate) }}
+      </button>
+    </ul>
+  </div>
+
   <button type="button" class="btn btn-light edit" [disabled]="secondaryLoadingState === LoadingState.LOADING || selectedPlaylist.type === PlaylistDto.Type.LIKE"
           (click)="edit()" *ngIf="selectedPlaylist"><i class="bi bi-pencil-square"></i></button>
-  <div ngbDropdown class="btn-group">
+
+  <div ngbDropdown class="btn-group filter">
     <button type="button" class="btn btn-light filter" ngbDropdownToggle data-toggle="dropdown"
             [disabled]="secondaryLoadingState === LoadingState.LOADING || !selectedPlaylistSongs.songs.length"
             *ngIf="selectedPlaylistSongs">
@@ -38,6 +46,7 @@
     </ul>
   </div>
 </div>
+
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
                              (touchmove)="onTouchmove($event)" (wheel)="onWheel($event)">
 
@@ -72,6 +81,7 @@
   </div>
 
 </cdk-virtual-scroll-viewport>
+
 <div class="modal-footer">
   <pony-loading-indicator [hidden]="secondaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator [hidden]="secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>

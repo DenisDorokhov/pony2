@@ -156,10 +156,13 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPlaylistChange() {
-    this.selectGenre(undefined);
-    this.loadSongs();
-    this.viewPort.scrollToOffset(0);
+  selectPlaylist(playlist: Playlist) {
+    if (this.selectedPlaylist?.id !== playlist.id) {
+      this.selectedPlaylist = playlist;
+      this.selectGenre(undefined);
+      this.loadSongs();
+      this.viewPort.scrollToOffset(0);
+    }
   }
 
   selectGenre(genre: Genre | undefined) {
