@@ -127,9 +127,6 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                                         .matching(normalizeTerm(subWord) + "*"));
                             }
                             SimpleBooleanPredicateClausesStep<?> rootOr = f.or();
-                            rootOr.add(f.wildcard()
-                                    .field(field)
-                                    .matching(normalizeTerm(term.value()) + "*"));
                             rootOr.add(subTermWildcards);
                             term.getCombinedSubWords().ifPresent(combinedSubWords -> rootOr.add(f.wildcard()
                                     .field(field)
