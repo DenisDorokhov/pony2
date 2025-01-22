@@ -12,7 +12,7 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import java.io.File;
 import java.io.Serializable;
 
-import static net.dorokhov.pony2.common.SearchTermUtils.prepareForIndexing;
+import static net.dorokhov.pony2.common.SearchTermUtils.extractSpaceSeparatedTerms;
 
 @Indexed
 @Entity
@@ -311,7 +311,7 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return prepareForIndexing(name);
+        return extractSpaceSeparatedTerms(name);
     }
 
     @Transient
@@ -329,9 +329,9 @@ public class Song extends BaseEntity<Song> implements Comparable<Song>, Serializ
             @PropertyValue(propertyName = "albumName"),
     }))
     public String getFallbackSearchTerms() {
-        return prepareForIndexing(name) + " " +
-                prepareForIndexing(artistName) + " " +
-                prepareForIndexing(albumArtistName);
+        return extractSpaceSeparatedTerms(name) + " " +
+                extractSpaceSeparatedTerms(artistName) + " " +
+                extractSpaceSeparatedTerms(albumArtistName);
     }
 
     @PostLoad

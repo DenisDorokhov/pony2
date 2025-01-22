@@ -4,9 +4,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibrarySearchService;
+import net.dorokhov.pony2.common.SearchTermUtils.Term;
 import net.dorokhov.pony2.core.library.service.search.EnglishToRussianLayoutMappingRegistry;
 import net.dorokhov.pony2.core.library.service.search.RussianToEnglishLayoutMappingRegistry;
 import net.dorokhov.pony2.core.library.service.search.TransliterationMappingRegistry;
+import org.hibernate.search.engine.search.predicate.dsl.SimpleBooleanPredicateClausesStep;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.slf4j.Logger;
@@ -15,16 +17,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
+import static net.dorokhov.pony2.common.SearchTermUtils.extractTerms;
 import static net.dorokhov.pony2.core.library.LibraryConfig.LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR;
 
 @Service
 public class LibrarySearchServiceImpl implements LibrarySearchService {
-
-    private static final String NON_UNICODE_LETTER_AND_DIGIT_REGEX = "[^\\p{L}\\s\\p{N}]";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -71,37 +75,28 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
 
     private <T extends Comparable<T>> List<T> search(LibrarySearchQuery query, int maxResults, Class<T> clazz, boolean useFallbackQuery) {
         SearchSession session = Search.session(entityManager);
-        String[] wordsSeparatedBySymbols = splitWords(query.getText());
-        Set<T> result = new LinkedHashSet<>(search(session, maxResults, clazz, wordsSeparatedBySymbols, "searchTerms"));
+        List<Term> terms = extractTerms(query.getText());
+        Set<T> result = new LinkedHashSet<>(search(session, maxResults, clazz, terms, "searchTerms"));
         if (useFallbackQuery && result.size() < maxResults) {
-            result.addAll(search(session, maxResults - result.size(), clazz, wordsSeparatedBySymbols, "fallbackSearchTerms"));
+            result.addAll(search(session, maxResults - result.size(), clazz, terms, "fallbackSearchTerms"));
         }
         if (result.isEmpty()) {
-            String[] englishToRussianWordsSeparatedBySymbols = splitWords(englishToRussianLayout(query.getText()));
-            result.addAll(search(session, maxResults, clazz, englishToRussianWordsSeparatedBySymbols, "searchTerms"));
+            List<Term> englishToRussianTerms = extractTerms(englishToRussianLayout(query.getText()));
+            result.addAll(search(session, maxResults, clazz, englishToRussianTerms, "searchTerms"));
             if (useFallbackQuery && result.size() < maxResults) {
-                result.addAll(search(session, maxResults - result.size(), clazz, englishToRussianWordsSeparatedBySymbols, "fallbackSearchTerms"));
+                result.addAll(search(session, maxResults - result.size(), clazz, englishToRussianTerms, "fallbackSearchTerms"));
             }
         }
         if (result.isEmpty()) {
-            String[] russianToEnglishWordsSeparatedBySymbols = splitWords(russianToEnglishLayout(query.getText()));
-            result.addAll(search(session, maxResults, clazz, russianToEnglishWordsSeparatedBySymbols, "searchTerms"));
+            List<Term> russianToEnglishTerms = extractTerms(russianToEnglishLayout(query.getText()));
+            result.addAll(search(session, maxResults, clazz, russianToEnglishTerms, "searchTerms"));
             if (useFallbackQuery && result.size() < maxResults) {
-                result.addAll(search(session, maxResults - result.size(), clazz, russianToEnglishWordsSeparatedBySymbols, "fallbackSearchTerms"));
+                result.addAll(search(session, maxResults - result.size(), clazz, russianToEnglishTerms, "fallbackSearchTerms"));
             }
         }
         return result.stream()
                 .sorted()
                 .toList();
-    }
-
-    private String[] splitWords(String query) {
-        return Arrays.stream(query.trim()
-                        .replaceAll("\\s+", " ")
-                        .toLowerCase()
-                        .split("\\s+"))
-                .map(word -> word.replaceAll(NON_UNICODE_LETTER_AND_DIGIT_REGEX, ""))
-                .toArray(String[]::new);
     }
 
     private String englishToRussianLayout(String query) {
@@ -120,25 +115,40 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
         return query;
     }
 
-    private <T extends Comparable<T>> List<T> search(SearchSession session, int maxResults, Class<T> clazz, String[] words, String field) {
+    private <T extends Comparable<T>> List<T> search(SearchSession session, int maxResults, Class<T> clazz, List<Term> terms, String field) {
         return session.search(clazz)
                 .where((f, root) -> {
-                    for (String word : words) {
-                        root.add(f.wildcard()
-                                .field(field)
-                                .matching(normalizeWord(word) + "*"));
+                    for (Term term : terms) {
+                        if (!term.getSubWords().isEmpty()) {
+                            SimpleBooleanPredicateClausesStep<?> subTermWildcards = f.and();
+                            for (String subWord : term.getSubWords()) {
+                                subTermWildcards.add(f.wildcard()
+                                        .field(field)
+                                        .matching(normalizeTerm(subWord) + "*"));
+                            }
+                            SimpleBooleanPredicateClausesStep<?> rootOr = f.or();
+                            rootOr.add(f.wildcard()
+                                    .field(field)
+                                    .matching(normalizeTerm(term.value()) + "*"));
+                            rootOr.add(subTermWildcards);
+                            term.getCombinedSubWords().ifPresent(combinedSubWords -> rootOr.add(f.wildcard()
+                                    .field(field)
+                                    .matching(normalizeTerm(combinedSubWords) + "*")));
+                            root.add(rootOr);
+                        }
                     }
                 })
                 .fetch(maxResults)
                 .hits();
     }
 
-    private String normalizeWord(String word) {
+    private String normalizeTerm(String term) {
+        String result = term;
         Map<String, String> mapping = TransliterationMappingRegistry.mapping();
         for (String from : mapping.keySet()) {
-            word = word.replace(from, mapping.get(from));
+            result = result.replace(from, mapping.get(from));
         }
-        return word;
+        return result;
     }
 
     @Override

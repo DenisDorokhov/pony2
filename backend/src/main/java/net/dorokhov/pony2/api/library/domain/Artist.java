@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static net.dorokhov.pony2.common.SearchTermUtils.prepareForIndexing;
+import static net.dorokhov.pony2.common.SearchTermUtils.extractSpaceSeparatedTerms;
 
 @Indexed
 @Entity
@@ -101,7 +101,7 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return prepareForIndexing(name);
+        return extractSpaceSeparatedTerms(name);
     }
 
     @Override

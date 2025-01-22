@@ -141,9 +141,9 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 10)).containsOnly(song1, song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ащщ"), 10)).containsOnly(song1, song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
-            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(song1, song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(song1);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("foo-underscore"), 10)).containsExactly(song1);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("underscore_separated"), 10)).containsExactly(song1);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("underscore_separated_"), 10)).containsExactly(song1);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("underscore separated words"), 10)).containsExactly(song1);
@@ -157,8 +157,8 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("don g"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("dong"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b-52's"), 10)).containsOnly(song2);
-            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b-52s"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b52s"), 10)).containsOnly(song2);
+            assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("b-52s"), 10)).containsOnly(song2);
             assertThat(librarySearchService.searchSongs(LibrarySearchQuery.of("1'33\""), 10)).containsOnly(song2);
         });
     }

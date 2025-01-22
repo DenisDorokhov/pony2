@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.common.SearchTermUtils.prepareForIndexing;
+import static net.dorokhov.pony2.common.SearchTermUtils.extractSpaceSeparatedTerms;
 
 @Indexed
 @Entity
@@ -96,7 +96,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
             @PropertyValue(propertyName = "name"),
     }))
     public String getSearchTerms() {
-        return prepareForIndexing(name);
+        return extractSpaceSeparatedTerms(name);
     }
 
     @Transient
@@ -112,9 +112,9 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
             @PropertyValue(propertyName = "name"),
     }))
     public String getFallbackSearchTerms() {
-        return prepareForIndexing(name) + " " +
-                prepareForIndexing(year != null ? String.valueOf(year) : "") + " " +
-                prepareForIndexing(artist.getName());
+        return extractSpaceSeparatedTerms(name) + " " +
+                extractSpaceSeparatedTerms(year != null ? String.valueOf(year) : "") + " " +
+                extractSpaceSeparatedTerms(artist.getName());
     }
 
     @Override
