@@ -1,5 +1,12 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbActiveModal,
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle
+} from '@ng-bootstrap/ng-bootstrap';
 import {TranslateModule} from '@ngx-translate/core';
 import {LogService} from '../../../service/log.service';
 import {LoadingState} from '../../../domain/common.model';
@@ -7,7 +14,7 @@ import {LogMessageDto, LogMessagePageDto} from '../../../domain/library.dto';
 import {CommonModule, DatePipe} from '@angular/common';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import Level = LogMessageDto.Level;
 
 class LogWithException implements LogMessageDto {
@@ -33,7 +40,7 @@ class LogWithException implements LogMessageDto {
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, FormsModule, ReactiveFormsModule, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdown],
   selector: 'pony-log',
   templateUrl: './log.component.html',
   styleUrls: ['./log.component.scss']
@@ -49,20 +56,14 @@ export class LogComponent implements OnInit {
 
   logs: LogWithException[] = [];
   page: LogMessagePageDto | undefined;
-
-  form: FormGroup;
+  minLevel = LogMessageDto.Level.INFO;
 
   @ViewChild('scroller') containerElement!: ElementRef;
 
   constructor(
     public readonly activeModal: NgbActiveModal,
     private readonly logService: LogService,
-    private readonly formBuilder: FormBuilder,
-  ) {
-    this.form = this.formBuilder.group({
-      minLevel: LogMessageDto.Level.INFO,
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     this.loadPage();
@@ -70,7 +71,7 @@ export class LogComponent implements OnInit {
 
   private loadPage(pageIndex = 0, pageSize = 30) {
     this.logService.getLog(
-      this.form.value.minLevel,
+      this.minLevel,
       pageIndex, pageSize
     ).subscribe({
       next: page => {
@@ -97,7 +98,8 @@ export class LogComponent implements OnInit {
     }
   }
 
-  applyFilter() {
+  applyFilter(level: LogMessageDto.Level) {
+    this.minLevel = level;
     this.loadPage(0, this.page?.pageSize);
   }
 }

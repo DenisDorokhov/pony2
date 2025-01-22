@@ -17,31 +17,11 @@ h4 {
   border: 1px solid #cccccc;
 }
 
-form {
-
+.btn-group {
   margin-bottom: 16px;
 
-  label {
+  .selected {
     font-weight: bold;
-    margin-right: 12px;
-  }
-
-  select {
-    display: inline;
-    width: 120px;
-    margin-right: 12px;
-    vertical-align: middle;
-  }
-
-  input {
-    display: inline;
-    width: 120px;
-    margin-right: 12px;
-    vertical-align: middle;
-  }
-
-  button {
-    margin-right: 6px;
   }
 }
 
@@ -95,15 +75,15 @@ table {
   }
 }
 
-.log-level.info {
+.INFO {
   color: #5cb85c;
 }
 
-.log-level.error {
+.ERROR {
   color: #d9534f;
 }
 
-.log-level.warn {
+.WARN {
   color: #f0ad4e;
 }
 

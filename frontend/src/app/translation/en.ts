@@ -249,7 +249,6 @@ export default {
     dateColumn: 'Date',
     levelColumn: 'Level',
     messageColumn: 'Message',
-    levelFilterLabel: 'Level:',
   },
   artwork: {
     header: 'Artwork',

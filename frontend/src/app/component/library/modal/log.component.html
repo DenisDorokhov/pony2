@@ -4,14 +4,17 @@
 </div>
 <div class="modal-body">
 
-  <form [formGroup]="form" (ngSubmit)="applyFilter()">
-
-    <label for="level" class="form-label">{{ 'log.levelFilterLabel' | translate }}</label>
-    <select formControlName="minLevel" id="level" class="form-select" (change)="applyFilter()">
-      <option *ngFor="let level of logLevels" [ngValue]="level">{{ level }}</option>
-    </select>
-
-  </form>
+  <div ngbDropdown class="btn-group">
+    <button ngbDropdownToggle type="button" class="btn btn-outline-dark">
+      {{ minLevel }}
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button *ngFor="let level of logLevels" ngbDropdownItem [class.selected]="minLevel === level" (click)="applyFilter(level)">
+        {{ level }}
+      </button>
+    </ul>
+  </div>
 
   <div #scroller class="table-scroller">
     <table class="table table-borderless">
@@ -19,11 +22,7 @@
         @for (log of logs; track log) {
           <tr>
             <td class="date">{{ log.date | date:('shared.dateTimeFormat' | translate) }}</td>
-            <td class="log-level"
-              [class.info]="log.level === Level.INFO"
-              [class.warn]="log.level === Level.WARN"
-              [class.error]="log.level === Level.ERROR"
-            >{{ log.level }}</td>
+            <td class="log-level {{ log.level }}">{{ log.level }}</td>
             <td>
               <div>{{ log.text }}</div>
               <div class="exception" title="{{ log.exception }}" *ngIf="log.exception !== undefined"><pre>{{ log.exception }}</pre></div>
