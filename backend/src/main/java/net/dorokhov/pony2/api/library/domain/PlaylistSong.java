@@ -80,7 +80,9 @@ public class PlaylistSong {
 
     @PrePersist
     public void prePersist() {
-        creationDate = LocalDateTime.now();
+        if (creationDate == null) {
+            creationDate = LocalDateTime.now();
+        }
     }
 
     @Override

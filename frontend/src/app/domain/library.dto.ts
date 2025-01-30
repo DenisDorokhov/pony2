@@ -305,3 +305,7 @@ export interface RandomSongsRequestDto {
   lastArtistId?: string;
   genreIds: string[];
 }
+
+export interface BackupDto {
+    fileContent: string;
+}

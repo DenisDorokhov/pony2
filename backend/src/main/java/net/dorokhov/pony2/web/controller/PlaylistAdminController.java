@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
-import net.dorokhov.pony2.web.dto.PlaylistBackupDto;
+import net.dorokhov.pony2.web.dto.BackupDto;
 import net.dorokhov.pony2.web.dto.RestoredPlaylistsDto;
 import net.dorokhov.pony2.web.service.PlaylistFacade;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +20,7 @@ public class PlaylistAdminController implements ErrorHandlingController {
     }
 
     @GetMapping("/api/admin/playlists/backup")
-    public PlaylistBackupDto backup() {
+    public BackupDto backup() {
         return playlistFacade.backupPlaylists();
     }
 

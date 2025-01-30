@@ -140,8 +140,8 @@ public class PlaylistFacade {
     }
 
     @Transactional
-    public PlaylistBackupDto backupPlaylists() {
-        return PlaylistBackupDto.of(playlistService.backupPlaylists());
+    public BackupDto backupPlaylists() {
+        return BackupDto.of(playlistService.backupPlaylists());
     }
 
     @Transactional

@@ -213,7 +213,7 @@ public class PlaylistServiceImpl implements PlaylistService {
                             .map(path -> {
                                 Song song = songRepository.findByPath(path);
                                 if (song == null) {
-                                    logger.warn("Playlist '{}' will not be fully restored: song '{}' not found.", backupPlaylist.name(), song);
+                                    logger.warn("Playlist '{}' of user '{}' will not be fully restored: song '{}' not found.", backupPlaylist.name(), userEmail, song);
                                     notFoundSongs.add(path);
                                 }
                                 return song;

@@ -8,7 +8,7 @@ import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
-import net.dorokhov.pony2.web.dto.PlaylistBackupDto;
+import net.dorokhov.pony2.web.dto.BackupDto;
 import net.dorokhov.pony2.web.dto.RestoredPlaylistsDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -182,9 +182,9 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistBackupDto> backupResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<BackupDto> backupResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/playlists/backup", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistBackupDto.class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), BackupDto.class);
 
         assertThat(backupResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(backupResponse.getBody()).satisfies(dto -> {

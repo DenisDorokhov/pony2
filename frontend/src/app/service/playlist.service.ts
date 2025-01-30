@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, forkJoin, Observable} from 'rxjs';
 import {Playlist, PlaylistSongs} from '../domain/library.model';
 import {
+  BackupDto,
   PlaylistCreateCommandDto,
   PlaylistDto,
   PlaylistSongsDto,
@@ -14,10 +15,6 @@ import {ErrorDto} from '../domain/common.dto';
 import FileSaver from 'file-saver';
 import {AuthenticationService} from './authentication.service';
 import {LibraryService} from './library.service';
-
-interface PlaylistBackupDto {
-  fileContent: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -159,7 +156,7 @@ export class PlaylistService {
   }
 
   backupPlaylists(): Observable<void> {
-    return this.httpClient.get<PlaylistBackupDto>('/api/admin/playlists/backup').pipe(
+    return this.httpClient.get<BackupDto>('/api/admin/playlists/backup').pipe(
       map(backup => {
         const file = new File([backup.fileContent], 'playlists-' + window.location.host + '-' + new Date().toISOString(), {type: 'text/plain;charset=utf-8'});
         FileSaver.saveAs(file);
