@@ -16,7 +16,7 @@
 
     <pony-large-song
       [index]="i" [song]="song"
-      [selected]="selectedIndex === i" [isCurrentSong]="currentSongIndex === i" [playbackState]="lastPlaybackEvent?.state"
+      [selected]="selectedIndex === i" [isCurrentSong]="currentSongIndex === i"
       #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"
       *cdkVirtualFor="let song of queue; let i = index;"
       (cdkDragStarted)="onDragStarted($event)"

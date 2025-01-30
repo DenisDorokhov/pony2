@@ -67,9 +67,24 @@ button.playback {
   padding: 0;
 }
 
-div.playback-indicator {
+.like-container {
   min-width: 24px;
   max-width: 24px;
+  line-height: 75px;
+
+  button {
+    border: none;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    color: #fcba03;
+  }
+}
+
+div.playback-indicator {
+  min-width: 36px;
+  max-width: 36px;
+  text-align: center;
   line-height: 75px;
 
   .bi-volume-up-fill {
@@ -80,7 +95,13 @@ div.playback-indicator {
 .duration {
   padding: 8px;
   color: #909090;
-  line-height: 58px;
+  line-height: 60px;
+  min-width: 58px;
+  max-width: 58px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .options {

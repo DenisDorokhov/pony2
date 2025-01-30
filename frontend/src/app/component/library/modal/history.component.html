@@ -13,7 +13,7 @@
 
     <pony-large-song
       [index]="i" [song]="playbackHistorySong.song"
-      [isCurrentSong]="playbackHistorySong.song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
+      [isCurrentSong]="playbackHistorySong.song.id === lastPlaybackEvent?.song?.id"
       [showIndex]="false" [showDuration]="false"
       [selected]="selectedIndex === i"
       *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"

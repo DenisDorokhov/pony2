@@ -66,7 +66,7 @@
     <pony-large-song
       [index]="i" [song]="playlistSong.song"
       [selected]="selectedIndex === i"
-      [isCurrentSong]="playlistSong.song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
+      [isCurrentSong]="playlistSong.song.id === lastPlaybackEvent?.song?.id"
       id="playlistSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled || selectedGenre || secondaryLoadingState === LoadingState.LOADING"
       *cdkVirtualFor="let playlistSong of (selectedGenre ? filteredSongs : selectedPlaylistSongs?.songs); let i = index;"
       (cdkDragStarted)="onDragStarted($event)"

@@ -9,7 +9,7 @@
 
     <pony-large-song
       [index]="i" [song]="song"
-      [isCurrentSong]="song.id === lastPlaybackEvent?.song?.id" [playbackState]="lastPlaybackEvent?.state"
+      [isCurrentSong]="song.id === lastPlaybackEvent?.song?.id"
       [showIndex]="false" [showDuration]="false"
       [selected]="selectedIndex === i"
       *cdkVirtualFor="let song of songs; let i = index;"
