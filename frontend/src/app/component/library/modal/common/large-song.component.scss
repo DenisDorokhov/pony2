@@ -68,9 +68,11 @@ button.playback {
 }
 
 .like-container {
-  min-width: 24px;
-  max-width: 24px;
+  min-width: 36px;
+  max-width: 36px;
   line-height: 75px;
+  text-align: center;
+  margin-left: -2px;
 
   button {
     border: none;
