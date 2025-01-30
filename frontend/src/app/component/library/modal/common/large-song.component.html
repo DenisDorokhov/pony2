@@ -31,6 +31,12 @@
     <div>{{ song.name | ponyUnknownSong }}</div>
     <div><small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small></div>
   </div>
+  <div class="like-container" [hidden]="!isMouseOver && !isLikedSong">
+    <button [title]="isLikedSong ? ('library.song.likedSongButtonTooltip' | translate) : ('library.song.notLikedSongButtonTooltip' | translate)"
+            (click)="onLikeClick()">
+      <i class="bi" [class.bi-star-fill]="isLikedSong" [class.bi-star]="!isLikedSong"></i>
+    </button>
+  </div>
   <div class="playback-indicator" *ngIf="!showIndex">
     <button class="playback" [hidden]="!isMouseOver || !playOrPauseRequested.observed" (click)="onPlaybackClick()">
       <i class="bi"
@@ -42,12 +48,6 @@
        [class.bi-volume-up-fill]="playbackState === PlaybackState.PLAYING"
        [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
        class="bi playback-indicator"></i>
-  </div>
-  <div class="like-container" [hidden]="!isMouseOver && !isLikedSong">
-    <button [title]="isLikedSong ? ('library.song.likedSongButtonTooltip' | translate) : ('library.song.notLikedSongButtonTooltip' | translate)"
-            (click)="onLikeClick()">
-      <i class="bi" [class.bi-star-fill]="isLikedSong" [class.bi-star]="!isLikedSong"></i>
-    </button>
   </div>
   <div class="duration" *ngIf="showDuration">
     {{ song.durationInMinutes }}
