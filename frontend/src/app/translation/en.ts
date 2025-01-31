@@ -229,8 +229,6 @@ export default {
     backupPlaylistsLabel: 'Backup playlists:',
     backupHistoryLabel: 'Backup history:',
     createBackupButton: 'Create Backup',
-    restorePlaylistsLabel: 'Restore playlists:',
-    restoreHistoryLabel: 'Restore history:',
     restoreBackupButton: 'Restore Backup',
     reBuildSearchIndexLabel: 'Re-build search index:',
     reBuildSearchIndexButton: 'Re-Build Index',

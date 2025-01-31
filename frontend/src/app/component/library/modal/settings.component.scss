@@ -14,16 +14,20 @@
 }
 
 .modal-body {
-  padding-bottom: 0;
+  padding-bottom: 6px;
   padding-left: 0;
   padding-right: 0;
 }
 
 .advanced {
 
-  border-bottom: var(--bs-modal-header-border-width) solid var(--bs-modal-header-border-color);
   padding: 0 16px 0 16px;
   margin-bottom: 12px;
+
+  hr {
+    color: #999999;
+    margin-top: 16px;
+  }
 
   input[type=file] {
     width: 320px;
@@ -33,6 +37,10 @@
   button.restore {
     margin-bottom: 5px;
     margin-left: 8px;
+  }
+
+  button.index {
+    margin-bottom: 6px;
   }
 }
 

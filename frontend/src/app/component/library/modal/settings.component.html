@@ -12,36 +12,40 @@
   <div class="blocking-overlay" [hidden]="primaryLoadingState !== LoadingState.LOADING && primaryLoadingState !== LoadingState.ERROR"></div>
 
   <div class="advanced" [hidden]="!showAdvanced">
+
     <div class="mb-3">
       <label class="form-label">{{ 'settings.backupPlaylistsLabel' | translate }}</label>
       <div><button class="btn btn-primary" (click)="createPlaylistsBackup()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}</button></div>
     </div>
     <div class="mb-3">
-      <label class="form-label">{{ 'settings.restorePlaylistsLabel' | translate }}</label>
-      <div>
-        <input type="file" class="form-control" (change)="onPlaylistsBackupFileChange($event)">
-        <button class="btn btn-primary restore" (click)="restorePlaylistsBackup()" [disabled]="!backupPlaylistsFileToRestore || secondaryLoadingState === LoadingState.LOADING">
-          {{ 'settings.restoreBackupButton' | translate }}
-        </button>
-      </div>
+      <input type="file" class="form-control" (change)="onPlaylistsBackupFileChange($event)">
+      <button class="btn btn-primary restore" (click)="restorePlaylistsBackup()" [disabled]="!backupPlaylistsFileToRestore || secondaryLoadingState === LoadingState.LOADING">
+        {{ 'settings.restoreBackupButton' | translate }}
+      </button>
     </div>
+
+    <hr>
+
     <div class="mb-3">
       <label class="form-label">{{ 'settings.backupHistoryLabel' | translate }}</label>
       <div><button class="btn btn-primary" (click)="createHistoryBackup()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}</button></div>
     </div>
     <div class="mb-3">
-      <label class="form-label">{{ 'settings.restoreHistoryLabel' | translate }}</label>
-      <div>
-        <input type="file" class="form-control" (change)="onHistoryBackupFileChange($event)">
-        <button class="btn btn-primary restore" (click)="restoreHistoryBackup()" [disabled]="!backupHistoryFileToRestore || secondaryLoadingState === LoadingState.LOADING">
-          {{ 'settings.restoreBackupButton' | translate }}
-        </button>
-      </div>
+      <input type="file" class="form-control" (change)="onHistoryBackupFileChange($event)">
+      <button class="btn btn-primary restore" (click)="restoreHistoryBackup()" [disabled]="!backupHistoryFileToRestore || secondaryLoadingState === LoadingState.LOADING">
+        {{ 'settings.restoreBackupButton' | translate }}
+      </button>
     </div>
+
+    <hr>
+
     <div class="mb-3">
       <label class="form-label">{{ 'settings.reBuildSearchIndexLabel' | translate }}</label>
-      <div><button class="btn btn-primary" (click)="reBuildSearchIndex()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}</button></div>
+      <div><button class="btn btn-primary index" (click)="reBuildSearchIndex()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}</button></div>
     </div>
+
+    <hr>
+
   </div>
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
