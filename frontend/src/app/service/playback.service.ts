@@ -23,6 +23,7 @@ interface QueueState {
   originalQueueSongIds: string[] | undefined;
   currentIndex: number;
   progress: number;
+  mode: PlaybackMode;
 }
 
 @Injectable({
@@ -31,18 +32,17 @@ interface QueueState {
 export class PlaybackService {
 
   private static readonly STATE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.state';
-  private static readonly MODE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.mode';
 
   private static readonly RANDOM_SONGS_COUNT = 20;
 
   private audioPlayer = new AudioPlayer();
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
   private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
-  private modeSubject: BehaviorSubject<PlaybackMode>;
+  private modeSubject = new BehaviorSubject(PlaybackMode.NORMAL);
 
   private _currentIndex = -1;
   private _queue: Song[] = [];
-  private _mode: PlaybackMode;
+  private _mode = PlaybackMode.NORMAL;
 
   private originalQueue: Song[] | undefined;
   private queueShuffleSubscription: Subscription | undefined;
@@ -53,8 +53,6 @@ export class PlaybackService {
     private readonly browserNotificationService: BrowserNotificationService,
     private readonly playbackHistoryService: PlaybackHistoryService,
   ) {
-    this._mode = window.localStorage.getItem(PlaybackService.MODE_LOCAL_STORAGE_KEY) as PlaybackMode || PlaybackMode.NORMAL;
-    this.modeSubject = new BehaviorSubject(this._mode);
     this.authenticationService.observeLogout().subscribe(() => {
         this.audioPlayer.stop();
         this.currentSongSubject.next(undefined);
@@ -109,7 +107,6 @@ export class PlaybackService {
   set mode(value: PlaybackMode) {
     if (this._mode !== value) {
       this._mode = value;
-      window.localStorage.setItem(PlaybackService.MODE_LOCAL_STORAGE_KEY, value);
       this.queueShuffleSubscription?.unsubscribe();
       this.queueShuffleSubscription = undefined;
       if (this._mode === PlaybackMode.SHUFFLE) {
@@ -202,6 +199,8 @@ export class PlaybackService {
   restoreQueueState(): Observable<any | undefined> {
     const state = this.loadQueueState();
     if (state) {
+      this._mode = state.mode;
+      this.modeSubject.next(this._mode);
       let allSongIds = [...state.queueSongIds];
       if (state.originalQueueSongIds !== undefined) {
         allSongIds = allSongIds.concat(state.originalQueueSongIds);
@@ -245,6 +244,8 @@ export class PlaybackService {
         })
       );
     } else {
+      this._mode = PlaybackMode.NORMAL;
+      this.modeSubject.next(this._mode);
       return of(undefined);
     }
   }
@@ -521,7 +522,8 @@ export class PlaybackService {
         queueSongIds: this._queue.map(next => next.id),
         originalQueueSongIds: this.originalQueue !== undefined ? this.originalQueue.map(next => next.id) : undefined,
         currentIndex: this._currentIndex,
-        progress: this.lastPlaybackEvent.state === PlaybackState.ENDED ? undefined : this.lastPlaybackEvent.progress
+        progress: this.lastPlaybackEvent.state === PlaybackState.ENDED ? undefined : this.lastPlaybackEvent.progress,
+        mode: this._mode
       } as QueueState;
       window.localStorage.setItem(localStorageKey, JSON.stringify(state));
     }
