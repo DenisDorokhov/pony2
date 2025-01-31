@@ -86,8 +86,8 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
     this.playlistService.unlikeSong(song.id).subscribe({
       error: () => {
         this.notificationService.error(
-          this.translateService.instant('artistLikes.unlikeNotificationTitle'),
-          this.translateService.instant('artistLikes.unlikeNotificationTextFailure')
+          this.translateService.instant('library.song.unlikeNotificationTitle'),
+          this.translateService.instant('library.song.unlikeNotificationTextFailure')
         );
       }
     });

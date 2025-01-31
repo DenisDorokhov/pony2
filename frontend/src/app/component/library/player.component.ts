@@ -203,8 +203,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
         error: () => {
           this.isLikedSong = true;
           this.notificationService.error(
-            this.translateService.instant('player.unlikeNotificationTitle'),
-            this.translateService.instant('player.unlikeNotificationTextFailure')
+            this.translateService.instant('library.song.unlikeNotificationTitle'),
+            this.translateService.instant('library.song.unlikeNotificationTextFailure')
           );
         }
       });
@@ -214,8 +214,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
         error: () => {
           this.isLikedSong = false;
           this.notificationService.error(
-            this.translateService.instant('player.likeNotificationTitle'),
-            this.translateService.instant('player.likeNotificationTextFailure')
+            this.translateService.instant('library.song.likeNotificationTitle'),
+            this.translateService.instant('library.song.likeNotificationTextFailure')
           );
         }
       });

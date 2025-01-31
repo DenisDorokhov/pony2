@@ -49,13 +49,11 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   @Input()
   index!: number;
   @Input()
+  overrideIndex: number | undefined;
+  @Input()
   selected = false;
   @Input()
   isCurrentSong = false;
-  @Input()
-  showIndex = true;
-  @Input()
-  showDuration = true;
 
   get song(): Song {
     return this._song;

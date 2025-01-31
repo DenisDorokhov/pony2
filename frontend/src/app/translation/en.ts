@@ -80,10 +80,6 @@ export default {
     songTitle: '{{artistName}} - {{songName}}',
     likedSongButtonTooltip: 'Delete song from favorites',
     notLikedSongButtonTooltip: 'Add song to favorites',
-    likeNotificationTitle: 'Playlists',
-    likeNotificationTextFailure: 'Could not add song to favorites!',
-    unlikeNotificationTitle: 'Playlists',
-    unlikeNotificationTextFailure: 'Could not remove song from favorites!',
   },
   queue: {
     header: 'Playback Queue',
@@ -115,8 +111,6 @@ export default {
   artistLikes: {
     header: '{{ artistName }}',
     statisticsLabel: '{{ count }} favorite songs of {{ artistName }}',
-    unlikeNotificationTitle: 'Playlists',
-    unlikeNotificationTextFailure: 'Could not remove song from favorites!',
   },
   playlist: {
     header: 'Playlists',
@@ -271,6 +265,14 @@ export default {
       hours: '{{value}} hours',
       minutes: '{{value}} minutes',
       seconds: '{{value}} seconds',
+    },
+    difference: {
+      years: '{{value}}Y',
+      months: '{{value}}M',
+      days: '{{value}}d',
+      hours: '{{value}}h',
+      minutes: '{{value}}m',
+      seconds: '{{value}}s',
     },
     scanJob: {
       startingStatus: 'STARTING',

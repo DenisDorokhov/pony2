@@ -2,7 +2,7 @@
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.genreName | ponyUnknownGenre }}] [{{ song.sizeMb }} MB] [{{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
      [class.current]="isCurrentSong" [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()"
      (dblclick)="onDoubleClick($event)" (mousedown)="preventDoubleClickDefault($event)">
-  <div class="track-number" *ngIf="showIndex">
+  <div class="track-number">
     <div>
       <button class="playback" [hidden]="!isMouseOver || !playOrPauseRequested.observed" (click)="onPlaybackClick()">
         <i class="bi"
@@ -20,7 +20,7 @@
             playbackState !== PlaybackState.LOADING &&
             playbackState !== PlaybackState.PLAYING &&
             playbackState !== PlaybackState.PAUSED
-          )) ? index + 1 : ''
+          )) ? (overrideIndex ?? (index + 1)) : ''
       }}
     </div>
   </div>
@@ -37,19 +37,7 @@
       <i class="bi" [class.bi-star-fill]="isLikedSong" [class.bi-star]="!isLikedSong"></i>
     </button>
   </div>
-  <div class="playback-indicator" *ngIf="!showIndex">
-    <button class="playback" [hidden]="!isMouseOver || !playOrPauseRequested.observed" (click)="onPlaybackClick()">
-      <i class="bi"
-         [class.bi-play-fill]="!isCurrentSong || (playbackState !== PlaybackState.PLAYING && playbackState !== PlaybackState.LOADING)"
-         [class.bi-pause-fill]="isCurrentSong && (playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.LOADING)"
-      ></i>
-    </button>
-    <i [hidden]="(isMouseOver && playOrPauseRequested.observed) || !isCurrentSong"
-       [class.bi-volume-up-fill]="playbackState === PlaybackState.PLAYING"
-       [class.bi-volume-off-fill]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"
-       class="bi playback-indicator"></i>
-  </div>
-  <div class="duration" *ngIf="showDuration">
+  <div class="duration">
     {{ song.durationInMinutes }}
   </div>
   <div ngbDropdown class="options">

@@ -1,8 +1,8 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdownModule} from '@ng-bootstrap/ng-bootstrap';
-import {PlaybackHistory, Song} from '../../../domain/library.model';
+import {PlaybackHistory, PlaybackHistorySong, Song} from '../../../domain/library.model';
 import {LoadingState} from '../../../domain/common.model';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
@@ -14,6 +14,7 @@ import {LibraryService} from '../../../service/library.service';
 import {PlaybackEvent} from '../../../service/audio-player.service';
 import {PlaybackService} from '../../../service/playback.service';
 import {Subscription} from 'rxjs';
+import {formatTimeDifference} from '../../../utils/format.utils';
 
 @Component({
   standalone: true,
@@ -52,6 +53,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
     private readonly playbackHistoryService: PlaybackHistoryService,
     private readonly libraryService: LibraryService,
     private readonly playbackService: PlaybackService,
+    private readonly translateService: TranslateService,
   ) {
   }
 
@@ -97,5 +99,10 @@ export class HistoryComponent implements OnInit, OnDestroy {
     this.libraryService.selectSong(song);
     this.libraryService.requestScrollToSong(song);
     this.activeModal.close();
+  }
+
+  formatTimeDifference(song: PlaybackHistorySong) {
+    const difference = new Date().getTime() / 1000 - song.creationDate.getTime() / 1000;
+    return formatTimeDifference(difference, this.translateService);
   }
 }
