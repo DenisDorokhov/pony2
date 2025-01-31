@@ -147,6 +147,8 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       this.checkIfClickWithinContainer(event)));
     this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
       this.hideMenu()));
+    this.subscriptions.push(fromEvent(window, 'resize').subscribe(() =>
+      this.hideMenu()));
   }
 
   private checkIfClickWithinContainer(event: Event) {
