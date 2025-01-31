@@ -67,7 +67,19 @@ export class LibraryService {
   }
 
   get defaultArtistId(): string | undefined {
-    return window.localStorage.getItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY) ?? undefined;
+    const localStorageKey = this.resolveDefaultArtistLocalStorageKey();
+    if (localStorageKey) {
+      return window.localStorage.getItem(localStorageKey) ?? undefined;
+    } else {
+      return undefined;
+    }
+  }
+
+  private resolveDefaultArtistLocalStorageKey(): string | undefined {
+    if (this.authenticationService.isAuthenticated) {
+      return LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY + '.' + this.authenticationService.currentUser!.id;
+    }
+    return undefined;
   }
 
   initialize(): Observable<void> {
@@ -254,10 +266,13 @@ export class LibraryService {
   }
 
   private storeDefaultArtistId(artistId: string | undefined) {
-    if (artistId) {
-      window.localStorage.setItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY, artistId);
-    } else {
-      window.localStorage.removeItem(LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY);
+    const localStorageKey = this.resolveDefaultArtistLocalStorageKey();
+    if (localStorageKey) {
+      if (artistId) {
+        window.localStorage.setItem(localStorageKey, artistId);
+      } else {
+        window.localStorage.removeItem(localStorageKey);
+      }
     }
   }
 
