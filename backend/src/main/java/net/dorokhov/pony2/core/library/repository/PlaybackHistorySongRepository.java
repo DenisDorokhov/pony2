@@ -9,4 +9,5 @@ public interface PlaybackHistorySongRepository extends JpaRepository<PlaybackHis
     long countByUserId(String userId);
     Page<PlaybackHistorySong> findByUserId(String userId, Pageable pageable);
     void deleteBySongId(String songId);
+    void deleteByUserId(String userId);
 }

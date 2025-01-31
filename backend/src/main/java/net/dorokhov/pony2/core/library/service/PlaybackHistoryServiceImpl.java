@@ -8,12 +8,14 @@ import net.dorokhov.pony2.api.library.domain.PlaybackHistoryStatistics;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.service.PlaybackHistoryService;
 import net.dorokhov.pony2.api.user.domain.User;
+import net.dorokhov.pony2.api.user.domain.UserDeletingEvent;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.core.library.repository.PlaybackHistorySongRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -127,6 +129,12 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
             });
         }
         return new RestoredHistory(restoredSongCount.get(), notFoundSongCount.get(), new ArrayList<>(notFoundUserEmails));
+    }
+
+    @Transactional
+    @EventListener(UserDeletingEvent.class)
+    public void onUserDeleting(UserDeletingEvent event) {
+        playbackHistorySongRepository.deleteByUserId(event.getUserId());
     }
 
     record PlaybackHistorySongBackup(
