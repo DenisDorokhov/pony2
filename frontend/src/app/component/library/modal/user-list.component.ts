@@ -12,11 +12,10 @@ import {AuthenticationService} from '../../../service/authentication.service';
 import {NotificationService} from '../../../service/notification.service';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent],
-  selector: 'pony-user-list',
-  templateUrl: './user-list.component.html',
-  styleUrls: ['./user-list.component.scss']
+    imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent],
+    selector: 'pony-user-list',
+    templateUrl: './user-list.component.html',
+    styleUrls: ['./user-list.component.scss']
 })
 export class UserListComponent implements OnInit {
 

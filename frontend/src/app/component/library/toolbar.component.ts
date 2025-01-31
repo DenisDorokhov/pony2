@@ -20,11 +20,10 @@ import Role = UserDto.Role;
 import {PlaylistComponent} from './modal/playlist.component';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, TranslateModule, NgbDropdownModule, FastSearchComponent],
-  selector: 'pony-toolbar',
-  templateUrl: './toolbar.component.html',
-  styleUrls: ['./toolbar.component.scss']
+    imports: [CommonModule, TranslateModule, NgbDropdownModule, FastSearchComponent],
+    selector: 'pony-toolbar',
+    templateUrl: './toolbar.component.html',
+    styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
 

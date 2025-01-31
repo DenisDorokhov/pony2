@@ -32,11 +32,10 @@ import {formatDuration} from '../../../utils/format.utils';
 import {UnknownGenrePipe} from '../../../pipe/unknown-genre.pipe';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, FormsModule, NoContentIndicatorComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport, CdkDropList, CdkDrag, CdkVirtualForOf, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownButtonItem, NgbDropdownItem, UnknownGenrePipe],
-  selector: 'pony-playlist',
-  templateUrl: './playlist.component.html',
-  styleUrls: ['./playlist.component.scss']
+    imports: [TranslateModule, CommonModule, FormsModule, NoContentIndicatorComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport, CdkDropList, CdkDrag, CdkVirtualForOf, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownButtonItem, NgbDropdownItem, UnknownGenrePipe],
+    selector: 'pony-playlist',
+    templateUrl: './playlist.component.html',
+    styleUrls: ['./playlist.component.scss']
 })
 export class PlaylistComponent implements OnInit, OnDestroy {
 

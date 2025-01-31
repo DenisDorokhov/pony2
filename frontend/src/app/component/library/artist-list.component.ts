@@ -19,11 +19,10 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, UnknownGenrePipe, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem],
-  selector: 'pony-artist-list',
-  templateUrl: './artist-list.component.html',
-  styleUrls: ['./artist-list.component.scss']
+    imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, UnknownGenrePipe, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem],
+    selector: 'pony-artist-list',
+    templateUrl: './artist-list.component.html',
+    styleUrls: ['./artist-list.component.scss']
 })
 export class ArtistListComponent implements OnInit, OnDestroy {
 

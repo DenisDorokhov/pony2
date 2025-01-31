@@ -4,11 +4,10 @@ import {ErrorTranslationService} from '../../service/error-translation.service';
 import {CommonModule} from '@angular/common';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule],
-  selector: 'pony-error-container',
-  templateUrl: './error-container.component.html',
-  styleUrls: []
+    imports: [CommonModule],
+    selector: 'pony-error-container',
+    templateUrl: './error-container.component.html',
+    styleUrls: []
 })
 export class ErrorContainerComponent implements OnChanges {
 

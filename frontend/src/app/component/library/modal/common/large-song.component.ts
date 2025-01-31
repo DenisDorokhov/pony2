@@ -24,24 +24,23 @@ import {PlaylistAddSongComponent} from '../playlist-add-song.component';
 import {PlaylistEditComponent} from '../playlist-edit.component';
 
 @Component({
-  standalone: true,
-  imports: [
-    CommonModule,
-    TranslateModule,
-    UnknownArtistPipe,
-    UnknownSongPipe,
-    ImageLoaderComponent,
-    UnknownAlbumPipe,
-    UnknownGenrePipe,
-    NgbDropdown,
-    NgbDropdownButtonItem,
-    NgbDropdownItem,
-    NgbDropdownMenu,
-    NgbDropdownToggle,
-  ],
-  selector: 'pony-large-song',
-  templateUrl: './large-song.component.html',
-  styleUrls: ['./large-song.component.scss']
+    imports: [
+        CommonModule,
+        TranslateModule,
+        UnknownArtistPipe,
+        UnknownSongPipe,
+        ImageLoaderComponent,
+        UnknownAlbumPipe,
+        UnknownGenrePipe,
+        NgbDropdown,
+        NgbDropdownButtonItem,
+        NgbDropdownItem,
+        NgbDropdownMenu,
+        NgbDropdownToggle,
+    ],
+    selector: 'pony-large-song',
+    templateUrl: './large-song.component.html',
+    styleUrls: ['./large-song.component.scss']
 })
 export class LargeSongComponent implements OnInit, OnDestroy {
 

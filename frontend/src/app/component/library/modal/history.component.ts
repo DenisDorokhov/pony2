@@ -17,23 +17,21 @@ import {Subscription} from 'rxjs';
 import {formatTimeDifference} from '../../../utils/format.utils';
 
 @Component({
-  standalone: true,
-  imports: [
-    CommonModule,
-    TranslateModule,
-    NgbDropdownModule,
-    ErrorIndicatorComponent,
-    LoadingIndicatorComponent,
-    CdkFixedSizeVirtualScroll,
-    CdkVirtualScrollViewport,
-    NoContentIndicatorComponent,
-    CdkVirtualForOf,
-    LargeSongComponent,
-
-  ],
-  selector: 'pony-history',
-  templateUrl: './history.component.html',
-  styleUrls: ['./history.component.scss']
+    imports: [
+        CommonModule,
+        TranslateModule,
+        NgbDropdownModule,
+        ErrorIndicatorComponent,
+        LoadingIndicatorComponent,
+        CdkFixedSizeVirtualScroll,
+        CdkVirtualScrollViewport,
+        NoContentIndicatorComponent,
+        CdkVirtualForOf,
+        LargeSongComponent,
+    ],
+    selector: 'pony-history',
+    templateUrl: './history.component.html',
+    styleUrls: ['./history.component.scss']
 })
 export class HistoryComponent implements OnInit, OnDestroy {
 

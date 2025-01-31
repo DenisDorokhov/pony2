@@ -6,11 +6,10 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {formatDuration, formatFileSize} from '../../../utils/format.utils';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule],
-  selector: 'pony-scan-job',
-  templateUrl: './scan-job.component.html',
-  styleUrls: ['./scan-job.component.scss']
+    imports: [TranslateModule, CommonModule],
+    selector: 'pony-scan-job',
+    templateUrl: './scan-job.component.html',
+    styleUrls: ['./scan-job.component.scss']
 })
 export class ScanJobComponent implements OnInit {
 

@@ -11,11 +11,10 @@ import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaybackState} from '../../service/audio-player.service';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
-  selector: 'pony-artist',
-  templateUrl: './artist.component.html',
-  styleUrls: ['./artist.component.scss']
+    imports: [CommonModule, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
+    selector: 'pony-artist',
+    templateUrl: './artist.component.html',
+    styleUrls: ['./artist.component.scss']
 })
 export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 

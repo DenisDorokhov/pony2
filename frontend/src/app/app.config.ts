@@ -1,4 +1,10 @@
-import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom, provideZoneChangeDetection} from '@angular/core';
+import {
+  ApplicationConfig,
+  importProvidersFrom,
+  inject,
+  provideAppInitializer,
+  provideZoneChangeDetection
+} from '@angular/core';
 import {provideRouter} from '@angular/router';
 
 import {routes} from './app.routes';
@@ -13,13 +19,9 @@ import {provideToastr} from 'ngx-toastr';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {NgbDateAdapter, NgbDateNativeAdapter} from '@ng-bootstrap/ng-bootstrap';
 
-export function initialize(initializerService: InitializerService) {
-  return () => initializerService.initialize();
-}
-
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
@@ -41,12 +43,9 @@ export const appConfig: ApplicationConfig = {
       provide: NgbDateAdapter,
       useClass: NgbDateNativeAdapter
     },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initialize,
-      deps: [InitializerService],
-      multi: true,
-    },
+    provideAppInitializer(() => {
+      return (inject(InitializerService) as InitializerService).initialize();
+    }),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: SecurityInterceptor,

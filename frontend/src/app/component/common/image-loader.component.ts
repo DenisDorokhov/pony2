@@ -8,11 +8,10 @@ enum ImageLoaderComponentState {
 }
 
 @Component({
-  standalone: true,
-  imports: [CommonModule],
-  selector: 'pony-image-loader',
-  templateUrl: './image-loader.component.html',
-  styleUrls: ['./image-loader.component.scss']
+    imports: [CommonModule],
+    selector: 'pony-image-loader',
+    templateUrl: './image-loader.component.html',
+    styleUrls: ['./image-loader.component.scss']
 })
 export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 

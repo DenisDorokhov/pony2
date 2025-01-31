@@ -14,11 +14,10 @@ import {ArtworkComponent} from './modal/artwork.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  standalone: true,
-  imports: [ImageLoaderComponent, TranslateModule],
-  selector: 'pony-player',
-  templateUrl: './player.component.html',
-  styleUrls: ['./player.component.scss']
+    imports: [ImageLoaderComponent, TranslateModule],
+    selector: 'pony-player',
+    templateUrl: './player.component.html',
+    styleUrls: ['./player.component.scss']
 })
 export class PlayerComponent implements OnInit, OnDestroy {
 

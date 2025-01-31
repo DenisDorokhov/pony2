@@ -14,11 +14,10 @@ import {formatDuration, formatFileSize} from '../../utils/format.utils';
 import {BrowserNotificationService} from '../../service/browser-notification.service';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, PlayerComponent, ToolbarComponent, ArtistListComponent, AlbumListComponent],
-  selector: 'pony-library',
-  templateUrl: './library.component.html',
-  styleUrls: ['./library.component.scss']
+    imports: [TranslateModule, CommonModule, PlayerComponent, ToolbarComponent, ArtistListComponent, AlbumListComponent],
+    selector: 'pony-library',
+    templateUrl: './library.component.html',
+    styleUrls: ['./library.component.scss']
 })
 export class LibraryComponent implements OnInit, OnDestroy {
 

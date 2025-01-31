@@ -18,11 +18,10 @@ import {LibraryService} from '../../../service/library.service';
 import {PlaybackHistoryService} from '../../../service/playback-history.service';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule],
-  selector: 'pony-settings',
-  templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss']
+    imports: [TranslateModule, CommonModule, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule],
+    selector: 'pony-settings',
+    templateUrl: './settings.component.html',
+    styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit{
 

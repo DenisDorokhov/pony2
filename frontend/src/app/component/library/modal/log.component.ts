@@ -39,11 +39,10 @@ class LogWithException implements LogMessageDto {
 }
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, FormsModule, ReactiveFormsModule, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdown],
-  selector: 'pony-log',
-  templateUrl: './log.component.html',
-  styleUrls: ['./log.component.scss']
+    imports: [TranslateModule, DatePipe, ErrorIndicatorComponent, LoadingIndicatorComponent, CommonModule, FormsModule, ReactiveFormsModule, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdown],
+    selector: 'pony-log',
+    templateUrl: './log.component.html',
+    styleUrls: ['./log.component.scss']
 })
 export class LogComponent implements OnInit {
 

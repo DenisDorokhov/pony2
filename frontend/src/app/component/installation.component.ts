@@ -13,11 +13,10 @@ import {mergeMap} from 'rxjs';
 import {AuthenticationService, Credentials} from '../service/authentication.service';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, AutoFocusDirective, ErrorComponent, ErrorContainerComponent],
-  selector: 'pony-installation',
-  templateUrl: './installation.component.html',
-  styleUrl: './installation.component.scss'
+    imports: [CommonModule, ReactiveFormsModule, TranslateModule, AutoFocusDirective, ErrorComponent, ErrorContainerComponent],
+    selector: 'pony-installation',
+    templateUrl: './installation.component.html',
+    styleUrl: './installation.component.scss'
 })
 export class InstallationComponent {
 

@@ -13,11 +13,10 @@ import {LibraryService} from '../../../service/library.service';
 import {ScanJobComponent} from './scan-job.component';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
-  selector: 'pony-scanning',
-  templateUrl: './scanning.component.html',
-  styleUrls: ['./scanning.component.scss']
+    imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
+    selector: 'pony-scanning',
+    templateUrl: './scanning.component.html',
+    styleUrls: ['./scanning.component.scss']
 })
 export class ScanningComponent implements OnInit, OnDestroy {
 

@@ -25,21 +25,20 @@ import {isMobileBrowser} from '../../../utils/mobile.utils';
 import {LargeSongComponent} from './common/large-song.component';
 
 @Component({
-  standalone: true,
-  imports: [
-    CommonModule,
-    TranslateModule,
-    NoContentIndicatorComponent,
-    CdkDropList,
-    CdkDrag,
-    CdkVirtualScrollViewport,
-    CdkVirtualForOf,
-    LargeSongComponent,
-    CdkFixedSizeVirtualScroll,
-  ],
-  selector: 'pony-queue',
-  templateUrl: './queue.component.html',
-  styleUrls: ['./queue.component.scss']
+    imports: [
+        CommonModule,
+        TranslateModule,
+        NoContentIndicatorComponent,
+        CdkDropList,
+        CdkDrag,
+        CdkVirtualScrollViewport,
+        CdkVirtualForOf,
+        LargeSongComponent,
+        CdkFixedSizeVirtualScroll,
+    ],
+    selector: 'pony-queue',
+    templateUrl: './queue.component.html',
+    styleUrls: ['./queue.component.scss']
 })
 export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 

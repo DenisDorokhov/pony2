@@ -12,11 +12,10 @@ import {PlaylistService} from '../service/playlist.service';
 import {LibraryService} from '../service/library.service';
 
 @Component({
-  standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, ErrorComponent],
-  selector: 'pony-login',
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+    imports: [ReactiveFormsModule, TranslateModule, ErrorComponent],
+    selector: 'pony-login',
+    templateUrl: './login.component.html',
+    styleUrl: './login.component.scss'
 })
 export class LoginComponent {
 

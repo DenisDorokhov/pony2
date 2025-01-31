@@ -16,11 +16,10 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ArtistLikesComponent} from './modal/artist-likes.component';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe],
-  selector: 'pony-album-list',
-  templateUrl: './album-list.component.html',
-  styleUrls: ['./album-list.component.scss']
+    imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe],
+    selector: 'pony-album-list',
+    templateUrl: './album-list.component.html',
+    styleUrls: ['./album-list.component.scss']
 })
 export class AlbumListComponent implements OnInit, OnDestroy {
 

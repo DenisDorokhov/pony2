@@ -4,11 +4,10 @@ import {SongComponent} from './song.component';
 import {CommonModule} from '@angular/common';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, SongComponent],
-  selector: 'pony-song-list',
-  templateUrl: './song-list.component.html',
-  styleUrls: ['./song-list.component.scss']
+    imports: [CommonModule, SongComponent],
+    selector: 'pony-song-list',
+    templateUrl: './song-list.component.html',
+    styleUrls: ['./song-list.component.scss']
 })
 export class SongListComponent {
 

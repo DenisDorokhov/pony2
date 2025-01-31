@@ -37,11 +37,10 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 }
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe],
-  selector: 'pony-album',
-  templateUrl: './album.component.html',
-  styleUrls: ['./album.component.scss']
+    imports: [CommonModule, TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe],
+    selector: 'pony-album',
+    templateUrl: './album.component.html',
+    styleUrls: ['./album.component.scss']
 })
 export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
 

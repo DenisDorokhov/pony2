@@ -14,11 +14,10 @@ import {LoadingIndicatorComponent} from '../../common/loading-indicator.componen
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, ReactiveFormsModule, ErrorContainerComponent, LoadingIndicatorComponent, ErrorIndicatorComponent],
-  selector: 'pony-user',
-  templateUrl: './user.component.html',
-  styleUrls: ['./user.component.scss']
+    imports: [TranslateModule, CommonModule, ReactiveFormsModule, ErrorContainerComponent, LoadingIndicatorComponent, ErrorIndicatorComponent],
+    selector: 'pony-user',
+    templateUrl: './user.component.html',
+    styleUrls: ['./user.component.scss']
 })
 export class UserComponent implements OnInit {
 

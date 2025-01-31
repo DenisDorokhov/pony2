@@ -21,11 +21,10 @@ import {FormsModule} from '@angular/forms';
 import {PlaylistDto} from '../../../domain/library.dto';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
-  selector: 'pony-playlist-add-song',
-  templateUrl: './playlist-add-song.component.html',
-  styleUrls: ['./playlist-add-song.component.scss']
+    imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+    selector: 'pony-playlist-add-song',
+    templateUrl: './playlist-add-song.component.html',
+    styleUrls: ['./playlist-add-song.component.scss']
 })
 export class PlaylistAddSongComponent implements OnInit {
 

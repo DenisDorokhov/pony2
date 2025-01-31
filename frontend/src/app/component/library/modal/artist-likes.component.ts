@@ -13,11 +13,10 @@ import {LibraryService} from '../../../service/library.service';
 import {NotificationService} from '../../../service/notification.service';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
-  selector: 'pony-artist-likes',
-  templateUrl: './artist-likes.component.html',
-  styleUrls: ['./artist-likes.component.scss']
+    imports: [TranslateModule, CommonModule, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
+    selector: 'pony-artist-likes',
+    templateUrl: './artist-likes.component.html',
+    styleUrls: ['./artist-likes.component.scss']
 })
 export class ArtistLikesComponent implements OnInit, OnDestroy {
 

@@ -29,11 +29,10 @@ import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistDto} from '../../domain/library.dto';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe],
-  selector: 'pony-song',
-  templateUrl: './song.component.html',
-  styleUrls: ['./song.component.scss']
+    imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe],
+    selector: 'pony-song',
+    templateUrl: './song.component.html',
+    styleUrls: ['./song.component.scss']
 })
 export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 

@@ -5,11 +5,10 @@ import {TranslateModule} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, TranslateModule],
-  selector: 'pony-error',
-  templateUrl: './error.component.html',
-  styleUrls: ['./error.component.scss']
+    imports: [CommonModule, TranslateModule],
+    selector: 'pony-error',
+    templateUrl: './error.component.html',
+    styleUrls: ['./error.component.scss']
 })
 export class ErrorComponent implements OnChanges {
 

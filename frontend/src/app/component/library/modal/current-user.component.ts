@@ -13,11 +13,10 @@ import {AuthenticationService} from '../../../service/authentication.service';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
-  selector: 'pony-current-user',
-  templateUrl: './current-user.component.html',
-  styleUrls: ['./current-user.component.scss']
+    imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
+    selector: 'pony-current-user',
+    templateUrl: './current-user.component.html',
+    styleUrls: ['./current-user.component.scss']
 })
 export class CurrentUserComponent implements OnInit {
 

@@ -15,11 +15,10 @@ import {ErrorContainerComponent} from '../../common/error-container.component';
 import SongId = PlaylistUpdateCommandDto.SongId;
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, FormsModule, ReactiveFormsModule, ErrorIndicatorComponent, LoadingIndicatorComponent, ErrorContainerComponent],
-  selector: 'pony-playlist-edit',
-  templateUrl: './playlist-edit.component.html',
-  styleUrls: ['./playlist-edit.component.scss']
+    imports: [TranslateModule, CommonModule, FormsModule, ReactiveFormsModule, ErrorIndicatorComponent, LoadingIndicatorComponent, ErrorContainerComponent],
+    selector: 'pony-playlist-edit',
+    templateUrl: './playlist-edit.component.html',
+    styleUrls: ['./playlist-edit.component.scss']
 })
 export class PlaylistEditComponent implements OnInit {
 

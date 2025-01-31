@@ -25,11 +25,10 @@ class NavigationItem {
 }
 
 @Component({
-  standalone: true,
-  imports: [TranslateModule, CommonModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
-  selector: 'pony-fast-search',
-  templateUrl: './fast-search.component.html',
-  styleUrls: ['./fast-search.component.scss']
+    imports: [TranslateModule, CommonModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
+    selector: 'pony-fast-search',
+    templateUrl: './fast-search.component.html',
+    styleUrls: ['./fast-search.component.scss']
 })
 export class FastSearchComponent implements OnInit, OnDestroy {
 
