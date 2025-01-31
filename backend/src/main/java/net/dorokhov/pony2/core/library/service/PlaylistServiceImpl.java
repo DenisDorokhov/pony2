@@ -33,17 +33,20 @@ public class PlaylistServiceImpl implements PlaylistService {
     private final SongRepository songRepository;
     private final UserService userService;
     private final LibraryService libraryService;
+    private final ObjectMapper objectMapper;
 
     public PlaylistServiceImpl(
             PlaylistRepository playlistRepository,
             SongRepository songRepository,
             UserService userService,
-            LibraryService libraryService
+            LibraryService libraryService,
+            ObjectMapper objectMapper
     ) {
         this.playlistRepository = playlistRepository;
         this.songRepository = songRepository;
         this.userService = userService;
         this.libraryService = libraryService;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -185,7 +188,7 @@ public class PlaylistServiceImpl implements PlaylistService {
             userEmailToBackup.put(user.getEmail(), backup);
         }
         try {
-            return new ObjectMapper().writeValueAsString(userEmailToBackup);
+            return objectMapper.writeValueAsString(userEmailToBackup);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -197,7 +200,7 @@ public class PlaylistServiceImpl implements PlaylistService {
 
         Map<String, List<BackupPlaylist>> userEmailToBackup;
         try {
-            userEmailToBackup = new ObjectMapper().readValue(backup, new TypeReference<>() {
+            userEmailToBackup = objectMapper.readValue(backup, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

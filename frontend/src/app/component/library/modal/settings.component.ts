@@ -15,6 +15,7 @@ import {LibraryScanService} from '../../../service/library-scan.service';
 import {NotificationService} from '../../../service/notification.service';
 import {PlaylistService} from '../../../service/playlist.service';
 import {LibraryService} from '../../../service/library.service';
+import {PlaybackHistoryService} from '../../../service/playback-history.service';
 
 @Component({
   standalone: true,
@@ -33,7 +34,8 @@ export class SettingsComponent implements OnInit{
   form: FormGroup;
   formLibraryFolders: FormArray;
   error: ErrorDto | undefined;
-  backupFileToRestore: File | undefined;
+  backupPlaylistsFileToRestore: File | undefined;
+  backupHistoryFileToRestore: File | undefined;
 
   primaryLoadingState = LoadingState.LOADING;
   secondaryLoadingState = LoadingState.LOADED;
@@ -47,6 +49,7 @@ export class SettingsComponent implements OnInit{
     private readonly notificationService: NotificationService,
     private readonly playlistService: PlaylistService,
     private readonly libraryService: LibraryService,
+    private readonly playbackHistoryService: PlaybackHistoryService,
   ) {
     this.formLibraryFolders = formBuilder.array([
       formBuilder.group({path: ''})
@@ -103,7 +106,7 @@ export class SettingsComponent implements OnInit{
     });
   }
 
-  createBackup() {
+  createPlaylistsBackup() {
     this.secondaryLoadingState = LoadingState.LOADING;
     this.playlistService.backupPlaylists().subscribe({
       next: () => this.secondaryLoadingState = LoadingState.LOADED,
@@ -111,17 +114,17 @@ export class SettingsComponent implements OnInit{
     });
   }
 
-  restoreBackup() {
+  restorePlaylistsBackup() {
     this.secondaryLoadingState = LoadingState.LOADING;
-    this.playlistService.restorePlaylists(this.backupFileToRestore!).subscribe({
+    this.playlistService.restorePlaylists(this.backupPlaylistsFileToRestore!).subscribe({
       next: dto => {
         this.secondaryLoadingState = LoadingState.LOADED;
-        let message = this.translateService.instant('settings.restoreBackupSuccess', { count: dto.userPlaylists.length });
+        let message = this.translateService.instant('settings.restorePlaylistsBackupSuccess', { count: dto.userPlaylists.length });
         if (dto.notFoundUserEmails.length > 0) {
-          message += '\n' + this.translateService.instant('settings.restoreBackupUserEmailsNotFound', { values: dto.notFoundUserEmails.join(', ') });
+          message += '\n' + this.translateService.instant('settings.restorePlaylistsBackupUserEmailsNotFound', { values: dto.notFoundUserEmails.join(', ') });
         }
         if (dto.notFoundSongPaths.length > 0) {
-          message += '\n' + this.translateService.instant('settings.restoreBackupSongPathsNotFound', { values: dto.notFoundSongPaths.join(', ') });
+          message += '\n' + this.translateService.instant('settings.restorePlaylistsBackupSongPathsNotFound', { values: dto.notFoundSongPaths.join(', ') });
         }
         window.alert(message);
       },
@@ -129,9 +132,40 @@ export class SettingsComponent implements OnInit{
     });
   }
 
-  onBackupFileChange(event: Event) {
+  onPlaylistsBackupFileChange(event: Event) {
     const fileList = (event.target as any).files as FileList;
-    this.backupFileToRestore = fileList.item(0) ?? undefined;
+    this.backupPlaylistsFileToRestore = fileList.item(0) ?? undefined;
+  }
+
+  createHistoryBackup() {
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.playbackHistoryService.backupHistory().subscribe({
+      next: () => this.secondaryLoadingState = LoadingState.LOADED,
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
+  }
+
+  restoreHistoryBackup() {
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.playbackHistoryService.restoreHistory(this.backupHistoryFileToRestore!).subscribe({
+      next: dto => {
+        this.secondaryLoadingState = LoadingState.LOADED;
+        let message = this.translateService.instant('settings.restoreHistoryBackupSuccess', { count: dto.restoredSongCount });
+        if (dto.notFoundUserEmails.length > 0) {
+          message += '\n' + this.translateService.instant('settings.restoreHistoryBackupUserEmailsNotFound', { values: dto.notFoundUserEmails.join(', ') });
+        }
+        if (dto.notFoundSongCount > 0) {
+          message += '\n' + this.translateService.instant('settings.restoreHistoryBackupSongNotFoundCount', { count: dto.notFoundSongCount });
+        }
+        window.alert(message);
+      },
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
+  }
+
+  onHistoryBackupFileChange(event: Event) {
+    const fileList = (event.target as any).files as FileList;
+    this.backupHistoryFileToRestore = fileList.item(0) ?? undefined;
   }
 
   reBuildSearchIndex() {

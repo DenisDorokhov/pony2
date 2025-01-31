@@ -309,3 +309,9 @@ export interface RandomSongsRequestDto {
 export interface BackupDto {
     fileContent: string;
 }
+
+export interface RestoredHistoryDto {
+  restoredSongCount: number;
+  notFoundSongCount: number;
+  notFoundUserEmails: string[];
+}

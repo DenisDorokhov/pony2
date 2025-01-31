@@ -33,15 +33,18 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
     private final PlaybackHistorySongRepository playbackHistorySongRepository;
     private final SongRepository songRepository;
     private final UserService userService;
+    private final ObjectMapper objectMapper;
 
     public PlaybackHistoryServiceImpl(
             PlaybackHistorySongRepository playbackHistorySongRepository,
             SongRepository songRepository,
-            UserService userService
+            UserService userService,
+            ObjectMapper objectMapper
     ) {
         this.playbackHistorySongRepository = playbackHistorySongRepository;
         this.songRepository = songRepository;
         this.userService = userService;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -81,7 +84,7 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
             userEmailToBackup.put(user.getEmail(), backup);
         }
         try {
-            return new ObjectMapper().writeValueAsString(userEmailToBackup);
+            return objectMapper.writeValueAsString(userEmailToBackup);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -93,7 +96,7 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
 
         Map<String, List<PlaybackHistorySongBackup>> userEmailToBackup;
         try {
-            userEmailToBackup = new ObjectMapper().readValue(backup, new TypeReference<>() {
+            userEmailToBackup = objectMapper.readValue(backup, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
