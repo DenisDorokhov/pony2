@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {UnknownArtistPipe} from '../../../../pipe/unknown-artist.pipe';
@@ -6,19 +6,22 @@ import {UnknownSongPipe} from '../../../../pipe/unknown-song.pipe';
 import {ImageLoaderComponent} from '../../../common/image-loader.component';
 import {UnknownAlbumPipe} from '../../../../pipe/unknown-album.pipe';
 import {UnknownGenrePipe} from '../../../../pipe/unknown-genre.pipe';
-import {Song} from '../../../../domain/library.model';
+import {Playlist, Song} from '../../../../domain/library.model';
 import {PlaybackState} from '../../../../service/audio-player.service';
 import {
   NgbDropdown,
   NgbDropdownButtonItem,
   NgbDropdownItem,
   NgbDropdownMenu,
-  NgbDropdownToggle
+  NgbDropdownToggle, NgbModal
 } from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistService} from '../../../../service/playlist.service';
-import {Subscription} from 'rxjs';
+import {fromEvent, Subscription} from 'rxjs';
 import {NotificationService} from '../../../../service/notification.service';
 import {PlaybackService} from '../../../../service/playback.service';
+import {PlaylistDto} from '../../../../domain/library.dto';
+import {PlaylistAddSongComponent} from '../playlist-add-song.component';
+import {PlaylistEditComponent} from '../playlist-edit.component';
 
 @Component({
   standalone: true,
@@ -74,18 +77,23 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   @Output()
   removalRequested = new EventEmitter<number>();
 
+  @ViewChild('menuDropdown')
+  menuDropdown!: NgbDropdown;
+
   playbackState: PlaybackState | undefined;
   isMouseOver = false;
   isLikedSong = false;
+  topPlaylists: Playlist[] = [];
 
   private _song!: Song;
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private playlistService: PlaylistService,
-    private notificationService: NotificationService,
-    private translateService: TranslateService,
-    private playbackService: PlaybackService,
+    private readonly playlistService: PlaylistService,
+    private readonly notificationService: NotificationService,
+    private readonly translateService: TranslateService,
+    private readonly playbackService: PlaybackService,
+    private readonly modal: NgbModal,
   ) {
   }
 
@@ -94,6 +102,10 @@ export class LargeSongComponent implements OnInit, OnDestroy {
       .subscribe(playbackEvent => this.playbackState = playbackEvent.state));
     this.subscriptions.push(this.playlistService.observeLikePlaylist()
       .subscribe(() => this.refreshLikeState()));
+    this.subscriptions.push(this.playlistService.observePlaylists()
+      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
+    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
+      this.menuDropdown.close()));
   }
 
   ngOnDestroy(): void {
@@ -166,6 +178,39 @@ export class LargeSongComponent implements OnInit, OnDestroy {
           );
         }
       });
+    }
+  }
+
+  playNext() {
+    this.playbackService.playNext(this.song);
+  }
+
+  addToQueue() {
+    this.playbackService.addToQueue(this.song);
+  }
+
+  createQueue() {
+    this.playbackService.createQueue(this.song);
+  }
+
+  addToPlaylist(playlist: Playlist) {
+    this.playlistService.addSongToPlaylist(playlist.id, this.song.id).subscribe({
+      error: () => this.notificationService.error(
+        this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
+        this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
+      ),
+    });
+  }
+
+  selectOrCreatePlaylist() {
+    if (this.topPlaylists.length > 0) {
+      const modalRef = this.modal.open(PlaylistAddSongComponent);
+      const playlistAddSongComponent: PlaylistAddSongComponent = modalRef.componentInstance;
+      playlistAddSongComponent.song = this.song;
+    } else {
+      const modalRef = this.modal.open(PlaylistEditComponent);
+      const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
+      playlistEditComponent.songs = [this.song];
     }
   }
 }

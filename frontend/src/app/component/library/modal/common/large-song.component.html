@@ -40,11 +40,23 @@
   <div class="duration">
     {{ song.durationInMinutes }}
   </div>
-  <div ngbDropdown class="options">
+  <div ngbDropdown class="options" #menuDropdown="ngbDropdown" container="body">
     <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
     <div ngbDropdownMenu class="dropdown-menu" role="menu">
       <button ngbDropdownItem (click)="goToSong()"><i class="bi bi-arrow-right"></i>{{ 'largeSong.goToSongButton' | translate }}</button>
       <button *ngIf="removalRequested.observed" ngbDropdownItem (click)="removeSong()"><i class="bi bi-x-circle"></i>{{ 'largeSong.removeSongButton' | translate }}</button>
+      <li><hr class="dropdown-divider"></li>
+      <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
+      <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.song.addToQueue' | translate }}</button>
+      <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.song.createQueue' | translate }}</button>
+      <li [hidden]="topPlaylists.length < 1"><hr class="dropdown-divider"></li>
+      @for (playlist of topPlaylists; track playlist.id) {
+        <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.song.addToPlaylist' | translate:{
+          name: playlist.name,
+        } }}</button>
+      }
+      <li><hr class="dropdown-divider"></li>
+      <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.song.selectOrCreatePlaylist' | translate }}</button>
     </div>
   </div>
 </div>

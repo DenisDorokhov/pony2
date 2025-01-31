@@ -107,10 +107,10 @@ button.playback {
   .dropdown-toggle::after {
     display: none;
   }
+}
 
-  .dropdown-menu button i {
-    margin-right: 12px;
-  }
+.dropdown-menu button i {
+  margin-right: 12px;
 }
 
 .columns-container.current {
