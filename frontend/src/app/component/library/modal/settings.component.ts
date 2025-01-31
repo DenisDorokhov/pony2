@@ -4,7 +4,7 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {ConfigService} from '../../../service/config.service';
 import {LoadingState} from '../../../domain/common.model';
 import {ConfigDto} from '../../../domain/config.dto';
-import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {ErrorDto} from '../../../domain/common.dto';
 import {AutoFocusDirective} from '../../common/auto-focus.directive';
 import {ErrorContainerComponent} from '../../common/error-container.component';
@@ -18,7 +18,7 @@ import {LibraryService} from '../../../service/library.service';
 
 @Component({
   standalone: true,
-  imports: [TranslateModule, CommonModule, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, ErrorIndicatorComponent, LoadingIndicatorComponent],
+  imports: [TranslateModule, CommonModule, ReactiveFormsModule, AutoFocusDirective, ErrorContainerComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule],
   selector: 'pony-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
@@ -28,6 +28,7 @@ export class SettingsComponent implements OnInit{
   LoadingState = LoadingState;
 
   config: ConfigDto | undefined;
+  showAdvanced = false;
 
   form: FormGroup;
   formLibraryFolders: FormArray;

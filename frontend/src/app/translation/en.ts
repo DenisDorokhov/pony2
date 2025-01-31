@@ -225,6 +225,7 @@ export default {
   },
   settings: {
     header: 'Settings',
+    advancedLabel: 'Advanced',
     backupPlaylistsLabel: 'Backup playlists:',
     createBackupButton: 'Create Backup',
     restorePlaylistsLabel: 'Restore playlists:',
