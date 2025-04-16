@@ -42,7 +42,7 @@ export default {
       unknownLabel: 'Unknown Genre'
     },
     album: {
-      counterHeader: '{{albumCount}} albums, {{songCount}} songs',
+      counterHeader: '{{genres}}, {{albumCount}} albums, {{songCount}} songs',
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown Album'
     },

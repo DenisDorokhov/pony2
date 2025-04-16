@@ -7,11 +7,12 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
     <h5 class="panel-title">
-      <span title="{{ (artistSongs.artist.name | ponyUnknownArtist) + ' [' + genreNames.join(', ') + ']' }}">{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
+      <span title="{{ (artistSongs.artist.name | ponyUnknownArtist) + ' [' + genreNamesAsString + ']' }}">{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
       <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i class="bi bi-star-fill"></i>{{ likeCount }}</button>
       <small class="counts">
         {{
           'library.album.counterHeader' | translate:{
+            genres: genreNamesAsString,
             albumCount,
             songCount
           }

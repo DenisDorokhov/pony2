@@ -28,6 +28,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   loadingState = LoadingState.LOADING;
   artistSongs!: ArtistSongs;
   genreNames: string[] = [];
+  genreNamesAsString = '';
 
   albumCount = 0;
   songCount = 0;
@@ -127,6 +128,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             }
             return this.translateService.instant('library.genre.unknownLabel');
           });
+          this.genreNamesAsString = this.genreNames.join(', ');
           this.artistSongs.albumSongs.sort(AlbumSongs.compare);
           this.artistSongs.albumSongs.forEach(album => {
             this.albumCount++;
