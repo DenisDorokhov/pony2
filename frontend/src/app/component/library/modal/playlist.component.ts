@@ -82,7 +82,13 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.playlistService.observePlaylists().subscribe(playlists => {
       this.playlists = playlists;
       const oldSelectedPlaylist = this.selectedPlaylist;
-      this.selectedPlaylist = this.playlists.length > 0 ? this.playlistService.getTopPlaylists()[0] : undefined;
+      const foundPlaylists = this.playlistService.getTopPlaylists()
+        .filter(next => next.id === this.selectedPlaylist?.id);
+      if (!this.selectedPlaylist || foundPlaylists.length < 1) {
+        this.selectedPlaylist = this.playlists.length > 0 ? this.playlistService.getTopPlaylists()[0] : undefined;
+      } else {
+        this.selectedPlaylist = foundPlaylists[0];
+      }
       this.loadSongs(!this.selectedPlaylist || this.selectedPlaylist.id !== oldSelectedPlaylist?.id);
     }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
