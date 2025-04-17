@@ -7,7 +7,7 @@
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
     <h5 class="panel-title">
-      <span title="{{ (artistSongs.artist.name | ponyUnknownArtist) + ' [' + genreNamesAsString + ']' }}">
+      <span title="{{ artistSongs.artist.name | ponyUnknownArtist }}">
         {{ artistSongs.artist.name | ponyUnknownArtist }}
         <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i class="bi bi-star-fill"></i>{{ likeCount }}</button>
       </span>

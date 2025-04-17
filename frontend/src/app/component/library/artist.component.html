@@ -1,4 +1,4 @@
-<a #container class="list-group-item" title="{{ (artist.name | ponyUnknownArtist) + ' [' + genreNames.join(', ') + ']' }}"
+<a #container class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
    [class.selected]="selected" [class.current]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED"
    (click)="select()">
   <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
