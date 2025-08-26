@@ -14,6 +14,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Component
 public class BuildVersionProvider {
 
+    @SuppressWarnings("FieldCanBeLocal")
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final BuildVersion buildVersion;

@@ -34,6 +34,11 @@ public class TokenService {
         } catch (SecretNotFoundException e) {
             tokenKeyService.generateAndStoreStaticTokenKey();
         }
+        try {
+            tokenKeyService.fetchOpenSubsonicKey();
+        } catch (SecretNotFoundException e) {
+            tokenKeyService.generateAndStoreOpenSubsonicKey();
+        }
     }
     
     public String generateAccessTokenForUserId(String userId) {
@@ -65,6 +70,22 @@ public class TokenService {
             return verifyJwtTokenAndGetUserId(userId, tokenKeyService.fetchStaticTokenKey());
         } catch (SecretNotFoundException e) {
             throw new IllegalStateException("Could not verify static token. Does the key file exist?");
+        }
+    }
+
+    public String generateOpenSubsonicApiKeyForUserId(String userId) {
+        try {
+            return generateJwtTokenForUserId(userId, tokenKeyService.fetchOpenSubsonicKey());
+        } catch (SecretNotFoundException e) {
+            throw new IllegalStateException("Could not generate OpenSubsonic API key. Does the key file exist?");
+        }
+    }
+
+    public String verifyOpenSubsonicApiKeyAndGetUserId(String userId) throws InvalidTokenException {
+        try {
+            return verifyJwtTokenAndGetUserId(userId, tokenKeyService.fetchOpenSubsonicKey());
+        } catch (SecretNotFoundException e) {
+            throw new IllegalStateException("Could not verify OpenSubsonic API key. Does the key file exist?");
         }
     }
 

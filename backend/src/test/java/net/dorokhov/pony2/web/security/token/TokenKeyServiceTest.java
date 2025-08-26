@@ -25,10 +25,12 @@ public class TokenKeyServiceTest {
     private File accessTokenKeyFile;
     @Mock
     private File staticTokenKeyFile;
+    @Mock
+    private File openSubsonicKeyFile;
 
     @BeforeEach
     public void setUp() {
-        tokenKeyService = new TokenKeyService(randomKeyService, accessTokenKeyFile, staticTokenKeyFile);
+        tokenKeyService = new TokenKeyService(randomKeyService, accessTokenKeyFile, staticTokenKeyFile, openSubsonicKeyFile);
     }
 
     @Test
@@ -69,5 +71,25 @@ public class TokenKeyServiceTest {
         when(randomKeyService.fetchStoredKey(staticTokenKeyFile)).thenReturn(randomKey);
 
         assertThat(tokenKeyService.fetchStaticTokenKey()).isEqualTo(randomKey);
+    }
+
+    @Test
+    public void shouldGenerateAndStoreOpenSubsonicKey() throws IOException {
+
+        byte[] randomKey = new byte[]{1, 2, 3};
+
+        when(randomKeyService.generateAndStoreRandomKey(openSubsonicKeyFile)).thenReturn(randomKey);
+
+        assertThat(tokenKeyService.generateAndStoreOpenSubsonicKey()).isEqualTo(randomKey);
+    }
+
+    @Test
+    public void shouldFetchOpenSubsonicKey() throws SecretNotFoundException, IOException {
+
+        byte[] randomKey = new byte[]{1, 2, 3};
+
+        when(randomKeyService.fetchStoredKey(openSubsonicKeyFile)).thenReturn(randomKey);
+
+        assertThat(tokenKeyService.fetchOpenSubsonicKey()).isEqualTo(randomKey);
     }
 }

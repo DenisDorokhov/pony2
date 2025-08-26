@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.web.security.token;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.web.security.UserDetailsImpl;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Optional;
 
 import static net.dorokhov.pony2.api.user.domain.User.Role.ADMIN;
 import static net.dorokhov.pony2.api.user.domain.User.Role.USER;
@@ -74,44 +77,76 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
     }
     
     private Authentication loadAuthentication(HttpServletRequest request) throws InvalidTokenException {
+        AuthenticationSource source;
         User user = loadUserByAccessToken(request);
-        boolean isAccessToken = user != null;
-        if (user == null) {
+        if (user != null) {
+            source = AuthenticationSource.ACCESS_TOKEN;
+        } else {
             user = loadUserByStaticToken(request);
-        }
-        if (user == null) {
-            throw new InvalidTokenException();
+            if (user != null) {
+                source = AuthenticationSource.STATIC_TOKEN;
+            } else {
+                user = loadUserBySubsonicCredentials(request);
+                if (user != null) {
+                    source = AuthenticationSource.OPEN_SUBSONIC;
+                } else {
+                    throw new InvalidTokenException();
+                }
+            }
         }
         UserDetails userDetails = new UserDetailsImpl(user);
-        ImmutableList.Builder<GrantedAuthority> authorities = ImmutableList.<GrantedAuthority>builder()
-                .addAll(userDetails.getAuthorities())
-                .add(new SimpleGrantedAuthority(WebAuthority.FILE_API.name()));
-        if (isAccessToken) {
-            if (user.getRoles().contains(USER)) {
-                authorities.add(new SimpleGrantedAuthority(WebAuthority.USER_API.name()));
+        ImmutableSet.Builder<GrantedAuthority> authorities = ImmutableSet.<GrantedAuthority>builder()
+                .addAll(userDetails.getAuthorities());
+        switch (source) {
+            case ACCESS_TOKEN -> {
+                if (user.getRoles().contains(USER)) {
+                    addAuthority(authorities, WebAuthority.FILE_API);
+                    addAuthority(authorities, WebAuthority.USER_API);
+                }
+                if (user.getRoles().contains(ADMIN)) {
+                    addAuthority(authorities, WebAuthority.FILE_API);
+                    addAuthority(authorities, WebAuthority.ADMIN_API);
+                }
             }
-            if (user.getRoles().contains(ADMIN)) {
-                authorities.add(new SimpleGrantedAuthority(WebAuthority.ADMIN_API.name()));
-            }
+            case STATIC_TOKEN ->
+                    addAuthority(authorities, WebAuthority.FILE_API);
+            case OPEN_SUBSONIC ->
+                    addAuthority(authorities, WebAuthority.OPEN_SUBSONIC_API);
         }
         return new UsernamePasswordAuthenticationToken(userDetails, null, authorities.build());
     }
-    
-    @Nullable
-    private User loadUserByAccessToken(HttpServletRequest request) throws InvalidTokenException {
+
+    private void addAuthority(ImmutableSet.Builder<GrantedAuthority> authorities, WebAuthority authority) {
+        authorities.add(new SimpleGrantedAuthority(authority.name()));
+    }
+
+    private @Nullable User loadUserByAccessToken(HttpServletRequest request) throws InvalidTokenException {
         String token = requestTokenFinder.findAccessToken(request);
         if (token != null) {
             return userService.getById(tokenService.verifyAccessTokenAndGetUserId(token)).orElse(null);
         }
         return null;
     }
-    
-    @Nullable
-    private User loadUserByStaticToken(HttpServletRequest request) throws InvalidTokenException {
+
+    private @Nullable User loadUserByStaticToken(HttpServletRequest request) throws InvalidTokenException {
         String token = requestTokenFinder.findStaticToken(request);
         if (token != null) {
             return userService.getById(tokenService.verifyStaticTokenAndGetUserId(token)).orElse(null);
         }
         return null;
+    }
+
+    private @Nullable User loadUserBySubsonicCredentials(HttpServletRequest request) throws InvalidTokenException {
+        String apiKey = requestTokenFinder.findOpenSubsonicApiKey(request);
+        if (apiKey != null) {
+            return userService.getById(tokenService.verifyOpenSubsonicApiKeyAndGetUserId(apiKey)).orElse(null);
+        }
+        return null;
+    }
+
+    enum AuthenticationSource {
+        ACCESS_TOKEN,
+        STATIC_TOKEN,
+        OPEN_SUBSONIC,
     }
 }

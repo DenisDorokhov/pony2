@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.user.service.exception.DuplicateEmailException;
 import net.dorokhov.pony2.api.user.service.exception.InvalidPasswordException;
 import net.dorokhov.pony2.api.user.service.exception.UserNotFoundException;
 import net.dorokhov.pony2.web.dto.*;
+import net.dorokhov.pony2.web.security.token.TokenService;
 import net.dorokhov.pony2.web.service.exception.NotAuthenticatedException;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
@@ -20,10 +21,16 @@ public class UserFacade {
 
     private final UserService userService;
     private final UserContext userContext;
+    private final TokenService tokenService;
 
-    public UserFacade(UserService userService, UserContext userContext) {
+    public UserFacade(
+            UserService userService,
+            UserContext userContext,
+            TokenService tokenService
+    ) {
         this.userService = userService;
         this.userContext = userContext;
+        this.tokenService = tokenService;
     }
 
     public UserDto getCurrentUser() throws NotAuthenticatedException {
@@ -79,5 +86,9 @@ public class UserFacade {
         }
         //noinspection ConstantConditions
         return UserDto.of(user);
+    }
+
+    public OpenSubsonicApiKeyDto generateCurrentUserOpenSubsonicApiKey() {
+        return new OpenSubsonicApiKeyDto().setValue(tokenService.generateOpenSubsonicApiKeyForUserId(userContext.getAuthenticatedUser().getId()));
     }
 }

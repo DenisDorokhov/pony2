@@ -87,6 +87,7 @@ public class WebConfig {
                         .requestMatchers("/api/file/**").hasAuthority(WebAuthority.FILE_API.name())
                         .requestMatchers("/api/admin/**").hasAuthority(WebAuthority.ADMIN_API.name())
                         .requestMatchers("/api/**").hasAuthority(WebAuthority.USER_API.name())
+                        .requestMatchers("/rest/**").hasAuthority(WebAuthority.OPEN_SUBSONIC_API.name())
                         .anyRequest().permitAll()
                 )
 

@@ -18,6 +18,7 @@ public class TokenKeyService {
 
     private static final String CACHE_KEY_ACCESS_TOKEN = "accessToken";
     private static final String CACHE_KEY_STATIC_TOKEN = "staticToken";
+    private static final String CACHE_KEY_OPEN_SUBSONIC = "openSubsonic";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -28,15 +29,18 @@ public class TokenKeyService {
     private final RandomKeyService randomKeyService;
     private final File accessTokenKeyFile;
     private final File staticTokenKeyFile;
+    private final File openSubsonicKeyFile;
 
     public TokenKeyService(
             RandomKeyService randomKeyService,
             @Value("${pony.accessTokenKey.path}") File accessTokenKeyFile,
-            @Value("${pony.staticTokenKey.path}") File staticTokenKeyFile
+            @Value("${pony.staticTokenKey.path}") File staticTokenKeyFile,
+            @Value("${pony.openSubsonicKey.path}") File openSubsonicKeyFile
     ) {
         this.randomKeyService = randomKeyService;
         this.accessTokenKeyFile = accessTokenKeyFile;
         this.staticTokenKeyFile = staticTokenKeyFile;
+        this.openSubsonicKeyFile = openSubsonicKeyFile;
     }
 
     public byte[] generateAndStoreAccessTokenKey() {
@@ -45,7 +49,7 @@ public class TokenKeyService {
         try {
             result = randomKeyService.generateAndStoreRandomKey(accessTokenKeyFile);
         } catch (IOException e) {
-            throw new RuntimeException("Could not generate access token.", e);
+            throw new RuntimeException("Could not generate access token secret.", e);
         }
         cache.put(CACHE_KEY_ACCESS_TOKEN, result);
         return result;
@@ -58,7 +62,7 @@ public class TokenKeyService {
             if (e.getCause() instanceof SecretNotFoundException) {
                 throw (SecretNotFoundException) e.getCause();
             } else {
-                throw new RuntimeException("Could not fetch access token.", e);
+                throw new RuntimeException("Could not fetch access token secret.", e);
             }
         }
     }
@@ -69,7 +73,7 @@ public class TokenKeyService {
         try {
             result = randomKeyService.generateAndStoreRandomKey(staticTokenKeyFile);
         } catch (IOException e) {
-            throw new RuntimeException("Could not generate static token.", e);
+            throw new RuntimeException("Could not generate static token secret.", e);
         }
         cache.put(CACHE_KEY_STATIC_TOKEN, result);
         return result;
@@ -82,7 +86,31 @@ public class TokenKeyService {
             if (e.getCause() instanceof SecretNotFoundException) {
                 throw (SecretNotFoundException) e.getCause();
             } else {
-                throw new RuntimeException("Could not fetch static token.", e);
+                throw new RuntimeException("Could not fetch static token secret.", e);
+            }
+        }
+    }
+
+    public byte[] generateAndStoreOpenSubsonicKey() {
+        logger.info("Generating new OpenSubsonic secret.");
+        byte[] result;
+        try {
+            result = randomKeyService.generateAndStoreRandomKey(openSubsonicKeyFile);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not generate OpenSubsonic secret.", e);
+        }
+        cache.put(CACHE_KEY_OPEN_SUBSONIC, result);
+        return result;
+    }
+
+    public byte[] fetchOpenSubsonicKey() throws SecretNotFoundException {
+        try {
+            return cache.get(CACHE_KEY_OPEN_SUBSONIC, () -> randomKeyService.fetchStoredKey(openSubsonicKeyFile));
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof SecretNotFoundException) {
+                throw (SecretNotFoundException) e.getCause();
+            } else {
+                throw new RuntimeException("Could not fetch OpenSubsonic secret.", e);
             }
         }
     }

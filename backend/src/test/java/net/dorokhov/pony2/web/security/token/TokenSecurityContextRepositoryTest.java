@@ -121,7 +121,7 @@ public class TokenSecurityContextRepositoryTest {
     }
 
     @Test
-    public void shouldLoadSecurityContextFromStatucToken() throws InvalidTokenException {
+    public void shouldLoadSecurityContextFromStaticToken() throws InvalidTokenException {
 
         when(requestTokenFinder.findAccessToken(any())).thenReturn(null);
         when(requestTokenFinder.findStaticToken(any())).thenReturn("someToken");

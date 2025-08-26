@@ -4,4 +4,5 @@ public enum WebAuthority {
     USER_API,
     ADMIN_API,
     FILE_API,
+    OPEN_SUBSONIC_API,
 }

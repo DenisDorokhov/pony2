@@ -3,6 +3,7 @@ package net.dorokhov.pony2.web.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.dorokhov.pony2.web.dto.ErrorDto.Code.ACCESS_DENIED;
 import static net.dorokhov.pony2.web.dto.ErrorDto.Code.AUTHENTICATION_FAILED;
 
 public final class ErrorDto {
@@ -128,5 +129,11 @@ public final class ErrorDto {
         return new ErrorDto()
                 .setCode(AUTHENTICATION_FAILED)
                 .setMessage("Authentication failed.");
+    }
+
+    public static ErrorDto accessDenied() {
+        return new ErrorDto()
+                .setCode(ACCESS_DENIED)
+                .setMessage("Access denied.");
     }
 }

@@ -29,6 +29,15 @@ public class RequestTokenFinderTest {
     }
 
     @Test
+    public void shouldFetchOpenSubsonicApiKeyFromParameters() {
+
+        MockHttpServletRequest request = mockHttpServletRequest();
+        request.addParameter(RequestTokenFinder.OPEN_SUBSONIC_API_KEY_PARAMETER, "someApiKey");
+
+        assertThat(requestTokenFinder.findOpenSubsonicApiKey(request)).isEqualTo("someApiKey");
+    }
+
+    @Test
     public void shouldSupportNoAccessTokenInAuthorizationHeader() {
 
         MockHttpServletRequest request = mockHttpServletRequest();
@@ -37,7 +46,7 @@ public class RequestTokenFinderTest {
     }
 
     @Test
-    public void shouldSupportNotBearerAuthorizationHeader() {
+    public void shouldSupportNoBearerAuthorizationHeader() {
 
         MockHttpServletRequest request = mockHttpServletRequest();
         request.addHeader("Authorization", "Basic someToken");
@@ -51,6 +60,14 @@ public class RequestTokenFinderTest {
         MockHttpServletRequest request = mockHttpServletRequest("GET", "/api/file/someFile");
 
         assertThat(requestTokenFinder.findAccessToken(request)).isNull();
+    }
+
+    @Test
+    public void shouldSupportNoOpenSubsonicApiKeyInParameters() {
+
+        MockHttpServletRequest request = mockHttpServletRequest("GET", "/rest/ping.view");
+
+        assertThat(requestTokenFinder.findOpenSubsonicApiKey(request)).isNull();
     }
 
     private MockHttpServletRequest mockHttpServletRequest() {

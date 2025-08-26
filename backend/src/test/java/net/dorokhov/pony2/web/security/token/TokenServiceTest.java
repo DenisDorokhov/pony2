@@ -124,4 +124,43 @@ public class TokenServiceTest {
         assertThatThrownBy(() -> tokenService.verifyStaticTokenAndGetUserId(token))
                 .isInstanceOf(InvalidTokenException.class);
     }
+
+    @Test
+    public void shouldVerifyOpenSubsonicApiKey() throws SecretNotFoundException, InvalidTokenException {
+
+        when(tokenKeyService.fetchOpenSubsonicKey()).thenReturn(new byte[]{1, 2, 3});
+
+        String apiKey = tokenService.generateOpenSubsonicApiKeyForUserId("1");
+
+        assertThat(apiKey).isNotNull();
+        assertThat(tokenService.verifyOpenSubsonicApiKeyAndGetUserId(apiKey)).isEqualTo("1");
+    }
+
+    @Test
+    public void shouldFailOpenSubsonicApiKeyVerificationIfKeyIsNotFound() throws SecretNotFoundException {
+
+        when(tokenKeyService.fetchOpenSubsonicKey()).thenThrow(new SecretNotFoundException());
+
+        assertThatThrownBy(() -> tokenService.verifyOpenSubsonicApiKeyAndGetUserId("someToken"));
+    }
+
+    @Test
+    public void shouldFailOpenSubsonicApiKeyVerificationIfTokenIsInvalid() throws SecretNotFoundException {
+
+        when(tokenKeyService.fetchOpenSubsonicKey()).thenReturn(new byte[]{});
+
+        assertThatThrownBy(() -> tokenService.verifyOpenSubsonicApiKeyAndGetUserId("invalidToken"))
+                .isInstanceOf(InvalidTokenException.class);
+    }
+
+    @Test
+    public void shouldFailOpenSubsonicApiKeyVerificationOnNoSubject() throws SecretNotFoundException {
+
+        byte[] key = new byte[]{1, 2, 3};
+        when(tokenKeyService.fetchOpenSubsonicKey()).thenReturn(key);
+        String token = JWT.create().sign(Algorithm.HMAC256(key));
+
+        assertThatThrownBy(() -> tokenService.verifyOpenSubsonicApiKeyAndGetUserId(token))
+                .isInstanceOf(InvalidTokenException.class);
+    }
 }
