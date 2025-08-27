@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {
-  CurrentUserUpdateCommandDto,
+  CurrentUserUpdateCommandDto, OpenSubsonicApiKeyDto,
   UserCreateCommandDto,
   UserDto,
   UserPageDto,
@@ -45,5 +45,9 @@ export class UserService {
     return this.httpClient.put<UserDto>('/api/user', command).pipe(
       catchError(ErrorDto.observableFromHttpErrorResponse)
     );
+  }
+
+  generateCurrentUserOpenSubsonicApiKey(): Observable<OpenSubsonicApiKeyDto> {
+    return this.httpClient.get<OpenSubsonicApiKeyDto>('/api/user/openSubsonicApiKey');
   }
 }

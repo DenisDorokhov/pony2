@@ -222,6 +222,7 @@ export default {
     newPasswordLabel: 'New password:',
     newPasswordPlaceholder: 'Leave empty to keep old password',
     repeatNewPasswordLabel: 'Repeat new password:',
+    openSonicApiKey: 'Generate API Key',
   },
   settings: {
     header: 'Settings',
@@ -305,6 +306,8 @@ export default {
     settingsTitle: 'Settings',
     settingsUpdatedText: 'Updated!',
     reBuildIndexStartedText: 'Started re-building of search index.',
+    generateApiKeyTitle: 'Generate API Key',
+    generateApiKeyText: 'API key has been copied to the clipboard.',
   },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).

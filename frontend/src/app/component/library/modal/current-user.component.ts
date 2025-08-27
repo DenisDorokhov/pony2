@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {CommonModule} from '@angular/common';
 import {ErrorContainerComponent} from '../../common/error-container.component';
@@ -11,6 +11,7 @@ import {ErrorDto} from '../../../domain/common.dto';
 import {UserService} from '../../../service/user.service';
 import {AuthenticationService} from '../../../service/authentication.service';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {NotificationService} from '../../../service/notification.service';
 
 @Component({
     imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
@@ -32,7 +33,9 @@ export class CurrentUserComponent implements OnInit {
     public readonly activeModal: NgbActiveModal,
     private formBuilder: FormBuilder,
     private authenticationService: AuthenticationService,
-    private userService: UserService
+    private userService: UserService,
+    private notificationService: NotificationService,
+    private translateService: TranslateService,
   ) {
     this.form = this.formBuilder.group({
       name: '',
@@ -75,6 +78,24 @@ export class CurrentUserComponent implements OnInit {
       error: error => {
         this.error = error;
         this.loadingState = this.error?.code === ErrorDto.Code.VALIDATION ? LoadingState.LOADED : LoadingState.ERROR;
+      }
+    });
+  }
+
+  generateOpenSubsonicApiKey() {
+    this.userService.generateCurrentUserOpenSubsonicApiKey().subscribe({
+      next: apiKey => {
+        navigator.clipboard.writeText(apiKey.value).then(
+          () => {
+            this.notificationService.success(
+              this.translateService.instant('notification.generateApiKeyTitle'),
+              this.translateService.instant('notification.generateApiKeyText')
+            );
+          },
+          () => {
+            window.alert(apiKey.value);
+          },
+        );
       }
     });
   }

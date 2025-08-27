@@ -50,3 +50,7 @@ export interface CurrentUserUpdateCommandDto {
   newPassword: string;
   repeatNewPassword: string;
 }
+
+export interface OpenSubsonicApiKeyDto {
+  value: string;
+}
