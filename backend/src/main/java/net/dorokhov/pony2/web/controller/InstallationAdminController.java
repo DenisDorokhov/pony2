@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.controller;
 
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.InstallationDto;
 import net.dorokhov.pony2.web.service.InstallationFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;

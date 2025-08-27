@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.web.controller.common;
+package net.dorokhov.pony2.web.controller;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,7 @@ public interface ErrorHandlingController {
     @ResponseBody
     class Advice {
 
-        protected final Logger logger = LoggerFactory.getLogger(getClass());
+        private final Logger logger = LoggerFactory.getLogger(getClass());
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
         @ResponseStatus(HttpStatus.BAD_REQUEST)

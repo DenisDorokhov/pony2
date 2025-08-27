@@ -2,7 +2,6 @@ package net.dorokhov.pony2.web.controller;
 
 import jakarta.validation.Valid;
 import net.dorokhov.pony2.api.installation.service.exception.AlreadyInstalledException;
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.ErrorDto;
 import net.dorokhov.pony2.web.dto.InstallationCommandDto;
 import net.dorokhov.pony2.web.dto.InstallationDto;

@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import net.dorokhov.pony2.web.service.LibraryFacade;

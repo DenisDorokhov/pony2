@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.controller;
 
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.FrontendLogCommandDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

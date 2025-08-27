@@ -65,7 +65,7 @@ public class RequestTokenFinderTest {
     @Test
     public void shouldSupportNoOpenSubsonicApiKeyInParameters() {
 
-        MockHttpServletRequest request = mockHttpServletRequest("GET", "/rest/ping.view");
+        MockHttpServletRequest request = mockHttpServletRequest("GET", "/opensubsonic/rest/ping.view");
 
         assertThat(requestTokenFinder.findOpenSubsonicApiKey(request)).isNull();
     }

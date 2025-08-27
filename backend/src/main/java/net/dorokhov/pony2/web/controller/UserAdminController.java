@@ -2,7 +2,6 @@ package net.dorokhov.pony2.web.controller;
 
 import jakarta.validation.Valid;
 import net.dorokhov.pony2.api.user.service.exception.DuplicateEmailException;
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.controller.exception.BadRequestException;
 import net.dorokhov.pony2.web.dto.UserCreationCommandDto;
 import net.dorokhov.pony2.web.dto.UserDto;

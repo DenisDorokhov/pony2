@@ -2,6 +2,7 @@ package net.dorokhov.pony2.web;
 
 import net.dorokhov.pony2.web.security.WebAuthority;
 import net.dorokhov.pony2.web.security.handler.AuthenticationFailureHandlerImpl;
+import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -87,7 +88,7 @@ public class WebConfig {
                         .requestMatchers("/api/file/**").hasAuthority(WebAuthority.FILE_API.name())
                         .requestMatchers("/api/admin/**").hasAuthority(WebAuthority.ADMIN_API.name())
                         .requestMatchers("/api/**").hasAuthority(WebAuthority.USER_API.name())
-                        .requestMatchers("/rest/**").hasAuthority(WebAuthority.OPEN_SUBSONIC_API.name())
+                        .requestMatchers(OpenSubsonicResponseService.PATH_PREFIX + "/**").hasAuthority(WebAuthority.OPEN_SUBSONIC_API.name())
                         .anyRequest().permitAll()
                 )
 

@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
 import jakarta.validation.Valid;
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.LibraryFacade;
 import net.dorokhov.pony2.web.service.ScanFacade;

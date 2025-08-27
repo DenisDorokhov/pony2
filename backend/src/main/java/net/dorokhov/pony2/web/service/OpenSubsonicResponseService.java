@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class OpenSubsonicResponseService {
 
+    public static final String PATH_PREFIX = "/opensubsonic";
+
     public static final int ERROR_GENERIC = 0; // A generic error.
     public static final int ERROR_REQUIRED_PARAMETER_MISSING = 10; // Required parameter is missing.
     public static final int ERROR_INCOMPATIBLE_CLIENT_VERSION = 20; // Incompatible Subsonic REST protocol version. Client must upgrade.
@@ -33,7 +35,7 @@ public class OpenSubsonicResponseService {
     }
 
     public boolean isOpenSubsonicRequest(HttpServletRequest request) {
-        return request.getServletPath().startsWith("/rest/");
+        return request.getServletPath().startsWith(PATH_PREFIX + "/");
     }
 
     public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> createSuccessful() {

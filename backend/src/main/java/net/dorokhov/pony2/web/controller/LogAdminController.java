@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.api.log.domain.LogMessage.Level;
-import net.dorokhov.pony2.web.controller.common.ErrorHandlingController;
 import net.dorokhov.pony2.web.dto.LogMessagePageDto;
 import net.dorokhov.pony2.web.service.LogFacade;
 import org.springframework.web.bind.annotation.GetMapping;
