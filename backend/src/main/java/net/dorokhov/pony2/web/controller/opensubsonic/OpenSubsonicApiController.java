@@ -1,9 +1,6 @@
 package net.dorokhov.pony2.web.controller.opensubsonic;
 
-import net.dorokhov.pony2.web.dto.ArtistDto;
-import net.dorokhov.pony2.web.dto.ArtistSongsDto;
-import net.dorokhov.pony2.web.dto.PlaylistSongDto;
-import net.dorokhov.pony2.web.dto.SongDetailsDto;
+import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.response.*;
 import net.dorokhov.pony2.web.service.LibraryFacade;
@@ -16,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +57,11 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setLicenseExpires(formatDate(LocalDateTime.now().plusYears(1)))
                 .setTrialExpires("2025-01-01T00:00:00.000Z")
         ));
+    }
+
+    private String formatDate(LocalDateTime date) {
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(date, ZoneId.systemDefault()).withZoneSameInstant(ZoneId.systemDefault());
+        return zonedDateTime.format(DateTimeFormatter.ISO_DATE);
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getOpenSubsonicExtensions.view", method = {GET, POST})
@@ -133,33 +137,6 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                         .toList());
     }
 
-    @RequestMapping(value = "/opensubsonic/rest/getArtist.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicArtistResponseDto> getArtists(@RequestParam String id) throws ObjectNotFoundException {
-        ArtistSongsDto artistSongs = libraryFacade.getArtistSongs(id);
-        OpenSubsonicArtistResponseDto response = new OpenSubsonicArtistResponseDto()
-                .setArtist(new OpenSubsonicArtistWithAlbumsID3()
-                        .setId(artistSongs.getArtist().getId())
-                        .setName(artistSongs.getArtist().getName() != null ? artistSongs.getArtist().getName() : "Unknown")
-                        .setCoverArt(artistSongs.getArtist().getArtworkId())
-                        .setAlbum(artistSongs.getAlbumSongs().stream()
-                                .map(album -> new OpenSubsonicArtistWithAlbumsID3.Album()
-                                        .setId(album.getAlbum().getId())
-                                        .setName(album.getAlbum().getName() != null ? album.getAlbum().getName() : "Unknown")
-                                        .setArtist(artistSongs.getArtist().getName() != null ? artistSongs.getArtist().getName() : "Unknown")
-                                        .setArtistId(artistSongs.getArtist().getId())
-                                        .setCoverArt(album.getAlbum().getArtworkId())
-                                        .setCreated(formatDate(album.getAlbum().getCreationDate()))
-                                        .setYear(album.getAlbum().getYear())
-                                )
-                                .toList())
-                );
-        return openSubsonicResponseService.createSuccessful(response);
-    }
-
-    private String formatDate(LocalDateTime date) {
-        return date.format(DateTimeFormatter.ISO_INSTANT);
-    }
-
     @RequestMapping(value = "/opensubsonic/rest/getStarred2.view", method = {GET, POST})
     public OpenSubsonicResponseDto<?> getStarred2() {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicStarred2ResponseDto()
@@ -225,7 +202,68 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getAlbumList2.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<?> getAlbumList2() {
-        throw new UnsupportedOperationException();
+    public OpenSubsonicResponseDto<OpenSubsonicAlbumList2ResponseDto> getAlbumList2(
+            @RequestParam int size, @RequestParam int offset
+    ) {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumList2ResponseDto()
+                .setAlbumList2(
+                        new OpenSubsonicAlbumList2ResponseDto.AlbumList2().setAlbum(
+                                libraryFacade.getAlbums(size, offset).stream()
+                                        .map(this::toAlbumID3)
+                                        .toList()
+                        )
+                ));
+    }
+
+    private OpenSubsonicAlbumID3 toAlbumID3(AlbumDetailsDto album) {
+        return new OpenSubsonicAlbumID3()
+                .setId(album.getAlbum().getId())
+                .setName(album.getAlbum().getName())
+                .setArtist(album.getArtist().getName())
+                .setArtistId(album.getArtist().getId())
+                .setCoverArt(album.getAlbum().getArtworkId())
+                .setCreated(formatDate(album.getAlbum().getCreationDate()))
+                .setYear(album.getAlbum().getYear())
+                .setArtists(List.of(
+                        toArtistID3(album.getArtist())
+                ))
+                .setDisplayArtist(album.getArtist().getName())
+                ;
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getAlbum.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicAlbumResponseDto> getAlbum(@RequestParam String id) throws ObjectNotFoundException {
+        AlbumSongDetailsDto albumSongs = libraryFacade.getAlbumSongDetails(id);
+        ArtistDto artist = libraryFacade.getArtist(albumSongs.getAlbum().getArtistId());
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumResponseDto()
+                .setAlbum(new OpenSubsonicAlbumID3WithSongs()
+                        .setId(albumSongs.getAlbum().getId())
+                        .setName(albumSongs.getAlbum().getName())
+                        .setArtist(artist.getName())
+                        .setArtistId(artist.getId())
+                        .setCoverArt(albumSongs.getAlbum().getArtworkId())
+                        .setCreated(formatDate(albumSongs.getAlbum().getCreationDate()))
+                        .setYear(albumSongs.getAlbum().getYear())
+                        .setArtists(List.of(
+                                toArtistID3(artist)
+                        ))
+                        .setDisplayArtist(artist.getName())
+                        .setSong(albumSongs.getSongs().stream()
+                                .map(this::toChild)
+                                .toList())
+                )
+        );
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getAlbumInfo2.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicAlbumInfo2ResponseDto> getAlbumInfo2() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumInfo2ResponseDto()
+                .setAlbumInfo(new OpenSubsonicAlbumInfo()));
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getArtistInfo2.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicArtistInfo2ResponseDto> getArtistInfo2() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistInfo2ResponseDto()
+                .setArtistInfo2(new OpenSubsonicArtistInfo2()));
     }
 }

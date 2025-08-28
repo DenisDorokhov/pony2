@@ -20,6 +20,10 @@ public interface LibraryService {
 
     Optional<Artist> getArtistById(String artistId);
 
+    List<Album> getAlbums(int size, int offset);
+
+    Optional<Album> getAlbumById(String id);
+
     Optional<Song> getSongById(String id);
 
     Optional<ArtworkFiles> getArtworkFilesById(String id);

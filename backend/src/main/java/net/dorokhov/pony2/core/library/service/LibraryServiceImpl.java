@@ -2,11 +2,10 @@ package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibraryService;
-import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.repository.GenreRepository;
-import net.dorokhov.pony2.core.library.repository.SongRepository;
+import net.dorokhov.pony2.common.OffsetBasedPageRequest;
+import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony2.web.dto.AlbumSongsDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +26,7 @@ public class LibraryServiceImpl implements LibraryService {
 
     private final GenreRepository genreRepository;
     private final ArtistRepository artistRepository;
+    private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
@@ -35,6 +35,7 @@ public class LibraryServiceImpl implements LibraryService {
     public LibraryServiceImpl(
             GenreRepository genreRepository,
             ArtistRepository artistRepository,
+            AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
@@ -42,6 +43,7 @@ public class LibraryServiceImpl implements LibraryService {
     ) {
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
+        this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
@@ -89,6 +91,17 @@ public class LibraryServiceImpl implements LibraryService {
     @Transactional(readOnly = true)
     public Optional<Artist> getArtistById(String id) {
         return artistRepository.findById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Album> getAlbums(int size, int offset) {
+        return albumRepository.findAll(new OffsetBasedPageRequest(size, offset, Sort.by("id"))).getContent();
+    }
+
+    @Override
+    public Optional<Album> getAlbumById(String id) {
+        return albumRepository.findById(id);
     }
 
     @Override

@@ -48,7 +48,14 @@ public class LibraryFacade {
         return libraryService.getArtists().stream()
                 .sorted()
                 .map(ArtistDto::of)
-                .collect(toList());
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AlbumDetailsDto> getAlbums(int size, int offset) {
+        return libraryService.getAlbums(size, offset).stream()
+                .map(AlbumDetailsDto::of)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -95,5 +102,17 @@ public class LibraryFacade {
 
     public void reBuildSearchIndexAsync() {
         librarySearchService.reIndexAsync();
+    }
+
+    @Transactional(readOnly = true)
+    public AlbumSongDetailsDto getAlbumSongDetails(String id) throws ObjectNotFoundException {
+        return libraryService.getAlbumById(id).map(album -> AlbumSongDetailsDto.of(album, isAdmin()))
+                .orElseThrow(() -> new ObjectNotFoundException(Album.class, id));
+    }
+
+    @Transactional(readOnly = true)
+    public ArtistDto getArtist(String id) throws ObjectNotFoundException {
+        return libraryService.getArtistById(id).map(ArtistDto::of)
+                .orElseThrow(() -> new ObjectNotFoundException(Artist.class, id));
     }
 }
