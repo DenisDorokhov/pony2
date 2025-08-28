@@ -285,4 +285,20 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         }
         return openSubsonicResponseService.createSuccessful();
     }
+
+    @RequestMapping(value = "/opensubsonic/rest/star.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> star(@RequestParam(required = false) String id) throws ObjectNotFoundException {
+        if (id != null) {
+            playlistFacade.likeSong(id);
+        }
+        return openSubsonicResponseService.createSuccessful();
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/unstar.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> unstar(@RequestParam(required = false) String id) throws ObjectNotFoundException {
+        if (id != null) {
+            playlistFacade.unlikeSong(id);
+        }
+        return openSubsonicResponseService.createSuccessful();
+    }
 }
