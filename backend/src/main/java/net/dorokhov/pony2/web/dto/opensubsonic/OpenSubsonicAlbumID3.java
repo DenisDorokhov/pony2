@@ -21,7 +21,7 @@ public class OpenSubsonicAlbumID3 {
     private Integer userRating;
     private List<OpenSubsonicRecordLabel> recordLabels;
     private String musicBrainzId;
-    private OpenSubsonicItemGenre genres;
+    private List<OpenSubsonicItemGenre> genres;
     private List<OpenSubsonicArtistID3> artists;
     private String displayArtist;
     private List<String> releaseTypes;
@@ -186,11 +186,11 @@ public class OpenSubsonicAlbumID3 {
         return this;
     }
 
-    public OpenSubsonicItemGenre getGenres() {
+    public List<OpenSubsonicItemGenre> getGenres() {
         return genres;
     }
 
-    public OpenSubsonicAlbumID3 setGenres(OpenSubsonicItemGenre genres) {
+    public OpenSubsonicAlbumID3 setGenres(List<OpenSubsonicItemGenre> genres) {
         this.genres = genres;
         return this;
     }

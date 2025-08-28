@@ -6,15 +6,15 @@ import java.util.List;
 
 public final class AlbumSongDetailsDto {
 
-    private AlbumDto album;
+    private AlbumDetailsDto details;
     private List<SongDetailsDto> songs;
 
-    public AlbumDto getAlbum() {
-        return album;
+    public AlbumDetailsDto getDetails() {
+        return details;
     }
 
-    public AlbumSongDetailsDto setAlbum(AlbumDto album) {
-        this.album = album;
+    public AlbumSongDetailsDto setDetails(AlbumDetailsDto details) {
+        this.details = details;
         return this;
     }
 
@@ -29,7 +29,7 @@ public final class AlbumSongDetailsDto {
 
     public static AlbumSongDetailsDto of(Album album, boolean isAdmin) {
         return new AlbumSongDetailsDto()
-                .setAlbum(AlbumDto.of(album))
+                .setDetails(AlbumDetailsDto.of(album))
                 .setSongs(album.getSongs().stream()
                         .sorted()
                         .map(song -> SongDetailsDto.of(song, isAdmin))

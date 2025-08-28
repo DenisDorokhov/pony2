@@ -52,9 +52,9 @@ public class LibraryFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<AlbumDetailsDto> getAlbums(int size, int offset) {
+    public List<AlbumSongDetailsDto> getAlbums(int size, int offset) {
         return libraryService.getAlbums(size, offset).stream()
-                .map(AlbumDetailsDto::of)
+                .map(album -> AlbumSongDetailsDto.of(album, isAdmin()))
                 .toList();
     }
 

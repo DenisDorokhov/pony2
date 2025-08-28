@@ -85,16 +85,6 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 ))));
     }
 
-    @RequestMapping(value = "/opensubsonic/rest/getIndexes.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<?> getIndexes() {
-        throw new UnsupportedOperationException();
-    }
-
-    @RequestMapping(value = "/opensubsonic/rest/getMusicDirectory.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<?> getMusicDirectory() {
-        throw new UnsupportedOperationException();
-    }
-
     @RequestMapping(value = "/opensubsonic/rest/getGenres.view", method = {GET, POST})
     public OpenSubsonicResponseDto<OpenSubsonicGenresResponseDto> getGenres() {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicGenresResponseDto()
@@ -139,17 +129,18 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
 
     @RequestMapping(value = "/opensubsonic/rest/getStarred2.view", method = {GET, POST})
     public OpenSubsonicResponseDto<?> getStarred2() {
+        PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicStarred2ResponseDto()
                 .setStarred2(new OpenSubsonicStarred2()
                         .setArtist(List.of())
                         .setAlbum(List.of())
-                        .setSong(playlistFacade.getLikePlaylist().getSongs().stream()
-                                .map(this::toChild)
+                        .setSong(likePlaylist.getSongs().stream()
+                                .map(song -> toChild(song, likePlaylist))
                                 .toList())
                 ));
     }
 
-    private OpenSubsonicChild toChild(SongDetailsDto songDetails) {
+    private OpenSubsonicChild toChild(SongDetailsDto songDetails, PlaylistSongsDto likePlaylist) {
         return new OpenSubsonicChild()
                 .setId(songDetails.getSong().getId())
                 .setParent(songDetails.getAlbumDetails().getAlbum().getId())
@@ -170,8 +161,14 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setBitRate(songDetails.getSong().getBitRate().intValue())
                 .setPath(songDetails.getSong().getPath())
                 .setVideo(false)
-                .setDiscNumber(songDetails.getSong().getDiscNumber())
+                .setDiscNumber(songDetails.getSong().getDiscNumber() != null ? songDetails.getSong().getDiscNumber() : 1)
                 .setCreated(formatDate(songDetails.getSong().getCreationDate()))
+                .setStarred(likePlaylist.getSongs().stream()
+                        .filter(next -> next.getId().equals(songDetails.getSong().getId()))
+                        .map(PlaylistSongDto::getCreationDate)
+                        .map(this::formatDate)
+                        .findAny()
+                        .orElse(null))
                 .setAlbumId(songDetails.getAlbumDetails().getAlbum().getId())
                 .setArtistId(songDetails.getAlbumDetails().getArtist().getId())
                 .setType("music")
@@ -190,8 +187,8 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 ;
     }
 
-    private OpenSubsonicChild toChild(PlaylistSongDto song) {
-        return toChild(song.getSong());
+    private OpenSubsonicChild toChild(PlaylistSongDto song, PlaylistSongsDto likePlaylist) {
+        return toChild(song.getSong(), likePlaylist);
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getBookmarks.view", method = {GET, POST})
@@ -215,41 +212,55 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 ));
     }
 
-    private OpenSubsonicAlbumID3 toAlbumID3(AlbumDetailsDto album) {
+    private OpenSubsonicAlbumID3 toAlbumID3(AlbumSongDetailsDto albumSongs) {
+        String genre = resolveGenre(albumSongs);
         return new OpenSubsonicAlbumID3()
-                .setId(album.getAlbum().getId())
-                .setName(album.getAlbum().getName())
-                .setArtist(album.getArtist().getName())
-                .setArtistId(album.getArtist().getId())
-                .setCoverArt(album.getAlbum().getArtworkId())
-                .setCreated(formatDate(album.getAlbum().getCreationDate()))
-                .setYear(album.getAlbum().getYear())
+                .setId(albumSongs.getDetails().getAlbum().getId())
+                .setName(albumSongs.getDetails().getAlbum().getName())
+                .setArtist(albumSongs.getDetails().getArtist().getName())
+                .setArtistId(albumSongs.getDetails().getArtist().getId())
+                .setCoverArt(albumSongs.getDetails().getAlbum().getArtworkId())
+                .setCreated(formatDate(albumSongs.getDetails().getAlbum().getCreationDate()))
+                .setYear(albumSongs.getDetails().getAlbum().getYear())
+                .setGenre(genre)
+                .setGenres(genre != null ? List.of(new OpenSubsonicItemGenre().setName(genre)) : null)
                 .setArtists(List.of(
-                        toArtistID3(album.getArtist())
+                        toArtistID3(albumSongs.getDetails().getArtist())
                 ))
-                .setDisplayArtist(album.getArtist().getName())
+                .setDisplayArtist(albumSongs.getDetails().getArtist().getName())
                 ;
+    }
+
+    private String resolveGenre(AlbumSongDetailsDto album) {
+        return album.getSongs().stream()
+                .filter(song -> song.getGenre().getName() != null)
+                .map(song -> song.getGenre().getName())
+                .findAny()
+                .orElse(null);
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getAlbum.view", method = {GET, POST})
     public OpenSubsonicResponseDto<OpenSubsonicAlbumResponseDto> getAlbum(@RequestParam String id) throws ObjectNotFoundException {
         AlbumSongDetailsDto albumSongs = libraryFacade.getAlbumSongDetails(id);
-        ArtistDto artist = libraryFacade.getArtist(albumSongs.getAlbum().getArtistId());
+        PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
+        String genre = resolveGenre(albumSongs);
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumResponseDto()
                 .setAlbum(new OpenSubsonicAlbumID3WithSongs()
-                        .setId(albumSongs.getAlbum().getId())
-                        .setName(albumSongs.getAlbum().getName())
-                        .setArtist(artist.getName())
-                        .setArtistId(artist.getId())
-                        .setCoverArt(albumSongs.getAlbum().getArtworkId())
-                        .setCreated(formatDate(albumSongs.getAlbum().getCreationDate()))
-                        .setYear(albumSongs.getAlbum().getYear())
+                        .setId(albumSongs.getDetails().getAlbum().getId())
+                        .setName(albumSongs.getDetails().getAlbum().getName())
+                        .setArtist(albumSongs.getDetails().getArtist().getName())
+                        .setArtistId(albumSongs.getDetails().getArtist().getId())
+                        .setCoverArt(albumSongs.getDetails().getAlbum().getArtworkId())
+                        .setCreated(formatDate(albumSongs.getDetails().getAlbum().getCreationDate()))
+                        .setYear(albumSongs.getDetails().getAlbum().getYear())
                         .setArtists(List.of(
-                                toArtistID3(artist)
+                                toArtistID3(albumSongs.getDetails().getArtist())
                         ))
-                        .setDisplayArtist(artist.getName())
+                        .setDisplayArtist(albumSongs.getDetails().getArtist().getName())
+                        .setGenre(genre)
+                        .setGenres(genre != null ? List.of(new OpenSubsonicItemGenre().setName(genre)) : null)
                         .setSong(albumSongs.getSongs().stream()
-                                .map(this::toChild)
+                                .map(song -> toChild(song, likePlaylist))
                                 .toList())
                 )
         );
