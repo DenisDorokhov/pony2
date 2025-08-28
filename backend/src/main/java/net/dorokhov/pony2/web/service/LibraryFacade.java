@@ -115,4 +115,10 @@ public class LibraryFacade {
         return libraryService.getArtistById(id).map(ArtistDto::of)
                 .orElseThrow(() -> new ObjectNotFoundException(Artist.class, id));
     }
+
+    @Transactional(readOnly = true)
+    public SongDetailsDto getSong(String id) throws ObjectNotFoundException {
+        return libraryService.getSongById(id).map(song -> SongDetailsDto.of(song, isAdmin()))
+                .orElseThrow(() -> new ObjectNotFoundException(Artist.class, id));
+    }
 }

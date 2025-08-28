@@ -191,6 +191,16 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         return toChild(song.getSong(), likePlaylist);
     }
 
+    @RequestMapping(value = "/opensubsonic/rest/deleteBookmark.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> deleteBookmark() {
+        return openSubsonicResponseService.createSuccessful();
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/createBookmark.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> createBookmark() {
+        return openSubsonicResponseService.createSuccessful();
+    }
+
     @RequestMapping(value = "/opensubsonic/rest/getBookmarks.view", method = {GET, POST})
     public OpenSubsonicResponseDto<OpenSubsonicBookmarksResponseDto> getBookmarks() {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicBookmarksResponseDto()
@@ -300,5 +310,12 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
             playlistFacade.unlikeSong(id);
         }
         return openSubsonicResponseService.createSuccessful();
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getSong.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicSongResponseDto> getSong(@RequestParam(required = false) String id) throws ObjectNotFoundException {
+        SongDetailsDto song = libraryFacade.getSong(id);
+        PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicSongResponseDto().setChild(toChild(song, likePlaylist)));
     }
 }
