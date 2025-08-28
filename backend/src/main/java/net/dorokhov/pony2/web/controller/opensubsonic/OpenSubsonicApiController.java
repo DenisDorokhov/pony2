@@ -1,10 +1,14 @@
 package net.dorokhov.pony2.web.controller.opensubsonic;
 
+import net.dorokhov.pony2.web.dto.ArtistDto;
 import net.dorokhov.pony2.web.dto.ArtistSongsDto;
+import net.dorokhov.pony2.web.dto.PlaylistSongDto;
+import net.dorokhov.pony2.web.dto.SongDetailsDto;
 import net.dorokhov.pony2.web.dto.opensubsonic.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.response.*;
 import net.dorokhov.pony2.web.service.LibraryFacade;
 import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
+import net.dorokhov.pony2.web.service.PlaylistFacade;
 import net.dorokhov.pony2.web.service.UserFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,15 +31,18 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     private final OpenSubsonicResponseService openSubsonicResponseService;
     private final UserFacade userFacade;
     private final LibraryFacade libraryFacade;
+    private final PlaylistFacade playlistFacade;
 
     public OpenSubsonicApiController(
             OpenSubsonicResponseService openSubsonicResponseService,
             UserFacade userFacade,
-            LibraryFacade libraryFacade
+            LibraryFacade libraryFacade,
+            PlaylistFacade playlistFacade
     ) {
         this.openSubsonicResponseService = openSubsonicResponseService;
         this.userFacade = userFacade;
         this.libraryFacade = libraryFacade;
+        this.playlistFacade = playlistFacade;
     }
 
     @RequestMapping(value = "/opensubsonic/rest/ping.view", method = {GET, POST})
@@ -86,24 +93,29 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
 
     @RequestMapping(value = "/opensubsonic/rest/getGenres.view", method = {GET, POST})
     public OpenSubsonicResponseDto<OpenSubsonicGenresResponseDto> getGenres() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicGenresResponseDto(libraryFacade.getGenres().stream()
-                .map(genre -> new OpenSubsonicGenre()
-                        .setValue(genre.getName())
-                )
-                .toList()
-        ));
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicGenresResponseDto()
+                .setGenres(new OpenSubsonicGenresResponseDto.Genres()
+                        .setGenre(libraryFacade.getGenres().stream()
+                                .map(genre -> new OpenSubsonicGenre()
+                                        .setValue(genre.getName())
+                                )
+                                .toList()
+                        )));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getArtists.view", method = {GET, POST})
     public OpenSubsonicResponseDto<OpenSubsonicArtistsResponseDto> getArtists() {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistsResponseDto().setArtists(toArtistsID3(libraryFacade.getArtists().stream()
-                .map(artist -> new OpenSubsonicArtistID3()
-                        .setId(artist.getId())
-                        .setName(artist.getName() != null ? artist.getName() : "Unknown")
-                        .setCoverArt(artist.getArtworkId())
-                )
+                .map(OpenSubsonicApiController::toArtistID3)
                 .toList()
         )));
+    }
+
+    private static OpenSubsonicArtistID3 toArtistID3(ArtistDto artist) {
+        return new OpenSubsonicArtistID3()
+                .setId(artist.getId())
+                .setName(artist.getName() != null ? artist.getName() : "Unknown")
+                .setCoverArt(artist.getArtworkId());
     }
 
     private OpenSubsonicArtistsID3 toArtistsID3(List<OpenSubsonicArtistID3> artists) {
@@ -150,7 +162,59 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
 
     @RequestMapping(value = "/opensubsonic/rest/getStarred2.view", method = {GET, POST})
     public OpenSubsonicResponseDto<?> getStarred2() {
-        throw new UnsupportedOperationException();
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicStarred2ResponseDto()
+                .setStarred2(new OpenSubsonicStarred2()
+                        .setArtist(List.of())
+                        .setAlbum(List.of())
+                        .setSong(playlistFacade.getLikePlaylist().getSongs().stream()
+                                .map(this::toChild)
+                                .toList())
+                ));
+    }
+
+    private OpenSubsonicChild toChild(SongDetailsDto songDetails) {
+        return new OpenSubsonicChild()
+                .setId(songDetails.getSong().getId())
+                .setParent(songDetails.getAlbumDetails().getAlbum().getId())
+                .setDir(false)
+                .setTitle(songDetails.getSong().getName())
+                .setAlbum(songDetails.getAlbumDetails().getAlbum().getName())
+                .setArtist(songDetails.getAlbumDetails().getArtist().getName())
+                .setTrack(songDetails.getSong().getTrackNumber())
+                .setYear(songDetails.getAlbumDetails().getAlbum().getYear())
+                .setGenre(songDetails.getGenre().getName())
+                .setCoverArt(songDetails.getAlbumDetails().getAlbum().getArtworkId())
+                .setSize(songDetails.getSong().getSize())
+                .setContentType(songDetails.getSong().getMimeType())
+                .setSuffix("mp3")
+                .setTranscodedContentType(songDetails.getSong().getMimeType())
+                .setTranscodedSuffix("mp3")
+                .setDuration(songDetails.getSong().getDuration().intValue())
+                .setBitRate(songDetails.getSong().getBitRate().intValue())
+                .setPath(songDetails.getSong().getPath())
+                .setVideo(false)
+                .setDiscNumber(songDetails.getSong().getDiscNumber())
+                .setCreated(formatDate(songDetails.getSong().getCreationDate()))
+                .setAlbumId(songDetails.getAlbumDetails().getAlbum().getId())
+                .setArtistId(songDetails.getAlbumDetails().getArtist().getId())
+                .setType("music")
+                .setMediaType("song")
+                .setGenres(songDetails.getSong().getGenreName() != null ? List.of(
+                        new OpenSubsonicItemGenre().setName(songDetails.getSong().getGenreName())
+                ) : List.of())
+                .setArtists(List.of(
+                        toArtistID3(songDetails.getAlbumDetails().getArtist())
+                ))
+                .setDisplayArtist(songDetails.getSong().getArtistName())
+                .setAlbumArtists(List.of(
+                        toArtistID3(songDetails.getAlbumDetails().getArtist())
+                ))
+                .setDisplayAlbumArtist(songDetails.getAlbumDetails().getArtist().getName())
+                ;
+    }
+
+    private OpenSubsonicChild toChild(PlaylistSongDto song) {
+        return toChild(song.getSong());
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getBookmarks.view", method = {GET, POST})

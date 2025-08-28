@@ -8,10 +8,6 @@ public class OpenSubsonicGenresResponseDto extends OpenSubsonicResponseDto.Abstr
 
     private Genres genres;
 
-    public OpenSubsonicGenresResponseDto(List<OpenSubsonicGenre> genres) {
-        this.genres = new Genres().setGenre(genres);
-    }
-
     public Genres getGenres() {
         return genres;
     }
