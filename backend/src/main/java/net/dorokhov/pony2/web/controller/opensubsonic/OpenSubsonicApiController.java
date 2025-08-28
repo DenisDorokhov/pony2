@@ -3,10 +3,7 @@ package net.dorokhov.pony2.web.controller.opensubsonic;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.response.*;
-import net.dorokhov.pony2.web.service.LibraryFacade;
-import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
-import net.dorokhov.pony2.web.service.PlaylistFacade;
-import net.dorokhov.pony2.web.service.UserFacade;
+import net.dorokhov.pony2.web.service.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,17 +28,20 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     private final UserFacade userFacade;
     private final LibraryFacade libraryFacade;
     private final PlaylistFacade playlistFacade;
+    private final PlaybackHistoryFacade playbackHistoryFacade;
 
     public OpenSubsonicApiController(
             OpenSubsonicResponseService openSubsonicResponseService,
             UserFacade userFacade,
             LibraryFacade libraryFacade,
-            PlaylistFacade playlistFacade
+            PlaylistFacade playlistFacade,
+            PlaybackHistoryFacade playbackHistoryFacade
     ) {
         this.openSubsonicResponseService = openSubsonicResponseService;
         this.userFacade = userFacade;
         this.libraryFacade = libraryFacade;
         this.playlistFacade = playlistFacade;
+        this.playbackHistoryFacade = playbackHistoryFacade;
     }
 
     @RequestMapping(value = "/opensubsonic/rest/ping.view", method = {GET, POST})
@@ -276,5 +276,13 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     public OpenSubsonicResponseDto<OpenSubsonicArtistInfo2ResponseDto> getArtistInfo2() {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistInfo2ResponseDto()
                 .setArtistInfo2(new OpenSubsonicArtistInfo2()));
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/scrobble.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> scrobble(@RequestParam String id, @RequestParam(defaultValue = "true") boolean submission) throws ObjectNotFoundException {
+        if (submission) {
+            playbackHistoryFacade.addSongToHistory(id);
+        }
+        return openSubsonicResponseService.createSuccessful();
     }
 }
