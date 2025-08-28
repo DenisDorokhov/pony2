@@ -99,19 +99,19 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
                 .addAll(userDetails.getAuthorities());
         switch (source) {
             case ACCESS_TOKEN -> {
+                addAuthority(authorities, WebAuthority.OPEN_SUBSONIC_API);
+                addAuthority(authorities, WebAuthority.FILE_API);
                 if (user.getRoles().contains(USER)) {
-                    addAuthority(authorities, WebAuthority.FILE_API);
                     addAuthority(authorities, WebAuthority.USER_API);
                 }
                 if (user.getRoles().contains(ADMIN)) {
-                    addAuthority(authorities, WebAuthority.FILE_API);
                     addAuthority(authorities, WebAuthority.ADMIN_API);
                 }
             }
-            case STATIC_TOKEN ->
-                    addAuthority(authorities, WebAuthority.FILE_API);
             case OPEN_SUBSONIC ->
                     addAuthority(authorities, WebAuthority.OPEN_SUBSONIC_API);
+            case STATIC_TOKEN ->
+                    addAuthority(authorities, WebAuthority.FILE_API);
         }
         return new UsernamePasswordAuthenticationToken(userDetails, null, authorities.build());
     }
