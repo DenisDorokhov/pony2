@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.web.dto.opensubsonic;
+package net.dorokhov.pony2.web.dto.opensubsonic.response;
 
 import java.util.ArrayList;
 import java.util.List;

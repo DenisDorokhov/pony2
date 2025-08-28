@@ -3,7 +3,6 @@ package net.dorokhov.pony2.web.security.handler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.dorokhov.pony2.web.dto.ErrorDto;
-import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicErrorResponseDto;
 import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static net.dorokhov.pony2.web.dto.ErrorDto.Code.ACCESS_DENIED;
 import static net.dorokhov.pony2.web.service.OpenSubsonicResponseService.ERROR_UNAUTHORIZED;
 
 @Component

@@ -2,9 +2,9 @@ package net.dorokhov.pony2.web.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
-import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicEmptyResponseDto;
-import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicErrorResponseDto;
-import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicResponseDto;
+import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicEmptyResponseDto;
+import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicErrorResponseDto;
+import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicResponseDto;
 import org.springframework.stereotype.Component;
 
 @Component
