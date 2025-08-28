@@ -18,6 +18,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.zalando.logbook.Logbook;
+import org.zalando.logbook.core.*;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -92,6 +94,14 @@ public class WebConfig {
                         .anyRequest().permitAll()
                 )
 
+                .build();
+    }
+
+    @Bean
+    public Logbook logbook() {
+        return Logbook.builder()
+                .strategy(new StatusAtLeastStrategy(400))
+                .sink(new DefaultSink(new DefaultHttpLogFormatter(), new DefaultHttpLogWriter()))
                 .build();
     }
 }
