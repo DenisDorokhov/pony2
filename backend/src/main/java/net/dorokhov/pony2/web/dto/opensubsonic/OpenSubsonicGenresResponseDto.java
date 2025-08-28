@@ -1,7 +1,5 @@
 package net.dorokhov.pony2.web.dto.opensubsonic;
 
-import net.dorokhov.pony2.api.library.domain.Genre;
-
 import java.util.List;
 
 public class OpenSubsonicGenresResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicGenresResponseDto> {

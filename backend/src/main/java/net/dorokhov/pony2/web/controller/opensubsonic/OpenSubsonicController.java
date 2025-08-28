@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.web.controller.opensubsonic;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
@@ -36,8 +37,8 @@ public interface OpenSubsonicController {
 
         @ExceptionHandler(Exception.class)
         @ResponseStatus(HttpStatus.OK)
-        public Object onUnexpectedError(Exception e) {
-            logger.error("Unexpected error occurred.", e);
+        public Object onUnexpectedError(Exception e, HttpServletRequest request) {
+            logger.error("Unexpected error occurred when accessing '{}'.", request.getServletPath(), e);
             return responseFactory.createError(ERROR_GENERIC, "Unexpected error occurred.");
         }
     }

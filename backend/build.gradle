@@ -40,6 +40,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
     implementation 'com.auth0:java-jwt:4.4.0'
+    implementation 'org.zalando:logbook-spring-boot-starter:3.12.2'
 
     implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'

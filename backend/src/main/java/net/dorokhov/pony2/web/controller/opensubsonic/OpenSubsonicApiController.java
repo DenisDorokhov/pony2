@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -61,7 +62,12 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
 
     @RequestMapping(value = "/opensubsonic/rest/getMusicFolders.view", method = {GET, POST})
     public OpenSubsonicResponseDto<?> getMusicFolders() {
-        throw new UnsupportedOperationException();
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicMusicFoldersResponseDto()
+                .setMusicFolders(new OpenSubsonicMusicFoldersResponseDto.MusicFolders().setMusicFolder(List.of(
+                        new OpenSubsonicMusicFoldersResponseDto.MusicFolders.MusicFolder()
+                                .setId(1)
+                                .setName("Music")
+                ))));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getIndexes.view", method = {GET, POST})

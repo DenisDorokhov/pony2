@@ -1,7 +1,9 @@
 package net.dorokhov.pony2.web.security.token;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import jakarta.annotation.Nullable;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.web.security.UserDetailsImpl;
@@ -17,12 +19,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.Nullable;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.util.Optional;
 
 import static net.dorokhov.pony2.api.user.domain.User.Role.ADMIN;
 import static net.dorokhov.pony2.api.user.domain.User.Role.USER;
