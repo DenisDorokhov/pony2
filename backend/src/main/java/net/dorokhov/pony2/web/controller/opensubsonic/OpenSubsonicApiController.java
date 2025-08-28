@@ -15,10 +15,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -86,7 +83,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setMusicFolders(new OpenSubsonicMusicFoldersResponseDto.MusicFolders().setMusicFolder(List.of(
                         new OpenSubsonicMusicFolder()
                                 .setId(1)
-                                .setName("Music")
+                                .setName("Pony Music")
                 ))));
     }
 
@@ -344,14 +341,64 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         PlaylistSongsDto playlist = playlistFacade.getPlaylistById(id);
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponseDto()
-                .setPlaylist(new OpenSubsonicPlaylistWithSongs()
-                        .setId(playlist.getPlaylist().getId())
-                        .setName(playlist.getPlaylist().getName())
-                        .setCreated(formatDate(playlist.getPlaylist().getCreationDate()))
-                        .setChanged(formatDate(playlist.getPlaylist().getUpdateDate()))
-                        .setEntry(playlist.getSongs().stream()
-                                .map(playlistSong -> toChild(playlistSong.getSong(), likePlaylist))
-                                .toList())
-                ));
+                .setPlaylist(toPlaylistWithSongs(playlist, likePlaylist)));
+    }
+
+    private OpenSubsonicPlaylistWithSongs toPlaylistWithSongs(PlaylistSongsDto playlist, PlaylistSongsDto likePlaylist) {
+        return new OpenSubsonicPlaylistWithSongs()
+                .setId(playlist.getPlaylist().getId())
+                .setName(playlist.getPlaylist().getName())
+                .setCreated(formatDate(playlist.getPlaylist().getCreationDate()))
+                .setChanged(formatDate(playlist.getPlaylist().getUpdateDate()))
+                .setEntry(playlist.getSongs().stream()
+                        .map(playlistSong -> toChild(playlistSong.getSong(), likePlaylist))
+                        .toList());
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/createPlaylist.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicPlaylistResponseDto> createPlaylist(
+            @RequestParam String name,
+            @RequestParam(required = false) String songId
+    ) {
+        PlaylistSongsDto playlist = playlistFacade.createNormalPlaylist(new PlaylistCreationCommandDto()
+                .setName(name)
+                .setSongIds(songId != null ? List.of(songId) : List.of())
+        );
+        PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponseDto()
+                .setPlaylist(toPlaylistWithSongs(playlist, likePlaylist)));
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/updatePlaylist.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> updatePlaylist(
+            @RequestParam String playlistId,
+            @RequestParam(required = false) @Nullable String name,
+            @RequestParam(required = false) @Nullable List<String> songIdToAdd,
+            @RequestParam(required = false) @Nullable List<Integer> songIndexToRemove
+    ) throws ObjectNotFoundException {
+        PlaylistSongsDto playlist = playlistFacade.getPlaylistById(playlistId);
+        PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
+                .setId(playlist.getPlaylist().getId())
+                .setOverrideName(name)
+                ;
+        List<PlaylistUpdateCommandDto.SongId> overridePlaylistSongIds = new ArrayList<>(playlist.getSongs().stream()
+                .map(playlistSong -> new PlaylistUpdateCommandDto.SongId()
+                        .setId(playlistSong.getId())
+                        .setSongId(playlistSong.getSong().getSong().getId()))
+                .toList());
+        if (songIndexToRemove != null) {
+            List<Integer> songIndexToRemoveDescending = songIndexToRemove.stream()
+                    .filter(Objects::nonNull)
+                    .sorted(Comparator.reverseOrder())
+                    .toList();
+            songIndexToRemoveDescending.forEach(index -> overridePlaylistSongIds.remove((int) index));
+        }
+        if (songIdToAdd != null) {
+            songIdToAdd.forEach(songId -> overridePlaylistSongIds.add(new PlaylistUpdateCommandDto.SongId()
+                    .setSongId(songId)));
+        }
+        command.setOverriddenSongIds(overridePlaylistSongIds);
+        playlistFacade.updatePlaylist(command);
+        return openSubsonicResponseService.createSuccessful();
     }
 }
