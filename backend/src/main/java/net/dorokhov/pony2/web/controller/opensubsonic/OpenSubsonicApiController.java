@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.web.controller.opensubsonic;
 
+import net.dorokhov.pony2.api.library.domain.Playlist;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.response.*;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -59,7 +61,10 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         ));
     }
 
-    private String formatDate(LocalDateTime date) {
+    private String formatDate(@Nullable LocalDateTime date) {
+        if (date == null) {
+            return null;
+        }
         ZonedDateTime zonedDateTime = ZonedDateTime.of(date, ZoneId.systemDefault()).withZoneSameInstant(ZoneId.systemDefault());
         return zonedDateTime.format(DateTimeFormatter.ISO_DATE);
     }
@@ -317,5 +322,36 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         SongDetailsDto song = libraryFacade.getSong(id);
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicSongResponseDto().setChild(toChild(song, likePlaylist)));
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getPlaylists.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicPlaylistsResponseDto> getPlaylists() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistsResponseDto()
+                .setPlaylists(new OpenSubsonicPlaylistsResponseDto.Playlists()
+                        .setPlaylist(playlistFacade.getPlaylists().stream()
+                                .filter(playlist -> playlist.getType() == Playlist.Type.NORMAL)
+                                .map(playlist -> new OpenSubsonicPlaylist()
+                                        .setId(playlist.getId())
+                                        .setName(playlist.getName())
+                                        .setCreated(formatDate(playlist.getCreationDate()))
+                                        .setChanged(formatDate(playlist.getUpdateDate()))
+                                )
+                                .toList())));
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getPlaylist.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicPlaylistResponseDto> getPlaylist(@RequestParam String id) throws ObjectNotFoundException {
+        PlaylistSongsDto playlist = playlistFacade.getPlaylistById(id);
+        PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponseDto()
+                .setPlaylist(new OpenSubsonicPlaylistWithSongs()
+                        .setId(playlist.getPlaylist().getId())
+                        .setName(playlist.getPlaylist().getName())
+                        .setCreated(formatDate(playlist.getPlaylist().getCreationDate()))
+                        .setChanged(formatDate(playlist.getPlaylist().getUpdateDate()))
+                        .setEntry(playlist.getSongs().stream()
+                                .map(playlistSong -> toChild(playlistSong.getSong(), likePlaylist))
+                                .toList())
+                ));
     }
 }

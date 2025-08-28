@@ -30,12 +30,12 @@ public class OpenSubsonicFileController implements OpenSubsonicController {
             "/opensubsonic/rest/stream.view",
             "/opensubsonic/rest/download.view",
     }, produces = {"audio/*", APPLICATION_JSON_VALUE}, method = {GET, POST})
-    public void getAudio(@RequestParam("id") String songId, HttpServletRequest request, HttpServletResponse response) {
+    public void getStream(@RequestParam("id") String songId, HttpServletRequest request, HttpServletResponse response) {
         handleStreamingExceptions(() -> fileDistributor.distribute(fileFacade.getSongDistribution(songId), request, response), response);
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getCoverArt.view", produces = {"image/*", APPLICATION_JSON_VALUE}, method = {GET, POST})
-    public void getLargeArtwork(@RequestParam("id") String artworkId, HttpServletRequest request, HttpServletResponse response) {
+    public void getCoverArt(@RequestParam("id") String artworkId, HttpServletRequest request, HttpServletResponse response) {
         handleStreamingExceptions(() -> fileDistributor.distribute(fileFacade.getLargeArtworkDistribution(artworkId), request, response), response);
     }
 }

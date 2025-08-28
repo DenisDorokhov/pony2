@@ -9,6 +9,7 @@ import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.web.security.UserDetailsImpl;
 import net.dorokhov.pony2.web.security.WebAuthority;
 import net.dorokhov.pony2.web.security.token.exception.InvalidTokenException;
+import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,15 +30,18 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
     private final RequestTokenFinder requestTokenFinder;
     private final TokenService tokenService;
     private final UserService userService;
+    private final OpenSubsonicResponseService openSubsonicResponseService;
 
     public TokenSecurityContextRepository(
             RequestTokenFinder requestTokenFinder,
             TokenService tokenService,
-            UserService userService
+            UserService userService,
+            OpenSubsonicResponseService openSubsonicResponseService
     ) {
         this.requestTokenFinder = requestTokenFinder;
         this.tokenService = tokenService;
         this.userService = userService;
+        this.openSubsonicResponseService = openSubsonicResponseService;
     }
 
     @Override
@@ -78,13 +82,13 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
         if (user != null) {
             source = AuthenticationSource.ACCESS_TOKEN;
         } else {
-            user = loadUserByStaticToken(request);
+            user = loadUserBySubsonicCredentials(request);
             if (user != null) {
-                source = AuthenticationSource.STATIC_TOKEN;
+                source = AuthenticationSource.OPEN_SUBSONIC;
             } else {
-                user = loadUserBySubsonicCredentials(request);
+                user = loadUserByStaticToken(request);
                 if (user != null) {
-                    source = AuthenticationSource.OPEN_SUBSONIC;
+                    source = AuthenticationSource.STATIC_TOKEN;
                 } else {
                     throw new InvalidTokenException();
                 }
@@ -133,9 +137,11 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
     }
 
     private @Nullable User loadUserBySubsonicCredentials(HttpServletRequest request) throws InvalidTokenException {
-        String apiKey = requestTokenFinder.findOpenSubsonicApiKey(request);
-        if (apiKey != null) {
-            return userService.getById(tokenService.verifyOpenSubsonicApiKeyAndGetUserId(apiKey)).orElse(null);
+        if (openSubsonicResponseService.isOpenSubsonicRequest(request)) {
+            String apiKey = requestTokenFinder.findOpenSubsonicApiKey(request);
+            if (apiKey != null) {
+                return userService.getById(tokenService.verifyOpenSubsonicApiKeyAndGetUserId(apiKey)).orElse(null);
+            }
         }
         return null;
     }
