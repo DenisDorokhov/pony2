@@ -93,31 +93,36 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setGenres(new OpenSubsonicGenresResponseDto.Genres()
                         .setGenre(libraryFacade.getGenres().stream()
                                 .map(genre -> new OpenSubsonicGenre()
-                                        .setValue(genre.getName())
+                                        .setValue(nullToUnknown(genre.getName()))
                                 )
                                 .toList()
                         )));
     }
 
-    @RequestMapping(value = "/opensubsonic/rest/getArtists.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicArtistsResponseDto> getArtists() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistsResponseDto().setArtists(toArtistsID3(libraryFacade.getArtists().stream()
-                .map(OpenSubsonicApiController::toArtistID3)
-                .toList()
-        )));
+    private String nullToUnknown(String value) {
+        return value != null ? value : "Unknown";
     }
 
-    private static OpenSubsonicArtistID3 toArtistID3(ArtistDto artist) {
+    @RequestMapping(value = "/opensubsonic/rest/getArtists.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicArtistsResponseDto> getArtists() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistsResponseDto()
+                .setArtists(toArtistsID3(libraryFacade.getArtists().stream()
+                        .map(this::toArtistID3)
+                        .toList()
+                )));
+    }
+
+    private OpenSubsonicArtistID3 toArtistID3(ArtistDto artist) {
         return new OpenSubsonicArtistID3()
                 .setId(artist.getId())
-                .setName(artist.getName() != null ? artist.getName() : "Unknown")
+                .setName(nullToUnknown(artist.getName()))
                 .setCoverArt(artist.getArtworkId());
     }
 
     private OpenSubsonicArtistsID3 toArtistsID3(List<OpenSubsonicArtistID3> artists) {
         Map<String, List<OpenSubsonicArtistID3>> letterToArtists = new TreeMap<>();
         for (OpenSubsonicArtistID3 artist : artists) {
-            String letter = artist.getName() != null ? artist.getName().substring(0, 1).toUpperCase() : "U";
+            String letter = nullToUnknown(artist.getName()).substring(0, 1).toUpperCase();
             List<OpenSubsonicArtistID3> letterArtists = letterToArtists.computeIfAbsent(letter, k -> new ArrayList<>());
             letterArtists.add(artist);
         }
@@ -147,12 +152,12 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setId(songDetails.getSong().getId())
                 .setParent(songDetails.getAlbumDetails().getAlbum().getId())
                 .setDir(false)
-                .setTitle(songDetails.getSong().getName())
-                .setAlbum(songDetails.getAlbumDetails().getAlbum().getName())
-                .setArtist(songDetails.getAlbumDetails().getArtist().getName())
+                .setTitle(nullToUnknown(songDetails.getSong().getName()))
+                .setAlbum(nullToUnknown(songDetails.getAlbumDetails().getAlbum().getName()))
+                .setArtist(nullToUnknown(songDetails.getAlbumDetails().getArtist().getName()))
                 .setTrack(songDetails.getSong().getTrackNumber())
                 .setYear(songDetails.getAlbumDetails().getAlbum().getYear())
-                .setGenre(songDetails.getGenre().getName())
+                .setGenre(nullToUnknown(songDetails.getGenre().getName()))
                 .setCoverArt(songDetails.getAlbumDetails().getAlbum().getArtworkId())
                 .setSize(songDetails.getSong().getSize())
                 .setContentType(songDetails.getSong().getMimeType())
@@ -185,7 +190,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setAlbumArtists(List.of(
                         toArtistID3(songDetails.getAlbumDetails().getArtist())
                 ))
-                .setDisplayAlbumArtist(songDetails.getAlbumDetails().getArtist().getName())
+                .setDisplayAlbumArtist(nullToUnknown(songDetails.getAlbumDetails().getArtist().getName()))
                 ;
     }
 
@@ -228,8 +233,8 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         String genre = resolveGenre(albumSongs);
         return new OpenSubsonicAlbumID3()
                 .setId(albumSongs.getDetails().getAlbum().getId())
-                .setName(albumSongs.getDetails().getAlbum().getName())
-                .setArtist(albumSongs.getDetails().getArtist().getName())
+                .setName(nullToUnknown(albumSongs.getDetails().getAlbum().getName()))
+                .setArtist(nullToUnknown(albumSongs.getDetails().getArtist().getName()))
                 .setArtistId(albumSongs.getDetails().getArtist().getId())
                 .setCoverArt(albumSongs.getDetails().getAlbum().getArtworkId())
                 .setCreated(formatDate(albumSongs.getDetails().getAlbum().getCreationDate()))
@@ -239,7 +244,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setArtists(List.of(
                         toArtistID3(albumSongs.getDetails().getArtist())
                 ))
-                .setDisplayArtist(albumSongs.getDetails().getArtist().getName())
+                .setDisplayArtist(nullToUnknown(albumSongs.getDetails().getArtist().getName()))
                 ;
     }
 
@@ -259,8 +264,8 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumResponseDto()
                 .setAlbum(new OpenSubsonicAlbumID3WithSongs()
                         .setId(albumSongs.getDetails().getAlbum().getId())
-                        .setName(albumSongs.getDetails().getAlbum().getName())
-                        .setArtist(albumSongs.getDetails().getArtist().getName())
+                        .setName(nullToUnknown(albumSongs.getDetails().getAlbum().getName()))
+                        .setArtist(nullToUnknown(albumSongs.getDetails().getArtist().getName()))
                         .setArtistId(albumSongs.getDetails().getArtist().getId())
                         .setCoverArt(albumSongs.getDetails().getAlbum().getArtworkId())
                         .setCreated(formatDate(albumSongs.getDetails().getAlbum().getCreationDate()))
@@ -268,7 +273,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                         .setArtists(List.of(
                                 toArtistID3(albumSongs.getDetails().getArtist())
                         ))
-                        .setDisplayArtist(albumSongs.getDetails().getArtist().getName())
+                        .setDisplayArtist(nullToUnknown(albumSongs.getDetails().getArtist().getName()))
                         .setGenre(genre)
                         .setGenres(genre != null ? List.of(new OpenSubsonicItemGenre().setName(genre)) : null)
                         .setSong(albumSongs.getSongs().stream()
@@ -329,7 +334,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                                 .filter(playlist -> playlist.getType() == Playlist.Type.NORMAL)
                                 .map(playlist -> new OpenSubsonicPlaylist()
                                         .setId(playlist.getId())
-                                        .setName(playlist.getName())
+                                        .setName(nullToUnknown(playlist.getName()))
                                         .setCreated(formatDate(playlist.getCreationDate()))
                                         .setChanged(formatDate(playlist.getUpdateDate()))
                                 )
@@ -347,7 +352,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     private OpenSubsonicPlaylistWithSongs toPlaylistWithSongs(PlaylistSongsDto playlist, PlaylistSongsDto likePlaylist) {
         return new OpenSubsonicPlaylistWithSongs()
                 .setId(playlist.getPlaylist().getId())
-                .setName(playlist.getPlaylist().getName())
+                .setName(nullToUnknown(playlist.getPlaylist().getName()))
                 .setCreated(formatDate(playlist.getPlaylist().getCreationDate()))
                 .setChanged(formatDate(playlist.getPlaylist().getUpdateDate()))
                 .setEntry(playlist.getSongs().stream()
@@ -379,8 +384,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         PlaylistSongsDto playlist = playlistFacade.getPlaylistById(playlistId);
         PlaylistUpdateCommandDto command = new PlaylistUpdateCommandDto()
                 .setId(playlist.getPlaylist().getId())
-                .setOverrideName(name)
-                ;
+                .setOverrideName(name);
         List<PlaylistUpdateCommandDto.SongId> overridePlaylistSongIds = new ArrayList<>(playlist.getSongs().stream()
                 .map(playlistSong -> new PlaylistUpdateCommandDto.SongId()
                         .setId(playlistSong.getId())
