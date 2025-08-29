@@ -4,7 +4,10 @@ import net.dorokhov.pony2.api.library.domain.Playlist;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.*;
 import net.dorokhov.pony2.web.dto.opensubsonic.response.*;
-import net.dorokhov.pony2.web.service.*;
+import net.dorokhov.pony2.web.service.LibraryFacade;
+import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
+import net.dorokhov.pony2.web.service.PlaybackHistoryFacade;
+import net.dorokhov.pony2.web.service.PlaylistFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,20 +27,17 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class OpenSubsonicApiController implements OpenSubsonicController {
 
     private final OpenSubsonicResponseService openSubsonicResponseService;
-    private final UserFacade userFacade;
     private final LibraryFacade libraryFacade;
     private final PlaylistFacade playlistFacade;
     private final PlaybackHistoryFacade playbackHistoryFacade;
 
     public OpenSubsonicApiController(
             OpenSubsonicResponseService openSubsonicResponseService,
-            UserFacade userFacade,
             LibraryFacade libraryFacade,
             PlaylistFacade playlistFacade,
             PlaybackHistoryFacade playbackHistoryFacade
     ) {
         this.openSubsonicResponseService = openSubsonicResponseService;
-        this.userFacade = userFacade;
         this.libraryFacade = libraryFacade;
         this.playlistFacade = playlistFacade;
         this.playbackHistoryFacade = playbackHistoryFacade;
@@ -48,33 +48,17 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         return openSubsonicResponseService.createSuccessful();
     }
 
-    @RequestMapping(value = "/opensubsonic/rest/getLicense.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicLicenseResponseDto> getLicense() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicLicenseResponseDto(new OpenSubsonicLicense()
-                .setValid(true)
-                .setEmail(userFacade.getCurrentUser().getEmail())
-                .setLicenseExpires(formatDate(LocalDateTime.now().plusYears(1)))
-                .setTrialExpires("2025-01-01T00:00:00.000Z")
-        ));
-    }
-
-    private String formatDate(@Nullable LocalDateTime date) {
-        if (date == null) {
-            return null;
-        }
-        ZonedDateTime zonedDateTime = ZonedDateTime.of(date, ZoneId.systemDefault()).withZoneSameInstant(ZoneId.systemDefault());
-        return zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-    }
-
     @RequestMapping(value = "/opensubsonic/rest/getOpenSubsonicExtensions.view", method = {GET, POST})
     public OpenSubsonicResponseDto<OpenSubsonicExtensionsResponseDto> getOpenSubsonicExtensions() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicExtensionsResponseDto());
-    }
-
-    @RequestMapping(value = "/opensubsonic/rest/tokenInfo.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicTokenInfoResponseDto> tokenInfo() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicTokenInfoResponseDto(new OpenSubsonicTokenInfo()
-                .setUsername(userFacade.getCurrentUser().getName())));
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicExtensionsResponseDto()
+                .setOpenSubsonicExtensions(List.of(
+                        new OpenSubsonicExtension()
+                                .setName("apiKeyAuthentication")
+                                .setVersions(List.of(1)),
+                        new OpenSubsonicExtension()
+                                .setName("formPost")
+                                .setVersions(List.of(1))
+                )));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getMusicFolders.view", method = {GET, POST})
@@ -192,6 +176,14 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 ))
                 .setDisplayAlbumArtist(nullToUnknown(songDetails.getAlbumDetails().getArtist().getName()))
                 ;
+    }
+
+    private String formatDate(@Nullable LocalDateTime date) {
+        if (date == null) {
+            return null;
+        }
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(date, ZoneId.systemDefault()).withZoneSameInstant(ZoneId.systemDefault());
+        return zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
     private OpenSubsonicChild toChild(PlaylistSongDto song, PlaylistSongsDto likePlaylist) {
