@@ -5,7 +5,6 @@ import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.common.OffsetBasedPageRequest;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
-import net.dorokhov.pony2.web.dto.AlbumSongsDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -63,6 +62,11 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
+    public List<Artist> getArtists(int size, int offset) {
+        return artistRepository.findAll(new OffsetBasedPageRequest(size, offset, Sort.by("id"))).getContent();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Song> getSongsByIds(List<String> ids) {
         Map<String, Song> songs = songRepository.findAllById(ids).stream()
@@ -108,6 +112,11 @@ public class LibraryServiceImpl implements LibraryService {
     @Transactional(readOnly = true)
     public Optional<Song> getSongById(String id) {
         return songRepository.findById(id);
+    }
+
+    @Override
+    public List<Song> getSongs(int size, int offset) {
+        return songRepository.findAll(new OffsetBasedPageRequest(size, offset, Sort.by("id"))).getContent();
     }
 
     @Override

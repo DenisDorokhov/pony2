@@ -12,6 +12,8 @@ public interface LibraryService {
 
     List<Artist> getArtists();
 
+    List<Artist> getArtists(int size, int offset);
+
     List<Song> getSongsByIds(List<String> ids);
 
     Page<Song> getSongsByGenreId(String genreId, int pageIndex);
@@ -26,7 +28,10 @@ public interface LibraryService {
 
     Optional<Song> getSongById(String id);
 
+    List<Song> getSongs(int size, int offset);
+
     Optional<ArtworkFiles> getArtworkFilesById(String id);
 
     List<Song> getRandomSongs(RandomSongsRequest request);
+
 }

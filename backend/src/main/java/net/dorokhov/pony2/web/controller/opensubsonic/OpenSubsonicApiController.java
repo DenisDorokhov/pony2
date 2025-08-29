@@ -397,4 +397,35 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
         playlistFacade.updatePlaylist(command);
         return openSubsonicResponseService.createSuccessful();
     }
+
+    @RequestMapping(value = "/opensubsonic/rest/search3.view", method = {GET, POST})
+    public OpenSubsonicResponseDto<OpenSubsonicSearch3ResponseDto> search3(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "20") int artistCount,
+            @RequestParam(defaultValue = "0") int artistOffset,
+            @RequestParam(defaultValue = "20") int albumCount,
+            @RequestParam(defaultValue = "0") int albumOffset,
+            @RequestParam(defaultValue = "20") int songCount,
+            @RequestParam(defaultValue = "0") int songOffset
+    ) {
+        String queryValue = query.trim()
+                .replaceAll("^\"", "")
+                .replaceAll("\"$", "");
+        if (!queryValue.isEmpty()) {
+            throw new IllegalArgumentException("Only empty query is supported.");
+        }
+        PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicSearch3ResponseDto()
+                .setSearchResult3(new OpenSubsonicSearchResult3()
+                        .setArtist(artistCount > 0 ? libraryFacade.getArtists(artistCount, artistOffset).stream()
+                                .map(this::toArtistID3)
+                                .toList() : List.of())
+                        .setAlbum(albumCount > 0 ? libraryFacade.getAlbums(albumCount, albumOffset).stream()
+                                .map(this::toAlbumID3)
+                                .toList() : List.of())
+                        .setSong(songCount > 0 ? libraryFacade.getSongs(songCount, songOffset).stream()
+                                .map(song -> toChild(song, likePlaylist))
+                                .toList() : List.of())
+                ));
+    }
 }

@@ -52,6 +52,13 @@ public class LibraryFacade {
     }
 
     @Transactional(readOnly = true)
+    public List<ArtistDto> getArtists(int size, int offset) {
+        return libraryService.getArtists(size, offset).stream()
+                .map(ArtistDto::of)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<AlbumSongDetailsDto> getAlbums(int size, int offset) {
         return libraryService.getAlbums(size, offset).stream()
                 .map(album -> AlbumSongDetailsDto.of(album, isAdmin()))
@@ -120,5 +127,12 @@ public class LibraryFacade {
     public SongDetailsDto getSong(String id) throws ObjectNotFoundException {
         return libraryService.getSongById(id).map(song -> SongDetailsDto.of(song, isAdmin()))
                 .orElseThrow(() -> new ObjectNotFoundException(Artist.class, id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SongDetailsDto> getSongs(int size, int offset) {
+        return libraryService.getSongs(size, offset).stream()
+                .map(song -> SongDetailsDto.of(song, isAdmin()))
+                .toList();
     }
 }
