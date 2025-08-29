@@ -63,7 +63,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
             return null;
         }
         ZonedDateTime zonedDateTime = ZonedDateTime.of(date, ZoneId.systemDefault()).withZoneSameInstant(ZoneId.systemDefault());
-        return zonedDateTime.format(DateTimeFormatter.ISO_DATE);
+        return zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getOpenSubsonicExtensions.view", method = {GET, POST})
@@ -171,7 +171,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setDiscNumber(songDetails.getSong().getDiscNumber() != null ? songDetails.getSong().getDiscNumber() : 1)
                 .setCreated(formatDate(songDetails.getSong().getCreationDate()))
                 .setStarred(likePlaylist.getSongs().stream()
-                        .filter(next -> next.getId().equals(songDetails.getSong().getId()))
+                        .filter(next -> next.getSong().getSong().getId().equals(songDetails.getSong().getId()))
                         .map(PlaylistSongDto::getCreationDate)
                         .map(this::formatDate)
                         .findAny()
