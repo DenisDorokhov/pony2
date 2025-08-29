@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.web.security.UserDetailsImpl;
 import net.dorokhov.pony2.web.security.WebAuthority;
 import net.dorokhov.pony2.web.security.token.exception.InvalidTokenException;
+import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +38,8 @@ public class TokenSecurityContextRepositoryTest {
     private TokenService tokenService;
     @Mock
     private UserService userService;
+    @Mock
+    private OpenSubsonicResponseService openSubsonicResponseService;
 
     @Test
     public void shouldLoadSecurityContext() throws InvalidTokenException {
@@ -58,6 +61,7 @@ public class TokenSecurityContextRepositoryTest {
                 assertThat(authorities).containsExactlyInAnyOrder(
                         "ROLE_" + User.Role.USER.name(), 
                         "ROLE_" + User.Role.ADMIN.name(), 
+                        WebAuthority.OPEN_SUBSONIC_API.name(),
                         WebAuthority.FILE_API.name(),
                         WebAuthority.USER_API.name(),
                         WebAuthority.ADMIN_API.name()
