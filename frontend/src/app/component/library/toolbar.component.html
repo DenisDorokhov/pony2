@@ -22,10 +22,10 @@
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.NORMAL)"><i class="bi bi-vinyl-fill"></i>{{ 'library.toolbar.normalModeButton' | translate }}</button>
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ALL)"><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ONE)"><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.SHUFFLE)"><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
       <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.RADIO)"><i class="bi bi-broadcast-pin"></i>{{ 'library.toolbar.radioModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ONE)"><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
+      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ALL)"><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
     </ul>
   </div>
   <div ngbDropdown class="btn-group">

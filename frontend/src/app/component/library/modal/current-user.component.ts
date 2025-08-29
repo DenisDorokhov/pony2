@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {CommonModule} from '@angular/common';
 import {ErrorContainerComponent} from '../../common/error-container.component';
 import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
@@ -12,12 +12,13 @@ import {UserService} from '../../../service/user.service';
 import {AuthenticationService} from '../../../service/authentication.service';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {NotificationService} from '../../../service/notification.service';
+import {OpenSubsonicApiKeyComponent} from './open-subsonic-api-key.component';
 
 @Component({
-    imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
-    selector: 'pony-current-user',
-    templateUrl: './current-user.component.html',
-    styleUrls: ['./current-user.component.scss']
+  imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
+  selector: 'pony-current-user',
+  templateUrl: './current-user.component.html',
+  styleUrls: ['./current-user.component.scss']
 })
 export class CurrentUserComponent implements OnInit {
 
@@ -36,6 +37,7 @@ export class CurrentUserComponent implements OnInit {
     private userService: UserService,
     private notificationService: NotificationService,
     private translateService: TranslateService,
+    private readonly modal: NgbModal,
   ) {
     this.form = this.formBuilder.group({
       name: '',
@@ -85,16 +87,14 @@ export class CurrentUserComponent implements OnInit {
   generateOpenSubsonicApiKey() {
     this.userService.generateCurrentUserOpenSubsonicApiKey().subscribe({
       next: apiKey => {
-        navigator.clipboard.writeText(apiKey.value).then(
-          () => {
-            this.notificationService.success(
-              this.translateService.instant('notification.generateApiKeyTitle'),
-              this.translateService.instant('notification.generateApiKeyText')
-            );
-          },
-          () => {
-            window.alert(apiKey.value);
-          },
+        const modalRef = this.modal.open(OpenSubsonicApiKeyComponent, {size: '400px'});
+        const userComponent: OpenSubsonicApiKeyComponent = modalRef.componentInstance;
+        userComponent.apiKey = apiKey.value;
+      },
+      error: () => {
+        this.notificationService.error(
+          this.translateService.instant('notification.generateApiKeyTitle'),
+          this.translateService.instant('notification.generateApiKeyErrorText')
         );
       }
     });

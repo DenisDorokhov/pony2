@@ -293,6 +293,10 @@ export default {
     foundArtistsHeader: 'Artists',
     foundAlbumsHeader: 'Albums',
   },
+  openSubsonicApiKey: {
+    header: 'OpenSubsonic API Key',
+    copyToClipboardButton: 'Copy',
+  },
   notification: {
     authenticationErrorTitle: 'Authentication Error',
     authenticationErrorText: 'Please sign in.',
@@ -307,7 +311,9 @@ export default {
     settingsUpdatedText: 'Updated!',
     reBuildIndexStartedText: 'Started re-building of search index.',
     generateApiKeyTitle: 'Generate API Key',
-    generateApiKeyText: 'API key has been copied to the clipboard.',
+    generateApiKeyText: 'OpenSubsonic API key has been copied to the clipboard.',
+    generateApiKeyErrorText: 'OpenSubsonic API key could not be generated.',
+    generateApiKeyCopyErrorText: 'OpenSubsonic API key could not be copied to clipboard.',
   },
   fieldViolation: {
     // Localized field violation messages can be defined here (code-message pairs).

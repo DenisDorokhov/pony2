@@ -1,0 +1,11 @@
+<div class="modal-header">
+  <h4 class="modal-title"><i class="bi bi-key-fill"></i>{{ 'openSubsonicApiKey.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <textarea class="form-control" readonly>{{ apiKey }}</textarea>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="copyToClipboard()" [hidden]="!isCopyToClipboardAvailable()">{{ 'openSubsonicApiKey.copyToClipboardButton' | translate }}</button>
+</div>
