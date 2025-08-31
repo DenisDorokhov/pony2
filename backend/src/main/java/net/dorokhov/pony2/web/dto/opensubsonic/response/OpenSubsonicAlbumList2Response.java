@@ -4,7 +4,7 @@ import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicAlbumID3;
 
 import java.util.List;
 
-public class OpenSubsonicAlbumList2ResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicAlbumList2ResponseDto> {
+public class OpenSubsonicAlbumList2Response extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicAlbumList2Response> {
 
     private AlbumList2 albumList2;
 
@@ -12,7 +12,7 @@ public class OpenSubsonicAlbumList2ResponseDto extends OpenSubsonicResponseDto.A
         return albumList2;
     }
 
-    public OpenSubsonicAlbumList2ResponseDto setAlbumList2(AlbumList2 albumList2) {
+    public OpenSubsonicAlbumList2Response setAlbumList2(AlbumList2 albumList2) {
         this.albumList2 = albumList2;
         return this;
     }

@@ -2,7 +2,7 @@ package net.dorokhov.pony2.web.dto.opensubsonic.response;
 
 import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicChild;
 
-public class OpenSubsonicSongResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicSongResponseDto> {
+public class OpenSubsonicSongResponse extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicSongResponse> {
 
     private OpenSubsonicChild child;
 
@@ -10,7 +10,7 @@ public class OpenSubsonicSongResponseDto extends OpenSubsonicResponseDto.Abstrac
         return child;
     }
 
-    public OpenSubsonicSongResponseDto setChild(OpenSubsonicChild child) {
+    public OpenSubsonicSongResponse setChild(OpenSubsonicChild child) {
         this.child = child;
         return this;
     }

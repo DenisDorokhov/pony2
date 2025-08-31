@@ -4,7 +4,7 @@ import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicGenre;
 
 import java.util.List;
 
-public class OpenSubsonicGenresResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicGenresResponseDto> {
+public class OpenSubsonicGenresResponse extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicGenresResponse> {
 
     private Genres genres;
 
@@ -12,7 +12,7 @@ public class OpenSubsonicGenresResponseDto extends OpenSubsonicResponseDto.Abstr
         return genres;
     }
 
-    public OpenSubsonicGenresResponseDto setGenres(Genres genres) {
+    public OpenSubsonicGenresResponse setGenres(Genres genres) {
         this.genres = genres;
         return this;
     }

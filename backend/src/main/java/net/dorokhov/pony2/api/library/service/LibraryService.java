@@ -33,5 +33,4 @@ public interface LibraryService {
     Optional<ArtworkFiles> getArtworkFilesById(String id);
 
     List<Song> getRandomSongs(RandomSongsRequest request);
-
 }

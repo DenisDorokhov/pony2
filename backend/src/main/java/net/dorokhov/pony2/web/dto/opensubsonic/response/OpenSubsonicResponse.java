@@ -2,12 +2,12 @@ package net.dorokhov.pony2.web.dto.opensubsonic.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OpenSubsonicResponseDto<T extends OpenSubsonicResponseDto.AbstractResponse<T>> {
+public class OpenSubsonicResponse<T extends OpenSubsonicResponse.AbstractResponse<T>> {
 
     @JsonProperty("subsonic-response")
     private T response;
 
-    public OpenSubsonicResponseDto(T response) {
+    public OpenSubsonicResponse(T response) {
         this.response = response;
     }
 
@@ -15,13 +15,13 @@ public class OpenSubsonicResponseDto<T extends OpenSubsonicResponseDto.AbstractR
         return response;
     }
 
-    public OpenSubsonicResponseDto<T> setResponse(T response) {
+    public OpenSubsonicResponse<T> setResponse(T response) {
         this.response = response;
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    public abstract static class AbstractResponse<T extends OpenSubsonicResponseDto.AbstractResponse<T>> {
+    public abstract static class AbstractResponse<T extends OpenSubsonicResponse.AbstractResponse<T>> {
 
         private String status;
         private String version;

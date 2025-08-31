@@ -2,9 +2,9 @@ package net.dorokhov.pony2.web.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
-import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicEmptyResponseDto;
-import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicErrorResponseDto;
-import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicResponseDto;
+import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicEmptyResponse;
+import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicErrorResponse;
+import net.dorokhov.pony2.web.dto.opensubsonic.response.OpenSubsonicResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,12 +38,12 @@ public class OpenSubsonicResponseService {
         return request.getServletPath().startsWith(PATH_PREFIX + "/");
     }
 
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> createSuccessful() {
-        return createSuccessful(new OpenSubsonicEmptyResponseDto());
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> createSuccessful() {
+        return createSuccessful(new OpenSubsonicEmptyResponse());
     }
 
-    public <T extends OpenSubsonicResponseDto.AbstractResponse<T>> OpenSubsonicResponseDto<T> createSuccessful(T body) {
-        return new OpenSubsonicResponseDto<>(body
+    public <T extends OpenSubsonicResponse.AbstractResponse<T>> OpenSubsonicResponse<T> createSuccessful(T body) {
+        return new OpenSubsonicResponse<>(body
                 .setStatus("ok")
                 .setVersion(VERSION)
                 .setType(TYPE)
@@ -52,8 +52,8 @@ public class OpenSubsonicResponseService {
         );
     }
 
-    public OpenSubsonicResponseDto<OpenSubsonicErrorResponseDto> createError(int code, String message) {
-        return new OpenSubsonicResponseDto<>(new OpenSubsonicErrorResponseDto(new OpenSubsonicResponseDto.AbstractResponse.Error()
+    public OpenSubsonicResponse<OpenSubsonicErrorResponse> createError(int code, String message) {
+        return new OpenSubsonicResponse<>(new OpenSubsonicErrorResponse(new OpenSubsonicResponse.AbstractResponse.Error()
                 .setCode(code)
                 .setMessage(message))
                 .setStatus("failed")

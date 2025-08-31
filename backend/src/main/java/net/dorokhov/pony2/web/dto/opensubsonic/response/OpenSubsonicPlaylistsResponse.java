@@ -4,7 +4,7 @@ import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicPlaylist;
 
 import java.util.List;
 
-public class OpenSubsonicPlaylistsResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicPlaylistsResponseDto> {
+public class OpenSubsonicPlaylistsResponse extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicPlaylistsResponse> {
 
     private Playlists playlists;
 
@@ -12,7 +12,7 @@ public class OpenSubsonicPlaylistsResponseDto extends OpenSubsonicResponseDto.Ab
         return playlists;
     }
 
-    public OpenSubsonicPlaylistsResponseDto setPlaylists(Playlists playlists) {
+    public OpenSubsonicPlaylistsResponse setPlaylists(Playlists playlists) {
         this.playlists = playlists;
         return this;
     }

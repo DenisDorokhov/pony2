@@ -44,13 +44,13 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/ping.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> ping() {
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> ping() {
         return openSubsonicResponseService.createSuccessful();
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getOpenSubsonicExtensions.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicExtensionsResponseDto> getOpenSubsonicExtensions() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicExtensionsResponseDto()
+    public OpenSubsonicResponse<OpenSubsonicExtensionsResponse> getOpenSubsonicExtensions() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicExtensionsResponse()
                 .setOpenSubsonicExtensions(List.of(
                         new OpenSubsonicExtension()
                                 .setName("apiKeyAuthentication")
@@ -62,19 +62,19 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getMusicFolders.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<?> getMusicFolders() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicMusicFoldersResponseDto()
-                .setMusicFolders(new OpenSubsonicMusicFoldersResponseDto.MusicFolders().setMusicFolder(List.of(
+    public OpenSubsonicResponse<OpenSubsonicMusicFoldersResponse> getMusicFolders() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicMusicFoldersResponse()
+                .setMusicFolders(new OpenSubsonicMusicFoldersResponse.MusicFolders().setMusicFolder(List.of(
                         new OpenSubsonicMusicFolder()
                                 .setId(1)
-                                .setName("Pony Music")
+                                .setName("Pony")
                 ))));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getGenres.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicGenresResponseDto> getGenres() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicGenresResponseDto()
-                .setGenres(new OpenSubsonicGenresResponseDto.Genres()
+    public OpenSubsonicResponse<OpenSubsonicGenresResponse> getGenres() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicGenresResponse()
+                .setGenres(new OpenSubsonicGenresResponse.Genres()
                         .setGenre(libraryFacade.getGenres().stream()
                                 .map(genre -> new OpenSubsonicGenre()
                                         .setValue(nullToUnknown(genre.getName()))
@@ -88,8 +88,8 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getArtists.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicArtistsResponseDto> getArtists() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistsResponseDto()
+    public OpenSubsonicResponse<OpenSubsonicArtistsResponse> getArtists() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistsResponse()
                 .setArtists(toArtistsID3(libraryFacade.getArtists().stream()
                         .map(this::toArtistID3)
                         .toList()
@@ -119,9 +119,9 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getStarred2.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<?> getStarred2() {
+    public OpenSubsonicResponse<OpenSubsonicStarred2Response> getStarred2() {
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicStarred2ResponseDto()
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicStarred2Response()
                 .setStarred2(new OpenSubsonicStarred2()
                         .setArtist(List.of())
                         .setAlbum(List.of())
@@ -191,29 +191,29 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/deleteBookmark.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> deleteBookmark() {
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> deleteBookmark() {
         return openSubsonicResponseService.createSuccessful();
     }
 
     @RequestMapping(value = "/opensubsonic/rest/createBookmark.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> createBookmark() {
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> createBookmark() {
         return openSubsonicResponseService.createSuccessful();
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getBookmarks.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicBookmarksResponseDto> getBookmarks() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicBookmarksResponseDto()
-                .setBookmarks(new OpenSubsonicBookmarksResponseDto.Bookmarks()
+    public OpenSubsonicResponse<OpenSubsonicBookmarksResponse> getBookmarks() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicBookmarksResponse()
+                .setBookmarks(new OpenSubsonicBookmarksResponse.Bookmarks()
                         .setBookmark(List.of())));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getAlbumList2.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicAlbumList2ResponseDto> getAlbumList2(
+    public OpenSubsonicResponse<OpenSubsonicAlbumList2Response> getAlbumList2(
             @RequestParam int size, @RequestParam int offset
     ) {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumList2ResponseDto()
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumList2Response()
                 .setAlbumList2(
-                        new OpenSubsonicAlbumList2ResponseDto.AlbumList2().setAlbum(
+                        new OpenSubsonicAlbumList2Response.AlbumList2().setAlbum(
                                 libraryFacade.getAlbums(size, offset).stream()
                                         .map(this::toAlbumID3)
                                         .toList()
@@ -249,11 +249,11 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getAlbum.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicAlbumResponseDto> getAlbum(@RequestParam String id) throws ObjectNotFoundException {
+    public OpenSubsonicResponse<OpenSubsonicAlbumResponse> getAlbum(@RequestParam String id) throws ObjectNotFoundException {
         AlbumSongDetailsDto albumSongs = libraryFacade.getAlbumSongDetails(id);
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
         String genre = resolveGenre(albumSongs);
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumResponseDto()
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumResponse()
                 .setAlbum(new OpenSubsonicAlbumID3WithSongs()
                         .setId(albumSongs.getDetails().getAlbum().getId())
                         .setName(nullToUnknown(albumSongs.getDetails().getAlbum().getName()))
@@ -276,19 +276,19 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getAlbumInfo2.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicAlbumInfo2ResponseDto> getAlbumInfo2() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumInfo2ResponseDto()
+    public OpenSubsonicResponse<OpenSubsonicAlbumInfo2Response> getAlbumInfo2() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicAlbumInfo2Response()
                 .setAlbumInfo(new OpenSubsonicAlbumInfo()));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getArtistInfo2.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicArtistInfo2ResponseDto> getArtistInfo2() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistInfo2ResponseDto()
+    public OpenSubsonicResponse<OpenSubsonicArtistInfo2Response> getArtistInfo2() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistInfo2Response()
                 .setArtistInfo2(new OpenSubsonicArtistInfo2()));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/scrobble.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> scrobble(@RequestParam String id, @RequestParam(defaultValue = "true") boolean submission) throws ObjectNotFoundException {
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> scrobble(@RequestParam String id, @RequestParam(defaultValue = "true") boolean submission) throws ObjectNotFoundException {
         if (submission) {
             playbackHistoryFacade.addSongToHistory(id);
         }
@@ -296,7 +296,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/star.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> star(@RequestParam(required = false) String id) throws ObjectNotFoundException {
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> star(@RequestParam(required = false) String id) throws ObjectNotFoundException {
         if (id != null) {
             playlistFacade.likeSong(id);
         }
@@ -304,7 +304,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/unstar.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> unstar(@RequestParam(required = false) String id) throws ObjectNotFoundException {
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> unstar(@RequestParam(required = false) String id) throws ObjectNotFoundException {
         if (id != null) {
             playlistFacade.unlikeSong(id);
         }
@@ -312,16 +312,16 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getSong.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicSongResponseDto> getSong(@RequestParam(required = false) String id) throws ObjectNotFoundException {
+    public OpenSubsonicResponse<OpenSubsonicSongResponse> getSong(@RequestParam(required = false) String id) throws ObjectNotFoundException {
         SongDetailsDto song = libraryFacade.getSong(id);
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicSongResponseDto().setChild(toChild(song, likePlaylist)));
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicSongResponse().setChild(toChild(song, likePlaylist)));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getPlaylists.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicPlaylistsResponseDto> getPlaylists() {
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistsResponseDto()
-                .setPlaylists(new OpenSubsonicPlaylistsResponseDto.Playlists()
+    public OpenSubsonicResponse<OpenSubsonicPlaylistsResponse> getPlaylists() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistsResponse()
+                .setPlaylists(new OpenSubsonicPlaylistsResponse.Playlists()
                         .setPlaylist(playlistFacade.getPlaylists().stream()
                                 .filter(playlist -> playlist.getType() == Playlist.Type.NORMAL)
                                 .map(playlist -> new OpenSubsonicPlaylist()
@@ -334,10 +334,10 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/getPlaylist.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicPlaylistResponseDto> getPlaylist(@RequestParam String id) throws ObjectNotFoundException {
+    public OpenSubsonicResponse<OpenSubsonicPlaylistResponse> getPlaylist(@RequestParam String id) throws ObjectNotFoundException {
         PlaylistSongsDto playlist = playlistFacade.getPlaylistById(id);
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponseDto()
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponse()
                 .setPlaylist(toPlaylistWithSongs(playlist, likePlaylist)));
     }
 
@@ -353,7 +353,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/createPlaylist.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicPlaylistResponseDto> createPlaylist(
+    public OpenSubsonicResponse<OpenSubsonicPlaylistResponse> createPlaylist(
             @RequestParam String name,
             @RequestParam(required = false) String songId
     ) {
@@ -362,12 +362,12 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                 .setSongIds(songId != null ? List.of(songId) : List.of())
         );
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponseDto()
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicPlaylistResponse()
                 .setPlaylist(toPlaylistWithSongs(playlist, likePlaylist)));
     }
 
     @RequestMapping(value = "/opensubsonic/rest/updatePlaylist.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicEmptyResponseDto> updatePlaylist(
+    public OpenSubsonicResponse<OpenSubsonicEmptyResponse> updatePlaylist(
             @RequestParam String playlistId,
             @RequestParam(required = false) @Nullable String name,
             @RequestParam(required = false) @Nullable List<String> songIdToAdd,
@@ -399,7 +399,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     }
 
     @RequestMapping(value = "/opensubsonic/rest/search3.view", method = {GET, POST})
-    public OpenSubsonicResponseDto<OpenSubsonicSearch3ResponseDto> search3(
+    public OpenSubsonicResponse<OpenSubsonicSearch3Response> search3(
             @RequestParam String query,
             @RequestParam(defaultValue = "20") int artistCount,
             @RequestParam(defaultValue = "0") int artistOffset,
@@ -415,7 +415,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
             throw new IllegalArgumentException("Only empty query is supported.");
         }
         PlaylistSongsDto likePlaylist = playlistFacade.getLikePlaylist();
-        return openSubsonicResponseService.createSuccessful(new OpenSubsonicSearch3ResponseDto()
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicSearch3Response()
                 .setSearchResult3(new OpenSubsonicSearchResult3()
                         .setArtist(artistCount > 0 ? libraryFacade.getArtists(artistCount, artistOffset).stream()
                                 .map(this::toArtistID3)
@@ -426,6 +426,16 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
                         .setSong(songCount > 0 ? libraryFacade.getSongs(songCount, songOffset).stream()
                                 .map(song -> toChild(song, likePlaylist))
                                 .toList() : List.of())
+                ));
+    }
+
+    @RequestMapping(value = "/opensubsonic/rest/getIndexes.view", method = {GET, POST})
+    public OpenSubsonicResponse<OpenSubsonicIndexesResponse> getIndexes() {
+        return openSubsonicResponseService.createSuccessful(new OpenSubsonicIndexesResponse()
+                .setIndexes(new OpenSubsonicIndexes()
+                        .setShortcut(List.of())
+                        .setIndex(List.of())
+                        .setChild(List.of())
                 ));
     }
 }

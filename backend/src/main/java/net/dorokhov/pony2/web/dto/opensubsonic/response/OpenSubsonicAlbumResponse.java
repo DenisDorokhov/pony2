@@ -2,7 +2,7 @@ package net.dorokhov.pony2.web.dto.opensubsonic.response;
 
 import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicAlbumID3WithSongs;
 
-public class OpenSubsonicAlbumResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicAlbumResponseDto> {
+public class OpenSubsonicAlbumResponse extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicAlbumResponse> {
 
     private OpenSubsonicAlbumID3WithSongs album;
 
@@ -10,7 +10,7 @@ public class OpenSubsonicAlbumResponseDto extends OpenSubsonicResponseDto.Abstra
         return album;
     }
 
-    public OpenSubsonicAlbumResponseDto setAlbum(OpenSubsonicAlbumID3WithSongs album) {
+    public OpenSubsonicAlbumResponse setAlbum(OpenSubsonicAlbumID3WithSongs album) {
         this.album = album;
         return this;
     }

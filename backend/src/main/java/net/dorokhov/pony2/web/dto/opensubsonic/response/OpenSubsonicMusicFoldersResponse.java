@@ -4,7 +4,7 @@ import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicMusicFolder;
 
 import java.util.List;
 
-public class OpenSubsonicMusicFoldersResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicMusicFoldersResponseDto> {
+public class OpenSubsonicMusicFoldersResponse extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicMusicFoldersResponse> {
 
     private MusicFolders musicFolders;
 
@@ -12,7 +12,7 @@ public class OpenSubsonicMusicFoldersResponseDto extends OpenSubsonicResponseDto
         return musicFolders;
     }
 
-    public OpenSubsonicMusicFoldersResponseDto setMusicFolders(MusicFolders musicFolders) {
+    public OpenSubsonicMusicFoldersResponse setMusicFolders(MusicFolders musicFolders) {
         this.musicFolders = musicFolders;
         return this;
     }

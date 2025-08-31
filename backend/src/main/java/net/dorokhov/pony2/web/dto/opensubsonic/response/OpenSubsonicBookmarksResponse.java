@@ -4,7 +4,7 @@ import net.dorokhov.pony2.web.dto.opensubsonic.OpenSubsonicBookmark;
 
 import java.util.List;
 
-public class OpenSubsonicBookmarksResponseDto extends OpenSubsonicResponseDto.AbstractResponse<OpenSubsonicBookmarksResponseDto> {
+public class OpenSubsonicBookmarksResponse extends OpenSubsonicResponse.AbstractResponse<OpenSubsonicBookmarksResponse> {
 
     private Bookmarks bookmarks;
 
@@ -12,7 +12,7 @@ public class OpenSubsonicBookmarksResponseDto extends OpenSubsonicResponseDto.Ab
         return bookmarks;
     }
 
-    public OpenSubsonicBookmarksResponseDto setBookmarks(Bookmarks bookmarks) {
+    public OpenSubsonicBookmarksResponse setBookmarks(Bookmarks bookmarks) {
         this.bookmarks = bookmarks;
         return this;
     }
