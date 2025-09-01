@@ -48,8 +48,9 @@
       button.menu {
         border: none;
         background-color: transparent;
-        top: -4px;
+        padding: 0;
         position: relative;
+        bottom: 5px;
       }
 
       .dropdown-toggle::after {
