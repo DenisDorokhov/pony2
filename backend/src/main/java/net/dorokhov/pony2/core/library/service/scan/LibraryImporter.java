@@ -372,7 +372,7 @@ public class LibraryImporter {
         try {
             return libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
         } catch (IOException e) {
-            logService.error(logger, "Could not find and save file artwork for file '{}'.",
+            logService.warn(logger, "Could not find and save file artwork for file '{}'.",
                     audioNode.getFile().getAbsolutePath(), e);
         }
         return null;
