@@ -44,13 +44,11 @@
 
     .options {
       display: inline;
+      position: inherit;
 
       button.menu {
         border: none;
         background-color: transparent;
-        padding: 0;
-        position: relative;
-        bottom: 4.5px;
       }
 
       .dropdown-toggle::after {
