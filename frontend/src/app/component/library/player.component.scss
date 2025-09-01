@@ -41,6 +41,25 @@
     .title:hover {
       background-color: #f5f5f5;
     }
+
+    .options {
+      display: inline;
+
+      button.menu {
+        border: none;
+        background-color: transparent;
+        top: -4px;
+        position: relative;
+      }
+
+      .dropdown-toggle::after {
+        display: none;
+      }
+    }
+  }
+
+  .dropdown-item i {
+    margin-right: 12px;
   }
 
   .progress-container {

@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {PlaybackService} from '../../service/playback.service';
-import {Song} from '../../domain/library.model';
+import {Playlist, Song} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {PageTitleService} from '../../service/page-title.service';
 import {ImageLoaderComponent} from '../common/image-loader.component';
@@ -11,10 +11,14 @@ import {PlaybackEvent, PlaybackState} from '../../service/audio-player.service';
 import {PlaylistService} from '../../service/playlist.service';
 import {NotificationService} from '../../service/notification.service';
 import {ArtworkComponent} from './modal/artwork.component';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {PlaylistDto} from '../../domain/library.dto';
+import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
+import {PlaylistEditComponent} from './modal/playlist-edit.component';
+import {NgIf} from '@angular/common';
 
 @Component({
-    imports: [ImageLoaderComponent, TranslateModule],
+  imports: [ImageLoaderComponent, TranslateModule, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgIf, NgbDropdownItem],
     selector: 'pony-player',
     templateUrl: './player.component.html',
     styleUrls: ['./player.component.scss']
@@ -36,6 +40,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   formattedMousePosition: string | undefined;
   queue: Song[] = [];
   isLikedSong = false;
+  topPlaylists: Playlist[] = [];
 
   private subscriptions: Subscription[] = [];
 
@@ -91,6 +96,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }));
     this.subscriptions.push(this.playlistService.observeLikePlaylist()
       .subscribe(() => this.refreshLikeState()));
+    this.subscriptions.push(this.playlistService.observePlaylists()
+      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
   }
 
   private refreshLikeState() {
@@ -227,5 +234,38 @@ export class PlayerComponent implements OnInit, OnDestroy {
       const userComponent: ArtworkComponent = modalRef.componentInstance;
       userComponent.url = this.artworkUrl;
     }
+  }
+
+  playNext() {
+    this.playbackService.playNext(this.song!);
+  }
+
+  addToQueue() {
+    this.playbackService.addToQueue(this.song!);
+  }
+
+  createQueue() {
+    this.playbackService.createQueue(this.song!);
+  }
+
+  selectOrCreatePlaylist() {
+    if (this.topPlaylists.length > 0) {
+      const modalRef = this.modal.open(PlaylistAddSongComponent);
+      const playlistAddSongComponent: PlaylistAddSongComponent = modalRef.componentInstance;
+      playlistAddSongComponent.song = this.song!;
+    } else {
+      const modalRef = this.modal.open(PlaylistEditComponent);
+      const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
+      playlistEditComponent.songs = [this.song!];
+    }
+  }
+
+  addToPlaylist(playlist: Playlist) {
+    this.playlistService.addSongToPlaylist(playlist.id, this.song!.id).subscribe({
+      error: () => this.notificationService.error(
+        this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
+        this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
+      ),
+    });
   }
 }
