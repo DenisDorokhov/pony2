@@ -4,6 +4,7 @@ import {Song} from '../domain/library.model';
 import {from, Observable, of} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {isMobileBrowser} from '../utils/mobile.utils';
+import {TokenStorageService} from './token-storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +15,7 @@ export class BrowserNotificationService {
 
   constructor(
     private translateService: TranslateService,
+    private tokenStorageService: TokenStorageService,
   ) {
     window.addEventListener('blur', () => {
       this.appInForeground = false;
@@ -54,9 +56,14 @@ export class BrowserNotificationService {
     }
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
+        let absoluteArtworkUrl: string | undefined = undefined;
+        if (song.album.smallArtworkUrl) {
+          const artworkUrl = song.album.smallArtworkUrl + '?apiKey=' + (this.tokenStorageService.staticToken ?? '');
+          absoluteArtworkUrl = new URL(artworkUrl, document.baseURI).href;
+        }
         const notification = new Notification(this.translateService.instant('player.songTitle', {artistName, songName}),
           {
-            icon: song.album.largeArtworkUrl,
+            icon: absoluteArtworkUrl,
             body: albumName
           });
         notification.onclick = () => {

@@ -9,6 +9,7 @@ import {AudioPlayer, PlaybackEvent, PlaybackState} from './audio-player.service'
 import {BrowserNotificationService} from './browser-notification.service';
 import {PlaybackHistoryService} from './playback-history.service';
 import {RandomSongsRequestDto} from '../domain/library.dto';
+import {TokenStorageService} from './token-storage.service';
 
 export enum PlaybackMode {
   NORMAL = 'NORMAL',
@@ -52,6 +53,7 @@ export class PlaybackService {
     private readonly libraryService: LibraryService,
     private readonly browserNotificationService: BrowserNotificationService,
     private readonly playbackHistoryService: PlaybackHistoryService,
+    private readonly tokenStorageService: TokenStorageService,
   ) {
     this.authenticationService.observeLogout().subscribe(() => {
         this.audioPlayer.stop();
@@ -508,7 +510,9 @@ export class PlaybackService {
           metadata.album = playbackEvent.song.album.name + (playbackEvent.song.album.year ? ' (' + playbackEvent.song.album.year + ')' : '');
         }
         if (playbackEvent.song?.album.largeArtworkUrl) {
-          metadata.artwork = [{src: location.protocol + '//' + location.host + playbackEvent.song.album.largeArtworkUrl}];
+          const artworkUrl = playbackEvent.song.album.largeArtworkUrl + '?apiKey=' + (this.tokenStorageService.staticToken ?? '');
+          const absoluteArtworkUrl = new URL(artworkUrl, document.baseURI).href;
+          metadata.artwork = [{src: absoluteArtworkUrl}];
         }
         navigator.mediaSession.metadata = metadata;
       }

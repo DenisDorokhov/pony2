@@ -32,7 +32,7 @@ public class RequestTokenFinderTest {
     public void shouldFetchOpenSubsonicApiKeyFromParameters() {
 
         MockHttpServletRequest request = mockHttpServletRequest();
-        request.addParameter(RequestTokenFinder.OPEN_SUBSONIC_API_KEY_PARAMETER, "someApiKey");
+        request.addParameter(RequestTokenFinder.TOKEN_PARAM_NAME, "someApiKey");
 
         assertThat(requestTokenFinder.findOpenSubsonicApiKey(request)).isEqualTo("someApiKey");
     }

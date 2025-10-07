@@ -16,7 +16,7 @@ import java.net.URLDecoder;
 public class RequestTokenFinder {
 
     public static final String TOKEN_COOKIE_NAME = "pony2.staticToken";
-    public static final String OPEN_SUBSONIC_API_KEY_PARAMETER = "apiKey";
+    public static final String TOKEN_PARAM_NAME = "apiKey";
 
     private static final String TOKEN_HEADER_PREFIX = "Bearer ";
 
@@ -34,10 +34,10 @@ public class RequestTokenFinder {
         if (cookie != null) {
             return URLDecoder.decode(cookie.getValue(), Charsets.UTF_8);
         }
-        return null;
+        return request.getParameter(TOKEN_PARAM_NAME);
     }
 
     public @Nullable String findOpenSubsonicApiKey(ServletRequest request) {
-        return request.getParameter(OPEN_SUBSONIC_API_KEY_PARAMETER);
+        return request.getParameter(TOKEN_PARAM_NAME);
     }
 }
