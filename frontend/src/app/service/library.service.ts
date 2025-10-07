@@ -18,6 +18,11 @@ export interface SongSelection {
   play: boolean;
 }
 
+export interface ScrollToSongRequest {
+  song: Song;
+  scrollToArtist: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -30,7 +35,7 @@ export class LibraryService {
 
   private scrollToArtistRequestSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private scrollToAlbumRequestSubject = new BehaviorSubject<Album | undefined>(undefined);
-  private scrollToSongRequestSubject = new BehaviorSubject<Song | undefined>(undefined);
+  private scrollToSongRequestSubject = new BehaviorSubject<ScrollToSongRequest | undefined>(undefined);
 
   private refreshRequestSubject = new Subject<void>();
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
@@ -252,13 +257,13 @@ export class LibraryService {
     this.scrollToAlbumRequestSubject.next(undefined);
   }
 
-  observeScrollToSongRequest(): Observable<Song> {
+  observeScrollToSongRequest(): Observable<ScrollToSongRequest> {
     return this.scrollToSongRequestSubject.asObservable()
-      .pipe(filter(song => song !== undefined));
+      .pipe(filter(request => request !== undefined));
   }
 
-  requestScrollToSong(song: Song) {
-    this.scrollToSongRequestSubject.next(song);
+  requestScrollToSong(song: Song, scrollToArtist = true) {
+    this.scrollToSongRequestSubject.next({song, scrollToArtist});
   }
 
   finishScrollToSong() {

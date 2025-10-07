@@ -93,8 +93,8 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
         }
       });
     this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
-      .subscribe(song => {
-        if (song.album.artist.id === this.artist.id) {
+      .subscribe(request => {
+        if (request.scrollToArtist && request.song.album.artist.id === this.artist.id) {
           ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
         }
       });
@@ -110,5 +110,6 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
   select() {
     this.libraryService.selectArtistAndMakeDefault(this.artist);
+    ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement, false);
   }
 }

@@ -127,8 +127,8 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       this.containerElement.nativeElement.focus();
     }
     this.subscriptions.push(this.libraryService.observeScrollToSongRequest()
-      .subscribe(song => {
-        if (song.id === this.song.id) {
+      .subscribe(request => {
+        if (request.song.id === this.song.id) {
           ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
           this.libraryService.finishScrollToSong();
         }
