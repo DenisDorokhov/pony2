@@ -15,7 +15,7 @@ export class NotInstalledGuard implements CanMatch {
   }
 
   canMatch(): MaybeAsync<GuardResult> {
-    return this.installationService.getInstallationStatus()
+    return this.installationService.requestInstallationStatus()
       .pipe(
         tap(installationStatus => {
           if (installationStatus.installed) {

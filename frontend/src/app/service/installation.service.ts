@@ -10,18 +10,22 @@ import {ErrorDto} from '../domain/common.dto';
 })
 export class InstallationService {
 
-  private installationStatus: InstallationStatusDto | undefined;
+  private _installationStatus: InstallationStatusDto | undefined;
 
   constructor(private httpClient: HttpClient) {
   }
 
-  getInstallationStatus(): Observable<InstallationStatusDto> {
-    if (this.installationStatus) {
-      return of(this.installationStatus);
+  get installationStatus(): InstallationStatusDto | undefined {
+    return this._installationStatus;
+  }
+
+  requestInstallationStatus(): Observable<InstallationStatusDto> {
+    if (this._installationStatus) {
+      return of(this._installationStatus);
     } else {
       return this.httpClient.get<InstallationStatusDto>('/api/installation/status')
         .pipe(
-          tap(installationStatus => this.installationStatus = installationStatus)
+          tap(installationStatus => this._installationStatus = installationStatus)
         );
     }
   }
@@ -29,7 +33,7 @@ export class InstallationService {
   install(installationCommand: InstallationCommandDto): Observable<InstallationDto> {
     return this.httpClient.post<InstallationDto>('/api/installation', installationCommand)
       .pipe(
-        tap(() => this.installationStatus = undefined),
+        tap(() => this._installationStatus = undefined),
         catchError(ErrorDto.observableFromHttpErrorResponse)
       );
   }

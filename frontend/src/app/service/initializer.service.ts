@@ -30,7 +30,7 @@ export class InitializerService {
 
     window.document.title = this.translateService.instant('noSongTitle');
 
-    return this.installationService.getInstallationStatus()
+    return this.installationService.requestInstallationStatus()
       .pipe(
         mergeMap(installationStatus => {
           if (installationStatus.installed) {

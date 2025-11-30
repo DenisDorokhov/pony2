@@ -12,6 +12,7 @@ import {
   SearchResultDto,
   SongDetailsDto
 } from '../domain/library.dto';
+import {InstallationService} from './installation.service';
 
 export interface SongSelection {
   song: Song;
@@ -47,6 +48,7 @@ export class LibraryService {
 
   constructor(
     private authenticationService: AuthenticationService,
+    private installationService: InstallationService,
     private httpClient: HttpClient
   ) {
     this.authenticationService.observeLogout().subscribe(() => {
@@ -64,7 +66,7 @@ export class LibraryService {
       this.appInForeground = false;
     });
     window.addEventListener('focus', () => {
-      if (!this.appInForeground) {
+      if (!this.appInForeground && this.installationService.installationStatus?.installed) {
         this.requestRefresh();
       }
       this.appInForeground = true;
