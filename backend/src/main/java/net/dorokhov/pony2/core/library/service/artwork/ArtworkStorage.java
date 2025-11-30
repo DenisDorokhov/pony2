@@ -31,6 +31,8 @@ import static org.springframework.transaction.support.TransactionSynchronization
 @Component
 public class ArtworkStorage {
 
+    private static final String THUMBNAIL_FORMAT = "png";
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ArtworkRepository artworkRepository;
@@ -142,8 +144,8 @@ public class ArtworkStorage {
         FileType fileType = fileTypeSupplier.get();
 
         String uuid = UUID.randomUUID().toString();
-        String smallImagePath = buildImagePath(uuid, "small", fileType.getFileExtension());
-        String largeImagePath = buildImagePath(uuid, "large", fileType.getFileExtension());
+        String smallImagePath = buildImagePath(uuid, "small", THUMBNAIL_FORMAT);
+        String largeImagePath = buildImagePath(uuid, "large", THUMBNAIL_FORMAT);
 
         File smallImageFile = new File(artworkFolder, smallImagePath);
         File largeImageFile = new File(artworkFolder, largeImagePath);
@@ -152,14 +154,14 @@ public class ArtworkStorage {
 
         try (InputStream stream = streamSupplier.get()) {
             try {
-                thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, smallImageFile);
+                thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, THUMBNAIL_FORMAT, smallImageFile);
             } catch (Exception e) {
                 throw new IOException("Could not generate small thumbnail for: " + sourceUri, e);
             }
         }
         try (InputStream stream = streamSupplier.get()) {
             try {
-                thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, largeImageFile);
+                thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, THUMBNAIL_FORMAT, largeImageFile);
             } catch (Exception e) {
                 throw new IOException("Could not generate large thumbnail for: " + sourceUri, e);
             }
@@ -192,7 +194,7 @@ public class ArtworkStorage {
         return artworkToArtworkFiles(artwork);
     }
 
-    @SuppressWarnings("StringBufferReplaceableByString")
+    @SuppressWarnings({"StringBufferReplaceableByString", "SameParameterValue"})
     private String buildImagePath(String name, String suffix, String extension) {
         StringBuilder builder = new StringBuilder();
         builder.append(name, 0, 2).append("/");

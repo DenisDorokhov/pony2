@@ -206,9 +206,9 @@ public class ArtworkStorageTest {
 
         verify(artworkRepository).save(savedArtwork.capture());
         verify(thumbnailGenerator).generateThumbnail((InputStream) any(), 
-                eq(SMALL_IMAGE_SIZE), eq(artworkFiles.getSmallFile()));
+                eq(SMALL_IMAGE_SIZE), any(), eq(artworkFiles.getSmallFile()));
         verify(thumbnailGenerator).generateThumbnail((InputStream) any(), 
-                eq(LARGE_IMAGE_SIZE), eq(artworkFiles.getLargeFile()));
+                eq(LARGE_IMAGE_SIZE), any(), eq(artworkFiles.getLargeFile()));
 
         assertThat(savedArtwork.getValue()).isSameAs(artworkFiles.getArtwork());
         checkSavedArtwork(savedArtwork.getValue());

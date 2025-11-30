@@ -33,7 +33,7 @@ public class ThumbnailGeneratorTest {
         File file = tempFolder.resolve(UUID.randomUUID().toString()).toFile();
 
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, file);
+            thumbnailGenerator.generateThumbnail(stream, THUMBNAIL_SIZE, "png", file);
         }
 
         checkFile(file);
@@ -45,7 +45,7 @@ public class ThumbnailGeneratorTest {
         File file = tempFolder.resolve(UUID.randomUUID().toString()).toFile();
 
         try (InputStream stream = IMAGE_RESOURCE.getInputStream()) {
-            thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, file);
+            thumbnailGenerator.generateThumbnail(ByteStreams.toByteArray(stream), THUMBNAIL_SIZE, "png", file);
         }
 
         checkFile(file);
@@ -56,7 +56,7 @@ public class ThumbnailGeneratorTest {
 
         File file = tempFolder.resolve(UUID.randomUUID().toString()).toFile();
 
-        thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, file);
+        thumbnailGenerator.generateThumbnail(IMAGE_RESOURCE.getFile(), THUMBNAIL_SIZE, "png", file);
 
         checkFile(file);
     }

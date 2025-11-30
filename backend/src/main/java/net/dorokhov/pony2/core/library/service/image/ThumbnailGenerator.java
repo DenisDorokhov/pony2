@@ -9,21 +9,25 @@ import java.io.*;
 @Component
 public class ThumbnailGenerator {
     
-    public void generateThumbnail(InputStream imageStream, ImageSize maxSize, File targetFile) throws IOException {
+    public void generateThumbnail(InputStream imageStream, ImageSize maxSize, String outputFormat, File targetFile) throws IOException {
         try (OutputStream targetStream = new FileOutputStream(targetFile)) {
-            Thumbnails.of(imageStream).size(maxSize.getWidth(), maxSize.getHeight()).outputQuality(1.0).toOutputStream(targetStream);
+            Thumbnails.of(imageStream)
+                    .size(maxSize.getWidth(), maxSize.getHeight())
+                    .outputFormat(outputFormat)
+                    .outputQuality(1.0)
+                    .toOutputStream(targetStream);
         }
     }
 
-    public void generateThumbnail(byte[] imageContent, ImageSize maxSize, File targetFile) throws IOException {
+    public void generateThumbnail(byte[] imageContent, ImageSize maxSize, String outputFormat, File targetFile) throws IOException {
         try (ByteArrayInputStream stream = new ByteArrayInputStream(imageContent)) {
-            generateThumbnail(stream, maxSize, targetFile);
+            generateThumbnail(stream, maxSize, outputFormat, targetFile);
         }
     }
 
-    public void generateThumbnail(File imageFile, ImageSize maxSize, File targetFile) throws IOException {
+    public void generateThumbnail(File imageFile, ImageSize maxSize, String outputFormat, File targetFile) throws IOException {
         try (FileInputStream stream = new FileInputStream(imageFile)) {
-            generateThumbnail(stream, maxSize, targetFile);
+            generateThumbnail(stream, maxSize, outputFormat, targetFile);
         }
     }
 }

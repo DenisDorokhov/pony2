@@ -23,6 +23,7 @@ public class FileTypeResolver {
             .put("jpg", "image/jpeg")
 		    .put("jpeg", "image/jpeg")
 		    .put("png", "image/png")
+		    .put("webp", "image/webp")
 		    .put("mp3", "audio/mpeg")
             .build();
     private static final Map<String, String> EXTENSION_TO_CORRECTION = ImmutableMap.of(".mpga", ".mp3");
