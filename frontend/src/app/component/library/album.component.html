@@ -2,7 +2,13 @@
   <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl"
                      [url]="albumSongs.album.largeArtworkUrl" (click)="openArtwork()"></pony-image-loader>
   <div class="song-list-container">
-    <h4 title="{{ (albumSongs.album.name | ponyUnknownAlbum) + (albumSongs.album.year ? ' ' + albumSongs.album.year : '') }}">
+    <h4 title="{{
+      (albumSongs.album.artist.name | ponyUnknownArtist) +
+      ' - ' +
+      (albumSongs.album.name | ponyUnknownAlbum) +
+      (albumSongs.album.year ? ' [' + albumSongs.album.year + ']' : '') + '\n' +
+      ('library.album.sizeLabel' | translate:{ songCount: albumSongs.songs.length, duration })
+    }}">
       <span>{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
       <button (click)="download()"
               type="button" class="btn btn-sm btn-light">

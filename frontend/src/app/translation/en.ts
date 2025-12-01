@@ -44,7 +44,8 @@ export default {
     album: {
       counterHeader: '{{genres}}, {{albumCount}} albums, {{songCount}} songs',
       discLabel: 'Disc {{discNumber}}',
-      unknownLabel: 'Unknown Album'
+      unknownLabel: 'Unknown Album',
+      sizeLabel: '{{songCount}} songs ({{duration}})',
     },
     artist: {
       allGenresLabel: 'All Artists',
