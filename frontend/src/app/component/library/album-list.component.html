@@ -29,7 +29,7 @@
     </h5>
   </div>
   <div *ngIf="loadingState === LoadingState.LOADED"
-       class="panel-body album-list-container" data-pony-image-loader-scroller>
+       class="panel-body album-list-container" #albumList data-pony-image-loader-scroller>
     <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album"></pony-album>
   </div>
 </div>

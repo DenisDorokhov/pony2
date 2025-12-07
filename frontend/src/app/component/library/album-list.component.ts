@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {AlbumSongs, Artist, ArtistSongs, PlaylistSongs, Song} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
@@ -33,6 +33,8 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   albumCount = 0;
   songCount = 0;
   likeCount = 0;
+
+  @ViewChild('albumList') albumListElement!: ElementRef;
 
   private likePlaylist: PlaylistSongs | undefined;
   private artistSongsSubscription: Subscription | undefined;
@@ -136,9 +138,14 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             album.songs.forEach(() => this.songCount++);
           });
           this.countLikes();
-          if (!refreshing && this.playbackService.currentSong?.album.artist.id === artistSongs.artist.id) {
-            this.libraryService.selectSong(this.playbackService.currentSong!);
-            this.libraryService.requestScrollToSong(this.playbackService.currentSong!, false);
+          if (!refreshing) {
+            if (this.playbackService.currentSong?.album.artist.id === artistSongs.artist.id) {
+              this.libraryService.selectSong(this.playbackService.currentSong!);
+              this.libraryService.requestScrollToSong(this.playbackService.currentSong!, false);
+            } else {
+              // Firefox for some reason retains the scroll position even after the element was re-created with *ngIf.
+              setTimeout(() => this.albumListElement.nativeElement.scrollTop = 0, 50);
+            }
           }
           this.loadingState = LoadingState.LOADED;
         },
