@@ -30,6 +30,11 @@ export class InitializerService {
 
     window.document.title = this.translateService.instant('noSongTitle');
 
+    // Avoid the browser recovering its previous scroll position, the app will control this explicitly.
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
     return this.installationService.requestInstallationStatus()
       .pipe(
         mergeMap(installationStatus => {
