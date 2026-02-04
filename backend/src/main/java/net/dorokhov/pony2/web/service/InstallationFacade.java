@@ -1,5 +1,7 @@
 package net.dorokhov.pony2.web.service;
 
+import net.dorokhov.pony2.api.common.BaseEntity;
+import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.web.service.exception.SecretNotFoundException;
 import net.dorokhov.pony2.api.installation.domain.Installation;
 import net.dorokhov.pony2.api.installation.service.InstallationService;
@@ -24,13 +26,16 @@ public class InstallationFacade {
 
     private final InstallationService installationService;
     private final InstallationSecretService installationSecretService;
+    private final ScanJobService scanJobService;
 
     public InstallationFacade(
             InstallationService installationService,
-            InstallationSecretService installationSecretService
+            InstallationSecretService installationSecretService,
+            ScanJobService scanJobService
     ) {
         this.installationService = installationService;
         this.installationSecretService = installationSecretService;
+        this.scanJobService = scanJobService;
     }
 
     @PostConstruct
@@ -45,7 +50,8 @@ public class InstallationFacade {
     @Transactional(readOnly = true)
     public InstallationStatusDto getInstallationStatus() {
         return new InstallationStatusDto()
-                .setInstalled(installationService.getInstallation().isPresent());
+                .setInstalled(installationService.getInstallation().isPresent())
+                .setInitialScanDate(scanJobService.getFirstSuccessfulJob().map(BaseEntity::getUpdateDate).orElse(null));
     }
 
     @Transactional(readOnly = true)

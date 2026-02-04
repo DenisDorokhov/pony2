@@ -33,8 +33,9 @@ public interface ScanJobService {
 
     Optional<ScanJob> getById(String id);
     
+    Optional<ScanJob> getFirstSuccessfulJob();
     Optional<ScanJob> getLastSuccessfulJob();
-    
+
     ScanJob startScanJob() throws ConcurrentScanException;
     ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException;
 }

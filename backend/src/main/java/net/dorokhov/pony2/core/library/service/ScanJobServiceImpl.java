@@ -120,6 +120,11 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
+    public Optional<ScanJob> getFirstSuccessfulJob() {
+        return scanJobRepository.findFirstByStatusOrderByUpdateDate(Status.COMPLETE);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     @Nullable
     public Optional<ScanJob> getLastSuccessfulJob() {

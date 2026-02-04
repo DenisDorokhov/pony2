@@ -11,5 +11,6 @@ public interface ScanJobRepository extends JpaRepository<ScanJob, String> {
 
     List<ScanJob> findByStatusIn(Collection<ScanJob.Status> statuses);
     
+    Optional<ScanJob> findFirstByStatusOrderByUpdateDate(ScanJob.Status status);
     Optional<ScanJob> findFirstByStatusOrderByUpdateDateDesc(ScanJob.Status status);
 }

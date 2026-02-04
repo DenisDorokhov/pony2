@@ -9,6 +9,8 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaybackState} from '../../service/audio-player.service';
+import {shouldShowNewIndicator} from '../../utils/indicator.utils';
+import {InstallationService} from '../../service/installation.service';
 
 @Component({
     imports: [CommonModule, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
@@ -35,11 +37,8 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
     this._artist = artist;
 
-    if (artist.updateDate) {
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
-      this.showNewIndicator = artist.creationDate.getTime() >= threeDaysAgo.getTime() || artist.updateDate.getTime() >= threeDaysAgo.getTime();
-    }
+    this.showNewIndicator = shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
+      shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus);
 
     this.genreNames = this.artist.genres.map(genre => {
       if (genre.name) {
@@ -72,6 +71,7 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
     private readonly libraryService: LibraryService,
     private readonly playbackService: PlaybackService,
     private readonly translateService: TranslateService,
+    private readonly installationService: InstallationService
   ) {
   }
 

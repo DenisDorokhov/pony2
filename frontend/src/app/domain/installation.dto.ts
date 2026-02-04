@@ -21,4 +21,5 @@ export namespace InstallationCommandDto {
 
 export interface InstallationStatusDto {
   installed: boolean;
+  initialScanDate: string | undefined;
 }

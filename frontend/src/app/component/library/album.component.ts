@@ -11,6 +11,8 @@ import {ArtworkComponent} from './modal/artwork.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {formatDuration} from '../../utils/format.utils';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
+import {shouldShowNewIndicator} from '../../utils/indicator.utils';
+import {InstallationService} from '../../service/installation.service';
 
 interface Disc {
   discNumber: number | undefined;
@@ -57,6 +59,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
   constructor(
     private readonly libraryService: LibraryService,
     private readonly translateService: TranslateService,
+    private readonly installationService: InstallationService,
     private readonly modal: NgbModal,
   ) {
   }
@@ -80,11 +83,8 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges() {
     this.splitAlbumsIntoDiscs();
     this.duration = formatDuration(this.albumSongs.songs.reduce((result: number, song: Song) => result + song.duration, 0), this.translateService);
-    if (this.albumSongs.album.updateDate) {
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
-      this.showNewIndicator = this.albumSongs.album.creationDate.getTime() >= threeDaysAgo.getTime() || this.albumSongs.album.updateDate.getTime() >= threeDaysAgo.getTime();
-    }
+    this.showNewIndicator = shouldShowNewIndicator(this.albumSongs.album.updateDate, this.installationService.installationStatus) ||
+      shouldShowNewIndicator(this.albumSongs.album.creationDate, this.installationService.installationStatus);
   }
 
   download() {
