@@ -43,4 +43,21 @@
   .fade-in {
     animation: fadeIn 0.1s linear forwards;
   }
+
+  .new {
+    position: absolute;
+    top: 2%;
+    left: 2%;
+    color: white;
+    font-weight: bold;
+    font-size: 9px;
+    background-color: #ff5900;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;      /* Vertical centering */
+    justify-content: center;   /* Horizontal centering */
+    padding: 1.5px 3px 2.5px 2.5px;         /* Equal padding */
+    line-height: 1;
+    border: 1px solid #fcba03;
+  }
 }

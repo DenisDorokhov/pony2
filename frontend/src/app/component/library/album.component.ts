@@ -50,6 +50,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
 
   discs: Disc[] = [];
   duration: string | undefined;
+  showNewIndicator = false;
 
   private scrollToAlbumRequestSubscription: Subscription | undefined;
 
@@ -79,6 +80,11 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges() {
     this.splitAlbumsIntoDiscs();
     this.duration = formatDuration(this.albumSongs.songs.reduce((result: number, song: Song) => result + song.duration, 0), this.translateService);
+    if (this.albumSongs.album.updateDate) {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+      this.showNewIndicator = this.albumSongs.album.updateDate.getTime() >= threeDaysAgo.getTime();
+    }
   }
 
   download() {

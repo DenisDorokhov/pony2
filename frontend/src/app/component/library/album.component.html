@@ -1,5 +1,5 @@
 <div class="album-container">
-  <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl"
+  <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl" [showNewIndicator]="showNewIndicator"
                      [url]="albumSongs.album.largeArtworkUrl" (click)="openArtwork()"></pony-image-loader>
   <div class="song-list-container">
     <h4 title="{{

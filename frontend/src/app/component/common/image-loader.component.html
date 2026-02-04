@@ -9,4 +9,5 @@
        [class.fade-in]="animate && state === State.LOADED"
        [class.animated]="!animate"
        (load)="onLoaded()" (error)="onError()" (animationend)="onAnimationEnd()">
+  <div class="new" [hidden]="!showNewIndicator">{{ 'shared.newLabel' | translate }}</div>
 </div>

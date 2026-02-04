@@ -58,7 +58,10 @@ public class LibraryImporter {
     public Song importAudioData(AudioNode audioNode, ReadableAudioData audioData) {
 
         Genre genre = importGenre(audioData);
-        Album album = importAlbum(audioData, importArtist(audioData));
+        ImportDetails<Artist> artistImportDetails = importArtist(audioData);
+        Artist artist = artistImportDetails.entity;
+        ImportDetails<Album> albumImportDetails = importAlbum(audioData, artistImportDetails);
+        Album album = albumImportDetails.entity;
         Song existingSong = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
 
         ArtworkFiles artworkFiles = findAndSaveArtwork(audioNode, audioData);
@@ -165,6 +168,12 @@ public class LibraryImporter {
             }
 
             Song savedSong = songRepository.save(songToSave);
+            if (!albumImportDetails.isCreated) {
+                album.setUpdateDate(LocalDateTime.now());
+            }
+            if (!artistImportDetails.isCreated) {
+                artist.setUpdateDate(LocalDateTime.now());
+            }
             if (existingSong != null) {
                 logger.debug("{} Updating song '{}': '{}'.", String.join(" ", saveReasons), existingSong, savedSong);
             } else {
@@ -270,7 +279,7 @@ public class LibraryImporter {
         return existingGenre;
     }
 
-    private Artist importArtist(ReadableAudioData audioData) {
+    private ImportDetails<Artist> importArtist(ReadableAudioData audioData) {
 
         String artistName = normalizeTitle(audioData.getAlbumArtist());
         if (artistName == null) {
@@ -301,13 +310,14 @@ public class LibraryImporter {
             } else {
                 logger.debug("Creating artist '{}'.", savedArtist);
             }
-            return savedArtist;
+            return new ImportDetails<>(savedArtist, existingArtist == null);
         }
-        return existingArtist;
+        return new ImportDetails<>(existingArtist, false);
     }
 
-    private Album importAlbum(ReadableAudioData audioData, Artist artist) {
+    private ImportDetails<Album> importAlbum(ReadableAudioData audioData, ImportDetails<Artist> artistImportDetails) {
 
+        Artist artist = artistImportDetails.entity;
         String albumName = normalizeTitle(audioData.getAlbum());
         Album existingAlbum = albumRepository.findByArtistIdAndName(artist.getId(), albumName);
 
@@ -332,14 +342,17 @@ public class LibraryImporter {
                     .setArtist(artist)
                     .setName(albumName)
                     .setYear(audioData.getYear()));
+            if (!artistImportDetails.isCreated) {
+                artist.setUpdateDate(LocalDateTime.now());
+            }
             if (existingAlbum != null) {
                 logger.debug("Updating album '{}': '{}'.", existingAlbum, savedAlbum);
             } else {
                 logger.debug("Creating album '{}'.", savedAlbum);
             }
-            return savedAlbum;
+            return new ImportDetails<>(savedAlbum, existingAlbum == null);
         }
-        return existingAlbum;
+        return new ImportDetails<>(existingAlbum, false);
     }
 
     private void importAlbumArtwork(Album album, Artwork artwork) {
@@ -385,5 +398,8 @@ public class LibraryImporter {
         } else {
             return null;
         }
+    }
+
+    public record ImportDetails<T>(T entity, boolean isCreated) {
     }
 }

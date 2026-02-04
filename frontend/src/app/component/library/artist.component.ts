@@ -22,6 +22,8 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
   genreNames: string[] = [];
 
+  showNewIndicator = false;
+
   private _artist!: Artist;
 
   get artist(): Artist {
@@ -30,14 +32,24 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
 
   @Input()
   set artist(artist: Artist) {
+
     this._artist = artist;
+
+    if (artist.updateDate) {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+      this.showNewIndicator = artist.updateDate.getTime() >= threeDaysAgo.getTime();
+    }
+
     this.genreNames = this.artist.genres.map(genre => {
       if (genre.name) {
         return genre.name;
       }
       return this.translateService.instant('library.genre.unknownLabel');
     });
+
     this.selected = this.libraryService.selectedArtist?.id === this.artist.id;
+
     if (this.playbackService.lastPlaybackEvent.song?.album.artist.id === this.artist.id) {
       this.playbackState = this.playbackService.lastPlaybackEvent.state;
     } else {

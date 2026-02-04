@@ -254,6 +254,7 @@ export default {
     header: 'Artwork',
   },
   shared: {
+    newLabel: 'NEW',
     errorsHeader: 'Errors',
     loadingIndicatorLabel: 'Loading...',
     errorIndicatorLabel: 'Operation failed!',
