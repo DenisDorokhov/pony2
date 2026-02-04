@@ -83,7 +83,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
     if (this.albumSongs.album.updateDate) {
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
-      this.showNewIndicator = this.albumSongs.album.updateDate.getTime() >= threeDaysAgo.getTime();
+      this.showNewIndicator = this.albumSongs.album.creationDate.getTime() >= threeDaysAgo.getTime() || this.albumSongs.album.updateDate.getTime() >= threeDaysAgo.getTime();
     }
   }
 

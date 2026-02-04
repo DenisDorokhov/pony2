@@ -38,7 +38,7 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
     if (artist.updateDate) {
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
-      this.showNewIndicator = artist.updateDate.getTime() >= threeDaysAgo.getTime();
+      this.showNewIndicator = artist.creationDate.getTime() >= threeDaysAgo.getTime() || artist.updateDate.getTime() >= threeDaysAgo.getTime();
     }
 
     this.genreNames = this.artist.genres.map(genre => {
