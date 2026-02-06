@@ -48,8 +48,12 @@ export default {
       sizeLabel: '{{songCount}} songs ({{duration}})',
     },
     artist: {
-      allGenresLabel: 'All Artists',
-      unknownLabel: 'Unknown Artist'
+      allArtistsLabel: 'All Artists ({{ artistCount }})',
+      allArtistsTitleLabel: 'All Artists',
+      updatedArtistsLabel: 'Recently Updated ({{ artistCount }})',
+      updatedArtistsTitleLabel: 'Recently Updated',
+      unknownLabel: 'Unknown Artist',
+      genreNavigationLabel: '{{ genreName }} ({{ artistCount }})',
     },
     song: {
       unknownLabel: 'Unknown Song',
