@@ -5,7 +5,9 @@
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button *ngFor="let navigationItem of navigationItems" ngbDropdownItem [class.selected]="selectedNavigationItem.id === navigationItem.id"
+      <button *ngFor="let navigationItem of navigationItems" ngbDropdownItem
+              [class.selected]="selectedNavigationItem.id === navigationItem.id"
+              [ngClass]="navigationItem.id"
               [title]=navigationItem.title
               (click)="onNavigationItemClick(navigationItem)">
         {{ navigationItem.menuEntry }}
