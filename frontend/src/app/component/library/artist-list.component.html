@@ -16,10 +16,11 @@
   </div>
   <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
-  <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
-                             [message]="'library.noMusicLabel' | translate">
+  <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY" [message]="'library.noMusicLabel' | translate">
   </pony-no-content-indicator>
-  <div *ngIf="loadingState === LoadingState.LOADED" #scroller
+  <pony-no-content-indicator *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length === 0" [message]="'library.artist.noFilteredArtistsLabel' | translate">
+  </pony-no-content-indicator>
+  <div *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0" #scroller
        class="list-container" data-pony-image-loader-scroller>
     <div class="list-group">
       <pony-artist *ngFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
