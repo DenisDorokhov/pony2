@@ -1,18 +1,40 @@
-import {Component, Input, OnChanges, OnDestroy, OnInit} from '@angular/core';
-import {AlbumSongs, Song} from '../../domain/library.model';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChildren
+} from '@angular/core';
+import {AlbumSongs, Playlist, Song} from '../../domain/library.model';
 import {SongListComponent} from './song-list.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ImageLoaderComponent} from '../common/image-loader.component';
 import {CommonModule} from '@angular/common';
 import {LibraryService} from '../../service/library.service';
-import {Subscription} from 'rxjs';
+import {fromEvent, Subscription} from 'rxjs';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import {ArtworkComponent} from './modal/artwork.component';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu, NgbDropdownToggle,
+  NgbModal
+} from '@ng-bootstrap/ng-bootstrap';
 import {formatDuration} from '../../utils/format.utils';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {InstallationService} from '../../service/installation.service';
+import {PlaylistDto} from '../../domain/library.dto';
+import {PlaylistService} from '../../service/playlist.service';
+import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
+import {PlaylistEditComponent} from './modal/playlist-edit.component';
+import {PlaybackService} from '../../service/playback.service';
+import {NotificationService} from '../../service/notification.service';
 
 interface Disc {
   discNumber: number | undefined;
@@ -41,35 +63,42 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 }
 
 @Component({
-  imports: [CommonModule, TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe, UnknownArtistPipe],
+  imports: [CommonModule, TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
     selector: 'pony-album',
     templateUrl: './album.component.html',
     styleUrls: ['./album.component.scss']
 })
-export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
+export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
 
   @Input() albumSongs!: AlbumSongs;
 
   discs: Disc[] = [];
   duration: string | undefined;
   showNewIndicator = false;
+  topPlaylists: Playlist[] = [];
 
-  private scrollToAlbumRequestSubscription: Subscription | undefined;
+  @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
+
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private readonly libraryService: LibraryService,
     private readonly translateService: TranslateService,
     private readonly installationService: InstallationService,
+    private readonly playlistService: PlaylistService,
+    private readonly playbackService: PlaybackService,
+    private readonly notificationService: NotificationService,
     private readonly modal: NgbModal,
+    private rootElement: ElementRef
   ) {
   }
 
   ngOnDestroy(): void {
-    this.scrollToAlbumRequestSubscription?.unsubscribe();
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
   ngOnInit(): void {
-    this.scrollToAlbumRequestSubscription = this.libraryService.observeScrollToAlbumRequest()
+    this.subscriptions.push(this.libraryService.observeScrollToAlbumRequest()
       .subscribe(album => {
         if (album.id === this.albumSongs.album.id) {
           const song = this.discs[0].songs[0];
@@ -77,7 +106,22 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
           this.libraryService.requestScrollToSong(song);
           this.libraryService.finishScrollToAlbum();
         }
-      });
+      }));
+    this.subscriptions.push(this.playlistService.observePlaylists()
+      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
+  }
+
+  ngAfterViewInit(): void {
+    this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'scroll').subscribe(() =>
+      this.closeOptionsDropDowns()));
+    this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'touchstart').subscribe(() =>
+      this.closeOptionsDropDowns()));
+  }
+
+  private closeOptionsDropDowns() {
+    this.optionsDropDowns.toArray().forEach(dropDown => {
+      dropDown.close();
+    });
   }
 
   ngOnChanges() {
@@ -131,6 +175,39 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
       const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
       const userComponent: ArtworkComponent = modalRef.componentInstance;
       userComponent.url = this.albumSongs.album.largeArtworkUrl;
+    }
+  }
+
+  playNext() {
+    this.playbackService.playListNext(this.albumSongs.songs);
+  }
+
+  addToQueue() {
+    this.playbackService.addListToQueue(this.albumSongs.songs);
+  }
+
+  createQueue() {
+    this.playbackService.createListQueue(this.albumSongs.songs);
+  }
+
+  addToPlaylist(playlist: Playlist) {
+    this.playlistService.addSongsToPlaylist(playlist.id, this.albumSongs.songs.map(song => song.id)).subscribe({
+      error: () => this.notificationService.error(
+        this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
+        this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
+      ),
+    });
+  }
+
+  selectOrCreatePlaylist() {
+    if (this.topPlaylists.length > 0) {
+      const modalRef = this.modal.open(PlaylistAddSongComponent);
+      const playlistAddSongComponent: PlaylistAddSongComponent = modalRef.componentInstance;
+      playlistAddSongComponent.songs = this.albumSongs.songs;
+    } else {
+      const modalRef = this.modal.open(PlaylistEditComponent);
+      const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
+      playlistEditComponent.songs = this.albumSongs.songs;
     }
   }
 }

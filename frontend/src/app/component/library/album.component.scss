@@ -12,6 +12,27 @@
     cursor: pointer;
   }
 
+  .options {
+    display: inline-block;
+    padding: 0;
+
+    button.menu {
+      border: none;
+      background-color: transparent;
+      margin-left: 0 !important;
+      padding: 0 0 3px 0;
+
+      i {
+        font-size: 18px;
+        color: var(--bs-body-color);
+      }
+    }
+
+    .dropdown-toggle::after {
+      display: none;
+    }
+  }
+
   .song-list-container {
     margin-left: 150px;
     margin-bottom: 50px;
@@ -64,6 +85,10 @@
       }
     }
   }
+}
+
+.dropdown-menu button i {
+  margin-right: 12px;
 }
 
 :host:last-child {

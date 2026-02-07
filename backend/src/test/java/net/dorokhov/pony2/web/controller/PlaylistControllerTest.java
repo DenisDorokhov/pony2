@@ -816,14 +816,14 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 assertThat(song.getCreationDate()).isNotNull();
                 checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
                 checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
-                checkSongDto(song.getSong().getSong(), song1_1_2);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
                 checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
                 checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
-                checkSongDto(song.getSong().getSong(), song1_1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
         });
     }
@@ -866,14 +866,14 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 assertThat(song.getCreationDate()).isNotNull();
                 checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
                 checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
-                checkSongDto(song.getSong().getSong(), song1_1_2);
+                checkSongDto(song.getSong().getSong(), song1_1_1);
             });
             assertThat(playlistSongs.getSongs().get(1)).satisfies(song -> {
                 assertThat(song.getId()).isNotNull();
                 assertThat(song.getCreationDate()).isNotNull();
                 checkArtistDto(song.getSong().getAlbumDetails().getArtist(), artist1);
                 checkAlbumDto(song.getSong().getAlbumDetails().getAlbum(), album1_1);
-                checkSongDto(song.getSong().getSong(), song1_1_1);
+                checkSongDto(song.getSong().getSong(), song1_1_2);
             });
         });
     }

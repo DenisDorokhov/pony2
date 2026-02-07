@@ -149,16 +149,23 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     @Transactional
     @Override
-    public Playlist addSongToPlaylist(String id, String songId) throws PlaylistNotFoundException, SongNotFoundException {
+    public Playlist addSongToPlaylist(String id, String songId, boolean addFirst) throws PlaylistNotFoundException, SongNotFoundException {
         Playlist playlist = playlistRepository.findLockedById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
         playlist.setUpdateDate(LocalDateTime.now());
         Song song = libraryService.getSongById(songId)
                 .orElseThrow(() -> new SongNotFoundException(songId));
-        playlist.getSongs().addFirst(new PlaylistSong()
-                .setPlaylist(playlist)
-                .setSong(song)
-        );
+        if (addFirst) {
+            playlist.getSongs().addFirst(new PlaylistSong()
+                    .setPlaylist(playlist)
+                    .setSong(song)
+            );
+        } else {
+            playlist.getSongs().add(new PlaylistSong()
+                    .setPlaylist(playlist)
+                    .setSong(song)
+            );
+        }
         return normalizeAndSavePlaylist(playlist);
     }
 

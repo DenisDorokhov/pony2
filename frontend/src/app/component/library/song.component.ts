@@ -260,7 +260,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.topPlaylists.length > 0) {
       const modalRef = this.modal.open(PlaylistAddSongComponent);
       const playlistAddSongComponent: PlaylistAddSongComponent = modalRef.componentInstance;
-      playlistAddSongComponent.song = this.song;
+      playlistAddSongComponent.songs = [this.song];
     } else {
       const modalRef = this.modal.open(PlaylistEditComponent);
       const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;

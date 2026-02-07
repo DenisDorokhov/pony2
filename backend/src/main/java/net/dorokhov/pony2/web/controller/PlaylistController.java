@@ -43,6 +43,11 @@ public class PlaylistController implements ErrorHandlingController {
         return playlistFacade.addSongToPlaylist(playlistId, songId);
     }
 
+    @PostMapping("/api/playlists/{playlistId}/songs")
+    public PlaylistSongsDto addSongToPlaylists(@PathVariable String playlistId, @RequestBody List<String> songIds) throws ObjectNotFoundException {
+        return playlistFacade.addSongsToPlaylist(playlistId, songIds);
+    }
+
     @PostMapping("/api/playlists/normal")
     public PlaylistSongsDto createNormalPlaylist(@Valid @RequestBody PlaylistCreationCommandDto command) {
         return playlistFacade.createNormalPlaylist(command);

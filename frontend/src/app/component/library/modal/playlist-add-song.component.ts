@@ -31,7 +31,7 @@ export class PlaylistAddSongComponent implements OnInit {
   readonly LoadingState = LoadingState;
 
   @Input()
-  song!: Song;
+  songs!: Song[];
 
   loadingState = LoadingState.LOADING;
   savingState = LoadingState.EMPTY;
@@ -65,7 +65,7 @@ export class PlaylistAddSongComponent implements OnInit {
 
   save() {
     this.savingState = LoadingState.LOADING;
-    this.playlistService.addSongToPlaylist(this.selectedPlaylist!.id, this.song.id).subscribe({
+    this.playlistService.addSongsToPlaylist(this.selectedPlaylist!.id, this.songs.map(song => song.id)).subscribe({
       next: () => {
         this.savingState = LoadingState.LOADED;
         this.activeModal.close();
@@ -83,7 +83,7 @@ export class PlaylistAddSongComponent implements OnInit {
   createPlaylist() {
     const modalRef = this.modal.open(PlaylistEditComponent);
     const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
-    playlistEditComponent.songs = [this.song];
+    playlistEditComponent.songs = this.songs;
     modalRef.closed.subscribe((playlist: Playlist | undefined) => {
       if (playlist) {
         this.activeModal.close();

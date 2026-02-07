@@ -139,6 +139,13 @@ export class PlaylistService {
     );
   }
 
+  addSongsToPlaylist(playlistId: string, songIds: string[]): Observable<PlaylistSongs> {
+    return this.httpClient.post<PlaylistSongsDto>('/api/playlists/' + playlistId + '/songs', songIds).pipe(
+      map(dto => new PlaylistSongs(dto)),
+      tap(() => this.requestPlaylists().subscribe()),
+    );
+  }
+
   likeSong(songId: string): Observable<PlaylistSongs> {
     return this.httpClient.post<PlaylistSongsDto>('/api/playlists/like/songs/' + songId, null).pipe(
       map(dto => new PlaylistSongs(dto)),

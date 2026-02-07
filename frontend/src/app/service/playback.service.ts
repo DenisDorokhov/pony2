@@ -364,19 +364,26 @@ export class PlaybackService {
   }
 
   addToQueue(song: Song): void {
-    this._queue.push(song);
+    this.addListToQueue([song]);
+  }
+
+  addListToQueue(songs: Song[]): void {
+    songs.forEach(song => this._queue.push(song));
     this.queueSubject.next(this._queue.slice());
     this.storeState();
   }
 
   playNext(song: Song): void {
+    this.playListNext([song]);
+  }
+
+  playListNext(songs: Song[]): void {
     if (this._currentIndex === -1) {
-      this._queue.push(song);
-      this.queueSubject.next(this._queue.slice());
+      songs.forEach(song => this._queue.push(song));
     } else {
-      this._queue.splice(this._currentIndex + 1, 0, song);
-      this.queueSubject.next(this._queue.slice());
+      songs.slice().reverse().forEach(song => this._queue.splice(this._currentIndex + 1, 0, song));
     }
+    this.queueSubject.next(this._queue.slice());
     this.storeState();
   }
 
@@ -534,16 +541,21 @@ export class PlaybackService {
   }
 
   createQueue(song: Song) {
+    this.createListQueue([song]);
+  }
+
+  createListQueue(songs: Song[]) {
     this.mode = PlaybackMode.NORMAL;
     this._queue = [];
-    this._queue.push(song);
+    songs.forEach(song => this._queue.push(song));
     this.queueSubject.next(this._queue.slice());
     this._currentIndex = 0;
-    if (song.id !== this.currentSongSubject.value?.id) {
-      this.currentSongSubject.next(song);
-      this.audioPlayer.play(song);
-      this.playbackHistoryService.addSongToHistory(song.id).subscribe();
-      this.browserNotificationService.showSongNotification(song);
+    const firstSong = this._queue[0];
+    if (firstSong.id !== this.currentSongSubject.value?.id) {
+      this.currentSongSubject.next(firstSong);
+      this.audioPlayer.play(firstSong);
+      this.playbackHistoryService.addSongToHistory(firstSong.id).subscribe();
+      this.browserNotificationService.showSongNotification(firstSong);
     }
   }
 }

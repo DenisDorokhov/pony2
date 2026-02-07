@@ -82,12 +82,24 @@ public class PlaylistFacade {
     public PlaylistSongsDto addSongToPlaylist(String playlistId, String songId) throws ObjectNotFoundException {
         getAndValidatePlaylist(playlistId);
         try {
-            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlistId, songId), isAdmin());
+            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlistId, songId, false), isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlistId);
         } catch (SongNotFoundException e) {
             throw new ObjectNotFoundException(Song.class, songId);
         }
+    }
+
+    @Transactional
+    public PlaylistSongsDto addSongsToPlaylist(String playlistId, List<String> songIds) throws ObjectNotFoundException {
+        PlaylistSongsDto result = null;
+        for (String songId : songIds) {
+            result = addSongToPlaylist(playlistId, songId);
+        }
+        if (result == null) {
+            result = getPlaylistById(playlistId);
+        }
+        return result;
     }
 
     @Transactional
@@ -121,7 +133,7 @@ public class PlaylistFacade {
     public PlaylistSongsDto likeSong(String songId) throws ObjectNotFoundException {
         Playlist playlist = getAndValidateLikePlaylist();
         try {
-            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlist.getId(), songId), isAdmin());
+            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlist.getId(), songId, true), isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlist.getId());
         } catch (SongNotFoundException e) {

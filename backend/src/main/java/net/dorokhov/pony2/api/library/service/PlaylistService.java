@@ -17,7 +17,7 @@ public interface PlaylistService {
 
     Playlist createNormalPlaylist(PlaylistCreationCommand command);
     Playlist updatePlaylist(PlaylistUpdateCommand command) throws PlaylistNotFoundException;
-    Playlist addSongToPlaylist(String id, String songId) throws PlaylistNotFoundException, SongNotFoundException;
+    Playlist addSongToPlaylist(String id, String songId, boolean addFirst) throws PlaylistNotFoundException, SongNotFoundException;
     Playlist removeSongFromPlaylist(String id, String songId) throws PlaylistNotFoundException;
     void delete(String id);
 
