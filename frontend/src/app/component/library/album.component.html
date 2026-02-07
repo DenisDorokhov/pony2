@@ -1,6 +1,12 @@
 <div class="album-container">
   <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl" [showNewIndicator]="showNewIndicator"
-                     [url]="albumSongs.album.largeArtworkUrl" (click)="openArtwork()"></pony-image-loader>
+                     [url]="albumSongs.album.largeArtworkUrl" (click)="openArtwork()" title="{{
+      (albumSongs.album.artist.name | ponyUnknownArtist) +
+      ' - ' +
+      (albumSongs.album.name | ponyUnknownAlbum) +
+      (albumSongs.album.year ? ' [' + albumSongs.album.year + ']' : '') + '\n' +
+      ('library.album.sizeLabel' | translate:{ songCount: albumSongs.songs.length, duration })
+    }}"></pony-image-loader>
   <div class="song-list-container">
     <h4 title="{{
       (albumSongs.album.artist.name | ponyUnknownArtist) +
