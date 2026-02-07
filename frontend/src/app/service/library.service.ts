@@ -40,6 +40,7 @@ export class LibraryService {
 
   private refreshRequestSubject = new Subject<void>();
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
+  private filterByGenreRequestSubject = new Subject<Genre | undefined>();
 
   private genresSubject = new BehaviorSubject<Genre[]>([]);
   private artistsSubject = new BehaviorSubject<Artist[]>([]);
@@ -231,6 +232,14 @@ export class LibraryService {
 
   requestSongPlayback(song?: Song) {
     this.songPlaybackRequestSubject.next(song);
+  }
+
+  observeFilterByGenreRequest(): Observable<Genre | undefined> {
+    return this.filterByGenreRequestSubject.asObservable();
+  }
+
+  requestFilterByGenre(genre: Genre) {
+    this.filterByGenreRequestSubject.next(genre);
   }
 
   observeScrollToArtistRequest(): Observable<Artist> {

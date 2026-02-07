@@ -89,6 +89,12 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         this.libraryService.deselectSong();
       }
     }));
+    this.subscriptions.push(this.libraryService.observeFilterByGenreRequest().subscribe(genre => {
+      const navigationItems = this.navigationItems.filter(navigationItem => navigationItem.id === genre!.id);
+      if (navigationItems.length > 0) {
+        this.onNavigationItemClick(navigationItems[0]);
+      }
+    }));
   }
 
   private reloadNavigationItems() {

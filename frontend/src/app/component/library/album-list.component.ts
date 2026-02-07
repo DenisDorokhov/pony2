@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {AlbumSongs, Artist, ArtistSongs, PlaylistSongs, Song} from '../../domain/library.model';
+import {AlbumSongs, Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
@@ -14,9 +14,10 @@ import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaylistService} from '../../service/playlist.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ArtistLikesComponent} from './modal/artist-likes.component';
+import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 
 @Component({
-    imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe],
     selector: 'pony-album-list',
     templateUrl: './album-list.component.html',
     styleUrls: ['./album-list.component.scss']
@@ -154,5 +155,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     const modalRef = this.modal.open(ArtistLikesComponent, { size: 'lg' });
     const userComponent: ArtistLikesComponent = modalRef.componentInstance;
     userComponent.artistSongs = this.artistSongs;
+  }
+
+  protected onGenreClick(genre: Genre) {
+    this.libraryService.requestFilterByGenre(genre);
   }
 }

@@ -9,18 +9,21 @@
     <h5 class="panel-title">
       <span title="{{ artistSongs.artist.name | ponyUnknownArtist }}">
         {{ artistSongs.artist.name | ponyUnknownArtist }}
-        <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i class="bi bi-star-fill"></i>{{ likeCount }}</button>
+        <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i
+          class="bi bi-star-fill"></i>{{ likeCount }}</button>
       </span>
       <small class="counts" title="{{
-          'library.album.counterHeader' | translate:{
+          'library.album.counterTitle' | translate:{
             genres: genreNamesAsString,
             albumCount,
             songCount
           }
         }}">
+        <ng-container *ngFor="let genre of artistSongs.artist.genres">
+          <a (click)="onGenreClick(genre)">{{ genre.name | ponyUnknownGenre }}</a>,
+        </ng-container>
         {{
           'library.album.counterHeader' | translate:{
-            genres: genreNamesAsString,
             albumCount,
             songCount
           }

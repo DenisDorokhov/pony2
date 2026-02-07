@@ -55,6 +55,11 @@
       font-size: 0.7em;
       float: right;
       padding-right: 12px;
+
+      a {
+        cursor: pointer;
+        text-decoration: underline;
+      }
     }
   }
 
