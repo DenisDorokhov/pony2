@@ -37,10 +37,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private libraryScanService: LibraryScanService,
-    private authenticationService: AuthenticationService,
-    private playbackService: PlaybackService,
-    private modal: NgbModal
+    private readonly libraryScanService: LibraryScanService,
+    private readonly authenticationService: AuthenticationService,
+    private readonly playbackService: PlaybackService,
+    private readonly modal: NgbModal
   ) {
     this.playbackMode = this.playbackService.mode;
   }
