@@ -165,7 +165,8 @@ export default {
     statusLabel: 'Status:',
     logMessageLabel: 'Log message:',
     targetPathsLabel: 'Target folders:',
-    failedPathsLabel: 'Failed folders:',
+    failedPathsLabel: 'Failed files:',
+    moreFailedPathsLabel: '...',
     processedAudioFilesLabel: 'Processed audio files:',
     scanResultLabel: 'Updates:',
     scanResult: {

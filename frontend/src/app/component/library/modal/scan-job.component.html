@@ -46,8 +46,11 @@
 
     <div class="mb-3" [hidden]="scanJob.scanResult!.failedPaths.length < 1">
       <label class="form-label">{{ 'scanJob.failedPathsLabel' | translate }}</label>
-      <div *ngFor="let failedPath of scanJob.scanResult!.failedPaths">
+      <div *ngFor="let failedPath of scanJob.scanResult!.failedPaths | slice:0:10">
         {{ failedPath }}
+      </div>
+      <div *ngIf="scanJob.scanResult!.failedPaths.length > 10">
+        {{ 'scanJob.moreFailedPathsLabel' | translate }}
       </div>
     </div>
 
