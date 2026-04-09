@@ -42,4 +42,12 @@ class SearchTermUtilsTest {
         assertThat(SearchTermUtils.extractStringTerms("артист, другой . entity2"))
                 .containsExactlyInAnyOrder("артист,", "артист", "другой", ".", "entity2");
     }
+
+    @Test
+    void shouldHandleAmpersand() {
+        assertThat(SearchTermUtils.extractSpaceSeparatedTerms("кровь & вино").split(" "))
+                .containsExactlyInAnyOrder("кровь", "вино", "&", "and", "и");
+        assertThat(SearchTermUtils.extractSpaceSeparatedTerms("seek & destroy").split(" "))
+                .containsExactlyInAnyOrder("seek", "destroy", "&", "and");
+    }
 }

@@ -43,9 +43,9 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
     @Test
     public void shouldSearchGenres() {
 
-        Genre genre1 = genreRepository.save(new Genre().setName("the foobar entity1"));
+        Genre genre1 = genreRepository.save(new Genre().setName("the foobar & entity1"));
         Genre genre2 = genreRepository.save(new Genre().setName("the foobar entity2"));
-        Genre genre3 = genreRepository.save(new Genre().setName("русская песня"));
+        Genre genre3 = genreRepository.save(new Genre().setName("русская & песня"));
 
         transactionTemplate.executeWithoutResult(status -> {
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 10)).containsOnly(genre1, genre2);
@@ -54,11 +54,15 @@ public class LibrarySearchServiceIntegrationTest extends IntegrationTest {
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("foo"), 1)).hasSize(1);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("ent th foo"), 10)).containsOnly(genre1, genre2);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 the foobar"), 10)).containsExactly(genre1);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 and foobar"), 10)).containsExactly(genre1);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("entity1 & foobar"), 10)).containsExactly(genre1);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("русс"), 10)).containsExactly(genre3);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("hecc"), 10)).containsExactly(genre3);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("РУСС"), 10)).containsExactly(genre3);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("песня русская"), 10)).containsExactly(genre3);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("рус пес"), 10)).containsExactly(genre3);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("рус и пeс"), 10)).containsExactly(genre3);
+            assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("рус & пeс"), 10)).containsExactly(genre3);
             assertThat(librarySearchService.searchGenres(LibrarySearchQuery.of("other"), 10)).isEmpty();
         });
     }
