@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 public interface GenreRepository extends JpaRepository<Genre, String> {
 
@@ -21,6 +22,9 @@ public interface GenreRepository extends JpaRepository<Genre, String> {
     Genre findByName(String name);
 
     Page<Genre> findByArtworkId(@Nullable String artworkId, Pageable pageable);
+
+    @Query("SELECT g FROM Genre g WHERE g.artwork.id = ?1")
+    Stream<Genre> streamByArtworkId(String artworkId);
 
     @Modifying
     @Query("UPDATE Genre g SET g.artwork = NULL WHERE g.artwork.id = ?1")

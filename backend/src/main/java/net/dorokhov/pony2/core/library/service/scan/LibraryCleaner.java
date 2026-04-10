@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.stream.Stream;
+
 @Component
 public class LibraryCleaner {
 
@@ -74,14 +76,40 @@ public class LibraryCleaner {
     @Transactional
     public boolean deleteArtworkIfUnused(Artwork artwork) {
         if (songRepository.countByArtworkId(artwork.getId()) == 0) {
-            songRepository.clearArtworkByArtworkId(artwork.getId());
-            albumRepository.clearArtworkByArtworkId(artwork.getId());
-            artistRepository.clearArtworkByArtworkId(artwork.getId());
-            genreRepository.clearArtworkByArtworkId(artwork.getId());
+            clearAlbumArtworkByArtworkId(artwork.getId());
+            clearArtistArtworkByArtworkId(artwork.getId());
+            clearGenreArtworkByArtworkId(artwork.getId());
             artworkStorage.delete(artwork.getId());
             logger.debug("Artwork '{}' has been deleted.", artwork);
             return true;
         }
         return false;
+    }
+
+    private void clearAlbumArtworkByArtworkId(String artworkId) {
+        try (Stream<Album> stream = albumRepository.streamByArtworkId(artworkId)) {
+            stream.forEach(album -> {
+                album.setArtwork(null);
+                albumRepository.save(album);
+            });
+        }
+    }
+
+    private void clearArtistArtworkByArtworkId(String artworkId) {
+        try (Stream<Artist> stream = artistRepository.streamByArtworkId(artworkId)) {
+            stream.forEach(artist -> {
+                artist.setArtwork(null);
+                artistRepository.save(artist);
+            });
+        }
+    }
+
+    private void clearGenreArtworkByArtworkId(String artworkId) {
+        try (Stream<Genre> stream = genreRepository.streamByArtworkId(artworkId)) {
+            stream.forEach(genre -> {
+                genre.setArtwork(null);
+                genreRepository.save(genre);
+            });
+        }
     }
 }

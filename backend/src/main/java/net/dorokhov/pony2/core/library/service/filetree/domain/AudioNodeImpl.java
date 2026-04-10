@@ -10,15 +10,11 @@ import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CachingAudioNode extends AbstractCachingFileNode implements AudioNode {
+public class AudioNodeImpl extends AbstractCachingFileNode implements AudioNode {
 
     private final AudioTagger audioTagger;
 
-    private volatile ReadableAudioData audioData = null;
-
-    private final Object audioDataLock = new Object();
-
-    public CachingAudioNode(
+    public AudioNodeImpl(
             File file, FolderNode parentFolder,
             FileTypeResolver fileTypeResolver, ChecksumCalculator checksumCalculator,
             AudioTagger audioTagger
@@ -29,13 +25,6 @@ public class CachingAudioNode extends AbstractCachingFileNode implements AudioNo
 
     @Override
     public ReadableAudioData getAudioData() throws IOException {
-        if (audioData == null) {
-            synchronized (audioDataLock) {
-                if (audioData == null) {
-                    audioData = audioTagger.read(file);
-                }
-            }
-        }
-        return audioData;
+        return audioTagger.read(file);
     }
 }

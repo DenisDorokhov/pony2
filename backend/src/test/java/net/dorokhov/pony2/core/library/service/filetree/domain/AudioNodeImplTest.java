@@ -19,7 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CachingAudioNodeTest {
+public class AudioNodeImplTest {
     
     @Mock
     private FileTypeResolver fileTypeResolver;
@@ -31,11 +31,11 @@ public class CachingAudioNodeTest {
     private AudioTagger audioTagger;
 
     @Test
-    public void shouldCacheFileType() throws IOException {
+    public void shouldCacheFileType() {
         
         FileType fileType = FileType.of("text/plan", "txt");
         when(fileTypeResolver.resolve((File) any())).thenReturn(fileType);
-        CachingAudioNode audioNode = new CachingAudioNode(mock(File.class), null, 
+        AudioNodeImpl audioNode = new AudioNodeImpl(mock(File.class), null,
                 fileTypeResolver, checksumCalculator, audioTagger);
         
         FileType result = audioNode.getFileType();
@@ -52,7 +52,7 @@ public class CachingAudioNodeTest {
 
         String checksum = "someChecksum";
         when(checksumCalculator.calculate((File) any())).thenReturn(checksum);
-        CachingAudioNode audioNode = new CachingAudioNode(mock(File.class), null,
+        AudioNodeImpl audioNode = new AudioNodeImpl(mock(File.class), null,
                 fileTypeResolver, checksumCalculator, audioTagger);
 
         String result = audioNode.getChecksum();
@@ -65,11 +65,11 @@ public class CachingAudioNodeTest {
     }
 
     @Test
-    public void shouldCacheAudioData() throws IOException {
+    public void shouldNotCacheAudioData() throws IOException {
 
         ReadableAudioData audioData = readableAudioData();
         when(audioTagger.read(any())).thenReturn(audioData);
-        CachingAudioNode audioNode = new CachingAudioNode(mock(File.class), null,
+        AudioNodeImpl audioNode = new AudioNodeImpl(mock(File.class), null,
                 fileTypeResolver, checksumCalculator, audioTagger);
 
         ReadableAudioData result = audioNode.getAudioData();
@@ -78,6 +78,6 @@ public class CachingAudioNodeTest {
         verify(audioTagger, times(1)).read(any());
 
         assertThat(audioNode.getAudioData()).isSameAs(result);
-        verify(audioTagger, times(1)).read(any());
+        verify(audioTagger, times(2)).read(any());
     }
 }

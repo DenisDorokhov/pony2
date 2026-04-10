@@ -77,7 +77,7 @@ public class FileTreeScanner {
         if (fileType.isImage()) {
             return new CachingImageNode(file, parentFolderNode, fileTypeResolver, checksumCalculator, imageSizeReader);
         } else if (fileType.isAudio()) {
-            return new CachingAudioNode(file, parentFolderNode, fileTypeResolver, checksumCalculator, audioTagger);
+            return new AudioNodeImpl(file, parentFolderNode, fileTypeResolver, checksumCalculator, audioTagger);
         }
         return null;
     }
