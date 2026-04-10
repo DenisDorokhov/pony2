@@ -47,7 +47,8 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist =>
-      this.songs = likePlaylist.songs
+      this.songs = [...likePlaylist.songs]
+        .sort((song1, song2) => song2.creationDate.getTime() - song1.creationDate.getTime())
         .map(next => next.song)
         .filter(song => song.album.artist.id === this.artistSongs.artist.id)
     ));
