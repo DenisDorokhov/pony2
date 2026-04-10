@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist, Genre} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
@@ -17,6 +17,7 @@ import {
   NgbDropdownToggle
 } from '@ng-bootstrap/ng-bootstrap';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
+import {ScrollingUtils} from '../../utils/scrolling.utils';
 import {InstallationService} from '../../service/installation.service';
 
 export class NavigationItem {
@@ -51,7 +52,8 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   navigationItems: NavigationItem[] = [];
   selectedNavigationItem!: NavigationItem;
 
-  @ViewChild('scroller') scrollerElement!: ElementRef;
+  @ViewChild('scrollerElement') scrollerElement!: ElementRef;
+  @ViewChildren('navigationItemElement') dropdownItems!: QueryList<ElementRef>;
 
   private subscriptions: Subscription[] = [];
 
@@ -167,6 +169,17 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   private scrollToSelectedArtist() {
     if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
       setTimeout(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
+    }
+  }
+
+  onDropdownOpenChange(open: boolean) {
+    if (open) {
+      const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
+      const selectedElement = this.dropdownItems.toArray()[selectedIndex];
+      if (selectedElement) {
+        requestAnimationFrame(() =>
+          ScrollingUtils.scrollIntoElement(selectedElement.nativeElement, true));
+      }
     }
   }
 

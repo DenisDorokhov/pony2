@@ -1,11 +1,11 @@
 <div class="panel panel-default">
-  <div ngbDropdown class="btn-group genre">
+  <div ngbDropdown class="btn-group genre" (openChange)="onDropdownOpenChange($event)">
     <button ngbDropdownToggle type="button" class="genre">
       {{ selectedNavigationItem.title }}
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button *ngFor="let navigationItem of navigationItems" ngbDropdownItem
+      <button *ngFor="let navigationItem of navigationItems" ngbDropdownItem #navigationItemElement
               [class.selected]="selectedNavigationItem.id === navigationItem.id"
               [ngClass]="navigationItem.id"
               [title]=navigationItem.title
@@ -20,7 +20,7 @@
   </pony-no-content-indicator>
   <pony-no-content-indicator *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length === 0" [message]="'library.artist.noFilteredArtistsLabel' | translate">
   </pony-no-content-indicator>
-  <div *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0" #scroller
+  <div *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0" #scrollerElement
        class="list-container" data-pony-image-loader-scroller>
     <div class="list-group">
       <pony-artist *ngFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
