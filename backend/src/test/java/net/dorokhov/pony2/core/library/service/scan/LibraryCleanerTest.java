@@ -9,8 +9,11 @@ import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.stream.Stream;
 
 import static net.dorokhov.pony2.test.ArtworkFixtures.artwork;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,18 +105,35 @@ public class LibraryCleanerTest {
         when(songRepository.countByArtworkId("1")).thenReturn(0L);
         when(songRepository.countByArtworkId("2")).thenReturn(1L);
 
+        when(albumRepository.streamByArtworkId("1")).thenReturn(Stream.of(
+                new Album().setArtwork(artwork1)
+        ));
+        when(artistRepository.streamByArtworkId("1")).thenReturn(Stream.of(
+                new Artist().setArtwork(artwork1)
+        ));
+        when(genreRepository.streamByArtworkId("1")).thenReturn(Stream.of(
+                new Genre().setArtwork(artwork1)
+        ));
+
         assertThat(libraryCleaner.deleteArtworkIfUnused(artwork1)).isTrue();
-        verify(songRepository).clearArtworkByArtworkId("1");
-        verify(albumRepository).clearArtworkByArtworkId("1");
-        verify(artistRepository).clearArtworkByArtworkId("1");
-        verify(genreRepository).clearArtworkByArtworkId("1");
+
+        ArgumentCaptor<Album> albumCaptor = ArgumentCaptor.forClass(Album.class);
+        ArgumentCaptor<Artist> artistCaptor = ArgumentCaptor.forClass(Artist.class);
+        ArgumentCaptor<Genre> genreCaptor = ArgumentCaptor.forClass(Genre.class);
+        verify(albumRepository).save(albumCaptor.capture());
+        verify(artistRepository).save(artistCaptor.capture());
+        verify(genreRepository).save(genreCaptor.capture());
         verify(artworkStorage).delete("1");
+        assertThat(albumCaptor.getValue().getArtwork()).isNull();
+        assertThat(artistCaptor.getValue().getArtwork()).isNull();
+        assertThat(genreCaptor.getValue().getArtwork()).isNull();
+
+        clearInvocations(albumRepository, artistRepository, genreRepository, artworkStorage);
 
         assertThat(libraryCleaner.deleteArtworkIfUnused(artwork2)).isFalse();
-        verify(songRepository, never()).clearArtworkByArtworkId("2");
-        verify(albumRepository, never()).clearArtworkByArtworkId("2");
-        verify(artistRepository, never()).clearArtworkByArtworkId("2");
-        verify(genreRepository, never()).clearArtworkByArtworkId("2");
+        verify(albumRepository, never()).save(any());
+        verify(artistRepository, never()).save(any());
+        verify(genreRepository, never()).save(any());
         verify(artworkStorage, never()).delete("2");
     }
 }
