@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.Genre;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.ProgressObserverFixture;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
@@ -37,13 +38,15 @@ public class BatchLibraryArtworkFinderTest {
     private ArtistRepository artistRepository;
     @Mock
     private AlbumRepository albumRepository;
+    @Mock
+    private ShutdownService shutdownService;
     
     private final PlatformTransactionManager transactionManager = transactionManager();
 
     @BeforeEach
     public void setUp() {
         batchLibraryArtworkFinder = new BatchLibraryArtworkFinder(libraryArtworkFinder, 
-                genreRepository, artistRepository, albumRepository,
+                genreRepository, artistRepository, albumRepository, shutdownService,
                 1, transactionManager);
     }
 

@@ -5,7 +5,9 @@ import net.dorokhov.pony2.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.domain.WritableAudioData;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.AudioTagger;
+import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony2.core.library.service.scan.BatchLibraryImportPlanner.Plan;
 import org.slf4j.Logger;
@@ -79,6 +81,7 @@ public class BatchLibraryImporter {
     private final LibraryImporter libraryImporter;
     private final LibraryArtworkFinder libraryArtworkFinder;
     private final LogService logService;
+    private final ShutdownService shutdownService;
     private final Executor executor;
 
     private final TransactionTemplate transactionTemplate;
@@ -91,6 +94,7 @@ public class BatchLibraryImporter {
             LibraryImporter libraryImporter,
             LibraryArtworkFinder libraryArtworkFinder,
             LogService logService,
+            ShutdownService shutdownService,
             @Qualifier(LIBRARY_IMPORT_EXECUTOR) Executor executor,
             PlatformTransactionManager transactionManager
     ) {
@@ -99,12 +103,17 @@ public class BatchLibraryImporter {
         this.libraryImporter = libraryImporter;
         this.libraryArtworkFinder = libraryArtworkFinder;
         this.logService = logService;
+        this.shutdownService = shutdownService;
         this.executor = executor;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
     public ImportResult readAndImport(List<AudioNode> audioNodes, ProgressObserver observer) {
+
+        if (shutdownService.isShutdown()) {
+            throw new ScanInterruptedException();
+        }
 
         Plan plan = batchLibraryImportPlanner.plan(audioNodes);
 
@@ -144,12 +153,20 @@ public class BatchLibraryImporter {
             notifyObserver(observer, 0, 0);
         }
 
+        if (shutdownService.isShutdown()) {
+            throw new ScanInterruptedException();
+        }
+
         return doImport(importTasks.stream()
                 .filter(Objects::nonNull)
                 .toList(), plan.getAudioNodesToSkip(), failedFiles);
     }
 
     public ImportResult writeAndImport(List<WriteAndImportCommand> commands, ProgressObserver observer) {
+
+        if (shutdownService.isShutdown()) {
+            throw new ScanInterruptedException();
+        }
 
         List<ImportTask> importTasks = synchronizedList(new ArrayList<>());
         commands.forEach(command -> importTasks.add(null));
@@ -186,6 +203,10 @@ public class BatchLibraryImporter {
         // Trigger progress even if there are no songs to import.
         if (itemsTotal == 0) {
             notifyObserver(observer, 0, 0);
+        }
+
+        if (shutdownService.isShutdown()) {
+            throw new ScanInterruptedException();
         }
 
         return doImport(importTasks.stream()

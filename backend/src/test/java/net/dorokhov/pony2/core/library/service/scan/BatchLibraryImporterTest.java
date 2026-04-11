@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.ReadableAudioData;
 import net.dorokhov.pony2.api.library.domain.WritableAudioData;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.ProgressObserverFixture;
 import net.dorokhov.pony2.core.library.service.AudioTagger;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
@@ -50,6 +51,9 @@ public class BatchLibraryImporterTest {
     @Mock
     @SuppressWarnings("unused")
     private LogService logService;
+    @SuppressWarnings("unused")
+    @Mock
+    private ShutdownService shutdownService;
 
     @Spy
     @SuppressWarnings("unused")

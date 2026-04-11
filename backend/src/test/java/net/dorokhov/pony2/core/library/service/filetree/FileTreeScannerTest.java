@@ -3,6 +3,7 @@ package net.dorokhov.pony2.core.library.service.filetree;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.FileType;
 import net.dorokhov.pony2.api.library.domain.ReadableAudioData;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.AudioTagger;
 import net.dorokhov.pony2.core.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony2.core.library.service.file.FileTypeResolver;
@@ -58,6 +59,9 @@ public class FileTreeScannerTest {
     private ChecksumCalculator checksumCalculator;
     @Mock
     private AudioTagger audioTagger;
+    @SuppressWarnings("unused")
+    @Mock
+    private ShutdownService shutdownService;
 
     @TempDir
     public Path tempFolder;

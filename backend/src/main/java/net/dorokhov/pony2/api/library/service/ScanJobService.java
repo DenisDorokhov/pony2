@@ -18,6 +18,8 @@ public interface ScanJobService {
         void onScanJobProgress(ScanJobProgress scanJobProgress);
         void onScanJobCompleting(ScanJob scanJob);
         void onScanJobCompleted(ScanJob scanJob);
+        void onScanJobInterrupting(ScanJob scanJob);
+        void onScanJobInterrupted(ScanJob scanJob);
         void onScanJobFailing(ScanJob scanJob);
         void onScanJobFailed(ScanJob scanJob);
     }

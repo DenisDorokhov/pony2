@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.UriUtils;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
 import net.dorokhov.pony2.core.library.service.filetree.domain.ImageNode;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ public class BatchLibraryCleaner {
     private final PlaylistSongRepository playlistSongRepository;
     private final PlaybackHistorySongRepository playbackHistorySongRepository;
     private final LogService logService;
+    private final ShutdownService shutdownService;
 
     private final int cleaningFetchingBufferSize;
     private final int cleaningDeletionBufferSize;
@@ -64,6 +67,7 @@ public class BatchLibraryCleaner {
             PlaylistSongRepository playlistSongRepository,
             PlaybackHistorySongRepository playbackHistorySongRepository,
             LogService logService,
+            ShutdownService shutdownService,
             @Value("${pony.scan.cleaningFetchingBufferSize}") int cleaningFetchingBufferSize,
             @Value("${pony.scan.cleaningDeletionBufferSize}") int cleaningDeletionBufferSize,
             PlatformTransactionManager transactionManager
@@ -79,6 +83,7 @@ public class BatchLibraryCleaner {
         this.playlistSongRepository = playlistSongRepository;
         this.playbackHistorySongRepository = playbackHistorySongRepository;
         this.logService = logService;
+        this.shutdownService = shutdownService;
         this.cleaningFetchingBufferSize = cleaningFetchingBufferSize;
         this.cleaningDeletionBufferSize = cleaningDeletionBufferSize;
 
@@ -96,6 +101,9 @@ public class BatchLibraryCleaner {
             List<String> result = new ArrayList<>();
             Pageable pageable = PageRequest.of(0, cleaningFetchingBufferSize, Sort.by("id"));
             while (pageable != null) {
+                if (shutdownService.isShutdown()) {
+                    throw new ScanInterruptedException();
+                }
                 Page<Song> songs = songRepository.findAll(pageable);
                 for (Song song : songs.getContent()) {
                     if (!existingAudioPaths.contains(song.getPath())) {
@@ -112,6 +120,9 @@ public class BatchLibraryCleaner {
             transactionTemplate.execute(transactionStatus -> {
                 Set<String> albumIds = new HashSet<>();
                 for (String id : chunk) {
+                    if (shutdownService.isShutdown()) {
+                        throw new ScanInterruptedException();
+                    }
                     songRepository.findById(id).ifPresent(song -> {
                         logger.debug("Deleting song '{}': file '{}' not found.", song, song.getPath());
                         albumIds.add(song.getAlbum().getId());
@@ -152,6 +163,9 @@ public class BatchLibraryCleaner {
             List<String> result = new ArrayList<>();
             Pageable pageable = PageRequest.of(0, cleaningFetchingBufferSize, Sort.by("id"));
             while (pageable != null) {
+                if (shutdownService.isShutdown()) {
+                    throw new ScanInterruptedException();
+                }
                 Page<Artwork> artworks = artworkRepository.findAll(pageable);
                 for (Artwork artwork : artworks.getContent()) {
                     if (Objects.equals(artwork.getSourceUriScheme(), SOURCE_URI_SCHEME_FILE)) {
@@ -177,6 +191,9 @@ public class BatchLibraryCleaner {
         for (List<String> chunk : Lists.partition(artworksToDelete, cleaningDeletionBufferSize)) {
             transactionTemplate.execute(transactionStatus -> {
                 for (String id : chunk) {
+                    if (shutdownService.isShutdown()) {
+                        throw new ScanInterruptedException();
+                    }
                     artworkRepository.findById(id).ifPresent(artwork -> {
                         logger.debug("Deleting artwork '{}': file '{}' not found or has been modified.", artwork, artwork.getSourceUri().getPath());
                         songRepository.clearArtworkByArtworkId(id);
@@ -205,6 +222,9 @@ public class BatchLibraryCleaner {
         transactionTemplate.execute(transactionStatus -> {
             List<Artist> artists = artistRepository.findAll();
             for (Artist artist : artists) {
+                if (shutdownService.isShutdown()) {
+                    throw new ScanInterruptedException();
+                }
                 Set<String> songGenreIds = artist.getSongs().stream()
                         .map(Song::getGenre)
                         .map(Genre::getId)

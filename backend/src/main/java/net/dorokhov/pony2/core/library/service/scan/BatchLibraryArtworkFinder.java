@@ -5,9 +5,11 @@ import net.dorokhov.pony2.api.common.BaseEntity;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.Genre;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
+import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +39,7 @@ public class BatchLibraryArtworkFinder {
     private final GenreRepository genreRepository;
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
+    private final ShutdownService shutdownService;
     private final int artworkSearchBufferSize;
 
     private final TransactionTemplate transactionTemplate;
@@ -46,6 +49,7 @@ public class BatchLibraryArtworkFinder {
             GenreRepository genreRepository,
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
+            ShutdownService shutdownService,
             @Value("${pony.scan.artworkSearchBufferSize}") int artworkSearchBufferSize,
             PlatformTransactionManager transactionManager
     ) {
@@ -54,6 +58,7 @@ public class BatchLibraryArtworkFinder {
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
+        this.shutdownService = shutdownService;
         this.artworkSearchBufferSize = artworkSearchBufferSize;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
@@ -117,6 +122,9 @@ public class BatchLibraryArtworkFinder {
         Pageable pageable = PageRequest.of(0, artworkSearchBufferSize, Sort.by("id"));
         List<String> responses = new ArrayList<>();
         while (pageable != null) {
+            if (shutdownService.isShutdown()) {
+                throw new ScanInterruptedException();
+            }
             Page<T> responsePage = requestExecutor.apply(pageable);
             responses.addAll(responsePage.getContent().stream()
                     .map(BaseEntity::getId)

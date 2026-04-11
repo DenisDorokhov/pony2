@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service;
 
+import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
@@ -13,6 +14,7 @@ import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
+import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -219,14 +221,28 @@ public class ScanJobServiceImpl implements ScanJobService {
                         });
                         doScanJob(currentScanJob, targetFolders);
                     } catch (Exception e) {
-                        final ScanJob failedScanJob = currentScanJob;
-                        notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
+                        ScanJob failedScanJob = currentScanJob;
+                        boolean interrupted = Throwables.getCausalChain(e).stream()
+                                .anyMatch(t -> t instanceof ScanInterruptedException);
+                        if (interrupted) {
+                            notifyObservers(observer -> observer.onScanJobInterrupting(failedScanJob));
+                        } else {
+                            notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
+                        }
                         changeScanJobStatusInTransaction(() -> {
-                            Optional<LogMessage> logFailed = logService.error(logger, "Unexpected error occurred when performing scan job.", e);
-                            return scanJobRepository.save(
-                                    scanJobRepository.findById(scanJob.getId()).orElseThrow()
-                                            .setStatus(Status.FAILED)
-                                            .setLogMessage(logFailed.orElse(null)));
+                            if (interrupted) {
+                                Optional<LogMessage> logMessage = logService.warn(logger, "Scan job has been interrupted.", e);
+                                return scanJobRepository.save(
+                                        scanJobRepository.findById(scanJob.getId()).orElseThrow()
+                                                .setStatus(Status.INTERRUPTED)
+                                                .setLogMessage(logMessage.orElse(null)));
+                            } else {
+                                Optional<LogMessage> logMessage = logService.error(logger, "Unexpected error occurred when performing scan job.", e);
+                                return scanJobRepository.save(
+                                        scanJobRepository.findById(scanJob.getId()).orElseThrow()
+                                                .setStatus(Status.FAILED)
+                                                .setLogMessage(logMessage.orElse(null)));
+                            }
                         });
                     } finally {
                         scanJobProgressReference.set(null);
@@ -305,6 +321,9 @@ public class ScanJobServiceImpl implements ScanJobService {
                 break;
             case FAILED:
                 notifyObservers(observer -> observer.onScanJobFailed(scanJob));
+                break;
+            case INTERRUPTED:
+                notifyObservers(observer -> observer.onScanJobInterrupted(scanJob));
                 break;
             default:
                 throw new IllegalStateException("Unexpected scan job status.");

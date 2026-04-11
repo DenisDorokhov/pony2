@@ -397,7 +397,7 @@ public class ScanJobServiceImplTest {
         private static class Call {
 
             private enum Type {
-                STARTING, STARTED, PROGRESS, COMPLETING, COMPLETED, FAILING, FAILED
+                STARTING, STARTED, PROGRESS, COMPLETING, COMPLETED, INTERRUPTING, INTERRUPTED, FAILING, FAILED
             }
 
             private final Type type;
@@ -505,6 +505,20 @@ public class ScanJobServiceImplTest {
         }
 
         @Override
+        public void onScanJobInterrupting(ScanJob scanJob) {
+            assertThat(scanJob).isNotNull();
+            assertThat(scanJob.getStatus()).isSameAs(STARTED);
+            calls.add(new Call(Call.Type.INTERRUPTING));
+        }
+
+        @Override
+        public void onScanJobInterrupted(ScanJob scanJob) {
+            assertThat(scanJob).isNotNull();
+            assertThat(scanJob.getStatus()).isSameAs(INTERRUPTED);
+            calls.add(new Call(Call.Type.INTERRUPTED));
+        }
+
+        @Override
         public void onScanJobFailing(ScanJob scanJob) {
             assertThat(scanJob).isNotNull();
             assertThat(scanJob.getStatus()).isSameAs(STARTED);
@@ -553,6 +567,18 @@ public class ScanJobServiceImplTest {
 
         @Override
         public void onScanJobCompleted(ScanJob scanJob) {
+            callCount++;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void onScanJobInterrupting(ScanJob scanJob) {
+            callCount++;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void onScanJobInterrupted(ScanJob scanJob) {
             callCount++;
             throw new RuntimeException();
         }

@@ -44,6 +44,8 @@ public final class RethrowingLambdas {
         return t -> {
             try {
                 consumer.accept(t);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -54,6 +56,8 @@ public final class RethrowingLambdas {
         return (t, u) -> {
             try {
                 biConsumer.accept(t, u);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -64,6 +68,8 @@ public final class RethrowingLambdas {
         return t -> {
             try {
                 return function.apply(t);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -74,6 +80,8 @@ public final class RethrowingLambdas {
         return () -> {
             try {
                 return function.get();
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -84,6 +92,8 @@ public final class RethrowingLambdas {
         return t -> {
             try {
                 return function.apply(t);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -94,6 +104,8 @@ public final class RethrowingLambdas {
         return () -> {
             try {
                 function.run();
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }

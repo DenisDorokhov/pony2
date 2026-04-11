@@ -3,7 +3,9 @@ package net.dorokhov.pony2.core.library.service.filetree;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.FileType;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.AudioTagger;
+import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import net.dorokhov.pony2.core.library.service.file.ChecksumCalculator;
 import net.dorokhov.pony2.core.library.service.file.FileTypeResolver;
 import net.dorokhov.pony2.core.library.service.filetree.domain.*;
@@ -33,19 +35,22 @@ public class FileTreeScanner {
     private final ChecksumCalculator checksumCalculator;
     private final AudioTagger audioTagger;
     private final LogService logService;
+    private final ShutdownService shutdownService;
 
     public FileTreeScanner(
             FileTypeResolver fileTypeResolver,
             ImageSizeReader imageSizeReader,
             ChecksumCalculator checksumCalculator,
             AudioTagger audioTagger,
-            LogService logService
+            LogService logService,
+            ShutdownService shutdownService
     ) {
         this.fileTypeResolver = fileTypeResolver;
         this.imageSizeReader = imageSizeReader;
         this.checksumCalculator = checksumCalculator;
         this.audioTagger = audioTagger;
         this.logService = logService;
+        this.shutdownService = shutdownService;
     }
 
     public FileNode scanFile(File file, List<File> rootFolders) throws IOException {
@@ -94,6 +99,9 @@ public class FileTreeScanner {
 
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+            if (shutdownService.isShutdown()) {
+                throw new ScanInterruptedException();
+            }
             MutableFolderNode parentFolder = root != null ? folderStack.peek() : null;
             MutableFolderNode folderNode = new MutableFolderNode(dir.toFile(), parentFolder);
             if (parentFolder != null) {
@@ -108,6 +116,9 @@ public class FileTreeScanner {
 
         @Override
         public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
+            if (shutdownService.isShutdown()) {
+                throw new ScanInterruptedException();
+            }
             File file = filePath.toFile();
             MutableFolderNode parentFolder = folderStack.peek();
             if (Objects.equals(file.getName(), ".ponyignore")) {

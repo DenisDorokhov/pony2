@@ -39,6 +39,19 @@ public final class BlockingScanJobServiceObserver implements ScanJobService.Obse
     }
 
     @Override
+    public void onScanJobInterrupting(ScanJob scanJob) {
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void onScanJobInterrupted(ScanJob scanJob) {
+    }
+
+    @Override
     public void onScanJobFailing(ScanJob scanJob) {
         try {
             countDownLatch.await();
