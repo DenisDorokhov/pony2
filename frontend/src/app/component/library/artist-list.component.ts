@@ -52,6 +52,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   navigationItems: NavigationItem[] = [];
   selectedNavigationItem!: NavigationItem;
 
+  @ViewChild('filterElement') filterElement!: ElementRef;
   @ViewChild('scrollerElement') scrollerElement!: ElementRef;
   @ViewChildren('navigationItemElement') dropdownItems!: QueryList<ElementRef>;
 
@@ -174,8 +175,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   onDropdownOpenChange(open: boolean) {
     if (open) {
+      setTimeout(() => this.filterElement.nativeElement.focus());
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
-      const selectedElement = this.dropdownItems.toArray()[selectedIndex];
+      const selectedElement = this.dropdownItems.toArray()[selectedIndex - 2];
       if (selectedElement) {
         requestAnimationFrame(() =>
           ScrollingUtils.scrollIntoElement(selectedElement.nativeElement, true));

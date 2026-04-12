@@ -42,14 +42,13 @@
   div.genre {
     ul {
       width: 252px;
-      max-height: 260px;
-      overflow-y: auto;
       text-align: center;
       margin-left: 30px !important;
       margin-right: 30px !important;
+      padding: 0;
 
       button {
-        max-width: 252px;
+        width: 100%;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
@@ -57,6 +56,34 @@
 
       .selected {
         font-weight: bold;
+      }
+
+      .notice {
+        margin-top: 6px;
+        color: #909090;
+      }
+
+      .search-genre {
+        padding: 6px;
+        border-bottom: solid 1px #ddd;
+
+        input {
+          width: 100%;
+          margin: 0;
+        }
+
+        .search-icon {
+          position: absolute;
+          top: 13px;
+          right: 18px;
+          pointer-events: none;
+          transform: scaleX(-1);
+        }
+      }
+
+      .genre-scroller {
+        max-height: 180px;
+        overflow-y: auto;
       }
     }
   }
