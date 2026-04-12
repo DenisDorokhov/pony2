@@ -7,7 +7,8 @@
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
       <div class="search-genre">
         <input #filterElement type="text" class="form-control"
-               placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}">
+               placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
+               [value]="filterGenre" (input)="onGenreFilter(filterElement.value)">
         <i class="bi bi-filter ms-3 search-icon"></i>
       </div>
       <button ngbDropdownItem

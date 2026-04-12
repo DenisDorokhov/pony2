@@ -35,9 +35,9 @@ export class NavigationItem {
 
 @Component({
   imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem],
-    selector: 'pony-artist-list',
-    templateUrl: './artist-list.component.html',
-    styleUrls: ['./artist-list.component.scss']
+  selector: 'pony-artist-list',
+  templateUrl: './artist-list.component.html',
+  styleUrls: ['./artist-list.component.scss']
 })
 export class ArtistListComponent implements OnInit, OnDestroy {
 
@@ -48,6 +48,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   filteredArtists: Artist[] = [];
   genres: Genre[] = [];
   genreCounter: Record<string, number> = {};
+  filterGenre = '';
 
   navigationItems: NavigationItem[] = [];
   selectedNavigationItem!: NavigationItem;
@@ -101,22 +102,31 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   }
 
   private reloadNavigationItems() {
+    const filterNormalized = this.filterGenre.trim().toLowerCase();
     this.navigationItems = [];
     this.navigationItems.push(this.allArtistsNavigationItem());
     this.navigationItems.push(new NavigationItem(
       'updated',
-      this.translateService.instant('library.artist.updatedArtistsLabel', {'artistCount': this.artists.filter(artist =>
+      this.translateService.instant('library.artist.updatedArtistsLabel', {
+        'artistCount': this.artists.filter(artist =>
           shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
-          shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus)).length}),
+          shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus)).length
+      }),
       this.translateService.instant('library.artist.updatedArtistsTitleLabel')
     ));
-    this.genres.forEach(genre =>
-      this.navigationItems.push(
-        new NavigationItem(
+    this.genres.forEach(genre => {
+      const genreName = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
+      if (filterNormalized.length === 0 || genreName.trim().toLowerCase().indexOf(filterNormalized) >= 0) {
+        this.navigationItems.push(new NavigationItem(
           genre.id,
-          this.translateService.instant('library.artist.genreNavigationLabel', {'genreName': genre.name, 'artistCount': this.genreCounter[genre.id]}),
-          genre.name ?? this.translateService.instant('library.genre.unknownLabel')
-        )));
+          this.translateService.instant('library.artist.genreNavigationLabel', {
+            genreName,
+            'artistCount': this.genreCounter[genre.id]
+          }),
+          genreName
+        ));
+      }
+    });
     const oldSelectedNavigationItemId = this.selectedNavigationItem.id;
     this.selectedNavigationItem = this.navigationItems.filter(item => item.id === oldSelectedNavigationItemId)[0] ?? this.navigationItems[0];
   }
@@ -182,6 +192,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         requestAnimationFrame(() =>
           ScrollingUtils.scrollIntoElement(selectedElement.nativeElement, true));
       }
+    } else {
+      this.filterGenre = '';
+      this.reloadNavigationItems();
     }
   }
 
@@ -190,5 +203,10 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.filterArtists();
     this.scrollerElement.nativeElement.scrollTop = 0;
     this.scrollToSelectedArtist();
+  }
+
+  onGenreFilter(value: string) {
+    this.filterGenre = value;
+    this.reloadNavigationItems();
   }
 }
