@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
-import {Subscription} from 'rxjs';
+import {fromEvent, Subscription} from 'rxjs';
 import {Artist, Genre} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {LoadingState} from '../../domain/common.model';
@@ -18,6 +18,7 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {ScrollingUtils} from '../../utils/scrolling.utils';
+import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 import {InstallationService} from '../../service/installation.service';
 
 export class NavigationItem {
@@ -25,6 +26,7 @@ export class NavigationItem {
   id: string;
   title: string;
   menuEntry: string;
+  active = false;
 
   constructor(id: string, menuEntry: string, title: string) {
     this.id = id;
@@ -55,6 +57,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   @ViewChild('filterElement') filterElement!: ElementRef;
   @ViewChild('scrollerElement') scrollerElement!: ElementRef;
+  @ViewChild(NgbDropdown) filterDropdown!: NgbDropdown;
   @ViewChildren('navigationItemElement') dropdownItems!: QueryList<ElementRef>;
 
   private subscriptions: Subscription[] = [];
@@ -97,6 +100,12 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       const navigationItems = this.navigationItems.filter(navigationItem => navigationItem.id === genre!.id);
       if (navigationItems.length > 0) {
         this.onNavigationItemClick(navigationItems[0]);
+      }
+    }));
+    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
+      if (event.ctrlKey && event.shiftKey && event.code === 'KeyG') {
+        this.filterDropdown.open();
+        event.preventDefault();
       }
     }));
   }
@@ -191,6 +200,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     if (open) {
       setTimeout(() => this.filterElement.nativeElement.focus());
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
+      for (let i = 0; i < this.navigationItems.length; i++) {
+        this.navigationItems[i].active = i === selectedIndex;
+      }
       const selectedElement = this.dropdownItems.toArray()[selectedIndex];
       if (selectedElement) {
         requestAnimationFrame(() =>
@@ -207,10 +219,79 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.filterArtists();
     this.scrollerElement.nativeElement.scrollTop = 0;
     this.scrollToSelectedArtist();
+    this.filterDropdown.close();
   }
 
   onGenreFilter(value: string) {
     this.filterGenre = value;
     this.reloadNavigationItems();
+    this.selectNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+  }
+
+  onFilterKeyDown(event: KeyboardEvent) {
+    switch (event.key) {
+      case 'ArrowDown':
+        this.moveNavigationIndex(1, true);
+        event.preventDefault();
+        break;
+      case 'ArrowUp':
+        this.moveNavigationIndex(1, false);
+        event.preventDefault();
+        break;
+      case 'PageDown':
+        this.moveNavigationIndex(4, true, false);
+        event.preventDefault();
+        break;
+      case 'PageUp':
+        this.moveNavigationIndex(4, false, false);
+        event.preventDefault();
+        break;
+      case 'Enter': {
+        const selectedIndex = this.indexOfActiveNavigationItem();
+        if (selectedIndex >= 0) {
+          this.onNavigationItemClick(this.navigationItems[selectedIndex]);
+        }
+        event.preventDefault();
+        break;
+      }
+    }
+  }
+
+  private indexOfActiveNavigationItem(): number {
+    return this.navigationItems.findIndex(next => next.active);
+  }
+
+  private moveNavigationIndex(value: number, next: boolean, loop = true) {
+    let selectedIndex = this.indexOfActiveNavigationItem();
+    if (selectedIndex < 0) {
+      selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
+    }
+    let indexToSelect: number = next ? selectedIndex + value : selectedIndex - value;
+    if (indexToSelect < 0) {
+      if (loop) {
+        indexToSelect = this.navigationItems.length - 1;
+      } else {
+        indexToSelect = 0;
+      }
+    }
+    if (indexToSelect > this.navigationItems.length - 1) {
+      if (loop) {
+        indexToSelect = 0;
+      } else {
+        indexToSelect = this.navigationItems.length - 1;
+      }
+    }
+    if (indexToSelect >= 0) {
+      this.selectNavigationItem(indexToSelect);
+    }
+  }
+
+  private selectNavigationItem(index: number) {
+    this.navigationItems.forEach(next => next.active = false);
+    this.navigationItems[index].active = true;
+    const selectedElement = this.dropdownItems.toArray()[index];
+    if (selectedElement) {
+      scrollIntoElement(selectedElement.nativeElement, false);
+    }
   }
 }
