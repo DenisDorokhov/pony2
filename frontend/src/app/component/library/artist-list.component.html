@@ -11,18 +11,8 @@
                [value]="filterGenre" (input)="onGenreFilter(filterElement.value)">
         <i class="bi bi-filter ms-3 search-icon"></i>
       </div>
-      <button ngbDropdownItem
-              [class.selected]="selectedNavigationItem.id === navigationItems[0].id" [ngClass]="navigationItems[0].id"
-              [title]=navigationItems[0].title (click)="onNavigationItemClick(navigationItems[0])">
-        {{ navigationItems[0].menuEntry }}
-      </button>
-      <button ngbDropdownItem
-              [class.selected]="selectedNavigationItem.id === navigationItems[1].id" [ngClass]="navigationItems[1].id"
-              [title]=navigationItems[1].title (click)="onNavigationItemClick(navigationItems[1])">
-        {{ navigationItems[1].menuEntry }}
-      </button>
       <div class="genre-scroller">
-        <button *ngFor="let navigationItem of navigationItems.slice(2)" ngbDropdownItem #navigationItemElement
+        <button *ngFor="let navigationItem of navigationItems" ngbDropdownItem #navigationItemElement
                 [class.selected]="selectedNavigationItem.id === navigationItem.id"
                 [ngClass]="navigationItem.id"
                 [title]=navigationItem.title

@@ -82,7 +82,7 @@
       }
 
       .genre-scroller {
-        max-height: 180px;
+        max-height: 220px;
         overflow-y: auto;
       }
     }
@@ -122,10 +122,5 @@
       height: 100%;
       margin: 0;
     }
-  }
-
-  button.updated {
-    padding-bottom: 8px;
-    border-bottom: solid 1px #ddd;
   }
 }

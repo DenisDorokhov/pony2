@@ -64,7 +64,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     private readonly translateService: TranslateService,
     private readonly installationService: InstallationService,
   ) {
-    this.navigationItems = [this.allArtistsNavigationItem()];
+    this.navigationItems = [this.allArtistsNavigationItem(), this.updatedArtistsNavigationItem()];
     this.selectedNavigationItem = this.navigationItems[0];
   }
 
@@ -105,15 +105,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     const filterNormalized = this.filterGenre.trim().toLowerCase();
     this.navigationItems = [];
     this.navigationItems.push(this.allArtistsNavigationItem());
-    this.navigationItems.push(new NavigationItem(
-      'updated',
-      this.translateService.instant('library.artist.updatedArtistsLabel', {
-        'artistCount': this.artists.filter(artist =>
-          shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
-          shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus)).length
-      }),
-      this.translateService.instant('library.artist.updatedArtistsTitleLabel')
-    ));
+    this.navigationItems.push(this.updatedArtistsNavigationItem());
     this.genres.forEach(genre => {
       const genreName = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
       if (filterNormalized.length === 0 || genreName.trim().toLowerCase().indexOf(filterNormalized) >= 0) {
@@ -136,6 +128,18 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       'all',
       this.translateService.instant('library.artist.allArtistsLabel', {'artistCount': this.artists.length}),
       this.translateService.instant('library.artist.allArtistsTitleLabel')
+    );
+  }
+
+  private updatedArtistsNavigationItem() {
+    return new NavigationItem(
+      'updated',
+      this.translateService.instant('library.artist.updatedArtistsLabel', {
+        'artistCount': this.artists.filter(artist =>
+          shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
+          shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus)).length
+      }),
+      this.translateService.instant('library.artist.updatedArtistsTitleLabel')
     );
   }
 
@@ -187,7 +191,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     if (open) {
       setTimeout(() => this.filterElement.nativeElement.focus());
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
-      const selectedElement = this.dropdownItems.toArray()[selectedIndex - 2];
+      const selectedElement = this.dropdownItems.toArray()[selectedIndex];
       if (selectedElement) {
         requestAnimationFrame(() =>
           ScrollingUtils.scrollIntoElement(selectedElement.nativeElement, true));
