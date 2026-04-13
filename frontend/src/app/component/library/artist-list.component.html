@@ -8,15 +8,16 @@
       <div class="search-genre">
         <input #filterElement type="text" class="form-control"
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
-               [value]="filterGenre" (input)="onGenreFilter(filterElement.value)" (keydown)="onFilterKeyDown($event)">
+               [value]="filterGenre" (input)="filterGenres(filterElement.value)" (keydown)="onFilterKeyDown($event)">
         <i class="bi bi-filter ms-3 search-icon"></i>
       </div>
       <div class="genre-scroller">
-        <button *ngFor="let navigationItem of navigationItems" ngbDropdownItem #navigationItemElement
+        <button *ngFor="let navigationItem of navigationItems; let i = index" ngbDropdownItem #navigationItemElement
                 [class.selected]="selectedNavigationItem.id === navigationItem.id"
                 [class.active]="navigationItem.active"
                 [ngClass]="navigationItem.id"
                 [title]=navigationItem.title
+                (mousedown)="selectNavigationItem(i)"
                 (click)="onNavigationItemClick(navigationItem)">
           {{ navigationItem.menuEntry }}
         </button>

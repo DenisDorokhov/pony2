@@ -112,6 +112,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   private reloadNavigationItems() {
     const filterNormalized = this.filterGenre.trim().toLowerCase();
+    const oldActiveNavigationItemId = this.navigationItems.filter(item => item.active)[0]?.id;
     this.navigationItems = [];
     this.navigationItems.push(this.allArtistsNavigationItem());
     this.navigationItems.push(this.updatedArtistsNavigationItem());
@@ -130,6 +131,8 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     });
     const oldSelectedNavigationItemId = this.selectedNavigationItem.id;
     this.selectedNavigationItem = this.navigationItems.filter(item => item.id === oldSelectedNavigationItemId)[0] ?? this.navigationItems[0];
+    this.navigationItems.forEach(navigationItem =>
+      navigationItem.active = navigationItem.id === oldActiveNavigationItemId);
   }
 
   private allArtistsNavigationItem() {
@@ -217,15 +220,21 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   onNavigationItemClick(navigationItem: NavigationItem) {
     this.selectedNavigationItem = navigationItem;
     this.filterArtists();
-    this.scrollerElement.nativeElement.scrollTop = 0;
     this.scrollToSelectedArtist();
     this.filterDropdown.close();
   }
 
-  onGenreFilter(value: string) {
+  filterGenres(value: string) {
     this.filterGenre = value;
     this.reloadNavigationItems();
-    this.selectNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+    const filterNormalized = this.filterGenre.trim().toLowerCase();
+    if (this.navigationItems[0].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+      this.selectNavigationItem(0);
+    } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+      this.selectNavigationItem(1);
+    } else {
+      this.selectNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+    }
   }
 
   onFilterKeyDown(event: KeyboardEvent) {
@@ -239,11 +248,19 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         event.preventDefault();
         break;
       case 'PageDown':
-        this.moveNavigationIndex(4, true, false);
+        this.moveNavigationIndex(7, true, false);
         event.preventDefault();
         break;
       case 'PageUp':
-        this.moveNavigationIndex(4, false, false);
+        this.moveNavigationIndex(7, false, false);
+        event.preventDefault();
+        break;
+      case 'Home':
+        this.selectNavigationItem(0);
+        event.preventDefault();
+        break;
+      case 'End':
+        this.selectNavigationItem(this.navigationItems.length - 1);
         event.preventDefault();
         break;
       case 'Enter': {
@@ -286,7 +303,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     }
   }
 
-  private selectNavigationItem(index: number) {
+  selectNavigationItem(index: number) {
     this.navigationItems.forEach(next => next.active = false);
     this.navigationItems[index].active = true;
     const selectedElement = this.dropdownItems.toArray()[index];

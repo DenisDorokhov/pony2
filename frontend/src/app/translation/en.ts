@@ -55,7 +55,7 @@ export default {
       updatedArtistsTitleLabel: 'Recently Updated',
       unknownLabel: 'Unknown Artist',
       genreNavigationLabel: '{{ genreName }} ({{ artistCount }})',
-      noFilteredArtistsLabel: 'No artists matching your search found :-(',
+      noFilteredArtistsLabel: 'No matching artists found :-(',
       filterGenresPlaceholder: 'Filter (Ctrl+Shift+G)',
     },
     song: {
