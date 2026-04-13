@@ -76,6 +76,16 @@
           pointer-events: none;
           transform: scaleX(-1);
         }
+
+        .clear-button {
+          pointer-events: auto;
+          cursor: pointer;
+          position: absolute;
+          top: 13px;
+          right: 18px;
+          width: 16px;
+          height: 16px;
+        }
       }
 
       .genre-scroller {

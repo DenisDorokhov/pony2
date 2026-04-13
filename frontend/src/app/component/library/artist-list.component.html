@@ -9,7 +9,8 @@
         <input #filterElement type="text" class="form-control"
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
                [value]="filterGenre" (input)="filterGenres(filterElement.value)" (keydown)="onFilterKeyDown($event)">
-        <i class="bi bi-filter ms-3 search-icon"></i>
+        <i class="bi bi-filter ms-3 search-icon" [hidden]="filterGenre.length > 0"></i>
+        <i class="bi bi-x ms-3 clear-button" [hidden]="filterGenre.length === 0" (click)="filterGenres('', false)"></i>
       </div>
       <div class="genre-scroller">
         <button *ngFor="let navigationItem of navigationItems; let i = index" ngbDropdownItem #navigationItemElement
@@ -17,7 +18,7 @@
                 [class.active]="navigationItem.active"
                 [ngClass]="navigationItem.id"
                 [title]=navigationItem.title
-                (mousedown)="selectNavigationItem(i)"
+                (mousedown)="activateNavigationItem(i)"
                 (click)="onNavigationItemClick(navigationItem)">
           {{ navigationItem.menuEntry }}
         </button>

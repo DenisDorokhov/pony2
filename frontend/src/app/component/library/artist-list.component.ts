@@ -110,27 +110,50 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     }));
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
+  }
+
+  trackByArtist(_: number, artist: Artist) {
+    return artist.id;
+  }
+
+  private reloadGenreCounter() {
+    this.genreCounter = {};
+    for (const artist of this.artists) {
+      for (const genre of artist.genres) {
+        if (this.genreCounter[genre.id] === undefined) {
+          this.genreCounter[genre.id] = 0;
+        }
+        this.genreCounter[genre.id]++;
+      }
+    }
+  }
+
   private reloadNavigationItems() {
-    const filterNormalized = this.filterGenre.trim().toLowerCase();
     const oldActiveNavigationItemId = this.navigationItems.filter(item => item.active)[0]?.id;
     this.navigationItems = [];
     this.navigationItems.push(this.allArtistsNavigationItem());
     this.navigationItems.push(this.updatedArtistsNavigationItem());
+    const filterNormalized = this.filterGenre.trim().toLowerCase();
+    const allNavigationItems = [...this.navigationItems];
     this.genres.forEach(genre => {
       const genreName = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
+      const navigationItem = new NavigationItem(
+        genre.id,
+        this.translateService.instant('library.artist.genreNavigationLabel', {
+          genreName,
+          'artistCount': this.genreCounter[genre.id]
+        }),
+        genreName
+      );
+      allNavigationItems.push(navigationItem);
       if (filterNormalized.length === 0 || genreName.trim().toLowerCase().indexOf(filterNormalized) >= 0) {
-        this.navigationItems.push(new NavigationItem(
-          genre.id,
-          this.translateService.instant('library.artist.genreNavigationLabel', {
-            genreName,
-            'artistCount': this.genreCounter[genre.id]
-          }),
-          genreName
-        ));
+        this.navigationItems.push(navigationItem);
       }
     });
     const oldSelectedNavigationItemId = this.selectedNavigationItem.id;
-    this.selectedNavigationItem = this.navigationItems.filter(item => item.id === oldSelectedNavigationItemId)[0] ?? this.navigationItems[0];
+    this.selectedNavigationItem = allNavigationItems.filter(item => item.id === oldSelectedNavigationItemId)[0] ?? this.navigationItems[0];
     this.navigationItems.forEach(navigationItem =>
       navigationItem.active = navigationItem.id === oldActiveNavigationItemId);
   }
@@ -153,26 +176,6 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       }),
       this.translateService.instant('library.artist.updatedArtistsTitleLabel')
     );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach(subscription => subscription.unsubscribe());
-  }
-
-  trackByArtist(_: number, artist: Artist) {
-    return artist.id;
-  }
-
-  private reloadGenreCounter() {
-    this.genreCounter = {};
-    for (const artist of this.artists) {
-      for (const genre of artist.genres) {
-        if (this.genreCounter[genre.id] === undefined) {
-          this.genreCounter[genre.id] = 0;
-        }
-        this.genreCounter[genre.id]++;
-      }
-    }
   }
 
   private filterArtists(scrollToSelectedArtist = false) {
@@ -208,7 +211,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       }
       const selectedElement = this.dropdownItems.toArray()[selectedIndex];
       if (selectedElement) {
-        requestAnimationFrame(() =>
+        setTimeout(() =>
           ScrollingUtils.scrollIntoElement(selectedElement.nativeElement, true));
       }
     } else {
@@ -224,16 +227,24 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.filterDropdown.close();
   }
 
-  filterGenres(value: string) {
+  filterGenres(value: string, changeSelection = true) {
+    this.filterElement.nativeElement.focus();
     this.filterGenre = value;
     this.reloadNavigationItems();
-    const filterNormalized = this.filterGenre.trim().toLowerCase();
-    if (this.navigationItems[0].title.toLowerCase().indexOf(filterNormalized) >= 0) {
-      this.selectNavigationItem(0);
-    } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
-      this.selectNavigationItem(1);
+    if (changeSelection) {
+      const filterNormalized = this.filterGenre.trim().toLowerCase();
+      if (this.navigationItems[0].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+        this.activateNavigationItem(0);
+      } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+        this.activateNavigationItem(1);
+      } else {
+        this.activateNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+      }
     } else {
-      this.selectNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+      const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
+      if (selectedIndex >= 0) {
+        this.activateNavigationItem(selectedIndex, true);
+      }
     }
   }
 
@@ -256,11 +267,11 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         event.preventDefault();
         break;
       case 'Home':
-        this.selectNavigationItem(0);
+        this.activateNavigationItem(0);
         event.preventDefault();
         break;
       case 'End':
-        this.selectNavigationItem(this.navigationItems.length - 1);
+        this.activateNavigationItem(this.navigationItems.length - 1);
         event.preventDefault();
         break;
       case 'Enter': {
@@ -299,16 +310,18 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       }
     }
     if (indexToSelect >= 0) {
-      this.selectNavigationItem(indexToSelect);
+      this.activateNavigationItem(indexToSelect);
     }
   }
 
-  selectNavigationItem(index: number) {
+  activateNavigationItem(index: number, scrollToCenter = false) {
     this.navigationItems.forEach(next => next.active = false);
     this.navigationItems[index].active = true;
-    const selectedElement = this.dropdownItems.toArray()[index];
-    if (selectedElement) {
-      scrollIntoElement(selectedElement.nativeElement, false);
-    }
+    setTimeout(() => {
+      const selectedElement = this.dropdownItems.toArray()[index];
+      if(selectedElement) {
+        scrollIntoElement(selectedElement.nativeElement, scrollToCenter);
+      }
+    });
   }
 }
