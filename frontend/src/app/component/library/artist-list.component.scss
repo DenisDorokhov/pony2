@@ -49,13 +49,6 @@
       padding: 0;
       overflow: hidden;
 
-      button {
-        width: 100%;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-
       .selected {
         font-weight: bold;
       }
@@ -91,6 +84,18 @@
       .genre-scroller {
         max-height: 221px;
         overflow-y: auto;
+
+        button {
+          width: 100%;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+      }
+
+      .reset-container {
+        padding: 6px;
+        border-top: solid 1px #ddd;
       }
     }
   }

@@ -99,7 +99,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.libraryService.observeFilterByGenreRequest().subscribe(genre => {
       const navigationItems = this.navigationItems.filter(navigationItem => navigationItem.id === genre!.id);
       if (navigationItems.length > 0) {
-        this.onNavigationItemClick(navigationItems[0]);
+        this.navigate(navigationItems[0]);
       }
     }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
@@ -221,7 +221,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onNavigationItemClick(navigationItem: NavigationItem) {
+  navigate(navigationItem: NavigationItem) {
     this.selectedNavigationItem = navigationItem;
     this.filterArtists();
     this.scrollToSelectedArtist();
@@ -283,7 +283,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       case 'Enter': {
         const selectedIndex = this.indexOfActiveNavigationItem();
         if (selectedIndex >= 0) {
-          this.onNavigationItemClick(this.navigationItems[selectedIndex]);
+          this.navigate(this.navigationItems[selectedIndex]);
         }
         event.preventDefault();
         break;
@@ -327,5 +327,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       const selectedElement = this.dropdownItems.toArray()[index];
       scrollIntoElement(selectedElement.nativeElement, scrollToCenter);
     });
+  }
+
+  protected reset() {
+    this.navigate(this.navigationItems[0]);
   }
 }
