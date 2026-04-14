@@ -57,7 +57,7 @@ export default {
       genreNavigationLabel: '{{ genreName }} ({{ artistCount }})',
       noFilteredArtistsLabel: 'No matching artists found :-(',
       filterGenresPlaceholder: 'Filter (Ctrl+Shift+G)',
-      resetButton: 'Reset',
+      resetButton: 'Clear All',
     },
     song: {
       unknownLabel: 'Unknown Song',

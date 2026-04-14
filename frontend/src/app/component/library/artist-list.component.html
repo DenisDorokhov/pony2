@@ -24,9 +24,9 @@
         </button>
       </div>
       <div class="reset-container" [hidden]="selectedNavigationItem.id === navigationItems[0].id">
-        <button type="button" class="btn btn-outline-dark btn-sm" (click)="resetNavigation()">
+        <a (click)="resetNavigation()" class="link-secondary">
           {{ 'library.artist.resetButton' | translate }}
-        </button>
+        </a>
       </div>
     </ul>
   </div>
