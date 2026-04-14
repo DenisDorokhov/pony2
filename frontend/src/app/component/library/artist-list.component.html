@@ -23,9 +23,8 @@
           {{ navigationItem.menuEntry }}
         </button>
       </div>
-      <div class="reset-container">
-        <button type="button" class="btn btn-outline-dark btn-sm"
-                [disabled]="selectedNavigationItem.id === navigationItems[0].id" (click)="resetNavigation()">
+      <div class="reset-container" [hidden]="selectedNavigationItem.id === navigationItems[0].id">
+        <button type="button" class="btn btn-outline-dark btn-sm" (click)="resetNavigation()">
           {{ 'library.artist.resetButton' | translate }}
         </button>
       </div>
