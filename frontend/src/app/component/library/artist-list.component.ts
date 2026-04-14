@@ -102,9 +102,10 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         this.onNavigationItemClick(navigationItems[0]);
       }
     }));
-    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
+    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
       if (event.ctrlKey && event.shiftKey && event.code === 'KeyG') {
         this.filterDropdown.open();
+        this.filterElement.nativeElement.focus();
         event.preventDefault();
       }
     }));
@@ -204,7 +205,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   onDropdownOpenChange(open: boolean) {
     if (open) {
-      setTimeout(() => this.filterElement.nativeElement.focus());
+      setTimeout(() => this.filterElement.nativeElement.focus(), 50);
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
       for (let i = 0; i < this.navigationItems.length; i++) {
         this.navigationItems[i].active = i === selectedIndex;
@@ -227,25 +228,30 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.filterDropdown.close();
   }
 
-  filterGenres(value: string, changeSelection = true) {
+  filterGenres(value: string) {
     this.filterElement.nativeElement.focus();
     this.filterGenre = value;
     this.reloadNavigationItems();
-    if (changeSelection) {
-      const filterNormalized = this.filterGenre.trim().toLowerCase();
-      if (this.navigationItems[0].title.toLowerCase().indexOf(filterNormalized) >= 0) {
-        this.activateNavigationItem(0);
-      } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
-        this.activateNavigationItem(1);
-      } else {
-        this.activateNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
-      }
+    const filterNormalized = this.filterGenre.trim().toLowerCase();
+    if (this.navigationItems[0].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+      this.activateNavigationItem(0);
+    } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+      this.activateNavigationItem(1);
     } else {
+      this.activateNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+    }
+  }
+
+  clearGenreFilter() {
+    this.filterElement.nativeElement.focus();
+    this.filterGenre = '';
+    this.reloadNavigationItems();
+    setTimeout(() => {
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
       if (selectedIndex >= 0) {
         this.activateNavigationItem(selectedIndex, true);
       }
-    }
+    });
   }
 
   onFilterKeyDown(event: KeyboardEvent) {
@@ -319,9 +325,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.navigationItems[index].active = true;
     setTimeout(() => {
       const selectedElement = this.dropdownItems.toArray()[index];
-      if(selectedElement) {
-        scrollIntoElement(selectedElement.nativeElement, scrollToCenter);
-      }
+      scrollIntoElement(selectedElement.nativeElement, scrollToCenter);
     });
   }
 }

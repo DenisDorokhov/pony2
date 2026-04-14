@@ -10,7 +10,7 @@
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
                [value]="filterGenre" (input)="filterGenres(filterElement.value)" (keydown)="onFilterKeyDown($event)">
         <i class="bi bi-filter ms-3 search-icon" [hidden]="filterGenre.length > 0"></i>
-        <i class="bi bi-x ms-3 clear-button" [hidden]="filterGenre.length === 0" (click)="filterGenres('', false)"></i>
+        <i class="bi bi-x ms-3 clear-button" [hidden]="filterGenre.length === 0" (click)="clearGenreFilter()"></i>
       </div>
       <div class="genre-scroller">
         <button *ngFor="let navigationItem of navigationItems; let i = index" ngbDropdownItem #navigationItemElement
