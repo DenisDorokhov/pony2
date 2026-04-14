@@ -136,8 +136,9 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.navigationItems = [];
     this.navigationItems.push(this.allArtistsNavigationItem());
     this.navigationItems.push(this.updatedArtistsNavigationItem());
-    const filterNormalized = this.filterGenre.trim().toLowerCase();
-    const allNavigationItems = [...this.navigationItems];
+    const idToNavigationItem: Record<string, NavigationItem> = {};
+    this.navigationItems.forEach(navigationItem =>
+      idToNavigationItem[navigationItem.id] = navigationItem);
     this.genres.forEach(genre => {
       const genreName = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
       const navigationItem = new NavigationItem(
@@ -148,13 +149,13 @@ export class ArtistListComponent implements OnInit, OnDestroy {
         }),
         genreName
       );
-      allNavigationItems.push(navigationItem);
-      if (filterNormalized.length === 0 || genreName.trim().toLowerCase().indexOf(filterNormalized) >= 0) {
-        this.navigationItems.push(navigationItem);
-      }
+      idToNavigationItem[navigationItem.id] = navigationItem;
+    });
+    this.libraryService.searchGenres(this.genres, this.filterGenre).forEach(genre => {
+      this.navigationItems.push(idToNavigationItem[genre.id]);
     });
     const oldSelectedNavigationItemId = this.selectedNavigationItem.id;
-    this.selectedNavigationItem = allNavigationItems.filter(item => item.id === oldSelectedNavigationItemId)[0] ?? this.navigationItems[0];
+    this.selectedNavigationItem = idToNavigationItem[oldSelectedNavigationItemId] ?? this.navigationItems[0];
     this.navigationItems.forEach(navigationItem =>
       navigationItem.active = navigationItem.id === oldActiveNavigationItemId);
   }
@@ -238,7 +239,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
       this.activateNavigationItem(1);
     } else {
-      this.activateNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+      this.activateNavigationItem(filterNormalized.length > 0 && this.navigationItems.length > 2 ? 2 : 0);
     }
   }
 

@@ -13,6 +13,130 @@ import {
   SongDetailsDto
 } from '../domain/library.dto';
 import {InstallationService} from './installation.service';
+import {TranslateService} from '@ngx-translate/core';
+
+const ENGLISH_TO_RUSSIAN_MAPPING: Record<string, string> = {
+  'F': 'А',
+  '<': 'Б',
+  'D': 'В',
+  'U': 'Г',
+  'L': 'Д',
+  'T': 'Е',
+  '~': 'Ё',
+  ':': 'Ж',
+  'P': 'З',
+  'B': 'И',
+  'Q': 'Й',
+  'R': 'К',
+  'K': 'Л',
+  'V': 'М',
+  'Y': 'Н',
+  'J': 'О',
+  'G': 'П',
+  'H': 'Р',
+  'C': 'С',
+  'N': 'Т',
+  'E': 'У',
+  'A': 'Ф',
+  '{': 'Х',
+  'W': 'Ц',
+  'X': 'Ч',
+  'I': 'Ш',
+  'O': 'Щ',
+  'S': 'Ы',
+  '"': 'Э',
+  '>': 'Ю',
+  'Z': 'Я',
+  'f': 'а',
+  ',': 'б',
+  'd': 'в',
+  'u': 'г',
+  'l': 'д',
+  't': 'е',
+  '`': 'ё',
+  ';': 'ж',
+  'p': 'з',
+  'b': 'и',
+  'q': 'й',
+  'r': 'к',
+  'k': 'л',
+  'v': 'м',
+  'y': 'н',
+  'j': 'о',
+  'g': 'п',
+  'h': 'р',
+  'c': 'с',
+  'n': 'т',
+  'e': 'у',
+  'a': 'ф',
+  '[': 'х',
+  'w': 'ц',
+  'x': 'ч',
+  'i': 'ш',
+  'o': 'щ',
+  's': 'ы',
+  '\'': 'э',
+  '.': 'ю',
+  'z': 'я',
+  '}': 'Ъ',
+  ']': 'ъ',
+  'M': 'Ь',
+  'm': 'ь',
+};
+const RUSSIAN_TO_ENGLISH_MAPPING: Record<string, string> = {
+  'Ф': 'A',
+  'И': 'B',
+  'С': 'C',
+  'В': 'D',
+  'У': 'E',
+  'А': 'F',
+  'П': 'G',
+  'Р': 'H',
+  'Ш': 'I',
+  'О': 'J',
+  'Л': 'K',
+  'Д': 'L',
+  'Ь': 'M',
+  'Т': 'N',
+  'Щ': 'O',
+  'З': 'P',
+  'Й': 'Q',
+  'К': 'R',
+  'Ы': 'S',
+  'Е': 'T',
+  'Г': 'U',
+  'М': 'V',
+  'Ц': 'W',
+  'Ч': 'X',
+  'Н': 'Y',
+  'Я': 'Z',
+  'ф': 'a',
+  'и': 'b',
+  'с': 'c',
+  'в': 'd',
+  'у': 'e',
+  'а': 'f',
+  'п': 'g',
+  'р': 'h',
+  'ш': 'i',
+  'о': 'j',
+  'л': 'k',
+  'д': 'l',
+  'ь': 'm',
+  'т': 'n',
+  'щ': 'o',
+  'з': 'p',
+  'й': 'q',
+  'к': 'r',
+  'ы': 's',
+  'е': 't',
+  'г': 'u',
+  'м': 'v',
+  'ц': 'w',
+  'ч': 'x',
+  'н': 'y',
+  'я': 'z',
+};
 
 export interface SongSelection {
   song: Song;
@@ -50,6 +174,7 @@ export class LibraryService {
   constructor(
     private authenticationService: AuthenticationService,
     private installationService: InstallationService,
+    private translateService: TranslateService,
     private httpClient: HttpClient
   ) {
     this.authenticationService.observeLogout().subscribe(() => {
@@ -297,6 +422,26 @@ export class LibraryService {
       .pipe(
         map(searchResultDto => new SearchResult(searchResultDto))
       );
+  }
+
+  searchGenres(genres: Genre[], query: string): Genre[] {
+    const queryNormalized = query.trim().toLowerCase();
+    return genres.filter(genre => {
+      const genreNameNormalized = (genre.name ?? this.translateService.instant('library.genre.unknownLabel')).trim().toLowerCase();
+      if (queryNormalized.length === 0 || genreNameNormalized.indexOf(queryNormalized) >= 0) {
+        return true;
+      }
+      const transformedRuEnQuery = queryNormalized.split('')
+        .map(char => RUSSIAN_TO_ENGLISH_MAPPING[char] ?? char)
+        .join('');
+      if (genreNameNormalized.indexOf(transformedRuEnQuery) >= 0) {
+        return true;
+      }
+      const transformedEnRuQuery = queryNormalized.split('')
+        .map(char => ENGLISH_TO_RUSSIAN_MAPPING[char] ?? char)
+        .join('');
+      return genreNameNormalized.indexOf(transformedEnRuQuery) >= 0;
+    });
   }
 
   reBuildSearchIndex(): Observable<void> {
