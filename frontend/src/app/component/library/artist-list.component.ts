@@ -18,8 +18,9 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {ScrollingUtils} from '../../utils/scrolling.utils';
-import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 import {InstallationService} from '../../service/installation.service';
+import {keyboardLayoutInsensitiveMatch} from '../../utils/search.utils';
+import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
 export class NavigationItem {
 
@@ -151,7 +152,10 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       );
       idToNavigationItem[navigationItem.id] = navigationItem;
     });
-    this.libraryService.searchGenres(this.genres, this.filterGenre).forEach(genre => {
+    this.genres.filter(genre => {
+      const genreNameNormalized = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
+      return keyboardLayoutInsensitiveMatch(this.filterGenre, genreNameNormalized);
+    }).forEach(genre => {
       this.navigationItems.push(idToNavigationItem[genre.id]);
     });
     const oldSelectedNavigationItemId = this.selectedNavigationItem.id;
@@ -201,6 +205,8 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   private scrollToSelectedArtist() {
     if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
       setTimeout(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
+    } else {
+      this.scrollerElement.nativeElement.scrollTop = 0;
     }
   }
 
@@ -233,13 +239,12 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.filterElement.nativeElement.focus();
     this.filterGenre = value;
     this.reloadNavigationItems();
-    const filterNormalized = this.filterGenre.trim().toLowerCase();
-    if (this.navigationItems[0].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+    if (keyboardLayoutInsensitiveMatch(this.filterGenre, this.navigationItems[0].title)) {
       this.activateNavigationItem(0);
-    } else if (this.navigationItems[1].title.toLowerCase().indexOf(filterNormalized) >= 0) {
+    } else if (keyboardLayoutInsensitiveMatch(this.filterGenre, this.navigationItems[1].title)) {
       this.activateNavigationItem(1);
     } else {
-      this.activateNavigationItem(filterNormalized.length > 0 && this.navigationItems.length > 2 ? 2 : 0);
+      this.activateNavigationItem(this.filterGenre.trim().length > 0 && this.navigationItems.length > 2 ? 2 : 0);
     }
   }
 
