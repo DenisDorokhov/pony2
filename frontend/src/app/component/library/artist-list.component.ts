@@ -99,7 +99,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.libraryService.observeFilterByGenreRequest().subscribe(genre => {
       const navigationItems = this.navigationItems.filter(navigationItem => navigationItem.id === genre!.id);
       if (navigationItems.length > 0) {
-        this.navigate(navigationItems[0]);
+        this.executeNavigationItem(navigationItems[0]);
       }
     }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
@@ -203,7 +203,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onDropdownOpenChange(open: boolean) {
+  onNavigationDropdownOpenChange(open: boolean) {
     if (open) {
       setTimeout(() => this.filterElement.nativeElement.focus(), 50);
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
@@ -221,7 +221,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     }
   }
 
-  navigate(navigationItem: NavigationItem) {
+  executeNavigationItem(navigationItem: NavigationItem) {
     this.selectedNavigationItem = navigationItem;
     this.filterArtists();
     this.scrollToSelectedArtist();
@@ -283,7 +283,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
       case 'Enter': {
         const selectedIndex = this.indexOfActiveNavigationItem();
         if (selectedIndex >= 0) {
-          this.navigate(this.navigationItems[selectedIndex]);
+          this.executeNavigationItem(this.navigationItems[selectedIndex]);
         }
         event.preventDefault();
         break;
@@ -329,7 +329,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected reset() {
-    this.navigate(this.navigationItems[0]);
+  protected resetNavigation() {
+    this.executeNavigationItem(this.navigationItems[0]);
   }
 }

@@ -1,5 +1,5 @@
 <div class="panel panel-default">
-  <div ngbDropdown class="btn-group genre" (openChange)="onDropdownOpenChange($event)">
+  <div ngbDropdown class="btn-group genre" (openChange)="onNavigationDropdownOpenChange($event)">
     <button ngbDropdownToggle type="button" class="genre">
       {{ selectedNavigationItem.title }}
       <span class="caret"></span>
@@ -19,13 +19,13 @@
                 [ngClass]="navigationItem.id"
                 [title]=navigationItem.title
                 (mousedown)="activateNavigationItem(i)"
-                (click)="navigate(navigationItem)">
+                (click)="executeNavigationItem(navigationItem)">
           {{ navigationItem.menuEntry }}
         </button>
       </div>
       <div class="reset-container">
         <button type="button" class="btn btn-outline-dark btn-sm"
-                [disabled]="selectedNavigationItem.id === navigationItems[0].id" (click)="reset()">
+                [disabled]="selectedNavigationItem.id === navigationItems[0].id" (click)="resetNavigation()">
           {{ 'library.artist.resetButton' | translate }}
         </button>
       </div>
