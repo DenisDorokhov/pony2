@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, AfterViewInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from 'rxjs';
@@ -30,7 +30,7 @@ class NavigationItem {
     templateUrl: './fast-search.component.html',
     styleUrls: ['./fast-search.component.scss']
 })
-export class FastSearchComponent implements OnInit, OnDestroy {
+export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
 
   open = false;
   searchResult: SearchResult | undefined;
@@ -122,6 +122,12 @@ export class FastSearchComponent implements OnInit, OnDestroy {
         this.inputElement.nativeElement.focus();
         event.preventDefault();
       }
+    }));
+  }
+
+  ngAfterViewInit(): void {
+    this.subscriptions.push(fromEvent<FocusEvent>(this.inputElement.nativeElement, 'focus').subscribe(() => {
+      setTimeout(() => this.inputElement.nativeElement.select());
     }));
   }
 

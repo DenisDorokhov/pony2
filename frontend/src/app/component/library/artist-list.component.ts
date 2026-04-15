@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, AfterViewInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {Artist, Genre} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
@@ -42,7 +42,7 @@ export class NavigationItem {
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
 })
-export class ArtistListComponent implements OnInit, OnDestroy {
+export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   LoadingState = LoadingState;
 
@@ -56,10 +56,10 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   navigationItems: NavigationItem[] = [];
   selectedNavigationItem!: NavigationItem;
 
-  @ViewChild('filterElement') filterElement!: ElementRef;
+  @ViewChild('filterInputElement') filterInputElement!: ElementRef;
   @ViewChild('scrollerElement') scrollerElement!: ElementRef;
   @ViewChild(NgbDropdown) filterDropdown!: NgbDropdown;
-  @ViewChildren('navigationItemElement') dropdownItems!: QueryList<ElementRef>;
+  @ViewChildren('navigationItemElement') navigationItemElements!: QueryList<ElementRef>;
 
   private subscriptions: Subscription[] = [];
 
@@ -106,9 +106,15 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
       if (event.ctrlKey && event.shiftKey && event.code === 'KeyG') {
         this.filterDropdown.open();
-        this.filterElement.nativeElement.focus();
+        this.filterInputElement.nativeElement.focus();
         event.preventDefault();
       }
+    }));
+  }
+
+  ngAfterViewInit(): void {
+    this.subscriptions.push(fromEvent<FocusEvent>(this.filterInputElement.nativeElement, 'focus').subscribe(() => {
+      setTimeout(() => this.filterInputElement.nativeElement.select());
     }));
   }
 
@@ -212,12 +218,12 @@ export class ArtistListComponent implements OnInit, OnDestroy {
 
   onNavigationDropdownOpenChange(open: boolean) {
     if (open) {
-      setTimeout(() => this.filterElement.nativeElement.focus(), 50);
+      setTimeout(() => this.filterInputElement.nativeElement.focus(), 50);
       const selectedIndex = this.navigationItems.findIndex(item => item.id === this.selectedNavigationItem.id);
       for (let i = 0; i < this.navigationItems.length; i++) {
         this.navigationItems[i].active = i === selectedIndex;
       }
-      const selectedElement = this.dropdownItems.toArray()[selectedIndex];
+      const selectedElement = this.navigationItemElements.toArray()[selectedIndex];
       if (selectedElement) {
         setTimeout(() =>
           ScrollingUtils.scrollIntoElement(selectedElement.nativeElement, true));
@@ -236,7 +242,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   }
 
   filterGenres(value: string) {
-    this.filterElement.nativeElement.focus();
+    this.filterInputElement.nativeElement.focus();
     this.filterGenre = value;
     this.reloadNavigationItems();
     if (keyboardLayoutInsensitiveMatch(this.filterGenre, this.navigationItems[0].title)) {
@@ -249,7 +255,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
   }
 
   clearGenreFilter() {
-    this.filterElement.nativeElement.focus();
+    this.filterInputElement.nativeElement.focus();
     this.filterGenre = '';
     this.reloadNavigationItems();
     setTimeout(() => {
@@ -330,7 +336,7 @@ export class ArtistListComponent implements OnInit, OnDestroy {
     this.navigationItems.forEach(next => next.active = false);
     this.navigationItems[index].active = true;
     setTimeout(() => {
-      const selectedElement = this.dropdownItems.toArray()[index];
+      const selectedElement = this.navigationItemElements.toArray()[index];
       scrollIntoElement(selectedElement.nativeElement, scrollToCenter);
     });
   }
