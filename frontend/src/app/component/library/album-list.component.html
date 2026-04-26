@@ -6,13 +6,13 @@
   </pony-no-content-indicator>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-heading">
-    <h5 class="panel-title">
-      <span title="{{ artistSongs.artist.name | ponyUnknownArtist }}">
+    <div class="panel-title">
+      <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
         {{ artistSongs.artist.name | ponyUnknownArtist }}
         <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i
           class="bi bi-star-fill"></i>{{ likeCount }}</button>
-      </span>
-      <small class="counts" title="{{
+      </div>
+      <div class="counts" title="{{
           'library.album.counterTitle' | translate:{
             genres: genreNamesAsString,
             albumCount,
@@ -28,8 +28,8 @@
             songCount
           }
         }}
-      </small>
-    </h5>
+      </div>
+    </div>
   </div>
   <div *ngIf="loadingState === LoadingState.LOADED"
        class="panel-body album-list-container" data-pony-image-loader-scroller>
