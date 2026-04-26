@@ -9,7 +9,7 @@
         <input #filterInputElement type="text" class="form-control"
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
                [value]="filterGenre" (input)="filterGenres(filterInputElement.value)" (keydown)="onFilterKeyDown($event)">
-        <i class="bi bi-filter ms-3 search-icon" [hidden]="filterGenre.length > 0"></i>
+        <i class="bi bi-funnel ms-3 search-icon" [hidden]="filterGenre.length > 0"></i>
         <i class="bi bi-x ms-3 clear-button" [hidden]="filterGenre.length === 0" (click)="clearGenreFilter()"></i>
       </div>
       <div class="genre-scroller">
@@ -29,6 +29,34 @@
         </a>
       </div>
     </ul>
+  </div>
+  <div class="sort-container">
+    <div ngbDropdown class="btn-group">
+      <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
+        @switch (sortingOrder) {
+          @case (ArtistSortingOrder.NAME_ASCENDING) {
+            <i class="bi bi-alphabet"></i>
+          }
+          @case (ArtistSortingOrder.NAME_DESCENDING) {
+            <i class="bi bi-alphabet"></i>
+          }
+          @case (ArtistSortingOrder.MODIFICATION_ASCENDING) {
+            <i class="bi bi-clock-history"></i>
+          }
+          @case (ArtistSortingOrder.MODIFICATION_DESCENDING) {
+            <i class="bi bi-clock-history"></i>
+          }
+        }
+      </button>
+      <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+        <button ngbDropdownItem (click)="setSortingOrder(ArtistSortingOrder.NAME_ASCENDING)">
+          <i class="bi bi-alphabet"></i>{{ 'library.artist.sortByNameAsc' | translate }}
+        </button>
+        <button ngbDropdownItem (click)="setSortingOrder(ArtistSortingOrder.MODIFICATION_DESCENDING)">
+          <i class="bi bi-clock-history"></i>{{ 'library.artist.sortByModificationDesc' | translate }}
+        </button>
+      </ul>
+    </div>
   </div>
   <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>

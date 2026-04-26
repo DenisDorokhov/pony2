@@ -136,6 +136,38 @@ export class Album {
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.artist = artist;
   }
+
+  static compareByName(album1: Album, album2: Album): number {
+    if ((album1.name ?? '') > (album2.name ?? '')) {
+      return 1;
+    }
+    if ((album1.name ?? '') < (album2.name ?? '')) {
+      return -1;
+    }
+    return 0;
+  }
+
+  static compareByYear(album1: Album, album2: Album): number {
+    if ((album1.year ?? 0) > (album2.year ?? 0)) {
+      return 1;
+    }
+    if ((album1.year ?? 0) < (album2.year ?? 0)) {
+      return -1;
+    }
+    return Album.compareByName(album1, album2);
+  }
+
+  static compareByModificationDate(album1: Album, album2: Album): number {
+    const artistDate1 = album1.updateDate ? album1.updateDate : album1.creationDate;
+    const artistDate2 = album2.updateDate ? album2.updateDate : album2.creationDate;
+    if (artistDate1 > artistDate2) {
+      return 1;
+    }
+    if (artistDate1 < artistDate2) {
+      return -1;
+    }
+    return Album.compareByName(album1, album2);
+  }
 }
 
 export class AlbumSongs {
@@ -149,14 +181,16 @@ export class AlbumSongs {
       .map(songDto => new Song(songDto, this.album));
   }
 
-  static compare(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
-    if ((albumSongs1.album.year ?? 0) < (albumSongs2.album.year ?? 0)) {
-      return 1;
-    }
-    if ((albumSongs1.album.year ?? 0) > (albumSongs2.album.year ?? 0)) {
-      return -1;
-    }
-    return 0;
+  static compareByName(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
+    return Album.compareByName(albumSongs1.album, albumSongs2.album);
+  }
+
+  static compareByYear(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
+    return Album.compareByYear(albumSongs1.album, albumSongs2.album);
+  }
+
+  static compareByModificationDate(albumSongs1: AlbumSongs, albumSongs2: AlbumSongs): number {
+    return Album.compareByModificationDate(albumSongs1.album, albumSongs2.album);
   }
 }
 
@@ -211,6 +245,28 @@ export class Artist {
       return false;
     }
     return artist1.id === artist2.id;
+  }
+
+  static compareByName(artist1: Artist, artist2: Artist): number {
+    if ((artist1.name ?? '') > (artist2.name ?? '')) {
+      return 1;
+    }
+    if ((artist1.name ?? '') < (artist2.name ?? '')) {
+      return -1;
+    }
+    return 0;
+  }
+
+  static compareByModificationDate(artist1: Artist, artist2: Artist): number {
+    const artistDate1 = artist1.updateDate ? artist1.updateDate : artist1.creationDate;
+    const artistDate2 = artist2.updateDate ? artist2.updateDate : artist2.creationDate;
+    if (artistDate1 > artistDate2) {
+      return 1;
+    }
+    if (artistDate1 < artistDate2) {
+      return -1;
+    }
+    return 0;
   }
 }
 

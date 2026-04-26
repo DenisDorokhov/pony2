@@ -58,6 +58,8 @@ export default {
       noFilteredArtistsLabel: 'No matching artists found :-(',
       filterGenresPlaceholder: 'Filter (Ctrl+Shift+G)',
       resetButton: 'Reset Filter',
+      sortByNameAsc: 'Sort by name',
+      sortByModificationDesc: 'Sort by date',
     },
     song: {
       unknownLabel: 'Unknown Song',

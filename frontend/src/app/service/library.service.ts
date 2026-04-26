@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, forkJoin, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
-import {Album, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
+import {Album, AlbumSongs, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
 import {
   ArtistDto,
@@ -24,12 +24,36 @@ export interface ScrollToSongRequest {
   scrollToArtist: boolean;
 }
 
+export enum ArtistSortingOrder {
+  NAME_ASCENDING = 'NAME_ASCENDING',
+  NAME_DESCENDING = 'NAME_DESCENDING',
+  MODIFICATION_ASCENDING = 'MODIFICATION_ASCENDING',
+  MODIFICATION_DESCENDING = 'MODIFICATION_DESCENDING',
+}
+
+export enum AlbumSortingOrder {
+  YEAR_ASCENDING = 'YEAR_ASCENDING',
+  YEAR_DESCENDING = 'YEAR_DESCENDING',
+  NAME_ASCENDING = 'NAME_ASCENDING',
+  NAME_DESCENDING = 'NAME_DESCENDING',
+  MODIFICATION_ASCENDING = 'MODIFICATION_ASCENDING',
+  MODIFICATION_DESCENDING = 'MODIFICATION_DESCENDING',
+}
+
+const DEFAULT_ARTIST_SORTING_ORDER = ArtistSortingOrder.NAME_ASCENDING;
+const DEFAULT_ALBUM_SORTING_ORDER = AlbumSortingOrder.YEAR_DESCENDING;
+
+const LOCAL_STORAGE_KEY_DEFAULT_ARTIST_ID = 'pony2.LibraryService.defaultArtistId';
+const LOCAL_STORAGE_KEY_ARTIST_SORTING_ORDER = 'pony2.LibraryService.artistSortingOrder';
+const LOCAL_STORAGE_KEY_ALBUM_SORTING_ORDER = 'pony2.LibraryService.albumSortingOrder';
+
 @Injectable({
   providedIn: 'root'
 })
 export class LibraryService {
 
-  private static readonly DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY: string = 'pony2.LibraryService.defaultArtistId';
+  private genresSubject = new BehaviorSubject<Genre[]>([]);
+  private artistsSubject = new BehaviorSubject<Artist[]>([]);
 
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<SongSelection | undefined>(undefined);
@@ -38,12 +62,12 @@ export class LibraryService {
   private scrollToAlbumRequestSubject = new BehaviorSubject<Album | undefined>(undefined);
   private scrollToSongRequestSubject = new BehaviorSubject<ScrollToSongRequest | undefined>(undefined);
 
+  private sortingOrderArtistSubject = new BehaviorSubject<ArtistSortingOrder>(DEFAULT_ARTIST_SORTING_ORDER);
+  private sortingOrderAlbumSubject = new BehaviorSubject<AlbumSortingOrder>(DEFAULT_ALBUM_SORTING_ORDER);
+
   private refreshRequestSubject = new Subject<void>();
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
   private filterByGenreRequestSubject = new Subject<Genre | undefined>();
-
-  private genresSubject = new BehaviorSubject<Genre[]>([]);
-  private artistsSubject = new BehaviorSubject<Artist[]>([]);
 
   private appInForeground = true;
 
@@ -53,11 +77,26 @@ export class LibraryService {
     private httpClient: HttpClient
   ) {
     this.authenticationService.observeLogout().subscribe(() => {
+      this.artistsSubject.next([]);
+      this.genresSubject.next([]);
       this.selectedArtistSubject.next(undefined);
       this.selectedSongSubject.next(undefined);
       this.scrollToArtistRequestSubject.next(undefined);
+      this.scrollToAlbumRequestSubject.next(undefined);
       this.scrollToSongRequestSubject.next(undefined);
+      this.storeArtistSortingOrder(undefined);
+      this.storeAlbumSortingOrder(undefined);
       this.storeDefaultArtistId(undefined);
+    });
+    this.authenticationService.observeAuthentication().subscribe(() => {
+      const artistSortingOrder = this.findLocalStorageItem(this.resolveArtistSortingOrderLocalStorageKey()) as ArtistSortingOrder;
+      if (artistSortingOrder) {
+        this.sortingOrderArtistSubject.next(artistSortingOrder);
+      }
+      const albumSortingOrder = this.findLocalStorageItem(this.resolveAlbumSortingOrderLocalStorageKey()) as AlbumSortingOrder;
+      if (albumSortingOrder) {
+        this.sortingOrderAlbumSubject.next(albumSortingOrder);
+      }
     });
     this.observeRefreshRequest().subscribe(() => {
       this.requestGenres().subscribe();
@@ -74,8 +113,50 @@ export class LibraryService {
     });
   }
 
+  private storeDefaultArtistId(artistId: string | undefined) {
+    this.storeLocalStorageItem(this.resolveDefaultArtistLocalStorageKey(), artistId);
+  }
+
+  private storeLocalStorageItem(localStorageKey: string | undefined, value: string | undefined) {
+    if (localStorageKey) {
+      if (value) {
+        window.localStorage.setItem(localStorageKey, value);
+      } else {
+        window.localStorage.removeItem(localStorageKey);
+      }
+    }
+  }
+
+  private storeArtistSortingOrder(sortingOrder: ArtistSortingOrder | undefined) {
+    this.storeLocalStorageItem(this.resolveArtistSortingOrderLocalStorageKey(), sortingOrder);
+    this.sortingOrderArtistSubject.next(sortingOrder ?? DEFAULT_ARTIST_SORTING_ORDER);
+  }
+
+  private resolveArtistSortingOrderLocalStorageKey(): string | undefined {
+    if (this.authenticationService.isAuthenticated) {
+      return LOCAL_STORAGE_KEY_ARTIST_SORTING_ORDER + '.' + this.authenticationService.currentUser!.id;
+    }
+    return undefined;
+  }
+
+  private storeAlbumSortingOrder(sortingOrder: AlbumSortingOrder | undefined) {
+    this.storeLocalStorageItem(this.resolveAlbumSortingOrderLocalStorageKey(), sortingOrder);
+    this.sortingOrderAlbumSubject.next(sortingOrder ?? DEFAULT_ALBUM_SORTING_ORDER);
+  }
+
+  private resolveAlbumSortingOrderLocalStorageKey(): string | undefined {
+    if (this.authenticationService.isAuthenticated) {
+      return LOCAL_STORAGE_KEY_ALBUM_SORTING_ORDER + '.' + this.authenticationService.currentUser!.id;
+    }
+    return undefined;
+  }
+
   get defaultArtistId(): string | undefined {
     const localStorageKey = this.resolveDefaultArtistLocalStorageKey();
+    return this.findLocalStorageItem(localStorageKey);
+  }
+
+  private findLocalStorageItem(localStorageKey: string | undefined): string | undefined {
     if (localStorageKey) {
       return window.localStorage.getItem(localStorageKey) ?? undefined;
     } else {
@@ -85,7 +166,7 @@ export class LibraryService {
 
   private resolveDefaultArtistLocalStorageKey(): string | undefined {
     if (this.authenticationService.isAuthenticated) {
-      return LibraryService.DEFAULT_ARTIST_ID_LOCAL_STORAGE_KEY + '.' + this.authenticationService.currentUser!.id;
+      return LOCAL_STORAGE_KEY_DEFAULT_ARTIST_ID + '.' + this.authenticationService.currentUser!.id;
     }
     return undefined;
   }
@@ -119,15 +200,69 @@ export class LibraryService {
     return this.httpClient.get<ArtistDto[]>('/api/library/artists')
       .pipe(
         map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto))),
-        tap(artists => this.artistsSubject.next(artists)),
+        tap(artists => {
+          this.sortArtists(artists);
+          this.artistsSubject.next(artists);
+        }),
       );
+  }
+
+  sortArtists(artists: Artist[]) {
+    const sortingOrder = this.sortingOrderArtistSubject.getValue();
+    switch (sortingOrder) {
+      case ArtistSortingOrder.NAME_ASCENDING:
+        artists.sort(Artist.compareByName);
+        break;
+      case ArtistSortingOrder.NAME_DESCENDING:
+        artists.sort(Artist.compareByName);
+        artists.reverse();
+        break;
+      case ArtistSortingOrder.MODIFICATION_ASCENDING:
+        artists.sort(Artist.compareByModificationDate);
+        break;
+      case ArtistSortingOrder.MODIFICATION_DESCENDING:
+        artists.sort(Artist.compareByModificationDate);
+        artists.reverse();
+        break;
+    }
   }
 
   getArtistSongs(artist: string): Observable<ArtistSongs> {
     return this.httpClient.get<ArtistSongsDto>(`/api/library/artistSongs/${artist}`)
       .pipe(
-        map(artistSongsDto => new ArtistSongs(artistSongsDto))
+        map(artistSongsDto => {
+          const artistSongs = new ArtistSongs(artistSongsDto);
+          this.sortArtistSongs(artistSongs);
+          return artistSongs;
+        }),
       );
+  }
+
+  sortArtistSongs(artistSongs: ArtistSongs) {
+    const sortingOrder = this.sortingOrderAlbumSubject.getValue();
+    switch (sortingOrder) {
+      case AlbumSortingOrder.NAME_ASCENDING:
+        artistSongs.albumSongs.sort(AlbumSongs.compareByName);
+        break;
+      case AlbumSortingOrder.NAME_DESCENDING:
+        artistSongs.albumSongs.sort(AlbumSongs.compareByName);
+        artistSongs.albumSongs.reverse();
+        break;
+      case AlbumSortingOrder.YEAR_ASCENDING:
+        artistSongs.albumSongs.sort(AlbumSongs.compareByYear);
+        break;
+      case AlbumSortingOrder.YEAR_DESCENDING:
+        artistSongs.albumSongs.sort(AlbumSongs.compareByYear);
+        artistSongs.albumSongs.reverse();
+        break;
+      case AlbumSortingOrder.MODIFICATION_ASCENDING:
+        artistSongs.albumSongs.sort(AlbumSongs.compareByModificationDate);
+        break;
+      case AlbumSortingOrder.MODIFICATION_DESCENDING:
+        artistSongs.albumSongs.sort(AlbumSongs.compareByModificationDate);
+        artistSongs.albumSongs.reverse();
+        break;
+    }
   }
 
   getSongs(songIds: string[]): Observable<Song[]> {
@@ -281,17 +416,6 @@ export class LibraryService {
     this.scrollToSongRequestSubject.next(undefined);
   }
 
-  private storeDefaultArtistId(artistId: string | undefined) {
-    const localStorageKey = this.resolveDefaultArtistLocalStorageKey();
-    if (localStorageKey) {
-      if (artistId) {
-        window.localStorage.setItem(localStorageKey, artistId);
-      } else {
-        window.localStorage.removeItem(localStorageKey);
-      }
-    }
-  }
-
   search(query: string): Observable<SearchResult> {
     return this.httpClient.get<SearchResultDto>('/api/library/search', { params: {query} })
       .pipe(
@@ -301,5 +425,29 @@ export class LibraryService {
 
   reBuildSearchIndex(): Observable<void> {
     return this.httpClient.post<void>('/api/admin/library/reBuildSearchIndex', null);
+  }
+
+  observeArtistSortingOrder(): Observable<ArtistSortingOrder> {
+    return this.sortingOrderArtistSubject.asObservable()
+      .pipe(distinctUntilChanged());
+  }
+
+  updateArtistSortingOrder(sortingOrder: ArtistSortingOrder) {
+    const oldSortingOrder = this.sortingOrderArtistSubject.getValue();
+    this.storeArtistSortingOrder(sortingOrder);
+    if (oldSortingOrder !== sortingOrder) {
+      const artists = this.artistsSubject.getValue();
+      this.sortArtists(artists);
+      this.artistsSubject.next(artists);
+    }
+  }
+
+  observeAlbumSortingOrder(): Observable<AlbumSortingOrder> {
+    return this.sortingOrderAlbumSubject.asObservable()
+      .pipe(distinctUntilChanged());
+  }
+
+  updateAlbumSortingOrder(sortingOrder: AlbumSortingOrder) {
+    this.storeAlbumSortingOrder(sortingOrder);
   }
 }

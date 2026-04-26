@@ -9,8 +9,9 @@
     <div class="panel-title">
       <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
         {{ artistSongs.artist.name | ponyUnknownArtist }}
-        <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()"><i
-          class="bi bi-star-fill"></i>{{ likeCount }}</button>
+        <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()">
+          <i class="bi bi-star-fill"></i>{{ likeCount }}
+        </button>
       </div>
       <div class="counts" title="{{
           'library.album.counterTitle' | translate:{

@@ -24,8 +24,7 @@
     border: 0;
     line-height: 36px;
     height: 37px;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 0 52px 0 52px;
     width: 312px;
     font-weight: 500;
     font-size: 1.25rem;
@@ -35,8 +34,22 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding-left: 16px;
-    padding-right: 16px;
+  }
+
+  .sort-container {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+
+    button.sort {
+      border: 1px solid #ddd;
+    }
+
+    ul {
+      i {
+        margin-right: 12px;
+      }
+    }
   }
 
   div.genre {

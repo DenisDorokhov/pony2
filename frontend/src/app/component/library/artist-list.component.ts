@@ -1,7 +1,16 @@
-import {Component, ElementRef, OnDestroy, OnInit, AfterViewInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {Artist, Genre} from '../../domain/library.model';
-import {LibraryService} from '../../service/library.service';
+import {ArtistSortingOrder, LibraryService} from '../../service/library.service';
 import {LoadingState} from '../../domain/common.model';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
@@ -44,7 +53,8 @@ export class NavigationItem {
 })
 export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  LoadingState = LoadingState;
+  readonly LoadingState = LoadingState;
+  readonly ArtistSortingOrder = ArtistSortingOrder;
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
@@ -52,6 +62,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   genres: Genre[] = [];
   genreCounter: Record<string, number> = {};
   filterGenre = '';
+  sortingOrder: ArtistSortingOrder | undefined = undefined;
 
   navigationItems: NavigationItem[] = [];
   selectedNavigationItem!: NavigationItem;
@@ -95,6 +106,14 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadingState = LoadingState.EMPTY;
         this.libraryService.deselectArtist();
         this.libraryService.deselectSong();
+      }
+    }));
+    this.subscriptions.push(this.libraryService.observeArtistSortingOrder().subscribe(sortingOrder => {
+      const oldSortingOrder = this.sortingOrder;
+      this.sortingOrder = sortingOrder;
+      if (oldSortingOrder) {
+        // Avoid scrolling to top on initial observation.
+        this.scrollerElement.nativeElement.scrollTop = 0;
       }
     }));
     this.subscriptions.push(this.libraryService.observeFilterByGenreRequest().subscribe(genre => {
@@ -210,6 +229,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private scrollToSelectedArtist() {
     if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
+      this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!);
       setTimeout(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
     } else {
       this.scrollerElement.nativeElement.scrollTop = 0;
@@ -341,7 +361,11 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  protected resetNavigation() {
+  resetNavigation() {
     this.executeNavigationItem(this.navigationItems[0]);
+  }
+
+  setSortingOrder(sortingOrder: ArtistSortingOrder) {
+    this.libraryService.updateArtistSortingOrder(sortingOrder);
   }
 }

@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {AlbumSongs, Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
+import {Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
@@ -130,7 +130,6 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             return this.translateService.instant('library.genre.unknownLabel');
           });
           this.genreNamesAsString = this.genreNames.join(', ');
-          this.artistSongs.albumSongs.sort(AlbumSongs.compare);
           this.artistSongs.albumSongs.forEach(album => {
             this.albumCount++;
             album.songs.sort(Song.compare);
