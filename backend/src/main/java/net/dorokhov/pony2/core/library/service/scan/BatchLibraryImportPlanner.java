@@ -56,7 +56,7 @@ public class BatchLibraryImportPlanner {
         List<String> filePaths = audioNodes.stream()
                 .map(node -> node.getFile().getAbsolutePath())
                 .toList();
-        Map<String, SongRepository.SongFile> pathToSongFile = songRepository.findByPathIn(filePaths).stream()
+        Map<String, SongRepository.SongFile> pathToSongFile = songRepository.findFilesByPathIn(filePaths).stream()
                 .collect(Collectors.toMap(SongRepository.SongFile::path, Function.identity()));
         List<AudioNode> audioNodesToImport = new ArrayList<>();
         List<AudioNode> audioNodesToSkip = new ArrayList<>();

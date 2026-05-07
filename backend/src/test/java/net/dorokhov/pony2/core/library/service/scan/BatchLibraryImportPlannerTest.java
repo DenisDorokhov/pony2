@@ -48,7 +48,7 @@ public class BatchLibraryImportPlannerTest {
     @Test
     public void shouldPlanImportOfNonExistentSongs() {
 
-        when(songRepository.findByPathIn(any())).thenReturn(List.of());
+        when(songRepository.findFilesByPathIn(any())).thenReturn(List.of());
 
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
 
@@ -60,7 +60,8 @@ public class BatchLibraryImportPlannerTest {
     public void shouldPlanImportOfSongsOutdatedByCreationDate() {
 
         String songPath = audioNode.getFile().getAbsolutePath();
-        when(songRepository.findByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+        when(songRepository.findFilesByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+                "someId",
                 songPath,
                 LocalDateTime.now().minusDays(1),
                 null
@@ -76,7 +77,8 @@ public class BatchLibraryImportPlannerTest {
     public void shouldPlanImportOfSongsOutdatedByUpdateDate() {
 
         String songPath = audioNode.getFile().getAbsolutePath();
-        when(songRepository.findByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+        when(songRepository.findFilesByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+                "someId",
                 songPath,
                 LocalDateTime.now().minusDays(2),
                 LocalDateTime.now().minusDays(1)
@@ -92,7 +94,8 @@ public class BatchLibraryImportPlannerTest {
     public void shouldSkipUpToDateSongs() {
 
         String songPath = audioNode.getFile().getAbsolutePath();
-        when(songRepository.findByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+        when(songRepository.findFilesByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+                "someId",
                 songPath,
                 LocalDateTime.now().plusDays(1),
                 null

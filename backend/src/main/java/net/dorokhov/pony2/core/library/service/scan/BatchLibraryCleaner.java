@@ -104,10 +104,10 @@ public class BatchLibraryCleaner {
                 if (shutdownService.isShutdown()) {
                     throw new ScanInterruptedException();
                 }
-                Page<Song> songs = songRepository.findAll(pageable);
-                for (Song song : songs.getContent()) {
-                    if (!existingAudioPaths.contains(song.getPath())) {
-                        result.add(song.getId());
+                Page<SongRepository.SongFile> songs = songRepository.findFilesBy(pageable);
+                for (SongRepository.SongFile song : songs.getContent()) {
+                    if (!existingAudioPaths.contains(song.path())) {
+                        result.add(song.id());
                     }
                 }
                 pageable = songs.hasNext() ? songs.nextPageable() : null;
