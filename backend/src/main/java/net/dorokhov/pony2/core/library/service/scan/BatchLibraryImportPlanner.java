@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
-import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.filetree.domain.AudioNode;
 import org.slf4j.Logger;
@@ -8,11 +7,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -48,10 +53,15 @@ public class BatchLibraryImportPlanner {
 
     @Transactional
     public Plan plan(List<AudioNode> audioNodes) {
+        List<String> filePaths = audioNodes.stream()
+                .map(node -> node.getFile().getAbsolutePath())
+                .toList();
+        Map<String, SongRepository.SongFile> pathToSongFile = songRepository.findByPathIn(filePaths).stream()
+                .collect(Collectors.toMap(SongRepository.SongFile::path, Function.identity()));
         List<AudioNode> audioNodesToImport = new ArrayList<>();
         List<AudioNode> audioNodesToSkip = new ArrayList<>();
         for (AudioNode audioNode : audioNodes) {
-            Song song = songRepository.findByPath(audioNode.getFile().getAbsolutePath());
+            SongRepository.SongFile song = pathToSongFile.get(audioNode.getFile().getAbsolutePath());
             if (song == null || shouldImportSong(song)) {
                 audioNodesToImport.add(audioNode);
             } else {
@@ -61,13 +71,17 @@ public class BatchLibraryImportPlanner {
         return new Plan(audioNodesToImport, audioNodesToSkip);
     }
 
-    private boolean shouldImportSong(Song song) {
-        LocalDateTime fileModificationDate = Instant.ofEpochMilli(song.getFile().lastModified())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
-        LocalDateTime songModificationDate = song.getUpdateDate();
+    private boolean shouldImportSong(SongRepository.SongFile song) {
+        Instant lastModified;
+        try {
+            lastModified = Instant.ofEpochMilli(Files.getLastModifiedTime(Path.of(song.path())).toMillis());
+        } catch (IOException e) {
+            throw new RuntimeException("Could not retrieve last modified time for song file '" + song.path() + "'.", e);
+        }
+        LocalDateTime fileModificationDate = lastModified.atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime songModificationDate = song.updateDate();
         if (songModificationDate == null) {
-            songModificationDate = song.getCreationDate();
+            songModificationDate = song.creationDate();
         }
         boolean result = songModificationDate.isBefore(fileModificationDate);
         if (result) {

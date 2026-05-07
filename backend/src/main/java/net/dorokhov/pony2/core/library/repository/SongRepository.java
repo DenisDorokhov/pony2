@@ -51,7 +51,16 @@ public interface SongRepository extends JpaRepository<Song, String> {
 
     Song findFirstByAlbumIdAndArtworkNotNull(String albumId);
 
+    List<SongFile> findByPathIn(List<String> paths);
+
     @Modifying
     @Query("UPDATE Song s SET s.artwork = NULL WHERE s.artwork.id = ?1")
     void clearArtworkByArtworkId(String artworkId);
+
+    record SongFile(
+            String path,
+            LocalDateTime creationDate,
+            LocalDateTime updateDate
+    ) {
+    }
 }

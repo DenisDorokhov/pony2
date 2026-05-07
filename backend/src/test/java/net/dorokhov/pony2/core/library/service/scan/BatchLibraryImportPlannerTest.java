@@ -12,12 +12,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -27,10 +29,10 @@ public class BatchLibraryImportPlannerTest {
 
     @InjectMocks
     private BatchLibraryImportPlanner batchLibraryImportPlanner;
-    
+
     @Mock
     private SongRepository songRepository;
-    
+
     @Mock
     private AudioNode audioNode;
 
@@ -38,14 +40,15 @@ public class BatchLibraryImportPlannerTest {
     public Path tempFolder;
 
     @BeforeEach
-    public void setUp() {
-        when(audioNode.getFile()).thenAnswer(invocationOnMock -> Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile());
+    public void setUp() throws IOException {
+        File file = Files.createFile(tempFolder.resolve(UUID.randomUUID().toString())).toFile();
+        when(audioNode.getFile()).thenAnswer(invocationOnMock -> file);
     }
 
     @Test
     public void shouldPlanImportOfNonExistentSongs() {
 
-        when(songRepository.findByPath(any())).thenReturn(null);
+        when(songRepository.findByPathIn(any())).thenReturn(List.of());
 
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
 
@@ -57,10 +60,11 @@ public class BatchLibraryImportPlannerTest {
     public void shouldPlanImportOfSongsOutdatedByCreationDate() {
 
         String songPath = audioNode.getFile().getAbsolutePath();
-        when(songRepository.findByPath(any())).thenReturn(song()
-                .setCreationDate(LocalDateTime.now().minusDays(1))
-                .setUpdateDate(null)
-                .setPath(songPath));
+        when(songRepository.findByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+                songPath,
+                LocalDateTime.now().minusDays(1),
+                null
+        )));
 
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
 
@@ -72,10 +76,11 @@ public class BatchLibraryImportPlannerTest {
     public void shouldPlanImportOfSongsOutdatedByUpdateDate() {
 
         String songPath = audioNode.getFile().getAbsolutePath();
-        when(songRepository.findByPath(any())).thenReturn(song()
-                .setCreationDate(LocalDateTime.now().minusDays(2))
-                .setUpdateDate(LocalDateTime.now().minusDays(1))
-                .setPath(songPath));
+        when(songRepository.findByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+                songPath,
+                LocalDateTime.now().minusDays(2),
+                LocalDateTime.now().minusDays(1)
+        )));
 
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
 
@@ -87,10 +92,11 @@ public class BatchLibraryImportPlannerTest {
     public void shouldSkipUpToDateSongs() {
 
         String songPath = audioNode.getFile().getAbsolutePath();
-        when(songRepository.findByPath(any())).thenReturn(song()
-                .setCreationDate(LocalDateTime.now().plusDays(1))
-                .setUpdateDate(null)
-                .setPath(songPath));
+        when(songRepository.findByPathIn(any())).thenReturn(List.of(new SongRepository.SongFile(
+                songPath,
+                LocalDateTime.now().plusDays(1),
+                null
+        )));
 
         Plan plan = batchLibraryImportPlanner.plan(ImmutableList.of(audioNode));
 
