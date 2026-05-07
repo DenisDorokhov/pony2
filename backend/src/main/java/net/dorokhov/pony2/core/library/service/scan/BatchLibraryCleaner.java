@@ -23,6 +23,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.File;
+import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -166,18 +167,19 @@ public class BatchLibraryCleaner {
                 if (shutdownService.isShutdown()) {
                     throw new ScanInterruptedException();
                 }
-                Page<Artwork> artworks = artworkRepository.findAll(pageable);
-                for (Artwork artwork : artworks.getContent()) {
-                    if (Objects.equals(artwork.getSourceUriScheme(), SOURCE_URI_SCHEME_FILE)) {
-                        if (!existingImagePaths.contains(artwork.getSourceUri().getPath())) {
-                            result.add(artwork.getId());
+                Page<ArtworkRepository.ArtworkFile> artworks = artworkRepository.findFilesBy(pageable);
+                for (ArtworkRepository.ArtworkFile artwork : artworks.getContent()) {
+                    if (Objects.equals(artwork.sourceUriScheme(), SOURCE_URI_SCHEME_FILE)) {
+                        URI sourceUri = URI.create(artwork.sourceUri());
+                        if (!existingImagePaths.contains(sourceUri.getPath())) {
+                            result.add(artwork.id());
                         } else {
-                            File file = new File(artwork.getSourceUri().getPath());
+                            File file = new File(sourceUri.getPath());
                             LocalDateTime modificationDate = Instant.ofEpochMilli(file.lastModified())
                                     .atZone(ZoneId.systemDefault())
                                     .toLocalDateTime();
-                            if (artwork.getDate().isBefore(modificationDate)) {
-                                result.add(artwork.getId());
+                            if (artwork.date().isBefore(modificationDate)) {
+                                result.add(artwork.id());
                             }
                         }
                     }

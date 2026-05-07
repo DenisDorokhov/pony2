@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
-import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.ShutdownService;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -108,14 +106,15 @@ public class BatchLibraryCleanerTest {
         Song song4 = song().setId("4").setPath("notExistingPath4").setArtwork(artwork);
         Song song5 = song().setId("5").setPath("notExistingPath4");
 
-        when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
-                ImmutableList.of(song1, song2, song3, song4, song5)));
+        when(songRepository.findFilesBy(any())).thenReturn(new PageImpl<>(
+                List.of(toFile(song1), toFile(song2), toFile(song3), toFile(song4), toFile(song5))
+        ));
         when(songRepository.findById("3")).thenReturn(Optional.of(song3));
         when(songRepository.findById("4")).thenReturn(Optional.of(song4));
         when(songRepository.findById("5")).thenReturn(Optional.empty());
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
-        batchLibraryCleaner.cleanSongs(ImmutableList.of(audioNode1, audioNode2), observer);
+        batchLibraryCleaner.cleanSongs(List.of(audioNode1, audioNode2), observer);
 
         verify(songRepository, times(2)).delete(any());
 
@@ -138,6 +137,15 @@ public class BatchLibraryCleanerTest {
         observer.assertThatAt(0, 1, 3);
         observer.assertThatAt(1, 2, 3);
         observer.assertThatAt(2, 3, 3);
+    }
+
+    private SongRepository.SongFile toFile(Song song) {
+        return new SongRepository.SongFile(
+                song.getId(),
+                song.getPath(),
+                song.getCreationDate(),
+                song.getUpdateDate()
+        );
     }
 
     @Test
@@ -169,14 +177,15 @@ public class BatchLibraryCleanerTest {
                         .fromUriString("http://google.com/logo.png")
                         .build().toUri());
 
-        when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(
-                ImmutableList.of(artwork1, artwork2, artwork3, artwork4, artwork5)));
+        when(artworkRepository.findFilesBy(any())).thenReturn(new PageImpl<>(
+                List.of(toFile(artwork1), toFile(artwork2), toFile(artwork3), toFile(artwork4), toFile(artwork5))
+        ));
         when(artworkRepository.findById("2")).thenReturn(Optional.of(artwork2));
         when(artworkRepository.findById("3")).thenReturn(Optional.of(artwork3));
         when(artworkRepository.findById("4")).thenReturn(Optional.empty());
 
         ProgressObserverFixture observer = new ProgressObserverFixture();
-        batchLibraryCleaner.cleanArtworks(ImmutableList.of(imageNode1, imageNode2), observer);
+        batchLibraryCleaner.cleanArtworks(List.of(imageNode1, imageNode2), observer);
 
         verify(artworkStorage, times(2)).delete(any());
 
@@ -196,6 +205,15 @@ public class BatchLibraryCleanerTest {
         observer.assertThatAt(0, 1, 3);
         observer.assertThatAt(1, 2, 3);
         observer.assertThatAt(2, 3, 3);
+    }
+
+    private ArtworkRepository.ArtworkFile toFile(Artwork artwork) {
+        return new ArtworkRepository.ArtworkFile(
+                artwork.getId(),
+                artwork.getDate(),
+                artwork.getSourceUri().toString(),
+                artwork.getSourceUriScheme()
+        );
     }
 
     @Test
@@ -237,7 +255,7 @@ public class BatchLibraryCleanerTest {
 
     @Test
     public void shouldNotFailSongsCleanupOnObserverException() {
-        when(songRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(song())));
+        when(songRepository.findFilesBy(any())).thenReturn(new PageImpl<>(List.of(toFile(song()))));
         batchLibraryCleaner.cleanSongs(emptyList(), (itemsComplete, itemsTotal) -> {
             throw new RuntimeException();
         });
@@ -245,7 +263,7 @@ public class BatchLibraryCleanerTest {
 
     @Test
     public void shouldNotFailArtworksCleanupOnObserverException() {
-        when(artworkRepository.findAll((Pageable) any())).thenReturn(new PageImpl<>(ImmutableList.of(artwork())));
+        when(artworkRepository.findFilesBy(any())).thenReturn(new PageImpl<>(List.of(toFile(artwork()))));
         batchLibraryCleaner.cleanArtworks(emptyList(), (itemsComplete, itemsTotal) -> {
             throw new RuntimeException();
         });
@@ -253,7 +271,7 @@ public class BatchLibraryCleanerTest {
 
     @Test
     public void shouldNotFailArtistGenresCleanupOnObserverException() {
-        when(artistRepository.findAll()).thenReturn(ImmutableList.of(new Artist()));
+        when(artistRepository.findAll()).thenReturn(List.of(new Artist()));
         batchLibraryCleaner.cleanArtistGenres((itemsComplete, itemsTotal) -> {
             throw new RuntimeException();
         });
