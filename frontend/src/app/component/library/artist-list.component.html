@@ -1,10 +1,10 @@
 <div class="panel panel-default">
-  <div ngbDropdown class="btn-group genre" (openChange)="onNavigationDropdownOpenChange($event)">
+  <div ngbDropdown class="header" (openChange)="onNavigationDropdownOpenChange($event)">
     <button ngbDropdownToggle type="button" class="genre">
       {{ selectedNavigationItem.title }}
       <span class="caret"></span>
     </button>
-    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end genre-list" role="menu">
       <div class="search-genre">
         <input #filterInputElement type="text" class="form-control"
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
@@ -29,9 +29,7 @@
         </a>
       </div>
     </ul>
-  </div>
-  <div class="sort-container">
-    <div ngbDropdown class="btn-group">
+    <div ngbDropdown class="btn-group sort-container">
       <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
         @switch (sortingOrder) {
           @case (ArtistSortingOrder.NAME_ASCENDING) {
@@ -48,7 +46,7 @@
           }
         }
       </button>
-      <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end sort-menu" role="menu">
         <button ngbDropdownItem (click)="setSortingOrder(ArtistSortingOrder.NAME_ASCENDING)">
           <i class="bi bi-alphabet"></i>{{ 'library.artist.sortByNameAsc' | translate }}
         </button>

@@ -20,45 +20,30 @@
     display: block;
   }
 
-  button.genre {
-    border: 0;
-    line-height: 36px;
-    height: 37px;
-    padding: 0 52px 0 52px;
-    width: 312px;
-    font-weight: 500;
-    font-size: 1.25rem;
+  .header {
+
     background-color: #f5f5f5;
-    color: var(--bs-heading-color);
     border-bottom: 1px solid #ddd;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
 
-  .sort-container {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-
-    button.sort {
-      border: 1px solid #ddd;
+    button.genre {
+      border: 0;
+      line-height: 36px;
+      height: 36px;
+      padding: 0 0 0 50px;
+      width: 261px;
+      font-weight: 500;
+      font-size: 1.25rem;
+      background-color: #f5f5f5;
+      color: var(--bs-heading-color);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
-    ul {
-      i {
-        margin-right: 12px;
-      }
-    }
-  }
-
-  div.genre {
-
-    ul {
+    ul.genre-list {
       width: 252px;
       text-align: center;
-      margin-left: 30px !important;
-      margin-right: 30px !important;
+      margin-right: -21px !important;
       padding: 0;
       overflow: hidden;
 
@@ -115,25 +100,21 @@
         }
       }
     }
-  }
 
-  select.form-select {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    border: 0;
-    border-radius: 0;
-    border-bottom: 1px solid #ddd;
-    text-align: center;
-    background-color: #f5f5f5;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 1.25rem;
-    padding-top: 0;
-    padding-bottom: 0;
-    line-height: 36px;
-    padding-right: 12px;
+    .sort-container {
+
+      button.sort {
+        border: 1px solid #ddd;
+        margin-left: 2px;
+        margin-top: -6px;
+      }
+
+      ul.sort-menu {
+        i {
+          margin-right: 12px;
+        }
+      }
+    }
   }
 
   .list-container {
