@@ -9,6 +9,52 @@
     <div class="panel-title">
       <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
         {{ artistSongs.artist.name | ponyUnknownArtist }}
+        <div ngbDropdown container="body" class="btn-group sort-container">
+          <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
+            @switch (sortingOrder) {
+              @case (AlbumSortingOrder.YEAR_ASCENDING) {
+                <i class="bi bi-calendar3 no-padding"></i>
+              }
+              @case (AlbumSortingOrder.YEAR_DESCENDING) {
+                <i class="bi bi-calendar3 no-padding"></i>
+              }
+              @case (AlbumSortingOrder.NAME_ASCENDING) {
+                <i class="bi bi-alphabet no-padding"></i>
+              }
+              @case (AlbumSortingOrder.NAME_DESCENDING) {
+                <i class="bi bi-alphabet no-padding"></i>
+              }
+              @case (AlbumSortingOrder.MODIFICATION_ASCENDING) {
+                <i class="bi bi-clock-history no-padding"></i>
+              }
+              @case (AlbumSortingOrder.MODIFICATION_DESCENDING) {
+                <i class="bi bi-clock-history no-padding"></i>
+              }
+            }
+          </button>
+          <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+            <button ngbDropdownItem (click)="setSortingOrder(AlbumSortingOrder.YEAR_DESCENDING)">
+              <i class="bi bi-calendar3"></i>
+              <i class="bi bi-arrow-down"></i>
+              {{ 'library.album.sortByYearDesc' | translate }}
+            </button>
+            <button ngbDropdownItem (click)="setSortingOrder(AlbumSortingOrder.YEAR_ASCENDING)">
+              <i class="bi bi-calendar3"></i>
+              <i class="bi bi-arrow-up"></i>
+              {{ 'library.album.sortByYearAsc' | translate }}
+            </button>
+            <button ngbDropdownItem (click)="setSortingOrder(AlbumSortingOrder.NAME_ASCENDING)">
+              <i class="bi bi-alphabet"></i>
+              <i class="bi bi-arrow-up"></i>
+              {{ 'library.album.sortByNameAsc' | translate }}
+            </button>
+            <button ngbDropdownItem (click)="setSortingOrder(AlbumSortingOrder.MODIFICATION_DESCENDING)">
+              <i class="bi bi-clock-history"></i>
+              <i class="bi bi-arrow-down"></i>
+              {{ 'library.album.sortByModificationDesc' | translate }}
+            </button>
+          </ul>
+        </div>
         <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()">
           <i class="bi bi-star-fill"></i>{{ likeCount }}
         </button>
@@ -32,7 +78,7 @@
       </div>
     </div>
   </div>
-  <div *ngIf="loadingState === LoadingState.LOADED"
+  <div *ngIf="loadingState === LoadingState.LOADED" #scrollerElement
        class="panel-body album-list-container" data-pony-image-loader-scroller>
     <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album"></pony-album>
   </div>

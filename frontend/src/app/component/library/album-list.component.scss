@@ -39,6 +39,9 @@
       i {
         padding-right: 6px;
       }
+      i.no-padding {
+        padding-right: 0;
+      }
     }
 
     .artist-name {
@@ -61,6 +64,10 @@
         text-decoration: underline;
         color: var(--bs-gray);
       }
+    }
+
+    .sort-container {
+      margin-top: -7px;
     }
   }
 

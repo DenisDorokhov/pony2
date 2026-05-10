@@ -1,7 +1,7 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
-import {LibraryService} from '../../service/library.service';
+import {AlbumSortingOrder, LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -12,12 +12,19 @@ import {AlbumComponent} from './album.component';
 import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaylistService} from '../../service/playlist.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle,
+  NgbModal
+} from '@ng-bootstrap/ng-bootstrap';
 import {ArtistLikesComponent} from './modal/artist-likes.component';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 
 @Component({
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
     selector: 'pony-album-list',
     templateUrl: './album-list.component.html',
     styleUrls: ['./album-list.component.scss']
@@ -25,15 +32,19 @@ import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 export class AlbumListComponent implements OnInit, OnDestroy {
 
   LoadingState = LoadingState;
+  AlbumSortingOrder = AlbumSortingOrder;
 
   loadingState = LoadingState.LOADING;
   artistSongs!: ArtistSongs;
   genreNames: string[] = [];
   genreNamesAsString = '';
+  sortingOrder: AlbumSortingOrder | undefined = undefined;
 
   albumCount = 0;
   songCount = 0;
   likeCount = 0;
+
+  @ViewChild('scrollerElement') scrollerElement!: ElementRef;
 
   private likePlaylist: PlaylistSongs | undefined;
   private artistSongsSubscription: Subscription | undefined;
@@ -91,6 +102,14 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist => {
       this.likePlaylist = likePlaylist;
       this.countLikes();
+    }));
+    this.subscriptions.push(this.libraryService.observeAlbumSortingOrder().subscribe(sortingOrder => {
+      const oldSortingOrder = this.sortingOrder;
+      this.sortingOrder = sortingOrder;
+      if (oldSortingOrder) {
+        // Avoid scrolling to top on initial observation.
+        this.scrollerElement.nativeElement.scrollTop = 0;
+      }
     }));
   }
 
@@ -158,5 +177,10 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   protected onGenreClick(genre: Genre) {
     this.libraryService.requestFilterByGenre(genre);
+  }
+
+  protected setSortingOrder(sortingOrder: AlbumSortingOrder) {
+    this.libraryService.updateAlbumSortingOrder(sortingOrder);
+    this.libraryService.sortArtistSongs(this.artistSongs);
   }
 }

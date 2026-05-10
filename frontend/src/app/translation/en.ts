@@ -47,6 +47,10 @@ export default {
       discLabel: 'Disc {{discNumber}}',
       unknownLabel: 'Unknown Album',
       sizeLabel: '{{songCount}} songs ({{duration}})',
+      sortByYearDesc: 'Sort by year (new first)',
+      sortByYearAsc: 'Sort by year (old first)',
+      sortByNameAsc: 'Sort by name',
+      sortByModificationDesc: 'Sort by update',
     },
     artist: {
       allArtistsLabel: 'All Artists ({{ artistCount }})',
@@ -59,7 +63,7 @@ export default {
       filterGenresPlaceholder: 'Filter (Ctrl+Shift+G)',
       resetButton: 'Reset Filter',
       sortByNameAsc: 'Sort by name',
-      sortByModificationDesc: 'Sort by date',
+      sortByModificationDesc: 'Sort by update',
     },
     song: {
       unknownLabel: 'Unknown Song',
