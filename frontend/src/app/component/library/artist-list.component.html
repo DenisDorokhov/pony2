@@ -47,12 +47,16 @@
         }
       </button>
       <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end sort-menu" role="menu">
-        <button ngbDropdownItem (click)="setSortingOrder(ArtistSortingOrder.NAME_ASCENDING)">
+        <button ngbDropdownItem
+                [class.active]="sortingOrder === ArtistSortingOrder.NAME_ASCENDING"
+                (click)="setSortingOrder(ArtistSortingOrder.NAME_ASCENDING)">
           <i class="bi bi-alphabet"></i>
           <i class="bi bi-arrow-up"></i>
           {{ 'library.artist.sortByNameAsc' | translate }}
         </button>
-        <button ngbDropdownItem (click)="setSortingOrder(ArtistSortingOrder.MODIFICATION_DESCENDING)">
+        <button ngbDropdownItem
+                [class.active]="sortingOrder === ArtistSortingOrder.MODIFICATION_DESCENDING"
+                (click)="setSortingOrder(ArtistSortingOrder.MODIFICATION_DESCENDING)">
           <i class="bi bi-clock-history"></i>
           <i class="bi bi-arrow-down"></i>
           {{ 'library.artist.sortByModificationDesc' | translate }}
