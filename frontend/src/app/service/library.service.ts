@@ -13,6 +13,7 @@ import {
   SongDetailsDto
 } from '../domain/library.dto';
 import {InstallationService} from './installation.service';
+import {UserDto} from '../domain/user.dto';
 
 export interface SongSelection {
   song: Song;
@@ -76,7 +77,7 @@ export class LibraryService {
     private installationService: InstallationService,
     private httpClient: HttpClient
   ) {
-    this.authenticationService.observeLogout().subscribe(() => {
+    this.authenticationService.observeLogout().subscribe(user => {
       this.artistsSubject.next([]);
       this.genresSubject.next([]);
       this.selectedArtistSubject.next(undefined);
@@ -84,16 +85,16 @@ export class LibraryService {
       this.scrollToArtistRequestSubject.next(undefined);
       this.scrollToAlbumRequestSubject.next(undefined);
       this.scrollToSongRequestSubject.next(undefined);
-      this.storeArtistSortingOrder(undefined);
-      this.storeAlbumSortingOrder(undefined);
-      this.storeDefaultArtistId(undefined);
+      this.storeArtistSortingOrder(undefined, user);
+      this.storeAlbumSortingOrder(undefined, user);
+      this.storeDefaultArtistId(undefined, user);
     });
-    this.authenticationService.observeAuthentication().subscribe(() => {
-      const artistSortingOrder = this.findLocalStorageItem(this.resolveArtistSortingOrderLocalStorageKey()) as ArtistSortingOrder;
+    this.authenticationService.observeAuthentication().subscribe(user => {
+      const artistSortingOrder = this.findLocalStorageItem(this.resolveArtistSortingOrderLocalStorageKey(user)) as ArtistSortingOrder;
       if (artistSortingOrder) {
         this.sortingOrderArtistSubject.next(artistSortingOrder);
       }
-      const albumSortingOrder = this.findLocalStorageItem(this.resolveAlbumSortingOrderLocalStorageKey()) as AlbumSortingOrder;
+      const albumSortingOrder = this.findLocalStorageItem(this.resolveAlbumSortingOrderLocalStorageKey(user)) as AlbumSortingOrder;
       if (albumSortingOrder) {
         this.sortingOrderAlbumSubject.next(albumSortingOrder);
       }
@@ -106,15 +107,15 @@ export class LibraryService {
       this.appInForeground = false;
     });
     window.addEventListener('focus', () => {
-      if (!this.appInForeground && this.installationService.installationStatus?.installed) {
+      if (!this.appInForeground && this.installationService.installationStatus?.installed && this.authenticationService.isAuthenticated) {
         this.requestRefresh();
       }
       this.appInForeground = true;
     });
   }
 
-  private storeDefaultArtistId(artistId: string | undefined) {
-    this.storeLocalStorageItem(this.resolveDefaultArtistLocalStorageKey(), artistId);
+  private storeDefaultArtistId(artistId: string | undefined, user: UserDto | undefined) {
+    this.storeLocalStorageItem(this.resolveDefaultArtistLocalStorageKey(user), artistId);
   }
 
   private storeLocalStorageItem(localStorageKey: string | undefined, value: string | undefined) {
@@ -127,32 +128,32 @@ export class LibraryService {
     }
   }
 
-  private storeArtistSortingOrder(sortingOrder: ArtistSortingOrder | undefined) {
-    this.storeLocalStorageItem(this.resolveArtistSortingOrderLocalStorageKey(), sortingOrder);
+  private storeArtistSortingOrder(sortingOrder: ArtistSortingOrder | undefined, user: UserDto | undefined) {
+    this.storeLocalStorageItem(this.resolveArtistSortingOrderLocalStorageKey(user), sortingOrder);
     this.sortingOrderArtistSubject.next(sortingOrder ?? DEFAULT_ARTIST_SORTING_ORDER);
   }
 
-  private resolveArtistSortingOrderLocalStorageKey(): string | undefined {
-    if (this.authenticationService.isAuthenticated) {
-      return LOCAL_STORAGE_KEY_ARTIST_SORTING_ORDER + '.' + this.authenticationService.currentUser!.id;
+  private resolveArtistSortingOrderLocalStorageKey(user: UserDto | undefined): string | undefined {
+    if (user) {
+      return LOCAL_STORAGE_KEY_ARTIST_SORTING_ORDER + '.' + user!.id;
     }
     return undefined;
   }
 
-  private storeAlbumSortingOrder(sortingOrder: AlbumSortingOrder | undefined) {
-    this.storeLocalStorageItem(this.resolveAlbumSortingOrderLocalStorageKey(), sortingOrder);
+  private storeAlbumSortingOrder(sortingOrder: AlbumSortingOrder | undefined, user: UserDto | undefined) {
+    this.storeLocalStorageItem(this.resolveAlbumSortingOrderLocalStorageKey(user), sortingOrder);
     this.sortingOrderAlbumSubject.next(sortingOrder ?? DEFAULT_ALBUM_SORTING_ORDER);
   }
 
-  private resolveAlbumSortingOrderLocalStorageKey(): string | undefined {
-    if (this.authenticationService.isAuthenticated) {
-      return LOCAL_STORAGE_KEY_ALBUM_SORTING_ORDER + '.' + this.authenticationService.currentUser!.id;
+  private resolveAlbumSortingOrderLocalStorageKey(user: UserDto | undefined): string | undefined {
+    if (user) {
+      return LOCAL_STORAGE_KEY_ALBUM_SORTING_ORDER + '.' + user!.id;
     }
     return undefined;
   }
 
   get defaultArtistId(): string | undefined {
-    const localStorageKey = this.resolveDefaultArtistLocalStorageKey();
+    const localStorageKey = this.resolveDefaultArtistLocalStorageKey(this.authenticationService.currentUser);
     return this.findLocalStorageItem(localStorageKey);
   }
 
@@ -164,9 +165,9 @@ export class LibraryService {
     }
   }
 
-  private resolveDefaultArtistLocalStorageKey(): string | undefined {
-    if (this.authenticationService.isAuthenticated) {
-      return LOCAL_STORAGE_KEY_DEFAULT_ARTIST_ID + '.' + this.authenticationService.currentUser!.id;
+  private resolveDefaultArtistLocalStorageKey(user: UserDto | undefined): string | undefined {
+    if (user) {
+      return LOCAL_STORAGE_KEY_DEFAULT_ARTIST_ID + '.' + user!.id;
     }
     return undefined;
   }
@@ -328,7 +329,7 @@ export class LibraryService {
 
   selectArtistAndMakeDefault(artist: Artist) {
     this.selectedArtistSubject.next(artist);
-    this.storeDefaultArtistId(artist ? artist.id : undefined);
+    this.storeDefaultArtistId(artist ? artist.id : undefined, this.authenticationService.currentUser);
   }
 
   deselectArtist() {
@@ -434,7 +435,7 @@ export class LibraryService {
 
   updateArtistSortingOrder(sortingOrder: ArtistSortingOrder) {
     const oldSortingOrder = this.sortingOrderArtistSubject.getValue();
-    this.storeArtistSortingOrder(sortingOrder);
+    this.storeArtistSortingOrder(sortingOrder, this.authenticationService.currentUser);
     if (oldSortingOrder !== sortingOrder) {
       const artists = this.artistsSubject.getValue();
       this.sortArtists(artists);
@@ -448,6 +449,6 @@ export class LibraryService {
   }
 
   updateAlbumSortingOrder(sortingOrder: AlbumSortingOrder) {
-    this.storeAlbumSortingOrder(sortingOrder);
+    this.storeAlbumSortingOrder(sortingOrder, this.authenticationService.currentUser);
   }
 }
