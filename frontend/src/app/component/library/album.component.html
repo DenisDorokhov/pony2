@@ -16,25 +16,22 @@
       ('library.album.sizeLabel' | translate:{ songCount: albumSongs.songs.length, duration })
     }}">
       <span>{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
-      <button (click)="download()"
-              type="button" class="btn btn-sm btn-light">
-        <i class="bi bi-download"></i>
-      </button>
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
-      <div ngbDropdown class="options" #menuDropdown="ngbDropdown" container="body">
+      <div ngbDropdown class="options" container="body">
         <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
         <div ngbDropdownMenu class="dropdown-menu" role="menu">
-          <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
-          <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.song.addToQueue' | translate }}</button>
-          <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.song.createQueue' | translate }}</button>
+          <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.album.playNext' | translate }}</button>
+          <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.album.addToQueue' | translate }}</button>
+          <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.album.createQueue' | translate }}</button>
+          <button ngbDropdownItem (click)="download()"><i class="bi bi-download"></i>{{ 'library.album.download' | translate }}</button>
           <li [hidden]="topPlaylists.length < 1"><hr class="dropdown-divider"></li>
           @for (playlist of topPlaylists; track playlist.id) {
-            <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.song.addToPlaylist' | translate:{
+            <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.album.addToPlaylist' | translate:{
               name: playlist.name,
             } }}</button>
           }
           <li><hr class="dropdown-divider"></li>
-          <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.song.selectOrCreatePlaylist' | translate }}</button>
+          <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.album.selectOrCreatePlaylist' | translate }}</button>
         </div>
       </div>
     </h4>

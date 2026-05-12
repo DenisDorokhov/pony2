@@ -304,4 +304,8 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     }
   }
+
+  download() {
+    this.libraryService.downloadSong(this.song!.id);
+  }
 }

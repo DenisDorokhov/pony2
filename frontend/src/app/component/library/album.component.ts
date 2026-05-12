@@ -132,7 +132,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   }
 
   download() {
-    window.open(`/api/file/export/album/${this.albumSongs.album.id}`, '_blank', '');
+    this.libraryService.downloadAlbum(this.albumSongs.album.id);
   }
 
   trackByIndex(index: number) {

@@ -22,6 +22,7 @@ import {PlaybackService} from '../../../../service/playback.service';
 import {PlaylistDto} from '../../../../domain/library.dto';
 import {PlaylistAddSongComponent} from '../playlist-add-song.component';
 import {PlaylistEditComponent} from '../playlist-edit.component';
+import {LibraryService} from '../../../../service/library.service';
 
 @Component({
     imports: [
@@ -92,6 +93,7 @@ export class LargeSongComponent implements OnInit, OnDestroy {
     private readonly notificationService: NotificationService,
     private readonly translateService: TranslateService,
     private readonly playbackService: PlaybackService,
+    private readonly libraryService: LibraryService,
     private readonly modal: NgbModal,
   ) {
   }
@@ -211,5 +213,9 @@ export class LargeSongComponent implements OnInit, OnDestroy {
       const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
       playlistEditComponent.songs = [this.song];
     }
+  }
+
+  download() {
+    this.libraryService.downloadSong(this.song!.id);
   }
 }

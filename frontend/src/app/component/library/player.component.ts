@@ -268,4 +268,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
       ),
     });
   }
+
+  download() {
+    this.libraryService.downloadSong(this.song!.id);
+  }
 }

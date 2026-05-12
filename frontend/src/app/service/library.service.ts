@@ -451,4 +451,12 @@ export class LibraryService {
   updateAlbumSortingOrder(sortingOrder: AlbumSortingOrder) {
     this.storeAlbumSortingOrder(sortingOrder, this.authenticationService.currentUser);
   }
+
+  downloadSong(id: string) {
+    window.open(`/api/file/export/song/${id}`, '_blank', '');
+  }
+
+  downloadAlbum(id: string) {
+    window.open(`/api/file/export/album/${id}`, '_blank', '');
+  }
 }
