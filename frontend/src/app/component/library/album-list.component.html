@@ -9,7 +9,7 @@
     <div class="panel-title">
       <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
         {{ artistSongs.artist.name | ponyUnknownArtist }}
-        <div ngbDropdown container="body" class="btn-group sort-container">
+        <div ngbDropdown container="body" class="btn-group sort-container" dropdownClass="pony-dropdown">
           <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
             @switch (sortingOrder) {
               @case (AlbumSortingOrder.YEAR_ASCENDING) {
@@ -34,28 +34,28 @@
           </button>
           <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
             <button ngbDropdownItem
-                    [class.active]="sortingOrder === AlbumSortingOrder.YEAR_DESCENDING"
+                    [class.selected]="sortingOrder === AlbumSortingOrder.YEAR_DESCENDING"
                     (click)="setSortingOrder(AlbumSortingOrder.YEAR_DESCENDING)">
               <i class="bi bi-calendar3"></i>
               <i class="bi bi-arrow-down"></i>
               {{ 'library.album.sortByYearDesc' | translate }}
             </button>
             <button ngbDropdownItem
-                    [class.active]="sortingOrder === AlbumSortingOrder.YEAR_ASCENDING"
+                    [class.selected]="sortingOrder === AlbumSortingOrder.YEAR_ASCENDING"
                     (click)="setSortingOrder(AlbumSortingOrder.YEAR_ASCENDING)">
               <i class="bi bi-calendar3"></i>
               <i class="bi bi-arrow-up"></i>
               {{ 'library.album.sortByYearAsc' | translate }}
             </button>
             <button ngbDropdownItem
-                    [class.active]="sortingOrder === AlbumSortingOrder.NAME_ASCENDING"
+                    [class.selected]="sortingOrder === AlbumSortingOrder.NAME_ASCENDING"
                     (click)="setSortingOrder(AlbumSortingOrder.NAME_ASCENDING)">
               <i class="bi bi-alphabet"></i>
               <i class="bi bi-arrow-up"></i>
               {{ 'library.album.sortByNameAsc' | translate }}
             </button>
             <button ngbDropdownItem
-                    [class.active]="sortingOrder === AlbumSortingOrder.MODIFICATION_DESCENDING"
+                    [class.selected]="sortingOrder === AlbumSortingOrder.MODIFICATION_DESCENDING"
                     (click)="setSortingOrder(AlbumSortingOrder.MODIFICATION_DESCENDING)">
               <i class="bi bi-clock-history"></i>
               <i class="bi bi-arrow-down"></i>

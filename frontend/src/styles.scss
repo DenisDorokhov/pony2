@@ -20,3 +20,9 @@ $dropdown-min-width: 100px;
   border-radius: 6px;
   outline: solid 4px var(--bs-border-color);
 }
+
+.pony-dropdown {
+  .selected {
+    font-weight: bold;
+  }
+}

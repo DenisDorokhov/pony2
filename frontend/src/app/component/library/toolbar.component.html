@@ -1,5 +1,5 @@
 <div class="toolbar-container">
-  <div ngbDropdown class="btn-group">
+  <div ngbDropdown class="btn-group" dropdownClass="pony-dropdown">
     <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
       @switch (playbackMode) {
         @case (PlaybackMode.NORMAL) {
@@ -21,11 +21,26 @@
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.NORMAL)"><i class="bi bi-vinyl-fill"></i>{{ 'library.toolbar.normalModeButton' | translate }}</button>
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.SHUFFLE)"><i class="bi bi-shuffle"></i>{{ 'library.toolbar.shuffleModeButton' | translate }}</button>
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.RADIO)"><i class="bi bi-broadcast-pin"></i>{{ 'library.toolbar.radioModeButton' | translate }}</button>
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ONE)"><i class="bi bi-repeat-1"></i>{{ 'library.toolbar.repeatOneModeButton' | translate }}</button>
-      <button ngbDropdownItem (click)="setPlaybackMode(PlaybackMode.REPEAT_ALL)"><i class="bi bi-repeat"></i>{{ 'library.toolbar.repeatAllModeButton' | translate }}</button>
+      <button ngbDropdownItem [class.selected]="playbackMode === PlaybackMode.NORMAL" (click)="setPlaybackMode(PlaybackMode.NORMAL)">
+        <i class="bi bi-vinyl-fill"></i>
+        {{ 'library.toolbar.normalModeButton' | translate }}
+      </button>
+      <button ngbDropdownItem [class.selected]="playbackMode === PlaybackMode.SHUFFLE" (click)="setPlaybackMode(PlaybackMode.SHUFFLE)">
+        <i class="bi bi-shuffle"></i>
+        {{ 'library.toolbar.shuffleModeButton' | translate }}
+      </button>
+      <button ngbDropdownItem [class.selected]="playbackMode === PlaybackMode.RADIO" (click)="setPlaybackMode(PlaybackMode.RADIO)">
+        <i class="bi bi-broadcast-pin"></i>
+        {{ 'library.toolbar.radioModeButton' | translate }}
+      </button>
+      <button ngbDropdownItem [class.selected]="playbackMode === PlaybackMode.REPEAT_ONE" (click)="setPlaybackMode(PlaybackMode.REPEAT_ONE)">
+        <i class="bi bi-repeat-1"></i>
+        {{ 'library.toolbar.repeatOneModeButton' | translate }}
+      </button>
+      <button ngbDropdownItem [class.selected]="playbackMode === PlaybackMode.REPEAT_ALL" (click)="setPlaybackMode(PlaybackMode.REPEAT_ALL)">
+        <i class="bi bi-repeat"></i>
+        {{ 'library.toolbar.repeatAllModeButton' | translate }}
+      </button>
     </ul>
   </div>
   <div ngbDropdown class="btn-group">

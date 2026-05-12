@@ -1,5 +1,5 @@
 <div class="panel panel-default">
-  <div ngbDropdown class="header" (openChange)="onNavigationDropdownOpenChange($event)">
+  <div ngbDropdown class="header" dropdownClass="pony-dropdown" (openChange)="onNavigationDropdownOpenChange($event)">
     <button ngbDropdownToggle type="button" class="genre">
       {{ selectedNavigationItem.title }}
       <span class="caret"></span>
@@ -29,7 +29,7 @@
         </a>
       </div>
     </ul>
-    <div ngbDropdown class="btn-group sort-container">
+    <div ngbDropdown class="btn-group sort-container" dropdownClass="pony-dropdown">
       <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
         @switch (sortingOrder) {
           @case (ArtistSortingOrder.NAME_ASCENDING) {
@@ -48,14 +48,14 @@
       </button>
       <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end sort-menu" role="menu">
         <button ngbDropdownItem
-                [class.active]="sortingOrder === ArtistSortingOrder.NAME_ASCENDING"
+                [class.selected]="sortingOrder === ArtistSortingOrder.NAME_ASCENDING"
                 (click)="setSortingOrder(ArtistSortingOrder.NAME_ASCENDING)">
           <i class="bi bi-alphabet"></i>
           <i class="bi bi-arrow-up"></i>
           {{ 'library.artist.sortByNameAsc' | translate }}
         </button>
         <button ngbDropdownItem
-                [class.active]="sortingOrder === ArtistSortingOrder.MODIFICATION_DESCENDING"
+                [class.selected]="sortingOrder === ArtistSortingOrder.MODIFICATION_DESCENDING"
                 (click)="setSortingOrder(ArtistSortingOrder.MODIFICATION_DESCENDING)">
           <i class="bi bi-clock-history"></i>
           <i class="bi bi-arrow-down"></i>
