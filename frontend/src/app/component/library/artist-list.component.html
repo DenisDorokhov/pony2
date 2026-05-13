@@ -1,10 +1,10 @@
 <div class="panel panel-default">
-  <div ngbDropdown class="header" dropdownClass="pony-dropdown" (openChange)="onNavigationDropdownOpenChange($event)">
+  <div ngbDropdown class="header" dropdownClass="pony-dropdown" placement="bottom" (openChange)="onNavigationDropdownOpenChange($event)">
     <button ngbDropdownToggle type="button" class="genre">
       {{ selectedNavigationItem.title }}
       <span class="caret"></span>
     </button>
-    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end genre-list" role="menu">
+    <ul ngbDropdownMenu class="dropdown-menu genre-list" role="menu">
       <div class="search-genre">
         <input #filterInputElement type="text" class="form-control"
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
