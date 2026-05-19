@@ -417,6 +417,10 @@ export class LibraryService {
     this.scrollToSongRequestSubject.next(undefined);
   }
 
+  get scrollToSongRequested(): boolean {
+    return this.scrollToSongRequestSubject.getValue() !== undefined;
+  }
+
   search(query: string): Observable<SearchResult> {
     return this.httpClient.get<SearchResultDto>('/api/library/search', { params: {query} })
       .pipe(

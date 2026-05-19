@@ -155,7 +155,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             album.songs.forEach(() => this.songCount++);
           });
           this.countLikes();
-          if (!refreshing && this.playbackService.currentSong?.album.artist.id === artistSongs.artist.id) {
+          if (
+            !refreshing &&
+            this.playbackService.currentSong?.album.artist.id === artistSongs.artist.id &&
+            !this.libraryService.scrollToSongRequested
+          ) {
             this.libraryService.selectSong(this.playbackService.currentSong!);
             this.libraryService.requestScrollToSong(this.playbackService.currentSong!, false);
           }
