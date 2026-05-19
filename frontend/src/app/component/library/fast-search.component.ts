@@ -11,11 +11,13 @@ import {UnknownSongPipe} from '../../pipe/unknown-song.pipe';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
+import {PlaylistService} from "../../service/playlist.service";
 
 class NavigationItem {
 
   id: string;
   selected = false;
+  liked = false;
   activate: () => void;
 
   constructor(id: string, activate: () => void) {
@@ -52,6 +54,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private readonly libraryService: LibraryService,
+    private readonly playlistService: PlaylistService,
   ) {
   }
 
@@ -92,6 +95,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       this.searchResult?.songs.forEach(song => {
         const navigationItem = new NavigationItem(song.id, () => this.goToSong(song));
+        navigationItem.liked = this.playlistService.isLikedSong(song.id);
         this.navigationItems.push(navigationItem);
         this.idToNavigationItem[navigationItem.id] = navigationItem;
       });
@@ -104,6 +108,15 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectNavigationItem(0);
       }
     }));
+    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(playlist => {
+      this.navigationItems.forEach(navigationItem => navigationItem.liked = false);
+      playlist.songs.forEach(song => {
+        const navigationItem = this.idToNavigationItem[song.song.id];
+        if (navigationItem) {
+          navigationItem.liked = true;
+        }
+      });
+    }))
 
     this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event => {
       let checkElement: Node | null = event.target as Node;

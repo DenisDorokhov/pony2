@@ -28,11 +28,16 @@
            *ngFor="let song of searchResult?.songs; trackBy:trackBySong"
            (mousedown)="selectSong(song)" (click)="goToSong(song)">
         <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-        <div class="text">
+        <div class="text" [class.liked]="idToNavigationItem[song.id].liked">
           <div>{{ song.name | ponyUnknownSong }}</div>
-          <div><small>
-            {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}
-          </small></div>
+          <div>
+            <small>
+              {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}
+            </small>
+          </div>
+        </div>
+        <div class="like" *ngIf="idToNavigationItem[song.id].liked">
+          <i class="bi bi-star-fill"></i>
         </div>
       </div>
     </div>
