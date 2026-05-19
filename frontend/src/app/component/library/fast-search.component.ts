@@ -11,7 +11,7 @@ import {UnknownSongPipe} from '../../pipe/unknown-song.pipe';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
-import {PlaylistService} from "../../service/playlist.service";
+import {PlaylistService} from '../../service/playlist.service';
 
 class NavigationItem {
 
@@ -116,7 +116,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
           navigationItem.liked = true;
         }
       });
-    }))
+    }));
 
     this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event => {
       let checkElement: Node | null = event.target as Node;
