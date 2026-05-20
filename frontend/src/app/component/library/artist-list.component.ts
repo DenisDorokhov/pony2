@@ -29,6 +29,7 @@ import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {ScrollingUtils} from '../../utils/scrolling.utils';
 import {InstallationService} from '../../service/installation.service';
 import {keyboardLayoutInsensitiveMatch} from '../../utils/search.utils';
+import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
 export class NavigationItem {
@@ -46,7 +47,7 @@ export class NavigationItem {
 }
 
 @Component({
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem],
+  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ArtistComponent, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownButtonItem, NgbDropdownItem, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
   selector: 'pony-artist-list',
   templateUrl: './artist-list.component.html',
   styleUrls: ['./artist-list.component.scss']
@@ -55,6 +56,8 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   readonly LoadingState = LoadingState;
   readonly ArtistSortingOrder = ArtistSortingOrder;
+
+  readonly rowHeight = ArtistComponent.HEIGHT;
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
@@ -68,7 +71,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedNavigationItem!: NavigationItem;
 
   @ViewChild('filterInputElement') filterInputElement!: ElementRef;
-  @ViewChild('scrollerElement') scrollerElement!: ElementRef;
+  @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
   @ViewChild(NgbDropdown) filterDropdown!: NgbDropdown;
   @ViewChildren('navigationItemElement') navigationItemElements!: QueryList<ElementRef>;
 
@@ -113,13 +116,25 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.sortingOrder = sortingOrder;
       if (oldSortingOrder) {
         // Avoid scrolling to top on initial observation.
-        this.scrollerElement.nativeElement.scrollTop = 0;
+        this.viewPort.scrollToOffset(0);
       }
     }));
     this.subscriptions.push(this.libraryService.observeFilterByGenreRequest().subscribe(genre => {
       const navigationItems = this.navigationItems.filter(navigationItem => navigationItem.id === genre!.id);
       if (navigationItems.length > 0) {
         this.executeNavigationItem(navigationItems[0]);
+      }
+    }));
+    this.subscriptions.push(this.libraryService.observeScrollToArtistRequest().subscribe(artist => {
+      this.scrollToArtist(artist);
+      this.libraryService.finishScrollToArtist();
+    }));
+    this.subscriptions.push(this.libraryService.observeScrollToAlbumRequest().subscribe(album => {
+      this.scrollToArtist(album.artist);
+    }));
+    this.subscriptions.push(this.libraryService.observeScrollToSongRequest().subscribe(request => {
+      if (request.scrollToArtist) {
+        this.scrollToArtist(request.song.album.artist);
       }
     }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
@@ -228,11 +243,21 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private scrollToSelectedArtist() {
-    if (this.filteredArtists.findIndex(artist => artist.id === this.libraryService.selectedArtist?.id) > -1) {
-      this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!);
-      setTimeout(() => this.libraryService.requestScrollToArtist(this.libraryService.selectedArtist!));
+    const selectedArtist = this.libraryService.selectedArtist;
+    if (selectedArtist && this.filteredArtists.findIndex(artist => artist.id === selectedArtist.id) > -1) {
+      this.scrollToArtist(selectedArtist);
     } else {
-      this.scrollerElement.nativeElement.scrollTop = 0;
+      this.viewPort?.scrollToOffset(0);
+    }
+  }
+
+  private scrollToArtist(artist: Artist) {
+    const index = this.filteredArtists.findIndex(next => next.id === artist.id);
+    if (index >= 0) {
+      setTimeout(() => {
+        const offset = index * this.rowHeight - (this.viewPort.getViewportSize() / 2) + (this.rowHeight / 2);
+        this.viewPort.scrollToOffset(Math.max(0, offset));
+      });
     }
   }
 

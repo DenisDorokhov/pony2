@@ -70,10 +70,10 @@
   </pony-no-content-indicator>
   <pony-no-content-indicator *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length === 0" [message]="'library.artist.noFilteredArtistsLabel' | translate">
   </pony-no-content-indicator>
-  <div *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0" #scrollerElement
-       class="list-container" data-pony-image-loader-scroller>
+  <cdk-virtual-scroll-viewport *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0"
+                               class="list-container" data-pony-image-loader-scroller [itemSize]="rowHeight">
     <div class="list-group">
-      <pony-artist *ngFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
+      <pony-artist *cdkVirtualFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
     </div>
-  </div>
+  </cdk-virtual-scroll-viewport>
 </div>

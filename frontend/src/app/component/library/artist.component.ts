@@ -1,9 +1,8 @@
-import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
-import {ScrollingUtils} from '../../utils/scrolling.utils';
 import {ImageLoaderComponent} from '../common/image-loader.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
@@ -18,7 +17,9 @@ import {InstallationService} from '../../service/installation.service';
     templateUrl: './artist.component.html',
     styleUrls: ['./artist.component.scss']
 })
-export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
+export class ArtistComponent implements OnInit, OnDestroy {
+
+  static readonly HEIGHT = 70;
 
   PlaybackState = PlaybackState;
 
@@ -56,15 +57,10 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
-  @ViewChild('container') containerElement!: ElementRef;
-
   selected = false;
   playbackState: PlaybackState | undefined;
 
   private selectedArtistSubscription: Subscription | undefined;
-  private scrollToArtistRequestSubscription: Subscription | undefined;
-  private scrollToAlbumRequestSubscription: Subscription | undefined;
-  private scrollToSongRequestSubscription: Subscription | undefined;
   private playbackEventSubscription: Subscription | undefined;
 
   constructor(
@@ -90,38 +86,12 @@ export class ArtistComponent implements AfterViewInit, OnInit, OnDestroy {
       });
   }
 
-  ngAfterViewInit(): void {
-    this.scrollToArtistRequestSubscription = this.libraryService.observeScrollToArtistRequest()
-      .subscribe(artist => {
-        if (artist.id === this.artist.id) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-          this.libraryService.finishScrollToArtist();
-        }
-      });
-    this.scrollToAlbumRequestSubscription = this.libraryService.observeScrollToAlbumRequest()
-      .subscribe(album => {
-        if (album.artist.id === this.artist.id) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-        }
-      });
-    this.scrollToSongRequestSubscription = this.libraryService.observeScrollToSongRequest()
-      .subscribe(request => {
-        if (request.scrollToArtist && request.song.album.artist.id === this.artist.id) {
-          ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
-        }
-      });
-  }
-
   ngOnDestroy(): void {
     this.selectedArtistSubscription?.unsubscribe();
-    this.scrollToArtistRequestSubscription?.unsubscribe();
-    this.scrollToAlbumRequestSubscription?.unsubscribe();
-    this.scrollToSongRequestSubscription?.unsubscribe();
     this.playbackEventSubscription?.unsubscribe();
   }
 
   select() {
     this.libraryService.selectArtistAndMakeDefault(this.artist);
-    ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement, false);
   }
 }
