@@ -143,8 +143,16 @@ export class AudioPlayer {
     });
     // Workaround for Howler bug: https://github.com/goldfire/howler.js/issues/1175
     if (navigator && navigator.mediaSession) {
-      navigator.mediaSession.setActionHandler('play', () => this.howl?.play());
-      navigator.mediaSession.setActionHandler('pause', () => this.howl?.pause());
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (!this.howl?.playing()) {
+          this.howl?.play();
+        }
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (this.howl?.playing()) {
+          this.howl?.pause();
+        }
+      });
     }
   }
 
