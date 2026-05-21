@@ -241,6 +241,7 @@ export class LibraryService {
 
   sortArtistSongs(artistSongs: ArtistSongs) {
     const sortingOrder = this.sortingOrderAlbumSubject.getValue();
+    artistSongs.albumSongs = [...artistSongs.albumSongs];
     switch (sortingOrder) {
       case AlbumSortingOrder.NAME_ASCENDING:
         artistSongs.albumSongs.sort(AlbumSongs.compareByName);
@@ -441,7 +442,7 @@ export class LibraryService {
     const oldSortingOrder = this.sortingOrderArtistSubject.getValue();
     this.storeArtistSortingOrder(sortingOrder, this.authenticationService.currentUser);
     if (oldSortingOrder !== sortingOrder) {
-      const artists = this.artistsSubject.getValue();
+      const artists = [...this.artistsSubject.getValue()];
       this.sortArtists(artists);
       this.artistsSubject.next(artists);
     }

@@ -257,7 +257,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
       setTimeout(() => {
         const offset = index * this.rowHeight - (this.viewPort.getViewportSize() / 2) + (this.rowHeight / 2);
         this.viewPort.scrollToOffset(Math.max(0, offset));
-      });
+      }, 10);
     }
   }
 
