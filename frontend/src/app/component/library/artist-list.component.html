@@ -71,7 +71,7 @@
   <pony-no-content-indicator *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length === 0" [message]="'library.artist.noFilteredArtistsLabel' | translate">
   </pony-no-content-indicator>
   <cdk-virtual-scroll-viewport *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0"
-                               class="list-container" data-pony-image-loader-scroller [itemSize]="rowHeight">
+                               class="list-container" [itemSize]="rowHeight">
     <div class="list-group">
       <pony-artist *cdkVirtualFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
     </div>

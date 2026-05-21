@@ -19,7 +19,7 @@ import {InstallationService} from '../../service/installation.service';
 })
 export class ArtistComponent implements OnInit, OnDestroy {
 
-  static readonly HEIGHT = 70;
+  static readonly HEIGHT = 69;
 
   PlaybackState = PlaybackState;
 
