@@ -114,9 +114,13 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subscriptions.push(this.libraryService.observeArtistSortingOrder().subscribe(sortingOrder => {
       const oldSortingOrder = this.sortingOrder;
       this.sortingOrder = sortingOrder;
+      // Avoid scrolling to top on initial observation.
       if (oldSortingOrder) {
-        // Avoid scrolling to top on initial observation.
-        this.viewPort.scrollToOffset(0);
+        if (this.sortingOrder === ArtistSortingOrder.MODIFICATION_DESCENDING) {
+          this.viewPort.scrollToOffset(0);
+        } else {
+          this.scrollToSelectedArtist();
+        }
       }
     }));
     this.subscriptions.push(this.libraryService.observeFilterByGenreRequest().subscribe(genre => {
@@ -252,13 +256,13 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private scrollToArtist(artist: Artist) {
-    const index = this.filteredArtists.findIndex(next => next.id === artist.id);
-    if (index >= 0) {
-      setTimeout(() => {
+    setTimeout(() => {
+      const index = this.filteredArtists.findIndex(next => next.id === artist.id);
+      if (index >= 0) {
         const offset = index * this.rowHeight - (this.viewPort.getViewportSize() / 2) + (this.rowHeight / 2);
         this.viewPort.scrollToOffset(Math.max(0, offset));
-      }, 10);
-    }
+      }
+    }, 10);
   }
 
   onNavigationDropdownOpenChange(open: boolean) {
