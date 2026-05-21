@@ -1,6 +1,6 @@
 <a class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
    [class.selected]="selected" [class.current]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED"
-   (mousedown)="select()">
+   (click)="select()">
   <pony-image-loader [url]="artist.smallArtworkUrl" [showNewIndicator]="showNewIndicator"></pony-image-loader>
   <div class="artist-name"
        [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
