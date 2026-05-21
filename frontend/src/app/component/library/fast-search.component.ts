@@ -110,7 +110,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     }));
     this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(playlist => {
       this.navigationItems.forEach(navigationItem => navigationItem.liked = false);
-      playlist.songs.forEach(song => {
+      playlist?.songs.forEach(song => {
         const navigationItem = this.idToNavigationItem[song.song.id];
         if (navigationItem) {
           navigationItem.liked = true;

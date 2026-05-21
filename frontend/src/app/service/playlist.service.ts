@@ -83,8 +83,8 @@ export class PlaylistService {
     return this.playlistsSubject.asObservable();
   }
 
-  observeLikePlaylist(): Observable<PlaylistSongs> {
-    return this.likePlaylistSongsSubject.asObservable() as Observable<PlaylistSongs>;
+  observeLikePlaylist(): Observable<PlaylistSongs | undefined> {
+    return this.likePlaylistSongsSubject.asObservable() as Observable<PlaylistSongs | undefined>;
   }
 
   requestPlaylists(): Observable<Playlist[]> {

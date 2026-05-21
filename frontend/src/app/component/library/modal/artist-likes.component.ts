@@ -13,10 +13,10 @@ import {LibraryService} from '../../../service/library.service';
 import {NotificationService} from '../../../service/notification.service';
 
 @Component({
-    imports: [TranslateModule, CommonModule, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
-    selector: 'pony-artist-likes',
-    templateUrl: './artist-likes.component.html',
-    styleUrls: ['./artist-likes.component.scss']
+  imports: [TranslateModule, CommonModule, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
+  selector: 'pony-artist-likes',
+  templateUrl: './artist-likes.component.html',
+  styleUrls: ['./artist-likes.component.scss']
 })
 export class ArtistLikesComponent implements OnInit, OnDestroy {
 
@@ -47,7 +47,7 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist =>
-      this.songs = [...likePlaylist.songs]
+      this.songs = [...likePlaylist ? likePlaylist.songs : []]
         .sort((song1, song2) => song1.creationDate.getTime() - song2.creationDate.getTime())
         .map(next => next.song)
         .filter(song => song.album.artist.id === this.artistSongs.artist.id)
