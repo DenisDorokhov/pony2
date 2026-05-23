@@ -278,16 +278,4 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
     this.close();
   }
-
-  trackByArtist() {
-    return 'reuseView';
-  }
-
-  trackBySong() {
-    return 'reuseView';
-  }
-
-  trackByAlbum() {
-    return 'reuseView';
-  }
 }

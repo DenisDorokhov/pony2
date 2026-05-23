@@ -35,7 +35,7 @@
       </div>
     </div>
   </h4>
-  @for (disc of discs; track trackByIndex($index, disc)) {
+  @for (disc of discs; track trackByIndex($index)) {
     <pony-song-list
       [caption]="disc.discNumber ? ('library.album.discLabel' | translate:{discNumber:disc.discNumber}) : undefined"
       [songs]="disc.songs" [showArtist]="disc.showArtist">

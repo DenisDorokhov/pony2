@@ -10,7 +10,7 @@
 
     <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
-      @for (artist of searchResult?.artists; track trackByArtist($index, artist)) {
+      @for (artist of searchResult?.artists; track $index) {
         <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
              title="{{ artist.name | ponyUnknownArtist }}"
              (mousedown)="selectArtist(artist)" (click)="goToArtist(artist)">
@@ -24,7 +24,7 @@
 
     <div [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
-      @for (song of searchResult?.songs; track trackBySong($index, song)) {
+      @for (song of searchResult?.songs; track $index) {
         <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
              title="{{ song.name | ponyUnknownSong }}
 {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
@@ -50,7 +50,7 @@
 
     <div [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
-      @for (album of searchResult?.albums; track trackByAlbum($index, album)) {
+      @for (album of searchResult?.albums; track $index) {
         <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
              title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
 {{ album.artist.name | ponyUnknownArtist }}"

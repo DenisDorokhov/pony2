@@ -99,7 +99,7 @@
   @if (loadingState === LoadingState.LOADED) {
     <div #scrollerElement
          class="panel-body album-list-container" data-pony-image-loader-scroller>
-      @for (album of artistSongs.albumSongs; track trackByIndex($index, album)) {
+      @for (album of artistSongs.albumSongs; track trackByIndex($index)) {
         <pony-album [albumSongs]="album"></pony-album>
       }
     </div>
