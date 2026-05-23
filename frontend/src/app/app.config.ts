@@ -12,7 +12,8 @@ import {InitializerService} from './service/initializer.service';
 import {HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
 import {CookieModule} from 'ngx-cookie';
 import {TranslateLoaderService} from './service/translate-loader.service';
-import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
+import {TranslateCompiler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
+import {TranslateMessageFormatCompiler} from 'ngx-translate-messageformat-compiler';
 import {SecurityInterceptor} from './service/security-interceptor.service';
 import {ReactiveFormsModule} from '@angular/forms';
 import {provideToastr} from 'ngx-toastr';
@@ -35,6 +36,10 @@ export const appConfig: ApplicationConfig = {
         loader: {
           provide: TranslateLoader,
           useClass: TranslateLoaderService,
+        },
+        compiler: {
+          provide: TranslateCompiler,
+          useClass: TranslateMessageFormatCompiler,
         }
       }),
       CookieModule.withOptions(),
