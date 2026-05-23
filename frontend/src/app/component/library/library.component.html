@@ -18,21 +18,23 @@
     </div>
     <div class="footer">
       <small>
-        <span *ngIf="scanStatistics">
-          {{ 'library.scanStatistics.counts' | translate:{
-              artistCount: scanStatistics.artistCount,
-              albumCount: scanStatistics.albumCount,
-              songCount: scanStatistics.songCount,
-              artworkCount: scanStatistics.artworkCount
-          } }}
-          |
-          {{ duration }}
-          |
-          {{ size }}
-          |
-          {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.dateTimeFormat' | translate ))} }}
-          |
-        </span>
+        @if (scanStatistics) {
+          <span>
+            {{ 'library.scanStatistics.counts' | translate:{
+            artistCount: scanStatistics.artistCount,
+            albumCount: scanStatistics.albumCount,
+            songCount: scanStatistics.songCount,
+            artworkCount: scanStatistics.artworkCount
+            } }}
+            |
+            {{ duration }}
+            |
+            {{ size }}
+            |
+            {{ 'library.scanStatistics.date' | translate:{date:(scanStatistics.date | date:( 'shared.dateTimeFormat' | translate ))} }}
+            |
+          </span>
+        }
         <a href="https://github.com/DenisDorokhov/pony2" target="_blank">
           {{ 'library.scanStatistics.githubLinkLabel' | translate }}
         </a>

@@ -1,13 +1,12 @@
 import {Component, inject, Input, OnChanges} from '@angular/core';
 import {ErrorDto} from '../../domain/common.dto';
 import {ErrorTranslationService} from '../../service/error-translation.service';
-import {CommonModule} from '@angular/common';
 
 @Component({
-    imports: [CommonModule],
-    selector: 'pony-error-container',
-    templateUrl: './error-container.component.html',
-    styleUrls: []
+  imports: [],
+  selector: 'pony-error-container',
+  templateUrl: './error-container.component.html',
+  styleUrls: []
 })
 export class ErrorContainerComponent implements OnChanges {
 

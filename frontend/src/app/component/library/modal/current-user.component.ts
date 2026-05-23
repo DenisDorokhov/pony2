@@ -1,7 +1,6 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {CommonModule} from '@angular/common';
 import {ErrorContainerComponent} from '../../common/error-container.component';
 import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {LoadingState} from '../../../domain/common.model';
@@ -15,7 +14,7 @@ import {NotificationService} from '../../../service/notification.service';
 import {OpenSubsonicApiKeyComponent} from './open-subsonic-api-key.component';
 
 @Component({
-  imports: [TranslateModule, CommonModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
+  imports: [TranslateModule, ErrorContainerComponent, ReactiveFormsModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
   selector: 'pony-current-user',
   templateUrl: './current-user.component.html',
   styleUrls: ['./current-user.component.scss']

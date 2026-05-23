@@ -5,24 +5,26 @@
 
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight">
 
-  <pony-no-content-indicator *ngIf="playbackHistory?.songs?.length === 0"
-                             [message]="'history.noHistoryLabel' | translate">
-  </pony-no-content-indicator>
+  @if (playbackHistory?.songs?.length === 0) {
+    <pony-no-content-indicator
+      [message]="'history.noHistoryLabel' | translate">
+    </pony-no-content-indicator>
+  }
 
-  <div class="table-container" *ngIf="playbackHistory?.songs?.length ?? 0">
-
-    <pony-large-song
-      [index]="i" [overrideIndex]="formatTimeDifference(playbackHistorySong)" [song]="playbackHistorySong.song"
-      [isCurrentSong]="playbackHistorySong.song.id === lastPlaybackEvent?.song?.id"
-      [selected]="selectedIndex === i"
-      *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"
-      (doubleClick)="onSongDoubleClick(i)"
-      (mousedown)="selectIndex(i)"
-      (playOrPauseRequested)="onPlaybackClick(i)"
-      (goToSongRequested)="goToSong(playbackHistorySong.song)"
-    />
-
-  </div>
+  @if (playbackHistory?.songs?.length ?? 0) {
+    <div class="table-container">
+      <pony-large-song
+        [index]="i" [overrideIndex]="formatTimeDifference(playbackHistorySong)" [song]="playbackHistorySong.song"
+        [isCurrentSong]="playbackHistorySong.song.id === lastPlaybackEvent?.song?.id"
+        [selected]="selectedIndex === i"
+        *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"
+        (doubleClick)="onSongDoubleClick(i)"
+        (mousedown)="selectIndex(i)"
+        (playOrPauseRequested)="onPlaybackClick(i)"
+        (goToSongRequested)="goToSong(playbackHistorySong.song)"
+      />
+    </div>
+  }
 
 </cdk-virtual-scroll-viewport>
 
@@ -31,7 +33,10 @@
   <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
   <small [hidden]="!playbackHistory">
     {{
-      'history.statisticsLabel' | translate:{ count: playbackHistory?.songs?.length, totalCount: playbackHistory?.statistics?.totalCount }
+      'history.statisticsLabel' | translate:{
+        count: playbackHistory?.songs?.length,
+        totalCount: playbackHistory?.statistics?.totalCount
+      }
     }}
   </small>
 </div>

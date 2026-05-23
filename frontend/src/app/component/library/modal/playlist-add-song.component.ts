@@ -1,5 +1,4 @@
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {Component, inject, Input, OnInit} from '@angular/core';
@@ -21,10 +20,10 @@ import {FormsModule} from '@angular/forms';
 import {PlaylistDto} from '../../../domain/library.dto';
 
 @Component({
-    imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
-    selector: 'pony-playlist-add-song',
-    templateUrl: './playlist-add-song.component.html',
-    styleUrls: ['./playlist-add-song.component.scss']
+  imports: [TranslateModule, ErrorIndicatorComponent, LoadingIndicatorComponent, FormsModule, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+  selector: 'pony-playlist-add-song',
+  templateUrl: './playlist-add-song.component.html',
+  styleUrls: ['./playlist-add-song.component.scss']
 })
 export class PlaylistAddSongComponent implements OnInit {
 

@@ -161,7 +161,8 @@
           >{{ scanJob.status }}</span></td>
           <td><span class="log-message">{{ scanJob.logMessage?.text }}</span></td>
           <td class="details-button">
-            <button type="button" class="btn btn-outline-dark" [disabled]="scanJob.status !== ScanJobStatus.COMPLETE && scanJob.status !== ScanJobStatus.FAILED"
+            <button type="button" class="btn btn-outline-dark"
+                    [disabled]="scanJob.status !== ScanJobStatus.COMPLETE && scanJob.status !== ScanJobStatus.FAILED"
                     (click)="showDetails(scanJob)">{{ 'scanning.detailsButton' | translate }}
             </button>
           </td>
@@ -188,8 +189,12 @@
     </div>
 
     <div class="col">
-      <pony-loading-indicator *ngIf="scanJobsLoadingState === LoadingState.LOADING"></pony-loading-indicator>
-      <pony-error-indicator *ngIf="scanJobsLoadingState === LoadingState.ERROR"></pony-error-indicator>
+      @if (scanJobsLoadingState === LoadingState.LOADING) {
+        <pony-loading-indicator></pony-loading-indicator>
+      }
+      @if (scanJobsLoadingState === LoadingState.ERROR) {
+        <pony-error-indicator></pony-error-indicator>
+      }
       <div class="page-label" [hidden]="scanJobsLoadingState !== LoadingState.LOADED">
         {{
           'shared.currentPageLabel' | translate:{

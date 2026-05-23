@@ -17,74 +17,77 @@
   <div class="mb-3">
     <label class="form-label">{{ 'scanJob.statusLabel' | translate }}</label>
     <div class="scan-job-status"
-         [class.starting]="scanJob.status === ScanJobStatus.STARTING"
-         [class.started]="scanJob.status === ScanJobStatus.STARTED"
-         [class.complete]="scanJob.status === ScanJobStatus.COMPLETE"
-         [class.failed]="scanJob.status === ScanJobStatus.FAILED"
-         [class.interrupted]="scanJob.status === ScanJobStatus.INTERRUPTED"
+      [class.starting]="scanJob.status === ScanJobStatus.STARTING"
+      [class.started]="scanJob.status === ScanJobStatus.STARTED"
+      [class.complete]="scanJob.status === ScanJobStatus.COMPLETE"
+      [class.failed]="scanJob.status === ScanJobStatus.FAILED"
+      [class.interrupted]="scanJob.status === ScanJobStatus.INTERRUPTED"
     >{{ scanJob.status }}</div>
   </div>
 
   <div class="mb-3">
     <label class="form-label">{{ 'scanJob.targetPathsLabel' | translate }}</label>
-    <div *ngFor="let targetPath of scanJob.targetPaths">
-      {{ targetPath }}
-    </div>
+    @for (targetPath of scanJob.targetPaths; track targetPath) {
+      <div>
+        {{ targetPath }}
+      </div>
+    }
   </div>
 
   <div class="mb-3" [hidden]="!scanJob.logMessage">
     <label class="form-label">{{ 'scanJob.logMessageLabel' | translate }}</label>
     <div><span class="log-level"
-               [class.info]="scanJob.logMessage!.level === LogMessageLevel.INFO"
-               [class.warn]="scanJob.logMessage!.level === LogMessageLevel.WARN"
-               [class.error]="scanJob.logMessage!.level === LogMessageLevel.ERROR"
+      [class.info]="scanJob.logMessage!.level === LogMessageLevel.INFO"
+      [class.warn]="scanJob.logMessage!.level === LogMessageLevel.WARN"
+      [class.error]="scanJob.logMessage!.level === LogMessageLevel.ERROR"
     >[{{ scanJob.logMessage!.level }}]</span> {{ scanJob.logMessage!.text }}</div>
-    <div *ngIf="exception" title="{{ exception }}" class="exception"><pre>{{ exception }}</pre></div>
+    @if (exception) {
+      <div title="{{ exception }}" class="exception"><pre>{{ exception }}</pre></div>
+    }
   </div>
 
-  <div *ngIf="scanJob.scanResult">
-
-    <div class="mb-3" [hidden]="scanJob.scanResult!.failedPaths.length < 1">
-      <label class="form-label">{{ 'scanJob.failedPathsLabel' | translate }}</label>
-      <div *ngFor="let failedPath of scanJob.scanResult!.failedPaths | slice:0:10">
-        {{ failedPath }}
+  @if (scanJob.scanResult) {
+    <div>
+      <div class="mb-3" [hidden]="scanJob.scanResult!.failedPaths.length < 1">
+        <label class="form-label">{{ 'scanJob.failedPathsLabel' | translate }}</label>
+        @for (failedPath of scanJob.scanResult!.failedPaths | slice:0:10; track failedPath) {
+          <div>
+            {{ failedPath }}
+          </div>
+        }
+        @if (scanJob.scanResult!.failedPaths.length > 10) {
+          <div>
+            {{ 'scanJob.moreFailedPathsLabel' | translate }}
+          </div>
+        }
       </div>
-      <div *ngIf="scanJob.scanResult!.failedPaths.length > 10">
-        {{ 'scanJob.moreFailedPathsLabel' | translate }}
+      <div class="mb-3">
+        <label class="form-label">{{ 'scanJob.processedAudioFilesLabel' | translate }}</label>
+        <div>{{ scanJob.scanResult!.processedAudioFileCount }}</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'scanJob.scanResultLabel' | translate }}</label>
+        <div>{{ result }}</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'scanJob.countsLabel' | translate }}</label>
+        <div>{{ 'scanJob.counts' | translate:{
+          artistCount: scanJob.scanResult!.artistCount,
+          albumCount: scanJob.scanResult!.albumCount,
+          songCount: scanJob.scanResult!.songCount,
+          artworkCount: scanJob.scanResult!.artworkCount,
+          genreCount: scanJob.scanResult!.genreCount,
+        } }}</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'scanJob.durationLabel' | translate }}</label>
+        <div>{{ duration }}</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'scanJob.sizeLabel' | translate }}</label>
+        <div>{{ songSize }}</div>
       </div>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.processedAudioFilesLabel' | translate }}</label>
-      <div>{{ scanJob.scanResult!.processedAudioFileCount }}</div>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.scanResultLabel' | translate }}</label>
-      <div>{{ result }}</div>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.countsLabel' | translate }}</label>
-      <div>{{ 'scanJob.counts' | translate:{
-        artistCount: scanJob.scanResult!.artistCount,
-        albumCount: scanJob.scanResult!.albumCount,
-        songCount: scanJob.scanResult!.songCount,
-        artworkCount: scanJob.scanResult!.artworkCount,
-        genreCount: scanJob.scanResult!.genreCount,
-      } }}</div>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.durationLabel' | translate }}</label>
-      <div>{{ duration }}</div>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'scanJob.sizeLabel' | translate }}</label>
-      <div>{{ songSize }}</div>
-    </div>
-
-  </div>
+  }
 
 </div>

@@ -4,57 +4,64 @@
          (input)="onInputChange($event)" (focusin)="onFocusIn()" (keydown)="onInputKeyDown($event)">
   <i class="bi bi-search ms-3 search-icon"></i>
 
-  <div tabindex="0" class="search-results focus-ring focus-ring-secondary" #searchResults data-pony-image-loader-scroller
+  <div tabindex="0" class="search-results focus-ring focus-ring-secondary" #searchResults
+       data-pony-image-loader-scroller
        [hidden]="!open || !searchResult" (keydown)="onInputKeyDown($event)">
 
     <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
-      <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
-           title="{{ artist.name | ponyUnknownArtist }}"
-           *ngFor="let artist of searchResult?.artists; trackBy:trackByArtist"
-           (mousedown)="selectArtist(artist)" (click)="goToArtist(artist)">
-        <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
-        <div class="text no-description">
-          {{ artist.name | ponyUnknownArtist }}
+      @for (artist of searchResult?.artists; track trackByArtist($index, artist)) {
+        <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
+             title="{{ artist.name | ponyUnknownArtist }}"
+             (mousedown)="selectArtist(artist)" (click)="goToArtist(artist)">
+          <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
+          <div class="text no-description">
+            {{ artist.name | ponyUnknownArtist }}
+          </div>
         </div>
-      </div>
+      }
     </div>
 
     <div [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
-      <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
-           title="{{ song.name | ponyUnknownSong }}
+      @for (song of searchResult?.songs; track trackBySong($index, song)) {
+        <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
+             title="{{ song.name | ponyUnknownSong }}
 {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
-           *ngFor="let song of searchResult?.songs; trackBy:trackBySong"
-           (mousedown)="selectSong(song)" (click)="goToSong(song)">
-        <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-        <div class="text" [class.liked]="idToNavigationItem[song.id].liked">
-          <div>{{ song.name | ponyUnknownSong }}</div>
-          <div>
-            <small>
-              {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}
-            </small>
+             (mousedown)="selectSong(song)" (click)="goToSong(song)">
+          <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
+          <div class="text" [class.liked]="idToNavigationItem[song.id].liked">
+            <div>{{ song.name | ponyUnknownSong }}</div>
+            <div>
+              <small>
+                {{ song.album.artist.name | ponyUnknownArtist }}
+                - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}
+              </small>
+            </div>
           </div>
+          @if (idToNavigationItem[song.id].liked) {
+            <div class="like">
+              <i class="bi bi-star-fill"></i>
+            </div>
+          }
         </div>
-        <div class="like" *ngIf="idToNavigationItem[song.id].liked">
-          <i class="bi bi-star-fill"></i>
-        </div>
-      </div>
+      }
     </div>
 
     <div [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
-      <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
-           title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
+      @for (album of searchResult?.albums; track trackByAlbum($index, album)) {
+        <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
+             title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
 {{ album.artist.name | ponyUnknownArtist }}"
-           *ngFor="let album of searchResult?.albums; trackBy:trackByAlbum"
-           (mousedown)="selectAlbum(album)" (click)="goToAlbum(album)">
-        <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
-        <div class="text">
-          <div>{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
-          <div><small>{{ album.artist.name | ponyUnknownArtist }}</small></div>
+             (mousedown)="selectAlbum(album)" (click)="goToAlbum(album)">
+          <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
+          <div class="text">
+            <div>{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
+            <div><small>{{ album.artist.name | ponyUnknownArtist }}</small></div>
+          </div>
         </div>
-      </div>
+      }
     </div>
 
   </div>

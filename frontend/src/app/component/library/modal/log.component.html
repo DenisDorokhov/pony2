@@ -10,9 +10,11 @@
       <span class="caret"></span>
     </button>
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button *ngFor="let level of logLevels" ngbDropdownItem [class.selected]="minLevel === level" (click)="applyFilter(level)">
-        {{ level }}
-      </button>
+      @for (level of logLevels; track level) {
+        <button ngbDropdownItem [class.selected]="minLevel === level" (click)="applyFilter(level)">
+          {{ level }}
+        </button>
+      }
     </ul>
   </div>
 
@@ -25,7 +27,11 @@
             <td class="log-level {{ log.level }}">{{ log.level }}</td>
             <td>
               <div>{{ log.text }}</div>
-              <div class="exception" title="{{ log.exception }}" *ngIf="log.exception !== undefined"><pre>{{ log.exception }}</pre></div>
+              @if (log.exception !== undefined) {
+                <div class="exception" title="{{ log.exception }}">
+                  <pre>{{ log.exception }}</pre>
+                </div>
+              }
             </td>
           </tr>
         }
@@ -41,8 +47,12 @@
               (click)="loadPreviousPage()"></button>
     </div>
     <div class="col">
-      <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
-      <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
+      @if (loadingState === LoadingState.LOADING) {
+        <pony-loading-indicator></pony-loading-indicator>
+      }
+      @if (loadingState === LoadingState.ERROR) {
+        <pony-error-indicator></pony-error-indicator>
+      }
       <div class="page-label" [hidden]="loadingState !== LoadingState.LOADED">
         {{
           'shared.currentPageLabel' | translate:{

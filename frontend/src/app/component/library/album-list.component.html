@@ -1,93 +1,107 @@
 <div class="panel panel-default">
-  <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
-  <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
-  <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY"
-                             [message]="'library.noMusicLabel' | translate">
-  </pony-no-content-indicator>
-  <div *ngIf="loadingState === LoadingState.LOADED"
-       class="panel-heading">
-    <div class="panel-title">
-      <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
-        {{ artistSongs.artist.name | ponyUnknownArtist }}
-        <div ngbDropdown container="body" class="btn-group sort-container" dropdownClass="pony-dropdown">
-          <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
-            @switch (sortingOrder) {
-              @case (AlbumSortingOrder.YEAR_ASCENDING) {
-                <i class="bi bi-calendar3 no-padding"></i>
+  @if (loadingState === LoadingState.LOADING) {
+    <pony-loading-indicator></pony-loading-indicator>
+  }
+  @if (loadingState === LoadingState.ERROR) {
+    <pony-error-indicator></pony-error-indicator>
+  }
+  @if (loadingState === LoadingState.EMPTY) {
+    <pony-no-content-indicator
+      [message]="'library.noMusicLabel' | translate">
+    </pony-no-content-indicator>
+  }
+  @if (loadingState === LoadingState.LOADED) {
+    <div
+      class="panel-heading">
+      <div class="panel-title">
+        <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
+          {{ artistSongs.artist.name | ponyUnknownArtist }}
+          <div ngbDropdown container="body" class="btn-group sort-container" dropdownClass="pony-dropdown">
+            <button ngbDropdownToggle class="btn btn-sm btn-light sort" data-toggle="dropdown">
+              @switch (sortingOrder) {
+                @case (AlbumSortingOrder.YEAR_ASCENDING) {
+                  <i class="bi bi-calendar3 no-padding"></i>
+                }
+                @case (AlbumSortingOrder.YEAR_DESCENDING) {
+                  <i class="bi bi-calendar3 no-padding"></i>
+                }
+                @case (AlbumSortingOrder.NAME_ASCENDING) {
+                  <i class="bi bi-alphabet no-padding"></i>
+                }
+                @case (AlbumSortingOrder.NAME_DESCENDING) {
+                  <i class="bi bi-alphabet no-padding"></i>
+                }
+                @case (AlbumSortingOrder.MODIFICATION_ASCENDING) {
+                  <i class="bi bi-clock-history no-padding"></i>
+                }
+                @case (AlbumSortingOrder.MODIFICATION_DESCENDING) {
+                  <i class="bi bi-clock-history no-padding"></i>
+                }
               }
-              @case (AlbumSortingOrder.YEAR_DESCENDING) {
-                <i class="bi bi-calendar3 no-padding"></i>
-              }
-              @case (AlbumSortingOrder.NAME_ASCENDING) {
-                <i class="bi bi-alphabet no-padding"></i>
-              }
-              @case (AlbumSortingOrder.NAME_DESCENDING) {
-                <i class="bi bi-alphabet no-padding"></i>
-              }
-              @case (AlbumSortingOrder.MODIFICATION_ASCENDING) {
-                <i class="bi bi-clock-history no-padding"></i>
-              }
-              @case (AlbumSortingOrder.MODIFICATION_DESCENDING) {
-                <i class="bi bi-clock-history no-padding"></i>
-              }
-            }
-          </button>
-          <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-            <button ngbDropdownItem
-                    [class.selected]="sortingOrder === AlbumSortingOrder.YEAR_DESCENDING"
-                    (click)="setSortingOrder(AlbumSortingOrder.YEAR_DESCENDING)">
-              <i class="bi bi-calendar3"></i>
-              <i class="bi bi-arrow-down"></i>
-              {{ 'library.album.sortByYearDesc' | translate }}
             </button>
-            <button ngbDropdownItem
-                    [class.selected]="sortingOrder === AlbumSortingOrder.YEAR_ASCENDING"
-                    (click)="setSortingOrder(AlbumSortingOrder.YEAR_ASCENDING)">
-              <i class="bi bi-calendar3"></i>
-              <i class="bi bi-arrow-up"></i>
-              {{ 'library.album.sortByYearAsc' | translate }}
+            <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+              <button ngbDropdownItem
+                      [class.selected]="sortingOrder === AlbumSortingOrder.YEAR_DESCENDING"
+                      (click)="setSortingOrder(AlbumSortingOrder.YEAR_DESCENDING)">
+                <i class="bi bi-calendar3"></i>
+                <i class="bi bi-arrow-down"></i>
+                {{ 'library.album.sortByYearDesc' | translate }}
+              </button>
+              <button ngbDropdownItem
+                      [class.selected]="sortingOrder === AlbumSortingOrder.YEAR_ASCENDING"
+                      (click)="setSortingOrder(AlbumSortingOrder.YEAR_ASCENDING)">
+                <i class="bi bi-calendar3"></i>
+                <i class="bi bi-arrow-up"></i>
+                {{ 'library.album.sortByYearAsc' | translate }}
+              </button>
+              <button ngbDropdownItem
+                      [class.selected]="sortingOrder === AlbumSortingOrder.NAME_ASCENDING"
+                      (click)="setSortingOrder(AlbumSortingOrder.NAME_ASCENDING)">
+                <i class="bi bi-alphabet"></i>
+                <i class="bi bi-arrow-up"></i>
+                {{ 'library.album.sortByNameAsc' | translate }}
+              </button>
+              <button ngbDropdownItem
+                      [class.selected]="sortingOrder === AlbumSortingOrder.MODIFICATION_DESCENDING"
+                      (click)="setSortingOrder(AlbumSortingOrder.MODIFICATION_DESCENDING)">
+                <i class="bi bi-clock-history"></i>
+                <i class="bi bi-arrow-down"></i>
+                {{ 'library.album.sortByModificationDesc' | translate }}
+              </button>
+            </ul>
+          </div>
+          @if (likeCount > 0) {
+            <button class="btn btn-sm btn-light" (click)="openArtistLikes()">
+              <i class="bi bi-star-fill"></i>{{ likeCount }}
             </button>
-            <button ngbDropdownItem
-                    [class.selected]="sortingOrder === AlbumSortingOrder.NAME_ASCENDING"
-                    (click)="setSortingOrder(AlbumSortingOrder.NAME_ASCENDING)">
-              <i class="bi bi-alphabet"></i>
-              <i class="bi bi-arrow-up"></i>
-              {{ 'library.album.sortByNameAsc' | translate }}
-            </button>
-            <button ngbDropdownItem
-                    [class.selected]="sortingOrder === AlbumSortingOrder.MODIFICATION_DESCENDING"
-                    (click)="setSortingOrder(AlbumSortingOrder.MODIFICATION_DESCENDING)">
-              <i class="bi bi-clock-history"></i>
-              <i class="bi bi-arrow-down"></i>
-              {{ 'library.album.sortByModificationDesc' | translate }}
-            </button>
-          </ul>
+          }
         </div>
-        <button *ngIf="likeCount > 0" class="btn btn-sm btn-light" (click)="openArtistLikes()">
-          <i class="bi bi-star-fill"></i>{{ likeCount }}
-        </button>
-      </div>
-      <div class="counts" title="{{
+        <div class="counts" title="{{
           'library.album.counterTitle' | translate:{
             genres: genreNamesAsString,
             albumCount,
             songCount
           }
         }}">
-        <ng-container *ngFor="let genre of artistSongs.artist.genres">
-          <a (click)="onGenreClick(genre)">{{ genre.name | ponyUnknownGenre }}</a>,
-        </ng-container>
-        {{
-          'library.album.counterHeader' | translate:{
-            albumCount,
-            songCount
+          @for (genre of artistSongs.artist.genres; track genre) {
+            <a (click)="onGenreClick(genre)">{{ genre.name | ponyUnknownGenre }}</a>,
           }
-        }}
+          {{
+            'library.album.counterHeader' | translate:{
+              albumCount,
+              songCount
+            }
+          }}
+        </div>
       </div>
     </div>
-  </div>
-  <div *ngIf="loadingState === LoadingState.LOADED" #scrollerElement
-       class="panel-body album-list-container" data-pony-image-loader-scroller>
-    <pony-album *ngFor="let album of artistSongs.albumSongs; trackBy: trackByIndex" [albumSongs]="album"></pony-album>
-  </div>
+  }
+  @if (loadingState === LoadingState.LOADED) {
+    <div #scrollerElement
+         class="panel-body album-list-container" data-pony-image-loader-scroller>
+      @for (album of artistSongs.albumSongs; track trackByIndex($index, album)) {
+        <pony-album [albumSongs]="album"></pony-album>
+      }
+    </div>
+  }
 </div>

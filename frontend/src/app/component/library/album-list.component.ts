@@ -9,7 +9,6 @@ import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
 import {AlbumComponent} from './album.component';
-import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaylistService} from '../../service/playlist.service';
 import {
@@ -24,10 +23,10 @@ import {ArtistLikesComponent} from './modal/artist-likes.component';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 
 @Component({
-  imports: [CommonModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
-    selector: 'pony-album-list',
-    templateUrl: './album-list.component.html',
-    styleUrls: ['./album-list.component.scss']
+  imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+  selector: 'pony-album-list',
+  templateUrl: './album-list.component.html',
+  styleUrls: ['./album-list.component.scss']
 })
 export class AlbumListComponent implements OnInit, OnDestroy {
 
@@ -171,7 +170,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   openArtistLikes() {
-    const modalRef = this.modal.open(ArtistLikesComponent, { size: 'lg' });
+    const modalRef = this.modal.open(ArtistLikesComponent, {size: 'lg'});
     const userComponent: ArtistLikesComponent = modalRef.componentInstance;
     userComponent.artistSongs = this.artistSongs;
   }

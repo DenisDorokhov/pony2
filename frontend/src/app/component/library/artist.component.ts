@@ -5,17 +5,16 @@ import {LibraryService} from '../../service/library.service';
 import {PlaybackService} from '../../service/playback.service';
 import {ImageLoaderComponent} from '../common/image-loader.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaybackState} from '../../service/audio-player.service';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {InstallationService} from '../../service/installation.service';
 
 @Component({
-    imports: [CommonModule, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
-    selector: 'pony-artist',
-    templateUrl: './artist.component.html',
-    styleUrls: ['./artist.component.scss']
+  imports: [TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
+  selector: 'pony-artist',
+  templateUrl: './artist.component.html',
+  styleUrls: ['./artist.component.scss']
 })
 export class ArtistComponent implements OnInit, OnDestroy {
 

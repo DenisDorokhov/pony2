@@ -9,7 +9,6 @@ import {
   ViewChild,
   ViewChildren
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown} from '@ng-bootstrap/ng-bootstrap';
 import {PlaybackService} from '../../../service/playback.service';
@@ -26,20 +25,19 @@ import {isMobileBrowser} from '../../../utils/mobile.utils';
 import {LargeSongComponent} from './common/large-song.component';
 
 @Component({
-    imports: [
-        CommonModule,
-        TranslateModule,
-        NoContentIndicatorComponent,
-        CdkDropList,
-        CdkDrag,
-        CdkVirtualScrollViewport,
-        CdkVirtualForOf,
-        LargeSongComponent,
-        CdkFixedSizeVirtualScroll,
-    ],
-    selector: 'pony-queue',
-    templateUrl: './queue.component.html',
-    styleUrls: ['./queue.component.scss']
+  imports: [
+    TranslateModule,
+    NoContentIndicatorComponent,
+    CdkDropList,
+    CdkDrag,
+    CdkVirtualScrollViewport,
+    CdkVirtualForOf,
+    LargeSongComponent,
+    CdkFixedSizeVirtualScroll
+  ],
+  selector: 'pony-queue',
+  templateUrl: './queue.component.html',
+  styleUrls: ['./queue.component.scss']
 })
 export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
@@ -64,7 +62,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   dragEnabled = true;
 
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
-  @ViewChildren('songElements', { read: ElementRef }) linkElements!: QueryList<ElementRef>;
+  @ViewChildren('songElements', {read: ElementRef}) linkElements!: QueryList<ElementRef>;
   @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
 
   private subscriptions: Subscription[] = [];

@@ -10,7 +10,6 @@ import {
   ViewChildren
 } from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from 'rxjs';
 import {distinctUntilChanged, map} from 'rxjs/operators';
 import {LibraryService} from '../../service/library.service';
@@ -37,10 +36,10 @@ class NavigationItem {
 }
 
 @Component({
-    imports: [TranslateModule, CommonModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
-    selector: 'pony-fast-search',
-    templateUrl: './fast-search.component.html',
-    styleUrls: ['./fast-search.component.scss']
+  imports: [TranslateModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
+  selector: 'pony-fast-search',
+  templateUrl: './fast-search.component.html',
+  styleUrls: ['./fast-search.component.scss']
 })
 export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -137,7 +136,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }));
 
-    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
+    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
       if (event.ctrlKey && event.shiftKey && event.code === 'KeyF') {
         this.inputElement.nativeElement.focus();
         event.preventDefault();

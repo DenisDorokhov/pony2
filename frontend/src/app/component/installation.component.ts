@@ -7,16 +7,15 @@ import {InstallationCommandDto} from '../domain/installation.dto';
 import {ErrorComponent} from './common/error.component';
 import {ErrorContainerComponent} from './common/error-container.component';
 import {TranslateModule} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 import {AutoFocusDirective} from './common/auto-focus.directive';
 import {mergeMap} from 'rxjs';
 import {AuthenticationService, Credentials} from '../service/authentication.service';
 
 @Component({
-    imports: [CommonModule, ReactiveFormsModule, TranslateModule, AutoFocusDirective, ErrorComponent, ErrorContainerComponent],
-    selector: 'pony-installation',
-    templateUrl: './installation.component.html',
-    styleUrl: './installation.component.scss'
+  imports: [ReactiveFormsModule, TranslateModule, AutoFocusDirective, ErrorComponent, ErrorContainerComponent],
+  selector: 'pony-installation',
+  templateUrl: './installation.component.html',
+  styleUrl: './installation.component.scss'
 })
 export class InstallationComponent {
 

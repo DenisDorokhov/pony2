@@ -2,13 +2,12 @@ import {Component, inject, Input, OnChanges} from '@angular/core';
 import {ErrorTranslationService} from '../../service/error-translation.service';
 import {ErrorDto} from '../../domain/common.dto';
 import {TranslateModule} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 
 @Component({
-    imports: [CommonModule, TranslateModule],
-    selector: 'pony-error',
-    templateUrl: './error.component.html',
-    styleUrls: ['./error.component.scss']
+  imports: [TranslateModule],
+  selector: 'pony-error',
+  templateUrl: './error.component.html',
+  styleUrls: ['./error.component.scss']
 })
 export class ErrorComponent implements OnChanges {
 

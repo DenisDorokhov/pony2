@@ -15,13 +15,12 @@ import {NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbMod
 import {PlaylistDto} from '../../domain/library.dto';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
-import {NgIf} from '@angular/common';
 
 @Component({
-  imports: [ImageLoaderComponent, TranslateModule, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgIf, NgbDropdownItem],
-    selector: 'pony-player',
-    templateUrl: './player.component.html',
-    styleUrls: ['./player.component.scss']
+  imports: [ImageLoaderComponent, TranslateModule, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownItem],
+  selector: 'pony-player',
+  templateUrl: './player.component.html',
+  styleUrls: ['./player.component.scss']
 })
 export class PlayerComponent implements OnInit, OnDestroy {
 
@@ -68,7 +67,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.hasPreviousSong = this.playbackService.hasPreviousSong() || this.queue.length > 0;
         this.hasNextSong = this.playbackService.hasNextSong();
       }));
-    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body,'keydown').subscribe(event => {
+    this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
       const formElements: string[] = [
         'INPUT', 'LABEL', 'SELECT', 'TEXTAREA', 'BUTTON', 'FIELDSET', 'LEGEND', 'DATALIST', 'OUTPUT', 'OPTION', 'OPTGROUP',
       ];

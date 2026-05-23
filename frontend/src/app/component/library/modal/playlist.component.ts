@@ -1,6 +1,5 @@
 import {Component, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 import {
   NgbActiveModal,
   NgbDropdown,
@@ -32,10 +31,10 @@ import {formatDuration} from '../../../utils/format.utils';
 import {UnknownGenrePipe} from '../../../pipe/unknown-genre.pipe';
 
 @Component({
-    imports: [TranslateModule, CommonModule, FormsModule, NoContentIndicatorComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport, CdkDropList, CdkDrag, CdkVirtualForOf, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownButtonItem, NgbDropdownItem, UnknownGenrePipe],
-    selector: 'pony-playlist',
-    templateUrl: './playlist.component.html',
-    styleUrls: ['./playlist.component.scss']
+  imports: [TranslateModule, FormsModule, NoContentIndicatorComponent, ErrorIndicatorComponent, LoadingIndicatorComponent, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport, CdkDropList, CdkDrag, CdkVirtualForOf, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownButtonItem, NgbDropdownItem, UnknownGenrePipe],
+  selector: 'pony-playlist',
+  templateUrl: './playlist.component.html',
+  styleUrls: ['./playlist.component.scss']
 })
 export class PlaylistComponent implements OnInit, OnDestroy {
 

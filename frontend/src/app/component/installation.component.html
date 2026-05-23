@@ -16,26 +16,28 @@
           <span>
             <label class="form-label">{{ 'installation.libraryFoldersLabel' | translate }}</label>
           </span>
-          <pony-error-container #libraryFoldersContainer class="library-folders-container"
-                                *ngFor="let libraryFolder of libraryFolders.controls; let i = index;"
-                                [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
-            <div class="input-group" [class.is-invalid]="libraryFoldersContainer.hasErrors">
-              <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
-                     [class.is-invalid]="libraryFoldersContainer.hasErrors" [placeholder]="'installation.libraryFoldersPlaceholder' | translate">
-              <span class="input-group-btn">
-                <button type="button" class="btn btn-light add"
-                        [disabled]="libraryFolders.controls.length >= 5"
-                        (click)="addLibraryFolder()">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-                <button type="button" class="btn btn-light remove"
-                        [disabled]="libraryFolders.controls.length <= 1"
-                        (click)="removeLibraryFolder(i)">
-                  <i class="bi bi-dash-lg"></i>
-                </button>
-              </span>
-            </div>
-          </pony-error-container>
+          @for (libraryFolder of libraryFolders.controls; track libraryFolder; let i = $index) {
+            <pony-error-container #libraryFoldersContainer class="library-folders-container"
+                                  [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
+              <div class="input-group" [class.is-invalid]="libraryFoldersContainer.hasErrors">
+                <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
+                       [class.is-invalid]="libraryFoldersContainer.hasErrors"
+                       [placeholder]="'installation.libraryFoldersPlaceholder' | translate">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-light add"
+                            [disabled]="libraryFolders.controls.length >= 5"
+                            (click)="addLibraryFolder()">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <button type="button" class="btn btn-light remove"
+                            [disabled]="libraryFolders.controls.length <= 1"
+                            (click)="removeLibraryFolder(i)">
+                      <i class="bi bi-dash-lg"></i>
+                    </button>
+                  </span>
+              </div>
+            </pony-error-container>
+          }
         </div>
 
         <div class="mb-3">
@@ -63,7 +65,8 @@
         </div>
 
         <div class="mb-3">
-          <pony-error-container #repeatAdminPasswordContainer class="form-group" [error]="error" [field]="'repeatAdminPassword'">
+          <pony-error-container #repeatAdminPasswordContainer class="form-group" [error]="error"
+                                [field]="'repeatAdminPassword'">
             <label for="repeatAdminPassword"
                    class="form-label">{{ 'installation.repeatAdminPasswordLabel' | translate }}</label>
             <input id="repeatAdminPassword" formControlName="repeatAdminPassword" type="password" class="form-control"
@@ -72,11 +75,13 @@
         </div>
 
         <div class="mb-3">
-          <pony-error-container #installationSecretContainer class="form-group" [error]="error" [field]="'installationSecret'">
+          <pony-error-container #installationSecretContainer class="form-group" [error]="error"
+                                [field]="'installationSecret'">
             <label for="installationSecret"
                    class="form-label">{{ 'installation.installationSecretLabel' | translate }}</label>
             <input id="installationSecret" formControlName="installationSecret" type="password" class="form-control"
-                   [class.is-invalid]="installationSecretContainer.hasErrors" [placeholder]="'installation.installationSecretPlaceholder' | translate">
+                   [class.is-invalid]="installationSecretContainer.hasErrors"
+                   [placeholder]="'installation.installationSecretPlaceholder' | translate">
           </pony-error-container>
         </div>
 

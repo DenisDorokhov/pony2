@@ -1,5 +1,4 @@
 import {Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {UnknownArtistPipe} from '../../../../pipe/unknown-artist.pipe';
 import {UnknownSongPipe} from '../../../../pipe/unknown-song.pipe';
@@ -26,23 +25,22 @@ import {PlaylistEditComponent} from '../playlist-edit.component';
 import {LibraryService} from '../../../../service/library.service';
 
 @Component({
-    imports: [
-        CommonModule,
-        TranslateModule,
-        UnknownArtistPipe,
-        UnknownSongPipe,
-        ImageLoaderComponent,
-        UnknownAlbumPipe,
-        UnknownGenrePipe,
-        NgbDropdown,
-        NgbDropdownButtonItem,
-        NgbDropdownItem,
-        NgbDropdownMenu,
-        NgbDropdownToggle,
-    ],
-    selector: 'pony-large-song',
-    templateUrl: './large-song.component.html',
-    styleUrls: ['./large-song.component.scss']
+  imports: [
+    TranslateModule,
+    UnknownArtistPipe,
+    UnknownSongPipe,
+    ImageLoaderComponent,
+    UnknownAlbumPipe,
+    UnknownGenrePipe,
+    NgbDropdown,
+    NgbDropdownButtonItem,
+    NgbDropdownItem,
+    NgbDropdownMenu,
+    NgbDropdownToggle
+  ],
+  selector: 'pony-large-song',
+  templateUrl: './large-song.component.html',
+  styleUrls: ['./large-song.component.scss']
 })
 export class LargeSongComponent implements OnInit, OnDestroy {
 

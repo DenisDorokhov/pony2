@@ -1,6 +1,5 @@
 import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {CommonModule} from '@angular/common';
 import {LargeSongComponent} from './common/large-song.component';
 import {ArtistSongs, Song} from '../../../domain/library.model';
 import {PlaylistService} from '../../../service/playlist.service';
@@ -13,7 +12,7 @@ import {LibraryService} from '../../../service/library.service';
 import {NotificationService} from '../../../service/notification.service';
 
 @Component({
-  imports: [TranslateModule, CommonModule, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
+  imports: [TranslateModule, LargeSongComponent, CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport],
   selector: 'pony-artist-likes',
   templateUrl: './artist-likes.component.html',
   styleUrls: ['./artist-likes.component.scss']

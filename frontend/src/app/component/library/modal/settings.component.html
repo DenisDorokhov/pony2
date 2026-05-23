@@ -9,17 +9,23 @@
 </div>
 <div class="modal-body">
 
-  <div class="blocking-overlay" [hidden]="primaryLoadingState !== LoadingState.LOADING && primaryLoadingState !== LoadingState.ERROR"></div>
+  <div class="blocking-overlay"
+       [hidden]="primaryLoadingState !== LoadingState.LOADING && primaryLoadingState !== LoadingState.ERROR"></div>
 
   <div class="advanced" [hidden]="!showAdvanced">
 
     <div class="mb-3">
       <label class="form-label">{{ 'settings.backupPlaylistsLabel' | translate }}</label>
-      <div><button class="btn btn-primary" (click)="createPlaylistsBackup()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}</button></div>
+      <div>
+        <button class="btn btn-primary" (click)="createPlaylistsBackup()"
+                [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}
+        </button>
+      </div>
     </div>
     <div class="mb-3">
       <input type="file" class="form-control" (change)="onPlaylistsBackupFileChange($event)">
-      <button class="btn btn-primary restore" (click)="restorePlaylistsBackup()" [disabled]="!backupPlaylistsFileToRestore || secondaryLoadingState === LoadingState.LOADING">
+      <button class="btn btn-primary restore" (click)="restorePlaylistsBackup()"
+              [disabled]="!backupPlaylistsFileToRestore || secondaryLoadingState === LoadingState.LOADING">
         {{ 'settings.restoreBackupButton' | translate }}
       </button>
     </div>
@@ -28,11 +34,16 @@
 
     <div class="mb-3">
       <label class="form-label">{{ 'settings.backupHistoryLabel' | translate }}</label>
-      <div><button class="btn btn-primary" (click)="createHistoryBackup()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}</button></div>
+      <div>
+        <button class="btn btn-primary" (click)="createHistoryBackup()"
+                [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}
+        </button>
+      </div>
     </div>
     <div class="mb-3">
       <input type="file" class="form-control" (change)="onHistoryBackupFileChange($event)">
-      <button class="btn btn-primary restore" (click)="restoreHistoryBackup()" [disabled]="!backupHistoryFileToRestore || secondaryLoadingState === LoadingState.LOADING">
+      <button class="btn btn-primary restore" (click)="restoreHistoryBackup()"
+              [disabled]="!backupHistoryFileToRestore || secondaryLoadingState === LoadingState.LOADING">
         {{ 'settings.restoreBackupButton' | translate }}
       </button>
     </div>
@@ -41,7 +52,11 @@
 
     <div class="mb-3">
       <label class="form-label">{{ 'settings.reBuildSearchIndexLabel' | translate }}</label>
-      <div><button class="btn btn-primary index" (click)="reBuildSearchIndex()" [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}</button></div>
+      <div>
+        <button class="btn btn-primary index" (click)="reBuildSearchIndex()"
+                [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}
+        </button>
+      </div>
     </div>
 
     <hr>
@@ -57,36 +72,44 @@
 
     <div class="mb-3" formArrayName="libraryFolders">
       <label class="form-label">{{ 'settings.libraryFoldersLabel' | translate }}</label>
-      <pony-error-container #libraryFoldersContainer class="library-folders-container"
-                            *ngFor="let libraryFolder of formLibraryFolders.controls; let i = index;"
-                            [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
-        <div class="input-group" [class.is-invalid]="libraryFoldersContainer.hasErrors">
-          <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
-                 [class.is-invalid]="libraryFoldersContainer.hasErrors" [placeholder]="'settings.libraryFoldersPlaceholder' | translate">
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-light add"
-                    [disabled]="formLibraryFolders.controls.length >= 5"
-                    (click)="addLibraryFolder()">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-            <button type="button" class="btn btn-light remove"
-                    [disabled]="formLibraryFolders.controls.length <= 1"
-                    (click)="removeLibraryFolder(i)">
-              <i class="bi bi-dash-lg"></i>
-            </button>
-          </span>
-        </div>
-      </pony-error-container>
+      @for (libraryFolder of formLibraryFolders.controls; track libraryFolder; let i = $index) {
+        <pony-error-container #libraryFoldersContainer class="library-folders-container"
+                              [formGroupName]="i" [error]="error" [field]="'libraryFolders[' + i + '].path'">
+          <div class="input-group" [class.is-invalid]="libraryFoldersContainer.hasErrors">
+            <input ponyAutoFocus formControlName="path" type="text" class="form-control library-folders"
+                   [class.is-invalid]="libraryFoldersContainer.hasErrors"
+                   [placeholder]="'settings.libraryFoldersPlaceholder' | translate">
+            <span class="input-group-btn">
+                      <button type="button" class="btn btn-light add"
+                              [disabled]="formLibraryFolders.controls.length >= 5"
+                              (click)="addLibraryFolder()">
+                        <i class="bi bi-plus-lg"></i>
+                      </button>
+                      <button type="button" class="btn btn-light remove"
+                              [disabled]="formLibraryFolders.controls.length <= 1"
+                              (click)="removeLibraryFolder(i)">
+                        <i class="bi bi-dash-lg"></i>
+                      </button>
+                    </span>
+          </div>
+        </pony-error-container>
+      }
     </div>
 
-    <input type="submit" hidden />
+    <input type="submit" hidden/>
 
   </form>
 
 </div>
 <div class="modal-footer">
-  <pony-loading-indicator [hidden]="primaryLoadingState !== LoadingState.LOADING && secondaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
-  <pony-error-indicator [hidden]="primaryLoadingState !== LoadingState.ERROR && secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
-  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
-  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="primaryLoadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
+  <pony-loading-indicator
+    [hidden]="primaryLoadingState !== LoadingState.LOADING && secondaryLoadingState !== LoadingState.LOADING"></pony-loading-indicator>
+  <pony-error-indicator
+    [hidden]="primaryLoadingState !== LoadingState.ERROR && secondaryLoadingState !== LoadingState.ERROR"></pony-error-indicator>
+  <button type="button" class="btn btn-outline-dark"
+          (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}
+  </button>
+  <button type="button" class="btn btn-primary" (click)="save()"
+          [disabled]="primaryLoadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}
+  </button>
 </div>

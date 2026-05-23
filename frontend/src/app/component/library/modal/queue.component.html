@@ -3,42 +3,44 @@
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight"
-                             (touchmove)="onTouchmove($event)" (scroll)="onScroll()"
-                             (wheel)="onWheel($event)">
+  (touchmove)="onTouchmove($event)" (scroll)="onScroll()"
+  (wheel)="onWheel($event)">
 
-  <pony-no-content-indicator *ngIf="!queue.length"
-                             [message]="'queue.emptyQueueLabel' | translate">
-  </pony-no-content-indicator>
+  @if (!queue.length) {
+    <pony-no-content-indicator
+      [message]="'queue.emptyQueueLabel' | translate">
+    </pony-no-content-indicator>
+  }
 
-  <div *ngIf="queue.length" cdkDropList cdkDropListAutoScrollDisabled
-       [cdkDropListData]="queue" class="table-container"
-       (cdkDropListDropped)="onDropListDropped($event)">
+  @if (queue.length) {
+    <div cdkDropList cdkDropListAutoScrollDisabled
+      [cdkDropListData]="queue" class="table-container"
+      (cdkDropListDropped)="onDropListDropped($event)">
+      <pony-large-song
+        [index]="i" [song]="song"
+        [selected]="selectedIndex === i" [isCurrentSong]="currentSongIndex === i"
+        #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"
+        *cdkVirtualFor="let song of queue; let i = index;"
+        (cdkDragStarted)="onDragStarted($event)"
+        (doubleClick)="playSongOnDoubleClick(i)"
+        (mousedown)="selectIndex(i)"
+        (playOrPauseRequested)="onPlaybackClick(i)"
+        (goToSongRequested)="goToSong(song)"
+        (removalRequested)="removeSong(i)"
+        />
+      </div>
+    }
 
-    <pony-large-song
-      [index]="i" [song]="song"
-      [selected]="selectedIndex === i" [isCurrentSong]="currentSongIndex === i"
-      #songElements id="queueSong_{{ i }}" cdkDrag [cdkDragDisabled]="!dragEnabled"
-      *cdkVirtualFor="let song of queue; let i = index;"
-      (cdkDragStarted)="onDragStarted($event)"
-      (doubleClick)="playSongOnDoubleClick(i)"
-      (mousedown)="selectIndex(i)"
-      (playOrPauseRequested)="onPlaybackClick(i)"
-      (goToSongRequested)="goToSong(song)"
-      (removalRequested)="removeSong(i)"
-    />
-
+  </cdk-virtual-scroll-viewport>
+  <div class="modal-footer" [hidden]="queue.length < 1">
+    <span class="scroll-to-current-song">
+      <button [hidden]="currentSongShown" (click)="scrollToCurrentSong()" type="button" class="btn btn-outline-dark btn-sm">
+        {{ 'queue.scrollToCurrentSongButton' | translate }}
+      </button>
+    </span>
+    <small>
+      {{
+      'queue.sizeLabel' | translate:{ songCount: queue.length, duration }
+      }}
+    </small>
   </div>
-
-</cdk-virtual-scroll-viewport>
-<div class="modal-footer" [hidden]="queue.length < 1">
-  <span class="scroll-to-current-song">
-    <button [hidden]="currentSongShown" (click)="scrollToCurrentSong()" type="button" class="btn btn-outline-dark btn-sm">
-      {{ 'queue.scrollToCurrentSongButton' | translate }}
-    </button>
-  </span>
-  <small>
-  {{
-    'queue.sizeLabel' | translate:{ songCount: queue.length, duration }
-  }}
-  </small>
-</div>

@@ -1,5 +1,6 @@
 <div class="panel panel-default">
-  <div ngbDropdown class="header" dropdownClass="pony-dropdown" placement="bottom" (openChange)="onNavigationDropdownOpenChange($event)">
+  <div ngbDropdown class="header" dropdownClass="pony-dropdown" placement="bottom"
+       (openChange)="onNavigationDropdownOpenChange($event)">
     <button ngbDropdownToggle type="button" class="genre">
       {{ selectedNavigationItem.title }}
       <span class="caret"></span>
@@ -8,20 +9,23 @@
       <div class="search-genre">
         <input #filterInputElement type="text" class="form-control"
                placeholder="{{ 'library.artist.filterGenresPlaceholder' | translate }}"
-               [value]="filterGenre" (input)="filterGenres(filterInputElement.value)" (keydown)="onFilterKeyDown($event)">
+               [value]="filterGenre" (input)="filterGenres(filterInputElement.value)"
+               (keydown)="onFilterKeyDown($event)">
         <i class="bi bi-funnel ms-3 search-icon" [hidden]="filterGenre.length > 0"></i>
         <i class="bi bi-x ms-3 clear-button" [hidden]="filterGenre.length === 0" (click)="clearGenreFilter()"></i>
       </div>
       <div class="genre-scroller">
-        <button *ngFor="let navigationItem of navigationItems; let i = index" ngbDropdownItem #navigationItemElement
-                [class.selected]="selectedNavigationItem.id === navigationItem.id"
-                [class.active]="navigationItem.active"
-                [ngClass]="navigationItem.id"
-                [title]=navigationItem.title
-                (mousedown)="activateNavigationItem(i)"
-                (click)="executeNavigationItem(navigationItem)">
-          {{ navigationItem.menuEntry }}
-        </button>
+        @for (navigationItem of navigationItems; track navigationItem; let i = $index) {
+          <button ngbDropdownItem #navigationItemElement
+                  [class.selected]="selectedNavigationItem.id === navigationItem.id"
+                  [class.active]="navigationItem.active"
+                  [ngClass]="navigationItem.id"
+                  [title]=navigationItem.title
+                  (mousedown)="activateNavigationItem(i)"
+                  (click)="executeNavigationItem(navigationItem)">
+            {{ navigationItem.menuEntry }}
+          </button>
+        }
       </div>
       <div class="reset-container" [hidden]="selectedNavigationItem.id === navigationItems[0].id">
         <a (click)="resetNavigation()" class="link-secondary">
@@ -64,16 +68,27 @@
       </ul>
     </div>
   </div>
-  <pony-loading-indicator *ngIf="loadingState === LoadingState.LOADING"></pony-loading-indicator>
-  <pony-error-indicator *ngIf="loadingState === LoadingState.ERROR"></pony-error-indicator>
-  <pony-no-content-indicator *ngIf="loadingState === LoadingState.EMPTY" [message]="'library.noMusicLabel' | translate">
-  </pony-no-content-indicator>
-  <pony-no-content-indicator *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length === 0" [message]="'library.artist.noFilteredArtistsLabel' | translate">
-  </pony-no-content-indicator>
-  <cdk-virtual-scroll-viewport *ngIf="loadingState === LoadingState.LOADED && filteredArtists.length > 0"
-                               class="list-container" [itemSize]="rowHeight">
-    <div class="list-group">
-      <pony-artist *cdkVirtualFor="let artist of filteredArtists; trackBy: trackByArtist" [artist]="artist"></pony-artist>
-    </div>
-  </cdk-virtual-scroll-viewport>
+  @if (loadingState === LoadingState.LOADING) {
+    <pony-loading-indicator></pony-loading-indicator>
+  }
+  @if (loadingState === LoadingState.ERROR) {
+    <pony-error-indicator></pony-error-indicator>
+  }
+  @if (loadingState === LoadingState.EMPTY) {
+    <pony-no-content-indicator [message]="'library.noMusicLabel' | translate">
+    </pony-no-content-indicator>
+  }
+  @if (loadingState === LoadingState.LOADED && filteredArtists.length === 0) {
+    <pony-no-content-indicator [message]="'library.artist.noFilteredArtistsLabel' | translate">
+    </pony-no-content-indicator>
+  }
+  @if (loadingState === LoadingState.LOADED && filteredArtists.length > 0) {
+    <cdk-virtual-scroll-viewport
+      class="list-container" [itemSize]="rowHeight">
+      <div class="list-group">
+        <pony-artist *cdkVirtualFor="let artist of filteredArtists; trackBy: trackByArtist"
+                     [artist]="artist"></pony-artist>
+      </div>
+    </cdk-virtual-scroll-viewport>
+  }
 </div>

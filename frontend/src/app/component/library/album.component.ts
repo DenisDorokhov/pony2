@@ -14,7 +14,6 @@ import {AlbumSongs, Playlist, Song} from '../../domain/library.model';
 import {SongListComponent} from './song-list.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ImageLoaderComponent} from '../common/image-loader.component';
-import {CommonModule} from '@angular/common';
 import {LibraryService} from '../../service/library.service';
 import {fromEvent, Subscription} from 'rxjs';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
@@ -65,10 +64,10 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 }
 
 @Component({
-  imports: [CommonModule, TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
-    selector: 'pony-album',
-    templateUrl: './album.component.html',
-    styleUrls: ['./album.component.scss']
+  imports: [TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+  selector: 'pony-album',
+  templateUrl: './album.component.html',
+  styleUrls: ['./album.component.scss']
 })
 export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
 

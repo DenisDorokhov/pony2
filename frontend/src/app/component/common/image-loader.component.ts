@@ -1,7 +1,6 @@
 import {AfterViewInit, Component, ElementRef, inject, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {Observable, Subscription} from 'rxjs';
 import {filter} from 'rxjs/operators';
-import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 
 enum ImageLoaderComponentState {
@@ -9,10 +8,10 @@ enum ImageLoaderComponentState {
 }
 
 @Component({
-  imports: [CommonModule, TranslateModule],
-    selector: 'pony-image-loader',
-    templateUrl: './image-loader.component.html',
-    styleUrls: ['./image-loader.component.scss']
+  imports: [TranslateModule],
+  selector: 'pony-image-loader',
+  templateUrl: './image-loader.component.html',
+  styleUrls: ['./image-loader.component.scss']
 })
 export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 

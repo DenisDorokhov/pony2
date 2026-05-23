@@ -12,9 +12,11 @@
         <span class="caret"></span>
       </button>
       <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-        <button *ngFor="let playlist of playlists" ngbDropdownItem [class.selected]="playlist.id === selectedPlaylist?.id" (click)="selectPlaylist(playlist)">
-          {{ playlist.name }}
-        </button>
+        @for (playlist of playlists; track playlist) {
+          <button ngbDropdownItem [class.selected]="playlist.id === selectedPlaylist?.id" (click)="selectPlaylist(playlist)">
+            {{ playlist.name }}
+          </button>
+        }
       </ul>
     </div>
   </div>
@@ -26,6 +28,6 @@
   <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
   <button type="button" class="btn btn-secondary" (click)="createPlaylist()">{{ 'playlistAddSong.createPlaylistButton' | translate }}</button>
   <button type="button" class="btn btn-primary"
-          [disabled]="loadingState === LoadingState.LOADING || savingState === LoadingState.LOADING || playlists.length < 1"
-          (click)="save()">{{ 'playlistAddSong.saveButton' | translate }}</button>
+    [disabled]="loadingState === LoadingState.LOADING || savingState === LoadingState.LOADING || playlists.length < 1"
+  (click)="save()">{{ 'playlistAddSong.saveButton' | translate }}</button>
 </div>

@@ -27,17 +27,19 @@
           <li [hidden]="topPlaylists.length < 1"><hr class="dropdown-divider"></li>
           @for (playlist of topPlaylists; track playlist.id) {
             <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.album.addToPlaylist' | translate:{
-              name: playlist.name,
-            } }}</button>
-          }
-          <li><hr class="dropdown-divider"></li>
-          <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.album.selectOrCreatePlaylist' | translate }}</button>
-        </div>
+            name: playlist.name,
+          } }}</button>
+        }
+        <li><hr class="dropdown-divider"></li>
+        <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.album.selectOrCreatePlaylist' | translate }}</button>
       </div>
-    </h4>
-    <pony-song-list *ngFor="let disc of discs; trackBy: trackByIndex"
-                    [caption]="disc.discNumber ? ('library.album.discLabel' | translate:{discNumber:disc.discNumber}) : undefined"
-                    [songs]="disc.songs" [showArtist]="disc.showArtist">
+    </div>
+  </h4>
+  @for (disc of discs; track trackByIndex($index, disc)) {
+    <pony-song-list
+      [caption]="disc.discNumber ? ('library.album.discLabel' | translate:{discNumber:disc.discNumber}) : undefined"
+      [songs]="disc.songs" [showArtist]="disc.showArtist">
     </pony-song-list>
-  </div>
+  }
+</div>
 </div>

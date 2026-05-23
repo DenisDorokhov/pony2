@@ -1,5 +1,6 @@
 <a class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
-   [class.selected]="selected" [class.current]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED"
+   [class.selected]="selected"
+   [class.current]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED"
    (click)="select()">
   <pony-image-loader [url]="artist.smallArtworkUrl" [showNewIndicator]="showNewIndicator"></pony-image-loader>
   <div class="artist-name"
@@ -7,7 +8,11 @@
     {{ artist.name | ponyUnknownArtist }}
   </div>
   <div class="playback-indicator" [class.playing]="playbackState === PlaybackState.PLAYING">
-    <i class="bi bi-volume-up-fill" *ngIf="playbackState === PlaybackState.PLAYING"></i>
-    <i class="bi bi-volume-off-fill" *ngIf="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED"></i>
+    @if (playbackState === PlaybackState.PLAYING) {
+      <i class="bi bi-volume-up-fill"></i>
+    }
+    @if (playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED) {
+      <i class="bi bi-volume-off-fill"></i>
+    }
   </div>
 </a>

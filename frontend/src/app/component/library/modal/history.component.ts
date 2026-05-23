@@ -1,5 +1,4 @@
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdownModule} from '@ng-bootstrap/ng-bootstrap';
 import {PlaybackHistory, PlaybackHistorySong, Song} from '../../../domain/library.model';
@@ -17,21 +16,20 @@ import {Subscription} from 'rxjs';
 import {formatTimeDifference} from '../../../utils/format.utils';
 
 @Component({
-    imports: [
-        CommonModule,
-        TranslateModule,
-        NgbDropdownModule,
-        ErrorIndicatorComponent,
-        LoadingIndicatorComponent,
-        CdkFixedSizeVirtualScroll,
-        CdkVirtualScrollViewport,
-        NoContentIndicatorComponent,
-        CdkVirtualForOf,
-        LargeSongComponent,
-    ],
-    selector: 'pony-history',
-    templateUrl: './history.component.html',
-    styleUrls: ['./history.component.scss']
+  imports: [
+    TranslateModule,
+    NgbDropdownModule,
+    ErrorIndicatorComponent,
+    LoadingIndicatorComponent,
+    CdkFixedSizeVirtualScroll,
+    CdkVirtualScrollViewport,
+    NoContentIndicatorComponent,
+    CdkVirtualForOf,
+    LargeSongComponent
+  ],
+  selector: 'pony-history',
+  templateUrl: './history.component.html',
+  styleUrls: ['./history.component.scss']
 })
 export class HistoryComponent implements OnInit, OnDestroy {
 

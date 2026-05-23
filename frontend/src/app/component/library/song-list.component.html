@@ -1,6 +1,8 @@
 <div class="song-list-container">
   <h6>{{ caption }}</h6>
   <div class="song-list">
-    <pony-song *ngFor="let song of songs; trackBy: trackByIndex" [song]="song" [showArtist]="showArtist"></pony-song>
+    @for (song of songs; track trackByIndex($index, song)) {
+      <pony-song [song]="song" [showArtist]="showArtist"></pony-song>
+    }
   </div>
 </div>

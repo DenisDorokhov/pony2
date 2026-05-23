@@ -66,21 +66,25 @@
       <button ngbDropdownItem (click)="signOut()"><i class="bi bi-box-arrow-right"></i>{{ 'library.toolbar.logOutButton' | translate }}</button>
     </ul>
   </div>
-  <button *ngIf="currentUser?.role === 'ADMIN'" title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
-    <i class="bi bi-arrow-clockwise" [class.spin]="scanRunning"></i>
-  </button>
-  <div *ngIf="currentUser?.role === 'ADMIN'" ngbDropdown class="btn-group">
-    <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
-      <i class="bi bi-gear-fill"></i>
-      <span class="caret"></span>
+  @if (currentUser?.role === 'ADMIN') {
+    <button title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
+      <i class="bi bi-arrow-clockwise" [class.spin]="scanRunning"></i>
     </button>
-    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
-      <button ngbDropdownItem (click)="openScanning()"><i class="bi bi-binoculars-fill"></i>{{ 'library.toolbar.scanningButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openLog()"><i class="bi bi-receipt-cutoff"></i>{{ 'library.toolbar.logButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openUsers()"><i class="bi bi-people-fill"></i>{{ 'library.toolbar.usersButton' | translate }}</button>
-      <button ngbDropdownItem (click)="openSettings()"><i class="bi bi-sliders"></i>{{ 'library.toolbar.settingsButton' | translate }}</button>
-    </ul>
-  </div>
+  }
+  @if (currentUser?.role === 'ADMIN') {
+    <div ngbDropdown class="btn-group">
+      <button ngbDropdownToggle type="button" class="btn btn-sm btn-light menu" data-toggle="dropdown">
+        <i class="bi bi-gear-fill"></i>
+        <span class="caret"></span>
+      </button>
+      <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+        <button ngbDropdownItem (click)="openScanning()"><i class="bi bi-binoculars-fill"></i>{{ 'library.toolbar.scanningButton' | translate }}</button>
+        <button ngbDropdownItem (click)="openLog()"><i class="bi bi-receipt-cutoff"></i>{{ 'library.toolbar.logButton' | translate }}</button>
+        <button ngbDropdownItem (click)="openUsers()"><i class="bi bi-people-fill"></i>{{ 'library.toolbar.usersButton' | translate }}</button>
+        <button ngbDropdownItem (click)="openSettings()"><i class="bi bi-sliders"></i>{{ 'library.toolbar.settingsButton' | translate }}</button>
+      </ul>
+    </div>
+  }
   <div>
     <pony-fast-search />
   </div>

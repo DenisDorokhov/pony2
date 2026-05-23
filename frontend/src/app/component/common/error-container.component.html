@@ -1,4 +1,11 @@
 <div>
   <ng-content></ng-content>
-  <div class="invalid-feedback" *ngFor="let error of errorMessages"><span *ngIf="errorMessages.length > 1">&bull;&nbsp;</span>{{ error }}</div>
+  @for (error of errorMessages; track error) {
+    <div class="invalid-feedback">
+      @if (errorMessages.length > 1) {
+        <span>&bull;&nbsp;</span>
+      }
+      {{ error }}
+    </div>
+  }
 </div>

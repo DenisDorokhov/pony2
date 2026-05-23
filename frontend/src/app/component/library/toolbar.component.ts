@@ -8,7 +8,6 @@ import {UserDto} from '../../domain/user.dto';
 import {AuthenticationService} from '../../service/authentication.service';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbDropdownModule, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {CommonModule} from '@angular/common';
 import {LibraryScanService} from '../../service/library-scan.service';
 import {Subscription} from 'rxjs';
 import {FastSearchComponent} from './fast-search.component';
@@ -20,10 +19,10 @@ import {PlaylistComponent} from './modal/playlist.component';
 import Role = UserDto.Role;
 
 @Component({
-    imports: [CommonModule, TranslateModule, NgbDropdownModule, FastSearchComponent],
-    selector: 'pony-toolbar',
-    templateUrl: './toolbar.component.html',
-    styleUrls: ['./toolbar.component.scss']
+  imports: [TranslateModule, NgbDropdownModule, FastSearchComponent],
+  selector: 'pony-toolbar',
+  templateUrl: './toolbar.component.html',
+  styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
 
@@ -90,23 +89,23 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   openSettings() {
-    this.modal.open(SettingsComponent, { size: 'lg' });
+    this.modal.open(SettingsComponent, {size: 'lg'});
   }
 
   openScanning() {
-    this.modal.open(ScanningComponent, { size: 'xl' });
+    this.modal.open(ScanningComponent, {size: 'xl'});
   }
 
   openLog() {
-    this.modal.open(LogComponent, { size: 'xl' });
+    this.modal.open(LogComponent, {size: 'xl'});
   }
 
   openUsers() {
-    this.modal.open(UserListComponent, { size: 'xl' });
+    this.modal.open(UserListComponent, {size: 'xl'});
   }
 
   openQueue() {
-    this.modal.open(QueueComponent, { size: 'lg' });
+    this.modal.open(QueueComponent, {size: 'lg'});
   }
 
   setPlaybackMode(mode: PlaybackMode) {
@@ -114,10 +113,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   openPlaylists() {
-    this.modal.open(PlaylistComponent, { size: 'lg' });
+    this.modal.open(PlaylistComponent, {size: 'lg'});
   }
 
   openHistory() {
-    this.modal.open(HistoryComponent, { size: 'lg' });
+    this.modal.open(HistoryComponent, {size: 'lg'});
   }
 }

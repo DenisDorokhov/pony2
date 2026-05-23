@@ -3,7 +3,8 @@
 </div>
 <div class="modal-body">
 
-  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
+  <div class="blocking-overlay"
+       [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
 
   <form [formGroup]="form" (ngSubmit)="save()" novalidate>
 
@@ -39,56 +40,67 @@
       <label class="form-label">{{ 'user.roleLabel' | translate }}</label>
       <pony-error-container #roleContainer class="form-group" [error]="error" [field]="'role'">
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" id="roleAdmin" formControlName="role" [class.is-invalid]="roleContainer.hasErrors" [value]="UserDto.Role.ADMIN">
+          <input class="form-check-input" type="radio" id="roleAdmin" formControlName="role"
+                 [class.is-invalid]="roleContainer.hasErrors" [value]="UserDto.Role.ADMIN">
           <label class="form-check-label" for="roleAdmin">{{ 'user.adminLabel' | translate }}</label>
         </div>
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" id="roleUser" formControlName="role" [class.is-invalid]="roleContainer.hasErrors" [value]="UserDto.Role.USER">
+          <input class="form-check-input" type="radio" id="roleUser" formControlName="role"
+                 [class.is-invalid]="roleContainer.hasErrors" [value]="UserDto.Role.USER">
           <label class="form-check-label" for="roleUser">{{ 'user.userLabel' | translate }}</label>
         </div>
       </pony-error-container>
     </div>
 
-    <div class="mb-3" *ngIf="user === undefined">
-      <pony-error-container #passwordContainer class="form-group" [error]="error" [field]="'password'">
-        <label for="password" class="form-label">{{ 'user.passwordLabel' | translate }}</label>
-        <input id="password" formControlName="password" type="password" class="form-control" autocomplete="one-time-code"
-               [class.is-invalid]="passwordContainer.hasErrors">
-      </pony-error-container>
-    </div>
+    @if (user === undefined) {
+      <div class="mb-3">
+        <pony-error-container #passwordContainer class="form-group" [error]="error" [field]="'password'">
+          <label for="password" class="form-label">{{ 'user.passwordLabel' | translate }}</label>
+          <input id="password" formControlName="password" type="password" class="form-control"
+                 autocomplete="one-time-code"
+                 [class.is-invalid]="passwordContainer.hasErrors">
+        </pony-error-container>
+      </div>
+      <div class="mb-3">
+        <pony-error-container #repeatPasswordContainer class="form-group" [error]="error" [field]="'repeatPassword'">
+          <label for="repeatPassword" class="form-label">{{ 'user.repeatPasswordLabel' | translate }}</label>
+          <input id="repeatPassword" formControlName="repeatPassword" type="password" class="form-control"
+                 autocomplete="one-time-code"
+                 [class.is-invalid]="repeatPasswordContainer.hasErrors">
+        </pony-error-container>
+      </div>
+    } @else {
+      <div class="mb-3">
+        <pony-error-container #newPasswordContainer class="form-group" [error]="error" [field]="'newPassword'">
+          <label for="newPassword" class="form-label">{{ 'user.newPasswordLabel' | translate }}</label>
+          <input id="newPassword" formControlName="newPassword" type="password" class="form-control"
+                 autocomplete="one-time-code"
+                 [placeholder]="'user.newPasswordPlaceholder' | translate"
+                 [class.is-invalid]="newPasswordContainer.hasErrors">
+        </pony-error-container>
+      </div>
+      <div class="mb-3">
+        <pony-error-container #repeatNewPasswordContainer class="form-group" [error]="error"
+                              [field]="'repeatNewPassword'">
+          <label for="repeatNewPassword" class="form-label">{{ 'user.repeatNewPasswordLabel' | translate }}</label>
+          <input id="repeatNewPassword" formControlName="repeatNewPassword" type="password" class="form-control"
+                 autocomplete="one-time-code"
+                 [class.is-invalid]="repeatNewPasswordContainer.hasErrors">
+        </pony-error-container>
+      </div>
+    }
 
-    <div class="mb-3" *ngIf="user === undefined">
-      <pony-error-container #repeatPasswordContainer class="form-group" [error]="error" [field]="'repeatPassword'">
-        <label for="repeatPassword" class="form-label">{{ 'user.repeatPasswordLabel' | translate }}</label>
-        <input id="repeatPassword" formControlName="repeatPassword" type="password" class="form-control" autocomplete="one-time-code"
-               [class.is-invalid]="repeatPasswordContainer.hasErrors">
-      </pony-error-container>
-    </div>
-
-    <div class="mb-3" *ngIf="user !== undefined">
-      <pony-error-container #newPasswordContainer class="form-group" [error]="error" [field]="'newPassword'">
-        <label for="newPassword" class="form-label">{{ 'user.newPasswordLabel' | translate }}</label>
-        <input id="newPassword" formControlName="newPassword" type="password" class="form-control" autocomplete="one-time-code"
-               [placeholder]="'user.newPasswordPlaceholder' | translate"
-               [class.is-invalid]="newPasswordContainer.hasErrors">
-      </pony-error-container>
-    </div>
-
-    <div class="mb-3" *ngIf="user !== undefined">
-      <pony-error-container #repeatNewPasswordContainer class="form-group" [error]="error" [field]="'repeatNewPassword'">
-        <label for="repeatNewPassword" class="form-label">{{ 'user.repeatNewPasswordLabel' | translate }}</label>
-        <input id="repeatNewPassword" formControlName="repeatNewPassword" type="password" class="form-control" autocomplete="one-time-code"
-               [class.is-invalid]="repeatNewPasswordContainer.hasErrors">
-      </pony-error-container>
-    </div>
-
-    <input type="submit" hidden />
+    <input type="submit" hidden/>
 
   </form>
 </div>
 <div class="modal-footer">
   <pony-loading-indicator [hidden]="loadingState !== LoadingState.LOADING"></pony-loading-indicator>
   <pony-error-indicator [hidden]="loadingState !== LoadingState.ERROR"></pony-error-indicator>
-  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}</button>
-  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
+  <button type="button" class="btn btn-outline-dark"
+          (click)="activeModal.close()">{{ 'shared.cancelButton' | translate }}
+  </button>
+  <button type="button" class="btn btn-primary" (click)="save()"
+          [disabled]="loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}
+  </button>
 </div>

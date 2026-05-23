@@ -1,32 +1,34 @@
 <div class="modal-header">
-  <h4 class="modal-title"><i class="bi bi-star-fill"></i>{{ 'artistLikes.header' | translate:{ artistName: artistSongs.artist.name } }}</h4>
+  <h4 class="modal-title">
+    <i class="bi bi-star-fill"></i>{{ 'artistLikes.header' | translate:{artistName: artistSongs.artist.name} }}
+  </h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
 <cdk-virtual-scroll-viewport data-pony-image-loader-scroller [itemSize]="rowHeight">
 
-  <div class="table-container" *ngIf="songs.length">
-
-    <pony-large-song
-      [index]="i" [song]="song"
-      [isCurrentSong]="song.id === lastPlaybackEvent?.song?.id"
-      [selected]="selectedIndex === i"
-      *cdkVirtualFor="let song of songs; let i = index;"
-      (doubleClick)="switchQueue(i)"
-      (mousedown)="selectIndex(i)"
-      (playOrPauseRequested)="onPlaybackClick(i)"
-      (goToSongRequested)="goToSong(song)"
-      (removalRequested)="onRemovalRequested(song)"
-    />
-
-  </div>
+  @if (songs.length) {
+    <div class="table-container">
+      <pony-large-song
+        [index]="i" [song]="song"
+        [isCurrentSong]="song.id === lastPlaybackEvent?.song?.id"
+        [selected]="selectedIndex === i"
+        *cdkVirtualFor="let song of songs; let i = index;"
+        (doubleClick)="switchQueue(i)"
+        (mousedown)="selectIndex(i)"
+        (playOrPauseRequested)="onPlaybackClick(i)"
+        (goToSongRequested)="goToSong(song)"
+        (removalRequested)="onRemovalRequested(song)"
+      />
+    </div>
+  }
 
 </cdk-virtual-scroll-viewport>
 
 <div class="modal-footer">
   <small>
     {{
-      'artistLikes.statisticsLabel' | translate:{ artistName: artistSongs.artist.name, count: songs.length }
+      'artistLikes.statisticsLabel' | translate:{artistName: artistSongs.artist.name, count: songs.length}
     }}
   </small>
 </div>
