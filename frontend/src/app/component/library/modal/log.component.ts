@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
 import {
   NgbActiveModal,
   NgbDropdown,
@@ -46,6 +46,10 @@ class LogWithException implements LogMessageDto {
 })
 export class LogComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly logService = inject(LogService);
+
   readonly LoadingState = LoadingState;
   readonly Level = LogMessageDto.Level;
 
@@ -58,11 +62,6 @@ export class LogComponent implements OnInit {
   minLevel = LogMessageDto.Level.INFO;
 
   @ViewChild('scroller') containerElement!: ElementRef;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly logService: LogService,
-  ) {}
 
   ngOnInit(): void {
     this.loadPage();

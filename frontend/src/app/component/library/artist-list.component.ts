@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  inject,
   OnDestroy,
   OnInit,
   QueryList,
@@ -54,6 +55,10 @@ export class NavigationItem {
 })
 export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
+  private readonly libraryService = inject(LibraryService);
+  private readonly translateService = inject(TranslateService);
+  private readonly installationService = inject(InstallationService);
+
   readonly LoadingState = LoadingState;
   readonly ArtistSortingOrder = ArtistSortingOrder;
 
@@ -77,11 +82,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(
-    private readonly libraryService: LibraryService,
-    private readonly translateService: TranslateService,
-    private readonly installationService: InstallationService,
-  ) {
+  constructor() {
     this.navigationItems = [this.allArtistsNavigationItem(), this.updatedArtistsNavigationItem()];
     this.selectedNavigationItem = this.navigationItems[0];
   }

@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
 import {AlbumSortingOrder, LibraryService} from '../../service/library.service';
@@ -31,6 +31,12 @@ import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 })
 export class AlbumListComponent implements OnInit, OnDestroy {
 
+  private readonly libraryService = inject(LibraryService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly translateService = inject(TranslateService);
+  private readonly modal = inject(NgbModal);
+
   LoadingState = LoadingState;
   AlbumSortingOrder = AlbumSortingOrder;
 
@@ -49,15 +55,6 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   private likePlaylist: PlaylistSongs | undefined;
   private artistSongsSubscription: Subscription | undefined;
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private readonly libraryService: LibraryService,
-    private readonly playbackService: PlaybackService,
-    private readonly playlistService: PlaylistService,
-    private readonly translateService: TranslateService,
-    private readonly modal: NgbModal,
-  ) {
-  }
 
   ngOnInit(): void {
     this.subscriptions.push(this.libraryService.observeRefreshRequest()

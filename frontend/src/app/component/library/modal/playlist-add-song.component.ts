@@ -2,7 +2,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {LoadingState} from '../../../domain/common.model';
 import {
   NgbActiveModal,
@@ -28,6 +28,13 @@ import {PlaylistDto} from '../../../domain/library.dto';
 })
 export class PlaylistAddSongComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly playlistService = inject(PlaylistService);
+  private readonly translateService = inject(TranslateService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly modal = inject(NgbModal);
+
   readonly LoadingState = LoadingState;
 
   @Input()
@@ -37,15 +44,6 @@ export class PlaylistAddSongComponent implements OnInit {
   savingState = LoadingState.EMPTY;
   playlists: Playlist[] = [];
   selectedPlaylist: Playlist | undefined;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly playlistService: PlaylistService,
-    private readonly translateService: TranslateService,
-    private readonly notificationService: NotificationService,
-    private readonly modal: NgbModal,
-  ) {
-  }
 
   ngOnInit(): void {
     this.reload();

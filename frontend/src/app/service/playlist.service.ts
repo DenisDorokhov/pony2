@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, forkJoin, Observable} from 'rxjs';
 import {Playlist, PlaylistSongs} from '../domain/library.model';
@@ -21,14 +21,14 @@ import {LibraryService} from './library.service';
 })
 export class PlaylistService {
 
+  private readonly httpClient = inject(HttpClient);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly libraryService = inject(LibraryService);
+
   playlistsSubject = new BehaviorSubject<Playlist[]>([]);
   likePlaylistSongsSubject = new BehaviorSubject<PlaylistSongs | undefined>(undefined);
 
-  constructor(
-    private httpClient: HttpClient,
-    private authenticationService: AuthenticationService,
-    private libraryService: LibraryService,
-  ) {
+  constructor() {
     this.authenticationService.observeLogout().subscribe(() => {
       this.playlistsSubject.next([]);
       this.likePlaylistSongsSubject.next(undefined);

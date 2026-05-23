@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, of, Subscription} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {Song} from '../domain/library.model';
@@ -32,6 +32,12 @@ interface QueueState {
 })
 export class PlaybackService {
 
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly browserNotificationService = inject(BrowserNotificationService);
+  private readonly playbackHistoryService = inject(PlaybackHistoryService);
+  private readonly tokenStorageService = inject(TokenStorageService);
+
   private static readonly STATE_LOCAL_STORAGE_KEY: string = 'pony2.PlaybackService.state';
 
   private static readonly RANDOM_SONGS_COUNT = 20;
@@ -48,13 +54,7 @@ export class PlaybackService {
   private originalQueue: Song[] | undefined;
   private queueShuffleSubscription: Subscription | undefined;
 
-  constructor(
-    private readonly authenticationService: AuthenticationService,
-    private readonly libraryService: LibraryService,
-    private readonly browserNotificationService: BrowserNotificationService,
-    private readonly playbackHistoryService: PlaybackHistoryService,
-    private readonly tokenStorageService: TokenStorageService,
-  ) {
+  constructor() {
     this.authenticationService.observeLogout().subscribe(() => {
         this.audioPlayer.stop();
         this.currentSongSubject.next(undefined);

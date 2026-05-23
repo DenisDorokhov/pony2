@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {Subscription} from 'rxjs';
@@ -21,21 +21,18 @@ import {BrowserNotificationService} from '../../service/browser-notification.ser
 })
 export class LibraryComponent implements OnInit, OnDestroy {
 
+  private readonly router = inject(Router);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly libraryScanService = inject(LibraryScanService);
+  private readonly translateService = inject(TranslateService);
+  private readonly browserNotificationService = inject(BrowserNotificationService);
+
   private loggedOutSubscription: Subscription | undefined;
   private scanStatisticsSubscription: Subscription | undefined;
 
   scanStatistics: ScanStatisticsDto | undefined | null;
   size: string | undefined;
   duration: string | undefined;
-
-  constructor(
-    private router: Router,
-    private authenticationService: AuthenticationService,
-    private libraryScanService: LibraryScanService,
-    private translateService: TranslateService,
-    private browserNotificationService: BrowserNotificationService,
-  ) {
-  }
 
   ngOnInit(): void {
     this.loggedOutSubscription = this.authenticationService.observeLogout()

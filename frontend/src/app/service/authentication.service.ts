@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, defer, Observable, Subject, throwError} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
 import {TokenStorageService} from './token-storage.service';
@@ -16,13 +16,13 @@ export class Credentials {
 })
 export class AuthenticationService {
 
+  private readonly tokenStorage = inject(TokenStorageService);
+  private readonly httpClient = inject(HttpClient);
+
   private _currentUser: UserDto | undefined;
 
   private authenticationSubject = new BehaviorSubject<UserDto | undefined>(undefined);
   private logoutSubject = new Subject<UserDto | undefined>();
-
-  constructor(private tokenStorage: TokenStorageService, private httpClient: HttpClient) {
-  }
 
   get isAuthenticated(): boolean {
     return this._currentUser !== undefined;

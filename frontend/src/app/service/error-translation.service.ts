@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {ErrorDto} from '../domain/common.dto';
 
@@ -7,8 +7,7 @@ import {ErrorDto} from '../domain/common.dto';
 })
 export class ErrorTranslationService {
 
-  constructor(private translateService: TranslateService) {
-  }
+  private readonly translateService = inject(TranslateService);
 
   translateError(error: ErrorDto): any {
     return this.translate('error.' + error.code, error.arguments, error.message);

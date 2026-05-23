@@ -1,4 +1,4 @@
-import {Component, ViewContainerRef} from '@angular/core';
+import {Component, inject, ViewContainerRef} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 
 // noinspection JSUnusedGlobalSymbols
@@ -8,7 +8,5 @@ import {RouterOutlet} from '@angular/router';
     templateUrl: './app.component.html'
 })
 export class AppComponent {
-  constructor(
-    public viewContainerRef: ViewContainerRef,
-  ) {}
+  readonly viewContainerRef = inject(ViewContainerRef);
 }

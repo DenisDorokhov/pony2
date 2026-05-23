@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {CanMatch, GuardResult, MaybeAsync, Router} from '@angular/router';
 import {AuthenticationService} from './authentication.service';
 
@@ -7,11 +7,8 @@ import {AuthenticationService} from './authentication.service';
 })
 export class AuthenticatedGuard implements CanMatch {
 
-  constructor(
-    private authenticationService: AuthenticationService,
-    private router: Router,
-  ) {
-  }
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly router = inject(Router);
 
   canMatch(): MaybeAsync<GuardResult> {
     if (this.authenticationService.isAuthenticated) {

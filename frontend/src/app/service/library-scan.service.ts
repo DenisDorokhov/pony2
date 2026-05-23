@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {
   BehaviorSubject,
   defer,
@@ -29,19 +29,19 @@ import Role = UserDto.Role;
 })
 export class LibraryScanService {
 
+  private readonly libraryService = inject(LibraryService);
+  private readonly httpClient = inject(HttpClient);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
+
   private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined | null>(undefined);
   private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined | null>(undefined);
 
   private scanJobProgressUpdateSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
 
-  constructor(
-    private libraryService: LibraryService,
-    private httpClient: HttpClient,
-    private authenticationService: AuthenticationService,
-    private notificationService: NotificationService,
-    private translateService: TranslateService
-  ) {
+  constructor() {
     this.libraryService.observeRefreshRequest().pipe(
       mergeMap(() => {
         if (this.authenticationService.isAuthenticated) {

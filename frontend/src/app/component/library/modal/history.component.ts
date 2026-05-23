@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdownModule} from '@ng-bootstrap/ng-bootstrap';
@@ -35,6 +35,13 @@ import {formatTimeDifference} from '../../../utils/format.utils';
 })
 export class HistoryComponent implements OnInit, OnDestroy {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly playbackHistoryService = inject(PlaybackHistoryService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly translateService = inject(TranslateService);
+
   readonly LoadingState = LoadingState;
 
   readonly rowHeight = LargeSongComponent.HEIGHT;
@@ -45,15 +52,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
   lastPlaybackEvent: PlaybackEvent | undefined;
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly playbackHistoryService: PlaybackHistoryService,
-    private readonly libraryService: LibraryService,
-    private readonly playbackService: PlaybackService,
-    private readonly translateService: TranslateService,
-  ) {
-  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());

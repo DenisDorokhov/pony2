@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {ToastrService} from 'ngx-toastr';
 
 @Injectable({
@@ -6,9 +6,7 @@ import {ToastrService} from 'ngx-toastr';
 })
 export class NotificationService {
 
-  constructor(
-    private toastr: ToastrService
-  ) {}
+  private readonly toastr = inject(ToastrService);
 
   success(title: string, text: string) {
     this.toastr.success(text, title);

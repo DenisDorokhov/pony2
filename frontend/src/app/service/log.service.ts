@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {LogMessageDto, LogMessagePageDto} from '../domain/library.dto';
 import {Observable} from 'rxjs';
@@ -8,10 +8,7 @@ import {Observable} from 'rxjs';
 })
 export class LogService {
 
-  constructor(
-    private httpClient: HttpClient,
-  ) {
-  }
+  private readonly httpClient = inject(HttpClient);
 
   getLog(
     minLevel: LogMessageDto.Level | undefined,

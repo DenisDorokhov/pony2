@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {TranslateModule} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
@@ -20,6 +20,12 @@ import {ScanJobComponent} from './scan-job.component';
 })
 export class ScanningComponent implements OnInit, OnDestroy {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly libraryScanService = inject(LibraryScanService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly modal = inject(NgbModal);
+
   LoadingState = LoadingState;
   Step = ScanProgressDto.Step;
   ScanJobStatus = ScanJobDto.Status;
@@ -36,14 +42,6 @@ export class ScanningComponent implements OnInit, OnDestroy {
 
   private scanJobProgressSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
-
-  constructor(
-    private libraryScanService: LibraryScanService,
-    private libraryService: LibraryService,
-    private modal: NgbModal,
-    public activeModal: NgbActiveModal,
-  ) {
-  }
 
   ngOnInit(): void {
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({

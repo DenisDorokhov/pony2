@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -22,6 +22,11 @@ import SongId = PlaylistUpdateCommandDto.SongId;
 })
 export class PlaylistEditComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly playlistService = inject(PlaylistService);
+
   readonly LoadingState = LoadingState;
 
   @Input()
@@ -32,13 +37,6 @@ export class PlaylistEditComponent implements OnInit {
   form!: FormGroup;
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADED;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private formBuilder: FormBuilder,
-    private playlistService: PlaylistService,
-  ) {
-  }
 
   ngOnInit(): void {
     this.form = this.formBuilder.group({

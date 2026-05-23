@@ -1,4 +1,4 @@
-import {Component, Input, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {LargeSongComponent} from './common/large-song.component';
@@ -20,6 +20,14 @@ import {NotificationService} from '../../../service/notification.service';
 })
 export class ArtistLikesComponent implements OnInit, OnDestroy {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly playlistService = inject(PlaylistService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
+
   readonly rowHeight = LargeSongComponent.HEIGHT;
 
   @Input()
@@ -30,16 +38,6 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
   selectedIndex = -1;
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly playlistService: PlaylistService,
-    private readonly playbackService: PlaybackService,
-    private readonly libraryService: LibraryService,
-    private readonly notificationService: NotificationService,
-    private readonly translateService: TranslateService,
-  ) {
-  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(next => next.unsubscribe());

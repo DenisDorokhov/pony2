@@ -1,4 +1,4 @@
-import {Pipe, PipeTransform} from '@angular/core';
+import {inject, Pipe, PipeTransform} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 
 @Pipe({
@@ -7,10 +7,7 @@ import {TranslateService} from '@ngx-translate/core';
 })
 export class UnknownGenrePipe implements PipeTransform {
 
-  constructor(
-    private readonly translateService: TranslateService,
-  ) {
-  }
+  private readonly translateService = inject(TranslateService);
 
   transform(value: any): any {
     return value ? value : this.translateService.instant('library.genre.unknownLabel');

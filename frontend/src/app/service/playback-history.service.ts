@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BackupDto, PlaybackHistoryDto, PlaybackHistorySongDto, RestoredHistoryDto} from '../domain/library.dto';
 import {map} from 'rxjs/operators';
@@ -11,10 +11,7 @@ import FileSaver from 'file-saver';
 })
 export class PlaybackHistoryService {
 
-  constructor(
-    private httpClient: HttpClient,
-  ) {
-  }
+  private readonly httpClient = inject(HttpClient);
 
   getHistory(): Observable<PlaybackHistory> {
     return this.httpClient.get<PlaybackHistoryDto>('/api/history').pipe(

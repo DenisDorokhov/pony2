@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {CanMatch, GuardResult, MaybeAsync, Router} from '@angular/router';
 import {map, tap} from 'rxjs/operators';
 import {InstallationService} from './installation.service';
@@ -8,11 +8,8 @@ import {InstallationService} from './installation.service';
 })
 export class InstalledGuard implements CanMatch {
 
-  constructor(
-    private installationService: InstallationService,
-    private router: Router,
-  ) {
-  }
+  private readonly installationService = inject(InstallationService);
+  private readonly router = inject(Router);
 
   canMatch(): MaybeAsync<GuardResult> {
     return this.installationService.requestInstallationStatus()

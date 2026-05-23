@@ -1,5 +1,5 @@
 import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable, throwError} from 'rxjs';
 import {TokenStorageService} from './token-storage.service';
 import {catchError} from 'rxjs/operators';
@@ -11,12 +11,9 @@ import {TranslateService} from '@ngx-translate/core';
 })
 export class SecurityInterceptor implements HttpInterceptor {
 
-  constructor(
-    private tokenStorage: TokenStorageService,
-    private notificationService: NotificationService,
-    private translateService: TranslateService,
-  ) {
-  }
+  private readonly tokenStorage = inject(TokenStorageService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     let newRequest;

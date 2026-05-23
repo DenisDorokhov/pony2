@@ -1,4 +1,4 @@
-import {Component, Input, OnChanges} from '@angular/core';
+import {Component, inject, Input, OnChanges} from '@angular/core';
 import {ErrorDto} from '../../domain/common.dto';
 import {ErrorTranslationService} from '../../service/error-translation.service';
 import {CommonModule} from '@angular/common';
@@ -11,14 +11,13 @@ import {CommonModule} from '@angular/common';
 })
 export class ErrorContainerComponent implements OnChanges {
 
+  private readonly errorTranslationService = inject(ErrorTranslationService);
+
   @Input() error: ErrorDto | undefined;
   @Input() field: string | undefined;
 
   errorMessages: string[] = [];
   hasErrors = false;
-
-  constructor(private errorTranslationService: ErrorTranslationService) {
-  }
 
   ngOnChanges() {
     this.errorMessages = this.fetchErrorMessages().sort();

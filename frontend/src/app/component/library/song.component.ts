@@ -4,6 +4,7 @@ import {
   Component,
   ElementRef,
   EmbeddedViewRef,
+  inject,
   Input,
   OnDestroy,
   OnInit,
@@ -35,6 +36,14 @@ import {PlaylistDto} from '../../domain/library.dto';
     styleUrls: ['./song.component.scss']
 })
 export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
+
+  private readonly libraryService = inject(LibraryService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly applicationRef = inject(ApplicationRef);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
+  private readonly modal = inject(NgbModal);
 
   PlaybackState = PlaybackState;
 
@@ -74,17 +83,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private menuEmbeddedViewRef: EmbeddedViewRef<any> | undefined;
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private readonly libraryService: LibraryService,
-    private readonly playbackService: PlaybackService,
-    private readonly applicationRef: ApplicationRef,
-    private readonly playlistService: PlaylistService,
-    private readonly notificationService: NotificationService,
-    private readonly translateService: TranslateService,
-    private readonly modal: NgbModal,
-  ) {
-  }
 
   ngOnInit(): void {
     this.subscriptions.push(this.libraryService.observeSelectedSong()

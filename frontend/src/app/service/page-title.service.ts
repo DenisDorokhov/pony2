@@ -1,4 +1,4 @@
-import {Injectable, NgZone} from '@angular/core';
+import {inject, Injectable, NgZone} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Subscription, timer} from 'rxjs';
 import {takeWhile, tap} from 'rxjs/operators';
@@ -51,6 +51,9 @@ class StringScroller {
 })
 export class PageTitleService {
 
+  private readonly translateService = inject(TranslateService);
+  private readonly ngZone = inject(NgZone);
+
   private static readonly ANIMATION_INITIAL_DELAY = 3000;
   private static readonly ANIMATION_FRAME_DELAY = 1000;
 
@@ -59,10 +62,7 @@ export class PageTitleService {
   private titleShifter: StringScroller | undefined;
   private timerSubscription: Subscription | undefined;
 
-  constructor(
-    private translateService: TranslateService,
-    private ngZone: NgZone
-  ) {
+  constructor() {
     this.startScrolling();
   }
 

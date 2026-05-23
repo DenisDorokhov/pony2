@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, forkJoin, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Album, AlbumSongs, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
@@ -53,6 +53,10 @@ const LOCAL_STORAGE_KEY_ALBUM_SORTING_ORDER = 'pony2.LibraryService.albumSorting
 })
 export class LibraryService {
 
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly installationService = inject(InstallationService);
+  private readonly httpClient = inject(HttpClient);
+
   private genresSubject = new BehaviorSubject<Genre[]>([]);
   private artistsSubject = new BehaviorSubject<Artist[]>([]);
 
@@ -72,11 +76,7 @@ export class LibraryService {
 
   private appInForeground = true;
 
-  constructor(
-    private authenticationService: AuthenticationService,
-    private installationService: InstallationService,
-    private httpClient: HttpClient
-  ) {
+  constructor() {
     this.authenticationService.observeLogout().subscribe(user => {
       this.artistsSubject.next([]);
       this.genresSubject.next([]);

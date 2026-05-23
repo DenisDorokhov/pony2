@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {UnknownArtistPipe} from '../../../../pipe/unknown-artist.pipe';
@@ -13,7 +13,8 @@ import {
   NgbDropdownButtonItem,
   NgbDropdownItem,
   NgbDropdownMenu,
-  NgbDropdownToggle, NgbModal
+  NgbDropdownToggle,
+  NgbModal
 } from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistService} from '../../../../service/playlist.service';
 import {fromEvent, Subscription} from 'rxjs';
@@ -44,6 +45,13 @@ import {LibraryService} from '../../../../service/library.service';
     styleUrls: ['./large-song.component.scss']
 })
 export class LargeSongComponent implements OnInit, OnDestroy {
+
+  private readonly playlistService = inject(PlaylistService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly modal = inject(NgbModal);
 
   static readonly HEIGHT = 76;
 
@@ -87,16 +95,6 @@ export class LargeSongComponent implements OnInit, OnDestroy {
 
   private _song!: Song;
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private readonly playlistService: PlaylistService,
-    private readonly notificationService: NotificationService,
-    private readonly translateService: TranslateService,
-    private readonly playbackService: PlaybackService,
-    private readonly libraryService: LibraryService,
-    private readonly modal: NgbModal,
-  ) {
-  }
 
   ngOnInit(): void {
     this.subscriptions.push(this.playbackService.observePlaybackEvent()

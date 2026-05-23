@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {
@@ -39,6 +39,15 @@ import {UnknownGenrePipe} from '../../../pipe/unknown-genre.pipe';
 })
 export class PlaylistComponent implements OnInit, OnDestroy {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly playlistService = inject(PlaylistService);
+  private readonly translateService = inject(TranslateService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly modal = inject(NgbModal);
+
   readonly LoadingState = LoadingState;
   readonly PlaylistDto = PlaylistDto;
 
@@ -61,17 +70,6 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   @ViewChild(CdkVirtualScrollViewport) viewPort!: CdkVirtualScrollViewport;
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly playlistService: PlaylistService,
-    private readonly translateService: TranslateService,
-    private readonly notificationService: NotificationService,
-    private readonly playbackService: PlaybackService,
-    private readonly libraryService: LibraryService,
-    private readonly modal: NgbModal,
-  ) {
-  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());

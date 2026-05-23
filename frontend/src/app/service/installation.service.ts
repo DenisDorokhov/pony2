@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {InstallationCommandDto, InstallationDto, InstallationStatusDto} from '../domain/installation.dto';
@@ -10,10 +10,9 @@ import {ErrorDto} from '../domain/common.dto';
 })
 export class InstallationService {
 
-  private _installationStatus: InstallationStatusDto | undefined;
+  private readonly httpClient = inject(HttpClient);
 
-  constructor(private httpClient: HttpClient) {
-  }
+  private _installationStatus: InstallationStatusDto | undefined;
 
   get installationStatus(): InstallationStatusDto | undefined {
     return this._installationStatus;

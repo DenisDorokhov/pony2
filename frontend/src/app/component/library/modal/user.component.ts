@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {UserCreateCommandDto, UserDto, UserUpdateCommandDto} from '../../../domain/user.dto';
@@ -21,6 +21,12 @@ import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 })
 export class UserComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly userService = inject(UserService);
+  private readonly authenticationService = inject(AuthenticationService);
+
   LoadingState = LoadingState;
   UserDto = UserDto;
 
@@ -30,14 +36,6 @@ export class UserComponent implements OnInit {
   form!: FormGroup;
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADED;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private formBuilder: FormBuilder,
-    private userService: UserService,
-    private authenticationService: AuthenticationService
-  ) {
-  }
 
   ngOnInit(): void {
     this.form = this.formBuilder.group({

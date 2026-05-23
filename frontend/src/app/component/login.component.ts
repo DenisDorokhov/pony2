@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {ErrorDto} from '../domain/common.dto';
 import {AuthenticationService, Credentials} from '../service/authentication.service';
@@ -19,18 +19,18 @@ import {LibraryService} from '../service/library.service';
 })
 export class LoginComponent {
 
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly router = inject(Router);
+  private readonly formBuilder = inject(FormBuilder);
+
   loginForm: FormGroup;
   error: ErrorDto | undefined;
 
-  constructor(
-    private authenticationService: AuthenticationService,
-    private playbackService: PlaybackService,
-    private playlistService: PlaylistService,
-    private libraryService: LibraryService,
-    private router: Router,
-    formBuilder: FormBuilder,
-  ) {
-    this.loginForm = formBuilder.group({
+  constructor() {
+    this.loginForm = this.formBuilder.group({
       email: '',
       password: '',
     });

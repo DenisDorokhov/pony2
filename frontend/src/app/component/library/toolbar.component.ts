@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {CurrentUserComponent} from './modal/current-user.component';
 import {LogComponent} from './modal/log.component';
 import {ScanningComponent} from './modal/scanning.component';
@@ -16,8 +16,8 @@ import {ErrorDto} from '../../domain/common.dto';
 import {QueueComponent} from './modal/queue.component';
 import {PlaybackMode, PlaybackService} from '../../service/playback.service';
 import {HistoryComponent} from './modal/history.component';
-import Role = UserDto.Role;
 import {PlaylistComponent} from './modal/playlist.component';
+import Role = UserDto.Role;
 
 @Component({
     imports: [CommonModule, TranslateModule, NgbDropdownModule, FastSearchComponent],
@@ -26,6 +26,11 @@ import {PlaylistComponent} from './modal/playlist.component';
     styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
+
+  private readonly libraryScanService = inject(LibraryScanService);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly modal = inject(NgbModal);
 
   PlaybackMode = PlaybackMode;
 
@@ -36,12 +41,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(
-    private readonly libraryScanService: LibraryScanService,
-    private readonly authenticationService: AuthenticationService,
-    private readonly playbackService: PlaybackService,
-    private readonly modal: NgbModal
-  ) {
+  constructor() {
     this.playbackMode = this.playbackService.mode;
   }
 

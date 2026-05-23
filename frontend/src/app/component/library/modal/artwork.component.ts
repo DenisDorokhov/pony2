@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, inject, Input} from '@angular/core';
 import {ImageLoaderComponent} from '../../common/image-loader.component';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
@@ -11,11 +11,8 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 })
 export class ArtworkComponent {
 
+  readonly activeModal = inject(NgbActiveModal);
+
   @Input()
   url: string | undefined;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-  ) {
-  }
 }

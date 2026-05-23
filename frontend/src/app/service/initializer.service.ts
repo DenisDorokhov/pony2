@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {EMPTY, forkJoin} from 'rxjs';
 import {catchError, mergeMap, tap} from 'rxjs/operators';
@@ -13,15 +13,12 @@ import {LibraryService} from './library.service';
 })
 export class InitializerService {
 
-  constructor(
-    private translateService: TranslateService,
-    private installationService: InstallationService,
-    private authenticationService: AuthenticationService,
-    private playbackService: PlaybackService,
-    private playlistService: PlaylistService,
-    private libraryService: LibraryService,
-  ) {
-  }
+  private readonly translateService = inject(TranslateService);
+  private readonly installationService = inject(InstallationService);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly libraryService = inject(LibraryService);
 
   initialize(): Promise<any> {
 

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {ErrorDto} from '../domain/common.dto';
 import {InstallationService} from '../service/installation.service';
@@ -20,6 +20,11 @@ import {AuthenticationService, Credentials} from '../service/authentication.serv
 })
 export class InstallationComponent {
 
+  private readonly installationService = inject(InstallationService);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly router = inject(Router);
+
   form: FormGroup;
   error: ErrorDto | undefined;
 
@@ -27,16 +32,11 @@ export class InstallationComponent {
     return this.form.get('libraryFolders') as FormArray;
   }
 
-  constructor(
-    private installationService: InstallationService,
-    private authenticationService: AuthenticationService,
-    private formBuilder: FormBuilder,
-    private router: Router
-  ) {
-    this.form = formBuilder.group({
+  constructor() {
+    this.form = this.formBuilder.group({
       installationSecret: '',
-      libraryFolders: formBuilder.array([
-        formBuilder.group({path: ''})
+      libraryFolders: this.formBuilder.array([
+        this.formBuilder.group({path: ''})
       ]),
       adminName: '',
       adminEmail: '',

@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {Song} from '../domain/library.model';
 import {from, Observable, of} from 'rxjs';
@@ -11,12 +11,13 @@ import {TokenStorageService} from './token-storage.service';
 })
 export class BrowserNotificationService {
 
+  private readonly translateService = inject(TranslateService);
+  private readonly tokenStorageService = inject(TokenStorageService);
+
+
   private appInForeground = true;
 
-  constructor(
-    private translateService: TranslateService,
-    private tokenStorageService: TokenStorageService,
-  ) {
+  constructor() {
     window.addEventListener('blur', () => {
       this.appInForeground = false;
     });

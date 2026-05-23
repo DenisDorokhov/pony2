@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, inject, Input} from '@angular/core';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NotificationService} from '../../../service/notification.service';
@@ -13,15 +13,13 @@ import {NotificationService} from '../../../service/notification.service';
 })
 export class OpenSubsonicApiKeyComponent {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
+
   @Input()
   apiKey!: string;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly notificationService: NotificationService,
-    private readonly translateService: TranslateService,
-  ) {
-  }
 
   isCopyToClipboardAvailable() {
     return navigator?.clipboard?.writeText;

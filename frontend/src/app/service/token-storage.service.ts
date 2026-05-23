@@ -1,10 +1,12 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {CookieService} from 'ngx-cookie';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TokenStorageService {
+
+  private readonly cookieService = inject(CookieService);
 
   private static readonly ACCESS_TOKEN_LOCAL_STORAGE_KEY: string = 'pony2.AuthenticationService.accessToken';
   private static readonly STATIC_TOKEN_LOCAL_STORAGE_KEY: string = 'pony2.AuthenticationService.staticToken';
@@ -14,7 +16,7 @@ export class TokenStorageService {
   private _accessToken: string | undefined;
   private _staticToken: string | undefined;
 
-  constructor(private cookieService: CookieService) {
+  constructor() {
     this._accessToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_LOCAL_STORAGE_KEY) ?? undefined;
     this._staticToken = localStorage.getItem(TokenStorageService.STATIC_TOKEN_LOCAL_STORAGE_KEY) ?? undefined;
     this.cookieService.put(TokenStorageService.STATIC_TOKEN_COOKIE_KEY, this._staticToken);

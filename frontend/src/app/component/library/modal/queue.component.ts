@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  inject,
   OnDestroy,
   OnInit,
   QueryList,
@@ -42,6 +43,12 @@ import {LargeSongComponent} from './common/large-song.component';
 })
 export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly playbackService = inject(PlaybackService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly translateService = inject(TranslateService);
+
   readonly LoadingState = LoadingState;
 
   readonly rowHeight = LargeSongComponent.HEIGHT;
@@ -61,14 +68,6 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly playbackService: PlaybackService,
-    private readonly libraryService: LibraryService,
-    private readonly translateService: TranslateService,
-  ) {
-  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());

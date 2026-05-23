@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {ConfigService} from '../../../service/config.service';
@@ -25,6 +25,17 @@ import {PlaybackHistoryService} from '../../../service/playback-history.service'
 })
 export class SettingsComponent implements OnInit{
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly configService = inject(ConfigService);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly translateService = inject(TranslateService);
+  private readonly libraryScanService = inject(LibraryScanService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly playbackHistoryService = inject(PlaybackHistoryService);
+
   LoadingState = LoadingState;
 
   config: ConfigDto | undefined;
@@ -39,21 +50,11 @@ export class SettingsComponent implements OnInit{
   primaryLoadingState = LoadingState.LOADING;
   secondaryLoadingState = LoadingState.LOADED;
 
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly configService: ConfigService,
-    private readonly formBuilder: FormBuilder,
-    private readonly translateService: TranslateService,
-    private readonly libraryScanService: LibraryScanService,
-    private readonly notificationService: NotificationService,
-    private readonly playlistService: PlaylistService,
-    private readonly libraryService: LibraryService,
-    private readonly playbackHistoryService: PlaybackHistoryService,
-  ) {
-    this.formLibraryFolders = formBuilder.array([
-      formBuilder.group({path: ''})
+  constructor() {
+    this.formLibraryFolders = this.formBuilder.array([
+      this.formBuilder.group({path: ''})
     ]);
-    this.form = formBuilder.group({
+    this.form = this.formBuilder.group({
       libraryFolders: this.formLibraryFolders,
     });
   }

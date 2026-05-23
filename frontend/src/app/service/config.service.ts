@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ConfigDto} from '../domain/config.dto';
 import {HttpClient} from '@angular/common/http';
@@ -10,8 +10,7 @@ import {ErrorDto} from '../domain/common.dto';
 })
 export class ConfigService {
 
-  constructor(private httpClient: HttpClient) {
-  }
+  private readonly httpClient = inject(HttpClient);
 
   getConfig(): Observable<ConfigDto> {
     return this.httpClient.get<ConfigDto>('/api/admin/config');

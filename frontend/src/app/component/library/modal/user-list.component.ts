@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {UserDto, UserPageDto} from '../../../domain/user.dto';
@@ -19,6 +19,14 @@ import {NotificationService} from '../../../service/notification.service';
 })
 export class UserListComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+  readonly authenticationService = inject(AuthenticationService);
+
+  private readonly userService = inject(UserService);
+  private readonly modal = inject(NgbModal);
+  private readonly translateService = inject(TranslateService);
+  private readonly notificationService = inject(NotificationService);
+
   LoadingState = LoadingState;
   UserRole = UserDto.Role;
 
@@ -27,15 +35,6 @@ export class UserListComponent implements OnInit {
   users: UserDto[] = [];
   page: UserPageDto | undefined;
   emptyRowCount = 5;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    public readonly authenticationService: AuthenticationService,
-    private readonly userService: UserService,
-    private readonly modal: NgbModal,
-    private readonly translateService: TranslateService,
-    private readonly notificationService: NotificationService,
-  ) {}
 
   ngOnInit(): void {
     this.loadPage();

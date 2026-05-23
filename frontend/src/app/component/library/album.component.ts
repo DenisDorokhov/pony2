@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -22,7 +23,8 @@ import {
   NgbDropdown,
   NgbDropdownButtonItem,
   NgbDropdownItem,
-  NgbDropdownMenu, NgbDropdownToggle,
+  NgbDropdownMenu,
+  NgbDropdownToggle,
   NgbModal
 } from '@ng-bootstrap/ng-bootstrap';
 import {formatDuration} from '../../utils/format.utils';
@@ -70,6 +72,15 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 })
 export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
 
+  private readonly libraryService = inject(LibraryService);
+  private readonly translateService = inject(TranslateService);
+  private readonly installationService = inject(InstallationService);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly modal = inject(NgbModal);
+  private readonly rootElement = inject(ElementRef);
+
   @Input() albumSongs!: AlbumSongs;
 
   discs: Disc[] = [];
@@ -80,18 +91,6 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private readonly libraryService: LibraryService,
-    private readonly translateService: TranslateService,
-    private readonly installationService: InstallationService,
-    private readonly playlistService: PlaylistService,
-    private readonly playbackService: PlaybackService,
-    private readonly notificationService: NotificationService,
-    private readonly modal: NgbModal,
-    private rootElement: ElementRef
-  ) {
-  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());

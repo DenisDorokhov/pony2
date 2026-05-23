@@ -1,7 +1,8 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {
-  CurrentUserUpdateCommandDto, OpenSubsonicApiKeyDto,
+  CurrentUserUpdateCommandDto,
+  OpenSubsonicApiKeyDto,
   UserCreateCommandDto,
   UserDto,
   UserPageDto,
@@ -16,10 +17,7 @@ import {ErrorDto} from '../domain/common.dto';
 })
 export class UserService {
 
-  constructor(
-    private httpClient: HttpClient
-  ) {
-  }
+  private readonly httpClient = inject(HttpClient);
 
   getAllUsers(pageIndex = 0, pageSize = 30): Observable<UserPageDto> {
     return this.httpClient.get<UserPageDto>('/api/admin/users', { params: {pageIndex, pageSize} });

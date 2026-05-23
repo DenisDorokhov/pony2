@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {LogMessageDto, ScanJobDto} from '../../../domain/library.dto';
@@ -13,6 +13,10 @@ import {formatDuration, formatFileSize} from '../../../utils/format.utils';
 })
 export class ScanJobComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly translateService = inject(TranslateService);
+
   ScanJobStatus = ScanJobDto.Status;
   LogMessageLevel = LogMessageDto.Level;
 
@@ -23,12 +27,6 @@ export class ScanJobComponent implements OnInit {
   duration: string | undefined;
   songSize: string | undefined;
   exception: string | undefined;
-
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private readonly translateService: TranslateService,
-  ) {
-  }
 
   ngOnInit(): void {
     this.exception = LogMessageDto.extractException(this.scanJob.logMessage);

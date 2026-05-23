@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {CommonModule} from '@angular/common';
@@ -22,6 +22,15 @@ import {OpenSubsonicApiKeyComponent} from './open-subsonic-api-key.component';
 })
 export class CurrentUserComponent implements OnInit {
 
+  readonly activeModal = inject(NgbActiveModal);
+
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly authenticationService = inject(AuthenticationService);
+  private readonly userService = inject(UserService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly translateService = inject(TranslateService);
+  private readonly modal = inject(NgbModal);
+
   LoadingState = LoadingState;
 
   user!: UserDto;
@@ -30,15 +39,7 @@ export class CurrentUserComponent implements OnInit {
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADING;
 
-  constructor(
-    public readonly activeModal: NgbActiveModal,
-    private formBuilder: FormBuilder,
-    private authenticationService: AuthenticationService,
-    private userService: UserService,
-    private notificationService: NotificationService,
-    private translateService: TranslateService,
-    private readonly modal: NgbModal,
-  ) {
+  constructor() {
     this.form = this.formBuilder.group({
       name: '',
       email: '',

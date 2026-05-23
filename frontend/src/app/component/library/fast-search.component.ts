@@ -1,4 +1,14 @@
-import {Component, ElementRef, OnDestroy, OnInit, AfterViewInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {debounceTime, fromEvent, mergeMap, of, Subject, Subscription} from 'rxjs';
@@ -10,8 +20,8 @@ import {ScrollingUtils} from '../../utils/scrolling.utils';
 import {UnknownSongPipe} from '../../pipe/unknown-song.pipe';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
-import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 import {PlaylistService} from '../../service/playlist.service';
+import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
 class NavigationItem {
 
@@ -34,6 +44,9 @@ class NavigationItem {
 })
 export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
 
+  private readonly libraryService = inject(LibraryService);
+  private readonly playlistService = inject(PlaylistService);
+
   open = false;
   searchResult: SearchResult | undefined;
 
@@ -51,12 +64,6 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
   private lastSearchQuery: string | undefined;
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private readonly libraryService: LibraryService,
-    private readonly playlistService: PlaylistService,
-  ) {
-  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(next => next.unsubscribe());

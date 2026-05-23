@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, inject, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {Observable, Subscription} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {CommonModule} from '@angular/common';
@@ -15,6 +15,8 @@ enum ImageLoaderComponentState {
     styleUrls: ['./image-loader.component.scss']
 })
 export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
+
+  private readonly ngZone = inject(NgZone);
 
   private static LOADED_URLS = new Set<string>();
 
@@ -59,9 +61,6 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   showNewIndicator = false;
-
-  constructor(private ngZone: NgZone) {
-  }
 
   ngAfterViewInit(): void {
     this.scroller = this.findScroller();

@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {fromEvent, Subscription} from 'rxjs';
 import {PlaybackService} from '../../service/playback.service';
@@ -25,6 +25,14 @@ import {NgIf} from '@angular/common';
 })
 export class PlayerComponent implements OnInit, OnDestroy {
 
+  private readonly playbackService = inject(PlaybackService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly translateService = inject(TranslateService);
+  private readonly pageTitleService = inject(PageTitleService);
+  private readonly playlistService = inject(PlaylistService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly modal = inject(NgbModal);
+
   song: Song | undefined;
   songTitle: string | undefined;
   artworkUrl: string | undefined;
@@ -43,17 +51,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
   topPlaylists: Playlist[] = [];
 
   private subscriptions: Subscription[] = [];
-
-  constructor(
-    private readonly playbackService: PlaybackService,
-    private readonly libraryService: LibraryService,
-    private readonly translateService: TranslateService,
-    private readonly pageTitleService: PageTitleService,
-    private readonly playlistService: PlaylistService,
-    private readonly notificationService: NotificationService,
-    private readonly modal: NgbModal,
-  ) {
-  }
 
   ngOnInit(): void {
     this.subscriptions.push(this.playbackService.observeCurrentSong()

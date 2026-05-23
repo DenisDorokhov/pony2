@@ -1,4 +1,4 @@
-import {Component, Input, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {Artist} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
@@ -18,6 +18,11 @@ import {InstallationService} from '../../service/installation.service';
     styleUrls: ['./artist.component.scss']
 })
 export class ArtistComponent implements OnInit, OnDestroy {
+
+  private readonly libraryService = inject(LibraryService);
+  private readonly playbackService = inject(PlaybackService);
+  private readonly translateService = inject(TranslateService);
+  private readonly installationService = inject(InstallationService);
 
   static readonly HEIGHT = 69;
 
@@ -62,14 +67,6 @@ export class ArtistComponent implements OnInit, OnDestroy {
 
   private selectedArtistSubscription: Subscription | undefined;
   private playbackEventSubscription: Subscription | undefined;
-
-  constructor(
-    private readonly libraryService: LibraryService,
-    private readonly playbackService: PlaybackService,
-    private readonly translateService: TranslateService,
-    private readonly installationService: InstallationService
-  ) {
-  }
 
   ngOnInit(): void {
     this.selectedArtistSubscription = this.libraryService.observeSelectedArtist()
