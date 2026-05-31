@@ -1,8 +1,8 @@
 :host {
   display: block;
   position: relative;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
+  background-color: var(--color-image-placeholder-background);
+  border: 1px solid var(--color-image-placeholder-border);
 
   .container {
     position: absolute;
@@ -48,16 +48,16 @@
     position: absolute;
     top: 2%;
     left: 2%;
-    color: white;
+    color: var(--color-new-badge-text);
     font-weight: bold;
     font-size: 9px;
-    background-color: #ff5900;
+    background-color: var(--color-new-badge-background);
     border-radius: 2px;
     display: inline-flex;
     align-items: center;      /* Vertical centering */
     justify-content: center;   /* Horizontal centering */
     padding: 1.5px 3px 2.5px 2.5px;         /* Equal padding */
     line-height: 1;
-    border: 1px solid #fcba03;
+    border: 1px solid var(--color-new-badge-border);
   }
 }

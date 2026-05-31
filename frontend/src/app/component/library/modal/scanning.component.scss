@@ -39,12 +39,12 @@ table.status-container {
 }
 
 table.log-container {
-  border: 1px solid #cccccc;
+  border: 1px solid var(--color-table-border);
   width: 100%;
   margin: 0 0 16px;
 
   thead {
-    border-bottom: 1px solid #cccccc;
+    border-bottom: 1px solid var(--color-table-border);
 
     .startDate {
       width: 180px;
@@ -60,26 +60,26 @@ table.log-container {
   }
 
   tbody {
-    border: 1px solid #cccccc;
+    border: 1px solid var(--color-table-border);
   }
 
   .scan-job-status.starting {
   }
 
   .scan-job-status.started {
-    color: #337ab7;
+    color: var(--color-status-info);
   }
 
   .scan-job-status.complete {
-    color: #5cb85c;
+    color: var(--color-status-success);
   }
 
   .scan-job-status.failed {
-    color: #d9534f;
+    color: var(--color-status-danger);
   }
 
   .scan-job-status.interrupted {
-    color: #f0ad4e;
+    color: var(--color-status-warning);
   }
 
   .log-message {

@@ -39,7 +39,7 @@
     }
 
     .title:hover {
-      background-color: #f5f5f5;
+      background-color: var(--color-list-hover-background);
     }
 
     .options {
@@ -48,7 +48,7 @@
 
       button.menu {
         border: none;
-        background-color: transparent;
+        background-color: var(--color-button-background-transparent);
       }
 
       .dropdown-toggle::after {
@@ -79,15 +79,15 @@
         -ms-transition: none;
         -o-transition: none;
         transition: none;
-        background-color: var(--turquoise);
+        background-color: var(--color-playback-progress-background);
       }
     }
 
     .mouse-progress {
       position: absolute;
       bottom: 20px;
-      background-color: #999;
-      color: white;
+      background-color: var(--color-player-scrub-tooltip-background);
+      color: var(--color-player-scrub-tooltip-text);
       padding: 0 4px 0 4px;
       transform: translate(-50%);
       border-radius: 4px;
@@ -98,11 +98,11 @@
     .mouse-position {
       position: absolute;
       bottom: 0;
-      border-left: 1px solid #999;
+      border-left: 1px solid var(--color-player-scrub-marker-border);
       height: 16px;
     }
     .mouse-position.played {
-      border-left: 1px solid #e9ecef;
+      border-left: 1px solid var(--color-player-scrub-played-marker-border);
     }
   }
 
@@ -110,7 +110,7 @@
     position: absolute;
     left: 158px;
     bottom: 1px;
-    color: #909090;
+    color: var(--color-text-muted);
   }
 
   .loading-indicator-container {
@@ -142,8 +142,8 @@
     text-align: center;
 
     button {
-      background: transparent;
-      color: #fcba03;
+      background: var(--color-button-background-transparent);
+      color: var(--color-like-icon);
       font-size: 14px;
       border: 0;
     }
@@ -153,7 +153,7 @@
     position: absolute;
     right: 84px;
     bottom: 1px;
-    color: #909090;
+    color: var(--color-text-muted);
   }
 
   pony-image-loader {

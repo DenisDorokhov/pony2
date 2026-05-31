@@ -9,10 +9,10 @@
   text-align: center;
   padding: 8px 0 8px 12px;
   line-height: 58px;
-  color: #909090;
+  color: var(--color-text-muted);
 
   .bi {
-    color: #212529;
+    color: var(--color-text-default);
   }
 
   .playback-indicator.bi-volume-off-fill {
@@ -46,10 +46,10 @@
   padding: 14px 8px 8px 8px;
 
   small {
-    color: #909090;
+    color: var(--color-text-muted);
 
     b {
-      color: #212529;
+      color: var(--color-text-default);
     }
   }
 
@@ -62,7 +62,7 @@
 
 button.playback {
   border: none;
-  background-color: transparent;
+  background-color: var(--color-button-background-transparent);
   margin: 0;
   padding: 0;
 }
@@ -75,16 +75,16 @@ button.playback {
 
   button {
     border: none;
-    background-color: transparent;
+    background-color: var(--color-button-background-transparent);
     margin: 0;
     padding: 0;
-    color: #fcba03;
+    color: var(--color-like-icon);
   }
 }
 
 .duration {
   padding: 8px;
-  color: #909090;
+  color: var(--color-text-muted);
   line-height: 60px;
   min-width: 58px;
   max-width: 58px;
@@ -99,7 +99,7 @@ button.playback {
 
   button.menu {
     border: none;
-    background-color: transparent;
+    background-color: var(--color-button-background-transparent);
     margin-top: 17px;
     margin-bottom: 17px;
   }
@@ -114,46 +114,46 @@ button.playback {
 }
 
 .columns-container.current {
-  background-color: #ffffee;
+  background-color: var(--color-current-item-background);
 }
 
 .columns-container:hover {
-  background-color: #f5f5f5;
+  background-color: var(--color-list-hover-background);
   cursor: pointer;
 }
 
 .columns-container.selected {
-  background-color: var(--blue) !important;
-  color: white;
+  background-color: var(--color-selection-background) !important;
+  color: var(--color-selection-text);
 
   small, small>b {
-    color: white;
+    color: var(--color-selection-text);
   }
 
   .track-number {
-    color: white;
+    color: var(--color-selection-text);
 
     .bi {
-      color: white;
+      color: var(--color-selection-text);
     }
   }
 
   button.playback, div.playback-indicator {
-    color: white;
+    color: var(--color-selection-text);
   }
 
   .duration {
-    color: white;
+    color: var(--color-selection-text);
   }
 
   .options {
 
     button.menu {
-      color: white;
+      color: var(--color-selection-text);
     }
 
     button.menu:active {
-      color: #f5f5f5;
+      color: var(--color-menu-active-text-on-selection);
     }
   }
 }

@@ -14,7 +14,7 @@ h4 {
   margin: 0 0 16px;
   overflow-y: auto;
   overflow-x: hidden;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--color-table-border);
 }
 
 .btn-group {
@@ -35,7 +35,7 @@ table {
   }
 
   td {
-    border-top: 1px solid #cccccc;
+    border-top: 1px solid var(--color-table-border);
 
     button {
       margin-right: 10px;
@@ -50,7 +50,7 @@ table {
 
   tr:nth-child(odd) {
     td {
-      background-color: #f5f5f5;
+      background-color: var(--color-table-row-alternate-background);
     }
   }
 
@@ -76,15 +76,15 @@ table {
 }
 
 .INFO {
-  color: #5cb85c;
+  color: var(--color-status-success);
 }
 
 .ERROR {
-  color: #d9534f;
+  color: var(--color-status-danger);
 }
 
 .WARN {
-  color: #f0ad4e;
+  color: var(--color-status-warning);
 }
 
 .exception {

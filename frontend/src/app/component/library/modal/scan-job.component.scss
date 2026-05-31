@@ -8,31 +8,31 @@ label {
 }
 
 .scan-job-status.started {
-  color: #337ab7;
+  color: var(--color-status-info);
 }
 
 .scan-job-status.complete {
-  color: #5cb85c;
+  color: var(--color-status-success);
 }
 
 .scan-job-status.failed {
-  color: #d9534f;
+  color: var(--color-status-danger);
 }
 
 .scan-job-status.interrupted {
-  color: #f0ad4e;
+  color: var(--color-status-warning);
 }
 
 .log-level.info {
-  color: #5cb85c;
+  color: var(--color-status-success);
 }
 
 .log-level.error {
-  color: #d9534f;
+  color: var(--color-status-danger);
 }
 
 .log-level.warn {
-  color: #f0ad4e;
+  color: var(--color-status-warning);
 }
 
 .exception {

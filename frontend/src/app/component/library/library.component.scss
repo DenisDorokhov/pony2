@@ -89,7 +89,7 @@
       left: 20px;
       right: 20px;
       text-align: right;
-      color: #777;
+      color: var(--color-footer-text);
 
       small {
         font-size: 80%;
@@ -97,7 +97,7 @@
     }
 
     a {
-      color: #428bca
+      color: var(--color-link)
     }
   }
 }

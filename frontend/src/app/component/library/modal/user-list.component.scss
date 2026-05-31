@@ -13,17 +13,17 @@ h4 {
 }
 
 table {
-  border: 1px solid #cccccc;
+  border: 1px solid var(--color-table-border);
   width: 100%;
   margin: 0 0 16px;
 
   thead {
-    border-bottom: 1px solid #cccccc;
+    border-bottom: 1px solid var(--color-table-border);
     white-space: nowrap;
   }
 
   tbody {
-    border: 1px solid #cccccc;
+    border: 1px solid var(--color-table-border);
   }
 
   td {

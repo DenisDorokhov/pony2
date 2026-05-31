@@ -54,14 +54,14 @@
 }
 
 .list-group-item.current {
-  background-color: #ffffee;
+  background-color: var(--color-current-item-background);
 }
 
 .list-group-item:hover {
-  background-color: #f5f5f5;
+  background-color: var(--color-list-hover-background);
 }
 
 .list-group-item.selected {
-  background-color: var(--blue);
-  color: white;
+  background-color: var(--color-selection-background);
+  color: var(--color-selection-text);
 }
