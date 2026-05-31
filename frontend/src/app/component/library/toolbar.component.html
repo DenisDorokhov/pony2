@@ -64,9 +64,9 @@
       <li><hr class="dropdown-divider"></li>
       <button ngbDropdownItem (click)="toggleTheme()">
         @if (currentTheme === 'dark') {
-          <i class="bi bi-sun-fill"></i>{{ 'library.toolbar.switchToLightThemeButton' | translate }}
+          <i class="bi bi-moon-stars-fill"></i>{{ 'library.toolbar.switchToLightThemeButton' | translate }}
         } @else {
-          <i class="bi bi-moon-stars-fill"></i>{{ 'library.toolbar.switchToDarkThemeButton' | translate }}
+          <i class="bi bi-sun-fill"></i>{{ 'library.toolbar.switchToDarkThemeButton' | translate }}
         }
       </button>
       <button ngbDropdownItem (click)="openProfile()"><i class="bi bi-person-lines-fill"></i>{{ 'library.toolbar.profileButton' | translate }}</button>
