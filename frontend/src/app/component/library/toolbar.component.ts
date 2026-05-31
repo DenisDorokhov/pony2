@@ -16,6 +16,7 @@ import {QueueComponent} from './modal/queue.component';
 import {PlaybackMode, PlaybackService} from '../../service/playback.service';
 import {HistoryComponent} from './modal/history.component';
 import {PlaylistComponent} from './modal/playlist.component';
+import {Theme, ThemeService} from '../../service/theme.service';
 import Role = UserDto.Role;
 
 @Component({
@@ -29,6 +30,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   private readonly libraryScanService = inject(LibraryScanService);
   private readonly authenticationService = inject(AuthenticationService);
   private readonly playbackService = inject(PlaybackService);
+  private readonly themeService = inject(ThemeService);
   private readonly modal = inject(NgbModal);
 
   PlaybackMode = PlaybackMode;
@@ -37,11 +39,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   scanRunning = false;
   playbackMode: PlaybackMode;
+  currentTheme: Theme;
 
   private subscriptions: Subscription[] = [];
 
   constructor() {
     this.playbackMode = this.playbackService.mode;
+    this.currentTheme = this.themeService.theme;
   }
 
   ngOnInit(): void {
@@ -53,8 +57,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.authenticationService.observeAuthentication().subscribe(user =>
       this.currentUser = user));
     this.subscriptions.push(this.playbackService.observeMode().subscribe(mode => this.playbackMode = mode));
-    this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
-      this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null);
+    this.subscriptions.push(this.themeService.observeTheme().subscribe(theme => this.currentTheme = theme));
+    this.subscriptions.push(this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
+      this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null));
   }
 
   ngOnDestroy(): void {
@@ -118,5 +123,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   openHistory() {
     this.modal.open(HistoryComponent, {size: 'lg'});
+  }
+
+  toggleTheme() {
+    this.themeService.toggleTheme();
   }
 }

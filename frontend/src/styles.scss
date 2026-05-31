@@ -1,45 +1,18 @@
 $color-brand-primary: #428bca;
 $color-brand-accent: #5bc0de;
 
-$color-link: $color-brand-primary;
-$color-selection-background: $color-brand-primary;
-$color-selection-text: white;
+$color-current-item-background-light: #ffffee;
+$color-current-item-background-dark: #3a3215;
 
-$color-surface-default: white;
-$color-panel-header-background: #f5f5f5;
-$color-image-placeholder-background: #f5f5f5;
-$color-list-hover-background: #f5f5f5;
-$color-table-row-alternate-background: #f5f5f5;
-$color-current-item-background: #ffffee;
-$color-menu-active-text-on-selection: #f5f5f5;
+$color-like-icon-light: #fcba03;
+$color-like-icon-dark: #ffd24d;
 
-$color-panel-border: #ddd;
-$color-content-divider: #ddd;
-$color-image-placeholder-border: #ddd;
-$color-control-border: #cccccc;
-$color-table-border: #cccccc;
+$color-new-badge-background-light: #ff5900;
+$color-new-badge-background-dark: #d95f2b;
+$color-new-badge-border-light: $color-like-icon-light;
+$color-new-badge-border-dark: $color-like-icon-dark;
 
-$color-text-muted: #909090;
-$color-text-strong: #333333;
-$color-text-default: #212529;
-$color-footer-text: #777;
-$color-error-text: #a94442;
-
-$color-settings-divider: #999999;
-$color-player-scrub-tooltip-background: #999;
-$color-player-scrub-tooltip-text: white;
-$color-player-scrub-marker-border: #999;
-$color-player-scrub-played-marker-border: #e9ecef;
-$color-playback-progress-background: $color-brand-accent;
-
-$color-button-background-transparent: transparent;
-$color-like-icon: #fcba03;
-$color-new-badge-background: #ff5900;
-$color-new-badge-text: white;
-$color-new-badge-border: #fcba03;
-$color-floating-action-background: rgba(255, 255, 255, 0.8);
-
-$color-status-info: #337ab7;
+$color-status-info-light: #337ab7;
 $color-status-success: #5cb85c;
 $color-status-danger: #d9534f;
 $color-status-warning: #f0ad4e;
@@ -47,6 +20,11 @@ $color-status-warning: #f0ad4e;
 // Override Bootstrap colors.
 $min-contrast-ratio: 3;
 $blue: $color-brand-primary;
+$primary: $color-brand-primary;
+$info: $color-brand-accent;
+$success: $color-status-success;
+$danger: $color-status-danger;
+$warning: $color-status-warning;
 $dropdown-min-width: 100px;
 
 @import 'bootstrap/scss/bootstrap';
@@ -57,52 +35,131 @@ $dropdown-min-width: 100px;
 @import 'ngx-toastr/toastr-bs5-alert';
 
 // Set global colors.
-:root {
-  --color-brand-primary: #{$color-brand-primary};
-  --color-brand-accent: #{$color-brand-accent};
+:root,
+[data-bs-theme="light"] {
+  --color-brand-primary: var(--bs-primary);
+  --color-brand-accent: var(--bs-info);
 
-  --color-link: #{$color-link};
-  --color-selection-background: #{$color-selection-background};
-  --color-selection-text: #{$color-selection-text};
+  --color-link: var(--bs-link-color);
+  --color-selection-background: var(--bs-primary);
+  --color-selection-text: var(--bs-white);
 
-  --color-surface-default: #{$color-surface-default};
-  --color-panel-header-background: #{$color-panel-header-background};
-  --color-image-placeholder-background: #{$color-image-placeholder-background};
-  --color-list-hover-background: #{$color-list-hover-background};
-  --color-table-row-alternate-background: #{$color-table-row-alternate-background};
-  --color-current-item-background: #{$color-current-item-background};
-  --color-menu-active-text-on-selection: #{$color-menu-active-text-on-selection};
+  --color-surface-default: var(--bs-body-bg);
+  --color-panel-header-background: var(--bs-tertiary-bg);
+  --color-image-placeholder-background: var(--bs-tertiary-bg);
+  --color-list-hover-background: var(--bs-tertiary-bg);
+  --color-table-row-alternate-background: var(--bs-tertiary-bg);
+  --color-current-item-background: #{$color-current-item-background-light};
+  --color-menu-active-text-on-selection: var(--bs-tertiary-bg);
 
-  --color-panel-border: #{$color-panel-border};
-  --color-content-divider: #{$color-content-divider};
-  --color-image-placeholder-border: #{$color-image-placeholder-border};
-  --color-control-border: #{$color-control-border};
-  --color-table-border: #{$color-table-border};
+  --color-panel-border: var(--bs-border-color);
+  --color-content-divider: var(--bs-border-color);
+  --color-image-placeholder-border: var(--bs-border-color);
+  --color-control-border: var(--bs-border-color);
+  --color-table-border: var(--bs-border-color);
 
-  --color-text-muted: #{$color-text-muted};
-  --color-text-strong: #{$color-text-strong};
-  --color-text-default: #{$color-text-default};
-  --color-footer-text: #{$color-footer-text};
-  --color-error-text: #{$color-error-text};
+  --color-text-muted: var(--bs-secondary-color);
+  --color-text-strong: var(--bs-emphasis-color);
+  --color-text-default: var(--bs-body-color);
+  --color-footer-text: var(--bs-secondary-color);
+  --color-error-text: var(--bs-danger-text-emphasis);
 
-  --color-settings-divider: #{$color-settings-divider};
-  --color-player-scrub-tooltip-background: #{$color-player-scrub-tooltip-background};
-  --color-player-scrub-tooltip-text: #{$color-player-scrub-tooltip-text};
-  --color-player-scrub-marker-border: #{$color-player-scrub-marker-border};
-  --color-player-scrub-played-marker-border: #{$color-player-scrub-played-marker-border};
-  --color-playback-progress-background: #{$color-playback-progress-background};
+  --color-settings-divider: var(--bs-secondary-color);
+  --color-player-scrub-tooltip-background: var(--bs-secondary);
+  --color-player-scrub-tooltip-text: var(--bs-white);
+  --color-player-scrub-marker-border: var(--bs-secondary);
+  --color-player-scrub-played-marker-border: var(--bs-border-color);
+  --color-playback-progress-background: var(--bs-info);
 
-  --color-button-background-transparent: #{$color-button-background-transparent};
-  --color-like-icon: #{$color-like-icon};
-  --color-new-badge-background: #{$color-new-badge-background};
-  --color-new-badge-text: #{$color-new-badge-text};
-  --color-new-badge-border: #{$color-new-badge-border};
-  --color-floating-action-background: #{$color-floating-action-background};
+  --color-button-background-transparent: transparent;
+  --color-like-icon: #{$color-like-icon-light};
+  --color-new-badge-background: #{$color-new-badge-background-light};
+  --color-new-badge-text: var(--bs-white);
+  --color-new-badge-border: #{$color-new-badge-border-light};
+  --color-floating-action-background: rgba(var(--bs-body-bg-rgb), 0.85);
 
-  --color-status-info: #{$color-status-info};
-  --color-status-success: #{$color-status-success};
-  --color-status-danger: #{$color-status-danger};
-  --color-status-warning: #{$color-status-warning};
+  --color-status-info: #{$color-status-info-light};
+  --color-status-success: var(--bs-success);
+  --color-status-danger: var(--bs-danger);
+  --color-status-warning: var(--bs-warning);
+}
+
+[data-bs-theme="dark"] {
+  --color-brand-primary: var(--bs-primary);
+  --color-brand-accent: var(--bs-info);
+
+  --color-link: var(--bs-link-color);
+  --color-selection-background: var(--bs-primary);
+  --color-selection-text: var(--bs-white);
+
+  --color-surface-default: var(--bs-body-bg);
+  --color-panel-header-background: var(--bs-tertiary-bg);
+  --color-image-placeholder-background: var(--bs-secondary-bg);
+  --color-list-hover-background: var(--bs-tertiary-bg);
+  --color-table-row-alternate-background: rgba(var(--bs-emphasis-color-rgb), 0.05);
+  --color-current-item-background: #{$color-current-item-background-dark};
+  --color-menu-active-text-on-selection: var(--bs-light);
+
+  --color-panel-border: var(--bs-border-color);
+  --color-content-divider: var(--bs-border-color);
+  --color-image-placeholder-border: var(--bs-border-color);
+  --color-control-border: var(--bs-border-color);
+  --color-table-border: var(--bs-border-color);
+
+  --color-text-muted: var(--bs-secondary-color);
+  --color-text-strong: var(--bs-emphasis-color);
+  --color-text-default: var(--bs-body-color);
+  --color-footer-text: var(--bs-secondary-color);
+  --color-error-text: var(--bs-danger-text-emphasis);
+
+  --color-settings-divider: var(--bs-secondary-color);
+  --color-player-scrub-tooltip-background: var(--bs-emphasis-color);
+  --color-player-scrub-tooltip-text: var(--bs-body-bg);
+  --color-player-scrub-marker-border: var(--bs-secondary-color);
+  --color-player-scrub-played-marker-border: var(--bs-border-color);
+  --color-playback-progress-background: var(--bs-info);
+
+  --color-button-background-transparent: transparent;
+  --color-like-icon: #{$color-like-icon-dark};
+  --color-new-badge-background: #{$color-new-badge-background-dark};
+  --color-new-badge-text: var(--bs-white);
+  --color-new-badge-border: #{$color-new-badge-border-dark};
+  --color-floating-action-background: rgba(var(--bs-body-bg-rgb), 0.85);
+
+  --color-status-info: var(--bs-primary-text-emphasis);
+  --color-status-success: var(--bs-success-text-emphasis);
+  --color-status-danger: var(--bs-danger-text-emphasis);
+  --color-status-warning: var(--bs-warning-text-emphasis);
+
+  .btn-light {
+    --bs-btn-color: var(--bs-body-color);
+    --bs-btn-bg: var(--bs-tertiary-bg);
+    --bs-btn-border-color: var(--bs-border-color);
+    --bs-btn-hover-color: var(--bs-emphasis-color);
+    --bs-btn-hover-bg: var(--bs-secondary-bg);
+    --bs-btn-hover-border-color: var(--bs-border-color);
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-rgb);
+    --bs-btn-active-color: var(--bs-emphasis-color);
+    --bs-btn-active-bg: var(--bs-secondary-bg);
+    --bs-btn-active-border-color: var(--bs-border-color);
+    --bs-btn-disabled-color: var(--bs-secondary-color);
+    --bs-btn-disabled-bg: var(--bs-tertiary-bg);
+    --bs-btn-disabled-border-color: var(--bs-border-color);
+  }
+
+  .btn-outline-dark {
+    --bs-btn-color: var(--bs-body-color);
+    --bs-btn-border-color: var(--bs-border-color);
+    --bs-btn-hover-color: var(--bs-body-bg);
+    --bs-btn-hover-bg: var(--bs-emphasis-color);
+    --bs-btn-hover-border-color: var(--bs-emphasis-color);
+    --bs-btn-focus-shadow-rgb: var(--bs-light-rgb);
+    --bs-btn-active-color: var(--bs-body-bg);
+    --bs-btn-active-bg: var(--bs-emphasis-color);
+    --bs-btn-active-border-color: var(--bs-emphasis-color);
+    --bs-btn-disabled-color: var(--bs-secondary-color);
+    --bs-btn-disabled-border-color: var(--bs-border-color);
+  }
 }
 
 *:focus-visible {

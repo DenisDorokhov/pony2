@@ -37,6 +37,8 @@ export default {
       repeatOneModeButton: 'Repeat one',
       shuffleModeButton: 'Shuffle',
       radioModeButton: 'Radio',
+      switchToDarkThemeButton: 'Light mode',
+      switchToLightThemeButton: 'Dark mode',
     },
     genre: {
       unknownLabel: 'Unknown Genre'
