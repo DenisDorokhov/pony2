@@ -35,11 +35,11 @@ export class ThemeService {
   }
 
   private loadDefaultTheme(): Theme {
-    const savedTheme = localStorage.getItem(ThemeService.THEME_LOCAL_STORAGE_KEY);
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme;
+    const appliedTheme = window.document.documentElement.getAttribute('data-bs-theme');
+    if (appliedTheme === 'light' || appliedTheme === 'dark') {
+      return appliedTheme;
     }
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light';
   }
 
   private applyTheme(theme: Theme) {

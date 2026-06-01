@@ -11,6 +11,28 @@
   <link rel="apple-touch-icon" type="image/x-icon" href="./icon-152.png" size="152x152" />
   <link rel="apple-touch-icon" type="image/x-icon" href="./icon-192.png" size="152x152" />
   <link rel="apple-touch-icon" type="image/x-icon" href="./icon-256.png" size="152x152" />
+  <script>
+    (function() {
+      var theme;
+      try {
+        theme = window.localStorage.getItem('pony2.ThemeService.theme');
+      } catch (e) {
+        theme = undefined;
+      }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-bs-theme', theme);
+    })();
+  </script>
+  <style>
+    html[data-bs-theme="dark"],
+    html[data-bs-theme="dark"] body {
+      color: #dee2e6;
+      color-scheme: dark;
+      background-color: #212529;
+    }
+  </style>
 </head>
 <body>
 
