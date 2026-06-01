@@ -52,7 +52,7 @@
     }
 
     .counts {
-      color: var(--bs-gray);
+      color: var(--color-text-muted);
       font-weight: normal;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -62,7 +62,7 @@
       a {
         cursor: pointer;
         text-decoration: underline;
-        color: var(--bs-gray);
+        color: inherit;
       }
     }
 
