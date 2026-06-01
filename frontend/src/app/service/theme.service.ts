@@ -10,7 +10,7 @@ export class ThemeService {
 
   private static readonly THEME_LOCAL_STORAGE_KEY = 'pony2.ThemeService.theme';
 
-  private readonly themeSubject = new BehaviorSubject<Theme>(this.loadTheme());
+  private readonly themeSubject = new BehaviorSubject<Theme>(this.loadDefaultTheme());
 
   constructor() {
     this.applyTheme(this.themeSubject.value);
@@ -34,8 +34,12 @@ export class ThemeService {
     this.theme = this.theme === 'dark' ? 'light' : 'dark';
   }
 
-  private loadTheme(): Theme {
-    return localStorage.getItem(ThemeService.THEME_LOCAL_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+  private loadDefaultTheme(): Theme {
+    const savedTheme = localStorage.getItem(ThemeService.THEME_LOCAL_STORAGE_KEY);
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
   private applyTheme(theme: Theme) {
