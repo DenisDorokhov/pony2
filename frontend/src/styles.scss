@@ -85,11 +85,11 @@ $dropdown-min-width: 100px;
 }
 
 [data-bs-theme="dark"] {
-  --color-brand-primary: rgba(var(--bs-primary-rgb), 0.2);
+  --color-brand-primary: var(--bs-primary);
   --color-brand-accent: var(--bs-info);
 
   --color-link: var(--bs-link-color);
-  --color-selection-background: rgba(var(--bs-primary-rgb), 0.2);
+  --color-selection-background: var(--bs-primary);
   --color-selection-text: var(--bs-white);
 
   --color-surface-default: var(--bs-body-bg);
