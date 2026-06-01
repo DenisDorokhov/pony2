@@ -45,6 +45,7 @@ $dropdown-min-width: 100px;
   --color-link: var(--bs-link-color);
   --color-selection-background: #{$color-selection-background-light};
   --color-selection-text: #{$color-selection-text-light};
+  --logo-alpha: 1;
 
   --color-surface-default: var(--bs-body-bg);
   --color-panel-header-background: var(--bs-tertiary-bg);
@@ -90,6 +91,7 @@ $dropdown-min-width: 100px;
   --color-link: var(--bs-link-color);
   --color-selection-background: #{$color-selection-background-dark};
   --color-selection-text: #{$color-selection-text-dark};
+  --logo-alpha: 0.6;
 
   --color-surface-default: var(--bs-body-bg);
   --color-panel-header-background: var(--bs-tertiary-bg);
@@ -116,7 +118,7 @@ $dropdown-min-width: 100px;
   --color-player-scrub-tooltip-text: var(--bs-body-bg);
   --color-player-scrub-marker-border: var(--bs-secondary-color);
   --color-player-scrub-played-marker-border: var(--bs-border-color);
-  --color-playback-progress-background: var(--bs-info);
+  --color-playback-progress-background: #428bca;
 
   --color-button-background-transparent: transparent;
   --color-like-icon: #{$color-like-icon-dark};
@@ -181,6 +183,10 @@ $dropdown-min-width: 100px;
   --bs-pagination-active-color: var(--color-selection-text);
   --bs-pagination-active-bg: var(--color-selection-background);
   --bs-pagination-active-border-color: var(--color-selection-background);
+}
+
+.pony-logo {
+  opacity: var(--logo-alpha);
 }
 
 *:focus-visible {
