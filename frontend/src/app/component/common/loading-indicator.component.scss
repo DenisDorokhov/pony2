@@ -1,15 +1,15 @@
 .loading-indicator-container {
   text-align: center;
 
-  img {
-    width: 20px;
-    height: 20px;
+  .loading-indicator-spinner {
+    --bs-spinner-width: 20px;
+    --bs-spinner-height: 20px;
+    --bs-spinner-border-width: 3px;
     margin-right: 10px;
-    margin-bottom: 3px;
+    vertical-align: middle;
   }
 
-  span {
-    position: relative;
-    top: 1px;
+  .loading-indicator-label {
+    vertical-align: middle;
   }
 }
