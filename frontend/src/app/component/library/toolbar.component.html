@@ -62,6 +62,7 @@
     <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
       <li class="username">{{ currentUser?.name }}</li>
       <li><hr class="dropdown-divider"></li>
+      <button ngbDropdownItem (click)="openProfile()"><i class="bi bi-person-lines-fill"></i>{{ 'library.toolbar.profileButton' | translate }}</button>
       <button ngbDropdownItem (click)="toggleTheme()">
         @if (currentTheme === 'dark') {
           <i class="bi bi-moon-stars-fill"></i>{{ 'library.toolbar.switchToLightThemeButton' | translate }}
@@ -69,7 +70,6 @@
           <i class="bi bi-sun-fill"></i>{{ 'library.toolbar.switchToDarkThemeButton' | translate }}
         }
       </button>
-      <button ngbDropdownItem (click)="openProfile()"><i class="bi bi-person-lines-fill"></i>{{ 'library.toolbar.profileButton' | translate }}</button>
       <button ngbDropdownItem (click)="signOut()"><i class="bi bi-box-arrow-right"></i>{{ 'library.toolbar.logOutButton' | translate }}</button>
     </ul>
   </div>

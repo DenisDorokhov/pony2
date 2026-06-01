@@ -1,6 +1,11 @@
 $color-brand-primary: #428bca;
 $color-brand-accent: #5bc0de;
 
+$color-selection-background-light: #428bca;
+$color-selection-background-dark: #428bca80;
+$color-selection-text-light: #fff;
+$color-selection-text-dark: #fff;
+
 $color-current-item-background-light: #ffffee;
 $color-current-item-background-dark: #3a3215;
 
@@ -37,12 +42,9 @@ $dropdown-min-width: 100px;
 // Set global colors.
 :root,
 [data-bs-theme="light"] {
-  --color-brand-primary: var(--bs-primary);
-  --color-brand-accent: var(--bs-info);
-
   --color-link: var(--bs-link-color);
-  --color-selection-background: var(--bs-primary);
-  --color-selection-text: var(--bs-white);
+  --color-selection-background: #{$color-selection-background-light};
+  --color-selection-text: #{$color-selection-text-light};
 
   --color-surface-default: var(--bs-body-bg);
   --color-panel-header-background: var(--bs-tertiary-bg);
@@ -85,12 +87,9 @@ $dropdown-min-width: 100px;
 }
 
 [data-bs-theme="dark"] {
-  --color-brand-primary: var(--bs-primary);
-  --color-brand-accent: var(--bs-info);
-
   --color-link: var(--bs-link-color);
-  --color-selection-background: var(--bs-primary);
-  --color-selection-text: var(--bs-white);
+  --color-selection-background: #{$color-selection-background-dark};
+  --color-selection-text: #{$color-selection-text-dark};
 
   --color-surface-default: var(--bs-body-bg);
   --color-panel-header-background: var(--bs-tertiary-bg);
@@ -160,6 +159,28 @@ $dropdown-min-width: 100px;
     --bs-btn-disabled-color: var(--bs-secondary-color);
     --bs-btn-disabled-border-color: var(--bs-border-color);
   }
+}
+
+.dropdown-menu {
+  --bs-dropdown-link-active-color: var(--color-selection-text);
+  --bs-dropdown-link-active-bg: var(--color-selection-background);
+}
+
+.nav-pills {
+  --bs-nav-pills-link-active-color: var(--color-selection-text);
+  --bs-nav-pills-link-active-bg: var(--color-selection-background);
+}
+
+.list-group {
+  --bs-list-group-active-color: var(--color-selection-text);
+  --bs-list-group-active-bg: var(--color-selection-background);
+  --bs-list-group-active-border-color: var(--color-selection-background);
+}
+
+.pagination {
+  --bs-pagination-active-color: var(--color-selection-text);
+  --bs-pagination-active-bg: var(--color-selection-background);
+  --bs-pagination-active-border-color: var(--color-selection-background);
 }
 
 *:focus-visible {
