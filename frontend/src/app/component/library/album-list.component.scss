@@ -46,7 +46,7 @@
 
     .artist-name {
       flex-grow: 1;
-      font-size: 1.25rem;
+      font-size: 20px;
       padding-right: 6px;
       min-width: 250px;
     }
@@ -57,7 +57,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
-      font-size: 0.9rem;
+      font-size: 15px;
 
       a {
         cursor: pointer;

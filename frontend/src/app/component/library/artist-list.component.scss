@@ -29,10 +29,10 @@
 
     button.genre {
       border: 0;
-      padding: 0 0 0 50px;
+      padding-left: 50px;
       width: 261px;
       font-weight: 500;
-      font-size: 1.25rem;
+      font-size: 20px;
       background-color: var(--color-panel-header-background);
       color: var(--bs-heading-color);
       text-overflow: ellipsis;
@@ -100,7 +100,7 @@
       button.sort {
         border: 1px solid var(--color-panel-border);
         margin-left: 2px;
-        margin-bottom: 7px;
+        margin-bottom: 8px;
       }
     }
   }
