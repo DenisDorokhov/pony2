@@ -61,8 +61,8 @@ export default {
       addToPlaylist: 'Add to "{name}"',
     },
     artist: {
-      allArtistsLabel: 'All Artists ({artistCount})',
-      allArtistsTitleLabel: 'All Artists',
+      allArtistsLabel: 'All Genres ({artistCount})',
+      allArtistsTitleLabel: 'All Genres',
       updatedArtistsLabel: 'Recently Updated ({artistCount})',
       updatedArtistsTitleLabel: 'Recently Updated',
       unknownLabel: 'Unknown Artist',
