@@ -10,7 +10,6 @@ import net.dorokhov.pony2.core.library.service.artwork.command.ByteSourceArtwork
 import net.dorokhov.pony2.core.library.service.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony2.core.library.service.artwork.command.ImageNodeArtworkStorageCommand;
 import net.dorokhov.pony2.core.library.service.file.ChecksumCalculator;
-import net.dorokhov.pony2.core.library.service.file.FileTypeResolver;
 import net.dorokhov.pony2.core.library.service.filetree.domain.ImageNode;
 import net.dorokhov.pony2.core.library.service.image.ThumbnailGenerator;
 import net.dorokhov.pony2.core.library.service.image.domain.ImageSize;
@@ -62,8 +61,6 @@ public class ArtworkStorageTest {
     @Mock
     private ArtworkRepository artworkRepository;
     @Mock
-    private FileTypeResolver fileTypeResolver;
-    @Mock
     private ChecksumCalculator checksumCalculator;
     @Mock
     private ThumbnailGenerator thumbnailGenerator;
@@ -75,8 +72,8 @@ public class ArtworkStorageTest {
     @BeforeEach
     public void setUp() {
         artworkFolder = tempFolder.resolve("some/nested/path").toFile();
-        artworkStorage = new ArtworkStorage(artworkRepository, 
-                fileTypeResolver, checksumCalculator, thumbnailGenerator, artworkFolder, 
+        artworkStorage = new ArtworkStorage(
+                artworkRepository, checksumCalculator, thumbnailGenerator, artworkFolder,
                 new int[]{SMALL_IMAGE_SIZE.getWidth(), SMALL_IMAGE_SIZE.getHeight()}, 
                 new int[]{LARGE_IMAGE_SIZE.getWidth(), LARGE_IMAGE_SIZE.getHeight()});
         initSynchronization();
@@ -103,7 +100,6 @@ public class ArtworkStorageTest {
     public void shouldGetOrSaveByteSourceArtwork() throws IOException {
 
         when(checksumCalculator.calculate((byte[]) any())).thenReturn(CHECKSUM);
-        when(fileTypeResolver.resolve((byte[]) any())).thenReturn(FILE_TYPE);
         when(artworkRepository.save(any())).then(returnsFirstArg());
         
         byte[] bytes = Files.toByteArray(RESOURCE.getFile());
@@ -116,7 +112,6 @@ public class ArtworkStorageTest {
     public void shouldGetOrSaveFileArtwork() throws IOException {
 
         when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
-        when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
         when(artworkRepository.save(any())).then(returnsFirstArg());
         
         File file = RESOURCE.getFile();
@@ -132,7 +127,6 @@ public class ArtworkStorageTest {
         
         ImageNode imageNode = mock(ImageNode.class);
         when(imageNode.getFile()).thenReturn(RESOURCE.getFile());
-        when(imageNode.getFileType()).thenReturn(FileType.of("image/png", "png"));
         when(imageNode.getChecksum()).thenReturn(CHECKSUM);
         ImageNodeArtworkStorageCommand command = new ImageNodeArtworkStorageCommand(sourceUri(), imageNode);
 
@@ -143,7 +137,6 @@ public class ArtworkStorageTest {
     public void shouldDeleteCreatedFilesOnRollback() throws IOException {
 
         when(checksumCalculator.calculate((File) any())).thenReturn(CHECKSUM);
-        when(fileTypeResolver.resolve((File) any())).thenReturn(FILE_TYPE);
         when(artworkRepository.save(any())).then(returnsFirstArg());
 
         FileArtworkStorageCommand command = new FileArtworkStorageCommand(sourceUri(), RESOURCE.getFile());

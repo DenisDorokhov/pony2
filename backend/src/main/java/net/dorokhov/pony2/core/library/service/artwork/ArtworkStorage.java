@@ -3,13 +3,11 @@ package net.dorokhov.pony2.core.library.service.artwork;
 import com.google.common.io.Files;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
-import net.dorokhov.pony2.api.library.domain.FileType;
 import net.dorokhov.pony2.core.library.repository.ArtworkRepository;
 import net.dorokhov.pony2.core.library.service.artwork.command.ByteSourceArtworkStorageCommand;
 import net.dorokhov.pony2.core.library.service.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony2.core.library.service.artwork.command.ImageNodeArtworkStorageCommand;
 import net.dorokhov.pony2.core.library.service.file.ChecksumCalculator;
-import net.dorokhov.pony2.core.library.service.file.FileTypeResolver;
 import net.dorokhov.pony2.core.library.service.image.ThumbnailGenerator;
 import net.dorokhov.pony2.core.library.service.image.domain.ImageSize;
 import org.slf4j.Logger;
@@ -36,7 +34,6 @@ public class ArtworkStorage {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ArtworkRepository artworkRepository;
-    private final FileTypeResolver fileTypeResolver;
     private final ChecksumCalculator checksumCalculator;
     private final ThumbnailGenerator thumbnailGenerator;
 
@@ -48,7 +45,6 @@ public class ArtworkStorage {
 
     public ArtworkStorage(
             ArtworkRepository artworkRepository,
-            FileTypeResolver fileTypeResolver,
             ChecksumCalculator checksumCalculator,
             ThumbnailGenerator thumbnailGenerator,
             @Value("${pony.artwork.path}") File artworkFolder,
@@ -57,7 +53,6 @@ public class ArtworkStorage {
     ) {
 
         this.artworkRepository = artworkRepository;
-        this.fileTypeResolver = fileTypeResolver;
         this.checksumCalculator = checksumCalculator;
         this.thumbnailGenerator = thumbnailGenerator;
 
@@ -78,7 +73,6 @@ public class ArtworkStorage {
             byte[] content = command.getByteSource().read();
             return doGetOrSave(command.getSourceUri(),
                     () -> checksumCalculator.calculate(content),
-                    () -> fileTypeResolver.resolve(content),
                     () -> new ByteArrayInputStream(content));
         }
     }
@@ -89,7 +83,6 @@ public class ArtworkStorage {
             File file = command.getFile();
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> checksumCalculator.calculate(file)),
-                    rethrow(() -> fileTypeResolver.resolve(file)),
                     rethrow(() -> new FileInputStream(file)));
         }
     }
@@ -99,7 +92,6 @@ public class ArtworkStorage {
         synchronized (modificationLock) {
             return doGetOrSave(command.getSourceUri(),
                     rethrow(() -> command.getImageNode().getChecksum()),
-                    rethrow(() -> command.getImageNode().getFileType()),
                     rethrow(() -> new FileInputStream(command.getImageNode().getFile())));
         }
     }
@@ -130,18 +122,13 @@ public class ArtworkStorage {
                 new File(artworkFolder, artwork.getLargeImagePath()));
     }
 
-    private ArtworkFiles doGetOrSave(URI sourceUri,
-                                     Supplier<String> checksumSupplier,
-                                     Supplier<FileType> fileTypeSupplier,
-                                     Supplier<InputStream> streamSupplier) throws IOException {
+    private ArtworkFiles doGetOrSave(URI sourceUri, Supplier<String> checksumSupplier, Supplier<InputStream> streamSupplier) throws IOException {
 
         String checksum = checksumSupplier.get();
         Artwork artwork = artworkRepository.findByChecksumAndSourceUriScheme(checksum, sourceUri.getScheme());
         if (artwork != null) {
             return artworkToArtworkFiles(artwork);
         }
-
-        FileType fileType = fileTypeSupplier.get();
 
         String uuid = UUID.randomUUID().toString();
         String smallImagePath = buildImagePath(uuid, "small", THUMBNAIL_FORMAT);
@@ -168,7 +155,7 @@ public class ArtworkStorage {
         }
 
         artwork = artworkRepository.save(new Artwork()
-                .setMimeType(fileType.getMimeType())
+                .setMimeType("image/" + THUMBNAIL_FORMAT)
                 .setChecksum(checksum)
                 .setSourceUri(sourceUri)
                 .setSmallImagePath(smallImagePath)
