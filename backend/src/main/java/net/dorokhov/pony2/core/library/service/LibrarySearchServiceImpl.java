@@ -25,28 +25,27 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
 import static net.dorokhov.pony2.common.SearchTermUtils.extractTerms;
-import static net.dorokhov.pony2.core.library.LibraryConfig.LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR;
+import static net.dorokhov.pony2.core.library.LibraryConfig.SEARCH_INDEX_REBUILD_EXECUTOR;
 
 @Service
 public class LibrarySearchServiceImpl implements LibrarySearchService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    // ReentrantLock doesn't fit here because we release in a different thread.
+    private final Semaphore reIndexSemaphore = new Semaphore(1);
 
     private final EntityManager entityManager;
     private final EntityManagerFactory entityManagerFactory;
-    private final Executor executor;
-
-    // ReentrantLock doesn't fit here, because we release in different thread.
-    private final Semaphore reIndexSemaphore = new Semaphore(1);
+    private final Executor reIndexExecutor;
 
     public LibrarySearchServiceImpl(
             EntityManager entityManager,
             EntityManagerFactory entityManagerFactory,
-            @Qualifier(LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR) Executor executor
+            @Qualifier(SEARCH_INDEX_REBUILD_EXECUTOR) Executor reIndexExecutor
     ) {
         this.entityManager = entityManager;
         this.entityManagerFactory = entityManagerFactory;
-        this.executor = executor;
+        this.reIndexExecutor = reIndexExecutor;
     }
 
     @Override
@@ -153,19 +152,24 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
         if (!reIndexSemaphore.tryAcquire()) {
             throw new IllegalStateException("Concurrent re-building of library search index.");
         }
-        executor.execute(() -> {
-            try {
-                logger.info("Re-building index...");
-                try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
-                    Search.session(entityManager).massIndexer().startAndWait();
-                    logger.info("Re-building library search index done.");
-                } catch (InterruptedException e) {
-                    logger.error("Re-building library search index has been interrupted.", e);
-                    throw new RuntimeException(e);
+        try {
+            reIndexExecutor.execute(() -> {
+                try {
+                    logger.info("Re-building index...");
+                    try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
+                        Search.session(entityManager).massIndexer().startAndWait();
+                        logger.info("Re-building library search index done.");
+                    } catch (InterruptedException e) {
+                        logger.error("Re-building library search index has been interrupted.", e);
+                        throw new RuntimeException(e);
+                    }
+                } finally {
+                    reIndexSemaphore.release();
                 }
-            } finally {
-                reIndexSemaphore.release();
-            }
-        });
+            });
+        } catch (RuntimeException e) {
+            reIndexSemaphore.release();
+            throw e;
+        }
     }
 }

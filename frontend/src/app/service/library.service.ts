@@ -433,6 +433,10 @@ export class LibraryService {
     return this.httpClient.post<void>('/api/admin/library/reBuildSearchIndex', null);
   }
 
+  reGenerateArtworkThumbnails(): Observable<void> {
+    return this.httpClient.post<void>('/api/admin/library/reGenerateArtworkThumbnails', null);
+  }
+
   observeArtistSortingOrder(): Observable<ArtistSortingOrder> {
     return this.sortingOrderArtistSubject.asObservable()
       .pipe(distinctUntilChanged());

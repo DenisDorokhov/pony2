@@ -10,7 +10,8 @@ public class LibraryConfig {
     
     public static final String SCAN_JOB_EXECUTOR = "scanJobExecutor";
     public static final String LIBRARY_IMPORT_EXECUTOR = "libraryImportExecutor";
-    public static final String LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR = "librarySearchIndexRebuildExecutor";
+    public static final String SEARCH_INDEX_REBUILD_EXECUTOR = "searchIndexRebuildExecutor";
+    public static final String ARTWORK_THUMBNAIL_REGENERATION_EXECUTOR = "artworkThumbnailRegenerationExecutor";
 
     private final int importThreadPoolSize;
     
@@ -28,9 +29,14 @@ public class LibraryConfig {
         return buildThreadPoolExecutor(LIBRARY_IMPORT_EXECUTOR, importThreadPoolSize);
     }
 
-    @Bean(LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR)
-    public ThreadPoolTaskExecutor librarySearchIndexRebuildExecutor() {
-        return buildThreadPoolExecutor(LIBRARY_SEARCH_INDEX_REBUILD_EXECUTOR, 1);
+    @Bean(SEARCH_INDEX_REBUILD_EXECUTOR)
+    public ThreadPoolTaskExecutor searchIndexRebuildExecutor() {
+        return buildThreadPoolExecutor(SEARCH_INDEX_REBUILD_EXECUTOR, 1);
+    }
+
+    @Bean(ARTWORK_THUMBNAIL_REGENERATION_EXECUTOR)
+    public ThreadPoolTaskExecutor artworkThumbnailRegenerationExecutor() {
+        return buildThreadPoolExecutor(ARTWORK_THUMBNAIL_REGENERATION_EXECUTOR, 1);
     }
 
     private ThreadPoolTaskExecutor buildThreadPoolExecutor(String beanName, int poolSize) {

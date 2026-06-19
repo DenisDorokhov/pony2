@@ -19,6 +19,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.io.*;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -30,6 +31,7 @@ import static org.springframework.transaction.support.TransactionSynchronization
 public class ArtworkStorage {
 
     private static final String THUMBNAIL_FORMAT = "png";
+    private static final String THUMBNAIL_MIME_TYPE = "image/" + THUMBNAIL_FORMAT;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -97,6 +99,42 @@ public class ArtworkStorage {
     }
 
     @Transactional
+    public void reGenerateThumbnails(Artwork artwork, Supplier<InputStream> streamSupplier) throws IOException {
+        synchronized (modificationLock) {
+
+            File previousSmallImageFile = new File(artworkFolder, artwork.getSmallImagePath());
+            File previousLargeImageFile = new File(artworkFolder, artwork.getLargeImagePath());
+
+            URI sourceUri = artwork.getSourceUri();
+            GeneratedThumbnails thumbnails = generateThumbnails(sourceUri, streamSupplier);
+
+            registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status != STATUS_COMMITTED) {
+                        deleteThumbnailFiles(thumbnails.smallImageFile(), thumbnails.largeImageFile());
+                    }
+                }
+            });
+
+            artworkRepository.save(artwork
+                    .setDate(LocalDateTime.now())
+                    .setMimeType(THUMBNAIL_MIME_TYPE)
+                    .setSmallImagePath(thumbnails.smallImagePath())
+                    .setLargeImagePath(thumbnails.largeImagePath())
+                    .setSmallImageSize(thumbnails.smallImageFile().length())
+                    .setLargeImageSize(thumbnails.largeImageFile().length()));
+
+            registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    deleteThumbnailFiles(previousSmallImageFile, previousLargeImageFile);
+                }
+            });
+        }
+    }
+
+    @Transactional
     public void delete(String id) {
         artworkRepository.findById(id).ifPresent(artwork -> {
             File largeFile = new File(artworkFolder, artwork.getLargeImagePath());
@@ -130,6 +168,32 @@ public class ArtworkStorage {
             return artworkToArtworkFiles(artwork);
         }
 
+        GeneratedThumbnails thumbnails = generateThumbnails(sourceUri, streamSupplier);
+
+        registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    deleteThumbnailFiles(thumbnails.smallImageFile(), thumbnails.largeImageFile());
+                }
+            }
+        });
+
+        artwork = artworkRepository.save(new Artwork()
+                .setMimeType(THUMBNAIL_MIME_TYPE)
+                .setChecksum(checksum)
+                .setSourceUri(sourceUri)
+                .setSmallImagePath(thumbnails.smallImagePath())
+                .setLargeImagePath(thumbnails.largeImagePath())
+                .setSmallImageSize(thumbnails.smallImageFile().length())
+                .setLargeImageSize(thumbnails.largeImageFile().length())
+        );
+
+        return artworkToArtworkFiles(artwork);
+    }
+
+    private GeneratedThumbnails generateThumbnails(URI sourceUri, Supplier<InputStream> streamSupplier) throws IOException {
+
         String uuid = UUID.randomUUID().toString();
         String smallImagePath = buildImagePath(uuid, "small", THUMBNAIL_FORMAT);
         String largeImagePath = buildImagePath(uuid, "large", THUMBNAIL_FORMAT);
@@ -140,45 +204,32 @@ public class ArtworkStorage {
         Files.createParentDirs(largeImageFile);
 
         try (InputStream stream = streamSupplier.get()) {
-            try {
-                thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, THUMBNAIL_FORMAT, smallImageFile);
-            } catch (Exception e) {
-                throw new IOException("Could not generate small thumbnail for: " + sourceUri, e);
-            }
+            thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, THUMBNAIL_FORMAT, smallImageFile);
+        } catch (Exception e) {
+            deleteThumbnailFiles(smallImageFile, largeImageFile);
+            throw new IOException("Could not generate small thumbnail for: " + sourceUri, e);
         }
+
         try (InputStream stream = streamSupplier.get()) {
-            try {
-                thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, THUMBNAIL_FORMAT, largeImageFile);
-            } catch (Exception e) {
-                throw new IOException("Could not generate large thumbnail for: " + sourceUri, e);
-            }
+            thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, THUMBNAIL_FORMAT, largeImageFile);
+        } catch (Exception e) {
+            deleteThumbnailFiles(smallImageFile, largeImageFile);
+            throw new IOException("Could not generate large thumbnail for: " + sourceUri, e);
         }
 
-        artwork = artworkRepository.save(new Artwork()
-                .setMimeType("image/" + THUMBNAIL_FORMAT)
-                .setChecksum(checksum)
-                .setSourceUri(sourceUri)
-                .setSmallImagePath(smallImagePath)
-                .setLargeImagePath(largeImagePath)
-                .setSmallImageSize(smallImageFile.length())
-                .setLargeImageSize(largeImageFile.length())
-        );
+        return new GeneratedThumbnails(smallImagePath, largeImagePath, smallImageFile, largeImageFile);
+    }
 
-        registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                if (status != STATUS_COMMITTED) {
-                    if (!smallImageFile.delete()) {
-                        logger.error("Could not delete small image file after rollback: '{}'.", smallImageFile.getAbsolutePath());
-                    }
-                    if (!largeImageFile.delete()) {
-                        logger.error("Could not delete large image file after rollback: '{}'.", largeImageFile.getAbsolutePath());
-                    }
+    private void deleteThumbnailFiles(File... files) {
+        for (File file : files) {
+            try {
+                if (file.exists() && !file.delete()) {
+                    logger.warn("Could not delete thumbnail file: '{}'.", file);
                 }
+            } catch (Exception e) {
+                logger.warn("Could not delete thumbnail file: '{}'.", file, e);
             }
-        });
-
-        return artworkToArtworkFiles(artwork);
+        }
     }
 
     @SuppressWarnings({"StringBufferReplaceableByString", "SameParameterValue"})
@@ -188,5 +239,13 @@ public class ArtworkStorage {
         builder.append(name, 2, 4).append("/");
         builder.append(name).append(".").append(suffix).append(".").append(extension);
         return builder.toString();
+    }
+
+    private record GeneratedThumbnails(
+            String smallImagePath,
+            String largeImagePath,
+            File smallImageFile,
+            File largeImageFile
+    ) {
     }
 }

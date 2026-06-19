@@ -181,4 +181,18 @@ export class SettingsComponent implements OnInit{
       error: () => this.secondaryLoadingState = LoadingState.ERROR
     });
   }
+
+  reGenerateArtworkThumbnails() {
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.libraryService.reGenerateArtworkThumbnails().subscribe({
+      next: () => {
+        this.secondaryLoadingState = LoadingState.LOADED;
+        this.notificationService.success(
+          this.translateService.instant('notification.settingsTitle'),
+          this.translateService.instant('notification.reGenerateArtworkThumbnailsStartedText')
+        );
+      },
+      error: () => this.secondaryLoadingState = LoadingState.ERROR
+    });
+  }
 }

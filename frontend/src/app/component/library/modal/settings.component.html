@@ -50,12 +50,22 @@
 
     <hr>
 
-    <div class="mb-3">
-      <label class="form-label">{{ 'settings.reBuildSearchIndexLabel' | translate }}</label>
-      <div>
-        <button class="btn btn-primary index" (click)="reBuildSearchIndex()"
-                [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}
-        </button>
+    <div class="mb-3 maintenance-actions">
+      <div class="maintenance-action">
+        <label class="form-label">{{ 'settings.reBuildSearchIndexLabel' | translate }}</label>
+        <div>
+          <button class="btn btn-primary index" (click)="reBuildSearchIndex()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reBuildSearchIndexButton' | translate }}
+          </button>
+        </div>
+      </div>
+      <div class="maintenance-action">
+        <label class="form-label">{{ 'settings.reGenerateArtworkThumbnailsLabel' | translate }}</label>
+        <div>
+          <button class="btn btn-primary index" (click)="reGenerateArtworkThumbnails()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reGenerateArtworkThumbnailsButton' | translate }}
+          </button>
+        </div>
       </div>
     </div>
 

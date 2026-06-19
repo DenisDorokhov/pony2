@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.web.service;
 
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.api.library.service.ArtworkThumbnailMaintenanceService;
 import net.dorokhov.pony2.api.library.service.LibrarySearchService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.user.domain.User;
@@ -20,15 +21,18 @@ public class LibraryFacade {
 
     private final LibraryService libraryService;
     private final LibrarySearchService librarySearchService;
+    private final ArtworkThumbnailMaintenanceService artworkThumbnailMaintenanceService;
     private final UserContext userContext;
 
     public LibraryFacade(
             LibraryService libraryService,
             LibrarySearchService librarySearchService,
+            ArtworkThumbnailMaintenanceService artworkThumbnailMaintenanceService,
             UserContext userContext
     ) {
         this.libraryService = libraryService;
         this.librarySearchService = librarySearchService;
+        this.artworkThumbnailMaintenanceService = artworkThumbnailMaintenanceService;
         this.userContext = userContext;
     }
 
@@ -109,6 +113,10 @@ public class LibraryFacade {
 
     public void reBuildSearchIndexAsync() {
         librarySearchService.reIndexAsync();
+    }
+
+    public void reGenerateArtworkThumbnailsAsync() {
+        artworkThumbnailMaintenanceService.reGenerateThumbnailsAsync();
     }
 
     @Transactional(readOnly = true)

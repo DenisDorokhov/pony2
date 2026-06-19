@@ -25,7 +25,7 @@ public class Artwork implements Serializable {
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
     private String id;
 
-    @Column(name = "date", nullable = false, updatable = false)
+    @Column(name = "date", nullable = false)
     @NotNull
     private LocalDateTime date;
 

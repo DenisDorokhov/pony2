@@ -71,4 +71,9 @@ public class LibraryAdminController implements ErrorHandlingController {
     public void reBuildSearchIndex() {
         libraryFacade.reBuildSearchIndexAsync();
     }
+
+    @PostMapping("/api/admin/library/reGenerateArtworkThumbnails")
+    public void reGenerateArtworkThumbnails() {
+        libraryFacade.reGenerateArtworkThumbnailsAsync();
+    }
 }
