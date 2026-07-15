@@ -184,14 +184,37 @@ export class PlaybackService {
   }
 
   private addRandomSongsToQueue(count: number) {
+    let shufflePool = this.shuffleUniqueSongs(this.originalQueue!
+      .filter(song => this._queue.findIndex(next => next.id === song.id) === -1));
     for (let i = 0; i < count; i++) {
-      this._queue.push(this.originalQueue![this.randomInt(0, this.originalQueue!.length - 1)]);
+      if (shufflePool.length === 0) {
+        // Avoid repeating last song after the pool is empty.
+        const lastSong = this._queue.at(-1);
+        shufflePool = this.shuffleUniqueSongs(this.originalQueue!
+          .filter(song => song.id !== lastSong?.id));
+      }
+      if (shufflePool.length === 0) {
+        shufflePool = this.shuffleUniqueSongs(this.originalQueue!);
+      }
+      this._queue.push(shufflePool.pop()!);
     }
     this.queueSubject.next(this._queue.slice());
   }
 
-  private randomInt(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  private shuffleUniqueSongs(songs: Song[]): Song[] {
+    const result: Song[] = [];
+    const songIds = new Set<string>();
+    for (const song of songs) {
+      if (!songIds.has(song.id)) {
+        songIds.add(song.id);
+        result.push(song);
+      }
+    }
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
   }
 
   observeMode(): Observable<PlaybackMode> {
@@ -273,7 +296,8 @@ export class PlaybackService {
   switchQueue(queue: Song[], switchToIndex: number, play = true) {
     this._queue = queue;
     this.queueSubject.next(this._queue.slice());
-    this.switchToIndex(switchToIndex, play);
+    // Avoid appending random songs before the new source queue when shuffling.
+    this.switchToIndex(switchToIndex, play, false);
     if (this._mode === PlaybackMode.SHUFFLE) {
       this.shuffleQueue(this._queue);
     }
@@ -288,7 +312,7 @@ export class PlaybackService {
     }
   }
 
-  private switchToIndex(index: number, play = true): Song {
+  private switchToIndex(index: number, play = true, addRandomSongsIfNeeded = true): Song {
     const song = this._queue[index];
     this._currentIndex = index;
     this.currentSongSubject.next(song);
@@ -299,7 +323,9 @@ export class PlaybackService {
     } else {
       this.audioPlayer.load(song);
     }
-    this.addRandomSongsToQueueIfNeeded();
+    if (addRandomSongsIfNeeded) {
+      this.addRandomSongsToQueueIfNeeded();
+    }
     return song;
   }
 
