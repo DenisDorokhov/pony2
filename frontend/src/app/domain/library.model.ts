@@ -13,6 +13,8 @@ import {
   SongDto
 } from './library.dto';
 
+const NAME_COLLATOR = new Intl.Collator(undefined, {sensitivity: 'accent'});
+
 export class Song {
 
   id: string;
@@ -138,13 +140,7 @@ export class Album {
   }
 
   static compareByName(album1: Album, album2: Album): number {
-    if ((album1.name ?? '') > (album2.name ?? '')) {
-      return 1;
-    }
-    if ((album1.name ?? '') < (album2.name ?? '')) {
-      return -1;
-    }
-    return 0;
+    return NAME_COLLATOR.compare(album1.name ?? '', album2.name ?? '');
   }
 
   static compareByYear(album1: Album, album2: Album): number {
@@ -248,13 +244,7 @@ export class Artist {
   }
 
   static compareByName(artist1: Artist, artist2: Artist): number {
-    if ((artist1.name ?? '') > (artist2.name ?? '')) {
-      return 1;
-    }
-    if ((artist1.name ?? '') < (artist2.name ?? '')) {
-      return -1;
-    }
-    return 0;
+    return NAME_COLLATOR.compare(artist1.name ?? '', artist2.name ?? '');
   }
 
   static compareByModificationDate(artist1: Artist, artist2: Artist): number {
