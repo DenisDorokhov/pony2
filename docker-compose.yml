@@ -1,0 +1,18 @@
+services:
+  pony2:
+    image: pony2:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      pull: true
+      args:
+        PONY_TIMEZONE: Europe/Berlin
+        PONY_UID: 1000
+        PONY_GID: 1000
+    container_name: pony2
+    restart: unless-stopped
+    ports:
+      - "8585:8080"
+    volumes:
+      - ./.pony2:/home/pony/.pony2 # Local data folder
+      - /mnt/media/Music:/home/pony/music # Music library folder

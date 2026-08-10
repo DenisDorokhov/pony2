@@ -1,13 +1,16 @@
 FROM ubuntu:24.04
 
-ARG TIMEZONE
+ARG PONY_TIMEZONE
+ARG PONY_UID=1000
+ARG PONY_GID=1000
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    TZ=${TIMEZONE:-UTC}
+    TZ=${PONY_TIMEZONE:-UTC}
 
 RUN apt update && apt install --no-install-recommends tzdata openjdk-21-jdk -y && \
-    useradd -m pony
+    groupadd -g ${PONY_GID} pony && \
+    useradd -m -u ${PONY_UID} -g ${PONY_GID} pony
 
 COPY backend /home/pony/src/backend
 COPY frontend /home/pony/src/frontend
