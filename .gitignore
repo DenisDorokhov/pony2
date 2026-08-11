@@ -3,3 +3,5 @@ pony2.iml
 .gradle
 build
 out
+.pony2
+music

@@ -5,14 +5,14 @@ services:
       context: .
       dockerfile: Dockerfile
       pull: true
-      args:
-        PONY_TIMEZONE: Europe/Berlin
-        PONY_UID: 1000
-        PONY_GID: 1000
     container_name: pony2
     restart: unless-stopped
+    environment:
+      PONY_TIMEZONE: "${PONY_TIMEZONE:-Europe/Berlin}"
+      PONY_UID: "${PONY_UID:-1000}"
+      PONY_GID: "${PONY_GID:-1000}"
     ports:
       - "8585:8080"
     volumes:
       - ./.pony2:/home/pony/.pony2 # Local data folder
-      - /mnt/media/Music:/home/pony/music # Music library folder
+      - ./music:/home/pony/music:ro # Music library folder
