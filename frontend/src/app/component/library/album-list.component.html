@@ -100,7 +100,7 @@
     <div #scrollerElement
          class="panel-body album-list-container" data-pony-image-loader-scroller>
       @for (album of artistSongs.albumSongs; track trackByIndex($index)) {
-        <pony-album [albumSongs]="album"></pony-album>
+        <pony-album [albumSongs]="album" (switchQueueRequested)="switchQueue($event)"></pony-album>
       }
     </div>
   }

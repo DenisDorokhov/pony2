@@ -54,10 +54,18 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
   }
 
   switchQueue(index: number) {
+    this.playbackService.switchQueue(this.collectSongs(), index);
+  }
+
+  private collectSongs(): Song[] {
     const songs: Song[] = [...this.songs];
     this.artistSongs.albumSongs.forEach(albumSongs =>
       albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
-    this.playbackService.switchQueue(songs, index);
+    return songs;
+  }
+
+  switchQueueTail(index: number) {
+    this.playbackService.switchListQueueTail(this.collectSongs(), index);
   }
 
   selectIndex(i: number) {

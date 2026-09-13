@@ -82,6 +82,8 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   goToSongRequested = new EventEmitter<number>();
   @Output()
   removalRequested = new EventEmitter<number>();
+  @Output()
+  switchQueueRequested = new EventEmitter<number>();
 
   @ViewChild('menuDropdown')
   menuDropdown!: NgbDropdown;
@@ -188,6 +190,10 @@ export class LargeSongComponent implements OnInit, OnDestroy {
 
   createQueue() {
     this.playbackService.createQueue(this.song);
+  }
+
+  switchQueue() {
+    this.switchQueueRequested.emit(this.index);
   }
 
   addToPlaylist(playlist: Playlist) {

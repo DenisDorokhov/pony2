@@ -22,6 +22,7 @@
         (mousedown)="selectIndex(i)"
         (playOrPauseRequested)="onPlaybackClick(i)"
         (goToSongRequested)="goToSong(playbackHistorySong.song)"
+        (switchQueueRequested)="switchQueueTail($event)"
       />
     </div>
   }

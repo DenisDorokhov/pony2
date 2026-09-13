@@ -200,4 +200,8 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
       this.playbackService.play(i);
     }
   }
+
+  switchQueue(index: number) {
+    this.playbackService.switchListQueueTail(this.queue, index);
+  }
 }

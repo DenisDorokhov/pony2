@@ -21,6 +21,7 @@
         <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
         <div ngbDropdownMenu class="dropdown-menu" role="menu">
           <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.album.playNext' | translate }}</button>
+          <button ngbDropdownItem (click)="switchQueue()"><i class="bi bi-sign-merge-right-fill"></i>{{ 'library.album.switchQueue' | translate }}</button>
           <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.album.addToQueue' | translate }}</button>
           <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.album.createQueue' | translate }}</button>
           <button ngbDropdownItem (click)="download()"><i class="bi bi-download"></i>{{ 'library.album.download' | translate }}</button>
@@ -38,7 +39,7 @@
   @for (disc of discs; track trackByIndex($index)) {
     <pony-song-list
       [caption]="disc.discNumber ? ('library.album.discLabel' | translate:{discNumber:disc.discNumber}) : undefined"
-      [songs]="disc.songs" [showArtist]="disc.showArtist">
+      [songs]="disc.songs" [showArtist]="disc.showArtist" (switchQueueRequested)="switchQueueFromSong($event)">
     </pony-song-list>
   }
 </div>

@@ -2,11 +2,13 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  EventEmitter,
   inject,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
+  Output,
   QueryList,
   ViewChildren
 } from '@angular/core';
@@ -81,6 +83,8 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   private readonly rootElement = inject(ElementRef);
 
   @Input() albumSongs!: AlbumSongs;
+
+  @Output() switchQueueRequested = new EventEmitter<Song>();
 
   discs: Disc[] = [];
   duration: string | undefined;
@@ -186,6 +190,17 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
 
   createQueue() {
     this.playbackService.createListQueue(this.albumSongs.songs);
+  }
+
+  switchQueue() {
+    const firstSong = this.albumSongs.songs[0];
+    if (firstSong) {
+      this.switchQueueRequested.emit(firstSong);
+    }
+  }
+
+  switchQueueFromSong(song: Song) {
+    this.switchQueueRequested.emit(song);
   }
 
   addToPlaylist(playlist: Playlist) {

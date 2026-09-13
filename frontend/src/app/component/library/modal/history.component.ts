@@ -72,7 +72,15 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   private switchQueue(index: number) {
-    this.playbackService.switchQueue(this.playbackHistory!.songs.map(next => next.song), index);
+    this.playbackService.switchQueue(this.collectSongs(), index);
+  }
+
+  private collectSongs(): Song[] {
+    return this.playbackHistory!.songs.map(next => next.song);
+  }
+
+  switchQueueTail(index: number) {
+    this.playbackService.switchListQueueTail(this.collectSongs(), index);
   }
 
   selectIndex(i: number) {

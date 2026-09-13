@@ -186,7 +186,11 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   playSongOnDoubleClick(index: number) {
-    this.playbackService.switchQueue(this.filteredSongs.map(next => next.song), index);
+    this.playbackService.switchQueue(this.collectFilteredSongs(), index);
+  }
+
+  private collectFilteredSongs(): Song[] {
+    return this.filteredSongs.map(next => next.song);
   }
 
   goToSong(song: Song) {
@@ -276,11 +280,15 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   onPlaybackClick(index: number) {
-    const playlistSong = this.selectedPlaylistSongs!.songs[index];
+    const playlistSong = this.filteredSongs[index];
     if (playlistSong.song.id === this.lastPlaybackEvent?.song?.id) {
       this.playbackService.playOrPause();
     } else {
-      this.playbackService.switchQueue(this.selectedPlaylistSongs!.songs.map(next => next.song), index);
+      this.playbackService.switchQueue(this.collectFilteredSongs(), index);
     }
+  }
+
+  switchQueue(index: number) {
+    this.playbackService.switchListQueueTail(this.collectFilteredSongs(), index);
   }
 }

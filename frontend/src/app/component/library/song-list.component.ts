@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Song} from '../../domain/library.model';
 import {SongComponent} from './song.component';
 
@@ -14,7 +14,13 @@ export class SongListComponent {
   @Input() songs!: Song[];
   @Input() showArtist!: boolean;
 
+  @Output() switchQueueRequested = new EventEmitter<Song>();
+
   trackByIndex(index: number) {
     return index;
+  }
+
+  switchQueue(song: Song) {
+    this.switchQueueRequested.emit(song);
   }
 }

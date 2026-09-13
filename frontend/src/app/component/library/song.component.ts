@@ -4,10 +4,12 @@ import {
   Component,
   ElementRef,
   EmbeddedViewRef,
+  EventEmitter,
   inject,
   Input,
   OnDestroy,
   OnInit,
+  Output,
   TemplateRef,
   ViewChild
 } from '@angular/core';
@@ -75,6 +77,8 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   @Input() showArtist = false;
+
+  @Output() switchQueueRequested = new EventEmitter<Song>();
 
   @ViewChild('container') containerElement!: ElementRef;
   selected = false;
@@ -243,6 +247,11 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   createQueue() {
     this.playbackService.createQueue(this.song);
+    this.hideMenu();
+  }
+
+  switchQueue() {
+    this.switchQueueRequested.emit(this.song);
     this.hideMenu();
   }
 

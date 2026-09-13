@@ -42,6 +42,7 @@
   <div class="menu dropdown show">
     <div class="dropdown-menu show" role="menu" #menuContainer>
       <button class="dropdown-item" (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
+      <button class="dropdown-item" (click)="switchQueue()"><i class="bi bi-sign-merge-right-fill"></i>{{ 'library.song.switchQueue' | translate }}</button>
       <button class="dropdown-item" (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.song.addToQueue' | translate }}</button>
       <button class="dropdown-item" (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.song.createQueue' | translate }}</button>
       <button class="dropdown-item" (click)="download()"><i class="bi bi-download"></i>{{ 'library.song.download' | translate }}</button>

@@ -244,6 +244,10 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.playbackService.createQueue(this.song!);
   }
 
+  switchQueue() {
+    this.playbackService.switchListQueueTail([this.song!], 0);
+  }
+
   selectOrCreatePlaylist() {
     if (this.topPlaylists.length > 0) {
       const modalRef = this.modal.open(PlaylistAddSongComponent);

@@ -2,7 +2,7 @@
   <h6>{{ caption }}</h6>
   <div class="song-list">
     @for (song of songs; track trackByIndex($index)) {
-      <pony-song [song]="song" [showArtist]="showArtist"></pony-song>
+      <pony-song [song]="song" [showArtist]="showArtist" (switchQueueRequested)="switchQueue($event)"></pony-song>
     }
   </div>
 </div>

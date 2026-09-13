@@ -80,11 +80,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.libraryService.observeSongPlaybackRequest()
       .subscribe(song => {
         if (this.artistSongs) {
-
-          const songs: Song[] = [];
-          this.artistSongs.albumSongs.forEach(albumSongs =>
-            albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
-
+          const songs = this.collectArtistSongs();
           let index = 0;
           if (song) {
             const targetIndex = songs.findIndex(nextSong => nextSong.id === song.id);
@@ -107,6 +103,13 @@ export class AlbumListComponent implements OnInit, OnDestroy {
         this.scrollerElement.nativeElement.scrollTop = 0;
       }
     }));
+  }
+
+  private collectArtistSongs(): Song[] {
+    const songs: Song[] = [];
+    this.artistSongs.albumSongs.forEach(albumSongs =>
+      albumSongs.songs.forEach(albumSong => songs.push(albumSong)));
+    return songs;
   }
 
   private countLikes() {
@@ -167,6 +170,12 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           }
         }
       });
+  }
+
+  switchQueue(song: Song) {
+    const songs = this.collectArtistSongs();
+    const index = songs.findIndex(nextSong => nextSong.id === song.id);
+    this.playbackService.switchListQueueTail(songs, index);
   }
 
   openArtistLikes() {

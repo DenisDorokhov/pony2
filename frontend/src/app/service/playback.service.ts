@@ -393,6 +393,21 @@ export class PlaybackService {
     this.addListToQueue([song]);
   }
 
+  switchListQueueTail(songs: Song[], startIndex = 0): void {
+    const queueTail = songs.slice(startIndex);
+    if (this._currentIndex > -1) {
+      const currentIndex = this._currentIndex;
+      const queueHead = this._queue.slice(0, currentIndex + 1);
+      this.mode = PlaybackMode.NORMAL;
+      this._queue = queueHead.concat(queueTail);
+      this._currentIndex = currentIndex;
+      this.queueSubject.next(this._queue.slice());
+      this.storeState();
+    } else if (queueTail.length > 0) {
+      this.createListQueue(queueTail);
+    }
+  }
+
   addListToQueue(songs: Song[]): void {
     songs.forEach(song => this._queue.push(song));
     this.queueSubject.next(this._queue.slice());
@@ -586,5 +601,6 @@ export class PlaybackService {
       this.playbackHistoryService.addSongToHistory(firstSong.id).subscribe();
       this.browserNotificationService.showSongNotification(firstSong);
     }
+    this.storeState();
   }
 }
