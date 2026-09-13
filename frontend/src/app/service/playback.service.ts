@@ -523,7 +523,10 @@ export class PlaybackService {
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (playbackEvent.state === PlaybackState.ENDED) {
-      this.switchToNextSong();
+      if (!this.switchToNextSong() && this._mode === PlaybackMode.NORMAL) {
+        this.switchToIndex(0, false);
+        this.audioPlayer.pause();
+      }
       this.storeState();
     } else if (
       playbackEvent.state === PlaybackState.LOADING
