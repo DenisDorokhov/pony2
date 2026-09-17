@@ -1,5 +1,7 @@
 FROM ubuntu:24.04
 
+LABEL org.opencontainers.image.source="https://github.com/DenisDorokhov/pony2"
+
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     TZ=UTC
