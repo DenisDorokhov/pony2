@@ -8,7 +8,9 @@
        data-pony-image-loader-scroller
        [hidden]="!open || !searchResult" (keydown)="onInputKeyDown($event)">
 
-    <div [hidden]="(searchResult?.artists?.length ?? 0) < 1">
+    <div class="result-section" [class.first-visible]="(searchResult?.artists?.length ?? 0) > 0"
+         [class.last-visible]="(searchResult?.artists?.length ?? 0) > 0 && (searchResult?.songs?.length ?? 0) < 1 && (searchResult?.albums?.length ?? 0) < 1"
+         [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
       @for (artist of searchResult?.artists; track $index) {
         <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
@@ -22,7 +24,10 @@
       }
     </div>
 
-    <div [hidden]="(searchResult?.songs?.length ?? 0) < 1">
+    <div class="result-section"
+         [class.first-visible]="(searchResult?.artists?.length ?? 0) < 1 && (searchResult?.songs?.length ?? 0) > 0"
+         [class.last-visible]="(searchResult?.songs?.length ?? 0) > 0 && (searchResult?.albums?.length ?? 0) < 1"
+         [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
       @for (song of searchResult?.songs; track $index) {
         <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
@@ -48,7 +53,10 @@
       }
     </div>
 
-    <div [hidden]="(searchResult?.albums?.length ?? 0) < 1">
+    <div class="result-section"
+         [class.first-visible]="(searchResult?.artists?.length ?? 0) < 1 && (searchResult?.songs?.length ?? 0) < 1 && (searchResult?.albums?.length ?? 0) > 0"
+         [class.last-visible]="(searchResult?.albums?.length ?? 0) > 0"
+         [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
       @for (album of searchResult?.albums; track $index) {
         <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"

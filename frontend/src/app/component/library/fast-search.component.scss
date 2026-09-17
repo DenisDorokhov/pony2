@@ -40,8 +40,13 @@ input::placeholder {
     border-bottom: 1px solid var(--color-control-border);
   }
 
+  .result-section.first-visible h5 {
+    margin-top: 0;
+  }
+
   .link {
     background-color: var(--color-surface-default);
+    border-top: 1px solid var(--color-control-border);
     white-space: nowrap;
     cursor: pointer;
     padding: 8px;
@@ -91,6 +96,14 @@ input::placeholder {
       padding-right: 4px;
       color: var(--color-like-icon);
     }
+  }
+
+  h5 + .link {
+    border-top: 0;
+  }
+
+  .result-section:not(.last-visible) .link:last-child {
+    border-bottom: 1px solid var(--color-control-border);
   }
 
   .link:hover, .link.selected {

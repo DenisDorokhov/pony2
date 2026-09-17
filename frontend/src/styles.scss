@@ -1,13 +1,13 @@
 $color-brand-primary: #428bca;
 $color-brand-accent: #5bc0de;
 
-$color-selection-background-light: #428bca;
+$color-selection-background-light: rgba($color-brand-primary, 0.92);
 $color-selection-background-dark: #428bca80;
-$color-selection-text-light: #fff;
+$color-selection-text-light: rgba(#fff, 0.9);
 $color-selection-text-dark: #fff;
 
-$color-current-item-background-light: #ffffee;
-$color-current-item-background-dark: #3a3215;
+$color-current-item-background-light: rgba($color-brand-primary, 0.10);
+$color-current-item-background-dark: rgba($color-brand-primary, 0.15);
 
 $color-like-icon-light: #fcba03;
 $color-like-icon-dark: #ffd24d;
@@ -17,7 +17,7 @@ $color-new-badge-background-dark: #d95f2b;
 $color-new-badge-border-light: $color-like-icon-light;
 $color-new-badge-border-dark: $color-like-icon-dark;
 
-$color-status-info-light: #337ab7;
+$color-status-info-light: rgba($color-brand-primary, 0.92);
 $color-status-success: #5cb85c;
 $color-status-danger: #d9534f;
 $color-status-warning: #f0ad4e;
@@ -40,9 +40,24 @@ $dropdown-min-width: 100px;
 @import 'ngx-toastr/toastr-bs5-alert';
 
 // Set global colors.
-:root,
 [data-bs-theme="light"] {
-  --color-link: var(--bs-link-color);
+  --bs-body-color: #202020;
+  --bs-body-color-rgb: 32, 32, 32;
+  --bs-body-bg: #f7f7f7;
+  --bs-body-bg-rgb: 247, 247, 247;
+  --bs-emphasis-color: #111;
+  --bs-emphasis-color-rgb: 17, 17, 17;
+  --bs-secondary-color: #626262;
+  --bs-secondary-color-rgb: 98, 98, 98;
+  --bs-secondary-bg: #ededed;
+  --bs-secondary-bg-rgb: 237, 237, 237;
+  --bs-tertiary-bg: #f2f2f2;
+  --bs-tertiary-bg-rgb: 242, 242, 242;
+  --bs-border-color: #dadada;
+  --bs-border-color-translucent: rgba(32, 32, 32, 0.16);
+  --bs-heading-color: #202020;
+
+  --color-link: #{$color-selection-background-light};
   --color-selection-background: #{$color-selection-background-light};
   --color-selection-text: #{$color-selection-text-light};
   --logo-alpha: 1;
@@ -50,7 +65,7 @@ $dropdown-min-width: 100px;
   --color-surface-default: var(--bs-body-bg);
   --color-panel-header-background: var(--bs-tertiary-bg);
   --color-image-placeholder-background: var(--bs-tertiary-bg);
-  --color-list-hover-background: var(--bs-tertiary-bg);
+  --color-list-hover-background: #ececec;
   --color-table-row-alternate-background: var(--bs-tertiary-bg);
   --color-current-item-background: #{$color-current-item-background-light};
   --color-menu-active-text-on-selection: var(--bs-tertiary-bg);
@@ -72,19 +87,34 @@ $dropdown-min-width: 100px;
   --color-player-scrub-tooltip-text: var(--bs-white);
   --color-player-scrub-marker-border: var(--bs-secondary);
   --color-player-scrub-played-marker-border: var(--bs-border-color);
-  --color-playback-progress-background: var(--bs-info);
-
+  --color-playback-progress-background: #{rgba($color-brand-accent, 0.75)};
   --color-button-background-transparent: transparent;
   --color-like-icon: #{$color-like-icon-light};
   --color-new-badge-background: #{$color-new-badge-background-light};
   --color-new-badge-text: var(--bs-white);
   --color-new-badge-border: #{$color-new-badge-border-light};
-  --color-floating-action-background: rgba(var(--bs-body-bg-rgb), 0.85);
+  --color-floating-action-background: rgba(247, 247, 247, 0.88);
 
   --color-status-info: #{$color-status-info-light};
   --color-status-success: var(--bs-success);
   --color-status-danger: var(--bs-danger);
   --color-status-warning: var(--bs-warning);
+
+  .btn-light {
+    --bs-btn-color: var(--bs-body-color);
+    --bs-btn-bg: #fafafa;
+    --bs-btn-border-color: #d3d3d3;
+    --bs-btn-hover-color: var(--bs-emphasis-color);
+    --bs-btn-hover-bg: var(--bs-tertiary-bg);
+    --bs-btn-hover-border-color: #c8c8c8;
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-color-rgb);
+    --bs-btn-active-color: var(--bs-emphasis-color);
+    --bs-btn-active-bg: var(--bs-secondary-bg);
+    --bs-btn-active-border-color: #c8c8c8;
+    --bs-btn-disabled-color: var(--bs-secondary-color);
+    --bs-btn-disabled-bg: var(--bs-tertiary-bg);
+    --bs-btn-disabled-border-color: var(--bs-border-color);
+  }
 }
 
 [data-bs-theme="dark"] {
