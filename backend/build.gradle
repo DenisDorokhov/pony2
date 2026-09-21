@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
 
-    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2:2.5.250'
 
     implementation project(':frontend')
 
