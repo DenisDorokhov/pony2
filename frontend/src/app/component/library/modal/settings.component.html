@@ -106,6 +106,25 @@
       }
     </div>
 
+    <div class="mb-3">
+      <pony-error-container #llmUrlContainer class="form-group" [error]="error" [field]="'llmUrl'">
+        <label for="llmUrl" class="form-label">{{ 'settings.llmUrlLabel' | translate }}</label>
+        <input id="llmUrl" formControlName="llmUrl" type="text" class="form-control"
+               [class.is-invalid]="llmUrlContainer.hasErrors"
+               [placeholder]="'settings.llmUrlPlaceholder' | translate">
+      </pony-error-container>
+    </div>
+
+    <div class="mb-3">
+      <pony-error-container #llmApiKeyContainer class="form-group" [error]="error" [field]="'llmApiKey'">
+        <label for="llmApiKey" class="form-label">{{ 'settings.llmApiKeyLabel' | translate }}</label>
+        <input id="llmApiKey" formControlName="llmApiKey" type="password" class="form-control"
+               autocomplete="one-time-code"
+               [class.is-invalid]="llmApiKeyContainer.hasErrors"
+               [placeholder]="'settings.llmApiKeyPlaceholder' | translate">
+      </pony-error-container>
+    </div>
+
     <input type="submit" hidden/>
 
   </form>

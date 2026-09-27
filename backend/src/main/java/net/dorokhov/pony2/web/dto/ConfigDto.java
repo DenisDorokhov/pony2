@@ -13,6 +13,9 @@ public final class ConfigDto {
     @Valid
     private List<LibraryFolderDto> libraryFolders;
 
+    private String llmUrl;
+    private String llmApiKey;
+
     public LocalDateTime getUpdateDate() {
         return updateDate;
     }
@@ -31,11 +34,31 @@ public final class ConfigDto {
         return this;
     }
 
-    public static ConfigDto of(LocalDateTime updateDate, List<File> libraryFolders) {
+    public String getLlmUrl() {
+        return llmUrl;
+    }
+
+    public ConfigDto setLlmUrl(String llmUrl) {
+        this.llmUrl = llmUrl;
+        return this;
+    }
+
+    public String getLlmApiKey() {
+        return llmApiKey;
+    }
+
+    public ConfigDto setLlmApiKey(String llmApiKey) {
+        this.llmApiKey = llmApiKey;
+        return this;
+    }
+
+    public static ConfigDto of(LocalDateTime updateDate, List<File> libraryFolders, String llmUrl, String llmApiKey) {
         return new ConfigDto()
                 .setUpdateDate(updateDate)
                 .setLibraryFolders(libraryFolders.stream()
                         .map(LibraryFolderDto::of)
-                        .toList());
+                        .toList())
+                .setLlmUrl(llmUrl)
+                .setLlmApiKey(llmApiKey);
     }
 }

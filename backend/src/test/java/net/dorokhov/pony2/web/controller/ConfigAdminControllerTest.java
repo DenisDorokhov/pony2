@@ -38,6 +38,8 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(config.getLibraryFolders()).hasSize(1);
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto -> 
                     assertThat(libraryFolderDto.getPath()).isEqualTo(libraryFolder.getAbsolutePath()));
+            assertThat(config.getLlmUrl()).isNull();
+            assertThat(config.getLlmApiKey()).isNull();
         });
     }
 
@@ -46,7 +48,9 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         File newLibraryFolder = Files.createDirectory(tempFolder.resolve("newLibraryFolder")).toFile();
         ConfigDto newConfig = new ConfigDto()
-                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(newLibraryFolder)));
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(newLibraryFolder)))
+                .setLlmUrl("http://localhost:11434/v1")
+                .setLlmApiKey("secret");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
@@ -58,6 +62,8 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(config.getLibraryFolders()).hasSize(1);
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto ->
                     assertThat(libraryFolderDto.getPath()).isEqualTo(newLibraryFolder.getAbsolutePath()));
+            assertThat(config.getLlmUrl()).isEqualTo("http://localhost:11434/v1");
+            assertThat(config.getLlmApiKey()).isEqualTo("secret");
         });
     }
 

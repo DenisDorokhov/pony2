@@ -19,6 +19,8 @@ import static java.util.Collections.emptyList;
 public class ConfigServiceImpl implements ConfigService {
 
     static final String CONFIG_LIBRARY_FOLDERS = "libraryFolders";
+    static final String CONFIG_LLM_URL = "llmUrl";
+    static final String CONFIG_LLM_API_KEY = "llmApiKey";
 
     private final ConfigRepository configRepository;
 
@@ -28,13 +30,9 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public Optional<LocalDateTime> getUpdateDate() {
-        return configRepository.findById(CONFIG_LIBRARY_FOLDERS)
-                .map(config -> {
-                    if (config.getUpdateDate() == null) {
-                        return config.getCreationDate();
-                    }
-                    return config.getUpdateDate();
-                });
+        return configRepository.findAll().stream()
+                .map(config -> config.getUpdateDate() != null ? config.getUpdateDate() : config.getCreationDate())
+                .max(LocalDateTime::compareTo);
     }
 
     @Override
@@ -55,8 +53,42 @@ public class ConfigServiceImpl implements ConfigService {
         String value = JsonConverter.toJson(files.stream()
                 .map(File::getPath)
                 .toList());
-        Config config = configRepository.findById(CONFIG_LIBRARY_FOLDERS)
-                .orElseGet(() -> new Config().setId(CONFIG_LIBRARY_FOLDERS));
+        saveStringConfig(CONFIG_LIBRARY_FOLDERS, value);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> getLlmUrl() {
+        return getStringConfig(CONFIG_LLM_URL);
+    }
+
+    @Override
+    @Transactional
+    public void saveLlmUrl(String llmUrl) {
+        saveStringConfig(CONFIG_LLM_URL, llmUrl);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> getLlmApiKey() {
+        return getStringConfig(CONFIG_LLM_API_KEY);
+    }
+
+    @Override
+    @Transactional
+    public void saveLlmApiKey(String llmApiKey) {
+        saveStringConfig(CONFIG_LLM_API_KEY, llmApiKey);
+    }
+
+    private Optional<String> getStringConfig(String id) {
+        return configRepository.findById(id)
+                .map(Config::getValue)
+                .filter(value -> !Strings.isNullOrEmpty(value));
+    }
+
+    private void saveStringConfig(String id, String value) {
+        Config config = configRepository.findById(id)
+                .orElseGet(() -> new Config().setId(id));
         config.setValue(Strings.emptyToNull(value));
         configRepository.save(config);
     }

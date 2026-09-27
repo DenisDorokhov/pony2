@@ -18,7 +18,12 @@ public class ConfigFacade {
 
     @Transactional(readOnly = true)
     public ConfigDto getConfig() {
-        return ConfigDto.of(configService.getUpdateDate().orElse(null), configService.getLibraryFolders());
+        return ConfigDto.of(
+                configService.getUpdateDate().orElse(null),
+                configService.getLibraryFolders(),
+                configService.getLlmUrl().orElse(null),
+                configService.getLlmApiKey().orElse(null)
+        );
     }
 
     @Transactional
@@ -26,6 +31,8 @@ public class ConfigFacade {
         configService.saveLibraryFolders(config.getLibraryFolders().stream()
                 .map(folder -> new File(folder.getPath()))
                 .toList());
+        configService.saveLlmUrl(config.getLlmUrl());
+        configService.saveLlmApiKey(config.getLlmApiKey());
         return getConfig();
     }
 }

@@ -12,4 +12,12 @@ public interface ConfigService {
     List<File> getLibraryFolders();
 
     void saveLibraryFolders(List<File> libraryFolders);
+
+    Optional<String> getLlmUrl();
+
+    void saveLlmUrl(String llmUrl);
+
+    Optional<String> getLlmApiKey();
+
+    void saveLlmApiKey(String llmApiKey);
 }

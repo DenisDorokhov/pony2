@@ -56,6 +56,8 @@ export class SettingsComponent implements OnInit{
     ]);
     this.form = this.formBuilder.group({
       libraryFolders: this.formLibraryFolders,
+      llmUrl: '',
+      llmApiKey: '',
     });
   }
 
@@ -66,6 +68,10 @@ export class SettingsComponent implements OnInit{
         this.formLibraryFolders.clear();
         this.config.libraryFolders.forEach(next =>
           this.formLibraryFolders.push(this.formBuilder.group({path: next.path})));
+        this.form.patchValue({
+          llmUrl: this.config.llmUrl ?? '',
+          llmApiKey: this.config.llmApiKey ?? '',
+        });
         this.primaryLoadingState = LoadingState.LOADED;
       },
       error: () => {
