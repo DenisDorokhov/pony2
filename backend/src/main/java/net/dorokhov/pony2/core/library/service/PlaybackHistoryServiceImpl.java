@@ -1,8 +1,5 @@
 package net.dorokhov.pony2.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dorokhov.pony2.api.library.domain.PlaybackHistorySong;
 import net.dorokhov.pony2.api.library.domain.PlaybackHistoryStatistics;
 import net.dorokhov.pony2.api.library.domain.Song;
@@ -20,6 +17,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,13 +35,13 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
     private final PlaybackHistorySongRepository playbackHistorySongRepository;
     private final SongRepository songRepository;
     private final UserService userService;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     public PlaybackHistoryServiceImpl(
             PlaybackHistorySongRepository playbackHistorySongRepository,
             SongRepository songRepository,
             UserService userService,
-            ObjectMapper objectMapper
+            JsonMapper objectMapper
     ) {
         this.playbackHistorySongRepository = playbackHistorySongRepository;
         this.songRepository = songRepository;
@@ -87,7 +87,7 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
         }
         try {
             return objectMapper.writeValueAsString(userEmailToBackup);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }
@@ -100,7 +100,7 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
         try {
             userEmailToBackup = objectMapper.readValue(backup, new TypeReference<>() {
             });
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
 

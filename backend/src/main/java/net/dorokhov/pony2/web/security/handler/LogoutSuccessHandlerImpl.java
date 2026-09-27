@@ -10,14 +10,12 @@ import net.dorokhov.pony2.web.security.UserDetailsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,15 +27,15 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final SecurityContextRepository securityContextRepository;
-    private final MappingJackson2HttpMessageConverter messageConverter;
+    private final JsonMapper jsonMapper;
     private final List<LogoutDelegate> logoutDelegates;
 
     public LogoutSuccessHandlerImpl(
             SecurityContextRepository securityContextRepository,
-            MappingJackson2HttpMessageConverter messageConverter, List<LogoutDelegate> logoutDelegates
+            JsonMapper jsonMapper, List<LogoutDelegate> logoutDelegates
     ) {
         this.securityContextRepository = securityContextRepository;
-        this.messageConverter = messageConverter;
+        this.jsonMapper = jsonMapper;
         this.logoutDelegates = logoutDelegates;
     }
 
@@ -47,20 +45,21 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
-        SecurityContext securityContext = securityContextRepository.loadContext(new HttpRequestResponseHolder(request, response));
+        SecurityContext securityContext = securityContextRepository.loadDeferredContext(request).get();
         User loggedOutUser = Optional.ofNullable(securityContext.getAuthentication())
                 .filter(requestAuthentication -> requestAuthentication.getPrincipal() instanceof UserDetailsImpl)
                 .map(requestAuthentication -> (UserDetailsImpl) requestAuthentication.getPrincipal())
                 .map(UserDetailsImpl::getUser)
                 .orElse(null);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         if (loggedOutUser != null) {
             logoutDelegates.forEach(logoutDelegate -> logoutDelegate.onLogout(loggedOutUser));
             logger.debug("User '{}' has logged out.", loggedOutUser.getEmail());
-            messageConverter.write(UserDto.of(loggedOutUser), MediaType.ALL, new ServletServerHttpResponse(response));
+            jsonMapper.writeValue(response.getOutputStream(), UserDto.of(loggedOutUser));
         } else {
             logger.debug("Logging out failed: user is not authenticated.");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            messageConverter.write(ErrorDto.authenticationFailed(), MediaType.ALL, new ServletServerHttpResponse(response));
+            jsonMapper.writeValue(response.getOutputStream(), ErrorDto.authenticationFailed());
         }
     }
 }

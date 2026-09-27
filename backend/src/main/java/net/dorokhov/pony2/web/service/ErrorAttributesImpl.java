@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.MoreObjects;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,11 +7,12 @@ import net.dorokhov.pony2.web.dto.ErrorDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
-import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
+import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.WebRequest;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,9 +26,9 @@ public class ErrorAttributesImpl extends DefaultErrorAttributes {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
-    public ErrorAttributesImpl(ObjectMapper objectMapper) {
+    public ErrorAttributesImpl(JsonMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 

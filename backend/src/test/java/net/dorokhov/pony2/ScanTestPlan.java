@@ -2,7 +2,7 @@ package net.dorokhov.pony2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;

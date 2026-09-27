@@ -3,11 +3,12 @@ package net.dorokhov.pony2.core.library.service.file;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import net.dorokhov.pony2.api.library.domain.FileType;
-import org.apache.tika.config.TikaConfig;
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -48,13 +49,16 @@ public class FileTypeResolver {
     }
 
     private FileType resolve(InputStream stream) throws IOException {
-        try (InputStream bufferedStream = new BufferedInputStream(stream)) {
+        try (
+                InputStream bufferedStream = new BufferedInputStream(stream);
+                TikaInputStream tikaStream = TikaInputStream.get(bufferedStream)
+        ) {
 
-            TikaConfig config = TikaConfig.getDefaultConfig();
-            MediaType mediaType = config.getMimeRepository().detect(bufferedStream, new Metadata());
+            MimeTypes mimeTypes = MimeTypes.getDefaultMimeTypes();
+            MediaType mediaType = mimeTypes.detect(tikaStream, new Metadata(), null);
 
             try {
-                MimeType mimeType = config.getMimeRepository().forName(mediaType.toString());
+                MimeType mimeType = mimeTypes.forName(mediaType.toString());
                 String extension = correctExtension(mimeType.getExtension());
                 return FileType.of(mimeType.toString(), extension);
             } catch (MimeTypeException e) {

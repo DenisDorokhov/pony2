@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.*;
 import net.dorokhov.pony2.api.config.service.ConfigService;
@@ -22,8 +21,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Repeat;
+import tools.jackson.databind.json.JsonMapper;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 
 import static java.util.Objects.requireNonNull;
@@ -41,7 +41,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     @Autowired
     private ConfigService configService;
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
     @Autowired
     private ScanTestPlanExecutor scanTestPlanExecutor;
     

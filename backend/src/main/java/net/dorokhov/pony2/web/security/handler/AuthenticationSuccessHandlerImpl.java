@@ -9,11 +9,10 @@ import net.dorokhov.pony2.web.security.LoginDelegate;
 import net.dorokhov.pony2.web.security.token.TokenService;
 import net.dorokhov.pony2.web.service.UserContext;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,20 +23,20 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
     private final UserContext userContext;
     private final TokenService tokenService;
     private final BruteForceProtector bruteForceProtector;
-    private final MappingJackson2HttpMessageConverter messageConverter;
+    private final JsonMapper jsonMapper;
     private final List<LoginDelegate> loginDelegates;
 
     public AuthenticationSuccessHandlerImpl(
             UserContext userContext,
             TokenService tokenService,
             BruteForceProtector bruteForceProtector,
-            MappingJackson2HttpMessageConverter messageConverter,
+            JsonMapper jsonMapper,
             List<LoginDelegate> loginDelegates
     ) {
         this.userContext = userContext;
         this.tokenService = tokenService;
         this.bruteForceProtector = bruteForceProtector;
-        this.messageConverter = messageConverter;
+        this.jsonMapper = jsonMapper;
         this.loginDelegates = loginDelegates;
     }
 
@@ -52,8 +51,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         bruteForceProtector.onSuccessfulLoginAttempt(request, user.getEmail());
         String accessToken = tokenService.generateAccessTokenForUserId(user.getId());
         String staticToken = tokenService.generateStaticTokenForUserId(user.getId());
-        messageConverter.write(
-                AuthenticationDto.of(user, accessToken, staticToken),
-                MediaType.ALL, new ServletServerHttpResponse(response));
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        jsonMapper.writeValue(response.getOutputStream(), AuthenticationDto.of(user, accessToken, staticToken));
     }
 }

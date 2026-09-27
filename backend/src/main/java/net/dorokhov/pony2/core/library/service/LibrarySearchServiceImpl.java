@@ -119,13 +119,13 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                 .where((f, root) -> {
                     for (Term term : terms) {
                         if (!term.getSubWords().isEmpty()) {
-                            SimpleBooleanPredicateClausesStep<?> subTermWildcards = f.and();
+                            SimpleBooleanPredicateClausesStep<?, ?> subTermWildcards = f.and();
                             for (String subWord : term.getSubWords()) {
                                 subTermWildcards.add(f.wildcard()
                                         .field(field)
                                         .matching(normalizeTerm(subWord) + "*"));
                             }
-                            SimpleBooleanPredicateClausesStep<?> rootOr = f.or();
+                            SimpleBooleanPredicateClausesStep<?, ?> rootOr = f.or();
                             rootOr.add(subTermWildcards);
                             term.getCombinedSubWords().ifPresent(combinedSubWords -> rootOr.add(f.wildcard()
                                     .field(field)

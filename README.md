@@ -21,7 +21,7 @@ It indexes your personal MP3 collection, builds a searchable library, and stream
 ### Backend
 - **Java**
 - **Spring Boot** (Web, Data JPA, Security, Validation)
-- **Hibernate ORM** + **Hibernate Search 7** with **Lucene** backend
+- **Hibernate ORM** + **Hibernate Search** with **Lucene** backend
 - **H2** database
 - **Flyway** migrations
 - **JAudioTagger** metadata extraction

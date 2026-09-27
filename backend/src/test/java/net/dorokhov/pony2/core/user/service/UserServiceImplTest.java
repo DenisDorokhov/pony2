@@ -91,7 +91,7 @@ public class UserServiceImplTest {
     @Test
     public void shouldCheckUserPassword() throws UserNotFoundException {
 
-        User existingUser = user();
+        User existingUser = user().setId("1");
         when(userRepository.findById(existingUser.getId())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
@@ -110,7 +110,7 @@ public class UserServiceImplTest {
     @Test
     public void shouldFailUserPasswordCheckIfPasswordDoesNotMatch() throws UserNotFoundException {
 
-        User existingUser = user();
+        User existingUser = user().setId("1");
         when(userRepository.findById(existingUser.getId())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
@@ -156,7 +156,7 @@ public class UserServiceImplTest {
     @Test
     public void shouldUpdateUserUnsafely() throws UserNotFoundException, DuplicateEmailException {
 
-        User existingUser = user();
+        User existingUser = user().setId("1");
         when(userRepository.findById("1")).thenReturn(Optional.of(existingUser));
         when(userRepository.saveAndFlush(any())).thenAnswer(returnsFirstArg());
         UnsafeUserUpdateCommand command = new UnsafeUserUpdateCommand()
@@ -182,7 +182,7 @@ public class UserServiceImplTest {
     @Test
     public void shouldUpdateUserPasswordUnsafely() throws UserNotFoundException, DuplicateEmailException {
 
-        User existingUser = user();
+        User existingUser = user().setId("1");
         when(userRepository.findById("1")).thenReturn(Optional.of(existingUser));
         when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");

@@ -20,7 +20,6 @@ public final class ScanJobFixtures {
 
     public static ScanJob scanJob(ScanType scanType) {
         return new ScanJob()
-                .setId("1")
                 .setCreationDate(LocalDateTime.now())
                 .setUpdateDate(LocalDateTime.now())
                 .setStatus(ScanJob.Status.STARTING)

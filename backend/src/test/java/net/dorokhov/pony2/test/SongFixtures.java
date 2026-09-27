@@ -14,7 +14,6 @@ public final class SongFixtures {
         Album album = new Album().setArtist(artist);
         Genre genre = new Genre();
         return new Song()
-                .setId("1")
                 .setCreationDate(LocalDateTime.now())
                 .setUpdateDate(LocalDateTime.now())
                 .setPath("somePath")

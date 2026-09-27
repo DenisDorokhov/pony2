@@ -123,7 +123,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     .setArtist(artist2));
 
             song1_1_1 = songRepository.save(song()
-                    .setId(null)
                     .setCreationDate(null)
                     .setUpdateDate(null)
                     .setArtistName("bar")
@@ -136,7 +135,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             song1_1_1.getGenre(); // Pre-fetch.
 
             song1_1_2 = songRepository.save(song()
-                    .setId(null)
                     .setCreationDate(null)
                     .setUpdateDate(null)
                     .setArtistName("bar")
@@ -149,7 +147,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             song1_1_2.getGenre(); // Pre-fetch.
 
             song1_2_1 = songRepository.save(song()
-                    .setId(null)
                     .setCreationDate(null)
                     .setUpdateDate(null)
                     .setArtistName("bar")
@@ -162,7 +159,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             song1_2_1.getGenre(); // Pre-fetch.
 
             song2_1_1 = songRepository.save(song()
-                    .setId(null)
                     .setCreationDate(null)
                     .setUpdateDate(null)
                     .setArtistName("bar")

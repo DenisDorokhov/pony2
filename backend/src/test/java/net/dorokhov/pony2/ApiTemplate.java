@@ -1,12 +1,12 @@
 package net.dorokhov.pony2;
 
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import static net.dorokhov.pony2.InstallingIntegrationTest.ADMIN_EMAIL;
 import static net.dorokhov.pony2.InstallingIntegrationTest.ADMIN_PASSWORD;
@@ -14,13 +14,13 @@ import static net.dorokhov.pony2.InstallingIntegrationTest.ADMIN_PASSWORD;
 @Component
 public class ApiTemplate {
 
-    private final TestRestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    public ApiTemplate(TestRestTemplate restTemplate) {
+    public ApiTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public TestRestTemplate getRestTemplate() {
+    public RestTemplate getRestTemplate() {
         return restTemplate;
     }
 
@@ -32,7 +32,7 @@ public class ApiTemplate {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("email", email);
         params.add("password", password);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, null);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, (HttpHeaders) null);
         return restTemplate.postForEntity("/api/authentication", entity, AuthenticationDto.class).getBody();
     }
 

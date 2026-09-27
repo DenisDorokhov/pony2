@@ -6,11 +6,10 @@ import net.dorokhov.pony2.web.WebConfig;
 import net.dorokhov.pony2.web.dto.ErrorDto;
 import net.dorokhov.pony2.web.security.BruteForceProtector;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 
@@ -18,14 +17,14 @@ import java.io.IOException;
 public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHandler {
 
     private final BruteForceProtector bruteForceProtector;
-    private final MappingJackson2HttpMessageConverter messageConverter;
+    private final JsonMapper jsonMapper;
 
     public AuthenticationFailureHandlerImpl(
             BruteForceProtector bruteForceProtector,
-            MappingJackson2HttpMessageConverter messageConverter
+            JsonMapper jsonMapper
     ) {
         this.bruteForceProtector = bruteForceProtector;
-        this.messageConverter = messageConverter;
+        this.jsonMapper = jsonMapper;
     }
 
     @Override
@@ -36,6 +35,7 @@ public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHa
     ) throws IOException {
         bruteForceProtector.onFailedLoginAttempt(request, request.getParameter(WebConfig.AUTH_PARAM_USERNAME));
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        messageConverter.write(ErrorDto.authenticationFailed(), MediaType.ALL, new ServletServerHttpResponse(response));
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        jsonMapper.writeValue(response.getOutputStream(), ErrorDto.authenticationFailed());
     }
 }

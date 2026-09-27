@@ -9,7 +9,6 @@ public final class UserFixtures {
     
     public static User user() {
         return new User()
-                .setId("1")
                 .setName("someName")
                 .setEmail("someEmail")
                 .setPassword("somePassword");

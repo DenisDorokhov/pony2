@@ -1,8 +1,5 @@
 package net.dorokhov.pony2.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.PlaylistService;
@@ -20,6 +17,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -33,14 +33,14 @@ public class PlaylistServiceImpl implements PlaylistService {
     private final SongRepository songRepository;
     private final UserService userService;
     private final LibraryService libraryService;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     public PlaylistServiceImpl(
             PlaylistRepository playlistRepository,
             SongRepository songRepository,
             UserService userService,
             LibraryService libraryService,
-            ObjectMapper objectMapper
+            JsonMapper objectMapper
     ) {
         this.playlistRepository = playlistRepository;
         this.songRepository = songRepository;
@@ -196,7 +196,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         }
         try {
             return objectMapper.writeValueAsString(userEmailToBackup);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }
@@ -209,7 +209,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         try {
             userEmailToBackup = objectMapper.readValue(backup, new TypeReference<>() {
             });
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
 

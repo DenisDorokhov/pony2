@@ -17,11 +17,11 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.zalando.logbook.Logbook;
 import org.zalando.logbook.core.*;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.pathPattern;
 
 @Configuration
 @EnableWebSecurity
@@ -79,10 +79,7 @@ public class WebConfig {
                         .failureHandler(authenticationFailureHandler))
 
                 .logout(httpSecurityLogoutConfigurer -> httpSecurityLogoutConfigurer
-                        .logoutRequestMatcher(
-                                new AntPathRequestMatcher(
-                                        "/api/authentication",
-                                        HttpMethod.DELETE.name()))
+                        .logoutRequestMatcher(pathPattern(HttpMethod.DELETE, "/api/authentication"))
                         .logoutSuccessHandler(logoutSuccessHandler))
 
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
