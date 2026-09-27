@@ -1,0 +1,57 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "isolated": false,
+    "userDataDir": "/data/profile",
+
+    "launchOptions": {
+      "headless": false,
+      "chromiumSandbox": true,
+
+      "proxy": {
+        "server": "http://squid:3128"
+      },
+
+      "args": [
+        "--proxy-bypass-list=<-loopback>"
+      ]
+    },
+
+    "contextOptions": {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+
+      "locale": "de-DE",
+      "timezoneId": "Europe/Berlin"
+    }
+  },
+
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8931,
+    "allowedHosts": [
+      "playwright-mcp",
+      "localhost",
+      "127.0.0.1"
+    ]
+  },
+
+  "capabilities": [
+    "core"
+  ],
+
+  "webmcp": false,
+
+  "timeouts": {
+    "action": 10000,
+    "navigation": 60000,
+    "settle": 500,
+    "idle": 0
+  },
+
+  "imageResponses": "allow",
+  "codegen": "none",
+  "allowUnrestrictedFileAccess": false
+}

@@ -1,0 +1,47 @@
+services:
+
+  pony2:
+    image: pony2:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      pull: true
+    container_name: pony2
+    depends_on:
+      - playwright-mcp
+    restart: unless-stopped
+    environment:
+      PONY_TIMEZONE: "${PONY_TIMEZONE:-Europe/Berlin}"
+      PONY_UID: "${PONY_UID:-1000}"
+      PONY_GID: "${PONY_GID:-1000}"
+    ports:
+      - "8585:8080"
+    volumes:
+      - ./.pony2:/home/pony/.pony2 # Local data folder
+      - ./music:/home/pony/music:ro # Music library folder
+
+  playwright-mcp:
+    build:
+      context: ./llm/playwright-mcp
+    init: true
+    shm_size: "1gb"
+    security_opt:
+      - seccomp=./llm/playwright-mcp/seccomp_profile.json
+    command:
+      - --config
+      - /config/config.json
+    volumes:
+      - ./llm/playwright-mcp/config.json:/config/config.json:ro
+      - playwright-profile:/data/profile
+    depends_on:
+      - squid
+    restart: unless-stopped
+
+  squid:
+    image: ubuntu/squid:latest
+    volumes:
+      - ./llm/squid/squid.conf:/etc/squid/squid.conf:ro
+    restart: unless-stopped
+
+volumes:
+  playwright-profile:
