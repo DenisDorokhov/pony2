@@ -3,6 +3,8 @@ package net.dorokhov.pony2.web;
 import net.dorokhov.pony2.web.security.WebAuthority;
 import net.dorokhov.pony2.web.security.handler.AuthenticationFailureHandlerImpl;
 import net.dorokhov.pony2.web.service.OpenSubsonicResponseService;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -100,5 +102,12 @@ public class WebConfig {
                 .strategy(new StatusAtLeastStrategy(400))
                 .sink(new DefaultSink(new DefaultHttpLogFormatter(), new DefaultHttpLogWriter()))
                 .build();
+    }
+
+    @Bean
+    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatCompressionCustomizer() {
+        // Tomcat's sendfile path bypasses response compression for large static resources.
+        return factory -> factory.addConnectorCustomizers(connector ->
+                connector.setProperty("useSendfile", "false"));
     }
 }
