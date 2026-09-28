@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service;
 
 import com.google.common.collect.ImmutableList;
 import jakarta.annotation.Nullable;
+import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.ScanProgress.Value;
@@ -80,6 +81,7 @@ public class ScanJobServiceImplTest {
     @BeforeEach
     public void setUp() {
         initSynchronization();
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
     }
 
     @AfterEach
@@ -117,7 +119,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldExecuteScanJob() throws IOException, ConcurrentScanException {
 
-        when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
+        when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), null, null, null));
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         ScanResult scanResult = scanResult(FULL);
@@ -323,7 +325,7 @@ public class ScanJobServiceImplTest {
 
     private void doTestFailScanJobOnException(Exception e) throws IOException, ConcurrentScanException {
 
-        when(configService.getLibraryFolders()).thenReturn(ImmutableList.of(new File("someFolder")));
+        when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), null, null, null));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         lenient().when(scanJobRepository.findById(any())).thenReturn(Optional.of(scanJobFull()));

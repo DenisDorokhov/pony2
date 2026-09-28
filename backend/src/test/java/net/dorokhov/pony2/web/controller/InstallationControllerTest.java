@@ -64,7 +64,7 @@ public class InstallationControllerTest extends IntegrationTest {
         assertThat(installationResponse.getBody()).satisfies(installationDto -> 
                 assertThat(installationDto.getVersion()).isNotNull());
 
-        assertThat(configService.getLibraryFolders()).isEmpty();
+        assertThat(configService.get().libraryFolders()).isEmpty();
 
         List<User> users = userService.getAll(PageRequest.of(0, 30)).getContent();
         assertThat(users).hasSize(1);

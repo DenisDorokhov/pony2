@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.installation.service;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.config.service.ConfigService;
+import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.installation.domain.Installation;
 import net.dorokhov.pony2.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony2.api.installation.service.exception.AlreadyInstalledException;
@@ -110,7 +111,9 @@ public class InstallationServiceImplTest {
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         
-        verify(configService).saveLibraryFolders(command.getLibraryFolders());
+        ArgumentCaptor<ConfigSetUpdateCommand> configUpdateCommand = ArgumentCaptor.forClass(ConfigSetUpdateCommand.class);
+        verify(configService).update(configUpdateCommand.capture());
+        assertThat(configUpdateCommand.getValue().getLibraryFolders()).isEqualTo(command.getLibraryFolders());
         verify(installationRepository).save(any());
         verify(logService).info(any(), any());
         

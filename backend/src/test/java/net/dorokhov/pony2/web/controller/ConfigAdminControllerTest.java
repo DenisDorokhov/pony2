@@ -39,6 +39,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto -> 
                     assertThat(libraryFolderDto.getPath()).isEqualTo(libraryFolder.getAbsolutePath()));
             assertThat(config.getLlmUrl()).isNull();
+            assertThat(config.getLlmModel()).isNull();
             assertThat(config.getLlmApiKey()).isNull();
         });
     }
@@ -50,6 +51,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
         ConfigDto newConfig = new ConfigDto()
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(newLibraryFolder)))
                 .setLlmUrl("http://localhost:11434/v1")
+                .setLlmModel("qwen3.5-35b-a3b")
                 .setLlmApiKey("secret");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -63,6 +65,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto ->
                     assertThat(libraryFolderDto.getPath()).isEqualTo(newLibraryFolder.getAbsolutePath()));
             assertThat(config.getLlmUrl()).isEqualTo("http://localhost:11434/v1");
+            assertThat(config.getLlmModel()).isEqualTo("qwen3.5-35b-a3b");
             assertThat(config.getLlmApiKey()).isEqualTo("secret");
         });
     }
@@ -84,6 +87,69 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(error.getFieldViolations()).hasSize(1);
             assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
                     assertThat(fieldViolation.getField()).isEqualTo("libraryFolders[0].path"));
+        });
+    }
+
+    @Test
+    public void shouldValidateLlmModel() {
+
+        ConfigDto config = new ConfigDto()
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setLlmUrl("http://localhost:11434/v1");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("llmModel"));
+        });
+    }
+
+    @Test
+    public void shouldValidateLlmModelWithoutUrl() {
+
+        ConfigDto config = new ConfigDto()
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setLlmModel("qwen3.5-35b-a3b");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("llmUrl"));
+        });
+    }
+
+    @Test
+    public void shouldValidateLlmApiKeyWithoutUrl() {
+
+        ConfigDto config = new ConfigDto()
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setLlmApiKey("secret");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("llmUrl"));
         });
     }
 }

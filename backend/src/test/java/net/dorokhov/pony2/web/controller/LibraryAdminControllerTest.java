@@ -3,6 +3,7 @@ package net.dorokhov.pony2.web.controller;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.*;
 import net.dorokhov.pony2.api.config.service.ConfigService;
+import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJob.Status;
 import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
@@ -192,7 +193,8 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-01-init.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
-        configService.saveLibraryFolders(ImmutableList.of(context.getRootFolder()));
+        configService.update(new ConfigSetUpdateCommand()
+                .setLibraryFolders(ImmutableList.of(context.getRootFolder())));
         scanJobService.addObserver(blockingObserver);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 

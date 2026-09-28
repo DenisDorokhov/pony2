@@ -15,14 +15,4 @@ RUN mkdir -p /data/profile \
 
 USER node
 
-ENTRYPOINT [
-    "/usr/bin/tini",
-    "-s",
-    "--",
-    "xvfb-run",
-    "-a",
-    "-s",
-    "-screen 0 1920x1080x24",
-    "node",
-    "/app/cli.js"
-]
+ENTRYPOINT ["xvfb-run", "-a", "-s", "-screen 0 1920x1080x24", "node", "/app/cli.js"]

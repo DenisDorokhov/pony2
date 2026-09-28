@@ -3,8 +3,9 @@ export interface LibraryFolderDto {
 }
 
 export interface ConfigDto {
-  updateDate: string;
+  updateDate: string | undefined;
   libraryFolders: LibraryFolderDto[];
-  llmUrl: string | null;
-  llmApiKey: string | null;
+  llmUrl: string | undefined;
+  llmModel: string | undefined;
+  llmApiKey: string | undefined;
 }

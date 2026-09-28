@@ -1,11 +1,15 @@
 package net.dorokhov.pony2.web.dto;
 
 import jakarta.validation.Valid;
+import net.dorokhov.pony2.api.config.domain.ConfigSet;
+import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
+import net.dorokhov.pony2.web.validation.ValidLlmConfig;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@ValidLlmConfig
 public final class ConfigDto {
 
     private LocalDateTime updateDate;
@@ -14,6 +18,7 @@ public final class ConfigDto {
     private List<LibraryFolderDto> libraryFolders;
 
     private String llmUrl;
+    private String llmModel;
     private String llmApiKey;
 
     public LocalDateTime getUpdateDate() {
@@ -43,6 +48,15 @@ public final class ConfigDto {
         return this;
     }
 
+    public String getLlmModel() {
+        return llmModel;
+    }
+
+    public ConfigDto setLlmModel(String llmModel) {
+        this.llmModel = llmModel;
+        return this;
+    }
+
     public String getLlmApiKey() {
         return llmApiKey;
     }
@@ -52,13 +66,24 @@ public final class ConfigDto {
         return this;
     }
 
-    public static ConfigDto of(LocalDateTime updateDate, List<File> libraryFolders, String llmUrl, String llmApiKey) {
+    public ConfigSetUpdateCommand convert() {
+        return new ConfigSetUpdateCommand()
+                .setLibraryFolders(libraryFolders != null ? libraryFolders.stream()
+                        .map(folder -> new File(folder.getPath()))
+                        .toList() : List.of())
+                .setLlmUrl(llmUrl)
+                .setLlmModel(llmModel)
+                .setLlmApiKey(llmApiKey);
+    }
+
+    public static ConfigDto of(ConfigSet configSet) {
         return new ConfigDto()
-                .setUpdateDate(updateDate)
-                .setLibraryFolders(libraryFolders.stream()
+                .setUpdateDate(configSet.updateDate())
+                .setLibraryFolders(configSet.libraryFolders().stream()
                         .map(LibraryFolderDto::of)
                         .toList())
-                .setLlmUrl(llmUrl)
-                .setLlmApiKey(llmApiKey);
+                .setLlmUrl(configSet.llmUrl())
+                .setLlmModel(configSet.llmModel())
+                .setLlmApiKey(configSet.llmApiKey());
     }
 }

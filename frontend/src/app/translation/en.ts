@@ -266,6 +266,8 @@ export default {
     libraryFoldersPlaceholder: 'Enter full folder path',
     llmUrlLabel: 'LLM URL:',
     llmUrlPlaceholder: 'e.g. https://api.openai.com',
+    llmModelLabel: 'LLM Model:',
+    llmModelPlaceholder: 'Enter model ID',
     llmApiKeyLabel: 'LLM API Key:',
     llmApiKeyPlaceholder: 'Leave empty if not required',
     startScanJobConfirmation: 'Library folders updated. Do you want to start scan now?',

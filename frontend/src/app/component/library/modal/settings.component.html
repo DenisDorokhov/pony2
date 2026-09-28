@@ -116,6 +116,15 @@
     </div>
 
     <div class="mb-3">
+      <pony-error-container #llmModelContainer class="form-group" [error]="error" [field]="'llmModel'">
+        <label for="llmModel" class="form-label">{{ 'settings.llmModelLabel' | translate }}</label>
+        <input id="llmModel" formControlName="llmModel" type="text" class="form-control"
+               [class.is-invalid]="llmModelContainer.hasErrors"
+               [placeholder]="'settings.llmModelPlaceholder' | translate">
+      </pony-error-container>
+    </div>
+
+    <div class="mb-3">
       <pony-error-container #llmApiKeyContainer class="form-group" [error]="error" [field]="'llmApiKey'">
         <label for="llmApiKey" class="form-label">{{ 'settings.llmApiKeyLabel' | translate }}</label>
         <input id="llmApiKey" formControlName="llmApiKey" type="password" class="form-control"

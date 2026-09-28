@@ -136,7 +136,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional
     public ScanJob startScanJob() throws ConcurrentScanException {
-        return doStartScanJob(configService.getLibraryFolders());
+        return doStartScanJob(configService.get().libraryFolders());
     }
 
     @Override
@@ -286,7 +286,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         ScanResult result = null;
         Supplier<LogMessage> logMessage;
         try {
-            result = libraryScanner.edit(commands, configService.getLibraryFolders(), scanProgress ->
+            result = libraryScanner.edit(commands, configService.get().libraryFolders(), scanProgress ->
                     onScanJobProgress(new ScanJobProgress(scanJob, scanProgress)));
             logMessage = () -> logService.info(logger, "Edit job complete for {} songs.", commands.size()).orElse(null);
         } catch (IOException e) {

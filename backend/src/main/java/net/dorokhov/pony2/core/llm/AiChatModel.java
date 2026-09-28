@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.llm;
 
 import io.micrometer.observation.ObservationRegistry;
+import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.ai.chat.model.ChatModel;
@@ -12,17 +13,11 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-
 @Component
 public class AiChatModel implements ChatModel {
 
     private final ConfigService configService;
     private final ObservationRegistry observationRegistry;
-
-    private String cachedUrl;
-    private String cachedApiKey;
-    private OpenAiChatModel openAiChatModel;
 
     public AiChatModel(
             ConfigService configService,
@@ -34,43 +29,31 @@ public class AiChatModel implements ChatModel {
 
     @Override
     public @NonNull ChatResponse call(@NonNull Prompt prompt) {
-        return getOpenAiChatModel().call(prompt);
+        ConfigSet configSet = configService.get();
+        return createChatModel(configSet).call(prompt);
     }
 
     @Override
     public @NonNull ChatOptions getOptions() {
-        return configService.getLlmUrl()
-                .map(llmUrl -> createOptions(llmUrl, configService.getLlmApiKey().orElse(null)))
-                .orElseGet(() -> OpenAiChatOptions.builder()
-                        .apiKey(new NoopApiKey())
-                        .build());
+        return createOptions(configService.get());
     }
 
-    private synchronized OpenAiChatModel getOpenAiChatModel() {
-        String llmUrl = configService.getLlmUrl()
-                .orElseThrow(() -> new IllegalStateException("LLM URL is not configured"));
-        String llmApiKey = configService.getLlmApiKey().orElse(null);
-        if (!Objects.equals(llmUrl, cachedUrl) || !Objects.equals(llmApiKey, cachedApiKey)) {
-            OpenAiChatModel newOpenAiChatModel = createChatModel(llmUrl, llmApiKey);
-            cachedUrl = llmUrl;
-            cachedApiKey = llmApiKey;
-            openAiChatModel = newOpenAiChatModel;
-        }
-        return openAiChatModel;
-    }
-
-    private OpenAiChatModel createChatModel(String llmUrl, String llmApiKey) {
+    private OpenAiChatModel createChatModel(ConfigSet configSet) {
         return OpenAiChatModel.builder()
-                .options(createOptions(llmUrl, llmApiKey))
+                .options(createOptions(configSet))
                 .observationRegistry(observationRegistry)
                 .build();
     }
 
-    private OpenAiChatOptions createOptions(String llmUrl, String llmApiKey) {
+    private OpenAiChatOptions createOptions(ConfigSet configSet) {
+        if (!configSet.llmEnabled()) {
+            throw new IllegalStateException("LLM is not configured");
+        }
         OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder()
-                .baseUrl(llmUrl);
-        if (llmApiKey != null) {
-            builder.apiKey(llmApiKey);
+                .baseUrl(configSet.llmUrl())
+                .model(configSet.llmModel());
+        if (configSet.llmApiKey() != null) {
+            builder.apiKey(configSet.llmApiKey());
         } else {
             builder.apiKey(new NoopApiKey());
         }

@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.installation.service;
 
 import com.google.common.collect.Sets;
 import net.dorokhov.pony2.api.config.service.ConfigService;
+import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.installation.domain.Installation;
 import net.dorokhov.pony2.api.installation.service.InstallationService;
 import net.dorokhov.pony2.api.installation.service.command.InstallationCommand;
@@ -85,7 +86,8 @@ public class InstallationServiceImpl implements InstallationService {
             throw new AlreadyInstalledException();
         }
 
-        configService.saveLibraryFolders(command.getLibraryFolders());
+        configService.update(new ConfigSetUpdateCommand()
+                .setLibraryFolders(command.getLibraryFolders()));
 
         try {
             userService.create(new UserCreationCommand()

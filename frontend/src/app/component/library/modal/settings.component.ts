@@ -57,6 +57,7 @@ export class SettingsComponent implements OnInit{
     this.form = this.formBuilder.group({
       libraryFolders: this.formLibraryFolders,
       llmUrl: '',
+      llmModel: '',
       llmApiKey: '',
     });
   }
@@ -70,6 +71,7 @@ export class SettingsComponent implements OnInit{
           this.formLibraryFolders.push(this.formBuilder.group({path: next.path})));
         this.form.patchValue({
           llmUrl: this.config.llmUrl ?? '',
+          llmModel: this.config.llmModel ?? '',
           llmApiKey: this.config.llmApiKey ?? '',
         });
         this.primaryLoadingState = LoadingState.LOADED;
@@ -89,7 +91,14 @@ export class SettingsComponent implements OnInit{
   }
 
   save() {
-    const configToSave = this.form.value as ConfigDto;
+    const formValue = this.form.value;
+    const configToSave: ConfigDto = {
+      updateDate: this.config?.updateDate,
+      libraryFolders: formValue.libraryFolders,
+      llmUrl: formValue.llmUrl === '' ? undefined : formValue.llmUrl,
+      llmModel: formValue.llmModel === '' ? undefined : formValue.llmModel,
+      llmApiKey: formValue.llmApiKey === '' ? undefined : formValue.llmApiKey,
+    };
     this.primaryLoadingState = LoadingState.LOADING;
     this.configService.saveConfig(configToSave).subscribe({
       next: config => {

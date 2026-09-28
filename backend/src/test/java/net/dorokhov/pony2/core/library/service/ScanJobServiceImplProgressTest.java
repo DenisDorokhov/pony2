@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service;
 
+import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
@@ -18,12 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronization;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.transaction.support.TransactionSynchronizationManager.*;
 
@@ -55,6 +58,7 @@ public class ScanJobServiceImplProgressTest {
     @BeforeEach
     public void setUp() {
         initSynchronization();
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
     }
 
     @AfterEach

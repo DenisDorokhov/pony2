@@ -33,8 +33,11 @@
     "port": 8931,
     "allowedHosts": [
       "playwright-mcp",
+      "playwright-mcp:8931",
       "localhost",
-      "127.0.0.1"
+      "localhost:8931",
+      "127.0.0.1",
+      "127.0.0.1:8931"
     ]
   },
 
