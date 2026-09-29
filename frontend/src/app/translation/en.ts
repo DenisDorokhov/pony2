@@ -268,7 +268,7 @@ export default {
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
     llmUrlLabel: 'LLM URL:',
-    llmUrlPlaceholder: 'e.g. https://api.openai.com',
+    llmUrlPlaceholder: 'e.g. https://api.openai.com/v1',
     llmModelLabel: 'LLM Model:',
     llmModelPlaceholder: 'Enter model ID',
     llmApiKeyLabel: 'LLM API Key:',

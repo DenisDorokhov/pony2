@@ -49,11 +49,25 @@ public class ValidLlmConfigValidatorTest {
     @Test
     public void shouldPassValidationWhenUrlAndModelAreConfigured() {
         ConfigDto config = new ConfigDto()
-                .setLlmUrl("https://api.openai.com")
+                .setLlmUrl("https://api.openai.com/v1")
                 .setLlmModel("gpt-5")
                 .setLlmApiKey("some-api-key");
 
         assertThat(validator.isValid(config, constraintValidatorContext)).isTrue();
+    }
+
+    @Test
+    public void shouldFailValidationWhenUrlDoesNotIncludeApiPath() {
+        ConfigDto config = new ConfigDto()
+                .setLlmUrl("https://api.openai.com")
+                .setLlmModel("gpt-5");
+
+        assertThat(validator.isValid(config, constraintValidatorContext)).isFalse();
+        verify(constraintValidatorContext).disableDefaultConstraintViolation();
+        verify(constraintValidatorContext).buildConstraintViolationWithTemplate(
+                "must be an absolute HTTP(S) URL including an API path, for example https://api.openai.com/v1");
+        verify(constraintViolationBuilder).addPropertyNode("llmUrl");
+        verify(nodeBuilderCustomizableContext).addConstraintViolation();
     }
 
     @Test

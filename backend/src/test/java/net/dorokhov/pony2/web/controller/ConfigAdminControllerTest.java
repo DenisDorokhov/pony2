@@ -133,6 +133,28 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
+    public void shouldValidateLlmUrlApiPath() {
+
+        ConfigDto config = new ConfigDto()
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setLlmUrl("http://localhost:11434")
+                .setLlmModel("qwen3.5-35b-a3b");
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).satisfies(error -> {
+            assertThat(error.getCode()).isSameAs(ErrorDto.Code.VALIDATION);
+            assertThat(error.getFieldViolations()).hasSize(1);
+            assertThat(error.getFieldViolations()).first().satisfies(fieldViolation ->
+                    assertThat(fieldViolation.getField()).isEqualTo("llmUrl"));
+        });
+    }
+
+    @Test
     public void shouldValidateLlmApiKeyWithoutUrl() {
 
         ConfigDto config = new ConfigDto()

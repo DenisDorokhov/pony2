@@ -5,6 +5,8 @@ import jakarta.validation.ConstraintValidatorContext;
 import net.dorokhov.pony2.web.dto.ConfigDto;
 import org.springframework.util.StringUtils;
 
+import java.net.URI;
+
 public class ValidLlmConfigValidator implements ConstraintValidator<ValidLlmConfig, ConfigDto> {
 
     @Override
@@ -24,8 +26,26 @@ public class ValidLlmConfigValidator implements ConstraintValidator<ValidLlmConf
         } else if (!StringUtils.hasText(config.getLlmModel())) {
             addViolation(context, "llmModel", "must be configured when LLM URL is configured");
             return false;
+        } else if (!isValidLlmUrl(config.getLlmUrl())) {
+            addViolation(context, "llmUrl",
+                    "must be an absolute HTTP(S) URL including an API path, for example https://api.openai.com/v1");
+            return false;
         }
         return true;
+    }
+
+    private boolean isValidLlmUrl(String value) {
+        try {
+            URI uri = URI.create(value);
+            String scheme = uri.getScheme();
+            String path = uri.getPath();
+            return ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    && StringUtils.hasText(uri.getHost())
+                    && StringUtils.hasText(path)
+                    && !"/".equals(path);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private void addViolation(ConstraintValidatorContext context, String field, String message) {
