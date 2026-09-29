@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.llm;
+package net.dorokhov.pony2.core.llm.service;
 
 import net.dorokhov.pony2.common.JsonConverter;
 import org.springframework.ai.tool.ToolCallbackProvider;

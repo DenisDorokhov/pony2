@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.llm;
+package net.dorokhov.pony2.core.llm.service;
 
 import io.micrometer.observation.ObservationRegistry;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
@@ -14,12 +14,12 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AiChatModel implements ChatModel {
+public class ChatModelImpl implements ChatModel {
 
     private final ConfigService configService;
     private final ObservationRegistry observationRegistry;
 
-    public AiChatModel(
+    public ChatModelImpl(
             ConfigService configService,
             ObservationRegistry observationRegistry
     ) {
