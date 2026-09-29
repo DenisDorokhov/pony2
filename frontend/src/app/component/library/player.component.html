@@ -59,12 +59,20 @@
   <div class="progress-container" (mousemove)="onProgressMouseMove($event)" (mouseleave)="onProgressMouseLeave()"
        (click)="seek($event)">
     <div class="progress">
+      @if (loopStartProgress !== undefined && loopWidthProgress !== undefined) {
+        <div class="practice-loop"
+             [style.left]="(loopStartProgress * 100) + '%'"
+             [style.width]="(loopWidthProgress * 100) + '%'"></div>
+      }
       <div class="progress-bar progress-bar-info" [style.width]="(progress * 100) + '%'"></div>
     </div>
-    <div class="mouse-progress" [hidden]="!mouseProgress"
+    @if (cueProgress !== undefined) {
+      <div class="practice-cursor" [style.left]="(cueProgress * 100) + '%'"></div>
+    }
+    <div class="mouse-progress" [hidden]="mouseProgress === undefined"
          [style.left]="((mouseProgress || 0) * 100) + '%'">{{ formattedMousePosition }}
     </div>
-    <div class="mouse-position" [hidden]="!mouseProgress" [class.played]="(mouseProgress || 0) < progress"
+    <div class="mouse-position" [hidden]="mouseProgress === undefined" [class.played]="(mouseProgress || 0) < progress"
          [style.left]="((mouseProgress || 0) * 100) + '%'"></div>
   </div>
 

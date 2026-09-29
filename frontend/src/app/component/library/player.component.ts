@@ -1,7 +1,7 @@
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {fromEvent, Subscription} from 'rxjs';
-import {PlaybackService} from '../../service/playback.service';
+import {CuePlaybackState, PlaybackService} from '../../service/playback.service';
 import {Playlist, Song} from '../../domain/library.model';
 import {LibraryService} from '../../service/library.service';
 import {PageTitleService} from '../../service/page-title.service';
@@ -24,6 +24,10 @@ import {PlaylistEditComponent} from './modal/playlist-edit.component';
 })
 export class PlayerComponent implements OnInit, OnDestroy {
 
+  private static readonly KEYBOARD_SHORTCUT_IGNORED_ELEMENTS = new Set([
+    'INPUT', 'LABEL', 'SELECT', 'TEXTAREA', 'BUTTON', 'FIELDSET', 'LEGEND', 'DATALIST', 'OUTPUT', 'OPTION', 'OPTGROUP',
+  ]);
+
   private readonly playbackService = inject(PlaybackService);
   private readonly libraryService = inject(LibraryService);
   private readonly translateService = inject(TranslateService);
@@ -42,6 +46,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
   hasNextSong = false;
   progress = 0.0; // 0.0 - 1.0
   mouseProgress: number | undefined; // 0.0 - 1.0
+  cueProgress: number | undefined; // 0.0 - 1.0
+  loopStartProgress: number | undefined; // 0.0 - 1.0
+  loopWidthProgress: number | undefined; // 0.0 - 1.0
   formattedProgress: string | undefined;
   formattedDuration: string | undefined;
   formattedMousePosition: string | undefined;
@@ -56,6 +63,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
       .subscribe(song => this.handleSongSwitch(song)));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.handlePlaybackEvent(playbackEvent)));
+    this.subscriptions.push(this.playbackService.observeCuePlaybackState()
+      .subscribe(cuePlaybackState => this.handleCuePlaybackState(cuePlaybackState)));
     this.subscriptions.push(this.playbackService.observeQueue()
       .subscribe(queue => {
         this.queue = queue;
@@ -68,26 +77,24 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.hasNextSong = this.playbackService.hasNextSong();
       }));
     this.subscriptions.push(fromEvent<KeyboardEvent>(window.document.body, 'keydown').subscribe(event => {
-      const formElements: string[] = [
-        'INPUT', 'LABEL', 'SELECT', 'TEXTAREA', 'BUTTON', 'FIELDSET', 'LEGEND', 'DATALIST', 'OUTPUT', 'OPTION', 'OPTGROUP',
-      ];
-      if (!document.activeElement || formElements.indexOf(document.activeElement?.tagName) < 0) {
-        if (event.code === 'Space') {
-          this.playbackService.playOrPause();
-          event.preventDefault();
+      if (!this.shouldHandleKeyboardShortcut()) {
+        return;
+      }
+      if (event.code === 'Space') {
+        this.playbackService.playOrStopAtCue();
+        event.preventDefault();
+      } else if (event.key === 'ArrowRight') {
+        if (this.playbackService.hasNextSong()) {
+          this.playbackService.switchToNextSong();
         }
-        if (event.key === 'ArrowRight') {
-          if (this.playbackService.hasNextSong()) {
-            this.playbackService.switchToNextSong();
-          }
-          event.preventDefault();
+        event.preventDefault();
+      } else if (event.key === 'ArrowLeft') {
+        if (this.playbackService.hasPreviousSong()) {
+          this.playbackService.rewindToBeginningOrSwitchToPreviousSong();
         }
-        if (event.key === 'ArrowLeft') {
-          if (this.playbackService.hasPreviousSong()) {
-            this.playbackService.rewindToBeginningOrSwitchToPreviousSong();
-          }
-          event.preventDefault();
-        }
+        event.preventDefault();
+      } else if (event.key === 'Escape' && !this.hasOpenKeyboardDismissibleOverlay()) {
+        this.playbackService.clearCueAndLoop();
       }
     }));
     this.subscriptions.push(this.playlistService.observeLikePlaylist()
@@ -112,7 +119,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     if (this.playbackService.lastPlaybackEvent.state === PlaybackState.STOPPED) {
       this.libraryService.requestSongPlayback();
     } else {
-      this.playbackService.playOrPause();
+      this.playbackService.playOrStopAtCue();
     }
   }
 
@@ -123,13 +130,19 @@ export class PlayerComponent implements OnInit, OnDestroy {
   seek(event: MouseEvent) {
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
-      const progressBar = event.currentTarget as Element;
-      const progressBarRect = progressBar.getBoundingClientRect();
-      const progress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
-      this.progress = progress || 0;
-      this.isLoading = true;
-      this.formattedProgress = song.getRelativeDurationInMinutes(this.progress);
-      this.playbackService.seek(this.progress);
+      const progress = this.resolveMouseProgress(event);
+      if (event.ctrlKey || event.metaKey) {
+        this.playbackService.clearLoopOrCue();
+        event.preventDefault();
+      } else if (event.altKey) {
+        this.playbackService.setCueProgress(progress);
+        event.preventDefault();
+      } else if (event.shiftKey) {
+        this.playbackService.setLoopEndProgress(progress);
+        event.preventDefault();
+      } else {
+        this.seekToProgress(song, progress);
+      }
     }
   }
 
@@ -149,6 +162,36 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.progress = playbackEvent.progress || 0;
     this.formattedProgress = playbackEvent.song ? playbackEvent.song.getRelativeDurationInMinutes(this.progress) : '0:00';
     this.formattedDuration = playbackEvent.song ? playbackEvent.song.durationInMinutes : '0:00';
+  }
+
+  private handleCuePlaybackState(cuePlaybackState: CuePlaybackState) {
+    if (cuePlaybackState.songId === this.playbackService.lastPlaybackEvent.song?.id) {
+      this.cueProgress = cuePlaybackState.cueProgress;
+      if (
+        this.cueProgress !== undefined &&
+        cuePlaybackState.loopEndProgress !== undefined &&
+        cuePlaybackState.loopEndProgress > this.cueProgress
+      ) {
+        this.loopStartProgress = this.cueProgress;
+        this.loopWidthProgress = cuePlaybackState.loopEndProgress - this.cueProgress;
+      } else {
+        this.loopStartProgress = undefined;
+        this.loopWidthProgress = undefined;
+      }
+    } else {
+      this.cueProgress = undefined;
+      this.loopStartProgress = undefined;
+      this.loopWidthProgress = undefined;
+    }
+  }
+
+  private shouldHandleKeyboardShortcut(): boolean {
+    return !document.activeElement ||
+      !PlayerComponent.KEYBOARD_SHORTCUT_IGNORED_ELEMENTS.has(document.activeElement.tagName);
+  }
+
+  private hasOpenKeyboardDismissibleOverlay(): boolean {
+    return document.querySelector('ngb-modal-window, ngb-offcanvas-panel, .modal.show, .dropdown-menu.show') !== null;
   }
 
   private handleSongSwitch(song: Song | undefined) {
@@ -180,10 +223,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
-      const progressBar = event.currentTarget as Element;
-      const progressBarRect = progressBar.getBoundingClientRect();
-      this.mouseProgress = (event.clientX - progressBarRect.left) / progressBar.clientWidth;
-      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress);
+      this.mouseProgress = this.resolveMouseProgress(event);
+      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress, 1);
     } else {
       this.mouseProgress = undefined;
       this.formattedMousePosition = undefined;
@@ -271,5 +312,21 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   download() {
     this.libraryService.downloadSong(this.song!.id);
+  }
+
+  private seekToProgress(song: Song, progress: number) {
+    this.progress = progress || 0;
+    this.isLoading = true;
+    this.formattedProgress = song.getRelativeDurationInMinutes(this.progress);
+    this.playbackService.seek(this.progress);
+  }
+
+  private resolveMouseProgress(event: MouseEvent): number {
+    const progressBar = event.currentTarget as Element;
+    if (progressBar.clientWidth === 0) {
+      return 0;
+    }
+    const progressBarRect = progressBar.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (event.clientX - progressBarRect.left) / progressBar.clientWidth));
   }
 }
