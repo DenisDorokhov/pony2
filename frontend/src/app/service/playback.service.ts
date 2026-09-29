@@ -87,7 +87,7 @@ export class PlaybackService {
         'seekto',
         details => {
           if (this.lastPlaybackEvent.state === PlaybackState.PLAYING || this.lastPlaybackEvent.state === PlaybackState.PAUSED) {
-            this.audioPlayer.seekToPercentage((details.seekTime || 0) / this.lastPlaybackEvent.song!.duration);
+            this.seek((details.seekTime || 0) / this.lastPlaybackEvent.song!.duration);
           }
         }
       );
@@ -502,7 +502,9 @@ export class PlaybackService {
       this.lastPlaybackEvent.state === PlaybackState.PAUSED ||
       this.lastPlaybackEvent.state === PlaybackState.ENDED
     ) {
-      this.audioPlayer.seekToPercentage(progress);
+      const normalizedProgress = this.normalizeProgress(progress);
+      this.clearLoopIfSeekOutsideLoop(normalizedProgress);
+      this.audioPlayer.seekToPercentage(normalizedProgress);
     }
   }
 
@@ -694,6 +696,18 @@ export class PlaybackService {
       && this.isCuePlaybackStateForSong(state, playbackEvent.song)
       && state.cueProgress !== undefined
       && state.loopEndProgress !== undefined;
+  }
+
+  private clearLoopIfSeekOutsideLoop(progress: number) {
+    const state = this.cuePlaybackStateSubject.value;
+    if (
+      this.isCuePlaybackStateCurrent(state) &&
+      state.cueProgress !== undefined &&
+      state.loopEndProgress !== undefined &&
+      (progress < state.cueProgress || progress >= state.loopEndProgress)
+    ) {
+      this.clearLoop();
+    }
   }
 
   private shouldKeepLoopEndProgress(song: Song, state: CuePlaybackState, cueProgress: number): boolean {

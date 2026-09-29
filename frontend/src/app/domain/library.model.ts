@@ -65,18 +65,22 @@ export class Song {
     return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 
-  getRelativeDurationInMinutes(progress: number) {
-    return this.formatSecondsInMinutes(this.duration * progress);
+  getRelativeDurationInMinutes(progress: number, fractionDigits = 0) {
+    return this.formatSecondsInMinutes(this.duration * progress, fractionDigits);
   }
 
-  private formatSecondsInMinutes(time: number): string {
+  private formatSecondsInMinutes(time: number, fractionDigits = 0): string {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time - minutes * 60);
     let buf = minutes + ':';
     if (seconds <= 9) {
       buf += '0';
     }
-    buf += Math.floor(seconds);
+    buf += seconds;
+    if (fractionDigits > 0) {
+      const fraction = Math.floor((time - Math.floor(time)) * Math.pow(10, fractionDigits));
+      buf += '.' + fraction.toString().padStart(fractionDigits, '0');
+    }
     return buf;
   }
 

@@ -136,7 +136,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
         event.preventDefault();
       } else if (event.altKey) {
         this.playbackService.setCueProgress(progress);
-        this.seekToProgress(song, progress);
         event.preventDefault();
       } else if (event.shiftKey) {
         this.playbackService.setLoopEndProgress(progress);
@@ -225,7 +224,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
       this.mouseProgress = this.resolveMouseProgress(event);
-      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress);
+      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress, 1);
     } else {
       this.mouseProgress = undefined;
       this.formattedMousePosition = undefined;
