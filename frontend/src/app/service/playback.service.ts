@@ -60,6 +60,7 @@ export class PlaybackService {
 
   private originalQueue: Song[] | undefined;
   private queueShuffleSubscription: Subscription | undefined;
+  private lastPlaybackProgress: number | undefined;
 
   constructor() {
     this.authenticationService.observeLogout().subscribe(() => {
@@ -274,7 +275,7 @@ export class PlaybackService {
               }
               this.audioPlayer.pause();
               if (state.progress !== undefined) {
-                this.audioPlayer.seekToSeconds(state.progress * idToSong[currentSongId!].duration);
+                this.seekToProgress(state.progress);
               }
             }
           }
@@ -484,12 +485,12 @@ export class PlaybackService {
     }
     if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
       this.audioPlayer.pause();
-      this.audioPlayer.seekToPercentage(cueProgress);
+      this.seekToProgress(cueProgress);
     } else if (
       this.lastPlaybackEvent.state === PlaybackState.PAUSED ||
       this.lastPlaybackEvent.state === PlaybackState.ENDED
     ) {
-      this.audioPlayer.seekToPercentage(cueProgress);
+      this.seekToProgress(cueProgress);
       this.audioPlayer.play();
     } else {
       this.playOrPause();
@@ -502,9 +503,7 @@ export class PlaybackService {
       this.lastPlaybackEvent.state === PlaybackState.PAUSED ||
       this.lastPlaybackEvent.state === PlaybackState.ENDED
     ) {
-      const normalizedProgress = this.normalizeProgress(progress);
-      this.clearLoopIfSeekOutsideLoop(normalizedProgress);
-      this.audioPlayer.seekToPercentage(normalizedProgress);
+      this.seekToProgress(progress);
     }
   }
 
@@ -639,11 +638,11 @@ export class PlaybackService {
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
     if (this.shouldLoopPlayback(playbackEvent)) {
-      this.audioPlayer.seekToPercentage(this.cuePlaybackStateSubject.value.cueProgress!);
+      this.seekToProgress(this.cuePlaybackStateSubject.value.cueProgress!);
       return;
     }
     if (this.shouldRestartLoopAfterSongEnd(playbackEvent)) {
-      this.audioPlayer.seekToPercentage(this.cuePlaybackStateSubject.value.cueProgress!);
+      this.seekToProgress(this.cuePlaybackStateSubject.value.cueProgress!);
       this.audioPlayer.play();
       return;
     }
@@ -678,6 +677,7 @@ export class PlaybackService {
         navigator.mediaSession.metadata = metadata;
       }
     }
+    this.rememberPlaybackProgress(playbackEvent);
   }
 
   private shouldLoopPlayback(playbackEvent: PlaybackEvent): boolean {
@@ -687,6 +687,8 @@ export class PlaybackService {
       && state.cueProgress !== undefined
       && state.loopEndProgress !== undefined
       && playbackEvent.progress !== undefined
+      && this.lastPlaybackProgress !== undefined
+      && this.lastPlaybackProgress < state.loopEndProgress
       && playbackEvent.progress >= state.loopEndProgress;
   }
 
@@ -695,19 +697,21 @@ export class PlaybackService {
     return playbackEvent.state === PlaybackState.ENDED
       && this.isCuePlaybackStateForSong(state, playbackEvent.song)
       && state.cueProgress !== undefined
-      && state.loopEndProgress !== undefined;
+      && state.loopEndProgress !== undefined
+      && this.lastPlaybackProgress !== undefined
+      && this.lastPlaybackProgress < state.loopEndProgress;
   }
 
-  private clearLoopIfSeekOutsideLoop(progress: number) {
-    const state = this.cuePlaybackStateSubject.value;
-    if (
-      this.isCuePlaybackStateCurrent(state) &&
-      state.cueProgress !== undefined &&
-      state.loopEndProgress !== undefined &&
-      (progress < state.cueProgress || progress >= state.loopEndProgress)
-    ) {
-      this.clearLoop();
+  private rememberPlaybackProgress(playbackEvent: PlaybackEvent) {
+    if (playbackEvent.progress !== undefined) {
+      this.lastPlaybackProgress = playbackEvent.progress;
     }
+  }
+
+  private seekToProgress(progress: number) {
+    const normalizedProgress = this.normalizeProgress(progress);
+    this.lastPlaybackProgress = normalizedProgress;
+    this.audioPlayer.seekToPercentage(normalizedProgress);
   }
 
   private shouldKeepLoopEndProgress(song: Song, state: CuePlaybackState, cueProgress: number): boolean {
