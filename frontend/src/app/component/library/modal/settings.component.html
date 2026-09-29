@@ -14,38 +14,37 @@
 
   <div class="advanced" [hidden]="!showAdvanced">
 
-    <div class="mb-3">
-      <label class="form-label">{{ 'settings.backupPlaylistsLabel' | translate }}</label>
-      <div>
-        <button class="btn btn-primary" (click)="createPlaylistsBackup()"
-                [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}
-        </button>
+    <div class="backup-actions">
+      <div class="backup-action">
+        <label class="form-label">{{ 'settings.backupPlaylistsLabel' | translate }}</label>
+        <div>
+          <button class="btn btn-primary" (click)="createPlaylistsBackup()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}
+          </button>
+        </div>
+        <div class="backup-restore">
+          <input type="file" class="form-control" (change)="onPlaylistsBackupFileChange($event)">
+          <button class="btn btn-primary restore" (click)="restorePlaylistsBackup()"
+                  [disabled]="!backupPlaylistsFileToRestore || secondaryLoadingState === LoadingState.LOADING">
+            {{ 'settings.restoreBackupButton' | translate }}
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="mb-3">
-      <input type="file" class="form-control" (change)="onPlaylistsBackupFileChange($event)">
-      <button class="btn btn-primary restore" (click)="restorePlaylistsBackup()"
-              [disabled]="!backupPlaylistsFileToRestore || secondaryLoadingState === LoadingState.LOADING">
-        {{ 'settings.restoreBackupButton' | translate }}
-      </button>
-    </div>
-
-    <hr>
-
-    <div class="mb-3">
-      <label class="form-label">{{ 'settings.backupHistoryLabel' | translate }}</label>
-      <div>
-        <button class="btn btn-primary" (click)="createHistoryBackup()"
-                [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}
-        </button>
+      <div class="backup-action">
+        <label class="form-label">{{ 'settings.backupHistoryLabel' | translate }}</label>
+        <div>
+          <button class="btn btn-primary" (click)="createHistoryBackup()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.createBackupButton' | translate }}
+          </button>
+        </div>
+        <div class="backup-restore">
+          <input type="file" class="form-control" (change)="onHistoryBackupFileChange($event)">
+          <button class="btn btn-primary restore" (click)="restoreHistoryBackup()"
+                  [disabled]="!backupHistoryFileToRestore || secondaryLoadingState === LoadingState.LOADING">
+            {{ 'settings.restoreBackupButton' | translate }}
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="mb-3">
-      <input type="file" class="form-control" (change)="onHistoryBackupFileChange($event)">
-      <button class="btn btn-primary restore" (click)="restoreHistoryBackup()"
-              [disabled]="!backupHistoryFileToRestore || secondaryLoadingState === LoadingState.LOADING">
-        {{ 'settings.restoreBackupButton' | translate }}
-      </button>
     </div>
 
     <hr>
@@ -64,6 +63,17 @@
         <div>
           <button class="btn btn-primary index" (click)="reGenerateArtworkThumbnails()"
                   [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.reGenerateArtworkThumbnailsButton' | translate }}
+          </button>
+        </div>
+      </div>
+      <div class="maintenance-action clear-llm-cache-action">
+        <label class="form-label">{{ 'settings.clearLlmCacheLabel' | translate }}</label>
+        <div class="input-group">
+          <input type="text" class="form-control" [(ngModel)]="llmCacheRegion"
+                 [disabled]="secondaryLoadingState === LoadingState.LOADING"
+                 [placeholder]="'settings.clearLlmCachePlaceholder' | translate">
+          <button class="btn btn-primary" (click)="clearLlmCache()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.clearLlmCacheButton' | translate }}
           </button>
         </div>
       </div>

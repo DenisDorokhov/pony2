@@ -437,6 +437,12 @@ export class LibraryService {
     return this.httpClient.post<void>('/api/admin/library/reGenerateArtworkThumbnails', null);
   }
 
+  clearLlmCache(region?: string): Observable<void> {
+    return this.httpClient.delete<void>('/api/admin/llm/cache', {
+      params: region ? {region} : {}
+    });
+  }
+
   observeArtistSortingOrder(): Observable<ArtistSortingOrder> {
     return this.sortingOrderArtistSubject.asObservable()
       .pipe(distinctUntilChanged());

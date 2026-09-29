@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface LlmCacheRepository extends JpaRepository<LlmCache, String> {
     Optional<LlmCache> findByRegionAndKeyAndVersion(LlmCacheRegion region, String key, int version);
-    long deleteByExpirationDateLessThanEqual(LocalDateTime expirationInSeconds);
+    long deleteByExpirationDateLessThanEqual(LocalDateTime expirationDate);
+    long deleteByRegion(LlmCacheRegion region);
 }
