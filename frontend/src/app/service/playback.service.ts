@@ -27,6 +27,12 @@ interface QueueState {
   mode: PlaybackMode;
 }
 
+export interface CuePlaybackState {
+  songId: string | undefined;
+  cueProgress: number | undefined;
+  loopEndProgress: number | undefined;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -46,6 +52,7 @@ export class PlaybackService {
   private queueSubject: BehaviorSubject<Song[]> = new BehaviorSubject<Song[]>([]);
   private currentSongSubject: BehaviorSubject<Song | undefined> = new BehaviorSubject<Song | undefined>(undefined);
   private modeSubject = new BehaviorSubject(PlaybackMode.NORMAL);
+  private cuePlaybackStateSubject = new BehaviorSubject<CuePlaybackState>(this.emptyCuePlaybackState());
 
   private _currentIndex = -1;
   private _queue: Song[] = [];
@@ -60,6 +67,7 @@ export class PlaybackService {
         this.currentSongSubject.next(undefined);
         this._queue = [];
         this.originalQueue = undefined;
+        this.clearCuePlaybackState();
         this.queueShuffleSubscription?.unsubscribe();
         this.queueShuffleSubscription = undefined;
         this.queueSubject.next([]);
@@ -221,6 +229,10 @@ export class PlaybackService {
     return this.modeSubject.asObservable();
   }
 
+  observeCuePlaybackState(): Observable<CuePlaybackState> {
+    return this.cuePlaybackStateSubject.asObservable();
+  }
+
   restoreQueueState(): Observable<any | undefined> {
     const state = this.loadQueueState();
     if (state) {
@@ -314,6 +326,9 @@ export class PlaybackService {
 
   private switchToIndex(index: number, play = true, addRandomSongsIfNeeded = true): Song {
     const song = this._queue[index];
+    if (song.id !== this.currentSongSubject.value?.id) {
+      this.clearCuePlaybackState();
+    }
     this._currentIndex = index;
     this.currentSongSubject.next(song);
     if (play) {
@@ -356,6 +371,7 @@ export class PlaybackService {
     if (this._currentIndex === index) {
       this._currentIndex = -1;
       this.currentSongSubject.next(undefined);
+      this.clearCuePlaybackState();
       this.audioPlayer.stop();
     } else if (this._currentIndex > index) {
       this._currentIndex--;
@@ -460,6 +476,26 @@ export class PlaybackService {
     }
   }
 
+  playOrStopAtCue() {
+    const cueProgress = this.currentCueProgress();
+    if (cueProgress === undefined) {
+      this.playOrPause();
+      return;
+    }
+    if (this.lastPlaybackEvent.state === PlaybackState.PLAYING) {
+      this.audioPlayer.pause();
+      this.audioPlayer.seekToPercentage(cueProgress);
+    } else if (
+      this.lastPlaybackEvent.state === PlaybackState.PAUSED ||
+      this.lastPlaybackEvent.state === PlaybackState.ENDED
+    ) {
+      this.audioPlayer.seekToPercentage(cueProgress);
+      this.audioPlayer.play();
+    } else {
+      this.playOrPause();
+    }
+  }
+
   seek(progress: number) {
     if (
       this.lastPlaybackEvent.state === PlaybackState.PLAYING ||
@@ -468,6 +504,69 @@ export class PlaybackService {
     ) {
       this.audioPlayer.seekToPercentage(progress);
     }
+  }
+
+  setCueProgress(progress: number) {
+    const song = this.lastPlaybackEvent.song;
+    if (song) {
+      const cueProgress = this.normalizeProgress(progress);
+      const state = this.cuePlaybackStateSubject.value;
+      const loopEndProgress = this.shouldKeepLoopEndProgress(song, state, cueProgress) ?
+        state.loopEndProgress :
+        undefined;
+      this.cuePlaybackStateSubject.next({
+        songId: song.id,
+        cueProgress,
+        loopEndProgress,
+      });
+    }
+  }
+
+  setLoopEndProgress(progress: number) {
+    const song = this.lastPlaybackEvent.song;
+    if (!song) {
+      return;
+    }
+    const loopProgress = this.normalizeProgress(progress);
+    const state = this.cuePlaybackStateSubject.value;
+    if (this.isCuePlaybackStateCurrent(state) && state.cueProgress !== undefined) {
+      this.cuePlaybackStateSubject.next({
+        songId: state.songId,
+        cueProgress: state.cueProgress,
+        loopEndProgress: loopProgress > state.cueProgress ? loopProgress : undefined,
+      });
+      return;
+    }
+    const currentProgress = this.normalizeProgress(this.lastPlaybackEvent.progress ?? 0);
+    this.cuePlaybackStateSubject.next({
+      songId: song.id,
+      cueProgress: currentProgress,
+      loopEndProgress: loopProgress > currentProgress ? loopProgress : undefined,
+    });
+  }
+
+  private clearLoop() {
+    const state = this.cuePlaybackStateSubject.value;
+    if (state.cueProgress !== undefined) {
+      this.cuePlaybackStateSubject.next({
+        songId: state.songId,
+        cueProgress: state.cueProgress,
+        loopEndProgress: undefined,
+      });
+    }
+  }
+
+  clearLoopOrCue() {
+    const state = this.cuePlaybackStateSubject.value;
+    if (state.loopEndProgress !== undefined) {
+      this.clearLoop();
+    } else {
+      this.clearCuePlaybackState();
+    }
+  }
+
+  clearCueAndLoop() {
+    this.clearCuePlaybackState();
   }
 
   hasPreviousSong(): boolean {
@@ -537,6 +636,15 @@ export class PlaybackService {
   }
 
   private handlePlaybackEvent(playbackEvent: PlaybackEvent) {
+    if (this.shouldLoopPlayback(playbackEvent)) {
+      this.audioPlayer.seekToPercentage(this.cuePlaybackStateSubject.value.cueProgress!);
+      return;
+    }
+    if (this.shouldRestartLoopAfterSongEnd(playbackEvent)) {
+      this.audioPlayer.seekToPercentage(this.cuePlaybackStateSubject.value.cueProgress!);
+      this.audioPlayer.play();
+      return;
+    }
     if (playbackEvent.state === PlaybackState.ENDED) {
       if (!this.switchToNextSong() && this._mode === PlaybackMode.NORMAL) {
         this.switchToIndex(0, false);
@@ -570,6 +678,62 @@ export class PlaybackService {
     }
   }
 
+  private shouldLoopPlayback(playbackEvent: PlaybackEvent): boolean {
+    const state = this.cuePlaybackStateSubject.value;
+    return playbackEvent.state === PlaybackState.PLAYING
+      && this.isCuePlaybackStateForSong(state, playbackEvent.song)
+      && state.cueProgress !== undefined
+      && state.loopEndProgress !== undefined
+      && playbackEvent.progress !== undefined
+      && playbackEvent.progress >= state.loopEndProgress;
+  }
+
+  private shouldRestartLoopAfterSongEnd(playbackEvent: PlaybackEvent): boolean {
+    const state = this.cuePlaybackStateSubject.value;
+    return playbackEvent.state === PlaybackState.ENDED
+      && this.isCuePlaybackStateForSong(state, playbackEvent.song)
+      && state.cueProgress !== undefined
+      && state.loopEndProgress !== undefined;
+  }
+
+  private shouldKeepLoopEndProgress(song: Song, state: CuePlaybackState, cueProgress: number): boolean {
+    return state.songId === song.id
+      && state.loopEndProgress !== undefined
+      && state.loopEndProgress > cueProgress;
+  }
+
+  private currentCueProgress(): number | undefined {
+    const state = this.cuePlaybackStateSubject.value;
+    return this.isCuePlaybackStateCurrent(state) ? state.cueProgress : undefined;
+  }
+
+  private isCuePlaybackStateCurrent(state: CuePlaybackState): boolean {
+    return this.isCuePlaybackStateForSong(state, this.lastPlaybackEvent.song);
+  }
+
+  private isCuePlaybackStateForSong(state: CuePlaybackState, song: Song | undefined): boolean {
+    return song !== undefined && state.songId === song.id;
+  }
+
+  private clearCuePlaybackState() {
+    const state = this.cuePlaybackStateSubject.value;
+    if (state.cueProgress !== undefined || state.loopEndProgress !== undefined || state.songId !== undefined) {
+      this.cuePlaybackStateSubject.next(this.emptyCuePlaybackState());
+    }
+  }
+
+  private emptyCuePlaybackState(): CuePlaybackState {
+    return {
+      songId: undefined,
+      cueProgress: undefined,
+      loopEndProgress: undefined,
+    };
+  }
+
+  private normalizeProgress(progress: number): number {
+    return Math.max(0, Math.min(1, progress));
+  }
+
   private storeState() {
     const localStorageKey = this.resolveQueueStateLocalStorageKey();
     if (localStorageKey) {
@@ -596,6 +760,7 @@ export class PlaybackService {
     this._currentIndex = 0;
     const firstSong = this._queue[0];
     if (firstSong.id !== this.currentSongSubject.value?.id) {
+      this.clearCuePlaybackState();
       this.currentSongSubject.next(firstSong);
       this.audioPlayer.play(firstSong);
       this.playbackHistoryService.addSongToHistory(firstSong.id).subscribe();
