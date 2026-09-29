@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, of, Subscription} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import {map, tap} from 'rxjs/operators';
 import {Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
 import {moveItemInArray} from '@angular/cdk/drag-drop';
@@ -450,7 +450,8 @@ export class PlaybackService {
   }
 
   observePlaybackEvent(): Observable<PlaybackEvent> {
-    return this.audioPlayer.observePlaybackEvent();
+    return this.audioPlayer.observePlaybackEvent()
+      .pipe(map(playbackEvent => this.adjustLoopingPlaybackEvent(playbackEvent)));
   }
 
   play(index: number) {
@@ -531,11 +532,13 @@ export class PlaybackService {
     const loopProgress = this.normalizeProgress(progress);
     const state = this.cuePlaybackStateSubject.value;
     if (this.isCuePlaybackStateCurrent(state) && state.cueProgress !== undefined) {
+      const loopEndProgress = loopProgress > state.cueProgress ? loopProgress : undefined;
       this.cuePlaybackStateSubject.next({
         songId: state.songId,
         cueProgress: state.cueProgress,
-        loopEndProgress: loopProgress > state.cueProgress ? loopProgress : undefined,
+        loopEndProgress,
       });
+      this.restartLoopIfAlreadyPastEnd(state.cueProgress, loopEndProgress);
       return;
     }
     const currentProgress = this.normalizeProgress(this.lastPlaybackEvent.progress ?? 0);
@@ -544,6 +547,12 @@ export class PlaybackService {
       cueProgress: currentProgress,
       loopEndProgress: loopProgress > currentProgress ? loopProgress : undefined,
     });
+  }
+
+  private restartLoopIfAlreadyPastEnd(cueProgress: number, loopEndProgress: number | undefined) {
+    if (loopEndProgress !== undefined && (this.lastPlaybackEvent.progress ?? 0) >= loopEndProgress) {
+      this.seekToProgress(cueProgress);
+    }
   }
 
   private clearLoop() {
@@ -700,6 +709,13 @@ export class PlaybackService {
       && state.loopEndProgress !== undefined
       && this.lastPlaybackProgress !== undefined
       && this.lastPlaybackProgress < state.loopEndProgress;
+  }
+
+  private adjustLoopingPlaybackEvent(playbackEvent: PlaybackEvent): PlaybackEvent {
+    // Hide the raw progress tick beyond the loop end so UI subscribers jump straight back to the cue.
+    return this.shouldLoopPlayback(playbackEvent) ?
+      new PlaybackEvent(playbackEvent.state, playbackEvent.song, this.cuePlaybackStateSubject.value.cueProgress) :
+      playbackEvent;
   }
 
   private rememberPlaybackProgress(playbackEvent: PlaybackEvent) {
