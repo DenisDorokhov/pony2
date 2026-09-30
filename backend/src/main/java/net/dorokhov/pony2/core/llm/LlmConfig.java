@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.llm;
 
 import io.micrometer.observation.ObservationRegistry;
 import net.dorokhov.pony2.core.llm.service.FetchUrlTool;
+import net.dorokhov.pony2.core.llm.service.PlaywrightMcpToolCallbackProxy;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallbackProvider;
@@ -19,11 +20,12 @@ public class LlmConfig {
             ChatModel chatModel,
             ObservationRegistry observationRegistry,
             FetchUrlTool fetchUrlTool,
+            PlaywrightMcpToolCallbackProxy playwrightMcpToolCallbackProxy,
             ObjectProvider<ToolCallbackProvider> toolCallbackProviders
     ) {
         Object[] tools = Stream.concat(
                 Stream.of(fetchUrlTool),
-                toolCallbackProviders.orderedStream()
+                playwrightMcpToolCallbackProxy.proxy(toolCallbackProviders.orderedStream()).stream()
         ).toArray();
         return ChatClient.builder(chatModel, observationRegistry, null, null)
                 .defaultTools(tools)

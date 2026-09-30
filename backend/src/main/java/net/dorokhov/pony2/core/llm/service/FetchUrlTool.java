@@ -1,25 +1,29 @@
 package net.dorokhov.pony2.core.llm.service;
 
 import net.dorokhov.pony2.common.JsonConverter;
-import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Map;
 
 @Component
 public class FetchUrlTool {
 
-    private static final int MAX_TEXT_LENGTH = 75000;
+    private final PlaywrightMcpCaller playwrightMcpCaller;
+    private final int maxTextLength;
 
-    private final ObjectProvider<ToolCallbackProvider> toolCallbackProviders;
-
-    public FetchUrlTool(ObjectProvider<ToolCallbackProvider> toolCallbackProviders) {
-        this.toolCallbackProviders = toolCallbackProviders;
+    public FetchUrlTool(
+            PlaywrightMcpCaller playwrightMcpCaller,
+            @Value("${pony.llm.fetchUrl.maxTextLength:75000}") int maxTextLength
+    ) {
+        if (maxTextLength < 1) {
+            throw new IllegalArgumentException("Max text length must be positive.");
+        }
+        this.playwrightMcpCaller = playwrightMcpCaller;
+        this.maxTextLength = maxTextLength;
     }
 
     @Tool(
@@ -31,8 +35,8 @@ public class FetchUrlTool {
             String url
     ) {
         validateUrl(url);
-        callPlaywrightTool("browser_navigate", JsonConverter.toJson(Map.of("url", url)));
-        return callPlaywrightTool("browser_evaluate", JsonConverter.toJson(Map.of(
+        playwrightMcpCaller.call("browser_navigate", JsonConverter.toJson(Map.of("url", url)));
+        return playwrightMcpCaller.call("browser_evaluate", JsonConverter.toJson(Map.of(
                 "function", """
                         () => {
                           const body = document.body;
@@ -43,7 +47,7 @@ public class FetchUrlTool {
                             text: text.slice(0, %d)
                           };
                         }
-                        """.formatted(MAX_TEXT_LENGTH)
+                        """.formatted(maxTextLength)
         )));
     }
 
@@ -56,14 +60,5 @@ public class FetchUrlTool {
         if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
             throw new IllegalArgumentException("Only http and https URLs are supported.");
         }
-    }
-
-    private String callPlaywrightTool(String toolName, String input) {
-        return toolCallbackProviders.orderedStream()
-                .flatMap(provider -> Arrays.stream(provider.getToolCallbacks()))
-                .filter(callback -> callback.getToolDefinition().name().equals(toolName))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Playwright MCP tool is not available: " + toolName))
-                .call(input);
     }
 }
