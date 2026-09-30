@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.LongUnaryOperator;
 
 @Component
-public class PlaywrightMcpCaller {
+public class PlaywrightMcpClient {
 
     private static final String PLAYWRIGHT_TOOL_PREFIX = "browser_";
 
@@ -43,19 +43,16 @@ public class PlaywrightMcpCaller {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final Object toolCallLock = new Object();
     private final ObjectProvider<ToolCallbackProvider> toolCallbackProviders;
-    private final RateLimitedRequestExecutor rateLimitedRequestExecutor;
     private final RandomDelay humanActionDelay;
     private final RandomDelay pageChangingDelay;
     private final RateLimitedRequestExecutor.Sleeper sleeper;
     private final LongUnaryOperator randomMillisSupplier;
 
     @Autowired
-    public PlaywrightMcpCaller(
+    public PlaywrightMcpClient(
             ObjectProvider<ToolCallbackProvider> toolCallbackProviders,
-            @Value("${pony.llm.playwrightMcp.rateLimit.notMoreOftenThan:2s}") Duration requestInterval,
-            @Value("${pony.llm.playwrightMcp.rateLimit.randomDelay:4s}") Duration requestRandomDelay,
-            @Value("${pony.llm.playwrightMcp.rateLimit.retriesOnException:1}") int retriesOnException,
             @Value("${pony.llm.playwrightMcp.humanActionDelay.min:500ms}") Duration humanActionMinDelay,
             @Value("${pony.llm.playwrightMcp.humanActionDelay.max:2500ms}") Duration humanActionMaxDelay,
             @Value("${pony.llm.playwrightMcp.pageChangingDelay.min:2s}") Duration pageChangingMinDelay,
@@ -63,14 +60,6 @@ public class PlaywrightMcpCaller {
     ) {
         this(
                 toolCallbackProviders,
-                new RateLimitedRequestExecutor(
-                        "playwright-mcp",
-                        new RateLimitedRequestExecutor.Settings(
-                                requestInterval,
-                                requestRandomDelay,
-                                retriesOnException
-                        )
-                ),
                 new RandomDelay(humanActionMinDelay, humanActionMaxDelay),
                 new RandomDelay(pageChangingMinDelay, pageChangingMaxDelay),
                 Thread::sleep,
@@ -78,45 +67,37 @@ public class PlaywrightMcpCaller {
         );
     }
 
-    PlaywrightMcpCaller(
+    PlaywrightMcpClient(
             ObjectProvider<ToolCallbackProvider> toolCallbackProviders,
-            RateLimitedRequestExecutor rateLimitedRequestExecutor,
             RandomDelay humanActionDelay,
             RandomDelay pageChangingDelay,
             RateLimitedRequestExecutor.Sleeper sleeper,
             LongUnaryOperator randomMillisSupplier
     ) {
-        this.toolCallbackProviders = Objects.requireNonNull(toolCallbackProviders, "Tool callback providers must not be null.");
-        this.rateLimitedRequestExecutor = Objects.requireNonNull(rateLimitedRequestExecutor, "Rate-limited request executor must not be null.");
-        this.humanActionDelay = Objects.requireNonNull(humanActionDelay, "Human action delay must not be null.");
-        this.pageChangingDelay = Objects.requireNonNull(pageChangingDelay, "Page changing delay must not be null.");
-        this.sleeper = Objects.requireNonNull(sleeper, "Sleeper must not be null.");
-        this.randomMillisSupplier = Objects.requireNonNull(randomMillisSupplier, "Random millis supplier must not be null.");
+        this.toolCallbackProviders = toolCallbackProviders;
+        this.humanActionDelay = humanActionDelay;
+        this.pageChangingDelay = pageChangingDelay;
+        this.sleeper = sleeper;
+        this.randomMillisSupplier = randomMillisSupplier;
     }
 
     public String call(String toolName, String input) {
-        return call(findPlaywrightTool(toolName), input);
-    }
-
-    public String call(ToolCallback toolCallback, String input) {
-        return call(toolCallback, input, null);
+        return call(findPlaywrightTool(toolName), input, null);
     }
 
     public String call(ToolCallback toolCallback, String input, ToolContext toolContext) {
-        Objects.requireNonNull(toolCallback, "Tool callback must not be null.");
-        String toolName = toolCallback.getToolDefinition().name();
-        if (!isPlaywrightToolName(toolName)) {
-            throw new IllegalArgumentException("Only Playwright MCP tools can be called: " + toolName);
+        validatePlaywrightToolName(toolCallback.getToolDefinition().name());
+        synchronized (toolCallLock) {
+            return invoke(toolCallback, input, toolContext);
         }
+    }
 
-        return rateLimitedRequestExecutor.execute(() -> {
-            logger.debug("Calling proxied Playwright MCP tool '{}'. Input length: {}.", toolName, inputLength(input));
-            waitBeforeCallIfNeeded(toolName);
-            String result = toolContext == null ? toolCallback.call(input) : toolCallback.call(input, toolContext);
-            waitAfterCallIfNeeded(toolName);
-            logger.debug("Finished proxied Playwright MCP tool '{}'. Result length: {}.", toolName, inputLength(result));
-            return result;
-        });
+    public List<String> call(List<ToolCall> toolCalls) {
+        synchronized (toolCallLock) {
+            return toolCalls.stream()
+                    .map(toolCall -> invoke(findPlaywrightTool(toolCall.name()), toolCall.input(), null))
+                    .toList();
+        }
     }
 
     public static boolean isPlaywrightToolName(String toolName) {
@@ -124,14 +105,28 @@ public class PlaywrightMcpCaller {
     }
 
     private ToolCallback findPlaywrightTool(String toolName) {
-        if (!isPlaywrightToolName(toolName)) {
-            throw new IllegalArgumentException("Only Playwright MCP tools can be called: " + toolName);
-        }
+        validatePlaywrightToolName(toolName);
         return toolCallbackProviders.orderedStream()
                 .flatMap(provider -> Arrays.stream(provider.getToolCallbacks()))
                 .filter(callback -> callback.getToolDefinition().name().equals(toolName))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Playwright MCP tool is not available: " + toolName));
+    }
+
+    private void validatePlaywrightToolName(String toolName) {
+        if (!isPlaywrightToolName(toolName)) {
+            throw new IllegalArgumentException("Only Playwright MCP tools can be called: " + toolName);
+        }
+    }
+
+    private String invoke(ToolCallback toolCallback, String input, ToolContext toolContext) {
+        String toolName = toolCallback.getToolDefinition().name();
+        logger.debug("Calling proxied Playwright MCP tool '{}'. Input length: {}.", toolName, input.length());
+        waitBeforeCallIfNeeded(toolName);
+        String result = toolContext == null ? toolCallback.call(input) : toolCallback.call(input, toolContext);
+        waitAfterCallIfNeeded(toolName);
+        logger.debug("Finished proxied Playwright MCP tool '{}'. Result length: {}.", toolName, result.length());
+        return result;
     }
 
     private void waitBeforeCallIfNeeded(String toolName) {
@@ -160,15 +155,12 @@ public class PlaywrightMcpCaller {
         }
     }
 
-    private int inputLength(String input) {
-        return input == null ? 0 : input.length();
+    public record ToolCall(String name, String input) {
     }
 
     record RandomDelay(Duration min, Duration max) {
 
         RandomDelay {
-            Objects.requireNonNull(min, "Min delay must not be null.");
-            Objects.requireNonNull(max, "Max delay must not be null.");
             if (min.isNegative()) {
                 throw new IllegalArgumentException("Min delay must not be negative.");
             }

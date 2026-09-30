@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.api.llm.service;
 
-import net.dorokhov.pony2.api.llm.LlmCache;
-import net.dorokhov.pony2.api.llm.LlmCacheRegion;
+import net.dorokhov.pony2.api.llm.domain.LlmCache;
+import net.dorokhov.pony2.api.llm.domain.LlmCacheRegion;
 
 import java.util.Optional;
 import java.util.function.Supplier;

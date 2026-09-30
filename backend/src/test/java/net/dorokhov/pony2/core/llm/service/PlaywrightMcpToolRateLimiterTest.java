@@ -19,62 +19,59 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PlaywrightMcpToolCallbackProxyTest {
+public class PlaywrightMcpToolRateLimiterTest {
 
-    private PlaywrightMcpToolCallbackProxy proxyFactory;
+    private PlaywrightMcpToolRateLimiter rateLimiter;
 
     @Mock
-    private PlaywrightMcpCaller playwrightMcpCaller;
+    private RateLimitedPlaywrightMcpClient rateLimitedPlaywrightMcpClient;
 
     @BeforeEach
     void setUp() {
-        proxyFactory = new PlaywrightMcpToolCallbackProxy(playwrightMcpCaller);
+        rateLimiter = new PlaywrightMcpToolRateLimiter(rateLimitedPlaywrightMcpClient);
     }
 
     @Test
-    public void shouldProxyPlaywrightToolCallbacks() {
+    public void shouldRateLimitPlaywrightToolCallbacks() {
 
         StubToolCallback browserTool = new StubToolCallback("browser_scroll");
         StubToolCallback otherTool = new StubToolCallback("other_tool");
 
-        ToolCallbackProvider proxiedProvider = proxyFactory.proxy(Stream.of((ToolCallbackProvider) () ->
-                new ToolCallback[]{browserTool, otherTool})).getFirst();
+        ToolCallbackProvider proxiedProvider = rateLimiter.rateLimit(Stream.of(() -> new ToolCallback[]{browserTool, otherTool})).getFirst();
         ToolCallback[] proxiedCallbacks = proxiedProvider.getToolCallbacks();
 
         assertThat(proxiedCallbacks).hasSize(2);
-        assertThat(proxiedCallbacks[0]).isInstanceOf(RateLimitedPlaywrightMcpToolCallback.class);
+        assertThat(proxiedCallbacks[0]).isNotSameAs(browserTool);
         assertThat(proxiedCallbacks[0].getToolDefinition()).isSameAs(browserTool.getToolDefinition());
         assertThat(proxiedCallbacks[0].getToolMetadata()).isSameAs(browserTool.getToolMetadata());
         assertThat(proxiedCallbacks[1]).isSameAs(otherTool);
     }
 
     @Test
-    public void shouldCallPlaywrightToolThroughCaller() {
+    public void shouldCallPlaywrightToolThroughRateLimitedClient() {
 
         StubToolCallback browserTool = new StubToolCallback("browser_click");
-        ToolCallback proxiedCallback = proxyFactory.proxy(Stream.of((ToolCallbackProvider) () ->
-                new ToolCallback[]{browserTool})).getFirst().getToolCallbacks()[0];
+        ToolCallback proxiedCallback = rateLimiter.rateLimit(Stream.of(() -> new ToolCallback[]{browserTool})).getFirst().getToolCallbacks()[0];
 
-        when(playwrightMcpCaller.call(browserTool, "{}")).thenReturn("result");
+        when(rateLimitedPlaywrightMcpClient.call(browserTool, "{}")).thenReturn("result");
 
         assertThat(proxiedCallback.call("{}")).isEqualTo("result");
 
-        verify(playwrightMcpCaller).call(browserTool, "{}");
+        verify(rateLimitedPlaywrightMcpClient).call(browserTool, "{}");
     }
 
     @Test
-    public void shouldCallPlaywrightToolWithContextThroughCaller() {
+    public void shouldCallPlaywrightToolWithContextThroughRateLimitedClient() {
 
         StubToolCallback browserTool = new StubToolCallback("browser_click");
-        ToolCallback proxiedCallback = proxyFactory.proxy(Stream.of((ToolCallbackProvider) () ->
-                new ToolCallback[]{browserTool})).getFirst().getToolCallbacks()[0];
+        ToolCallback proxiedCallback = rateLimiter.rateLimit(Stream.of(() -> new ToolCallback[]{browserTool})).getFirst().getToolCallbacks()[0];
         ToolContext toolContext = new ToolContext(Map.of("key", "value"));
 
-        when(playwrightMcpCaller.call(browserTool, "{}", toolContext)).thenReturn("result");
+        when(rateLimitedPlaywrightMcpClient.call(browserTool, "{}", toolContext)).thenReturn("result");
 
         assertThat(proxiedCallback.call("{}", toolContext)).isEqualTo("result");
 
-        verify(playwrightMcpCaller).call(browserTool, "{}", toolContext);
+        verify(rateLimitedPlaywrightMcpClient).call(browserTool, "{}", toolContext);
     }
 
     private static class StubToolCallback implements ToolCallback {

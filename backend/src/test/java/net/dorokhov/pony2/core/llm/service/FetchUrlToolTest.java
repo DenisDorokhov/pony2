@@ -4,12 +4,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,25 +24,43 @@ public class FetchUrlToolTest {
     private FetchUrlTool fetchUrlTool;
 
     @Mock
-    private PlaywrightMcpCaller playwrightMcpCaller;
+    private PlaywrightMcpClient playwrightMcpClient;
+
+    @Mock
+    private RateLimitedRequestExecutor rateLimitedRequestExecutor;
 
     @BeforeEach
     void setUp() {
-        fetchUrlTool = new FetchUrlTool(playwrightMcpCaller, 123);
+        fetchUrlTool = new FetchUrlTool(playwrightMcpClient, rateLimitedRequestExecutor, 123);
     }
 
     @Test
-    public void shouldFetchUrlThroughPlaywrightToolCaller() {
+    public void shouldFetchUrlThroughPlaywrightMcpClient() {
 
-        ArgumentCaptor<String> evaluateInputCaptor = ArgumentCaptor.forClass(String.class);
-        when(playwrightMcpCaller.call(anyString(), anyString())).thenAnswer(invocation ->
-                "browser_evaluate".equals(invocation.getArgument(0)) ? "result" : null);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<PlaywrightMcpClient.ToolCall>> toolCallsCaptor = ArgumentCaptor.forClass(List.class);
+        doAnswer(invocation -> invocation.<Supplier<String>>getArgument(1).get())
+                .when(rateLimitedRequestExecutor).execute(any(), any());
+        when(playwrightMcpClient.call(ArgumentMatchers.any()))
+                .thenReturn(List.of("navigateResult", "result"));
 
-        String result = fetchUrlTool.fetchUrl("https://example.com");
+        String result = fetchUrlTool.fetchUrl("https://www.example.com");
 
         assertThat(result).isEqualTo("result");
-        verify(playwrightMcpCaller).call("browser_navigate", "{\"url\":\"https://example.com\"}");
-        verify(playwrightMcpCaller).call(eq("browser_evaluate"), evaluateInputCaptor.capture());
-        assertThat(evaluateInputCaptor.getValue()).contains("text.slice(0, 123)");
+        verify(rateLimitedRequestExecutor).execute(eq("example.com"), any());
+        verify(playwrightMcpClient).call(toolCallsCaptor.capture());
+        assertThat(toolCallsCaptor.getValue())
+                .extracting(PlaywrightMcpClient.ToolCall::name)
+                .containsExactly("browser_navigate", "browser_evaluate");
+        assertThat(toolCallsCaptor.getValue().get(0).input()).isEqualTo("{\"url\":\"https://www.example.com\"}");
+        assertThat(toolCallsCaptor.getValue().get(1).input()).contains("text.slice(0, 123)");
+    }
+
+    @Test
+    public void shouldUseTopPrivateDomainAsRateLimitContext() {
+
+        fetchUrlTool.fetchUrl("https://docs.google.co.uk/path");
+
+        verify(rateLimitedRequestExecutor).execute(eq("google.co.uk"), any());
     }
 }

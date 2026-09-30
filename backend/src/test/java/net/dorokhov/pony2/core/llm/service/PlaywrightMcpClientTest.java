@@ -1,17 +1,14 @@
 package net.dorokhov.pony2.core.llm.service;
 
-import net.dorokhov.pony2.core.llm.service.PlaywrightMcpCaller.RandomDelay;
-import net.dorokhov.pony2.core.llm.service.RateLimitedRequestExecutor.Settings;
+import net.dorokhov.pony2.core.llm.service.PlaywrightMcpClient.RandomDelay;
+import net.dorokhov.pony2.core.llm.service.PlaywrightMcpClient.ToolCall;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.beans.factory.ObjectProvider;
 
-import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,65 +17,58 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class PlaywrightMcpCallerTest {
+public class PlaywrightMcpClientTest {
 
-    private final MutableClock clock = new MutableClock();
     private final List<Duration> sleepDurations = new ArrayList<>();
 
     @Test
-    public void shouldCallPlaywrightToolByNameWithConfiguredDelays() {
+    public void shouldCallToolSequenceInOneBrowserSession() {
 
-        StubToolCallback toolCallback = new StubToolCallback("browser_scroll", "result");
-        PlaywrightMcpCaller toolCaller = toolCaller(providerOf((ToolCallbackProvider) () ->
-                new ToolCallback[]{toolCallback}));
+        StubToolCallback navigateCallback = new StubToolCallback("browser_navigate", "navigateResult");
+        StubToolCallback evaluateCallback = new StubToolCallback("browser_evaluate", "evaluateResult");
+        PlaywrightMcpClient client = client(providerOf(() -> new ToolCallback[]{navigateCallback, evaluateCallback}));
 
-        String result = toolCaller.call("browser_scroll", "{}");
+        List<String> result = client.call(List.of(
+                new ToolCall("browser_navigate", "{\"url\":\"https://example.com\"}"),
+                new ToolCall("browser_evaluate", "{\"function\":\"() => {}\"}")
+        ));
 
-        assertThat(result).isEqualTo("result");
-        assertThat(sleepDurations).containsExactly(Duration.ofMillis(2500), Duration.ofSeconds(6));
+        assertThat(result).containsExactly("navigateResult", "evaluateResult");
+        assertThat(navigateCallback.inputs).containsExactly("{\"url\":\"https://example.com\"}");
+        assertThat(evaluateCallback.inputs).containsExactly("{\"function\":\"() => {}\"}");
+        assertThat(sleepDurations).containsExactly(Duration.ofSeconds(6));
     }
 
     @Test
-    public void shouldNotAddHumanDelaysToReadOnlyPlaywrightTool() {
+    public void shouldApplyDelaysOnlyToConfiguredToolTypes() {
 
-        StubToolCallback toolCallback = new StubToolCallback("browser_snapshot", "result");
-        PlaywrightMcpCaller toolCaller = toolCaller(providerOf((ToolCallbackProvider) () ->
-                new ToolCallback[]{toolCallback}));
+        StubToolCallback snapshotCallback = new StubToolCallback("browser_snapshot", "snapshotResult");
+        StubToolCallback scrollCallback = new StubToolCallback("browser_scroll", "scrollResult");
+        PlaywrightMcpClient client = client(providerOf(() -> new ToolCallback[]{snapshotCallback, scrollCallback}));
 
-        String result = toolCaller.call("browser_snapshot", "{}");
+        String snapshotResult = client.call("browser_snapshot", "{}");
+        String scrollResult = client.call("browser_scroll", "{}");
 
-        assertThat(result).isEqualTo("result");
-        assertThat(sleepDurations).isEmpty();
+        assertThat(snapshotResult).isEqualTo("snapshotResult");
+        assertThat(scrollResult).isEqualTo("scrollResult");
+        assertThat(sleepDurations).containsExactly(Duration.ofMillis(2500), Duration.ofSeconds(6));
     }
 
     @Test
     public void shouldFailWhenPlaywrightToolIsMissing() {
 
-        PlaywrightMcpCaller toolCaller = toolCaller(providerOf());
+        PlaywrightMcpClient client = client(providerOf());
 
-        assertThatThrownBy(() -> toolCaller.call("browser_missing", "{}"))
+        assertThatThrownBy(() -> client.call("browser_missing", "{}"))
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    private PlaywrightMcpCaller toolCaller(ObjectProvider<ToolCallbackProvider> toolCallbackProviders) {
-        return new PlaywrightMcpCaller(
+    private PlaywrightMcpClient client(ObjectProvider<ToolCallbackProvider> toolCallbackProviders) {
+        return new PlaywrightMcpClient(
                 toolCallbackProviders,
-                new RateLimitedRequestExecutor(
-                        "test-playwright-mcp",
-                        new Settings(Duration.ZERO, Duration.ZERO, 0),
-                        clock,
-                        duration -> {
-                            sleepDurations.add(duration);
-                            clock.plus(duration);
-                        },
-                        bound -> 0
-                ),
                 new RandomDelay(Duration.ofMillis(500), Duration.ofMillis(2500)),
                 new RandomDelay(Duration.ofSeconds(2), Duration.ofSeconds(6)),
-                duration -> {
-                    sleepDurations.add(duration);
-                    clock.plus(duration);
-                },
+                sleepDurations::add,
                 bound -> bound - 1
         );
     }
@@ -122,6 +112,7 @@ public class PlaywrightMcpCallerTest {
 
         private final ToolDefinition toolDefinition;
         private final String result;
+        private final List<String> inputs = new ArrayList<>();
 
         private StubToolCallback(String name, String result) {
             toolDefinition = ToolDefinition.builder()
@@ -139,31 +130,8 @@ public class PlaywrightMcpCallerTest {
 
         @Override
         public String call(String input) {
+            inputs.add(input);
             return result;
-        }
-    }
-
-    private static class MutableClock extends Clock {
-
-        private Instant instant = Instant.parse("2026-09-30T00:00:00Z");
-
-        @Override
-        public ZoneId getZone() {
-            return ZoneId.of("UTC");
-        }
-
-        @Override
-        public Clock withZone(ZoneId zone) {
-            return this;
-        }
-
-        @Override
-        public Instant instant() {
-            return instant;
-        }
-
-        public void plus(Duration duration) {
-            instant = instant.plus(duration);
         }
     }
 }

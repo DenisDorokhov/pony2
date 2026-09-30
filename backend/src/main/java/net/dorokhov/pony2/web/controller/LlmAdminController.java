@@ -1,6 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
-import net.dorokhov.pony2.api.llm.LlmCacheRegion;
+import net.dorokhov.pony2.api.llm.domain.LlmCacheRegion;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import org.springframework.web.bind.annotation.*;
 

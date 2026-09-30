@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.core.llm.service;
 
-import net.dorokhov.pony2.api.llm.LlmCache;
-import net.dorokhov.pony2.api.llm.LlmCacheRegion;
+import net.dorokhov.pony2.api.llm.domain.LlmCache;
+import net.dorokhov.pony2.api.llm.domain.LlmCacheRegion;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
 import org.slf4j.Logger;
@@ -50,6 +50,7 @@ public class LlmCacheServiceImpl implements LlmCacheService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getOrPut(LlmCacheRegion region, String key, int version, Supplier<String> valueSupplier) {
         return get(region, key, version)
                 .orElseGet(() -> put(region, key, version, valueSupplier.get()).getValue());

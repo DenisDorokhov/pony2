@@ -46,6 +46,36 @@ public class RateLimitedRequestExecutorTest {
     }
 
     @Test
+    public void shouldNotShareLimitsBetweenContexts() {
+
+        Settings settings = settings(Duration.ofSeconds(30), Duration.ZERO, 0);
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(settings);
+
+        requestExecutor.execute("google.com", () -> "googleValue");
+        String yandexResult = requestExecutor.execute("yandex.ru", () -> "yandexValue");
+        String googleResult = requestExecutor.execute("google.com", () -> "secondGoogleValue");
+
+        assertThat(yandexResult).isEqualTo("yandexValue");
+        assertThat(googleResult).isEqualTo("secondGoogleValue");
+        assertThat(sleepDurations).containsExactly(Duration.ofSeconds(30));
+    }
+
+    @Test
+    public void shouldEvictOldestContextWhenLimitIsExceeded() {
+
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(
+                new Settings(Duration.ofSeconds(30), Duration.ZERO, 0, 2)
+        );
+
+        requestExecutor.execute("google.com", () -> "googleValue");
+        requestExecutor.execute("yandex.ru", () -> "yandexValue");
+        requestExecutor.execute("openai.com", () -> "openAiValue");
+        requestExecutor.execute("google.com", () -> "secondGoogleValue");
+
+        assertThat(sleepDurations).isEmpty();
+    }
+
+    @Test
     public void shouldRetryAfterException() {
 
         AtomicInteger calls = new AtomicInteger();
@@ -93,6 +123,8 @@ public class RateLimitedRequestExecutorTest {
         assertThatThrownBy(() -> settings(Duration.ZERO, Duration.ofSeconds(-1), 0))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> settings(Duration.ZERO, Duration.ZERO, -1))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Settings(Duration.ZERO, Duration.ZERO, 0, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -11,7 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static net.dorokhov.pony2.api.llm.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LlmAdminControllerTest extends InstallingIntegrationTest {

@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.api.llm;
+package net.dorokhov.pony2.api.llm.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

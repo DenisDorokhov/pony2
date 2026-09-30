@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.core.llm.service;
 
 import net.dorokhov.pony2.IntegrationTest;
-import net.dorokhov.pony2.api.llm.LlmCache;
+import net.dorokhov.pony2.api.llm.domain.LlmCache;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.dorokhov.pony2.api.llm.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LlmCacheServiceImplTest extends IntegrationTest {
