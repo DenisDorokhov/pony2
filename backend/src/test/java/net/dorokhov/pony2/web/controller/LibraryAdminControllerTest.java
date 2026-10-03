@@ -228,6 +228,12 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(optionalResponse.getValue()).satisfies(scanJobProgress -> {
                 assertThat(scanJobProgress.getScanJob()).isNotNull();
                 assertThat(scanJobProgress.getScanProgress()).isNotNull();
+                assertThat(scanJobProgress.getScanProgress().getStepDescriptor()).satisfies(stepDescriptor -> {
+                    assertThat(stepDescriptor.getStep()).isNotNull();
+                    assertThat(stepDescriptor.getScanType()).isSameAs(stepDescriptor.getStep().getScanType());
+                    assertThat(stepDescriptor.getStepNumber()).isEqualTo(stepDescriptor.getStep().getStepNumber());
+                    assertThat(stepDescriptor.getTotalSteps()).isEqualTo(stepDescriptor.getStep().getTotalSteps());
+                });
             });
         });
 
@@ -242,6 +248,12 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(optionalResponse.isPresent()).isTrue();
             assertThat(optionalResponse.getValue().getScanJob()).isNotNull();
             assertThat(optionalResponse.getValue().getScanProgress()).isNotNull();
+            assertThat(optionalResponse.getValue().getScanProgress().getStepDescriptor()).satisfies(stepDescriptor -> {
+                assertThat(stepDescriptor.getStep()).isNotNull();
+                assertThat(stepDescriptor.getScanType()).isSameAs(stepDescriptor.getStep().getScanType());
+                assertThat(stepDescriptor.getStepNumber()).isEqualTo(stepDescriptor.getStep().getStepNumber());
+                assertThat(stepDescriptor.getTotalSteps()).isEqualTo(stepDescriptor.getStep().getTotalSteps());
+            });
         });
 
         blockingObserver.unlock();

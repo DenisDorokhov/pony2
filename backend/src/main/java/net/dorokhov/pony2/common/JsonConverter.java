@@ -2,6 +2,7 @@ package net.dorokhov.pony2.common;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.cfg.EnumFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
@@ -9,7 +10,10 @@ import java.util.Map;
 
 public final class JsonConverter {
 
-    private static final JsonMapper MAPPER = JsonMapper.builder().build();
+    private static final JsonMapper MAPPER = JsonMapper.builder()
+            .configure(EnumFeature.READ_ENUMS_USING_TO_STRING, false)
+            .configure(EnumFeature.WRITE_ENUMS_USING_TO_STRING, false)
+            .build();
 
     private JsonConverter() {
     }

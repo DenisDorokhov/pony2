@@ -50,7 +50,7 @@ public class LlmCacheServiceImpl implements LlmCacheService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public String getOrPut(LlmCacheRegion region, String key, int version, Supplier<String> valueSupplier) {
         return get(region, key, version)
                 .orElseGet(() -> put(region, key, version, valueSupplier.get()).getValue());
