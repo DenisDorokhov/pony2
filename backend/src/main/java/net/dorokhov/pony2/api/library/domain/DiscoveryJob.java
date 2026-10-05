@@ -37,7 +37,7 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "job")
     private List<DiscoveryTask> tasks = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "discovery_result_id", unique = true)
     private DiscoveryResult discoveryResult;
 

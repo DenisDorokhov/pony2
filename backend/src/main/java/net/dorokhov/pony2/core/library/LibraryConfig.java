@@ -9,6 +9,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class LibraryConfig {
     
     public static final String SCAN_JOB_EXECUTOR = "scanJobExecutor";
+    public static final String DISCOVERY_JOB_EXECUTOR = "discoveryJobExecutor";
     public static final String LIBRARY_IMPORT_EXECUTOR = "libraryImportExecutor";
     public static final String SEARCH_INDEX_REBUILD_EXECUTOR = "searchIndexRebuildExecutor";
     public static final String ARTWORK_THUMBNAIL_REGENERATION_EXECUTOR = "artworkThumbnailRegenerationExecutor";
@@ -22,6 +23,11 @@ public class LibraryConfig {
     @Bean(SCAN_JOB_EXECUTOR)
     public ThreadPoolTaskExecutor scanJobExecutor() {
         return buildThreadPoolExecutor(SCAN_JOB_EXECUTOR, 1);
+    }
+
+    @Bean(DISCOVERY_JOB_EXECUTOR)
+    public ThreadPoolTaskExecutor discoveryJobExecutor() {
+        return buildThreadPoolExecutor(DISCOVERY_JOB_EXECUTOR, 1);
     }
 
     @Bean(LIBRARY_IMPORT_EXECUTOR)

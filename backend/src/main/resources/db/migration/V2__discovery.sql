@@ -69,6 +69,7 @@ CREATE TABLE discovery_task (
 );
 
 CREATE INDEX index_discovery_task_status ON discovery_task (status);
+CREATE INDEX index_discovery_task_job_id_status ON discovery_task (discovery_job_id, status);
 
 CREATE TABLE artist_discovery (
 
