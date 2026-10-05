@@ -35,11 +35,24 @@ public class LibraryCleanerTest {
     @Mock
     private ArtistGenreRepository artistGenreRepository;
     @Mock
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
+    @Mock
+    private AlbumDiscoveryRepository albumDiscoveryRepository;
+    @Mock
     private ArtworkStorage artworkStorage;
 
     @BeforeEach
     public void setUp() {
-        libraryCleaner = new LibraryCleaner(songRepository, albumRepository, artistRepository, genreRepository, artistGenreRepository, artworkStorage);
+        libraryCleaner = new LibraryCleaner(
+                songRepository,
+                albumRepository,
+                artistRepository,
+                genreRepository,
+                artistGenreRepository,
+                artistDiscoveryRepository,
+                albumDiscoveryRepository,
+                artworkStorage
+        );
     }
 
     @Test
@@ -52,10 +65,12 @@ public class LibraryCleanerTest {
         when(albumRepository.countByArtistId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist1)).isTrue();
+        verify(artistDiscoveryRepository).deleteByArtistId("1");
         verify(artistGenreRepository).deleteByArtistId("1");
         verify(artistRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist2)).isFalse();
+        verify(artistDiscoveryRepository, never()).deleteByArtistId("2");
         verify(artistGenreRepository, never()).deleteByArtistId("2");
         verify(artistRepository, never()).deleteById("2");
     }
@@ -72,9 +87,11 @@ public class LibraryCleanerTest {
         when(songRepository.countByAlbumId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album1)).isTrue();
+        verify(albumDiscoveryRepository).deleteByAlbumId("1");
         verify(albumRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album2)).isFalse();
+        verify(albumDiscoveryRepository, never()).deleteByAlbumId("2");
         verify(albumRepository, never()).deleteById("2");
     }
 

@@ -13,6 +13,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * Detects Playwright MCP tools and applies rate limiting to them.
+ * Other tools are passed through unchanged.
+ */
 @Component
 public class PlaywrightMcpToolRateLimiter {
 

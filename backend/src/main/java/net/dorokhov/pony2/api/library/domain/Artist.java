@@ -41,6 +41,14 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
     )
     private List<ArtistGenre> genres = new ArrayList<>();
 
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "artist",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ArtistDiscovery> discoveries = new ArrayList<>();
+
     @Nullable
     public String getName() {
         return name;
@@ -88,6 +96,15 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
 
     public Artist setGenres(List<ArtistGenre> genres) {
         this.genres = genres;
+        return this;
+    }
+
+    public List<ArtistDiscovery> getDiscoveries() {
+        return discoveries;
+    }
+
+    public Artist setDiscoveries(List<ArtistDiscovery> discoveries) {
+        this.discoveries = discoveries;
         return this;
     }
 

@@ -15,6 +15,10 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Executes requests with per-context rate limiting, optional random delay, and retries.
+ * Idle context state is bounded by evicting least recently used contexts.
+ */
 public class RateLimitedRequestExecutor {
 
     public static final int DEFAULT_MAX_CONTEXT_COUNT = 1000;

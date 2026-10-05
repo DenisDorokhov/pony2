@@ -34,6 +34,14 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "album")
     private List<Song> songs = new ArrayList<>();
 
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "album",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<AlbumDiscovery> discoveries = new ArrayList<>();
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id", nullable = false)
     @NotNull
@@ -78,6 +86,15 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
 
     public Album setSongs(List<Song> songs) {
         this.songs = songs;
+        return this;
+    }
+
+    public List<AlbumDiscovery> getDiscoveries() {
+        return discoveries;
+    }
+
+    public Album setDiscoveries(List<AlbumDiscovery> discoveries) {
+        this.discoveries = discoveries;
         return this;
     }
 
