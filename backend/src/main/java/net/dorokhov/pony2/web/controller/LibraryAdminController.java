@@ -1,8 +1,10 @@
 package net.dorokhov.pony2.web.controller;
 
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
+import net.dorokhov.pony2.web.service.DiscoveryFacade;
 import net.dorokhov.pony2.web.service.LibraryFacade;
 import net.dorokhov.pony2.web.service.ScanFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
@@ -29,16 +31,27 @@ public class LibraryAdminController implements ErrorHandlingController {
                     .setCode(Code.CONCURRENT_SCAN)
                     .setMessage(e.getMessage());
         }
+
+        @ExceptionHandler(ConcurrentDiscoveryException.class)
+        @ResponseStatus(HttpStatus.BAD_REQUEST)
+        public ErrorDto onConcurrentDiscovery(ConcurrentDiscoveryException e) {
+            return new ErrorDto()
+                    .setCode(Code.CONCURRENT_DISCOVERY)
+                    .setMessage(e.getMessage());
+        }
     }
 
     private final ScanFacade scanFacade;
+    private final DiscoveryFacade discoveryFacade;
     private final LibraryFacade libraryFacade;
 
     public LibraryAdminController(
             ScanFacade scanFacade,
+            DiscoveryFacade discoveryFacade,
             LibraryFacade libraryFacade
     ) {
         this.scanFacade = scanFacade;
+        this.discoveryFacade = discoveryFacade;
         this.libraryFacade = libraryFacade;
     }
 
@@ -65,6 +78,41 @@ public class LibraryAdminController implements ErrorHandlingController {
     @PostMapping("/api/admin/library/scanJobs")
     public ScanJobDto startScanJob() throws ConcurrentScanException {
         return scanFacade.startScanJob();
+    }
+
+    @GetMapping("/api/admin/library/discoveryJobProgress")
+    public OptionalResponseDto<DiscoveryJobProgressDto> getCurrentDiscoveryJobProgress() {
+        return discoveryFacade.getCurrentDiscoveryJobProgress();
+    }
+
+    @GetMapping("/api/admin/library/discoveryJobProgress/{discoveryJobId}")
+    public OptionalResponseDto<DiscoveryJobProgressDto> getDiscoveryJobProgress(@PathVariable String discoveryJobId) {
+        return discoveryFacade.getDiscoveryJobProgress(discoveryJobId);
+    }
+
+    @GetMapping("/api/admin/library/discoveryJobs")
+    public DiscoveryJobPageDto getDiscoveryJobs(@RequestParam(defaultValue = "0") int pageIndex, @RequestParam(defaultValue = "30") int pageSize) {
+        return discoveryFacade.getDiscoveryJobs(pageIndex, pageSize);
+    }
+
+    @GetMapping("/api/admin/library/discoveryJobs/{discoveryJobId}")
+    public DiscoveryJobDto getDiscoveryJob(@PathVariable String discoveryJobId) throws ObjectNotFoundException {
+        return discoveryFacade.getDiscoveryJob(discoveryJobId);
+    }
+
+    @PostMapping("/api/admin/library/discoveryJobs/full")
+    public DiscoveryJobDto startFullDiscoveryJob() throws ConcurrentDiscoveryException {
+        return discoveryFacade.startFullDiscoveryJob();
+    }
+
+    @PostMapping("/api/admin/library/discoveryJobs/artist/{artistId}")
+    public DiscoveryJobDto startArtistDiscoveryJob(@PathVariable String artistId) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+        return discoveryFacade.startArtistDiscoveryJob(artistId);
+    }
+
+    @PostMapping("/api/admin/library/discoveryJobs/album/{albumId}")
+    public DiscoveryJobDto startAlbumDiscoveryJob(@PathVariable String albumId) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+        return discoveryFacade.startAlbumDiscoveryJob(albumId);
     }
 
     @PostMapping("/api/admin/library/reBuildSearchIndex")

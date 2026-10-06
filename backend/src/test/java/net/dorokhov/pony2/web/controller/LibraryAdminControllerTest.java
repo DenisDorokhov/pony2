@@ -4,11 +4,16 @@ import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.*;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
+import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
+import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
+import net.dorokhov.pony2.api.library.domain.DiscoveryResult;
+import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJob.Status;
 import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony2.api.library.domain.ScanResult;
 import net.dorokhov.pony2.api.library.domain.ScanType;
+import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
@@ -40,6 +45,8 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     @Autowired
     private ScanJobService scanJobService;
     @Autowired
+    private DiscoveryJobService discoveryJobService;
+    @Autowired
     private ConfigService configService;
     @Autowired
     private JsonMapper objectMapper;
@@ -47,10 +54,12 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     private ScanTestPlanExecutor scanTestPlanExecutor;
     
     private final BlockingScanJobServiceObserver blockingObserver = new BlockingScanJobServiceObserver();
+    private final BlockingDiscoveryJobServiceObserver blockingDiscoveryObserver = new BlockingDiscoveryJobServiceObserver();
 
     @AfterEach
     public void tearDown() {
         scanJobService.removeObserver(blockingObserver);
+        discoveryJobService.removeObserver(blockingDiscoveryObserver);
         scanTestPlanExecutor.clean();
     }
 
@@ -188,6 +197,123 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(optionalResponse.getValue()).isNull();
         });
     }
+
+    @Test
+    public void shouldPerformFullDiscoveryFlow() {
+
+        discoveryJobService.addObserver(blockingDiscoveryObserver);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<DiscoveryJobDto> discoveryJobResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/discoveryJobs/full", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), DiscoveryJobDto.class);
+
+        assertThat(discoveryJobResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        DiscoveryJobDto discoveryJob = requireNonNull(discoveryJobResponse.getBody());
+        assertThat(discoveryJob.getId()).isNotNull();
+        assertThat(discoveryJob.getCreationDate()).isNotNull();
+        assertThat(discoveryJob.getUpdateDate()).isNull();
+        assertThat(discoveryJob.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
+        assertThat(discoveryJob.getStatus()).isSameAs(DiscoveryJob.Status.STARTING);
+        assertThat(discoveryJob.getLogMessage()).isNotNull();
+        assertThat(discoveryJob.getDiscoveryResult()).isNull();
+
+        await().until(() -> {
+            DiscoveryJobProgress discoveryJobProgress = discoveryJobService.getDiscoveryJobProgress(discoveryJob.getId()).orElse(null);
+            return discoveryJobProgress != null && discoveryJobProgress.getDiscoveryProgress() != null;
+        });
+
+        ResponseEntity<OptionalResponseDto<DiscoveryJobProgressDto>> optionalDiscoveryJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/discoveryJobProgress", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {});
+
+        assertThat(optionalDiscoveryJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(optionalDiscoveryJobProgressResponse.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isTrue();
+            assertThat(optionalResponse.getValue()).satisfies(discoveryJobProgress -> {
+                assertThat(discoveryJobProgress.getDiscoveryJob()).isNotNull();
+                assertThat(discoveryJobProgress.getDiscoveryProgress()).isNotNull();
+                assertThat(discoveryJobProgress.getDiscoveryJob().getId()).isEqualTo(discoveryJob.getId());
+                assertThat(discoveryJobProgress.getDiscoveryJob().getStatus()).isSameAs(DiscoveryJob.Status.STARTED);
+                assertThat(discoveryJobProgress.getDiscoveryProgress().getStepDescriptor()).satisfies(stepDescriptor -> {
+                    assertThat(stepDescriptor.getStep()).isNotNull();
+                    assertThat(stepDescriptor.getDiscoveryType()).isSameAs(stepDescriptor.getStep().getDiscoveryType());
+                    assertThat(stepDescriptor.getStepNumber()).isEqualTo(stepDescriptor.getStep().getStepNumber());
+                    assertThat(stepDescriptor.getTotalSteps()).isEqualTo(stepDescriptor.getStep().getTotalSteps());
+                });
+                assertThat(discoveryJobProgress.getDiscoveryProgress().getValue()).satisfies(value ->
+                        assertThat(value.getItemsTotal()).isZero());
+            });
+        });
+
+        ResponseEntity<OptionalResponseDto<DiscoveryJobProgressDto>> discoveryJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/discoveryJobProgress/{discoveryJobId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
+                new ParameterizedTypeReference<>() {},
+                discoveryJob.getId());
+
+        assertThat(discoveryJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(discoveryJobProgressResponse.getBody()).satisfies(optionalResponse -> {
+            assertThat(optionalResponse.isPresent()).isTrue();
+            assertThat(optionalResponse.getValue().getDiscoveryJob()).isNotNull();
+            assertThat(optionalResponse.getValue().getDiscoveryProgress()).isNotNull();
+            assertThat(optionalResponse.getValue().getDiscoveryJob().getId()).isEqualTo(discoveryJob.getId());
+            assertThat(optionalResponse.getValue().getDiscoveryJob().getStatus()).isSameAs(DiscoveryJob.Status.STARTED);
+            assertThat(optionalResponse.getValue().getDiscoveryProgress().getStepDescriptor()).satisfies(stepDescriptor -> {
+                assertThat(stepDescriptor.getStep()).isNotNull();
+                assertThat(stepDescriptor.getDiscoveryType()).isSameAs(stepDescriptor.getStep().getDiscoveryType());
+                assertThat(stepDescriptor.getStepNumber()).isEqualTo(stepDescriptor.getStep().getStepNumber());
+                assertThat(stepDescriptor.getTotalSteps()).isEqualTo(stepDescriptor.getStep().getTotalSteps());
+            });
+            assertThat(optionalResponse.getValue().getDiscoveryProgress().getValue()).satisfies(value ->
+                    assertThat(value.getItemsTotal()).isZero());
+        });
+
+        ResponseEntity<ErrorDto> concurrentDiscoveryResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/discoveryJobs/full", HttpMethod.POST,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(concurrentDiscoveryResponse.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
+        assertThat(concurrentDiscoveryResponse.getBody()).satisfies(error ->
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_DISCOVERY));
+
+        blockingDiscoveryObserver.unlock();
+
+        await().atMost(30, SECONDS).until(() -> {
+            DiscoveryJob.Status status = discoveryJobService.getById(discoveryJob.getId()).orElseThrow().getStatus();
+            return status == DiscoveryJob.Status.COMPLETE || status == DiscoveryJob.Status.MODERATE || status == DiscoveryJob.Status.FAILED;
+        });
+
+        ResponseEntity<DiscoveryJobDto> completedDiscoveryJobResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/discoveryJobs/{discoveryJobId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), DiscoveryJobDto.class, discoveryJob.getId());
+
+        assertThat(completedDiscoveryJobResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(completedDiscoveryJobResponse.getBody()).satisfies(dto -> {
+            checkDiscoveryJobDto(dto, discoveryJob.getId());
+            assertThat(dto.getStatus()).isSameAs(DiscoveryJob.Status.COMPLETE);
+            assertThat(dto.getDiscoveryResult()).satisfies(discoveryResult -> {
+                assertThat(discoveryResult.getCompletedTasks()).isZero();
+                assertThat(discoveryResult.getFailedTasks()).isZero();
+            });
+        });
+
+        ResponseEntity<DiscoveryJobPageDto> discoveryJobsResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/library/discoveryJobs", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), DiscoveryJobPageDto.class);
+
+        assertThat(discoveryJobsResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(discoveryJobsResponse.getBody()).satisfies(discoveryJobPage -> {
+            assertThat(discoveryJobPage.getPageIndex()).isEqualTo(0);
+            assertThat(discoveryJobPage.getPageSize()).isGreaterThan(0);
+            assertThat(discoveryJobPage.getTotalPages()).isEqualTo(1);
+            assertThat(discoveryJobPage.getDiscoveryJobs()).satisfies(discoveryJobs -> {
+                assertThat(discoveryJobs).hasSize(1);
+                checkDiscoveryJobDto(discoveryJobs.get(0), discoveryJob.getId());
+            });
+        });
+    }
     
     private void runAndVerifyInitialScan() throws IOException {
 
@@ -285,6 +411,21 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         });
     }
 
+    private void checkDiscoveryJobDto(DiscoveryJobDto dto, String discoveryJobId) {
+        getTransactionTemplate().execute(transactionStatus -> {
+            DiscoveryJob discoveryJob = discoveryJobService.getById(discoveryJobId).orElseThrow();
+            assertThat(dto.getId()).isEqualTo(discoveryJob.getId());
+            assertThat(dto.getCreationDate()).isEqualTo(discoveryJob.getCreationDate());
+            assertThat(dto.getUpdateDate()).isEqualTo(discoveryJob.getUpdateDate());
+            assertThat(dto.getDiscoveryType()).isEqualTo(discoveryJob.getType());
+            assertThat(dto.getStatus()).isEqualTo(discoveryJob.getStatus());
+            assertThat(dto.getParameter()).isEqualTo(discoveryJob.getParameter());
+            checkLogMessageDto(dto.getLogMessage(), discoveryJob.getLogMessage());
+            checkDiscoveryResultDto(dto.getDiscoveryResult(), discoveryJob.getDiscoveryResult());
+            return null;
+        });
+    }
+
     private void checkLogMessageDto(@Nullable LogMessageDto dto, @Nullable LogMessage logMessage) {
         assertThat(logMessage).isNotNull();
         assertThat(dto).isNotNull();
@@ -326,6 +467,16 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getDeletedGenreCount()).isEqualTo(scanResult.getDeletedGenreCount());
         assertThat(dto.getCreatedArtworkCount()).isEqualTo(scanResult.getCreatedArtworkCount());
         assertThat(dto.getDeletedArtworkCount()).isEqualTo(scanResult.getDeletedArtworkCount());
+    }
+
+    private void checkDiscoveryResultDto(@Nullable DiscoveryResultDto dto, @Nullable DiscoveryResult discoveryResult) {
+        assertThat(discoveryResult).isNotNull();
+        assertThat(dto).isNotNull();
+        assertThat(dto.getId()).isEqualTo(discoveryResult.getId());
+        assertThat(dto.getDate()).isEqualTo(discoveryResult.getDate());
+        assertThat(dto.getDiscoveryType()).isEqualTo(discoveryResult.getType());
+        assertThat(dto.getCompletedTasks()).isEqualTo(discoveryResult.getCompletedTasks());
+        assertThat(dto.getFailedTasks()).isEqualTo(discoveryResult.getFailedTasks());
     }
 
     private void runAndVerifyDeletionScan() throws IOException, ConcurrentScanException {

@@ -17,6 +17,7 @@ public final class ErrorDto {
         NOT_FOUND,
         MAX_UPLOAD_SIZE_EXCEEDED,
         CONCURRENT_SCAN,
+        CONCURRENT_DISCOVERY,
     }
 
     public static final class FieldViolation {

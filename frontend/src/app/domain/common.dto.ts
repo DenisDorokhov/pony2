@@ -19,6 +19,7 @@ export namespace ErrorDto {
     NOT_FOUND = 'NOT_FOUND',
     MAX_UPLOAD_SIZE_EXCEEDED = 'MAX_UPLOAD_SIZE_EXCEEDED',
     CONCURRENT_SCAN = 'CONCURRENT_SCAN',
+    CONCURRENT_DISCOVERY = 'CONCURRENT_DISCOVERY',
   }
 
   export interface FieldViolation {
