@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service;
+package net.dorokhov.pony2.core.library.service.scan;
 
 import com.google.common.collect.ImmutableList;
 import jakarta.annotation.PostConstruct;

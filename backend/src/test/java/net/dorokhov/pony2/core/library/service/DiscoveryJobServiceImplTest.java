@@ -7,6 +7,9 @@ import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryExcep
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.*;
+import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
+import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
+import net.dorokhov.pony2.core.library.service.discovery.FullDiscoveryService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

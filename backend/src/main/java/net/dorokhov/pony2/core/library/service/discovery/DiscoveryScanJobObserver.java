@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service;
+package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

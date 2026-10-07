@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service;
+package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
@@ -16,13 +16,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
-import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ALBUM_DISCOVERY;
-import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_DISCOVERY;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.FULL_ALBUM_DISCOVERY;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.FULL_ARTIST_DISCOVERY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -40,10 +38,6 @@ public class FullDiscoveryServiceTest {
     private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
     private AlbumDiscoveryRepository albumDiscoveryRepository;
-    @Mock
-    private ArtistDiscoveryService artistDiscoveryService;
-    @Mock
-    private AlbumDiscoveryService albumDiscoveryService;
 
     @Test
     public void shouldDiscoverArtistsAndAlbums() {
@@ -71,10 +65,11 @@ public class FullDiscoveryServiceTest {
 
         fullDiscoveryService.discover(discoveryJob, progressCalls::add);
 
-        verify(artistDiscoveryService).discover(same(discoveryJob), same(artist1), notNull());
-        verify(artistDiscoveryService).discover(same(discoveryJob), same(artist2), notNull());
-        verify(albumDiscoveryService).discover(same(discoveryJob), same(album1), notNull());
-        verify(albumDiscoveryService).discover(same(discoveryJob), same(album2), notNull());
+        verify(artistRepository).findAll(Sort.by("id"));
+        verify(artistDiscoveryRepository).findFirstByArtistIdOrderByCreationDateDesc("artist1");
+        verify(artistDiscoveryRepository).findFirstByArtistIdOrderByCreationDateDesc("artist2");
+        verify(albumDiscoveryRepository).findFirstByAlbumIdOrderByCreationDateDesc("album1");
+        verify(albumDiscoveryRepository).findFirstByAlbumIdOrderByCreationDateDesc("album2");
         verify(albumRepository, times(2)).findAll((Pageable) any());
 
         assertThat(progressCalls).hasSize(6);
@@ -87,70 +82,70 @@ public class FullDiscoveryServiceTest {
     }
 
     @Test
-    public void shouldMapNestedProgressToFullProgress() {
+    public void shouldReportEmptyLibraryProgress() {
 
-        DiscoveryJob discoveryJob = discoveryJob();
-        Artist artist1 = artist("artist1");
-        Artist artist2 = artist("artist2");
-
-        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist1, artist2));
+        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of());
         when(albumRepository.findAll((Pageable) any())).thenAnswer(invocation ->
                 new PageImpl<>(List.of(), invocation.getArgument(0), 0));
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(any())).thenReturn(Optional.empty());
-        doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 3)));
-            return null;
-        }).when(artistDiscoveryService).discover(any(), any(), any());
 
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
-        fullDiscoveryService.discover(discoveryJob, progressCalls::add);
+        fullDiscoveryService.discover(discoveryJob(), progressCalls::add);
 
-        assertThat(progressCalls).hasSize(6);
-        assertProgress(progressCalls.get(0), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 2));
-        assertProgress(progressCalls.get(1), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 6));
-        assertProgress(progressCalls.get(2), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(3, 6));
-        assertProgress(progressCalls.get(3), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(4, 6));
-        assertProgress(progressCalls.get(4), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(6, 6));
-        assertProgress(progressCalls.get(5), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, 0));
+        assertThat(progressCalls).hasSize(2);
+        assertProgress(progressCalls.get(0), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 0));
+        assertProgress(progressCalls.get(1), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, 0));
+        verifyNoInteractions(artistDiscoveryRepository, albumDiscoveryRepository);
     }
 
     @Test
-    public void shouldMapNestedAlbumProgressToFullProgress() {
+    public void shouldPreserveInterruptionDuringArtistDiscovery() {
 
-        DiscoveryJob discoveryJob = discoveryJob();
-        Album album1 = album("album1");
-        Album album2 = album("album2");
-
-        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of());
-        when(albumRepository.findAll((Pageable) any())).thenAnswer(invocation -> {
-            Pageable pageable = invocation.getArgument(0);
-            Pageable page = PageRequest.of(pageable.getPageNumber(), 1, pageable.getSort());
-            if (pageable.getPageNumber() == 0) {
-                return new PageImpl<>(List.of(album1), page, 2);
-            } else {
-                return new PageImpl<>(List.of(album2), page, 2);
-            }
-        });
-        when(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(any())).thenReturn(Optional.empty());
-        doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
-            observer.accept(new DiscoveryProgress(ALBUM_DISCOVERY, DiscoveryProgress.Value.of(2, 4)));
-            return null;
-        }).when(albumDiscoveryService).discover(any(), any(), any());
+        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist("artist1")));
+        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist1"))
+                .thenReturn(Optional.empty());
 
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
-        fullDiscoveryService.discover(discoveryJob, progressCalls::add);
+        Thread.currentThread().interrupt();
+        try {
+            assertThatThrownBy(() -> fullDiscoveryService.discover(discoveryJob(), progressCalls::add))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasCauseInstanceOf(InterruptedException.class);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted();
+        }
 
-        assertThat(progressCalls).hasSize(6);
+        assertThat(progressCalls).hasSize(1);
+        assertProgress(progressCalls.get(0), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 1));
+        verifyNoInteractions(albumRepository, albumDiscoveryRepository);
+    }
+
+    @Test
+    public void shouldPreserveInterruptionDuringAlbumDiscovery() {
+
+        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of());
+        when(albumRepository.findAll((Pageable) any())).thenAnswer(invocation ->
+                new PageImpl<>(List.of(album("album1")), invocation.getArgument(0), 1));
+        when(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc("album1"))
+                .thenReturn(Optional.empty());
+
+        List<DiscoveryProgress> progressCalls = new ArrayList<>();
+
+        Thread.currentThread().interrupt();
+        try {
+            assertThatThrownBy(() -> fullDiscoveryService.discover(discoveryJob(), progressCalls::add))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasCauseInstanceOf(InterruptedException.class);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted();
+        }
+
+        assertThat(progressCalls).hasSize(2);
         assertProgress(progressCalls.get(0), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 0));
-        assertProgress(progressCalls.get(1), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, 2));
-        assertProgress(progressCalls.get(2), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(2, 8));
-        assertProgress(progressCalls.get(3), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(4, 8));
-        assertProgress(progressCalls.get(4), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(6, 8));
-        assertProgress(progressCalls.get(5), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(8, 8));
+        assertProgress(progressCalls.get(1), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, 1));
     }
 
     @Test
@@ -168,9 +163,21 @@ public class FullDiscoveryServiceTest {
         when(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc("album1"))
                 .thenReturn(Optional.of(new AlbumDiscovery().setCreationDate(now)));
 
-        fullDiscoveryService.discover(discoveryJob(), null);
+        List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
-        verifyNoInteractions(artistDiscoveryService, albumDiscoveryService);
+        Thread.currentThread().interrupt();
+        try {
+            fullDiscoveryService.discover(discoveryJob(), progressCalls::add);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted();
+        }
+
+        assertThat(progressCalls).hasSize(4);
+        assertProgress(progressCalls.get(0), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 1));
+        assertProgress(progressCalls.get(1), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 1));
+        assertProgress(progressCalls.get(2), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, 1));
+        assertProgress(progressCalls.get(3), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(1, 1));
     }
 
     @Test
@@ -188,11 +195,15 @@ public class FullDiscoveryServiceTest {
         when(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc("album1"))
                 .thenReturn(Optional.of(new AlbumDiscovery().setCreationDate(now.minusMinutes(1))));
 
-        DiscoveryJob discoveryJob = discoveryJob();
-        fullDiscoveryService.discover(discoveryJob, null);
+        List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
-        verify(artistDiscoveryService).discover(same(discoveryJob), same(artist), notNull());
-        verify(albumDiscoveryService).discover(same(discoveryJob), same(album), notNull());
+        fullDiscoveryService.discover(discoveryJob(), progressCalls::add);
+
+        assertThat(progressCalls).hasSize(4);
+        assertProgress(progressCalls.get(0), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 1));
+        assertProgress(progressCalls.get(1), FULL_ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 1));
+        assertProgress(progressCalls.get(2), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, 1));
+        assertProgress(progressCalls.get(3), FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(1, 1));
     }
 
     private void assertProgress(DiscoveryProgress progress, DiscoveryProgress.Step step, DiscoveryProgress.Value value) {

@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service;
+package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanType;
