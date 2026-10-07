@@ -113,7 +113,7 @@ public class DiscoveryJobServiceImplTest {
     @Test
     public void shouldExecuteFullJob() throws ConcurrentDiscoveryException {
 
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
@@ -135,7 +135,7 @@ public class DiscoveryJobServiceImplTest {
 
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
-        verify(logService, times(3)).info(any(), any(), any());
+        verify(logService, times(3)).info(any(), any(), any(Object[].class));
         verify(fullDiscoveryService).discover(any(), eq(true), any());
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
@@ -197,7 +197,7 @@ public class DiscoveryJobServiceImplTest {
 
         Artist artist = artist("artist1");
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist));
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(3);
@@ -238,7 +238,7 @@ public class DiscoveryJobServiceImplTest {
 
         Album album = album("album1");
         when(albumRepository.findById("album1")).thenReturn(Optional.of(album));
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(3);
@@ -280,7 +280,7 @@ public class DiscoveryJobServiceImplTest {
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         when(discoveryTaskRepository.countByJobId(any())).thenReturn(2L);
         when(discoveryTaskRepository.countByJobIdAndStatus(any(), any())).thenReturn(1L);
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(logService.warn(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
 
@@ -312,7 +312,7 @@ public class DiscoveryJobServiceImplTest {
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         when(discoveryTaskRepository.countByJobId(any())).thenReturn(2L);
         when(discoveryTaskRepository.countByJobIdAndStatus(any(), any())).thenReturn(0L);
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
 
@@ -364,7 +364,7 @@ public class DiscoveryJobServiceImplTest {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         doThrow(new RuntimeException()).when(artistDiscoveryService).discover(any(), any(), eq(true), any());
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(logService.error(any(), any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discoveryJobArtist().setStatus(STARTED)));
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
@@ -377,7 +377,7 @@ public class DiscoveryJobServiceImplTest {
 
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
-        verify(logService, times(2)).info(any(), any(), any());
+        verify(logService, times(2)).info(any(), any(), any(Object[].class));
         verify(logService).error(any(), any(), any(), any());
 
         DiscoveryJob discoveryJobFailed = savedDiscoveryJob.getValue();
@@ -399,7 +399,7 @@ public class DiscoveryJobServiceImplTest {
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         doThrow(new RuntimeException(new DiscoveryInterruptedException()))
                 .when(artistDiscoveryService).discover(any(), any(), eq(true), any());
-        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(logService.warn(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discoveryJobArtist().setStatus(STARTED)));
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());

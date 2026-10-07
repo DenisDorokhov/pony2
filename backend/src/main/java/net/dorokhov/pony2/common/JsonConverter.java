@@ -25,6 +25,14 @@ public final class JsonConverter {
             throw new RuntimeException(e);
         }
     }
+
+    public static String toPrettyJson(Object object) {
+        try {
+            return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+        } catch (JacksonException e) {
+            throw new RuntimeException(e);
+        }
+    }
     
     public static Object fromJson(String json) {
         try {

@@ -118,6 +118,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(cache).hasSize(1);
         Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
         Map<?, ?> request = (Map<?, ?>) entry.get("request");
+        assertThat(request).hasSize(3);
         assertThat(request.get("systemPrompt")).isEqualTo(prompts.getFirst().getInstructions().getFirst().getText());
         assertThat(request.get("userPrompt")).isEqualTo(prompts.getFirst().getInstructions().get(1).getText());
         assertThat(request.get("albumTitles")).isEqualTo(List.of("Album"));
@@ -306,7 +307,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(artist.getId())).isEmpty();
 
-        verify(logService).info(any(), contains("no album title"), eq("Artist"), eq(artist.getId()));
+        verify(logService).info(any(), contains("no album title"), eq(artist.getId()), eq(artist.getName()));
         verify(model, never()).call(any(Prompt.class));
         verifyNoInteractions(cacheService);
     }
@@ -317,7 +318,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(artist.getId())).isEmpty();
 
-        verify(logService).info(any(), contains("artist name is unknown"), eq(artist.getId()));
+        verify(logService).info(any(), contains("artist name is unknown"), eq(artist.getId()), eq(artist.getName()));
         verify(model, never()).call(any(Prompt.class));
         verifyNoInteractions(cacheService);
     }

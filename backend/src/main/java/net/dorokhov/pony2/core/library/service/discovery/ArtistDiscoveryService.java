@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Artist;
@@ -78,8 +79,8 @@ public class ArtistDiscoveryService {
                 DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 new DiscoveryTask.ArtistParameter(artist.getId()),
                 (context, parameter) -> spotifyArtistDataService.discover(parameter.artistId(), cacheEnabled).orElse(null),
-                error -> logService.error(logger, "Could not discover Spotify data for artist '{}' ({}).",
-                        artist.getName(), artist.getId(), error)
+                error -> logService.error(logger, "Could not discover Spotify data for artist '{} -> {}'.",
+                        artist.getId(), artist.getName(), error)
         );
     }
 
@@ -90,15 +91,28 @@ public class ArtistDiscoveryService {
             BiFunction<ArtistDiscovery, P, R> action,
             Consumer<RuntimeException> errorHandler
     ) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
         DiscoveryTask task = startTask(discovery, type, parameter);
+        Artist artist = discovery.getArtist();
+        logger.debug("Started discovery task '{}' of type {} for artist '{} -> {}' in job '{}'.",
+                task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId());
         try {
             R result = action.apply(discovery, parameter);
             saveResult(task, DiscoveryTask.Status.COMPLETE, JsonConverter.toJson(result));
+            logger.debug("Completed discovery task '{}' of type {} for artist '{} -> {}' in job '{}' after {} ms.",
+                    task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId(),
+                    stopwatch.elapsed().toMillis());
             return new TaskResult<>(DiscoveryTask.Status.COMPLETE, result);
         } catch (DiscoveryInterruptedException e) {
+            logger.info("Interrupted execution of discovery task '{}' of type {} for artist '{} -> {}' in job '{}' after {} ms.",
+                    task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId(),
+                    stopwatch.elapsed().toMillis());
             throw e;
         } catch (RuntimeException e) {
             saveResult(task, DiscoveryTask.Status.FAILED, JsonConverter.toJson(new DiscoveryTask.ErrorResult(Throwables.getStackTraceAsString(e))));
+            logger.warn("Failed discovery task '{}' of type {} for artist '{} -> {}' in job '{}' after {} ms.",
+                    task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId(),
+                    stopwatch.elapsed().toMillis());
             errorHandler.accept(e);
             return new TaskResult<>(DiscoveryTask.Status.FAILED, null);
         }

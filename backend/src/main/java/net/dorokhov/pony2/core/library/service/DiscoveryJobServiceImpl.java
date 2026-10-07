@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
@@ -171,7 +172,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         }
 
         String jobDescription = discoveryJobDescription(discoveryType, parameter);
-        Optional<LogMessage> logStarting = logService.info(logger, "Starting discovery job {}...", jobDescription);
+        Optional<LogMessage> logStarting = logService.info(logger, "Starting discovery job {}... Cache enabled: {}.", jobDescription, cacheEnabled);
         DiscoveryJob discoveryJob = discoveryJobRepository.save(new DiscoveryJob()
                 .setType(discoveryType)
                 .setStatus(STARTING)
@@ -183,16 +184,18 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             public void afterCommit() {
                 onDiscoveryJobStatusChange(discoveryJob);
                 discoveryJobExecutor.execute(() -> {
+                    Stopwatch stopwatch = Stopwatch.createStarted();
                     DiscoveryJob currentDiscoveryJob = discoveryJob;
                     try {
                         currentDiscoveryJob = changeDiscoveryJobStatusInTransaction(() -> {
-                            Optional<LogMessage> logStarted = logService.info(logger, "Started discovery job {}.", jobDescription);
+                            Optional<LogMessage> logStarted = logService.info(logger, "Started discovery job '{}' ({}). Cache enabled: {}.",
+                                    discoveryJob.getId(), jobDescription, cacheEnabled);
                             return discoveryJobRepository.save(discoveryJob
                                     .setStatus(STARTED)
                                     .setLogMessage(logStarted.orElse(null)));
                         });
                         doDiscoveryJob(currentDiscoveryJob, cacheEnabled);
-                        completeDiscoveryJob(currentDiscoveryJob);
+                        completeDiscoveryJob(currentDiscoveryJob, stopwatch);
                     } catch (Exception e) {
                         DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
                         boolean interrupted = Throwables.getCausalChain(e).stream()
@@ -249,7 +252,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         }
     }
 
-    private void completeDiscoveryJob(DiscoveryJob discoveryJob) {
+    private void completeDiscoveryJob(DiscoveryJob discoveryJob, Stopwatch stopwatch) {
 
         long totalTasks = discoveryTaskRepository.countByJobId(discoveryJob.getId());
         long completedTasks = discoveryTaskRepository.countByJobIdAndStatus(discoveryJob.getId(), DiscoveryTask.Status.COMPLETE);
@@ -279,7 +282,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             return discoveryJobRepository.save(discoveryJob
                     .setStatus(status)
                     .setDiscoveryResult(discoveryResult)
-                    .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks).orElse(null)));
+                    .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks,
+                            stopwatch.elapsed().toMillis()).orElse(null)));
         });
     }
 
@@ -287,13 +291,16 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             DiscoveryJob discoveryJob,
             DiscoveryJob.Status status,
             long completedTasks,
-            long failedTasks
+            long failedTasks,
+            long durationMillis
     ) {
         String resultDescription = String.format(
-                "%s. Completed tasks: %s, failed tasks: %s",
+                "Job '%s' (%s). Completed tasks: %s, failed tasks: %s, duration: %s ms",
+                discoveryJob.getId(),
                 discoveryJobDescription(discoveryJob.getType(), discoveryJob.getParameter()),
                 completedTasks,
-                failedTasks
+                failedTasks,
+                durationMillis
         );
         return switch (status) {
             case COMPLETE -> logService.info(logger, "Discovery job complete: {}.", resultDescription);
