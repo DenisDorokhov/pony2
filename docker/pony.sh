@@ -12,4 +12,4 @@ chown -R "$PONY_UID:$PONY_GID" /home/pony/.pony2 2>/dev/null || true
 
 exec setpriv --reuid "$PONY_UID" --regid "$PONY_GID" --clear-groups \
   env HOME=/home/pony LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ="$PONY_TIMEZONE" \
-  java -Duser.home=/home/pony -jar /home/pony/pony.jar
+  java --enable-native-access=ALL-UNNAMED --add-modules=jdk.incubator.vector -Duser.home=/home/pony -jar /home/pony/pony.jar
