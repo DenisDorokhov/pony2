@@ -10,6 +10,7 @@ import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.FullDiscoveryService;
+import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -362,6 +363,41 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
+    public void shouldInterruptDiscoveryJobOnInterruption() throws ConcurrentDiscoveryException {
+
+        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
+        doThrow(new RuntimeException(new DiscoveryInterruptedException()))
+                .when(artistDiscoveryService).discover(any(), any(), any());
+        when(logService.info(any(), any(), any())).thenReturn(logMessage());
+        when(logService.warn(any(), any(), any())).thenReturn(logMessage());
+        when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discoveryJobArtist().setStatus(STARTED)));
+        when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
+
+        DiscoveryJobServiceObserver observer = new DiscoveryJobServiceObserver();
+        discoveryJobService.addObserver(observer);
+
+        discoveryJobService.startArtistJob("artist1");
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+
+        ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
+        verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
+        verify(logService).warn(any(), eq("Discovery job has been interrupted."), any());
+        verify(logService, never()).error(any(), any(), any());
+
+        DiscoveryJob discoveryJobInterrupted = savedDiscoveryJob.getValue();
+        assertThat(discoveryJobInterrupted.getStatus()).isSameAs(INTERRUPTED);
+        assertThat(discoveryJobInterrupted.getLogMessage()).isNotNull();
+        assertThat(discoveryJobInterrupted.getDiscoveryResult()).isNull();
+        assertThat(discoveryJobService.getCurrentDiscoveryJobProgress()).isEmpty();
+
+        assertThat(observer.getCallCount()).isEqualTo(4);
+        observer.assertThatStartingAt(0);
+        observer.assertThatStartedAt(1);
+        observer.assertThatInterruptingAt(2);
+        observer.assertThatInterruptedAt(3);
+    }
+
+    @Test
     public void shouldIgnoreExceptionsThrownByObservers() throws ConcurrentDiscoveryException {
 
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
@@ -486,6 +522,16 @@ public class DiscoveryJobServiceImplTest {
         public void assertThatFailedAt(int index) {
             assertThat(calls).element(index).satisfies(call ->
                     assertThat(call.getType()).isSameAs(Call.Type.FAILED));
+        }
+
+        public void assertThatInterruptingAt(int index) {
+            assertThat(calls).element(index).satisfies(call ->
+                    assertThat(call.getType()).isSameAs(Call.Type.INTERRUPTING));
+        }
+
+        public void assertThatInterruptedAt(int index) {
+            assertThat(calls).element(index).satisfies(call ->
+                    assertThat(call.getType()).isSameAs(Call.Type.INTERRUPTED));
         }
 
         @Override

@@ -55,6 +55,15 @@ public class JsonConverterTest {
     }
 
     @Test
+    public void shouldDeserializeRequestedRecordType() {
+        NamedValue result = JsonConverter.fromJson("{\"name\":\"Foobar\"}", NamedValue.class);
+
+        assertThat(result).isEqualTo(new NamedValue("Foobar"));
+    }
+
+    public record NamedValue(String name) {}
+
+    @Test
     public void shouldConvertListFromJson() {
 
         List<String> result = JsonConverter.listFromJson("[\"foo\",\"bar\"]", String.class);

@@ -14,6 +14,10 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         STARTED, COMPLETE, FAILED, INTERRUPTED
     }
 
+    public record ArtistArgument(String artistId) {}
+
+    public record ErrorResult(String error) {}
+
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     @NotNull

@@ -88,7 +88,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     private DiscoveryTask saveDiscoveryTask(DiscoveryJob job) {
         return discoveryTaskRepository.save(new DiscoveryTask()
                 .setJob(job)
-                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATE)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(DiscoveryTask.Status.COMPLETE)
                 .setArgument("{}")
                 .setResult("{}"));

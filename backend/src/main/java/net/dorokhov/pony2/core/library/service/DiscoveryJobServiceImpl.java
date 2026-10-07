@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service;
 
+import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
@@ -10,6 +11,7 @@ import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.FullDiscoveryService;
+import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -175,14 +177,28 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                         completeDiscoveryJob(currentDiscoveryJob);
                     } catch (Exception e) {
                         DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
-                        notifyObservers(observer -> observer.onDiscoveryJobFailing(failedDiscoveryJob));
+                        boolean interrupted = Throwables.getCausalChain(e).stream()
+                                .anyMatch(t -> t instanceof DiscoveryInterruptedException);
+                        if (interrupted) {
+                            notifyObservers(observer -> observer.onDiscoveryJobInterrupting(failedDiscoveryJob));
+                        } else {
+                            notifyObservers(observer -> observer.onDiscoveryJobFailing(failedDiscoveryJob));
+                        }
                         changeDiscoveryJobStatusInTransaction(() -> {
-                            Optional<LogMessage> logFailed = logService.error(logger,
-                                    "Unexpected error occurred when performing discovery job " + jobDescription + ".", e);
-                            return discoveryJobRepository.save(
-                                    discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
-                                            .setStatus(FAILED)
-                                            .setLogMessage(logFailed.orElse(null)));
+                            if (interrupted) {
+                                Optional<LogMessage> logMessage = logService.warn(logger, "Discovery job has been interrupted.", e);
+                                return discoveryJobRepository.save(
+                                        discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
+                                                .setStatus(INTERRUPTED)
+                                                .setLogMessage(logMessage.orElse(null)));
+                            } else {
+                                Optional<LogMessage> logMessage = logService.error(logger,
+                                        "Unexpected error occurred when performing discovery job " + jobDescription + ".", e);
+                                return discoveryJobRepository.save(
+                                        discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
+                                                .setStatus(FAILED)
+                                                .setLogMessage(logMessage.orElse(null)));
+                            }
                         });
                     } finally {
                         discoveryJobProgressReference.set(null);

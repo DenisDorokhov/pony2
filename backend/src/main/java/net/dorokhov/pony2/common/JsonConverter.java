@@ -34,9 +34,9 @@ public final class JsonConverter {
         }
     }
     
-    public static <T> T fromJson(String json, Class<T> ignoredClazz) {
+    public static <T> T fromJson(String json, Class<T> clazz) {
         try {
-            return MAPPER.readValue(json, new TypeReference<>() {});
+            return MAPPER.readValue(json, clazz);
         } catch (JacksonException e) {
             throw new RuntimeException(e);
         }

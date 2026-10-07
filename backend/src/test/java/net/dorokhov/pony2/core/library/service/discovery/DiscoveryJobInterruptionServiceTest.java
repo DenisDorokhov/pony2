@@ -2,9 +2,11 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
+import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +29,8 @@ public class DiscoveryJobInterruptionServiceTest {
     @Mock
     private DiscoveryJobRepository discoveryJobRepository;
     @Mock
+    private DiscoveryTaskRepository discoveryTaskRepository;
+    @Mock
     private LogService logService;
 
     @Test
@@ -45,6 +49,30 @@ public class DiscoveryJobInterruptionServiceTest {
                 .isSameAs(DiscoveryJob.Status.INTERRUPTED));
 
         verify(logService).warn(any(), any(), any());
+    }
+
+    @Test
+    public void shouldMarkCurrentTasksAsInterrupted() {
+
+        DiscoveryTask task = new DiscoveryTask().setStatus(DiscoveryTask.Status.STARTED);
+        when(discoveryTaskRepository.findByStatus(DiscoveryTask.Status.STARTED)).thenReturn(List.of(task));
+
+        discoveryJobInterruptionService.markCurrentJobsAsInterrupted();
+
+        verify(discoveryTaskRepository).save(task);
+        assertThat(task.getStatus()).isSameAs(DiscoveryTask.Status.INTERRUPTED);
+        assertThat(task.getResult()).isNull();
+        verify(logService).warn(any(), eq("Interrupted {} discovery task(s)."), eq(1));
+    }
+
+    @Test
+    public void shouldNotLogWhenNothingWasInterrupted() {
+
+        discoveryJobInterruptionService.markCurrentJobsAsInterrupted();
+
+        verify(discoveryJobRepository, never()).save(any());
+        verify(discoveryTaskRepository, never()).save(any());
+        verifyNoInteractions(logService);
     }
 
     private DiscoveryJob discoveryJob() {
