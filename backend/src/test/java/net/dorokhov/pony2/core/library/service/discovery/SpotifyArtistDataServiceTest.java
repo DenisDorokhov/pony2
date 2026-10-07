@@ -33,6 +33,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
+import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -43,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -262,14 +264,69 @@ class SpotifyArtistDataServiceTest {
     }
 
     @Test
-    void shouldCacheSuccessfulLlmResponseDuringShutdown() {
+    void shouldInterruptWithoutCachingWhenShutdownStartsDuringLlmCall() {
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             shutdownService.onApplicationEvent();
             return new ChatResponse(List.of(new Generation(new AssistantMessage(response))));
         });
 
-        assertThat(service.discover(artist().getId())).contains(found());
-        assertThat(cache).hasSize(1);
+        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(cache).isEmpty();
+        verify(model).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldNotCallLlmWhenShutdownStartsWhileReadingCache() {
+        when(cacheService.get(eq(SPOTIFY), anyString(), eq(1))).thenAnswer(invocation -> {
+            shutdownService.onApplicationEvent();
+            return Optional.empty();
+        });
+
+        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(cache).isEmpty();
+        verify(model, never()).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldNotExecuteToolsWhenShutdownStartsDuringLlmCall() throws IOException {
+        ToolCallback callback = tool("browser_navigate");
+        configuredClient = ChatClient.builder(model).defaultTools(callback).build();
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            shutdownService.onApplicationEvent();
+            return toolCallResponse("browser_navigate");
+        });
+
+        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(cache).isEmpty();
+        verify(model).call(any(Prompt.class));
+        verify(callback, never()).call(anyString(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 3})
+    void shouldStopBeforeNextLlmIterationWhenShutdownStartsInTool(int toolCallsBeforeShutdown) throws IOException {
+        ToolCallback callback = tool("browser_navigate");
+        when(callback.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(callback.call(anyString(), any())).thenAnswer(invocation -> {
+            if (toolCalls.incrementAndGet() == toolCallsBeforeShutdown) {
+                shutdownService.onApplicationEvent();
+            }
+            return "Spotify page loaded";
+        });
+        configuredClient = ChatClient.builder(model).defaultTools(callback).build();
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            modelCalls++;
+            return modelCalls <= toolCallsBeforeShutdown ? toolCallResponse("browser_navigate")
+                    : new ChatResponse(List.of(new Generation(new AssistantMessage(response))));
+        });
+
+        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(cache).isEmpty();
+        verify(model, times(toolCallsBeforeShutdown)).call(any(Prompt.class));
+        verify(callback, times(toolCallsBeforeShutdown)).call(anyString(), any());
     }
 
     @Test
@@ -325,7 +382,8 @@ class SpotifyArtistDataServiceTest {
 
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
         return new SpotifyArtistDataService(client,
-                cacheService, validator, artistRepository, logService, shutdownService, transactionManager(), promptResource);
+                cacheService, validator, artistRepository, logService, shutdownService,
+                new DiscoveryShutdownAdvisor(shutdownService), transactionManager(), promptResource);
     }
 
     private Artist artist() {
@@ -363,6 +421,12 @@ class SpotifyArtistDataServiceTest {
                 new SpotifyArtistData(data.status(), data.artist(), null, null, null, null, null, null),
                 new SpotifyArtistData(data.status(), new SpotifyArtistData.SpotifyArtist("", "Artist", "url"),
                         data.matchedAlbum(), null, null, null, null, null));
+    }
+
+    private ChatResponse toolCallResponse(String name) {
+        return new ChatResponse(List.of(new Generation(AssistantMessage.builder()
+                .toolCalls(List.of(new AssistantMessage.ToolCall("tool-call", "function", name, "{}")))
+                .build())));
     }
 
     private ToolCallback tool(String name) {

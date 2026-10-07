@@ -121,7 +121,7 @@ public class PlaywrightMcpClient {
 
     private String invoke(ToolCallback toolCallback, String input, ToolContext toolContext) {
         String toolName = toolCallback.getToolDefinition().name();
-        logger.debug("Calling proxied Playwright MCP tool '{}'. Input length: {}.", toolName, input.length());
+        logger.debug("Calling proxied Playwright MCP tool '{}': {}.", toolName, input);
         waitBeforeCallIfNeeded(toolName);
         String result = toolContext == null ? toolCallback.call(input) : toolCallback.call(input, toolContext);
         waitAfterCallIfNeeded(toolName);

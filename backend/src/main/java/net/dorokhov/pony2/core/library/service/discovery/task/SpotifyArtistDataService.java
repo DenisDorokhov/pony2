@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery.task;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import com.google.common.hash.Hashing;
 import jakarta.annotation.Nullable;
@@ -14,6 +15,7 @@ import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
+import net.dorokhov.pony2.core.library.service.discovery.DiscoveryShutdownAdvisor;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,7 @@ public class SpotifyArtistDataService {
     private final ArtistRepository artistRepository;
     private final LogService logService;
     private final ShutdownService shutdownService;
+    private final DiscoveryShutdownAdvisor shutdownAdvisor;
     private final TransactionTemplate transactionTemplate;
 
     private final String systemPrompt;
@@ -64,6 +67,7 @@ public class SpotifyArtistDataService {
             ArtistRepository artistRepository,
             LogService logService,
             ShutdownService shutdownService,
+            DiscoveryShutdownAdvisor shutdownAdvisor,
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource
     ) throws IOException {
@@ -73,6 +77,7 @@ public class SpotifyArtistDataService {
         this.artistRepository = artistRepository;
         this.logService = logService;
         this.shutdownService = shutdownService;
+        this.shutdownAdvisor = shutdownAdvisor;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         systemPrompt = promptResource.getContentAsString(UTF_8) + "\n"
                 + new BeanOutputConverter<>(SpotifyArtistData.class).getFormat();
@@ -103,10 +108,11 @@ public class SpotifyArtistDataService {
                 return Optional.of(result);
             }
         }
-        logger.debug("Requesting Spotify data from LLM for artist '{} -> {}'. Album count: {}.",
-                artist.getId(), artist.getName(), request.albumTitles().size());
+        logger.debug("Requesting Spotify data from LLM for artist '{} -> {}'.\n\n{}\n\n",
+                artist.getId(), artist.getName(), request);
         Stopwatch stopwatch = Stopwatch.createStarted();
         String response = chatClient.prompt()
+                .advisors(shutdownAdvisor)
                 .messages(new SystemMessage(request.systemPrompt()), new UserMessage(request.userPrompt()))
                 .call()
                 .content();
@@ -190,7 +196,16 @@ public class SpotifyArtistDataService {
             String systemPrompt,
             String userPrompt,
             List<String> albumTitles
-    ) {}
+    ) {
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("systemPrompt", systemPrompt)
+                    .add("userPrompt", userPrompt)
+                    .add("albumTitles", albumTitles)
+                    .toString();
+        }
+    }
 
     private record CacheEntry(
             Request request,

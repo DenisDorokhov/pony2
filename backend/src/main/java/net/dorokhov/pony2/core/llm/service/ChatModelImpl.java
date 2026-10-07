@@ -13,6 +13,8 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 @Component
 public class ChatModelImpl implements ChatModel {
 
@@ -51,7 +53,8 @@ public class ChatModelImpl implements ChatModel {
         }
         OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder()
                 .baseUrl(configSet.llmUrl())
-                .model(configSet.llmModel());
+                .model(configSet.llmModel())
+                .timeout(Duration.ofMinutes(5));
         if (configSet.llmApiKey() != null) {
             builder.apiKey(configSet.llmApiKey());
         } else {
