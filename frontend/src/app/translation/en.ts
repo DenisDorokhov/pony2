@@ -24,6 +24,7 @@ export default {
     toolbar: {
       settingsButton: 'Settings',
       scanningButton: 'Scanning',
+      discoveryButton: 'Discovery',
       logButton: 'Log',
       usersButton: 'Users',
       profileButton: 'Profile',
@@ -58,10 +59,14 @@ export default {
       createQueue: 'Create queue',
       switchQueue: 'Switch queue',
       download: 'Download',
+      discover: 'Discovery',
       selectOrCreatePlaylist: 'Add to playlist',
       addToPlaylist: 'Add to "{name}"',
     },
     artist: {
+      shuffle: 'Shuffle',
+      radio: 'Radio',
+      discover: 'Discovery',
       allArtistsLabel: 'All Artists ({artistCount})',
       allArtistsTitleLabel: 'All Artists',
       updatedArtistsLabel: 'Recently Updated ({artistCount})',

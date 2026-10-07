@@ -19,7 +19,7 @@
   .panel-title {
     border-bottom: 1px solid var(--color-panel-border);
     background-color: var(--color-panel-header-background);
-    padding: 0 15px 0 15px;
+    padding: 0 5px 0 15px;
     line-height: 39px;
     height: 41px;
     display: flex;
@@ -33,7 +33,7 @@
 
     button {
       border: 1px solid var(--color-panel-border);
-      margin-left: 4px;
+      margin-left: 6px;
       vertical-align: 2px;
 
       i {
@@ -49,6 +49,37 @@
       font-size: 20px;
       padding-right: 6px;
       min-width: 250px;
+    }
+
+    .artist-options {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: top;
+      height: 39px;
+      margin: 0;
+
+      button.menu {
+        position: relative;
+        top: -0.5px;
+        border: none;
+        background-color: var(--color-button-background-transparent);
+        margin: 0;
+        padding: 0 0 2px 0;
+
+        i {
+          font-size: 18px;
+          padding-right: 0;
+          color: var(--bs-body-color);
+        }
+      }
+
+      .dropdown-toggle::after {
+        display: none;
+      }
+    }
+
+    button.artist-likes {
+      margin-left: 2px;
     }
 
     .counts {
@@ -67,7 +98,9 @@
     }
 
     .sort-container {
-      vertical-align: top;
+      display: flex;
+      align-self: center;
+      flex-shrink: 0;
     }
   }
 
@@ -82,4 +115,8 @@
     /* Scrolling performance optimization */
     transform: translateZ(0);
   }
+}
+
+.artist-options-menu button i {
+  margin-right: 12px;
 }

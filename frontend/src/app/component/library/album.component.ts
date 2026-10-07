@@ -38,6 +38,8 @@ import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
 import {PlaybackService} from '../../service/playback.service';
 import {NotificationService} from '../../service/notification.service';
+import {AuthenticationService} from '../../service/authentication.service';
+import {UserDto} from '../../domain/user.dto';
 
 interface Disc {
   discNumber: number | undefined;
@@ -79,6 +81,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   private readonly playlistService = inject(PlaylistService);
   private readonly playbackService = inject(PlaybackService);
   private readonly notificationService = inject(NotificationService);
+  private readonly authenticationService = inject(AuthenticationService);
   private readonly modal = inject(NgbModal);
   private readonly rootElement = inject(ElementRef);
 
@@ -131,6 +134,15 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
     this.duration = formatDuration(this.albumSongs.songs.reduce((result: number, song: Song) => result + song.duration, 0), this.translateService);
     this.showNewIndicator = shouldShowNewIndicator(this.albumSongs.album.updateDate, this.installationService.installationStatus) ||
       shouldShowNewIndicator(this.albumSongs.album.creationDate, this.installationService.installationStatus);
+  }
+
+  protected get isAdmin(): boolean {
+    return this.authenticationService.currentUser?.role === UserDto.Role.ADMIN;
+  }
+
+  protected startAlbumDiscovery() {
+    this.subscriptions.push(this.libraryService.startAlbumDiscoveryJob(this.albumSongs.album.id)
+      .subscribe());
   }
 
   download() {

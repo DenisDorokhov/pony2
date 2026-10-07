@@ -9,6 +9,7 @@ import {AuthenticationService} from '../../service/authentication.service';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbDropdownModule, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {LibraryScanService} from '../../service/library-scan.service';
+import {LibraryService} from '../../service/library.service';
 import {Subscription} from 'rxjs';
 import {FastSearchComponent} from './fast-search.component';
 import {ErrorDto} from '../../domain/common.dto';
@@ -28,6 +29,7 @@ import Role = UserDto.Role;
 export class ToolbarComponent implements OnInit, OnDestroy {
 
   private readonly libraryScanService = inject(LibraryScanService);
+  private readonly libraryService = inject(LibraryService);
   private readonly authenticationService = inject(AuthenticationService);
   private readonly playbackService = inject(PlaybackService);
   private readonly themeService = inject(ThemeService);
@@ -99,6 +101,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
   openScanning() {
     this.modal.open(ScanningComponent, {size: 'xl'});
+  }
+
+  protected startFullDiscovery() {
+    this.subscriptions.push(this.libraryService.startFullDiscoveryJob()
+      .subscribe());
   }
 
   openLog() {

@@ -429,6 +429,18 @@ export class LibraryService {
       );
   }
 
+  startFullDiscoveryJob(): Observable<void> {
+    return this.httpClient.post<void>('/api/admin/library/discoveryJobs/full', null);
+  }
+
+  startArtistDiscoveryJob(artistId: string): Observable<void> {
+    return this.httpClient.post<void>(`/api/admin/library/discoveryJobs/artist/${artistId}`, null);
+  }
+
+  startAlbumDiscoveryJob(albumId: string): Observable<void> {
+    return this.httpClient.post<void>(`/api/admin/library/discoveryJobs/album/${albumId}`, null);
+  }
+
   reBuildSearchIndex(): Observable<void> {
     return this.httpClient.post<void>('/api/admin/library/reBuildSearchIndex', null);
   }

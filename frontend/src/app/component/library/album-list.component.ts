@@ -2,8 +2,10 @@ import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angu
 import {Subscription} from 'rxjs';
 import {Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
 import {AlbumSortingOrder, LibraryService} from '../../service/library.service';
-import {PlaybackService} from '../../service/playback.service';
+import {PlaybackMode, PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
+import {UserDto} from '../../domain/user.dto';
+import {AuthenticationService} from '../../service/authentication.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../common/error-indicator.component';
@@ -34,6 +36,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   private readonly playbackService = inject(PlaybackService);
   private readonly playlistService = inject(PlaylistService);
   private readonly translateService = inject(TranslateService);
+  private readonly authenticationService = inject(AuthenticationService);
   private readonly modal = inject(NgbModal);
 
   LoadingState = LoadingState;
@@ -176,6 +179,34 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     const songs = this.collectArtistSongs();
     const index = songs.findIndex(nextSong => nextSong.id === song.id);
     this.playbackService.switchListQueueTail(songs, index);
+  }
+
+  protected get isAdmin(): boolean {
+    return this.authenticationService.currentUser?.role === UserDto.Role.ADMIN;
+  }
+
+  protected startArtistShuffle() {
+    this.playRandomArtistSongAndSwitchMode(PlaybackMode.SHUFFLE);
+  }
+
+  protected startArtistRadio() {
+    this.playRandomArtistSongAndSwitchMode(PlaybackMode.RADIO);
+  }
+
+  private playRandomArtistSongAndSwitchMode(mode: PlaybackMode) {
+    const songs = this.collectArtistSongs();
+    if (songs.length === 0) {
+      return;
+    }
+    const index = Math.floor(Math.random() * songs.length);
+    this.playbackService.mode = PlaybackMode.NORMAL;
+    this.playbackService.switchQueue(songs, index);
+    this.playbackService.mode = mode;
+  }
+
+  protected startArtistDiscovery() {
+    this.subscriptions.push(this.libraryService.startArtistDiscoveryJob(this.artistSongs.artist.id)
+      .subscribe());
   }
 
   openArtistLikes() {

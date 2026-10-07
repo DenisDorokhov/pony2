@@ -86,6 +86,7 @@
       </button>
       <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
         <button ngbDropdownItem (click)="openScanning()"><i class="bi bi-binoculars-fill"></i>{{ 'library.toolbar.scanningButton' | translate }}</button>
+        <button ngbDropdownItem (click)="startFullDiscovery()"><i class="bi bi-stars"></i>{{ 'library.toolbar.discoveryButton' | translate }}</button>
         <button ngbDropdownItem (click)="openLog()"><i class="bi bi-receipt-cutoff"></i>{{ 'library.toolbar.logButton' | translate }}</button>
         <button ngbDropdownItem (click)="openUsers()"><i class="bi bi-people-fill"></i>{{ 'library.toolbar.usersButton' | translate }}</button>
         <button ngbDropdownItem (click)="openSettings()"><i class="bi bi-sliders"></i>{{ 'library.toolbar.settingsButton' | translate }}</button>

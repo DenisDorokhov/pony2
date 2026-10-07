@@ -25,6 +25,9 @@
           <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.album.addToQueue' | translate }}</button>
           <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.album.createQueue' | translate }}</button>
           <button ngbDropdownItem (click)="download()"><i class="bi bi-download"></i>{{ 'library.album.download' | translate }}</button>
+          @if (isAdmin) {
+            <button ngbDropdownItem (click)="startAlbumDiscovery()"><i class="bi bi-stars"></i>{{ 'library.album.discover' | translate }}</button>
+          }
           <li [hidden]="topPlaylists.length < 1"><hr class="dropdown-divider"></li>
           @for (playlist of topPlaylists; track playlist.id) {
             <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.album.addToPlaylist' | translate:{
