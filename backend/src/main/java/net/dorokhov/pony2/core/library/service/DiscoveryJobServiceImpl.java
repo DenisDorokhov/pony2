@@ -193,7 +193,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                                                 .setLogMessage(logMessage.orElse(null)));
                             } else {
                                 Optional<LogMessage> logMessage = logService.error(logger,
-                                        "Unexpected error occurred when performing discovery job " + jobDescription + ".", e);
+                                        "Unexpected error occurred when performing discovery job {}.", jobDescription, e);
                                 return discoveryJobRepository.save(
                                         discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
                                                 .setStatus(FAILED)

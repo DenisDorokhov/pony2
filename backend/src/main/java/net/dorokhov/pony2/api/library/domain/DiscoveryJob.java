@@ -63,8 +63,8 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
         return parameter;
     }
 
-    public DiscoveryJob setParameter(String argument) {
-        this.parameter = argument;
+    public DiscoveryJob setParameter(String parameter) {
+        this.parameter = parameter;
         return this;
     }
 

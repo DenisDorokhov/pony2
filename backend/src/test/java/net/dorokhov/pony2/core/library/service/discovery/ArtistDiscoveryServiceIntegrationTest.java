@@ -18,11 +18,14 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -72,6 +75,11 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(prompt.getInstructions().get(1).getText()).contains("- \"Album\"");
             assertThat(taskRepository.findAll()).singleElement()
                     .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
+            getTransactionTemplate().executeWithoutResult(status -> {
+                ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
+                assertThat(discovery.getTasks()).singleElement()
+                        .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
+            });
             return chatResponse(result);
         });
 
@@ -86,9 +94,38 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
                 assertThat(task.getType()).isEqualTo(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
                 assertThat(task.getJob().getId()).isEqualTo(job.getId());
-                assertThat(task.getArgument()).isEqualTo(JsonConverter.toJson(Map.of("artistId", artist.getId())));
+                assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(Map.of("artistId", artist.getId())));
                 assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
             });
+        });
+    }
+
+    @Test
+    void shouldReadSpotifyArtistIdFromPreviousTask() {
+        Artist artist = saveArtist("Album");
+        ArtistDiscovery discovery = artistDiscoveryRepository.save(new ArtistDiscovery()
+                .setArtist(artist)
+                .setJob(saveJob()));
+        SpotifyArtistData artistData = spotifyArtistData("spotify-artist");
+        List<String> tracks = List.of("track-1", "track-2");
+
+        executeTask(discovery, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+                new DiscoveryTask.ArtistParameter(artist.getId()), (context, parameter) -> artistData);
+        executeTask(discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, "spotify-artist", (context, spotifyArtistId) -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            DiscoveryTask previousTask = context.getTasks().getFirst();
+            assertThat(previousTask.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            SpotifyArtistData previousResult = JsonConverter.fromJson(previousTask.getResult(), SpotifyArtistData.class);
+            assertThat(previousResult.artist().id()).isEqualTo(spotifyArtistId);
+            return tracks;
+        });
+
+        getTransactionTemplate().executeWithoutResult(status -> {
+            ArtistDiscovery persistedDiscovery = artistDiscoveryRepository.findById(discovery.getId()).orElseThrow();
+            assertThat(persistedDiscovery.getTasks()).extracting(DiscoveryTask::getStatus)
+                    .containsOnly(DiscoveryTask.Status.COMPLETE);
+            assertThat(persistedDiscovery.getTasks()).extracting(DiscoveryTask::getResult)
+                    .containsExactlyInAnyOrder(JsonConverter.toJson(artistData), JsonConverter.toJson(tracks));
         });
     }
 
@@ -188,7 +225,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .setJob(job)
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(status)
-                .setArgument("{}")
+                .setParameter("{}")
                 .setResult(result));
     }
 
@@ -206,5 +243,20 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         return jobRepository.save(new DiscoveryJob()
                 .setType(DiscoveryType.ARTIST)
                 .setStatus(DiscoveryJob.Status.STARTED));
+    }
+
+    private <P, R> void executeTask(ArtistDiscovery discovery, DiscoveryTaskType type, P parameter,
+                                  BiFunction<ArtistDiscovery, P, R> action) {
+        Consumer<RuntimeException> errorHandler = error -> {
+            throw error;
+        };
+        ReflectionTestUtils.invokeMethod(service, "executeTask", discovery, type, parameter, action, errorHandler);
+    }
+
+    private SpotifyArtistData spotifyArtistData(String spotifyArtistId) {
+        return new SpotifyArtistData(SpotifyArtistData.Status.FOUND,
+                new SpotifyArtistData.SpotifyArtist(spotifyArtistId, "Artist", "https://open.spotify.com/artist/" + spotifyArtistId),
+                new SpotifyArtistData.MatchedAlbum("Album", "Album", "spotify-album", "https://open.spotify.com/album/spotify-album"),
+                null, null, null, null, null);
     }
 }

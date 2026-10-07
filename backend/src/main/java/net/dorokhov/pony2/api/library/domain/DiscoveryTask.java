@@ -14,7 +14,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         STARTED, COMPLETE, FAILED, INTERRUPTED
     }
 
-    public record ArtistArgument(String artistId) {}
+    public record ArtistParameter(String artistId) {}
 
     public record ErrorResult(String error) {}
 
@@ -28,9 +28,9 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @NotNull
     private DiscoveryTaskType type;
 
-    @Column(name = "argument")
+    @Column(name = "parameter")
     @NotNull
-    private String argument;
+    private String parameter;
 
     @Column(name = "result")
     private String result;
@@ -58,12 +58,12 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    public String getArgument() {
-        return argument;
+    public String getParameter() {
+        return parameter;
     }
 
-    public DiscoveryTask setArgument(String argument) {
-        this.argument = argument;
+    public DiscoveryTask setParameter(String parameter) {
+        this.parameter = parameter;
         return this;
     }
 
@@ -94,7 +94,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
                 .add("updateDate", updateDate)
                 .add("status", status)
                 .add("type", type)
-                .add("argument", argument)
+                .add("parameter", parameter)
                 .add("result", result)
                 .toString();
     }

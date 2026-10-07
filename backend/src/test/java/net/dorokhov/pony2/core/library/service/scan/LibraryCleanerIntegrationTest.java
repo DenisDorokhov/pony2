@@ -90,7 +90,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
                 .setJob(job)
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(DiscoveryTask.Status.COMPLETE)
-                .setArgument("{}")
+                .setParameter("{}")
                 .setResult("{}"));
     }
 }

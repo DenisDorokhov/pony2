@@ -21,8 +21,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
@@ -56,28 +55,63 @@ public class ArtistDiscoveryService {
 
     public void discover(DiscoveryJob discoveryJob, Artist artist, @Nullable Consumer<DiscoveryProgress> observer) {
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, null), observer);
-        DiscoveryTask task = requireNonNull(transactionTemplate.execute(status -> {
-            DiscoveryTask startedTask = discoveryTaskRepository.save(new DiscoveryTask()
-                    .setJob(discoveryJob)
-                    .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
-                    .setStatus(DiscoveryTask.Status.STARTED)
-                    .setArgument(JsonConverter.toJson(new DiscoveryTask.ArtistArgument(artist.getId()))));
-            artistDiscoveryRepository.save(new ArtistDiscovery()
-                    .setArtist(artist)
-                    .setJob(discoveryJob)
-                    .setTasks(List.of(startedTask)));
-            return startedTask;
-        }));
+        ArtistDiscovery discovery = createDiscovery(discoveryJob, artist);
+        discoverSpotifyArtistData(discovery);
+    }
+
+    private ArtistDiscovery createDiscovery(DiscoveryJob discoveryJob, Artist artist) {
+        return requireNonNull(transactionTemplate.execute(status ->
+                artistDiscoveryRepository.save(new ArtistDiscovery()
+                        .setArtist(artist)
+                        .setJob(discoveryJob))));
+    }
+
+    private TaskResult<SpotifyArtistData> discoverSpotifyArtistData(ArtistDiscovery discovery) {
+        Artist artist = discovery.getArtist();
+        return executeTask(
+                discovery,
+                DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+                new DiscoveryTask.ArtistParameter(artist.getId()),
+                (context, parameter) -> spotifyArtistDataService.discover(parameter.artistId()).orElse(null),
+                error -> logService.error(logger, "Could not discover Spotify data for artist '{}' ({}).",
+                        artist.getName(), artist.getId(), error)
+        );
+    }
+
+    private <P, R> TaskResult<R> executeTask(
+            ArtistDiscovery discovery,
+            DiscoveryTaskType type,
+            P parameter,
+            BiFunction<ArtistDiscovery, P, R> action,
+            Consumer<RuntimeException> errorHandler
+    ) {
+        DiscoveryTask task = startTask(discovery, type, parameter);
         try {
-            Optional<SpotifyArtistData> result = spotifyArtistDataService.discover(artist.getId());
-            saveResult(task, DiscoveryTask.Status.COMPLETE, JsonConverter.toJson(result.orElse(null)));
+            R result = action.apply(discovery, parameter);
+            saveResult(task, DiscoveryTask.Status.COMPLETE, JsonConverter.toJson(result));
+            return new TaskResult<>(DiscoveryTask.Status.COMPLETE, result);
         } catch (DiscoveryInterruptedException e) {
             throw e;
         } catch (RuntimeException e) {
             saveResult(task, DiscoveryTask.Status.FAILED, JsonConverter.toJson(new DiscoveryTask.ErrorResult(Throwables.getStackTraceAsString(e))));
-            logService.error(logger, "Could not discover Spotify data for artist '{}' ({}).",
-                    artist.getName(), artist.getId(), e);
+            errorHandler.accept(e);
+            return new TaskResult<>(DiscoveryTask.Status.FAILED, null);
         }
+    }
+
+    private <P> DiscoveryTask startTask(ArtistDiscovery discovery, DiscoveryTaskType type, P parameter) {
+        DiscoveryTask task = requireNonNull(transactionTemplate.execute(status -> {
+            ArtistDiscovery persistedDiscovery = artistDiscoveryRepository.findById(discovery.getId()).orElseThrow();
+            DiscoveryTask startedTask = discoveryTaskRepository.save(new DiscoveryTask()
+                    .setJob(persistedDiscovery.getJob())
+                    .setType(type)
+                    .setStatus(DiscoveryTask.Status.STARTED)
+                    .setParameter(JsonConverter.toJson(parameter)));
+            persistedDiscovery.getTasks().add(startedTask);
+            return startedTask;
+        }));
+        discovery.getTasks().add(task);
+        return task;
     }
 
     private void saveResult(DiscoveryTask task, DiscoveryTask.Status status, String result) {
@@ -96,4 +130,6 @@ public class ArtistDiscoveryService {
             }
         }
     }
+
+    private record TaskResult<R>(DiscoveryTask.Status status, @Nullable R value) {}
 }
