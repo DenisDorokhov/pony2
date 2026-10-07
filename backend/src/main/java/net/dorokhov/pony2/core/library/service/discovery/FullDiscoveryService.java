@@ -46,6 +46,10 @@ public class FullDiscoveryService {
     }
 
     public void discover(DiscoveryJob discoveryJob, @Nullable Consumer<DiscoveryProgress> observer) {
+        discover(discoveryJob, true, observer);
+    }
+
+    public void discover(DiscoveryJob discoveryJob, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
 
         discoverArtists(observer);
 

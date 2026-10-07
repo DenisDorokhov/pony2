@@ -36,6 +36,11 @@ public interface DiscoveryJobService {
     Optional<DiscoveryJob> getById(String id);
 
     DiscoveryJob startFullJob() throws ConcurrentDiscoveryException;
+    DiscoveryJob startFullJob(boolean cacheEnabled) throws ConcurrentDiscoveryException;
+
     DiscoveryJob startArtistJob(String artistId) throws ConcurrentDiscoveryException;
+    DiscoveryJob startArtistJob(String artistId, boolean cacheEnabled) throws ConcurrentDiscoveryException;
+
     DiscoveryJob startAlbumJob(String albumId) throws ConcurrentDiscoveryException;
+    DiscoveryJob startAlbumJob(String albumId, boolean cacheEnabled) throws ConcurrentDiscoveryException;
 }

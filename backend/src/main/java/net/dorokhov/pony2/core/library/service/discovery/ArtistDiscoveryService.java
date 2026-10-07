@@ -13,6 +13,7 @@ import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
+import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +55,13 @@ public class ArtistDiscoveryService {
     }
 
     public void discover(DiscoveryJob discoveryJob, Artist artist, @Nullable Consumer<DiscoveryProgress> observer) {
+        discover(discoveryJob, artist, true, observer);
+    }
+
+    public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, null), observer);
         ArtistDiscovery discovery = createDiscovery(discoveryJob, artist);
-        discoverSpotifyArtistData(discovery);
+        discoverSpotifyArtistData(discovery, cacheEnabled);
     }
 
     private ArtistDiscovery createDiscovery(DiscoveryJob discoveryJob, Artist artist) {
@@ -66,13 +71,13 @@ public class ArtistDiscoveryService {
                         .setJob(discoveryJob))));
     }
 
-    private TaskResult<SpotifyArtistData> discoverSpotifyArtistData(ArtistDiscovery discovery) {
+    private TaskResult<SpotifyArtistData> discoverSpotifyArtistData(ArtistDiscovery discovery, boolean cacheEnabled) {
         Artist artist = discovery.getArtist();
         return executeTask(
                 discovery,
                 DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 new DiscoveryTask.ArtistParameter(artist.getId()),
-                (context, parameter) -> spotifyArtistDataService.discover(parameter.artistId()).orElse(null),
+                (context, parameter) -> spotifyArtistDataService.discover(parameter.artistId(), cacheEnabled).orElse(null),
                 error -> logService.error(logger, "Could not discover Spotify data for artist '{}' ({}).",
                         artist.getName(), artist.getId(), error)
         );

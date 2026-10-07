@@ -5,11 +5,14 @@ import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.*;
+import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -63,8 +66,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         lenient().when(model.getOptions()).thenReturn(ToolCallingChatOptions.builder().build());
     }
 
-    @Test
-    void shouldCommitStartedTaskBeforeLlmAndPersistCompletedResult() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldCommitStartedTaskBeforeLlmAndPersistCompletedResult(boolean cacheEnabled) {
         Artist artist = saveArtist("Album");
         DiscoveryJob job = saveJob();
         List<DiscoveryProgress> progress = new ArrayList<>();
@@ -83,8 +87,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             return chatResponse(result);
         });
 
-        service.discover(job, artist, progress::add);
-        assertThat(cacheRepository.count()).isEqualTo(1);
+        service.discover(job, artist, cacheEnabled, progress::add);
+        assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 1 : 0);
         assertThat(progress).singleElement().satisfies(value -> assertThat(value.getStep())
                 .isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY));
 

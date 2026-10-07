@@ -104,7 +104,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   protected startFullDiscovery() {
-    this.subscriptions.push(this.libraryService.startFullDiscoveryJob()
+    this.subscriptions.push(this.libraryService.startFullDiscoveryJob(false)
       .subscribe());
   }
 

@@ -141,7 +141,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   }
 
   protected startAlbumDiscovery() {
-    this.subscriptions.push(this.libraryService.startAlbumDiscoveryJob(this.albumSongs.album.id)
+    this.subscriptions.push(this.libraryService.startAlbumDiscoveryJob(this.albumSongs.album.id, false)
       .subscribe());
   }
 

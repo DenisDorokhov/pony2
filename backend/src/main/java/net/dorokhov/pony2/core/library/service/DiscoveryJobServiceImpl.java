@@ -131,22 +131,40 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     @Override
     @Transactional
     public DiscoveryJob startFullJob() throws ConcurrentDiscoveryException {
-        return doStartDiscoveryJob(DiscoveryType.FULL, null);
+        return startFullJob(true);
+    }
+
+    @Override
+    @Transactional
+    public DiscoveryJob startFullJob(boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        return doStartDiscoveryJob(DiscoveryType.FULL, null, cacheEnabled);
     }
 
     @Override
     @Transactional
     public DiscoveryJob startArtistJob(String artistId) throws ConcurrentDiscoveryException {
-        return doStartDiscoveryJob(DiscoveryType.ARTIST, artistId);
+        return startArtistJob(artistId, true);
+    }
+
+    @Override
+    @Transactional
+    public DiscoveryJob startArtistJob(String artistId, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        return doStartDiscoveryJob(DiscoveryType.ARTIST, artistId, cacheEnabled);
     }
 
     @Override
     @Transactional
     public DiscoveryJob startAlbumJob(String albumId) throws ConcurrentDiscoveryException {
-        return doStartDiscoveryJob(DiscoveryType.ALBUM, albumId);
+        return startAlbumJob(albumId, true);
     }
 
-    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter) throws ConcurrentDiscoveryException {
+    @Override
+    @Transactional
+    public DiscoveryJob startAlbumJob(String albumId, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        return doStartDiscoveryJob(DiscoveryType.ALBUM, albumId, cacheEnabled);
+    }
+
+    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentDiscoveryException {
 
         if (!discoveryJobSemaphore.tryAcquire()) {
             throw new ConcurrentDiscoveryException();
@@ -173,7 +191,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                                     .setStatus(STARTED)
                                     .setLogMessage(logStarted.orElse(null)));
                         });
-                        doDiscoveryJob(currentDiscoveryJob);
+                        doDiscoveryJob(currentDiscoveryJob, cacheEnabled);
                         completeDiscoveryJob(currentDiscoveryJob);
                     } catch (Exception e) {
                         DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
@@ -211,19 +229,21 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         return discoveryJob;
     }
 
-    private void doDiscoveryJob(DiscoveryJob discoveryJob) {
+    private void doDiscoveryJob(DiscoveryJob discoveryJob, boolean cacheEnabled) {
         Consumer<DiscoveryProgress> progressObserver = discoveryProgress ->
                 onDiscoveryJobProgress(new DiscoveryJobProgress(discoveryJob, discoveryProgress));
         switch (discoveryJob.getType()) {
-            case FULL -> fullDiscoveryService.discover(discoveryJob, progressObserver);
+            case FULL -> fullDiscoveryService.discover(discoveryJob, cacheEnabled, progressObserver);
             case ARTIST -> artistDiscoveryService.discover(
                     discoveryJob,
                     artistRepository.findById(Objects.requireNonNull(discoveryJob.getParameter())).orElseThrow(),
+                    cacheEnabled,
                     progressObserver
             );
             case ALBUM -> albumDiscoveryService.discover(
                     discoveryJob,
                     albumRepository.findById(Objects.requireNonNull(discoveryJob.getParameter())).orElseThrow(),
+                    cacheEnabled,
                     progressObserver
             );
         }

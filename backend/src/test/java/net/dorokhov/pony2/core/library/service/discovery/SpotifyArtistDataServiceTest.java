@@ -11,6 +11,7 @@ import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
+import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,6 +122,39 @@ class SpotifyArtistDataServiceTest {
         assertThat(request.get("userPrompt")).isEqualTo(prompts.getFirst().getInstructions().get(1).getText());
         assertThat(request.get("albumTitles")).isEqualTo(List.of("Album"));
         assertThat(entry.get("response")).isEqualTo(response);
+    }
+
+    @Test
+    void shouldSkipCacheReadsAndWritesWhenDisabled() {
+        Artist artist = artist();
+
+        assertThat(service.discover(artist.getId())).contains(found());
+        Map<String, String> originalCache = Map.copyOf(cache);
+        clearInvocations(cacheService);
+        SpotifyArtistData freshResult = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
+                null, null, null, null, null, null, null);
+        response = JsonConverter.toJson(freshResult);
+
+        assertThat(service.discover(artist.getId(), false)).contains(freshResult);
+        assertThat(service.discover(artist.getId(), false)).contains(freshResult);
+
+        verifyNoInteractions(cacheService);
+        assertThat(modelCalls).isEqualTo(3);
+        assertThat(cache).isEqualTo(originalCache);
+
+        assertThat(service.discover(artist.getId(), true)).contains(found());
+        assertThat(modelCalls).isEqualTo(3);
+    }
+
+    @Test
+    void shouldNotPopulateCacheWhenDisabled() {
+        Artist artist = artist();
+
+        assertThat(service.discover(artist.getId(), false)).contains(found());
+
+        verifyNoInteractions(cacheService);
+        assertThat(cache).isEmpty();
+        assertThat(modelCalls).isOne();
     }
 
     @Test

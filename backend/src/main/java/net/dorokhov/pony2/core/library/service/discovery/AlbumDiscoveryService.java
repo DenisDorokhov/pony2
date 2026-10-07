@@ -18,6 +18,10 @@ public class AlbumDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public void discover(DiscoveryJob discoveryJob, Album album, @Nullable Consumer<DiscoveryProgress> observer) {
+        discover(discoveryJob, album, true, observer);
+    }
+
+    public void discover(DiscoveryJob discoveryJob, Album album, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         notifyProgressObserver(new DiscoveryProgress(ALBUM_DISCOVERY, null), observer);
         try {
             Thread.sleep(10);

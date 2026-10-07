@@ -15,6 +15,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -114,10 +116,10 @@ public class DiscoveryJobServiceImplTest {
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(1);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
             observer.accept(new DiscoveryProgress(FULL_ARTIST_DISCOVERY, null));
             return null;
-        }).when(fullDiscoveryService).discover(any(), any());
+        }).when(fullDiscoveryService).discover(any(), eq(true), any());
 
         DiscoveryJobServiceObserver observer = new DiscoveryJobServiceObserver();
         discoveryJobService.addObserver(observer);
@@ -134,7 +136,7 @@ public class DiscoveryJobServiceImplTest {
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
         verify(logService, times(3)).info(any(), any(), any());
-        verify(fullDiscoveryService).discover(any(), any());
+        verify(fullDiscoveryService).discover(any(), eq(true), any());
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getStatus()).isSameAs(COMPLETE);
@@ -161,6 +163,35 @@ public class DiscoveryJobServiceImplTest {
         assertThat(observer.getCallCount()).isEqualTo(5);
     }
 
+    @ParameterizedTest
+    @CsvSource({"FULL, true", "FULL, false", "ARTIST, true", "ARTIST, false", "ALBUM, true", "ALBUM, false"})
+    public void shouldPassCacheSettingToDiscovery(DiscoveryType type, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
+        Artist artist = artist("artist1");
+        Album album = album("album1");
+
+        switch (type) {
+            case FULL -> discoveryJobService.startFullJob(cacheEnabled);
+            case ARTIST -> {
+                when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist));
+                discoveryJobService.startArtistJob("artist1", cacheEnabled);
+            }
+            case ALBUM -> {
+                when(albumRepository.findById("album1")).thenReturn(Optional.of(album));
+                discoveryJobService.startAlbumJob("album1", cacheEnabled);
+            }
+        }
+        verifyNoInteractions(fullDiscoveryService, artistDiscoveryService, albumDiscoveryService);
+
+        getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+
+        switch (type) {
+            case FULL -> verify(fullDiscoveryService).discover(any(), eq(cacheEnabled), any());
+            case ARTIST -> verify(artistDiscoveryService).discover(any(), same(artist), eq(cacheEnabled), any());
+            case ALBUM -> verify(albumDiscoveryService).discover(any(), same(album), eq(cacheEnabled), any());
+        }
+    }
+
     @Test
     public void shouldExecuteArtistJob() throws ConcurrentDiscoveryException {
 
@@ -169,10 +200,10 @@ public class DiscoveryJobServiceImplTest {
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(3);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, null));
             return null;
-        }).when(artistDiscoveryService).discover(any(), any(), any());
+        }).when(artistDiscoveryService).discover(any(), any(), eq(true), any());
 
         DiscoveryJobServiceObserver observer = new DiscoveryJobServiceObserver();
         discoveryJobService.addObserver(observer);
@@ -182,7 +213,7 @@ public class DiscoveryJobServiceImplTest {
 
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
-        verify(artistDiscoveryService).discover(any(), same(artist), any());
+        verify(artistDiscoveryService).discover(any(), same(artist), eq(true), any());
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getType()).isSameAs(ARTIST);
@@ -210,10 +241,10 @@ public class DiscoveryJobServiceImplTest {
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(3);
             observer.accept(new DiscoveryProgress(ALBUM_DISCOVERY, null));
             return null;
-        }).when(albumDiscoveryService).discover(any(), any(), any());
+        }).when(albumDiscoveryService).discover(any(), any(), eq(true), any());
 
         DiscoveryJobServiceObserver observer = new DiscoveryJobServiceObserver();
         discoveryJobService.addObserver(observer);
@@ -223,7 +254,7 @@ public class DiscoveryJobServiceImplTest {
 
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
-        verify(albumDiscoveryService).discover(any(), same(album), any());
+        verify(albumDiscoveryService).discover(any(), same(album), eq(true), any());
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getType()).isSameAs(ALBUM);
@@ -332,9 +363,9 @@ public class DiscoveryJobServiceImplTest {
     public void shouldFailDiscoveryJobOnUnexpectedException() throws ConcurrentDiscoveryException {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
-        doThrow(new RuntimeException()).when(artistDiscoveryService).discover(any(), any(), any());
+        doThrow(new RuntimeException()).when(artistDiscoveryService).discover(any(), any(), eq(true), any());
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
-        when(logService.error(any(), any(), any())).thenReturn(logMessage());
+        when(logService.error(any(), any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discoveryJobArtist().setStatus(STARTED)));
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
 
@@ -347,7 +378,7 @@ public class DiscoveryJobServiceImplTest {
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
         verify(logService, times(2)).info(any(), any(), any());
-        verify(logService).error(any(), any(), any());
+        verify(logService).error(any(), any(), any(), any());
 
         DiscoveryJob discoveryJobFailed = savedDiscoveryJob.getValue();
         assertThat(discoveryJobFailed.getType()).isSameAs(ARTIST);
@@ -367,7 +398,7 @@ public class DiscoveryJobServiceImplTest {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         doThrow(new RuntimeException(new DiscoveryInterruptedException()))
-                .when(artistDiscoveryService).discover(any(), any(), any());
+                .when(artistDiscoveryService).discover(any(), any(), eq(true), any());
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(logService.warn(any(), any(), any())).thenReturn(logMessage());
         when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discoveryJobArtist().setStatus(STARTED)));

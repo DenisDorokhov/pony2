@@ -101,18 +101,18 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/full")
-    public DiscoveryJobDto startFullDiscoveryJob() throws ConcurrentDiscoveryException {
-        return discoveryFacade.startFullDiscoveryJob();
+    public DiscoveryJobDto startFullDiscoveryJob(@RequestParam(defaultValue = "true") boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        return discoveryFacade.startFullDiscoveryJob(cacheEnabled);
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/artist/{artistId}")
-    public DiscoveryJobDto startArtistDiscoveryJob(@PathVariable String artistId) throws ObjectNotFoundException, ConcurrentDiscoveryException {
-        return discoveryFacade.startArtistDiscoveryJob(artistId);
+    public DiscoveryJobDto startArtistDiscoveryJob(@PathVariable String artistId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+        return discoveryFacade.startArtistDiscoveryJob(artistId, cacheEnabled);
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/album/{albumId}")
-    public DiscoveryJobDto startAlbumDiscoveryJob(@PathVariable String albumId) throws ObjectNotFoundException, ConcurrentDiscoveryException {
-        return discoveryFacade.startAlbumDiscoveryJob(albumId);
+    public DiscoveryJobDto startAlbumDiscoveryJob(@PathVariable String albumId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+        return discoveryFacade.startAlbumDiscoveryJob(albumId, cacheEnabled);
     }
 
     @PostMapping("/api/admin/library/reBuildSearchIndex")

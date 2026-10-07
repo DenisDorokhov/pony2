@@ -68,8 +68,12 @@ public class LibraryDiscoveryAdminControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(DiscoveryType.class)
-    public void shouldStartDiscoveryJob(DiscoveryType type) throws Exception {
+    @CsvSource({
+            "FULL, , true", "ARTIST, , true", "ALBUM, , true",
+            "FULL, true, true", "ARTIST, true, true", "ALBUM, true, true",
+            "FULL, false, false", "ARTIST, false, false", "ALBUM, false, false"
+    })
+    public void shouldStartDiscoveryJob(DiscoveryType type, String cacheEnabledParameter, boolean cacheEnabled) throws Exception {
         DiscoveryJob job = discoveryJob(type)
                 .setId("job1")
                 .setParameter(switch (type) {
@@ -78,9 +82,13 @@ public class LibraryDiscoveryAdminControllerTest {
                     case ALBUM -> "albumId";
                 })
                 .setLogMessage(new LogMessage().setId("log1").setText("Starting discovery."));
-        when(startJob(type)).thenReturn(job);
+        when(startJob(type, cacheEnabled)).thenReturn(job);
 
-        String response = mockMvc.perform(post(startJobPath(type)))
+        var request = post(startJobPath(type));
+        if (cacheEnabledParameter != null) {
+            request.param("cacheEnabled", cacheEnabledParameter);
+        }
+        String response = mockMvc.perform(request)
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         DiscoveryJobDto dto = objectMapper.readValue(response, DiscoveryJobDto.class);
@@ -99,16 +107,16 @@ public class LibraryDiscoveryAdminControllerTest {
         });
 
         switch (type) {
-            case FULL -> verify(discoveryJobService).startFullJob();
-            case ARTIST -> verify(discoveryJobService).startArtistJob("artistId");
-            case ALBUM -> verify(discoveryJobService).startAlbumJob("albumId");
+            case FULL -> verify(discoveryJobService).startFullJob(cacheEnabled);
+            case ARTIST -> verify(discoveryJobService).startArtistJob("artistId", cacheEnabled);
+            case ALBUM -> verify(discoveryJobService).startAlbumJob("albumId", cacheEnabled);
         }
     }
 
     @ParameterizedTest
     @EnumSource(DiscoveryType.class)
     public void shouldRejectConcurrentDiscoveryJob(DiscoveryType type) throws Exception {
-        when(startJob(type)).thenThrow(new ConcurrentDiscoveryException());
+        when(startJob(type, true)).thenThrow(new ConcurrentDiscoveryException());
 
         String response = mockMvc.perform(post(startJobPath(type)))
                 .andExpect(status().isBadRequest())
@@ -301,16 +309,16 @@ public class LibraryDiscoveryAdminControllerTest {
         });
     }
 
-    private DiscoveryJob startJob(DiscoveryType type) throws ConcurrentDiscoveryException {
+    private DiscoveryJob startJob(DiscoveryType type, boolean cacheEnabled) throws ConcurrentDiscoveryException {
         return switch (type) {
-            case FULL -> discoveryJobService.startFullJob();
+            case FULL -> discoveryJobService.startFullJob(cacheEnabled);
             case ARTIST -> {
                 when(libraryService.getArtistById("artistId")).thenReturn(Optional.of(new Artist().setId("artistId")));
-                yield discoveryJobService.startArtistJob("artistId");
+                yield discoveryJobService.startArtistJob("artistId", cacheEnabled);
             }
             case ALBUM -> {
                 when(libraryService.getAlbumById("albumId")).thenReturn(Optional.of(new Album().setId("albumId")));
-                yield discoveryJobService.startAlbumJob("albumId");
+                yield discoveryJobService.startAlbumJob("albumId", cacheEnabled);
             }
         };
     }

@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service.discovery;
+package net.dorokhov.pony2.core.library.service.discovery.task;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.hash.Hashing;
@@ -76,6 +76,10 @@ public class SpotifyArtistDataService {
     }
 
     public Optional<SpotifyArtistData> discover(String artistId) {
+        return discover(artistId, true);
+    }
+
+    public Optional<SpotifyArtistData> discover(String artistId, boolean cacheEnabled) {
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }
@@ -85,10 +89,12 @@ public class SpotifyArtistDataService {
             return Optional.empty();
         }
         String key = "SPOTIFY_ARTIST_DATA:" + Hashing.sha256().hashString(JsonConverter.toJson(request), UTF_8);
-        Optional<String> cached = cacheService.get(SPOTIFY, key, CACHE_VERSION);
-        if (cached.isPresent()) {
-            CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
-            return Optional.of(JsonConverter.fromJson(entry.response(), SpotifyArtistData.class));
+        if (cacheEnabled) {
+            Optional<String> cached = cacheService.get(SPOTIFY, key, CACHE_VERSION);
+            if (cached.isPresent()) {
+                CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
+                return Optional.of(JsonConverter.fromJson(entry.response(), SpotifyArtistData.class));
+            }
         }
         String response = chatClient.prompt()
                 .messages(new SystemMessage(request.systemPrompt()), new UserMessage(request.userPrompt()))
@@ -96,7 +102,9 @@ public class SpotifyArtistDataService {
                 .content();
         SpotifyArtistData result = JsonConverter.fromJson(response, SpotifyArtistData.class);
         checkState(isValidResponse(result, request), "The LLM returned an invalid Spotify response.");
-        cacheService.put(SPOTIFY, key, CACHE_VERSION, JsonConverter.toJson(new CacheEntry(request, response)));
+        if (cacheEnabled) {
+            cacheService.put(SPOTIFY, key, CACHE_VERSION, JsonConverter.toJson(new CacheEntry(request, response)));
+        }
         return Optional.of(result);
     }
 

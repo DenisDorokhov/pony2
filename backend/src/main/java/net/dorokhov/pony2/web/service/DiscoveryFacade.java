@@ -63,25 +63,25 @@ public class DiscoveryFacade {
     }
 
     @Transactional
-    public DiscoveryJobDto startFullDiscoveryJob() throws ConcurrentDiscoveryException {
-        return DiscoveryJobDto.of(discoveryJobService.startFullJob());
+    public DiscoveryJobDto startFullDiscoveryJob(boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        return DiscoveryJobDto.of(discoveryJobService.startFullJob(cacheEnabled));
     }
 
     @Transactional
-    public DiscoveryJobDto startArtistDiscoveryJob(String artistId) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+    public DiscoveryJobDto startArtistDiscoveryJob(String artistId, boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
         Artist artist = libraryService.getArtistById(artistId).orElse(null);
         if (artist == null) {
             throw new ObjectNotFoundException(Artist.class, artistId);
         }
-        return DiscoveryJobDto.of(discoveryJobService.startArtistJob(artistId));
+        return DiscoveryJobDto.of(discoveryJobService.startArtistJob(artistId, cacheEnabled));
     }
 
     @Transactional
-    public DiscoveryJobDto startAlbumDiscoveryJob(String albumId) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+    public DiscoveryJobDto startAlbumDiscoveryJob(String albumId, boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
         Album album = libraryService.getAlbumById(albumId).orElse(null);
         if (album == null) {
             throw new ObjectNotFoundException(Album.class, albumId);
         }
-        return DiscoveryJobDto.of(discoveryJobService.startAlbumJob(albumId));
+        return DiscoveryJobDto.of(discoveryJobService.startAlbumJob(albumId, cacheEnabled));
     }
 }
