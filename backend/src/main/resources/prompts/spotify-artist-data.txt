@@ -13,28 +13,37 @@ release to establish the match. Copy inputTitle exactly from the supplied list a
 title exactly from Spotify. Use years, when provided, to help distinguish artists.
 If no matching artist can be established after searching, return NOT_FOUND. If
 multiple artists satisfy the evidence and cannot be distinguished, return AMBIGUOUS.
-For either status, return null for every other field. A login wall, browser error,
-or blocked page is a technical failure: report the failure instead of NOT_FOUND.
+For NOT_FOUND or AMBIGUOUS, omit every field except status. A login wall, browser
+error, or blocked page is a technical failure: report the failure instead of NOT_FOUND.
 
 For FOUND, collect:
 - artist: Spotify ID, displayed name, and artist page URL observed in the browser.
 - matchedAlbum: supplied inputTitle, Spotify album title, ID and album page URL.
-- topTracks: tracks from the artist page's Popular section in displayed order.
-  Open each track's Spotify page to collect its actual album title, album ID and
-  album URL, as well as the track ID, title and URL. Do not infer album membership.
-- similarArtists: IDs, displayed names and URLs from Spotify's Fans also like or
-  similar artists section. Do not generate your own recommendations.
+- topTracks: up to 10 tracks from the artist page's Popular section in displayed
+  order. Click "Show more" if needed to reveal all 10 tracks. Open each track's
+  Spotify page to collect its actual album title, album ID and album URL, as well
+  as the track ID, title and URL. Do not infer album membership.
+- similarArtists: IDs, displayed names and URLs from Spotify's Fans also like
+  section. Click "See all" if available to open the full list of related artists.
+  Collect all artists from that list, scrolling if necessary. Do not generate
+  your own recommendations.
 - biography: the complete text of the artist's Spotify About biography, preserving
   its original language and wording. Do not summarize, translate or invent it.
 - links: external website and social links shown in the artist's About section,
-  each with its displayed title and actual destination URL.
-- imageUrl: the artist's main image URL read from the browser DOM, not album artwork.
+  each with its displayed title and actual destination URL. Open the expanded About
+  view and inspect its links, including content rendered in dialogs or overlays
+  outside the main page element. Do not invent URLs or return an empty list without
+  inspecting the About section. Do not visit external websites.
+- imageUrl: the URL of the first image in the artist's About photo gallery with
+  dimensions of at least 400×300 pixels. Check dimensions using img.naturalWidth and
+  img.naturalHeight. Do not analyze image contents or search for alternatives. If no
+  image qualifies, omit this field.
 
 Read Spotify IDs from links or page data observed in the browser. Copy the actual
 artist, album and track page URLs. Do not construct URLs or assume a fixed URL path,
 domain, or ID format. Preserve locale segments and query parameters when present.
-Use null for an unavailable optional section or field. Use an empty list only when
-the section was inspected and contains no items. Do not include placeholder items,
-duplicate IDs, or the selected artist in similarArtists. If a section is blocked or
-fails to load, report the technical failure rather than silently treating it as absent.
-Return only the JSON object matching the supplied schema, without Markdown fences.
+Omit unavailable optional fields. Use an empty list only when the section was
+inspected and contains no items. Do not include placeholder items, duplicate IDs, or
+the selected artist in similarArtists. If a section is blocked or fails to load,
+report the technical failure rather than silently treating it as absent. Return only
+the JSON object matching the supplied schema, with no additional text.

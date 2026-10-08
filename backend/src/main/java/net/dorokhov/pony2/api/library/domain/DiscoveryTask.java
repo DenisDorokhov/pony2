@@ -35,6 +35,12 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @Column(name = "result")
     private String result;
 
+    @Column(name = "raw_request")
+    private String rawRequest;
+
+    @Column(name = "raw_result")
+    private String rawResult;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "discovery_job_id", nullable = false)
     @NotNull
@@ -74,6 +80,26 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
 
     public DiscoveryTask setResult(@Nullable String result) {
         this.result = result;
+        return this;
+    }
+
+    @Nullable
+    public String getRawRequest() {
+        return rawRequest;
+    }
+
+    public DiscoveryTask setRawRequest(@Nullable String rawRequest) {
+        this.rawRequest = rawRequest;
+        return this;
+    }
+
+    @Nullable
+    public String getRawResult() {
+        return rawResult;
+    }
+
+    public DiscoveryTask setRawResult(@Nullable String rawResult) {
+        this.rawResult = rawResult;
         return this;
     }
 

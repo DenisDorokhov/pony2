@@ -62,6 +62,8 @@ CREATE TABLE discovery_task (
   type VARCHAR (255) NOT NULL,
   parameter LONGVARCHAR NOT NULL,
   result LONGVARCHAR,
+  raw_request LONGVARCHAR,
+  raw_result LONGVARCHAR,
 
   discovery_job_id CHAR(36) NOT NULL,
 

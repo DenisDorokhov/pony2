@@ -21,8 +21,7 @@ public final class InstallationCommandDto {
     private String installationSecret;
 
     @NotNull
-    @Valid
-    private List<LibraryFolderDto> libraryFolders = new ArrayList<>();
+    private List<@Valid LibraryFolderDto> libraryFolders = new ArrayList<>();
 
     @NotBlank
     @Size(max = 255)

@@ -23,8 +23,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_DISCOVERY;
@@ -55,10 +55,6 @@ public class ArtistDiscoveryService {
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
-    public void discover(DiscoveryJob discoveryJob, Artist artist, @Nullable Consumer<DiscoveryProgress> observer) {
-        discover(discoveryJob, artist, true, observer);
-    }
-
     public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, null), observer);
         ArtistDiscovery discovery = createDiscovery(discoveryJob, artist);
@@ -78,7 +74,7 @@ public class ArtistDiscoveryService {
                 discovery,
                 DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 new DiscoveryTask.ArtistParameter(artist.getId()),
-                (context, parameter) -> spotifyArtistDataService.discover(parameter.artistId(), cacheEnabled).orElse(null),
+                task -> spotifyArtistDataService.discover(task, cacheEnabled).orElse(null),
                 error -> logService.error(logger, "Could not discover Spotify data for artist '{} -> {}'.",
                         artist.getId(), artist.getName(), error)
         );
@@ -88,7 +84,7 @@ public class ArtistDiscoveryService {
             ArtistDiscovery discovery,
             DiscoveryTaskType type,
             P parameter,
-            BiFunction<ArtistDiscovery, P, R> action,
+            Function<DiscoveryTask, R> action,
             Consumer<RuntimeException> errorHandler
     ) {
         Stopwatch stopwatch = Stopwatch.createStarted();
@@ -97,7 +93,7 @@ public class ArtistDiscoveryService {
         logger.debug("Started discovery task '{}' of type {} for artist '{} -> {}' in job '{}'.",
                 task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId());
         try {
-            R result = action.apply(discovery, parameter);
+            R result = action.apply(task);
             saveResult(task, DiscoveryTask.Status.COMPLETE, JsonConverter.toJson(result));
             logger.debug("Completed discovery task '{}' of type {} for artist '{} -> {}' in job '{}' after {} ms.",
                     task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId(),

@@ -125,7 +125,8 @@ public class PlaywrightMcpClient {
         waitBeforeCallIfNeeded(toolName);
         String result = toolContext == null ? toolCallback.call(input) : toolCallback.call(input, toolContext);
         waitAfterCallIfNeeded(toolName);
-        logger.debug("Finished proxied Playwright MCP tool '{}'. Result length: {}.", toolName, result.length());
+        logger.debug("Finished proxied Playwright MCP tool '{}': {}", toolName,
+                result.length() > 500 ? result.substring(0, 500) + "..." : result + ".");
         return result;
     }
 

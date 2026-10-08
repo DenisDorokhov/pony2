@@ -5,7 +5,6 @@ import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.*;
-import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
@@ -24,9 +23,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,8 +46,6 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private DiscoveryTaskRepository taskRepository;
     @Autowired
-    private SpotifyArtistDataService spotifyService;
-    @Autowired
     private DiscoveryJobInterruptionService interruptionService;
     @Autowired
     private LlmCacheRepository cacheRepository;
@@ -67,19 +63,28 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         DiscoveryJob job = saveJob();
         List<DiscoveryProgress> progress = new ArrayList<>();
-        SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND, null, null, null, null, null, null, null);
+        SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
+                null, null, null, null, "Biography".repeat(1000), null, null);
+        String rawResponse = "\n " + JsonConverter.toJson(result) + "\n";
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             Prompt prompt = invocation.getArgument(0);
             assertThat(prompt.getInstructions().get(1).getText()).contains("- \"Album\"");
             assertThat(taskRepository.findAll()).singleElement()
-                    .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
+                    .satisfies(task -> {
+                        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED);
+                        RawRequest rawRequest = JsonConverter.fromJson(task.getRawRequest(), RawRequest.class);
+                        assertThat(rawRequest.systemPrompt()).isEqualTo(prompt.getInstructions().getFirst().getText());
+                        assertThat(rawRequest.userPrompt()).isEqualTo(prompt.getInstructions().get(1).getText());
+                        assertThat(rawRequest.albumTitles()).isEqualTo(List.of("Album"));
+                        assertThat(task.getRawResult()).isNull();
+                    });
             getTransactionTemplate().executeWithoutResult(status -> {
                 ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
                 assertThat(discovery.getTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
             });
-            return chatResponse(result);
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse))));
         });
 
         service.discover(job, artist, cacheEnabled, progress::add);
@@ -93,10 +98,52 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
                 assertThat(task.getType()).isEqualTo(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
                 assertThat(task.getJob().getId()).isEqualTo(job.getId());
-                assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(Map.of("artistId", artist.getId())));
+                assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
                 assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
+                assertThat(task.getRawRequest()).isNotBlank();
+                assertThat(task.getRawResult()).isEqualTo(rawResponse);
             });
         });
+    }
+
+    @Test
+    void shouldPersistRawExchangeFromCache() {
+        Artist artist = saveArtist("Album");
+        SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
+                null, null, null, null, null, null, null);
+        String rawResponse = "\n " + JsonConverter.toJson(result) + "\n";
+        when(model.call(any(Prompt.class)))
+                .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse)))));
+        service.discover(saveJob(), artist, true, null);
+        DiscoveryTask originalTask = taskRepository.findAll().getFirst();
+        clearInvocations(model);
+
+        service.discover(saveJob(), artist, true, null);
+
+        assertThat(taskRepository.findAll()).hasSize(2).allSatisfy(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(task.getRawRequest()).isEqualTo(originalTask.getRawRequest());
+            assertThat(task.getRawResult()).isEqualTo(rawResponse);
+        });
+        verify(model, never()).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"not JSON", "{\"status\":\"FOUND\"}"})
+    void shouldPersistRawExchangeWhenResponseIsInvalid(String rawResponse) {
+        Artist artist = saveArtist("Album");
+        when(model.call(any(Prompt.class)))
+                .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse)))));
+
+        service.discover(saveJob(), artist, true, null);
+
+        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+            assertThat(task.getRawRequest()).isNotBlank();
+            assertThat(task.getRawResult()).isEqualTo(rawResponse);
+            assertThat(task.getResult()).isNotBlank();
+        });
+        assertThat(cacheRepository.count()).isZero();
     }
 
     @Test
@@ -109,10 +156,11 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         List<String> tracks = List.of("track-1", "track-2");
 
         executeTask(discovery, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                new DiscoveryTask.ArtistParameter(artist.getId()), (context, parameter) -> artistData);
-        executeTask(discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, "spotify-artist", (context, spotifyArtistId) -> {
+                new DiscoveryTask.ArtistParameter(artist.getId()), task -> artistData);
+        executeTask(discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, "spotify-artist", task -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
-            DiscoveryTask previousTask = context.getTasks().getFirst();
+            String spotifyArtistId = JsonConverter.fromJson(task.getParameter(), String.class);
+            DiscoveryTask previousTask = discovery.getTasks().getFirst();
             assertThat(previousTask.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             SpotifyArtistData previousResult = JsonConverter.fromJson(previousTask.getResult(), SpotifyArtistData.class);
             assertThat(previousResult.artist().id()).isEqualTo(spotifyArtistId);
@@ -133,11 +181,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("Browser unavailable"));
 
-        service.discover(saveJob(), artist, null);
+        service.discover(saveJob(), artist, true, null);
 
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("Browser unavailable");
+            assertThat(task.getRawRequest()).isNotBlank();
+            assertThat(task.getRawResult()).isNull();
         });
         assertThat(logRepository.findAll()).anySatisfy(log -> {
             assertThat(log.getLevel()).isEqualTo(LogMessage.Level.ERROR);
@@ -147,11 +197,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
     @Test
     void shouldCompleteTaskAndLogSkipWithoutCallingLlmForSingleNullAlbum() {
-        service.discover(saveJob(), saveArtist(null), null);
+        service.discover(saveJob(), saveArtist(null), true, null);
 
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("null");
+            assertThat(task.getRawRequest()).isNull();
+            assertThat(task.getRawResult()).isNull();
         });
         assertThat(artistDiscoveryRepository.count()).isEqualTo(1);
         assertThat(cacheRepository.count()).isZero();
@@ -160,7 +212,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldLoadAlbumsAndReleaseTransactionWhenSpotifyTaskIsCalledDirectly() {
+    void shouldLoadAlbumsAndReleaseTransactionDuringSpotifyDiscovery() {
         Artist artist = saveArtist("Album");
         albumRepository.save(new Album().setArtist(artist).setName("Z album").setYear(2000));
         SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
@@ -173,9 +225,12 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             return chatResponse(result);
         });
 
-        assertThat(spotifyService.discover(artist.getId())).contains(result);
+        service.discover(saveJob(), artist, true, null);
 
-        assertThat(taskRepository.count()).isZero();
+        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
+        });
         assertThat(cacheRepository.count()).isEqualTo(1);
     }
 
@@ -185,11 +240,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         DiscoveryJob job = saveJob();
         when(model.call(any(Prompt.class))).thenThrow(new DiscoveryInterruptedException());
 
-        assertThatThrownBy(() -> service.discover(job, artist, null)).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(job, artist, true, null)).isInstanceOf(DiscoveryInterruptedException.class);
 
         DiscoveryTask unfinishedTask = taskRepository.findAll().getFirst();
         assertThat(unfinishedTask.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED);
         assertThat(unfinishedTask.getResult()).isNull();
+        assertThat(unfinishedTask.getRawRequest()).isNotBlank();
+        assertThat(unfinishedTask.getRawResult()).isNull();
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);
         jobRepository.save(job.setStatus(DiscoveryJob.Status.INTERRUPTED));
@@ -204,6 +261,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findById(unfinishedTask.getId())).get().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();
+            assertThat(task.getRawRequest()).isEqualTo(unfinishedTask.getRawRequest());
+            assertThat(task.getRawResult()).isNull();
         });
         assertThat(taskRepository.findById(completedTask.getId())).get().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
@@ -218,6 +277,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(jobRepository.findById(failedJob.getId())).get()
                 .satisfies(value -> assertThat(value.getStatus()).isEqualTo(DiscoveryJob.Status.FAILED));
     }
+
+    private record RawRequest(String systemPrompt, String userPrompt, List<String> albumTitles) {}
 
     private DiscoveryTask saveTask(DiscoveryJob job, DiscoveryTask.Status status, String result) {
         return taskRepository.save(new DiscoveryTask()
@@ -245,7 +306,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     }
 
     private <P, R> void executeTask(ArtistDiscovery discovery, DiscoveryTaskType type, P parameter,
-                                  BiFunction<ArtistDiscovery, P, R> action) {
+                                  Function<DiscoveryTask, R> action) {
         Consumer<RuntimeException> errorHandler = error -> {
             throw error;
         };

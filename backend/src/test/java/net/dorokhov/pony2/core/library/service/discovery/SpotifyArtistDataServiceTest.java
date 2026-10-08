@@ -5,12 +5,14 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
+import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.junit.jupiter.api.AfterEach;
@@ -63,6 +65,7 @@ class SpotifyArtistDataServiceTest {
     @Mock private ChatModel model;
     @Mock private LlmCacheService cacheService;
     @Mock private ArtistRepository artistRepository;
+    @Mock private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock private LogService logService;
 
     private SpotifyArtistDataService service;
@@ -109,8 +112,8 @@ class SpotifyArtistDataServiceTest {
         service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
         Artist artist = artist();
 
-        assertThat(service.discover(artist.getId())).contains(found());
-        assertThat(service.discover(artist.getId())).contains(found());
+        assertThat(service.discover(task(artist), true)).contains(found());
+        assertThat(service.discover(task(artist), true)).contains(found());
 
         assertThat(modelCalls).isOne();
         assertThat(prompts.getFirst().getInstructions()).anySatisfy(message ->
@@ -131,21 +134,21 @@ class SpotifyArtistDataServiceTest {
     void shouldSkipCacheReadsAndWritesWhenDisabled() {
         Artist artist = artist();
 
-        assertThat(service.discover(artist.getId())).contains(found());
+        assertThat(service.discover(task(artist), true)).contains(found());
         Map<String, String> originalCache = Map.copyOf(cache);
         clearInvocations(cacheService);
         SpotifyArtistData freshResult = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
                 null, null, null, null, null, null, null);
         response = JsonConverter.toJson(freshResult);
 
-        assertThat(service.discover(artist.getId(), false)).contains(freshResult);
-        assertThat(service.discover(artist.getId(), false)).contains(freshResult);
+        assertThat(service.discover(task(artist), false)).contains(freshResult);
+        assertThat(service.discover(task(artist), false)).contains(freshResult);
 
         verifyNoInteractions(cacheService);
         assertThat(modelCalls).isEqualTo(3);
         assertThat(cache).isEqualTo(originalCache);
 
-        assertThat(service.discover(artist.getId(), true)).contains(found());
+        assertThat(service.discover(task(artist), true)).contains(found());
         assertThat(modelCalls).isEqualTo(3);
     }
 
@@ -153,7 +156,7 @@ class SpotifyArtistDataServiceTest {
     void shouldNotPopulateCacheWhenDisabled() {
         Artist artist = artist();
 
-        assertThat(service.discover(artist.getId(), false)).contains(found());
+        assertThat(service.discover(task(artist), false)).contains(found());
 
         verifyNoInteractions(cacheService);
         assertThat(cache).isEmpty();
@@ -163,12 +166,12 @@ class SpotifyArtistDataServiceTest {
     @Test
     void shouldInvalidateCacheWhenAlbumsOrPromptChanges() throws Exception {
         Artist original = artist();
-        service.discover(original.getId());
-        service.discover(artist("Artist", new Album().setName("Album"), new Album().setName("Second")).getId());
+        service.discover(task(original), true);
+        service.discover(task(artist("Artist", new Album().setName("Album"), new Album().setName("Second"))), true);
         String changedPrompt = new ClassPathResource("prompts/spotify-artist-data.txt").getContentAsString(UTF_8)
                 + "\nExtra instruction";
         SpotifyArtistDataService changedService = createService(configuredClient, new ByteArrayResource(changedPrompt.getBytes(UTF_8)));
-        changedService.discover(original.getId());
+        changedService.discover(task(original), true);
 
         assertThat(cache).hasSize(3);
         assertThat(modelCalls).isEqualTo(3);
@@ -178,7 +181,7 @@ class SpotifyArtistDataServiceTest {
     void shouldPropagateConfiguredClientFailureWithoutCaching() {
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("Playwright is unavailable"));
 
-        assertThatThrownBy(() -> service.discover(artist().getId())).hasMessageContaining("Playwright is unavailable");
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).hasMessageContaining("Playwright is unavailable");
         assertThat(cache).isEmpty();
     }
 
@@ -187,7 +190,7 @@ class SpotifyArtistDataServiceTest {
     @ValueSource(strings = {" ", "null", "not JSON"})
     void shouldNotCacheInvalidJson(String invalidResponse) {
         response = invalidResponse;
-        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(RuntimeException.class);
         assertThat(cache).isEmpty();
     }
 
@@ -198,8 +201,8 @@ class SpotifyArtistDataServiceTest {
         SpotifyArtistData result = new SpotifyArtistData(status, null, null, null, null, null, null, null);
         response = JsonConverter.toJson(result);
 
-        assertThat(service.discover(artist.getId())).contains(result);
-        assertThat(service.discover(artist.getId())).contains(result);
+        assertThat(service.discover(task(artist), true)).contains(result);
+        assertThat(service.discover(task(artist), true)).contains(result);
 
         assertThat(cache).hasSize(1);
         assertThat(modelCalls).isOne();
@@ -211,7 +214,7 @@ class SpotifyArtistDataServiceTest {
         response = JsonConverter.toJson(new SpotifyArtistData(data.status(), data.artist(),
                 new SpotifyArtistData.MatchedAlbum("Other album", "Album", ALBUM_ID, albumUrl()),
                 data.topTracks(), data.similarArtists(), data.biography(), data.links(), data.imageUrl()));
-        assertThatThrownBy(() -> service.discover(artist().getId())).hasMessageContaining("invalid Spotify response");
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).hasMessageContaining("invalid Spotify response");
         assertThat(cache).isEmpty();
     }
 
@@ -231,8 +234,8 @@ class SpotifyArtistDataServiceTest {
         response = JsonConverter.toJson(data);
         Artist artist = artist();
 
-        assertThat(service.discover(artist.getId())).contains(data);
-        assertThat(service.discover(artist.getId())).contains(data);
+        assertThat(service.discover(task(artist), true)).contains(data);
+        assertThat(service.discover(task(artist), true)).contains(data);
         assertThat(modelCalls).isOne();
     }
 
@@ -243,14 +246,14 @@ class SpotifyArtistDataServiceTest {
                 null, null, null, null, null);
         response = JsonConverter.toJson(partial);
 
-        assertThat(service.discover(artist().getId())).contains(partial);
+        assertThat(service.discover(task(artist()), true)).contains(partial);
     }
 
     @ParameterizedTest
     @MethodSource("invalidResponses")
     void shouldRejectInvalidFieldsOrConfirmedArtistWithoutIdentification(SpotifyArtistData invalidResponse) {
         response = JsonConverter.toJson(invalidResponse);
-        assertThatThrownBy(() -> service.discover(artist().getId())).hasMessageContaining("invalid Spotify response");
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).hasMessageContaining("invalid Spotify response");
         assertThat(cache).isEmpty();
     }
 
@@ -258,7 +261,7 @@ class SpotifyArtistDataServiceTest {
     void shouldNotCallLlmOnShutdown() {
         shutdownService.onApplicationEvent();
 
-        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
         assertThat(cache).isEmpty();
         verify(model, never()).call(any(Prompt.class));
     }
@@ -270,7 +273,7 @@ class SpotifyArtistDataServiceTest {
             return new ChatResponse(List.of(new Generation(new AssistantMessage(response))));
         });
 
-        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
         assertThat(cache).isEmpty();
         verify(model).call(any(Prompt.class));
     }
@@ -282,7 +285,7 @@ class SpotifyArtistDataServiceTest {
             return Optional.empty();
         });
 
-        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
         assertThat(cache).isEmpty();
         verify(model, never()).call(any(Prompt.class));
     }
@@ -297,7 +300,7 @@ class SpotifyArtistDataServiceTest {
             return toolCallResponse("browser_navigate");
         });
 
-        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
         assertThat(cache).isEmpty();
         verify(model).call(any(Prompt.class));
         verify(callback, never()).call(anyString(), any());
@@ -323,7 +326,7 @@ class SpotifyArtistDataServiceTest {
                     : new ChatResponse(List.of(new Generation(new AssistantMessage(response))));
         });
 
-        assertThatThrownBy(() -> service.discover(artist().getId())).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
         assertThat(cache).isEmpty();
         verify(model, times(toolCallsBeforeShutdown)).call(any(Prompt.class));
         verify(callback, times(toolCallsBeforeShutdown)).call(anyString(), any());
@@ -336,7 +339,7 @@ class SpotifyArtistDataServiceTest {
         response = JsonConverter.toJson(new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
                 null, null, null, null, null, null, null));
 
-        service.discover(artist.getId());
+        service.discover(task(artist), true);
 
         assertThat(prompts.getFirst().getInstructions().get(1).getText())
                 .contains("\"Artist {name}\"", "- null", "- \"Album\\n\\\"Quoted\\\"\" (year: 2000)");
@@ -348,9 +351,9 @@ class SpotifyArtistDataServiceTest {
         Album later = new Album().setName("Album").setYear(2010);
         Artist artist = artist("Artist", later, earlier);
 
-        service.discover(artist.getId());
+        service.discover(task(artist), true);
         artist.setAlbums(List.of(earlier, later));
-        service.discover(artist.getId());
+        service.discover(task(artist), true);
 
         assertThat(prompts.getFirst().getInstructions().get(1).getText())
                 .contains("- \"Z album\" (year: 2000)\n- \"Album\" (year: 2010)");
@@ -362,7 +365,7 @@ class SpotifyArtistDataServiceTest {
     void shouldSkipArtistWithoutAlbums() {
         Artist artist = artist("Artist");
 
-        assertThat(service.discover(artist.getId())).isEmpty();
+        assertThat(service.discover(task(artist), true)).isEmpty();
 
         verify(logService).info(any(), contains("no album title"), eq(artist.getId()), eq(artist.getName()));
         verify(model, never()).call(any(Prompt.class));
@@ -373,7 +376,7 @@ class SpotifyArtistDataServiceTest {
     void shouldSkipArtistWithoutName() {
         Artist artist = artist(null, new Album().setName("Album"));
 
-        assertThat(service.discover(artist.getId())).isEmpty();
+        assertThat(service.discover(task(artist), true)).isEmpty();
 
         verify(logService).info(any(), contains("artist name is unknown"), eq(artist.getId()), eq(artist.getName()));
         verify(model, never()).call(any(Prompt.class));
@@ -382,12 +385,17 @@ class SpotifyArtistDataServiceTest {
 
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
         return new SpotifyArtistDataService(client,
-                cacheService, validator, artistRepository, logService, shutdownService,
-                new DiscoveryShutdownAdvisor(shutdownService), transactionManager(), promptResource);
+                cacheService, validator, artistRepository, discoveryTaskRepository, logService, shutdownService,
+                new DiscoveryAdvisor(shutdownService), transactionManager(), promptResource);
     }
 
     private Artist artist() {
         return artist("Artist", new Album().setName("Album"));
+    }
+
+    private DiscoveryTask task(Artist artist) {
+        return new DiscoveryTask()
+                .setParameter(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
     }
 
     private Artist artist(String name, Album... albums) {

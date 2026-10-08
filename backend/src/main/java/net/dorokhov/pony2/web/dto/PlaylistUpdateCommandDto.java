@@ -47,8 +47,7 @@ public class PlaylistUpdateCommandDto {
     @Size(min = 1, max = 255)
     private String overrideName;
 
-    @Valid
-    private List<SongId> overriddenSongIds;
+    private List<@Valid SongId> overriddenSongIds;
 
     public String getId() {
         return id;

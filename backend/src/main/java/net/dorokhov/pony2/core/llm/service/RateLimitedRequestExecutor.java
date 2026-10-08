@@ -65,11 +65,11 @@ public class RateLimitedRequestExecutor {
                 return executeOnce(context, supplier);
             } catch (RuntimeException e) {
                 if (retryIndex >= settings.retriesOnException()) {
-                    logger.error("Rate-limited request '{}' in context '{}' failed after {} attempt(s).", name,
+                    logger.debug("Rate-limited request '{}' in context '{}' failed after {} attempt(s).", name,
                             context, retryIndex + 1, e);
                     throw e;
                 }
-                logger.warn("Rate-limited request '{}' in context '{}' failed on attempt {}/{}. Retrying.", name,
+                logger.debug("Rate-limited request '{}' in context '{}' failed on attempt {}/{}. Retrying.", name,
                         context, retryIndex + 1, settings.retriesOnException() + 1, e);
             }
         }

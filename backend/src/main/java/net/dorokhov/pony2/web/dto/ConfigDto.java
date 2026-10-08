@@ -14,8 +14,7 @@ public final class ConfigDto {
 
     private LocalDateTime updateDate;
 
-    @Valid
-    private List<LibraryFolderDto> libraryFolders;
+    private List<@Valid LibraryFolderDto> libraryFolders;
 
     private String llmUrl;
     private String llmModel;
@@ -34,7 +33,7 @@ public final class ConfigDto {
         return libraryFolders;
     }
 
-    public ConfigDto setLibraryFolders(@Valid List<LibraryFolderDto> libraryFolders) {
+    public ConfigDto setLibraryFolders(List<@Valid LibraryFolderDto> libraryFolders) {
         this.libraryFolders = libraryFolders;
         return this;
     }

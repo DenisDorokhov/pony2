@@ -9,13 +9,15 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.service.discovery.DiscoveryShutdownAdvisor;
+import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
+import net.dorokhov.pony2.core.library.service.discovery.DiscoveryAdvisor;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,9 +55,10 @@ public class SpotifyArtistDataService {
     private final LlmCacheService cacheService;
     private final Validator validator;
     private final ArtistRepository artistRepository;
+    private final DiscoveryTaskRepository discoveryTaskRepository;
     private final LogService logService;
     private final ShutdownService shutdownService;
-    private final DiscoveryShutdownAdvisor shutdownAdvisor;
+    private final DiscoveryAdvisor discoveryAdvisor;
     private final TransactionTemplate transactionTemplate;
 
     private final String systemPrompt;
@@ -65,9 +68,10 @@ public class SpotifyArtistDataService {
             LlmCacheService cacheService,
             Validator validator,
             ArtistRepository artistRepository,
+            DiscoveryTaskRepository discoveryTaskRepository,
             LogService logService,
             ShutdownService shutdownService,
-            DiscoveryShutdownAdvisor shutdownAdvisor,
+            DiscoveryAdvisor discoveryAdvisor,
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource
     ) throws IOException {
@@ -75,26 +79,25 @@ public class SpotifyArtistDataService {
         this.cacheService = cacheService;
         this.validator = validator;
         this.artistRepository = artistRepository;
+        this.discoveryTaskRepository = discoveryTaskRepository;
         this.logService = logService;
         this.shutdownService = shutdownService;
-        this.shutdownAdvisor = shutdownAdvisor;
+        this.discoveryAdvisor = discoveryAdvisor;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         systemPrompt = promptResource.getContentAsString(UTF_8) + "\n"
                 + new BeanOutputConverter<>(SpotifyArtistData.class).getFormat();
     }
 
-    public Optional<SpotifyArtistData> discover(String artistId) {
-        return discover(artistId, true);
-    }
-
-    public Optional<SpotifyArtistData> discover(String artistId, boolean cacheEnabled) {
+    public Optional<SpotifyArtistData> discover(DiscoveryTask task, boolean cacheEnabled) {
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }
+        String artistId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.ArtistParameter.class).artistId();
         Request request = transactionTemplate.execute(status -> prepareRequest(artistId));
         if (request == null) {
             return Optional.empty();
         }
+        saveRawExchange(task, request, null);
         Artist artist = artistRepository.findById(artistId).orElseThrow();
         String key = "SPOTIFY_ARTIST_DATA:" + Hashing.sha256().hashString(JsonConverter.toJson(request), UTF_8);
         if (cacheEnabled) {
@@ -103,6 +106,7 @@ public class SpotifyArtistDataService {
                 logger.debug("Spotify discovery cache hit for artist '{} -> {}'. Cache version: {}.",
                         artist.getId(), artist.getName(), CACHE_VERSION);
                 CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
+                saveRawExchange(task, entry.request(), entry.response());
                 SpotifyArtistData result = JsonConverter.fromJson(entry.response(), SpotifyArtistData.class);
                 logResult(artist, result, "cache");
                 return Optional.of(result);
@@ -112,10 +116,11 @@ public class SpotifyArtistDataService {
                 artist.getId(), artist.getName(), request);
         Stopwatch stopwatch = Stopwatch.createStarted();
         String response = chatClient.prompt()
-                .advisors(shutdownAdvisor)
+                .advisors(discoveryAdvisor)
                 .messages(new SystemMessage(request.systemPrompt()), new UserMessage(request.userPrompt()))
                 .call()
                 .content();
+        saveRawExchange(task, request, response);
         logLlmExchange(artist, request, response, stopwatch);
         SpotifyArtistData result = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;
         validateResponse(result, request);
@@ -126,6 +131,12 @@ public class SpotifyArtistDataService {
                     artist.getId(), artist.getName(), CACHE_VERSION);
         }
         return Optional.of(result);
+    }
+
+    private void saveRawExchange(DiscoveryTask task, Request request, @Nullable String response) {
+        transactionTemplate.executeWithoutResult(status -> discoveryTaskRepository.save(task
+                .setRawRequest(JsonConverter.toJson(request))
+                .setRawResult(response)));
     }
 
     private void logLlmExchange(Artist artist, Request request, @Nullable String response, Stopwatch stopwatch) {
