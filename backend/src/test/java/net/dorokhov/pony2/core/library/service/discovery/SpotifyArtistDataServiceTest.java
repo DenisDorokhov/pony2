@@ -10,6 +10,7 @@ import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -72,6 +73,7 @@ class SpotifyArtistDataServiceTest {
     private ChatClient configuredClient;
     private ValidatorFactory validatorFactory;
     private Validator validator;
+    private final DiscoveryCancellationMonitor cancellationMonitor = new DiscoveryCancellationMonitor();
     private final ShutdownService shutdownService = new ShutdownService();
     private final Map<String, String> cache = new HashMap<>();
     private final List<Prompt> prompts = new ArrayList<>();
@@ -386,7 +388,7 @@ class SpotifyArtistDataServiceTest {
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
         return new SpotifyArtistDataService(client,
                 cacheService, validator, artistRepository, discoveryTaskRepository, logService, shutdownService,
-                new DiscoveryAdvisor(shutdownService), transactionManager(), promptResource);
+                new DiscoveryAdvisor(shutdownService, cancellationMonitor), cancellationMonitor, transactionManager(), promptResource);
     }
 
     private Artist artist() {

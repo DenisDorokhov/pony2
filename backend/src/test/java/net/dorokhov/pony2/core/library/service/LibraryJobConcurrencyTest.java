@@ -8,6 +8,7 @@ import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
@@ -25,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.support.TransactionSynchronization;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -32,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.transaction.support.TransactionSynchronization.STATUS_COMMITTED;
@@ -54,6 +57,7 @@ class LibraryJobConcurrencyTest {
     @Mock private AlbumDiscoveryService albumDiscoveryService;
     @Mock private LogService logService;
 
+    private final DiscoveryCancellationMonitor cancellationMonitor = new DiscoveryCancellationMonitor();
     private final LibraryJobLockService lockService = new LibraryJobLockService();
     private final BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<>();
     private final Executor executor = tasks::add;
@@ -63,7 +67,7 @@ class LibraryJobConcurrencyTest {
     @BeforeEach
     void setUp() throws Exception {
         initSynchronization();
-        scanService = new ScanJobServiceImpl(scanJobRepository, configService, libraryScanner, lockService,
+        scanService = new ScanJobServiceImpl(scanJobRepository, configService, libraryScanner, lockService, cancellationMonitor,
                 logService, executor, transactionManager());
         discoveryService = new DiscoveryJobServiceImpl(discoveryJobRepository, discoveryTaskRepository,
                 artistRepository, albumRepository, fullDiscoveryService, lockService,
@@ -99,34 +103,21 @@ class LibraryJobConcurrencyTest {
     }
 
     @ParameterizedTest
-    @EnumSource(JobKind.class)
-    void shouldRejectOtherJobTypeWhileQueuedAndWhileRunning(JobKind kind) throws Exception {
-        ScanJobService.Observer scanObserver = mock(ScanJobService.Observer.class);
-        if (isScan(kind)) {
-            doAnswer(invocation -> { assertOtherJobTypeRejected(kind); return null; }).when(scanObserver).onScanJobStarted(any());
-            doAnswer(invocation -> { assertOtherJobTypeRejected(kind); return null; }).when(scanObserver).onScanJobCompleting(any());
-        }
-        scanService.addObserver(scanObserver);
-        DiscoveryJobService.Observer discoveryObserver = mock(DiscoveryJobService.Observer.class);
-        if (!isScan(kind)) {
-            doAnswer(invocation -> { assertOtherJobTypeRejected(kind); return null; }).when(discoveryObserver).onDiscoveryJobStarted(any());
-            doAnswer(invocation -> { assertOtherJobTypeRejected(kind); return null; }).when(discoveryObserver).onDiscoveryJobCompleting(any());
-        }
-        discoveryService.addObserver(discoveryObserver);
+    @EnumSource(value = JobKind.class, names = {"SCAN", "EDIT"})
+    void shouldRejectDiscoveryWhileScanIsQueuedAndRunning(JobKind kind) throws Exception {
+        ScanJobService.Observer observer = mock(ScanJobService.Observer.class);
+        doAnswer(invocation -> { assertDiscoveryRejected(); return null; }).when(observer).onScanJobStarted(any());
+        doAnswer(invocation -> { assertDiscoveryRejected(); return null; }).when(observer).onScanJobCompleting(any());
+        scanService.addObserver(observer);
 
         start(kind);
         commit();
-        assertOtherJobTypeRejected(kind);
+        assertDiscoveryRejected();
         assertThat(tasks).hasSize(1);
         runNextTask();
 
-        if (isScan(kind)) {
-            verify(scanObserver).onScanJobStarted(any());
-            verify(scanObserver).onScanJobCompleting(any());
-        } else {
-            verify(discoveryObserver).onDiscoveryJobStarted(any());
-            verify(discoveryObserver).onDiscoveryJobCompleting(any());
-        }
+        verify(observer).onScanJobStarted(any());
+        verify(observer).onScanJobCompleting(any());
         assertReleased();
     }
 
@@ -135,12 +126,12 @@ class LibraryJobConcurrencyTest {
     void shouldAcquireBeforeSavingJob(JobKind kind) throws Exception {
         if (isScan(kind)) {
             doAnswer(invocation -> {
-                assertOtherJobTypeRejected(kind);
+                assertDiscoveryRejected();
                 return invocation.getArgument(0);
             }).when(scanJobRepository).save(any());
         } else {
             doAnswer(invocation -> {
-                assertOtherJobTypeRejected(kind);
+                assertThat(lockService.tryAcquire()).isEmpty();
                 return invocation.getArgument(0);
             }).when(discoveryJobRepository).save(any());
         }
@@ -200,7 +191,7 @@ class LibraryJobConcurrencyTest {
         assertThat(discoveryService.getCurrentDiscoveryJobProgress()).hasValueSatisfying(progress ->
                 assertThat(progress.getDiscoveryJob().getStatus()).isEqualTo(DiscoveryJob.Status.STARTING));
         assertThat(tasks).hasSize(1);
-        assertOtherJobTypeRejected(JobKind.DISCOVERY_FULL);
+        assertThat(lockService.tryAcquire()).isEmpty();
         runNextTask();
         verify(fullDiscoveryService).discover(any(), eq(true), any());
         assertReleased();
@@ -224,28 +215,118 @@ class LibraryJobConcurrencyTest {
             assertThat(progress.getScanJob().getScanType()).isEqualTo(ScanType.EDIT);
             assertThat(progress.getScanJob().getStatus()).isEqualTo(ScanJob.Status.STARTING);
         });
-        assertOtherJobTypeRejected(JobKind.EDIT);
+        assertDiscoveryRejected();
     }
 
     @Test
-    void shouldAllowOnlyOneSimultaneousStart() throws Exception {
+    void shouldAllowOnlyOneSimultaneousScanStart() throws Exception {
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch go = new CountDownLatch(1);
         try (ExecutorService callers = Executors.newFixedThreadPool(2)) {
             Future<Object> scan = callers.submit(() -> concurrentStart(JobKind.SCAN, ready, go));
-            Future<Object> discovery = callers.submit(() -> concurrentStart(JobKind.DISCOVERY_FULL, ready, go));
+            Future<Object> edit = callers.submit(() -> concurrentStart(JobKind.EDIT, ready, go));
             try {
                 assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
             } finally {
                 go.countDown();
             }
-            List<Object> results = List.of(scan.get(5, TimeUnit.SECONDS), discovery.get(5, TimeUnit.SECONDS));
-            assertThat(results.stream().filter(result ->
-                    result instanceof ConcurrentScanException || result instanceof ConcurrentDiscoveryException).count()).isEqualTo(1);
+            List<Object> results = List.of(scan.get(5, TimeUnit.SECONDS), edit.get(5, TimeUnit.SECONDS));
+            assertThat(results.stream().filter(ConcurrentScanException.class::isInstance).count()).isEqualTo(1);
             long saves = mockingDetails(scanJobRepository).getInvocations().size()
                     + mockingDetails(discoveryJobRepository).getInvocations().size();
             assertThat(saves).isEqualTo(1);
             assertThat(tasks).isEmpty();
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = JobKind.class, names = {"DISCOVERY_FULL", "DISCOVERY_ARTIST", "DISCOVERY_ALBUM"})
+    void shouldRejectScanWhileDiscoveryIsQueued(JobKind kind) throws Exception {
+        start(kind);
+        commit();
+
+        assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
+        assertThatThrownBy(scanService::startScanJob).isInstanceOf(ConcurrentScanException.class);
+        assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentScanException.class);
+        verifyNoInteractions(scanJobRepository);
+        assertThat(tasks).hasSize(1);
+        runNextTask();
+        assertReleased();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = JobKind.class, names = {"SCAN", "EDIT"})
+    void shouldKeepScanBlockedAfterTaskCancellationUntilDiscoveryJobFinishes(JobKind kind) throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        CountDownLatch finishing = new CountDownLatch(1);
+        CountDownLatch finish = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            cancellationMonitor.taskStarted();
+            try {
+                entered.countDown();
+                assertThat(release.await(5, TimeUnit.SECONDS)).isTrue();
+                cancellationMonitor.interruptIfCancelled();
+                return null;
+            } finally {
+                cancellationMonitor.taskFinished();
+            }
+        }).when(fullDiscoveryService).discover(any(), eq(true), any());
+        DiscoveryJob discovery = discoveryService.startFullJob();
+        when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discovery));
+        DiscoveryJobService.Observer observer = mock(DiscoveryJobService.Observer.class);
+        doAnswer(invocation -> {
+            finishing.countDown();
+            assertThat(finish.await(5, TimeUnit.SECONDS)).isTrue();
+            return null;
+        }).when(observer).onDiscoveryJobInterrupting(any());
+        discoveryService.addObserver(observer);
+        commit();
+
+        try (ExecutorService callers = Executors.newFixedThreadPool(2)) {
+            Future<?> execution = callers.submit(tasks.remove());
+            Future<Object> scan = null;
+            try {
+                assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
+                scan = callers.submit(() -> startAndCommit(kind));
+                await().atMost(Duration.ofSeconds(5)).until(cancellationMonitor::isCancelled);
+                assertThat(scan.isDone()).isFalse();
+                verifyNoInteractions(scanJobRepository);
+                release.countDown();
+                assertThat(finishing.await(5, TimeUnit.SECONDS)).isTrue();
+                assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
+                assertThat(scan.get(5, TimeUnit.SECONDS)).isInstanceOf(ConcurrentScanException.class);
+                verifyNoInteractions(scanJobRepository);
+                finish.countDown();
+                execution.get(5, TimeUnit.SECONDS);
+                verify(observer).onDiscoveryJobInterrupted(any());
+                assertThat(discovery.getStatus()).isEqualTo(DiscoveryJob.Status.INTERRUPTED);
+                assertReleased();
+
+                start(kind);
+                commit();
+                runNextTask();
+                assertReleased();
+            } finally {
+                release.countDown();
+                finish.countDown();
+                if (scan != null) {
+                    scan.cancel(true);
+                }
+            }
+        }
+    }
+
+    private Object startAndCommit(JobKind kind) throws Exception {
+        initSynchronization();
+        try {
+            Object job = start(kind);
+            commit();
+            return job;
+        } catch (ConcurrentScanException e) {
+            return e;
+        } finally {
+            clearSynchronization();
         }
     }
 
@@ -276,16 +357,16 @@ class LibraryJobConcurrencyTest {
         return kind == JobKind.SCAN || kind == JobKind.EDIT;
     }
 
-    private void assertOtherJobTypeRejected(JobKind runningKind) {
+    private void assertDiscoveryRejected() {
         int scanSaves = mockingDetails(scanJobRepository).getInvocations().size();
         int discoverySaves = mockingDetails(discoveryJobRepository).getInvocations().size();
         int logs = mockingDetails(logService).getInvocations().size();
         for (JobKind kind : JobKind.values()) {
-            if (isScan(kind) == isScan(runningKind)) {
+            if (isScan(kind)) {
                 continue;
             }
             assertThatThrownBy(() -> start(kind))
-                    .isInstanceOf(isScan(kind) ? ConcurrentScanException.class : ConcurrentDiscoveryException.class);
+                    .isInstanceOf(ConcurrentDiscoveryException.class);
         }
         assertThat(mockingDetails(scanJobRepository).getInvocations()).hasSize(scanSaves);
         assertThat(mockingDetails(discoveryJobRepository).getInvocations()).hasSize(discoverySaves);
@@ -293,6 +374,7 @@ class LibraryJobConcurrencyTest {
     }
 
     private void assertReleased() {
+        assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
         assertThat(scanService.getCurrentScanJobProgress()).isEmpty();
         assertThat(discoveryService.getCurrentDiscoveryJobProgress()).isEmpty();
         try (LibraryJobLockService.Permit ignored = lockService.tryAcquire().orElseThrow()) {

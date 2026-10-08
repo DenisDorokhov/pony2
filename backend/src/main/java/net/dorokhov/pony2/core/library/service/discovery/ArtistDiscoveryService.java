@@ -12,6 +12,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
@@ -39,6 +40,7 @@ public class ArtistDiscoveryService {
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final LogService logService;
+    private final DiscoveryCancellationMonitor cancellationMonitor;
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
@@ -46,12 +48,14 @@ public class ArtistDiscoveryService {
             DiscoveryTaskRepository discoveryTaskRepository,
             SpotifyArtistDataService spotifyArtistDataService,
             LogService logService,
+            DiscoveryCancellationMonitor cancellationMonitor,
             PlatformTransactionManager transactionManager
     ) {
         this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.logService = logService;
+        this.cancellationMonitor = cancellationMonitor;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
@@ -87,6 +91,18 @@ public class ArtistDiscoveryService {
             Function<DiscoveryTask, R> action,
             Consumer<RuntimeException> errorHandler
     ) {
+        cancellationMonitor.taskStarted();
+        try {
+            return executeRegisteredTask(discovery, type, parameter, action, errorHandler);
+        } finally {
+            cancellationMonitor.taskFinished();
+        }
+    }
+
+    private <P, R> TaskResult<R> executeRegisteredTask(
+            ArtistDiscovery discovery, DiscoveryTaskType type, P parameter,
+            Function<DiscoveryTask, R> action, Consumer<RuntimeException> errorHandler
+    ) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         DiscoveryTask task = startTask(discovery, type, parameter);
         Artist artist = discovery.getArtist();
@@ -100,6 +116,7 @@ public class ArtistDiscoveryService {
                     stopwatch.elapsed().toMillis());
             return new TaskResult<>(DiscoveryTask.Status.COMPLETE, result);
         } catch (DiscoveryInterruptedException e) {
+            saveResult(task, DiscoveryTask.Status.INTERRUPTED, null);
             logger.info("Interrupted execution of discovery task '{}' of type {} for artist '{} -> {}' in job '{}' after {} ms.",
                     task.getId(), type, artist.getId(), artist.getName(), discovery.getJob().getId(),
                     stopwatch.elapsed().toMillis());
@@ -129,7 +146,7 @@ public class ArtistDiscoveryService {
         return task;
     }
 
-    private void saveResult(DiscoveryTask task, DiscoveryTask.Status status, String result) {
+    private void saveResult(DiscoveryTask task, DiscoveryTask.Status status, @Nullable String result) {
         transactionTemplate.executeWithoutResult(transactionStatus ->
                 discoveryTaskRepository.save(task
                         .setStatus(status)

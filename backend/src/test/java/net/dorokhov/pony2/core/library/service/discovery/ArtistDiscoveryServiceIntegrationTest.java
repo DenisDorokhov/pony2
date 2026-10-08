@@ -4,6 +4,7 @@ import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
@@ -35,6 +36,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
     @Autowired
     private ArtistDiscoveryService service;
+    @Autowired
+    private DiscoveryCancellationMonitor cancellationMonitor;
     @Autowired
     private ArtistRepository artistRepository;
     @Autowired
@@ -235,18 +238,19 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldRecoverUnfinishedTaskOnStartupAndPreserveFinishedTasks() {
+    void shouldPersistInterruptedTaskAndRecoverUnfinishedTasksOnStartup() {
         Artist artist = saveArtist("Album");
         DiscoveryJob job = saveJob();
         when(model.call(any(Prompt.class))).thenThrow(new DiscoveryInterruptedException());
 
         assertThatThrownBy(() -> service.discover(job, artist, true, null)).isInstanceOf(DiscoveryInterruptedException.class);
 
-        DiscoveryTask unfinishedTask = taskRepository.findAll().getFirst();
-        assertThat(unfinishedTask.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED);
-        assertThat(unfinishedTask.getResult()).isNull();
-        assertThat(unfinishedTask.getRawRequest()).isNotBlank();
-        assertThat(unfinishedTask.getRawResult()).isNull();
+        DiscoveryTask interruptedTask = taskRepository.findAll().getFirst();
+        assertThat(interruptedTask.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
+        assertThat(interruptedTask.getResult()).isNull();
+        assertThat(interruptedTask.getRawRequest()).isNotBlank();
+        assertThat(interruptedTask.getRawResult()).isNull();
+        DiscoveryTask unfinishedTask = saveTask(job, DiscoveryTask.Status.STARTED, null);
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);
         jobRepository.save(job.setStatus(DiscoveryJob.Status.INTERRUPTED));
@@ -276,6 +280,26 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .satisfies(value -> assertThat(value.getStatus()).isEqualTo(DiscoveryJob.Status.INTERRUPTED));
         assertThat(jobRepository.findById(failedJob.getId())).get()
                 .satisfies(value -> assertThat(value.getStatus()).isEqualTo(DiscoveryJob.Status.FAILED));
+    }
+
+    @Test
+    void shouldPersistInterruptionAndSkipCacheWhenCancelledDuringLlmCall() {
+        Artist artist = saveArtist("Album");
+        DiscoveryJob job = saveJob();
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            cancellationMonitor.cancel();
+            return chatResponse(spotifyArtistData("spotify-artist"));
+        });
+
+        assertThatThrownBy(() -> service.discover(job, artist, true, null))
+                .isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
+            assertThat(task.getResult()).isNull();
+            assertThat(task.getRawResult()).isNull();
+        });
+        assertThat(cacheRepository.count()).isZero();
+        assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);
     }
 
     private record RawRequest(String systemPrompt, String userPrompt, List<String> albumTitles) {}

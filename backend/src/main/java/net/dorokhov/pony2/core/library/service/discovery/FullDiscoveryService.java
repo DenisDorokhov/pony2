@@ -5,6 +5,7 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
@@ -32,17 +33,20 @@ public class FullDiscoveryService {
     private final AlbumRepository albumRepository;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final AlbumDiscoveryRepository albumDiscoveryRepository;
+    private final DiscoveryCancellationMonitor cancellationMonitor;
 
     public FullDiscoveryService(
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             ArtistDiscoveryRepository artistDiscoveryRepository,
-            AlbumDiscoveryRepository albumDiscoveryRepository
+            AlbumDiscoveryRepository albumDiscoveryRepository,
+            DiscoveryCancellationMonitor cancellationMonitor
     ) {
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.albumDiscoveryRepository = albumDiscoveryRepository;
+        this.cancellationMonitor = cancellationMonitor;
     }
 
     public void discover(DiscoveryJob discoveryJob, @Nullable Consumer<DiscoveryProgress> observer) {
@@ -50,10 +54,13 @@ public class FullDiscoveryService {
     }
 
     public void discover(DiscoveryJob discoveryJob, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
-
-        discoverArtists(observer);
-
-        discoverAlbums(observer);
+        cancellationMonitor.taskStarted();
+        try {
+            discoverArtists(observer);
+            discoverAlbums(observer);
+        } finally {
+            cancellationMonitor.taskFinished();
+        }
     }
 
     private void discoverArtists(@Nullable Consumer<DiscoveryProgress> observer) {
@@ -67,6 +74,7 @@ public class FullDiscoveryService {
         for (Artist artist : artists) {
             if (shouldDiscoverArtist(artist)) {
                 try {
+                    cancellationMonitor.interruptIfCancelled();
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -99,6 +107,7 @@ public class FullDiscoveryService {
                 if (shouldDiscoverAlbum(album)) {
                     try {
                         Thread.sleep(10);
+                        cancellationMonitor.interruptIfCancelled();
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new RuntimeException(e);

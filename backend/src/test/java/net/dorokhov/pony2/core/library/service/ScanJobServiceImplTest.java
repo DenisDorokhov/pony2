@@ -11,6 +11,7 @@ import net.dorokhov.pony2.api.library.service.command.EditCommand;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
 import org.junit.jupiter.api.AfterEach;
@@ -70,6 +71,9 @@ public class ScanJobServiceImplTest {
     private LibraryScanner libraryScanner;
     @Mock
     private LogService logService;
+
+    @Spy
+    private final DiscoveryCancellationMonitor cancellationMonitor = new DiscoveryCancellationMonitor();
 
     @Spy
     private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();

@@ -160,10 +160,13 @@ public class DiscoveryJobServiceImplTest {
 
         discoveryJobService.removeObserver(observer);
 
+        clearSynchronization();
+        initSynchronization();
         discoveryJobService.startFullJob();
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
         assertThat(observer.getCallCount()).isEqualTo(5);
+        verify(fullDiscoveryService, times(2)).discover(any(), eq(true), any());
     }
 
     @ParameterizedTest

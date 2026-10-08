@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
@@ -19,9 +20,11 @@ public class DiscoveryAdvisor implements BaseAdvisor {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ShutdownService shutdownService;
+    private final DiscoveryCancellationMonitor cancellationMonitor;
 
-    public DiscoveryAdvisor(ShutdownService shutdownService) {
+    public DiscoveryAdvisor(ShutdownService shutdownService, DiscoveryCancellationMonitor cancellationMonitor) {
         this.shutdownService = shutdownService;
+        this.cancellationMonitor = cancellationMonitor;
     }
 
     @Override
@@ -52,6 +55,7 @@ public class DiscoveryAdvisor implements BaseAdvisor {
     }
 
     private void checkShutdown() {
+        cancellationMonitor.interruptIfCancelled();
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }

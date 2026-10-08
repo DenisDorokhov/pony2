@@ -13,6 +13,7 @@ import net.dorokhov.pony2.api.library.service.command.EditCommand;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
@@ -30,8 +31,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -44,6 +47,8 @@ import static org.springframework.transaction.support.TransactionSynchronization
 
 @Service
 public class ScanJobServiceImpl implements ScanJobService {
+
+    private static final Duration DISCOVERY_CANCELLATION_TIMEOUT = Duration.ofSeconds(30);
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -60,12 +65,14 @@ public class ScanJobServiceImpl implements ScanJobService {
     private final AtomicReference<ScanJobProgress> scanJobProgressReference = new AtomicReference<>();
 
     private final LibraryJobLockService libraryJobLockService;
+    private final DiscoveryCancellationMonitor cancellationMonitor;
 
     public ScanJobServiceImpl(
             ScanJobRepository scanJobRepository,
             ConfigService configService,
             LibraryScanner libraryScanner,
             LibraryJobLockService libraryJobLockService,
+            DiscoveryCancellationMonitor cancellationMonitor,
             LogService logService,
             @Qualifier(SCAN_JOB_EXECUTOR) Executor scanJobExecutor,
             PlatformTransactionManager transactionManager
@@ -77,6 +84,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         this.logService = logService;
         this.scanJobExecutor = scanJobExecutor;
         this.libraryJobLockService = libraryJobLockService;
+        this.cancellationMonitor = cancellationMonitor;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
@@ -136,7 +144,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional
     public ScanJob startScanJob() throws ConcurrentScanException {
-        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentScanException::new);
+        LibraryJobLockService.Permit permit = acquireScanPermit();
         try {
             return doStartScanJob(configService.get().libraryFolders(), permit);
         } catch (Exception e) {
@@ -148,13 +156,22 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional
     public ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException {
-        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentScanException::new);
+        LibraryJobLockService.Permit permit = acquireScanPermit();
         try {
             return doStartEditJob(commands, permit);
         } catch (Exception e) {
             permit.close();
             throw e;
         }
+    }
+
+    private LibraryJobLockService.Permit acquireScanPermit() throws ConcurrentScanException {
+        try {
+            cancellationMonitor.cancelAndWait(DISCOVERY_CANCELLATION_TIMEOUT);
+        } catch (TimeoutException e) {
+            throw new ConcurrentScanException();
+        }
+        return libraryJobLockService.tryAcquire().orElseThrow(ConcurrentScanException::new);
     }
 
     private ScanJob doStartEditJob(List<EditCommand> commands, LibraryJobLockService.Permit permit) {
