@@ -72,6 +72,9 @@ public class ScanJobServiceImplTest {
     private LogService logService;
 
     @Spy
+    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+
+    @Spy
     @SuppressWarnings("unused")
     private final Executor executor = new SyncTaskExecutor();
     @Spy
@@ -353,6 +356,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
+        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
     }
 
     private void doTestFailEditJobOnException(Exception e) throws IOException, ConcurrentScanException {
@@ -385,6 +389,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
+        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
     }
 
     private Optional<LogMessage> logMessage() {

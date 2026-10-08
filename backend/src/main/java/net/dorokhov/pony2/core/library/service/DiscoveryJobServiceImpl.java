@@ -27,7 +27,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -60,8 +59,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     private final AtomicReference<DiscoveryJobProgress> discoveryJobProgressReference = new AtomicReference<>();
 
-    // ReentrantLock doesn't fit here, because we release in different thread.
-    private final Semaphore discoveryJobSemaphore = new Semaphore(1);
+    private final LibraryJobLockService libraryJobLockService;
 
     public DiscoveryJobServiceImpl(
             DiscoveryJobRepository discoveryJobRepository,
@@ -69,6 +67,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             FullDiscoveryService fullDiscoveryService,
+            LibraryJobLockService libraryJobLockService,
             ArtistDiscoveryService artistDiscoveryService,
             AlbumDiscoveryService albumDiscoveryService,
             LogService logService,
@@ -85,6 +84,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         this.albumDiscoveryService = albumDiscoveryService;
         this.logService = logService;
         this.discoveryJobExecutor = discoveryJobExecutor;
+        this.libraryJobLockService = libraryJobLockService;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
@@ -138,7 +138,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     @Override
     @Transactional
     public DiscoveryJob startFullJob(boolean cacheEnabled) throws ConcurrentDiscoveryException {
-        return doStartDiscoveryJob(DiscoveryType.FULL, null, cacheEnabled);
+        return startDiscoveryJob(DiscoveryType.FULL, null, cacheEnabled);
     }
 
     @Override
@@ -150,7 +150,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     @Override
     @Transactional
     public DiscoveryJob startArtistJob(String artistId, boolean cacheEnabled) throws ConcurrentDiscoveryException {
-        return doStartDiscoveryJob(DiscoveryType.ARTIST, artistId, cacheEnabled);
+        return startDiscoveryJob(DiscoveryType.ARTIST, artistId, cacheEnabled);
     }
 
     @Override
@@ -162,14 +162,20 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     @Override
     @Transactional
     public DiscoveryJob startAlbumJob(String albumId, boolean cacheEnabled) throws ConcurrentDiscoveryException {
-        return doStartDiscoveryJob(DiscoveryType.ALBUM, albumId, cacheEnabled);
+        return startDiscoveryJob(DiscoveryType.ALBUM, albumId, cacheEnabled);
     }
 
-    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentDiscoveryException {
-
-        if (!discoveryJobSemaphore.tryAcquire()) {
-            throw new ConcurrentDiscoveryException();
+    private DiscoveryJob startDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentDiscoveryException::new);
+        try {
+            return doStartDiscoveryJob(discoveryType, parameter, cacheEnabled, permit);
+        } catch (RuntimeException | Error e) {
+            permit.close();
+            throw e;
         }
+    }
+
+    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled, LibraryJobLockService.Permit permit) {
 
         String jobDescription = discoveryJobDescription(discoveryType, parameter);
         Optional<LogMessage> logStarting = logService.info(logger, "Starting discovery job {}... Cache enabled: {}.", jobDescription, cacheEnabled);
@@ -223,9 +229,16 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                         });
                     } finally {
                         discoveryJobProgressReference.set(null);
-                        discoveryJobSemaphore.release();
+                        permit.close();
                     }
                 });
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    permit.close();
+                }
             }
         });
 

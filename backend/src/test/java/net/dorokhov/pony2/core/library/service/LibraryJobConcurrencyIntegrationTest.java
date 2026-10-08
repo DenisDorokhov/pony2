@@ -1,0 +1,67 @@
+package net.dorokhov.pony2.core.library.service;
+
+import net.dorokhov.pony2.InstallingIntegrationTest;
+import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
+import net.dorokhov.pony2.api.library.service.ScanJobService;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
+import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
+
+class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
+
+    private enum JobKind { SCAN, EDIT, DISCOVERY }
+
+    @Autowired
+    private ScanJobService scanService;
+    @Autowired
+    private DiscoveryJobService discoveryService;
+    @Autowired
+    private ScanJobRepository scanJobRepository;
+    @Autowired
+    private DiscoveryJobRepository discoveryJobRepository;
+    @Autowired
+    private LibraryJobLockService lockService;
+
+    @ParameterizedTest
+    @EnumSource(JobKind.class)
+    void shouldHoldSharedLockUntilOuterTransactionRollsBack(JobKind kind) {
+        getTransactionTemplate().executeWithoutResult(status -> {
+            if (kind != JobKind.DISCOVERY) {
+                if (kind == JobKind.SCAN) {
+                    assertThatCode(() -> scanService.startScanJob()).doesNotThrowAnyException();
+                } else {
+                    assertThatCode(() -> scanService.startEditJob(List.of())).doesNotThrowAnyException();
+                }
+                assertThat(scanJobRepository.count()).isEqualTo(1);
+                assertThatThrownBy(() -> discoveryService.startFullJob()).isInstanceOf(ConcurrentDiscoveryException.class);
+                assertThatThrownBy(() -> discoveryService.startArtistJob("artist")).isInstanceOf(ConcurrentDiscoveryException.class);
+                assertThatThrownBy(() -> discoveryService.startAlbumJob("album")).isInstanceOf(ConcurrentDiscoveryException.class);
+                assertThat(discoveryJobRepository.count()).isZero();
+            } else {
+                assertThatCode(() -> discoveryService.startFullJob()).doesNotThrowAnyException();
+                assertThat(discoveryJobRepository.count()).isEqualTo(1);
+                assertThatThrownBy(() -> scanService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
+                assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentScanException.class);
+                assertThat(scanJobRepository.count()).isZero();
+            }
+            assertThat(lockService.tryAcquire()).isEmpty();
+            assertThat(scanService.getCurrentScanJobProgress()).isEmpty();
+            assertThat(discoveryService.getCurrentDiscoveryJobProgress()).isEmpty();
+            status.setRollbackOnly();
+        });
+
+        assertThat(scanJobRepository.count()).isZero();
+        assertThat(discoveryJobRepository.count()).isZero();
+        try (LibraryJobLockService.Permit ignored = lockService.tryAcquire().orElseThrow()) {
+            assertThat(lockService.tryAcquire()).isEmpty();
+        }
+    }
+}

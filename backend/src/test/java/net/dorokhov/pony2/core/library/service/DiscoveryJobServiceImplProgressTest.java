@@ -60,6 +60,10 @@ public class DiscoveryJobServiceImplProgressTest {
 
     @Spy
     @SuppressWarnings("unused")
+    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+
+    @Spy
+    @SuppressWarnings("unused")
     private final Executor executor = new NoOpTaskExecutor();
     @Spy
     @SuppressWarnings("unused")

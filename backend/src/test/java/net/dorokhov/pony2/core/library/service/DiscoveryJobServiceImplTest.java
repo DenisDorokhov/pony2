@@ -74,6 +74,9 @@ public class DiscoveryJobServiceImplTest {
     private LogService logService;
 
     @Spy
+    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+
+    @Spy
     @SuppressWarnings("unused")
     private final Executor executor = new SyncTaskExecutor();
     @Spy
@@ -336,6 +339,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
+        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
     }
 
     @Test
@@ -391,6 +395,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
+        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
     }
 
     @Test
@@ -426,6 +431,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatInterruptingAt(2);
         observer.assertThatInterruptedAt(3);
+        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
     }
 
     @Test

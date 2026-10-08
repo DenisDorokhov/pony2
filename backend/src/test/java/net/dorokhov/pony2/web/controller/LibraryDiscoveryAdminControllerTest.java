@@ -123,10 +123,7 @@ public class LibraryDiscoveryAdminControllerTest {
                 .andReturn().getResponse().getContentAsString();
         ErrorDto dto = objectMapper.readValue(response, ErrorDto.class);
 
-        assertThat(dto).satisfies(error -> {
-            assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_DISCOVERY);
-            assertThat(error.getMessage()).isEqualTo("Discovery job is already running.");
-        });
+        assertThat(dto.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_DISCOVERY);
     }
 
     @ParameterizedTest

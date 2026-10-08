@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -60,13 +59,13 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     private final AtomicReference<ScanJobProgress> scanJobProgressReference = new AtomicReference<>();
 
-    // ReentrantLock doesn't fit here, because we release in different thread.
-    private final Semaphore scanJobSemaphore = new Semaphore(1);
+    private final LibraryJobLockService libraryJobLockService;
 
     public ScanJobServiceImpl(
             ScanJobRepository scanJobRepository,
             ConfigService configService,
             LibraryScanner libraryScanner,
+            LibraryJobLockService libraryJobLockService,
             LogService logService,
             @Qualifier(SCAN_JOB_EXECUTOR) Executor scanJobExecutor,
             PlatformTransactionManager transactionManager
@@ -77,6 +76,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         this.libraryScanner = libraryScanner;
         this.logService = logService;
         this.scanJobExecutor = scanJobExecutor;
+        this.libraryJobLockService = libraryJobLockService;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
@@ -136,16 +136,28 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional
     public ScanJob startScanJob() throws ConcurrentScanException {
-        return doStartScanJob(configService.get().libraryFolders());
+        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentScanException::new);
+        try {
+            return doStartScanJob(configService.get().libraryFolders(), permit);
+        } catch (Exception e) {
+            permit.close();
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException {
-
-        if (!scanJobSemaphore.tryAcquire()) {
-            throw new ConcurrentScanException();
+        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentScanException::new);
+        try {
+            return doStartEditJob(commands, permit);
+        } catch (Exception e) {
+            permit.close();
+            throw e;
         }
+    }
+
+    private ScanJob doStartEditJob(List<EditCommand> commands, LibraryJobLockService.Permit permit) {
 
         List<String> targetPaths = commands.stream()
                 .map(EditCommand::getSongFilePath)
@@ -164,17 +176,17 @@ public class ScanJobServiceImpl implements ScanJobService {
                 scanJobExecutor.execute(() -> {
                     ScanJob currentScanJob = scanJob;
                     try {
-                        currentScanJob = changeScanJobStatusInTransaction(() -> {
+                        currentScanJob = onScanJobStatusChange(changeScanJobStatusInTransaction(() -> {
                             Optional<LogMessage> logStarted = logService.info(logger, "Started edit job for {} songs...", commands.size());
                             return scanJobRepository.save(scanJob
                                     .setStatus(Status.STARTED)
                                     .setLogMessage(logStarted.orElse(null)));
-                        });
-                        doEditJob(currentScanJob, commands);
+                        }));
+                        currentScanJob = doEditJob(currentScanJob, commands);
                     } catch (Exception e) {
                         final ScanJob failedScanJob = currentScanJob;
                         notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
-                        changeScanJobStatusInTransaction(() -> {
+                        currentScanJob = changeScanJobStatusInTransaction(() -> {
                             Optional<LogMessage> logFailed = logService.error(logger, "Unexpected error occurred when performing edit job.", e);
                             return scanJobRepository.save(
                                     scanJobRepository.findById(scanJob.getId()).orElseThrow()
@@ -183,20 +195,24 @@ public class ScanJobServiceImpl implements ScanJobService {
                         });
                     } finally {
                         scanJobProgressReference.set(null);
-                        scanJobSemaphore.release();
+                        permit.close();
                     }
+                    onScanJobStatusChange(currentScanJob);
                 });
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    permit.close();
+                }
             }
         });
 
         return scanJob;
     }
 
-    private ScanJob doStartScanJob(List<File> targetFolders) throws ConcurrentScanException {
-
-        if (!scanJobSemaphore.tryAcquire()) {
-            throw new ConcurrentScanException();
-        }
+    private ScanJob doStartScanJob(List<File> targetFolders, LibraryJobLockService.Permit permit) {
 
         List<String> targetPaths = fetchAbsolutePaths(targetFolders);
         Optional<LogMessage> logStarting = logService.info(logger, "Starting scan job for {}...", targetPaths);
@@ -213,13 +229,13 @@ public class ScanJobServiceImpl implements ScanJobService {
                 scanJobExecutor.execute(() -> {
                     ScanJob currentScanJob = scanJob;
                     try {
-                        currentScanJob = changeScanJobStatusInTransaction(() -> {
+                        currentScanJob = onScanJobStatusChange(changeScanJobStatusInTransaction(() -> {
                             Optional<LogMessage> logStarted = logService.info(logger, "Started scan job for {}.", targetPaths);
                             return scanJobRepository.save(scanJob
                                     .setStatus(Status.STARTED)
                                     .setLogMessage(logStarted.orElse(null)));
-                        });
-                        doScanJob(currentScanJob, targetFolders);
+                        }));
+                        currentScanJob = doScanJob(currentScanJob, targetFolders);
                     } catch (Exception e) {
                         ScanJob failedScanJob = currentScanJob;
                         boolean interrupted = Throwables.getCausalChain(e).stream()
@@ -229,7 +245,7 @@ public class ScanJobServiceImpl implements ScanJobService {
                         } else {
                             notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
                         }
-                        changeScanJobStatusInTransaction(() -> {
+                        currentScanJob = changeScanJobStatusInTransaction(() -> {
                             if (interrupted) {
                                 Optional<LogMessage> logMessage = logService.warn(logger, "Scan job has been interrupted.", e);
                                 return scanJobRepository.save(
@@ -246,16 +262,24 @@ public class ScanJobServiceImpl implements ScanJobService {
                         });
                     } finally {
                         scanJobProgressReference.set(null);
-                        scanJobSemaphore.release();
+                        permit.close();
                     }
+                    onScanJobStatusChange(currentScanJob);
                 });
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    permit.close();
+                }
             }
         });
 
         return scanJob;
     }
 
-    private void doScanJob(ScanJob scanJob, List<File> targetFolders) {
+    private ScanJob doScanJob(ScanJob scanJob, List<File> targetFolders) {
 
         ScanResult result = null;
         Supplier<LogMessage> logMessage;
@@ -275,13 +299,13 @@ public class ScanJobServiceImpl implements ScanJobService {
 
         final ScanResult finalResult = result;
         final Supplier<LogMessage> finalLogMessage = logMessage;
-        changeScanJobStatusInTransaction(() -> scanJobRepository.save(scanJob
+        return changeScanJobStatusInTransaction(() -> scanJobRepository.save(scanJob
                 .setStatus(finalResult != null ? Status.COMPLETE : Status.FAILED)
                 .setScanResult(finalResult)
                 .setLogMessage(finalLogMessage.get())));
     }
 
-    private void doEditJob(ScanJob scanJob, List<EditCommand> commands) {
+    private ScanJob doEditJob(ScanJob scanJob, List<EditCommand> commands) {
 
         ScanResult result = null;
         Supplier<LogMessage> logMessage;
@@ -301,14 +325,16 @@ public class ScanJobServiceImpl implements ScanJobService {
 
         final ScanResult finalResult = result;
         final Supplier<LogMessage> finalLogMessage = logMessage;
-        changeScanJobStatusInTransaction(() -> scanJobRepository.save(scanJob
+        return changeScanJobStatusInTransaction(() -> scanJobRepository.save(scanJob
                 .setStatus(finalResult != null ? Status.COMPLETE : Status.FAILED)
                 .setScanResult(finalResult)
                 .setLogMessage(finalLogMessage.get())));
     }
 
     private ScanJob onScanJobStatusChange(ScanJob scanJob) {
-        scanJobProgressReference.set(new ScanJobProgress(scanJob, null));
+        if (scanJob.getStatus() == Status.STARTING || scanJob.getStatus() == Status.STARTED) {
+            scanJobProgressReference.set(new ScanJobProgress(scanJob, null));
+        }
         switch (scanJob.getStatus()) {
             case STARTING:
                 notifyObservers(observer -> observer.onScanJobStarting(scanJob));
@@ -347,7 +373,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     private ScanJob changeScanJobStatusInTransaction(Supplier<ScanJob> handler) {
-        return onScanJobStatusChange(transactionTemplate.execute(transactionStatus -> handler.get()));
+        return transactionTemplate.execute(transactionStatus -> handler.get());
     }
 
     private List<String> fetchAbsolutePaths(List<File> files) {
