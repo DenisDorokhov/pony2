@@ -47,11 +47,11 @@ public class DiscoveryScanJobObserverTest {
     }
 
     @Test
-    public void shouldNotStartFullDiscoveryJobOnEditJobCompleted() throws ConcurrentLibraryJobException {
+    public void shouldStartFullDiscoveryJobOnEditJobCompleted() throws ConcurrentLibraryJobException {
 
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.EDIT));
 
-        verify(discoveryJobService, never()).startFullJob();
+        verify(discoveryJobService).startFullJob();
     }
 
     @Test

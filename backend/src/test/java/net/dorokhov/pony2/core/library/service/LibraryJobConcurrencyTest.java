@@ -178,10 +178,11 @@ class LibraryJobConcurrencyTest {
         assertReleased();
     }
 
-    @Test
-    void shouldStartDiscoveryAfterScanReleasesLock() throws Exception {
+    @ParameterizedTest
+    @EnumSource(value = JobKind.class, names = {"SCAN", "EDIT"})
+    void shouldStartDiscoveryAfterScanReleasesLock(JobKind kind) throws Exception {
         scanService.addObserver(new DiscoveryScanJobObserver(scanService, discoveryService, logService));
-        scanService.startScanJob();
+        start(kind);
         commit();
         runNextTask();
         assertThat(scanService.getCurrentScanJobProgress()).isEmpty();

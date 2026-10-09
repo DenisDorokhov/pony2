@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.Nullable;
+import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -36,6 +37,7 @@ public class ArtistDiscoveryService {
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final LogService logService;
     private final DiscoveryTaskExecutor taskExecutor;
+    private final ConfigService configService;
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
@@ -44,6 +46,7 @@ public class ArtistDiscoveryService {
             SpotifyArtistDataService spotifyArtistDataService,
             LogService logService,
             DiscoveryTaskExecutor taskExecutor,
+            ConfigService configService,
             PlatformTransactionManager transactionManager
     ) {
         this.artistDiscoveryRepository = artistDiscoveryRepository;
@@ -51,12 +54,17 @@ public class ArtistDiscoveryService {
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.logService = logService;
         this.taskExecutor = taskExecutor;
+        this.configService = configService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
     public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, null), observer);
-        taskExecutor.execute(new SpotifyArtistDataTaskExecution(createDiscovery(discoveryJob, artist), cacheEnabled));
+        ArtistDiscovery artistDiscovery = createDiscovery(discoveryJob, artist);
+        boolean llmEnabled = configService.get().llmEnabled();
+        if (llmEnabled) {
+            taskExecutor.execute(new SpotifyArtistDataTaskExecution(artistDiscovery, cacheEnabled));
+        }
     }
 
     private ArtistDiscovery createDiscovery(DiscoveryJob discoveryJob, Artist artist) {

@@ -27,6 +27,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -60,6 +61,7 @@ class DiscoveryChatClientTest {
     private final AtomicInteger requests = new AtomicInteger();
     private final ExecutorService serverExecutor = Executors.newCachedThreadPool();
     private final CountDownLatch responseBodyRead = new CountDownLatch(1);
+    private Runnable beforeClientCreation = () -> {};
     private Runnable beforeRetry = () -> {};
     private LibraryJobSynchronizer.LibraryJobRegistration discovery;
     private HttpServer server;
@@ -156,6 +158,80 @@ class DiscoveryChatClientTest {
         assertThat(requests).hasValue(3);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldCancelParallelCallsOnShutdownBeforeHeadersOrDuringResponseBody(boolean responseStarted) throws Exception {
+        CountDownLatch received = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+        DiscoveryChatClient client = createClient(exchange -> blockResponse(exchange, responseStarted, received, release));
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.registerBean(DiscoveryChatClient.class, () -> client);
+            context.refresh();
+            try (ExecutorService workers = Executors.newFixedThreadPool(2)) {
+                List<Future<String>> results = List.of(workers.submit(() -> call(client)), workers.submit(() -> call(client)));
+                try {
+                    assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
+                    if (responseStarted) {
+                        assertThat(responseBodyRead.await(5, TimeUnit.SECONDS)).isTrue();
+                    }
+                    context.close();
+                    for (Future<String> result : results) {
+                        assertCancelled(result);
+                    }
+                    assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
+                    assertThat(requests).hasValue(2);
+                } finally {
+                    release.countDown();
+                    client.onApplicationShutdown();
+                }
+            }
+        }
+    }
+
+    @Test
+    void shouldRejectCallsAfterShutdownEvenForNextDiscovery() throws Exception {
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        client.onApplicationShutdown();
+        client.onApplicationShutdown();
+        discovery.close();
+        discovery = synchronizer.registerDiscoveryJob();
+        beforeClientCreation = () -> fail("A client must not be created after shutdown.");
+
+        assertThatThrownBy(() -> call(client)).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
+        assertThat(requests).hasValue(0);
+    }
+
+    @Test
+    void shouldCancelCallDuringClientCreation() throws Exception {
+        CountDownLatch creatingClient = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        beforeClientCreation = () -> {
+            creatingClient.countDown();
+            try {
+                assertThat(release.await(5, TimeUnit.SECONDS)).isTrue();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+            }
+        };
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
+            Future<String> result = worker.submit(() -> call(client));
+            try {
+                assertThat(creatingClient.await(5, TimeUnit.SECONDS)).isTrue();
+                client.onApplicationShutdown();
+                assertThatThrownBy(() -> call(client)).isInstanceOf(DiscoveryInterruptedException.class);
+                release.countDown();
+                assertCancelled(result);
+                assertThat(requests).hasValue(0);
+            } finally {
+                release.countDown();
+                client.onApplicationShutdown();
+            }
+        }
+    }
+
     @Test
     void shouldKeepRetriesForServerErrors() throws IOException {
         DiscoveryChatClient client = createClient(exchange -> {
@@ -241,10 +317,13 @@ class DiscoveryChatClientTest {
         when(configService.get()).thenReturn(new ConfigSet(null, List.of(),
                 "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "test", null));
         ChatModelImpl model = new ChatModelImpl(configService, ObservationRegistry.NOOP);
-        return new DiscoveryChatClient(customizer -> ChatClient.builder(model.createChatModel(builder -> {
-            customizer.customize(builder);
-            builder.interceptor(this::observeResponseBody);
-        })).defaultTools(tools).build(),
+        return new DiscoveryChatClient(customizer -> {
+            beforeClientCreation.run();
+            return ChatClient.builder(model.createChatModel(builder -> {
+                customizer.customize(builder);
+                builder.interceptor(this::observeResponseBody);
+            })).defaultTools(tools).build();
+        },
                 synchronizer, new DiscoveryAdvisor(new ShutdownService(), synchronizer));
     }
 

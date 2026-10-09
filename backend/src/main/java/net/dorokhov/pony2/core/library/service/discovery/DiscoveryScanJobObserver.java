@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
-import net.dorokhov.pony2.api.library.domain.ScanType;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
@@ -60,12 +59,10 @@ public class DiscoveryScanJobObserver implements ScanJobService.Observer {
 
     @Override
     public void onScanJobCompleted(ScanJob scanJob) {
-        if (scanJob.getScanType() == ScanType.FULL) {
-            try {
-                discoveryJobService.startFullJob();
-            } catch (ConcurrentLibraryJobException e) {
-                logService.warn(logger, "Could not start full discovery job after scan job.", e);
-            }
+        try {
+            discoveryJobService.startFullJob();
+        } catch (ConcurrentLibraryJobException e) {
+            logService.warn(logger, "Could not start full discovery job after scan job.", e);
         }
     }
 
