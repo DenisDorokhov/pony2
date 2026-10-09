@@ -52,7 +52,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     private final AlbumDiscoveryService albumDiscoveryService;
     private final LogService logService;
     private final Executor discoveryJobExecutor;
-    private final LibraryJobLockService libraryJobLockService;
+    private final LibraryJobSynchronizer jobSynchronizer;
 
     private final TransactionTemplate transactionTemplate;
 
@@ -66,7 +66,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             FullDiscoveryService fullDiscoveryService,
-            LibraryJobLockService libraryJobLockService,
+            LibraryJobSynchronizer jobSynchronizer,
             ArtistDiscoveryService artistDiscoveryService,
             AlbumDiscoveryService albumDiscoveryService,
             LogService logService,
@@ -83,7 +83,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         this.albumDiscoveryService = albumDiscoveryService;
         this.logService = logService;
         this.discoveryJobExecutor = discoveryJobExecutor;
-        this.libraryJobLockService = libraryJobLockService;
+        this.jobSynchronizer = jobSynchronizer;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
@@ -165,16 +165,16 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     }
 
     private DiscoveryJob startDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentLibraryJobException {
-        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentLibraryJobException::new);
+        LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerDiscoveryJob();
         try {
-            return doStartDiscoveryJob(discoveryType, parameter, cacheEnabled, permit);
+            return doStartDiscoveryJob(discoveryType, parameter, cacheEnabled, jobRegistration);
         } catch (RuntimeException | Error e) {
-            permit.close();
+            jobRegistration.close();
             throw e;
         }
     }
 
-    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled, LibraryJobLockService.Permit permit) {
+    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled, LibraryJobSynchronizer.LibraryJobRegistration jobRegistration) {
 
         String jobDescription = discoveryJobDescription(discoveryType, parameter);
         Optional<LogMessage> logStarting = logService.info(logger, "Starting discovery job {}... Cache enabled: {}.", jobDescription, cacheEnabled);
@@ -192,6 +192,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                     Stopwatch stopwatch = Stopwatch.createStarted();
                     DiscoveryJob currentDiscoveryJob = discoveryJob;
                     try {
+                        jobSynchronizer.interruptDiscoveryIfCancelled();
                         currentDiscoveryJob = changeDiscoveryJobStatusInTransaction(() -> {
                             Optional<LogMessage> logStarted = logService.info(logger, "Started discovery job '{}' ({}). Cache enabled: {}.",
                                     discoveryJob.getId(), jobDescription, cacheEnabled);
@@ -228,7 +229,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                         });
                     } finally {
                         discoveryJobProgressReference.set(null);
-                        permit.close();
+                        jobRegistration.close();
                     }
                 });
             }
@@ -236,7 +237,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             @Override
             public void afterCompletion(int status) {
                 if (status != STATUS_COMMITTED) {
-                    permit.close();
+                    jobRegistration.close();
                 }
             }
         });

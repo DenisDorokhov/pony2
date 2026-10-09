@@ -4,7 +4,7 @@ import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,10 +17,10 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ALBUM
 public class AlbumDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final DiscoveryCancellationMonitor cancellationMonitor;
+    private final LibraryJobSynchronizer jobSynchronizer;
 
-    public AlbumDiscoveryService(DiscoveryCancellationMonitor cancellationMonitor) {
-        this.cancellationMonitor = cancellationMonitor;
+    public AlbumDiscoveryService(LibraryJobSynchronizer jobSynchronizer) {
+        this.jobSynchronizer = jobSynchronizer;
     }
 
     public void discover(DiscoveryJob discoveryJob, Album album, @Nullable Consumer<DiscoveryProgress> observer) {
@@ -28,16 +28,13 @@ public class AlbumDiscoveryService {
     }
 
     public void discover(DiscoveryJob discoveryJob, Album album, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
-        cancellationMonitor.taskStarted();
-        try {
+        try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
             notifyProgressObserver(new DiscoveryProgress(ALBUM_DISCOVERY, null), observer);
             Thread.sleep(10);
-            cancellationMonitor.interruptIfCancelled();
+            jobSynchronizer.interruptDiscoveryIfCancelled();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
-        } finally {
-            cancellationMonitor.taskFinished();
         }
     }
 

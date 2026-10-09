@@ -14,7 +14,7 @@ import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -60,7 +60,7 @@ public class SpotifyArtistDataService {
     private final LogService logService;
     private final ShutdownService shutdownService;
     private final DiscoveryAdvisor discoveryAdvisor;
-    private final DiscoveryCancellationMonitor cancellationMonitor;
+    private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
 
     private final String systemPrompt;
@@ -74,7 +74,7 @@ public class SpotifyArtistDataService {
             LogService logService,
             ShutdownService shutdownService,
             DiscoveryAdvisor discoveryAdvisor,
-            DiscoveryCancellationMonitor cancellationMonitor,
+            LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource
     ) throws IOException {
@@ -86,23 +86,20 @@ public class SpotifyArtistDataService {
         this.logService = logService;
         this.shutdownService = shutdownService;
         this.discoveryAdvisor = discoveryAdvisor;
-        this.cancellationMonitor = cancellationMonitor;
+        this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         systemPrompt = promptResource.getContentAsString(UTF_8) + "\n"
                 + new BeanOutputConverter<>(SpotifyArtistData.class).getFormat();
     }
 
     public Optional<SpotifyArtistData> discover(DiscoveryTask task, boolean cacheEnabled) {
-        cancellationMonitor.taskStarted();
-        try {
+        try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
             return doDiscover(task, cacheEnabled);
-        } finally {
-            cancellationMonitor.taskFinished();
         }
     }
 
     private Optional<SpotifyArtistData> doDiscover(DiscoveryTask task, boolean cacheEnabled) {
-        cancellationMonitor.interruptIfCancelled();
+        jobSynchronizer.interruptDiscoveryIfCancelled();
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }
@@ -134,7 +131,7 @@ public class SpotifyArtistDataService {
                 .messages(new SystemMessage(request.systemPrompt()), new UserMessage(request.userPrompt()))
                 .call()
                 .content();
-        cancellationMonitor.interruptIfCancelled();
+        jobSynchronizer.interruptDiscoveryIfCancelled();
         saveRawExchange(task, request, response);
         logLlmExchange(artist, request, response, stopwatch);
         SpotifyArtistData result = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;

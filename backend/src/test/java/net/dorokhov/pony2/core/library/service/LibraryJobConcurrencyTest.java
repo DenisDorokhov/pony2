@@ -7,7 +7,6 @@ import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
@@ -56,8 +55,7 @@ class LibraryJobConcurrencyTest {
     @Mock private AlbumDiscoveryService albumDiscoveryService;
     @Mock private LogService logService;
 
-    private final DiscoveryCancellationMonitor cancellationMonitor = new DiscoveryCancellationMonitor();
-    private final LibraryJobLockService lockService = new LibraryJobLockService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
     private final BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<>();
     private final Executor executor = tasks::add;
     private ScanJobServiceImpl scanService;
@@ -66,10 +64,10 @@ class LibraryJobConcurrencyTest {
     @BeforeEach
     void setUp() throws Exception {
         initSynchronization();
-        scanService = new ScanJobServiceImpl(scanJobRepository, configService, libraryScanner, lockService, cancellationMonitor,
+        scanService = new ScanJobServiceImpl(scanJobRepository, configService, libraryScanner, jobSynchronizer,
                 logService, executor, transactionManager());
         discoveryService = new DiscoveryJobServiceImpl(discoveryJobRepository, discoveryTaskRepository,
-                artistRepository, albumRepository, fullDiscoveryService, lockService,
+                artistRepository, albumRepository, fullDiscoveryService, jobSynchronizer,
                 artistDiscoveryService, albumDiscoveryService, logService, executor, transactionManager());
 
         lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
@@ -130,7 +128,7 @@ class LibraryJobConcurrencyTest {
             }).when(scanJobRepository).save(any());
         } else {
             doAnswer(invocation -> {
-                assertThat(lockService.tryAcquire()).isEmpty();
+                assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
                 return invocation.getArgument(0);
             }).when(discoveryJobRepository).save(any());
         }
@@ -140,7 +138,7 @@ class LibraryJobConcurrencyTest {
 
     @ParameterizedTest
     @EnumSource(value = JobKind.class, names = {"SCAN", "EDIT", "DISCOVERY_FULL"})
-    void shouldReleaseWhenSavingJobFails(JobKind kind) {
+    void shouldReleaseWhenSavingJobFails(JobKind kind) throws Exception {
         RuntimeException failure = new IllegalStateException("save failed");
         if (isScan(kind)) {
             doThrow(failure).when(scanJobRepository).save(any());
@@ -190,7 +188,7 @@ class LibraryJobConcurrencyTest {
         assertThat(discoveryService.getCurrentDiscoveryJobProgress()).hasValueSatisfying(progress ->
                 assertThat(progress.getDiscoveryJob().getStatus()).isEqualTo(DiscoveryJob.Status.STARTING));
         assertThat(tasks).hasSize(1);
-        assertThat(lockService.tryAcquire()).isEmpty();
+        assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
         runNextTask();
         verify(fullDiscoveryService).discover(any(), eq(true), any());
         assertReleased();
@@ -240,17 +238,29 @@ class LibraryJobConcurrencyTest {
 
     @ParameterizedTest
     @EnumSource(value = JobKind.class, names = {"DISCOVERY_FULL", "DISCOVERY_ARTIST", "DISCOVERY_ALBUM"})
-    void shouldRejectScanWhileDiscoveryIsQueued(JobKind kind) throws Exception {
-        start(kind);
+    void shouldCancelDiscoveryWhileQueued(JobKind kind) throws Exception {
+        DiscoveryJob discovery = (DiscoveryJob) start(kind);
+        when(discoveryJobRepository.findById(any())).thenReturn(Optional.of(discovery));
         commit();
 
-        assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
-        assertThatThrownBy(scanService::startScanJob).isInstanceOf(ConcurrentLibraryJobException.class);
-        assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentLibraryJobException.class);
-        verifyNoInteractions(scanJobRepository);
-        assertThat(tasks).hasSize(1);
-        runNextTask();
-        assertReleased();
+        try (ExecutorService callers = Executors.newSingleThreadExecutor()) {
+            Future<Object> scan = callers.submit(() -> startAndCommit(JobKind.SCAN));
+            try {
+                await().atMost(Duration.ofSeconds(5)).until(jobSynchronizer::isDiscoveryCancelled);
+                assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
+                assertThat(scan.isDone()).isFalse();
+                assertDiscoveryRejected();
+                verifyNoInteractions(scanJobRepository);
+                runNextTask();
+                assertThat(discovery.getStatus()).isEqualTo(DiscoveryJob.Status.INTERRUPTED);
+                verifyNoInteractions(fullDiscoveryService, artistDiscoveryService, albumDiscoveryService);
+                assertThat(scan.get(5, TimeUnit.SECONDS)).isInstanceOf(ScanJob.class);
+                runNextTask();
+                assertReleased();
+            } finally {
+                scan.cancel(true);
+            }
+        }
     }
 
     @ParameterizedTest
@@ -261,14 +271,11 @@ class LibraryJobConcurrencyTest {
         CountDownLatch finishing = new CountDownLatch(1);
         CountDownLatch finish = new CountDownLatch(1);
         doAnswer(invocation -> {
-            cancellationMonitor.taskStarted();
-            try {
+            try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
                 entered.countDown();
                 assertThat(release.await(5, TimeUnit.SECONDS)).isTrue();
-                cancellationMonitor.interruptIfCancelled();
+                jobSynchronizer.interruptDiscoveryIfCancelled();
                 return null;
-            } finally {
-                cancellationMonitor.taskFinished();
             }
         }).when(fullDiscoveryService).discover(any(), eq(true), any());
         DiscoveryJob discovery = discoveryService.startFullJob();
@@ -288,22 +295,20 @@ class LibraryJobConcurrencyTest {
             try {
                 assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
                 scan = callers.submit(() -> startAndCommit(kind));
-                await().atMost(Duration.ofSeconds(5)).until(cancellationMonitor::isCancelled);
+                await().atMost(Duration.ofSeconds(5)).until(jobSynchronizer::isDiscoveryCancelled);
                 assertThat(scan.isDone()).isFalse();
                 verifyNoInteractions(scanJobRepository);
                 release.countDown();
                 assertThat(finishing.await(5, TimeUnit.SECONDS)).isTrue();
-                assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
-                assertThat(scan.get(5, TimeUnit.SECONDS)).isInstanceOf(ConcurrentLibraryJobException.class);
+                assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
+                assertThat(scan.isDone()).isFalse();
+                assertDiscoveryRejected();
                 verifyNoInteractions(scanJobRepository);
                 finish.countDown();
                 execution.get(5, TimeUnit.SECONDS);
                 verify(observer).onDiscoveryJobInterrupted(any());
                 assertThat(discovery.getStatus()).isEqualTo(DiscoveryJob.Status.INTERRUPTED);
-                assertReleased();
-
-                start(kind);
-                commit();
+                assertThat(scan.get(5, TimeUnit.SECONDS)).isInstanceOf(ScanJob.class);
                 runNextTask();
                 assertReleased();
             } finally {
@@ -372,12 +377,12 @@ class LibraryJobConcurrencyTest {
         assertThat(mockingDetails(logService).getInvocations()).hasSize(logs);
     }
 
-    private void assertReleased() {
-        assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
+    private void assertReleased() throws Exception {
+        assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
         assertThat(scanService.getCurrentScanJobProgress()).isEmpty();
         assertThat(discoveryService.getCurrentDiscoveryJobProgress()).isEmpty();
-        try (LibraryJobLockService.Permit ignored = lockService.tryAcquire().orElseThrow()) {
-            assertThat(lockService.tryAcquire()).isEmpty();
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerDiscoveryJob()) {
+            assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
         }
     }
 

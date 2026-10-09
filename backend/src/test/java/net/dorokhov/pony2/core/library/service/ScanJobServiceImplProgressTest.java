@@ -5,7 +5,6 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.NoOpTaskExecutor;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
@@ -51,11 +50,7 @@ public class ScanJobServiceImplProgressTest {
 
     @Spy
     @SuppressWarnings("unused")
-    private final DiscoveryCancellationMonitor cancellationMonitor = new DiscoveryCancellationMonitor();
-
-    @Spy
-    @SuppressWarnings("unused")
-    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
 
     @Spy
     @SuppressWarnings("unused")

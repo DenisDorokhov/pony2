@@ -4,11 +4,12 @@ import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,7 +38,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private ArtistDiscoveryService service;
     @Autowired
-    private DiscoveryCancellationMonitor cancellationMonitor;
+    private LibraryJobSynchronizer jobSynchronizer;
     @Autowired
     private ArtistRepository artistRepository;
     @Autowired
@@ -55,8 +56,16 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private LogMessageRepository logRepository;
 
+    private LibraryJobSynchronizer.LibraryJobRegistration jobRegistration;
+
+    @AfterEach
+    void tearDown() {
+        jobRegistration.close();
+    }
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        jobRegistration = jobSynchronizer.registerDiscoveryJob();
         lenient().when(model.getOptions()).thenReturn(ToolCallingChatOptions.builder().build());
     }
 
@@ -287,7 +296,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         DiscoveryJob job = saveJob();
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
-            cancellationMonitor.cancel();
+            jobSynchronizer.cancelDiscovery();
             return chatResponse(spotifyArtistData("spotify-artist"));
         });
 

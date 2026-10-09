@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
@@ -84,7 +85,7 @@ public class LibraryDiscoveryAdminControllerTest {
                 .setLogMessage(new LogMessage().setId("log1").setText("Starting discovery."));
         when(startJob(type, cacheEnabled)).thenReturn(job);
 
-        var request = post(startJobPath(type));
+        MockHttpServletRequestBuilder request = post(startJobPath(type));
         if (cacheEnabledParameter != null) {
             request.param("cacheEnabled", cacheEnabledParameter);
         }

@@ -13,7 +13,6 @@ import net.dorokhov.pony2.api.library.service.command.EditCommand;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.exception.ScanInterruptedException;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
@@ -34,7 +33,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -57,8 +55,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     private final LibraryScanner libraryScanner;
     private final LogService logService;
     private final Executor scanJobExecutor;
-    private final LibraryJobLockService libraryJobLockService;
-    private final DiscoveryCancellationMonitor cancellationMonitor;
+    private final LibraryJobSynchronizer jobSynchronizer;
 
     private final TransactionTemplate transactionTemplate;
 
@@ -70,8 +67,7 @@ public class ScanJobServiceImpl implements ScanJobService {
             ScanJobRepository scanJobRepository,
             ConfigService configService,
             LibraryScanner libraryScanner,
-            LibraryJobLockService libraryJobLockService,
-            DiscoveryCancellationMonitor cancellationMonitor,
+            LibraryJobSynchronizer jobSynchronizer,
             LogService logService,
             @Qualifier(SCAN_JOB_EXECUTOR) Executor scanJobExecutor,
             PlatformTransactionManager transactionManager
@@ -82,8 +78,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         this.libraryScanner = libraryScanner;
         this.logService = logService;
         this.scanJobExecutor = scanJobExecutor;
-        this.libraryJobLockService = libraryJobLockService;
-        this.cancellationMonitor = cancellationMonitor;
+        this.jobSynchronizer = jobSynchronizer;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
@@ -143,11 +138,11 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional
     public ScanJob startScanJob() throws ConcurrentLibraryJobException {
-        LibraryJobLockService.Permit permit = acquireScanPermit();
+        LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerScanJob(DISCOVERY_CANCELLATION_TIMEOUT);
         try {
-            return doStartScanJob(configService.get().libraryFolders(), permit);
-        } catch (Exception e) {
-            permit.close();
+            return doStartScanJob(configService.get().libraryFolders(), jobRegistration);
+        } catch (RuntimeException | Error e) {
+            jobRegistration.close();
             throw e;
         }
     }
@@ -155,25 +150,16 @@ public class ScanJobServiceImpl implements ScanJobService {
     @Override
     @Transactional
     public ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentLibraryJobException {
-        LibraryJobLockService.Permit permit = acquireScanPermit();
+        LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerScanJob(DISCOVERY_CANCELLATION_TIMEOUT);
         try {
-            return doStartEditJob(commands, permit);
-        } catch (Exception e) {
-            permit.close();
+            return doStartEditJob(commands, jobRegistration);
+        } catch (RuntimeException | Error e) {
+            jobRegistration.close();
             throw e;
         }
     }
 
-    private LibraryJobLockService.Permit acquireScanPermit() throws ConcurrentLibraryJobException {
-        try {
-            cancellationMonitor.cancelAndWait(DISCOVERY_CANCELLATION_TIMEOUT);
-        } catch (TimeoutException e) {
-            throw new ConcurrentLibraryJobException();
-        }
-        return libraryJobLockService.tryAcquire().orElseThrow(ConcurrentLibraryJobException::new);
-    }
-
-    private ScanJob doStartEditJob(List<EditCommand> commands, LibraryJobLockService.Permit permit) {
+    private ScanJob doStartEditJob(List<EditCommand> commands, LibraryJobSynchronizer.LibraryJobRegistration jobRegistration) {
 
         List<String> targetPaths = commands.stream()
                 .map(EditCommand::getSongFilePath)
@@ -211,7 +197,7 @@ public class ScanJobServiceImpl implements ScanJobService {
                         });
                     } finally {
                         scanJobProgressReference.set(null);
-                        permit.close();
+                        jobRegistration.close();
                     }
                     onScanJobStatusChange(currentScanJob);
                 });
@@ -220,7 +206,7 @@ public class ScanJobServiceImpl implements ScanJobService {
             @Override
             public void afterCompletion(int status) {
                 if (status != STATUS_COMMITTED) {
-                    permit.close();
+                    jobRegistration.close();
                 }
             }
         });
@@ -228,7 +214,7 @@ public class ScanJobServiceImpl implements ScanJobService {
         return scanJob;
     }
 
-    private ScanJob doStartScanJob(List<File> targetFolders, LibraryJobLockService.Permit permit) {
+    private ScanJob doStartScanJob(List<File> targetFolders, LibraryJobSynchronizer.LibraryJobRegistration jobRegistration) {
 
         List<String> targetPaths = fetchAbsolutePaths(targetFolders);
         Optional<LogMessage> logStarting = logService.info(logger, "Starting scan job for {}...", targetPaths);
@@ -278,7 +264,7 @@ public class ScanJobServiceImpl implements ScanJobService {
                         });
                     } finally {
                         scanJobProgressReference.set(null);
-                        permit.close();
+                        jobRegistration.close();
                     }
                     onScanJobStatusChange(currentScanJob);
                 });
@@ -287,7 +273,7 @@ public class ScanJobServiceImpl implements ScanJobService {
             @Override
             public void afterCompletion(int status) {
                 if (status != STATUS_COMMITTED) {
-                    permit.close();
+                    jobRegistration.close();
                 }
             }
         });

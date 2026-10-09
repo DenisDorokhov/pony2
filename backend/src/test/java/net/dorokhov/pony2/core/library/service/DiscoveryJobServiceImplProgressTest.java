@@ -60,7 +60,7 @@ public class DiscoveryJobServiceImplProgressTest {
 
     @Spy
     @SuppressWarnings("unused")
-    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
 
     @Spy
     @SuppressWarnings("unused")

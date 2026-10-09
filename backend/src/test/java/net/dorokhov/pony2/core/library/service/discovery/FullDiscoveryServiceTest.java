@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.api.library.domain.*;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 public class FullDiscoveryServiceTest {
 
     @Mock
-    private DiscoveryCancellationMonitor cancellationMonitor;
+    private LibraryJobSynchronizer jobSynchronizer;
 
     @InjectMocks
     private FullDiscoveryService fullDiscoveryService;

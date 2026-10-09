@@ -11,7 +11,6 @@ import net.dorokhov.pony2.api.library.service.command.EditCommand;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import net.dorokhov.pony2.core.library.service.scan.LibraryScanner;
 import org.junit.jupiter.api.AfterEach;
@@ -51,6 +50,7 @@ import static net.dorokhov.pony2.test.ScanJobFixtures.scanJobEdit;
 import static net.dorokhov.pony2.test.ScanJobFixtures.scanJobFull;
 import static net.dorokhov.pony2.test.ScanResultFixtures.scanResult;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,10 +73,7 @@ public class ScanJobServiceImplTest {
     private LogService logService;
 
     @Spy
-    private final DiscoveryCancellationMonitor cancellationMonitor = new DiscoveryCancellationMonitor();
-
-    @Spy
-    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
 
     @Spy
     @SuppressWarnings("unused")
@@ -360,7 +357,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
-        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
+        assertThatCode(() -> jobSynchronizer.registerDiscoveryJob().close()).doesNotThrowAnyException();
     }
 
     private void doTestFailEditJobOnException(Exception e) throws IOException, ConcurrentLibraryJobException {
@@ -393,7 +390,7 @@ public class ScanJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
-        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
+        assertThatCode(() -> jobSynchronizer.registerDiscoveryJob().close()).doesNotThrowAnyException();
     }
 
     private Optional<LogMessage> logMessage() {

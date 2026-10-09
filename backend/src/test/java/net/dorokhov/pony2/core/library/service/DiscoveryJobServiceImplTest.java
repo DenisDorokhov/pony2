@@ -45,6 +45,7 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryType.*;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static net.dorokhov.pony2.test.DiscoveryJobFixtures.discoveryJobArtist;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -74,7 +75,7 @@ public class DiscoveryJobServiceImplTest {
     private LogService logService;
 
     @Spy
-    private final LibraryJobLockService libraryJobLockService = new LibraryJobLockService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
 
     @Spy
     @SuppressWarnings("unused")
@@ -342,7 +343,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
-        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
+        assertThatCode(() -> jobSynchronizer.registerDiscoveryJob().close()).doesNotThrowAnyException();
     }
 
     @Test
@@ -398,7 +399,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatFailingAt(2);
         observer.assertThatFailedAt(3);
-        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
+        assertThatCode(() -> jobSynchronizer.registerDiscoveryJob().close()).doesNotThrowAnyException();
     }
 
     @Test
@@ -434,7 +435,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatInterruptingAt(2);
         observer.assertThatInterruptedAt(3);
-        assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
+        assertThatCode(() -> jobSynchronizer.registerDiscoveryJob().close()).doesNotThrowAnyException();
     }
 
     @Test

@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -27,11 +28,11 @@ class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
     @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
     @Autowired
-    private LibraryJobLockService lockService;
+    private LibraryJobSynchronizer jobSynchronizer;
 
     @ParameterizedTest
     @EnumSource(JobKind.class)
-    void shouldHoldSharedLockUntilOuterTransactionRollsBack(JobKind kind) {
+    void shouldHoldSharedLockUntilOuterTransactionRollsBack(JobKind kind) throws Exception {
         getTransactionTemplate().executeWithoutResult(status -> {
             if (kind != JobKind.DISCOVERY) {
                 if (kind == JobKind.SCAN) {
@@ -47,11 +48,11 @@ class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
             } else {
                 assertThatCode(() -> discoveryService.startFullJob()).doesNotThrowAnyException();
                 assertThat(discoveryJobRepository.count()).isEqualTo(1);
-                assertThatThrownBy(() -> scanService.startScanJob()).isInstanceOf(ConcurrentLibraryJobException.class);
-                assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentLibraryJobException.class);
+                assertThatThrownBy(() -> jobSynchronizer.registerScanJob(Duration.ZERO))
+                        .isInstanceOf(ConcurrentLibraryJobException.class);
                 assertThat(scanJobRepository.count()).isZero();
             }
-            assertThat(lockService.tryAcquire()).isEmpty();
+            assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
             assertThat(scanService.getCurrentScanJobProgress()).isEmpty();
             assertThat(discoveryService.getCurrentDiscoveryJobProgress()).isEmpty();
             status.setRollbackOnly();
@@ -59,8 +60,8 @@ class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
 
         assertThat(scanJobRepository.count()).isZero();
         assertThat(discoveryJobRepository.count()).isZero();
-        try (LibraryJobLockService.Permit ignored = lockService.tryAcquire().orElseThrow()) {
-            assertThat(lockService.tryAcquire()).isEmpty();
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerDiscoveryJob()) {
+            assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
         }
     }
 }

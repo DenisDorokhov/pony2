@@ -12,7 +12,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
@@ -40,7 +40,7 @@ public class ArtistDiscoveryService {
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final LogService logService;
-    private final DiscoveryCancellationMonitor cancellationMonitor;
+    private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
@@ -48,14 +48,14 @@ public class ArtistDiscoveryService {
             DiscoveryTaskRepository discoveryTaskRepository,
             SpotifyArtistDataService spotifyArtistDataService,
             LogService logService,
-            DiscoveryCancellationMonitor cancellationMonitor,
+            LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager
     ) {
         this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.logService = logService;
-        this.cancellationMonitor = cancellationMonitor;
+        this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
@@ -91,11 +91,8 @@ public class ArtistDiscoveryService {
             Function<DiscoveryTask, R> action,
             Consumer<RuntimeException> errorHandler
     ) {
-        cancellationMonitor.taskStarted();
-        try {
+        try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
             return executeRegisteredTask(discovery, type, parameter, action, errorHandler);
-        } finally {
-            cancellationMonitor.taskFinished();
         }
     }
 

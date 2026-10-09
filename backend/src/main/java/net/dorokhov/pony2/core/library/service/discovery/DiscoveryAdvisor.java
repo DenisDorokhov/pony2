@@ -1,6 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
-import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
@@ -20,22 +20,22 @@ public class DiscoveryAdvisor implements BaseAdvisor {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ShutdownService shutdownService;
-    private final DiscoveryCancellationMonitor cancellationMonitor;
+    private final LibraryJobSynchronizer jobSynchronizer;
 
-    public DiscoveryAdvisor(ShutdownService shutdownService, DiscoveryCancellationMonitor cancellationMonitor) {
+    public DiscoveryAdvisor(ShutdownService shutdownService, LibraryJobSynchronizer jobSynchronizer) {
         this.shutdownService = shutdownService;
-        this.cancellationMonitor = cancellationMonitor;
+        this.jobSynchronizer = jobSynchronizer;
     }
 
     @Override
     public ChatClientRequest before(ChatClientRequest request, AdvisorChain advisorChain) {
-        checkShutdown();
+        interruptIfNeeded();
         return request;
     }
 
     @Override
     public ChatClientResponse after(ChatClientResponse response, AdvisorChain advisorChain) {
-        checkShutdown();
+        interruptIfNeeded();
         ChatResponse chatResponse = response.chatResponse();
         if (logger.isDebugEnabled() && chatResponse != null) {
             for (Generation generation : chatResponse.getResults()) {
@@ -54,8 +54,8 @@ public class DiscoveryAdvisor implements BaseAdvisor {
         return ToolCallingAdvisor.DEFAULT_ORDER + 1;
     }
 
-    private void checkShutdown() {
-        cancellationMonitor.interruptIfCancelled();
+    private void interruptIfNeeded() {
+        jobSynchronizer.interruptDiscoveryIfCancelled();
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }
