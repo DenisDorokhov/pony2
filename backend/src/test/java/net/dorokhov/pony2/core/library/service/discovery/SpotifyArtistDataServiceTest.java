@@ -78,6 +78,7 @@ class SpotifyArtistDataServiceTest {
     private final ShutdownService shutdownService = new ShutdownService();
     private final Map<String, String> cache = new HashMap<>();
     private final List<Prompt> prompts = new ArrayList<>();
+    private final List<String> queuedResponses = new ArrayList<>();
     private int modelCalls;
     private int artistCount;
     private String response;
@@ -98,7 +99,8 @@ class SpotifyArtistDataServiceTest {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
             modelCalls++;
-            return new ChatResponse(List.of(new Generation(new AssistantMessage(response))));
+            String nextResponse = queuedResponses.isEmpty() ? response : queuedResponses.removeFirst();
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(nextResponse))));
         });
         response = JsonConverter.toJson(found());
         configuredClient = ChatClient.builder(model).build();
@@ -188,6 +190,62 @@ class SpotifyArtistDataServiceTest {
 
         assertThatThrownBy(() -> service.discover(task(artist()), true)).hasMessageContaining("Playwright is unavailable");
         assertThat(cache).isEmpty();
+        verify(model).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"not JSON", "Here is the result:\n%s", "%s\nDone.", "```json\n%s\n```", "{}", "{\"status\":\"FOUND\"}"})
+    void shouldRequestVerificationAndWarnAboutInvalidResponse(String invalidResponseTemplate) throws IOException {
+        configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate")).build();
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        String invalidResponse = invalidResponseTemplate != null ? invalidResponseTemplate.formatted(response) : null;
+        queuedResponses.add(invalidResponse);
+        Artist artist = artist();
+        DiscoveryTask task = task(artist);
+
+        assertThat(service.discover(task, true)).contains(found());
+
+        assertThat(modelCalls).isEqualTo(2);
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2).endsWith(response);
+        Prompt verification = prompts.get(1);
+        assertThat(verification.getInstructions().subList(0, 2)).isEqualTo(prompts.getFirst().getInstructions());
+        if (invalidResponse != null && !invalidResponse.isBlank()) {
+            assertThat(verification.getInstructions().get(2)).isInstanceOf(AssistantMessage.class);
+            assertThat(verification.getInstructions().get(2).getText()).isEqualTo(invalidResponse);
+        }
+        assertThat(verification.getInstructions().getLast().getText()).contains("Recheck the entire answer", "all URLs");
+        assertThat(((ToolCallingChatOptions) verification.getOptions()).getToolCallbacks())
+                .extracting(callback -> callback.getToolDefinition().name()).containsExactly("browser_navigate");
+        verify(logService).warn(any(), contains("Invalid Spotify response"), eq(artist.getId()), anyString());
+        assertThat(cache).hasSize(1);
+        Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
+        assertThat(entry.get("response")).isEqualTo(response);
+        assertThat(((Map<?, ?>) entry.get("request")).get("userPrompt")).isEqualTo(verification.getInstructions().getLast().getText());
+    }
+
+    @Test
+    void shouldSkipCacheForBothAttemptsWhenDisabled() {
+        queuedResponses.add("Invalid response");
+
+        assertThat(service.discover(task(artist()), false)).contains(found());
+
+        assertThat(modelCalls).isEqualTo(2);
+        verifyNoInteractions(cacheService);
+    }
+
+    @Test
+    void shouldNotVerifyWhenDiscoveryIsCancelledAfterInvalidResponse() {
+        response = "Invalid response";
+        doAnswer(invocation -> {
+            jobSynchronizer.cancelDiscovery();
+            return Optional.empty();
+        }).when(logService).warn(any(), anyString(), any(), any());
+
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(modelCalls).isOne();
+        assertThat(cache).isEmpty();
     }
 
     @ParameterizedTest
@@ -195,8 +253,11 @@ class SpotifyArtistDataServiceTest {
     @ValueSource(strings = {" ", "null", "not JSON"})
     void shouldNotCacheInvalidJson(String invalidResponse) {
         response = invalidResponse;
-        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(RuntimeException.class);
+        Artist artist = artist();
+        assertThatThrownBy(() -> service.discover(task(artist), true)).isInstanceOf(RuntimeException.class);
         assertThat(cache).isEmpty();
+        assertThat(modelCalls).isEqualTo(2);
+        verify(logService, times(2)).warn(any(), contains("Invalid Spotify response"), eq(artist.getId()), anyString());
     }
 
     @ParameterizedTest
@@ -395,7 +456,8 @@ class SpotifyArtistDataServiceTest {
                 discoveryTaskRepository, jobSynchronizer, shutdownService, transactionManager());
         return new SpotifyArtistDataService(operation,
                 validator, artistRepository, logService, shutdownService,
-                jobSynchronizer, transactionManager(), promptResource);
+                jobSynchronizer, transactionManager(), promptResource,
+                new ClassPathResource("prompts/spotify-artist-data-verification.txt"));
     }
 
     private Artist artist() {

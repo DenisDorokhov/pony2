@@ -1,0 +1,6 @@
+Your previous response failed parsing or validation: %s
+Recheck the entire answer using the Playwright MCP browser tools on Spotify, including the
+artist and album match, IDs, all URLs and the remaining data. Correct all errors, not just
+the reported issue. Copy actual URLs observed on Spotify; do not construct or guess them.
+Do not invent missing data or turn a technical failure into NOT_FOUND.
+Return the complete JSON object matching the supplied schema, without Markdown or extra text.

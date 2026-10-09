@@ -15,6 +15,7 @@ import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
+import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.util.List;
@@ -56,6 +58,7 @@ public class SpotifyArtistDataService {
     private final TransactionTemplate transactionTemplate;
 
     private final String systemPrompt;
+    private final String verificationPrompt;
 
     public SpotifyArtistDataService(
             DiscoveryTaskLlmExecutor llmOperation,
@@ -65,7 +68,8 @@ public class SpotifyArtistDataService {
             ShutdownService shutdownService,
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
-            @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource
+            @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource,
+            @Value("classpath:prompts/spotify-artist-data-verification.txt") Resource verificationPromptResource
     ) throws IOException {
         this.llmOperation = llmOperation;
         this.validator = validator;
@@ -76,6 +80,7 @@ public class SpotifyArtistDataService {
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         systemPrompt = promptResource.getContentAsString(UTF_8) + "\n"
                 + new BeanOutputConverter<>(SpotifyArtistData.class).getFormat();
+        verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
     }
 
     public Optional<SpotifyArtistData> discover(DiscoveryTask task, boolean cacheEnabled) {
@@ -94,11 +99,20 @@ public class SpotifyArtistDataService {
         if (request == null) {
             return Optional.empty();
         }
-        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
+        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(
+                SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
         SpotifyArtistData result = llmOperation.call(task, request, cacheSettings, response -> {
-            SpotifyArtistData data = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;
-            validateResponse(data, request);
-            return data;
+            try {
+                SpotifyArtistData data = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;
+                validateResponse(data, request);
+                return data;
+            } catch (RuntimeException e) {
+                if (!(e instanceof IllegalStateException) && !(e.getCause() instanceof JacksonException)) {
+                    throw e;
+                }
+                logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}': {}", artistId, e.getMessage());
+                throw new FollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
+            }
         });
         logger.debug("Spotify discovery result for artist '{}': {}.", artistId, result);
         return Optional.of(result);

@@ -7,10 +7,13 @@ import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
+import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -164,6 +167,50 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(JsonConverter.fromJson(cachedTask.getRawResult(), String[].class)).containsExactly("answer 1");
         verify(model).call(any(Prompt.class));
         verify(cacheService).put(eq(SPOTIFY), anyString(), eq(1), anyString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldRequestOneMorePromptAndCacheAcceptedResponse(boolean cachedResponse) {
+        DiscoveryTask task = task();
+        DialogueRequest search = searchRequest();
+        if (cachedResponse) {
+            operation.call(task(), search, CACHE_SETTINGS, Function.identity());
+        }
+        String result = operation.call(task, search, CACHE_SETTINGS, answer -> {
+            if (answer.equals("answer 1")) {
+                throw new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo("answer 2");
+        assertThat(prompts.get(1).getInstructions()).extracting(Message::getText)
+                .containsExactly("Find artist data", "Artist", "answer 1", "Verify this answer");
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly("answer 1", "answer 2");
+        Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+        assertThat(requests).hasSize(2);
+        assertThat(cache).hasSize(1);
+
+        DiscoveryTask cachedTask = task();
+        assertThat(operation.call(cachedTask, search, CACHE_SETTINGS, Function.identity())).isEqualTo("answer 2");
+        assertThat(JsonConverter.fromJson(cachedTask.getRawResult(), String[].class)).containsExactly("answer 2");
+        assertThat(JsonConverter.fromJson(cachedTask.getRawRequest(), Object[].class)).containsExactly(requests[1]);
+        verify(model, times(2)).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldStopAfterOneAdditionalPromptWithoutCachingRejectedResponses() {
+        DiscoveryTask task = task();
+        FollowUpException rejected = new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), CACHE_SETTINGS, answer -> {
+            throw rejected;
+        })).isSameAs(rejected);
+
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly("answer 1", "answer 2");
+        assertThat(cache).isEmpty();
+        verify(model, times(2)).call(any(Prompt.class));
     }
 
     @Test

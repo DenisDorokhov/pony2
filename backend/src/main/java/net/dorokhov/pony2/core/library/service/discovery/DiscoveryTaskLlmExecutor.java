@@ -11,8 +11,12 @@ import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
+import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -56,9 +60,10 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     /**
-     * Makes one synchronous model call, or reuses its cached response. The caller supplies conversation history.
+     * Makes a synchronous model call, or reuses its cached response. The caller supplies conversation history.
+     * The response handler may throw FollowUpException to append a prompt and request one additional response.
      * Raw requests and responses are appended to parallel JSON arrays before the response is processed.
-     * Responses enter the cache only after successful processing. Null cache settings disable caching.
+     * Only an accepted response enters the cache, under the original request's key. Null cache settings disable caching.
      * Calls for the same task must be sequential; task status and the final result belong to its lifecycle.
      */
     public <R> R call(
@@ -109,10 +114,21 @@ public class DiscoveryTaskLlmExecutor {
                     task.getId(), task.getType(), stopwatch.elapsed().toMillis(), cached.isPresent() ? "cache" : "llm",
                     JsonConverter.toPrettyJson(requests.getLast()), formatResponseForLog(response));
         }
-        R result = responseHandler.apply(response);
-        if (cacheSettings != null && cached.isEmpty()) {
+        R result;
+        Request acceptedRequest = request;
+        boolean retried = false;
+        try {
+            result = responseHandler.apply(response);
+        } catch (FollowUpException e) {
+            acceptedRequest = new FollowUpRequest(request, response, e.getPrompt());
+            response = call(task, acceptedRequest, null, Function.identity());
+            result = responseHandler.apply(response);
+            retried = true;
+        }
+        interruptIfNeeded();
+        if (cacheSettings != null && (cached.isEmpty() || retried)) {
             cacheService.put(cacheSettings.region(), key, cacheSettings.version(),
-                    JsonConverter.toJson(new CacheEntry(request, response)));
+                    JsonConverter.toJson(new CacheEntry(acceptedRequest, response)));
         }
         return result;
     }
@@ -152,4 +168,17 @@ public class DiscoveryTaskLlmExecutor {
     public record CacheSettings(LlmCacheRegion region, String keyPrefix, int version) {}
 
     private record CacheEntry(Object request, @Nullable String response) {}
+
+    private record FollowUpRequest(Request originalRequest, @Nullable String previousResponse, String userPrompt) implements Request {
+        @Override
+        public Prompt toPrompt() {
+            Prompt originalPrompt = originalRequest.toPrompt();
+            List<Message> messages = new ArrayList<>(originalPrompt.getInstructions());
+            if (previousResponse != null && !previousResponse.isBlank()) {
+                messages.add(new AssistantMessage(previousResponse));
+            }
+            messages.add(new UserMessage(userPrompt));
+            return new Prompt(messages, originalPrompt.getOptions());
+        }
+    }
 }
