@@ -9,7 +9,7 @@ import net.dorokhov.pony2.api.installation.service.command.InstallationCommand;
 import net.dorokhov.pony2.api.installation.service.exception.AlreadyInstalledException;
 import net.dorokhov.pony2.api.installation.service.exception.NotInstalledException;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.api.user.domain.User.Role;
 import net.dorokhov.pony2.api.user.service.UserService;
@@ -114,8 +114,8 @@ public class InstallationServiceImpl implements InstallationService {
                         transactionTemplate.executeWithoutResult(status -> {
                             try {
                                 scanJobService.startScanJob();
-                            } catch (ConcurrentScanException e) {
-                                logService.error(logger, "Could not start scan job after installation: scan job is already running.");
+                            } catch (ConcurrentLibraryJobException e) {
+                                logService.error(logger, "Could not start scan job after installation: library job is already running.");
                             }
                         });
                     } catch (Exception e) {

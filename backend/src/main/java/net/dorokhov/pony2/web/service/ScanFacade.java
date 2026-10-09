@@ -3,7 +3,7 @@ package net.dorokhov.pony2.web.service;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
@@ -73,7 +73,7 @@ public class ScanFacade {
     }
 
     @Transactional
-    public ScanJobDto startScanJob() throws ConcurrentScanException {
+    public ScanJobDto startScanJob() throws ConcurrentLibraryJobException {
         return ScanJobDto.of(scanJobService.startScanJob());
     }
 }

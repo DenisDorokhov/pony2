@@ -75,7 +75,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       this.libraryScanService.startScanJob().subscribe({
         next: () => this.openScanning(),
         error: (error: ErrorDto) => {
-          if (error.code === ErrorDto.Code.CONCURRENT_SCAN) {
+          if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
             this.openScanning();
           }
         }

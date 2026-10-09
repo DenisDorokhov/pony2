@@ -3,7 +3,7 @@ package net.dorokhov.pony2.api.library.service;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony2.api.library.service.command.EditCommand;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -38,6 +38,6 @@ public interface ScanJobService {
     Optional<ScanJob> getFirstSuccessfulJob();
     Optional<ScanJob> getLastSuccessfulJob();
 
-    ScanJob startScanJob() throws ConcurrentScanException;
-    ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException;
+    ScanJob startScanJob() throws ConcurrentLibraryJobException;
+    ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentLibraryJobException;
 }

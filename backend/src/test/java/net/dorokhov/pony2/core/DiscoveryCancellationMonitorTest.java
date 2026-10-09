@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +37,7 @@ class DiscoveryCancellationMonitorTest {
     void shouldWaitForEveryParallelTaskAndWakeAllWaiters() throws Exception {
         DiscoveryCancellationMonitor monitor = new DiscoveryCancellationMonitor();
         List<CountDownLatch> releases = List.of(new CountDownLatch(1), new CountDownLatch(1), new CountDownLatch(1));
-        try (var executor = Executors.newFixedThreadPool(5)) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
             List<Future<?>> tasks = new ArrayList<>();
             for (CountDownLatch release : releases) {
                 monitor.taskStarted();

@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import net.dorokhov.pony2.web.service.DiscoveryFacade;
@@ -24,19 +23,11 @@ public class LibraryAdminController implements ErrorHandlingController {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public static class Advice {
 
-        @ExceptionHandler(ConcurrentScanException.class)
+        @ExceptionHandler(ConcurrentLibraryJobException.class)
         @ResponseStatus(HttpStatus.BAD_REQUEST)
-        public ErrorDto onConcurrentScan(ConcurrentScanException e) {
+        public ErrorDto onConcurrentLibraryJob(ConcurrentLibraryJobException e) {
             return new ErrorDto()
-                    .setCode(Code.CONCURRENT_SCAN)
-                    .setMessage(e.getMessage());
-        }
-
-        @ExceptionHandler(ConcurrentDiscoveryException.class)
-        @ResponseStatus(HttpStatus.BAD_REQUEST)
-        public ErrorDto onConcurrentDiscovery(ConcurrentDiscoveryException e) {
-            return new ErrorDto()
-                    .setCode(Code.CONCURRENT_DISCOVERY)
+                    .setCode(Code.CONCURRENT_LIBRARY_JOB)
                     .setMessage(e.getMessage());
         }
     }
@@ -76,7 +67,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @PostMapping("/api/admin/library/scanJobs")
-    public ScanJobDto startScanJob() throws ConcurrentScanException {
+    public ScanJobDto startScanJob() throws ConcurrentLibraryJobException {
         return scanFacade.startScanJob();
     }
 
@@ -101,17 +92,17 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/full")
-    public DiscoveryJobDto startFullDiscoveryJob(@RequestParam(defaultValue = "true") boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    public DiscoveryJobDto startFullDiscoveryJob(@RequestParam(defaultValue = "true") boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return discoveryFacade.startFullDiscoveryJob(cacheEnabled);
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/artist/{artistId}")
-    public DiscoveryJobDto startArtistDiscoveryJob(@PathVariable String artistId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+    public DiscoveryJobDto startArtistDiscoveryJob(@PathVariable String artistId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentLibraryJobException {
         return discoveryFacade.startArtistDiscoveryJob(artistId, cacheEnabled);
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/album/{albumId}")
-    public DiscoveryJobDto startAlbumDiscoveryJob(@PathVariable String albumId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+    public DiscoveryJobDto startAlbumDiscoveryJob(@PathVariable String albumId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentLibraryJobException {
         return discoveryFacade.startAlbumDiscoveryJob(albumId, cacheEnabled);
     }
 

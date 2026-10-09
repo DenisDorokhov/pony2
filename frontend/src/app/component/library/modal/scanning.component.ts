@@ -100,7 +100,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
         this.scanJobProgressLoadingState = LoadingState.LOADED;
       },
       error: (error: ErrorDto) => {
-        if (error.code === ErrorDto.Code.CONCURRENT_SCAN) {
+        if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
           this.scanJobProgressLoadingState = LoadingState.LOADED;
         } else {
           this.scanJobProgressLoadingState = LoadingState.ERROR;

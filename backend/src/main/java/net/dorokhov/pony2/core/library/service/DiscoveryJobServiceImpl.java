@@ -5,7 +5,7 @@ import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.*;
@@ -52,14 +52,13 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     private final AlbumDiscoveryService albumDiscoveryService;
     private final LogService logService;
     private final Executor discoveryJobExecutor;
+    private final LibraryJobLockService libraryJobLockService;
 
     private final TransactionTemplate transactionTemplate;
 
     private final Set<Observer> observers = synchronizedSet(new LinkedHashSet<>());
 
     private final AtomicReference<DiscoveryJobProgress> discoveryJobProgressReference = new AtomicReference<>();
-
-    private final LibraryJobLockService libraryJobLockService;
 
     public DiscoveryJobServiceImpl(
             DiscoveryJobRepository discoveryJobRepository,
@@ -131,42 +130,42 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     @Override
     @Transactional
-    public DiscoveryJob startFullJob() throws ConcurrentDiscoveryException {
+    public DiscoveryJob startFullJob() throws ConcurrentLibraryJobException {
         return startFullJob(true);
     }
 
     @Override
     @Transactional
-    public DiscoveryJob startFullJob(boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    public DiscoveryJob startFullJob(boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return startDiscoveryJob(DiscoveryType.FULL, null, cacheEnabled);
     }
 
     @Override
     @Transactional
-    public DiscoveryJob startArtistJob(String artistId) throws ConcurrentDiscoveryException {
+    public DiscoveryJob startArtistJob(String artistId) throws ConcurrentLibraryJobException {
         return startArtistJob(artistId, true);
     }
 
     @Override
     @Transactional
-    public DiscoveryJob startArtistJob(String artistId, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    public DiscoveryJob startArtistJob(String artistId, boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return startDiscoveryJob(DiscoveryType.ARTIST, artistId, cacheEnabled);
     }
 
     @Override
     @Transactional
-    public DiscoveryJob startAlbumJob(String albumId) throws ConcurrentDiscoveryException {
+    public DiscoveryJob startAlbumJob(String albumId) throws ConcurrentLibraryJobException {
         return startAlbumJob(albumId, true);
     }
 
     @Override
     @Transactional
-    public DiscoveryJob startAlbumJob(String albumId, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    public DiscoveryJob startAlbumJob(String albumId, boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return startDiscoveryJob(DiscoveryType.ALBUM, albumId, cacheEnabled);
     }
 
-    private DiscoveryJob startDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentDiscoveryException {
-        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentDiscoveryException::new);
+    private DiscoveryJob startDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentLibraryJobException {
+        LibraryJobLockService.Permit permit = libraryJobLockService.tryAcquire().orElseThrow(ConcurrentLibraryJobException::new);
         try {
             return doStartDiscoveryJob(discoveryType, parameter, cacheEnabled, permit);
         } catch (RuntimeException | Error e) {

@@ -4,7 +4,7 @@ import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanType;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ public class DiscoveryScanJobObserverTest {
     }
 
     @Test
-    public void shouldStartFullDiscoveryJobOnFullScanJobCompleted() throws ConcurrentDiscoveryException {
+    public void shouldStartFullDiscoveryJobOnFullScanJobCompleted() throws ConcurrentLibraryJobException {
 
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.FULL));
 
@@ -47,7 +47,7 @@ public class DiscoveryScanJobObserverTest {
     }
 
     @Test
-    public void shouldNotStartFullDiscoveryJobOnEditJobCompleted() throws ConcurrentDiscoveryException {
+    public void shouldNotStartFullDiscoveryJobOnEditJobCompleted() throws ConcurrentLibraryJobException {
 
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.EDIT));
 
@@ -55,9 +55,9 @@ public class DiscoveryScanJobObserverTest {
     }
 
     @Test
-    public void shouldLogConcurrentDiscoveryException() throws ConcurrentDiscoveryException {
+    public void shouldLogConcurrentLibraryJobException() throws ConcurrentLibraryJobException {
 
-        when(discoveryJobService.startFullJob()).thenThrow(new ConcurrentDiscoveryException());
+        when(discoveryJobService.startFullJob()).thenThrow(new ConcurrentLibraryJobException());
 
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.FULL));
 

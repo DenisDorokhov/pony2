@@ -3,8 +3,7 @@ package net.dorokhov.pony2.core.library.service;
 import net.dorokhov.pony2.InstallingIntegrationTest;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
 import net.dorokhov.pony2.core.library.repository.ScanJobRepository;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,15 +40,15 @@ class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
                     assertThatCode(() -> scanService.startEditJob(List.of())).doesNotThrowAnyException();
                 }
                 assertThat(scanJobRepository.count()).isEqualTo(1);
-                assertThatThrownBy(() -> discoveryService.startFullJob()).isInstanceOf(ConcurrentDiscoveryException.class);
-                assertThatThrownBy(() -> discoveryService.startArtistJob("artist")).isInstanceOf(ConcurrentDiscoveryException.class);
-                assertThatThrownBy(() -> discoveryService.startAlbumJob("album")).isInstanceOf(ConcurrentDiscoveryException.class);
+                assertThatThrownBy(() -> discoveryService.startFullJob()).isInstanceOf(ConcurrentLibraryJobException.class);
+                assertThatThrownBy(() -> discoveryService.startArtistJob("artist")).isInstanceOf(ConcurrentLibraryJobException.class);
+                assertThatThrownBy(() -> discoveryService.startAlbumJob("album")).isInstanceOf(ConcurrentLibraryJobException.class);
                 assertThat(discoveryJobRepository.count()).isZero();
             } else {
                 assertThatCode(() -> discoveryService.startFullJob()).doesNotThrowAnyException();
                 assertThat(discoveryJobRepository.count()).isEqualTo(1);
-                assertThatThrownBy(() -> scanService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
-                assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentScanException.class);
+                assertThatThrownBy(() -> scanService.startScanJob()).isInstanceOf(ConcurrentLibraryJobException.class);
+                assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentLibraryJobException.class);
                 assertThat(scanJobRepository.count()).isZero();
             }
             assertThat(lockService.tryAcquire()).isEmpty();

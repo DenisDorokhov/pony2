@@ -3,7 +3,7 @@ package net.dorokhov.pony2.core.library.service;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.*;
@@ -114,7 +114,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldExecuteFullJob() throws ConcurrentDiscoveryException {
+    public void shouldExecuteFullJob() throws ConcurrentLibraryJobException {
 
         when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
@@ -171,7 +171,7 @@ public class DiscoveryJobServiceImplTest {
 
     @ParameterizedTest
     @CsvSource({"FULL, true", "FULL, false", "ARTIST, true", "ARTIST, false", "ALBUM, true", "ALBUM, false"})
-    public void shouldPassCacheSettingToDiscovery(DiscoveryType type, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    public void shouldPassCacheSettingToDiscovery(DiscoveryType type, boolean cacheEnabled) throws ConcurrentLibraryJobException {
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         Artist artist = artist("artist1");
         Album album = album("album1");
@@ -199,7 +199,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldExecuteArtistJob() throws ConcurrentDiscoveryException {
+    public void shouldExecuteArtistJob() throws ConcurrentLibraryJobException {
 
         Artist artist = artist("artist1");
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist));
@@ -240,7 +240,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldExecuteAlbumJob() throws ConcurrentDiscoveryException {
+    public void shouldExecuteAlbumJob() throws ConcurrentLibraryJobException {
 
         Album album = album("album1");
         when(albumRepository.findById("album1")).thenReturn(Optional.of(album));
@@ -281,7 +281,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldModerateDiscoveryJobOnPartiallyFailedTasks() throws ConcurrentDiscoveryException {
+    public void shouldModerateDiscoveryJobOnPartiallyFailedTasks() throws ConcurrentLibraryJobException {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         when(discoveryTaskRepository.countByJobId(any())).thenReturn(2L);
@@ -313,7 +313,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailDiscoveryJobWhenAllTasksFailed() throws ConcurrentDiscoveryException {
+    public void shouldFailDiscoveryJobWhenAllTasksFailed() throws ConcurrentLibraryJobException {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         when(discoveryTaskRepository.countByJobId(any())).thenReturn(2L);
@@ -346,18 +346,18 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailDiscoveryJobOnConcurrentDiscoveryException() throws ConcurrentDiscoveryException, InterruptedException {
+    public void shouldFailDiscoveryJobOnConcurrentLibraryJobException() throws ConcurrentLibraryJobException, InterruptedException {
 
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         discoveryJobService.startFullJob();
 
-        assertThatThrownBy(() -> discoveryJobService.startFullJob()).isInstanceOf(ConcurrentDiscoveryException.class);
+        assertThatThrownBy(() -> discoveryJobService.startFullJob()).isInstanceOf(ConcurrentLibraryJobException.class);
 
         AtomicBoolean isConcurrentDiscovery = new AtomicBoolean(false);
         Thread thread = new Thread(() -> {
             try {
                 discoveryJobService.startFullJob();
-            } catch (ConcurrentDiscoveryException e) {
+            } catch (ConcurrentLibraryJobException e) {
                 isConcurrentDiscovery.set(true);
             }
         });
@@ -367,7 +367,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailDiscoveryJobOnUnexpectedException() throws ConcurrentDiscoveryException {
+    public void shouldFailDiscoveryJobOnUnexpectedException() throws ConcurrentLibraryJobException {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         doThrow(new RuntimeException()).when(artistDiscoveryService).discover(any(), any(), eq(true), any());
@@ -402,7 +402,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldInterruptDiscoveryJobOnInterruption() throws ConcurrentDiscoveryException {
+    public void shouldInterruptDiscoveryJobOnInterruption() throws ConcurrentLibraryJobException {
 
         when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
         doThrow(new RuntimeException(new DiscoveryInterruptedException()))
@@ -438,7 +438,7 @@ public class DiscoveryJobServiceImplTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionsThrownByObservers() throws ConcurrentDiscoveryException {
+    public void shouldIgnoreExceptionsThrownByObservers() throws ConcurrentLibraryJobException {
 
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
 

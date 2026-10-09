@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.NoOpTaskExecutor;
 import net.dorokhov.pony2.core.library.repository.*;
@@ -80,7 +80,7 @@ public class DiscoveryJobServiceImplProgressTest {
     }
 
     @Test
-    public void shouldGetCurrentDiscoveryJobProgress() throws ConcurrentDiscoveryException {
+    public void shouldGetCurrentDiscoveryJobProgress() throws ConcurrentLibraryJobException {
 
         assertThat(discoveryJobService.getCurrentDiscoveryJobProgress()).isEmpty();
 
@@ -98,7 +98,7 @@ public class DiscoveryJobServiceImplProgressTest {
     }
 
     @Test
-    public void shouldGetDiscoveryJobProgressById() throws ConcurrentDiscoveryException {
+    public void shouldGetDiscoveryJobProgressById() throws ConcurrentLibraryJobException {
 
         assertThat(discoveryJobService.getDiscoveryJobProgress("1")).isEmpty();
 

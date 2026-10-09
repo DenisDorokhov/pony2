@@ -5,8 +5,7 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.repository.*;
@@ -231,7 +230,7 @@ class LibraryJobConcurrencyTest {
                 go.countDown();
             }
             List<Object> results = List.of(scan.get(5, TimeUnit.SECONDS), edit.get(5, TimeUnit.SECONDS));
-            assertThat(results.stream().filter(ConcurrentScanException.class::isInstance).count()).isEqualTo(1);
+            assertThat(results.stream().filter(ConcurrentLibraryJobException.class::isInstance).count()).isEqualTo(1);
             long saves = mockingDetails(scanJobRepository).getInvocations().size()
                     + mockingDetails(discoveryJobRepository).getInvocations().size();
             assertThat(saves).isEqualTo(1);
@@ -246,8 +245,8 @@ class LibraryJobConcurrencyTest {
         commit();
 
         assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
-        assertThatThrownBy(scanService::startScanJob).isInstanceOf(ConcurrentScanException.class);
-        assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentScanException.class);
+        assertThatThrownBy(scanService::startScanJob).isInstanceOf(ConcurrentLibraryJobException.class);
+        assertThatThrownBy(() -> scanService.startEditJob(List.of())).isInstanceOf(ConcurrentLibraryJobException.class);
         verifyNoInteractions(scanJobRepository);
         assertThat(tasks).hasSize(1);
         runNextTask();
@@ -295,7 +294,7 @@ class LibraryJobConcurrencyTest {
                 release.countDown();
                 assertThat(finishing.await(5, TimeUnit.SECONDS)).isTrue();
                 assertThat(cancellationMonitor.hasRunningTasks()).isFalse();
-                assertThat(scan.get(5, TimeUnit.SECONDS)).isInstanceOf(ConcurrentScanException.class);
+                assertThat(scan.get(5, TimeUnit.SECONDS)).isInstanceOf(ConcurrentLibraryJobException.class);
                 verifyNoInteractions(scanJobRepository);
                 finish.countDown();
                 execution.get(5, TimeUnit.SECONDS);
@@ -323,7 +322,7 @@ class LibraryJobConcurrencyTest {
             Object job = start(kind);
             commit();
             return job;
-        } catch (ConcurrentScanException e) {
+        } catch (ConcurrentLibraryJobException e) {
             return e;
         } finally {
             clearSynchronization();
@@ -336,14 +335,14 @@ class LibraryJobConcurrencyTest {
             ready.countDown();
             assertThat(go.await(5, TimeUnit.SECONDS)).isTrue();
             return start(kind);
-        } catch (ConcurrentScanException | ConcurrentDiscoveryException e) {
+        } catch (ConcurrentLibraryJobException e) {
             return e;
         } finally {
             clearSynchronization();
         }
     }
 
-    private Object start(JobKind kind) throws ConcurrentScanException, ConcurrentDiscoveryException {
+    private Object start(JobKind kind) throws ConcurrentLibraryJobException {
         return switch (kind) {
             case SCAN -> scanService.startScanJob();
             case EDIT -> scanService.startEditJob(List.of());
@@ -366,7 +365,7 @@ class LibraryJobConcurrencyTest {
                 continue;
             }
             assertThatThrownBy(() -> start(kind))
-                    .isInstanceOf(ConcurrentDiscoveryException.class);
+                    .isInstanceOf(ConcurrentLibraryJobException.class);
         }
         assertThat(mockingDetails(scanJobRepository).getInvocations()).hasSize(scanSaves);
         assertThat(mockingDetails(discoveryJobRepository).getInvocations()).hasSize(discoverySaves);

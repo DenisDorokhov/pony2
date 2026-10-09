@@ -7,7 +7,7 @@ import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony2.api.library.domain.ScanType;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +63,7 @@ public class DiscoveryScanJobObserver implements ScanJobService.Observer {
         if (scanJob.getScanType() == ScanType.FULL) {
             try {
                 discoveryJobService.startFullJob();
-            } catch (ConcurrentDiscoveryException e) {
+            } catch (ConcurrentLibraryJobException e) {
                 logService.warn(logger, "Could not start full discovery job after scan job.", e);
             }
         }

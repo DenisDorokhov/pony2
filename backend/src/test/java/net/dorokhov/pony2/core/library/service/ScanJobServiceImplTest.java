@@ -8,7 +8,7 @@ import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.ScanProgress.Value;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.command.EditCommand;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
@@ -124,7 +124,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldExecuteScanJob() throws IOException, ConcurrentScanException {
+    public void shouldExecuteScanJob() throws IOException, ConcurrentLibraryJobException {
 
         when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), null, null, null));
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
@@ -180,7 +180,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldExecuteEditJob() throws IOException, ConcurrentScanException {
+    public void shouldExecuteEditJob() throws IOException, ConcurrentLibraryJobException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());
@@ -235,7 +235,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailScanJobOnIOException() throws IOException, ConcurrentScanException {
+    public void shouldFailScanJobOnIOException() throws IOException, ConcurrentLibraryJobException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         
@@ -245,18 +245,18 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailScanJobOnConcurrentScanException() throws ConcurrentScanException, InterruptedException {
+    public void shouldFailScanJobOnConcurrentLibraryJobException() throws ConcurrentLibraryJobException, InterruptedException {
 
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         scanJobService.startScanJob();
 
-        assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(ConcurrentScanException.class);
+        assertThatThrownBy(() -> scanJobService.startScanJob()).isInstanceOf(ConcurrentLibraryJobException.class);
 
         AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
         Thread thread = new Thread(() -> {
             try {
                 scanJobService.startScanJob();
-            } catch (ConcurrentScanException e) {
+            } catch (ConcurrentLibraryJobException e) {
                 isConcurrentScan.set(true);
             }
         });
@@ -266,7 +266,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailScanJobOnUnexpectedException() throws IOException, ConcurrentScanException {
+    public void shouldFailScanJobOnUnexpectedException() throws IOException, ConcurrentLibraryJobException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
 
@@ -276,7 +276,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailEditJobOnIOException() throws ConcurrentScanException, IOException {
+    public void shouldFailEditJobOnIOException() throws ConcurrentLibraryJobException, IOException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
 
@@ -286,18 +286,18 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailEditJobOnConcurrentScanException() throws ConcurrentScanException, InterruptedException {
+    public void shouldFailEditJobOnConcurrentLibraryJobException() throws ConcurrentLibraryJobException, InterruptedException {
 
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         scanJobService.startEditJob(emptyList());
 
-        assertThatThrownBy(() -> scanJobService.startEditJob(emptyList())).isInstanceOf(ConcurrentScanException.class);
+        assertThatThrownBy(() -> scanJobService.startEditJob(emptyList())).isInstanceOf(ConcurrentLibraryJobException.class);
 
         AtomicBoolean isConcurrentScan = new AtomicBoolean(false);
         Thread thread = new Thread(() -> {
             try {
                 scanJobService.startEditJob(emptyList());
-            } catch (ConcurrentScanException e) {
+            } catch (ConcurrentLibraryJobException e) {
                 isConcurrentScan.set(true);
             }
         });
@@ -307,7 +307,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldFailEditJobOnUnexpectedException() throws ConcurrentScanException, IOException {
+    public void shouldFailEditJobOnUnexpectedException() throws ConcurrentLibraryJobException, IOException {
 
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
 
@@ -317,7 +317,7 @@ public class ScanJobServiceImplTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionsThrownByObservers() throws ConcurrentScanException {
+    public void shouldIgnoreExceptionsThrownByObservers() throws ConcurrentLibraryJobException {
 
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         ThrowingScanJobServiceObserver observer = new ThrowingScanJobServiceObserver();
@@ -330,7 +330,7 @@ public class ScanJobServiceImplTest {
         assertThat(observer.getCallCount()).isEqualTo(4);
     }
 
-    private void doTestFailScanJobOnException(Exception e) throws IOException, ConcurrentScanException {
+    private void doTestFailScanJobOnException(Exception e) throws IOException, ConcurrentLibraryJobException {
 
         when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), null, null, null));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
@@ -363,7 +363,7 @@ public class ScanJobServiceImplTest {
         assertThat(libraryJobLockService.tryAcquire()).hasValueSatisfying(LibraryJobLockService.Permit::close);
     }
 
-    private void doTestFailEditJobOnException(Exception e) throws IOException, ConcurrentScanException {
+    private void doTestFailEditJobOnException(Exception e) throws IOException, ConcurrentLibraryJobException {
 
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());

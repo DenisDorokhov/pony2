@@ -10,7 +10,7 @@ import net.dorokhov.pony2.api.library.domain.ScanResult;
 import net.dorokhov.pony2.api.library.domain.ScanType;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.command.EditCommand;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
@@ -57,15 +57,14 @@ public class ScanJobServiceImpl implements ScanJobService {
     private final LibraryScanner libraryScanner;
     private final LogService logService;
     private final Executor scanJobExecutor;
+    private final LibraryJobLockService libraryJobLockService;
+    private final DiscoveryCancellationMonitor cancellationMonitor;
 
     private final TransactionTemplate transactionTemplate;
 
     private final Set<Observer> observers = synchronizedSet(new LinkedHashSet<>());
 
     private final AtomicReference<ScanJobProgress> scanJobProgressReference = new AtomicReference<>();
-
-    private final LibraryJobLockService libraryJobLockService;
-    private final DiscoveryCancellationMonitor cancellationMonitor;
 
     public ScanJobServiceImpl(
             ScanJobRepository scanJobRepository,
@@ -143,7 +142,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional
-    public ScanJob startScanJob() throws ConcurrentScanException {
+    public ScanJob startScanJob() throws ConcurrentLibraryJobException {
         LibraryJobLockService.Permit permit = acquireScanPermit();
         try {
             return doStartScanJob(configService.get().libraryFolders(), permit);
@@ -155,7 +154,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional
-    public ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentScanException {
+    public ScanJob startEditJob(List<EditCommand> commands) throws ConcurrentLibraryJobException {
         LibraryJobLockService.Permit permit = acquireScanPermit();
         try {
             return doStartEditJob(commands, permit);
@@ -165,13 +164,13 @@ public class ScanJobServiceImpl implements ScanJobService {
         }
     }
 
-    private LibraryJobLockService.Permit acquireScanPermit() throws ConcurrentScanException {
+    private LibraryJobLockService.Permit acquireScanPermit() throws ConcurrentLibraryJobException {
         try {
             cancellationMonitor.cancelAndWait(DISCOVERY_CANCELLATION_TIMEOUT);
         } catch (TimeoutException e) {
-            throw new ConcurrentScanException();
+            throw new ConcurrentLibraryJobException();
         }
-        return libraryJobLockService.tryAcquire().orElseThrow(ConcurrentScanException::new);
+        return libraryJobLockService.tryAcquire().orElseThrow(ConcurrentLibraryJobException::new);
     }
 
     private ScanJob doStartEditJob(List<EditCommand> commands, LibraryJobLockService.Permit permit) {

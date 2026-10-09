@@ -3,7 +3,7 @@ package net.dorokhov.pony2.core.library.service;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.DiscoveryCancellationMonitor;
 import net.dorokhov.pony2.core.library.NoOpTaskExecutor;
@@ -76,7 +76,7 @@ public class ScanJobServiceImplProgressTest {
     }
 
     @Test
-    public void shouldGetCurrentScanJobProgress() throws ConcurrentScanException {
+    public void shouldGetCurrentScanJobProgress() throws ConcurrentLibraryJobException {
 
         assertThat(scanJobService.getCurrentScanJobProgress()).isEmpty();
 
@@ -93,7 +93,7 @@ public class ScanJobServiceImplProgressTest {
     }
 
     @Test
-    public void shouldGetScanJobProgressById() throws ConcurrentScanException {
+    public void shouldGetScanJobProgressById() throws ConcurrentLibraryJobException {
 
         assertThat(scanJobService.getScanJobProgress("1")).isEmpty();
 

@@ -5,7 +5,7 @@ import net.dorokhov.pony2.BlockingScanJobServiceObserver;
 import net.dorokhov.pony2.InstallingIntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -485,7 +485,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetPositiveScanStatus() throws ConcurrentScanException {
+    public void shouldGetPositiveScanStatus() throws ConcurrentLibraryJobException {
 
         scanJobService.addObserver(blockingObserver);
         ScanJob scanJob = scanJobService.startScanJob();
@@ -505,7 +505,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetScanStatistics() throws ConcurrentScanException {
+    public void shouldGetScanStatistics() throws ConcurrentLibraryJobException {
 
         ScanJob scanJob = scanJobService.startScanJob();
         await().until(() -> scanJobService.getById(scanJob.getId()).orElseThrow().getStatus() == ScanJob.Status.COMPLETE);

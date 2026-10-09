@@ -6,7 +6,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
@@ -63,12 +63,12 @@ public class DiscoveryFacade {
     }
 
     @Transactional
-    public DiscoveryJobDto startFullDiscoveryJob(boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    public DiscoveryJobDto startFullDiscoveryJob(boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return DiscoveryJobDto.of(discoveryJobService.startFullJob(cacheEnabled));
     }
 
     @Transactional
-    public DiscoveryJobDto startArtistDiscoveryJob(String artistId, boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+    public DiscoveryJobDto startArtistDiscoveryJob(String artistId, boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentLibraryJobException {
         Artist artist = libraryService.getArtistById(artistId).orElse(null);
         if (artist == null) {
             throw new ObjectNotFoundException(Artist.class, artistId);
@@ -77,7 +77,7 @@ public class DiscoveryFacade {
     }
 
     @Transactional
-    public DiscoveryJobDto startAlbumDiscoveryJob(String albumId, boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentDiscoveryException {
+    public DiscoveryJobDto startAlbumDiscoveryJob(String albumId, boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentLibraryJobException {
         Album album = libraryService.getAlbumById(albumId).orElse(null);
         if (album == null) {
             throw new ObjectNotFoundException(Album.class, albumId);

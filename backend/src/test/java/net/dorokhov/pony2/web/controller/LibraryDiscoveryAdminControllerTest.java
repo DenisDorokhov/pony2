@@ -3,7 +3,7 @@ package net.dorokhov.pony2.web.controller;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentDiscoveryException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JacksonConfig;
 import net.dorokhov.pony2.web.dto.*;
@@ -116,14 +116,15 @@ public class LibraryDiscoveryAdminControllerTest {
     @ParameterizedTest
     @EnumSource(DiscoveryType.class)
     public void shouldRejectConcurrentDiscoveryJob(DiscoveryType type) throws Exception {
-        when(startJob(type, true)).thenThrow(new ConcurrentDiscoveryException());
+        when(startJob(type, true)).thenThrow(new ConcurrentLibraryJobException());
 
         String response = mockMvc.perform(post(startJobPath(type)))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse().getContentAsString();
         ErrorDto dto = objectMapper.readValue(response, ErrorDto.class);
 
-        assertThat(dto.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_DISCOVERY);
+        assertThat(dto.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_LIBRARY_JOB);
+        assertThat(dto.getMessage()).isEqualTo("Library job is already running.");
     }
 
     @ParameterizedTest
@@ -306,7 +307,7 @@ public class LibraryDiscoveryAdminControllerTest {
         });
     }
 
-    private DiscoveryJob startJob(DiscoveryType type, boolean cacheEnabled) throws ConcurrentDiscoveryException {
+    private DiscoveryJob startJob(DiscoveryType type, boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return switch (type) {
             case FULL -> discoveryJobService.startFullJob(cacheEnabled);
             case ARTIST -> {

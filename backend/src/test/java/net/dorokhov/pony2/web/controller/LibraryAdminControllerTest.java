@@ -15,7 +15,7 @@ import net.dorokhov.pony2.api.library.domain.ScanResult;
 import net.dorokhov.pony2.api.library.domain.ScanType;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
-import net.dorokhov.pony2.api.library.service.exception.ConcurrentScanException;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.AfterEach;
@@ -75,7 +75,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldPerformFullScanFlow() throws IOException, InterruptedException, ConcurrentScanException {
+    public void shouldPerformFullScanFlow() throws IOException, InterruptedException, ConcurrentLibraryJobException {
         
         runAndVerifyInitialScan();
 
@@ -87,7 +87,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldFailFullScanIfItIsAlreadyRunning() throws ConcurrentScanException {
+    public void shouldFailFullScanIfItIsAlreadyRunning() throws ConcurrentLibraryJobException {
 
         scanJobService.addObserver(blockingObserver);
         ScanJob scanJob = scanJobService.startScanJob();
@@ -99,7 +99,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> 
-                assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_SCAN));
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_LIBRARY_JOB));
         
         blockingObserver.unlock();
 
@@ -110,7 +110,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetAllScanJobs() throws ConcurrentScanException {
+    public void shouldGetAllScanJobs() throws ConcurrentLibraryJobException {
 
         String scanJob1 = createAndFinishScanJob();
         String scanJob2 = createAndFinishScanJob();
@@ -134,7 +134,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldGetScanJobById() throws ConcurrentScanException {
+    public void shouldGetScanJobById() throws ConcurrentLibraryJobException {
 
         String scanJobId = createAndFinishScanJob();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
@@ -276,7 +276,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         assertThat(concurrentDiscoveryResponse.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(concurrentDiscoveryResponse.getBody()).satisfies(error ->
-                assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_DISCOVERY));
+                assertThat(error.getCode()).isSameAs(ErrorDto.Code.CONCURRENT_LIBRARY_JOB));
 
         blockingDiscoveryObserver.unlock();
 
@@ -391,7 +391,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         scanTestPlanExecutor.verify(scanJob.getId(), context);
     }
 
-    private String createAndFinishScanJob() throws ConcurrentScanException {
+    private String createAndFinishScanJob() throws ConcurrentLibraryJobException {
         ScanJob scanJob = scanJobService.startScanJob();
         await().until(() -> scanJobService.getById(scanJob.getId()).orElseThrow().getStatus() == Status.COMPLETE);
         return scanJob.getId();
@@ -479,7 +479,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getFailedTasks()).isEqualTo(discoveryResult.getFailedTasks());
     }
 
-    private void runAndVerifyDeletionScan() throws IOException, ConcurrentScanException {
+    private void runAndVerifyDeletionScan() throws IOException, ConcurrentLibraryJobException {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-02-delete.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);
@@ -492,7 +492,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         scanTestPlanExecutor.verify(scanJob.getId(), context);
     }
 
-    private void runAndVerifyModificationScan() throws IOException, ConcurrentScanException {
+    private void runAndVerifyModificationScan() throws IOException, ConcurrentLibraryJobException {
 
         ScanTestPlan scanTestPlan = objectMapper.readValue(new ClassPathResource("scan-test-03-modify.json").getFile(), ScanTestPlan.class);
         ScanTestPlanExecutor.Context context = scanTestPlanExecutor.prepare(scanTestPlan);

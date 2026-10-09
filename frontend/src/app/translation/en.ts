@@ -350,7 +350,6 @@ export default {
     scanJobInterruptedText: 'Interrupted!',
     scanJobFinishedText: 'Complete!',
     scanJobFailedText: 'Failed!',
-    scanJobAlreadyRunningText: 'Failed!',
     settingsTitle: 'Settings',
     settingsUpdatedText: 'Updated!',
     reBuildIndexStartedText: 'Started re-building of search index.',
