@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.config.service;
 
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.config.domain.Config;
+import net.dorokhov.pony2.api.config.domain.ConfigChangeEvent;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.core.config.repository.ConfigRepository;
@@ -11,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +37,26 @@ public class ConfigServiceImplTest {
     
     @Mock
     private ConfigRepository configRepository;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @Test
+    public void shouldPublishOldAndNewConfigSnapshots() {
+        Config model = Config.of(ConfigServiceImpl.CONFIG_LLM_MODEL, "old-model");
+        when(configRepository.findAll()).thenReturn(List.of(model));
+        when(configRepository.findById(any())).thenReturn(Optional.empty());
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_LLM_MODEL)).thenReturn(Optional.of(model));
+
+        configService.update(new ConfigSetUpdateCommand()
+                .setLlmUrl("http://localhost:11434/v1")
+                .setLlmModel("new-model"));
+
+        ArgumentCaptor<ConfigChangeEvent> event = ArgumentCaptor.forClass(ConfigChangeEvent.class);
+        verify(applicationEventPublisher).publishEvent(event.capture());
+        assertThat(model.getValue()).isEqualTo("new-model");
+        assertThat(event.getValue().oldConfig().llmModel()).isEqualTo("old-model");
+        assertThat(event.getValue().newConfig().llmModel()).isEqualTo("new-model");
+    }
 
     @Test
     public void shouldFetchExistingConfigSet() {
@@ -221,6 +244,7 @@ public class ConfigServiceImplTest {
                 .hasMessage("LLM model must be configured when LLM URL is configured.");
 
         verify(configRepository, never()).save(any());
+        verifyNoInteractions(applicationEventPublisher);
     }
 
     @Test
@@ -233,6 +257,7 @@ public class ConfigServiceImplTest {
                 .hasMessage("LLM URL must be configured when LLM model is configured.");
 
         verify(configRepository, never()).save(any());
+        verifyNoInteractions(applicationEventPublisher);
     }
 
     @Test
@@ -245,5 +270,6 @@ public class ConfigServiceImplTest {
                 .hasMessage("LLM URL must be configured when LLM API key is configured.");
 
         verify(configRepository, never()).save(any());
+        verifyNoInteractions(applicationEventPublisher);
     }
 }

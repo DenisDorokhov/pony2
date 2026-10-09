@@ -1,11 +1,13 @@
 package net.dorokhov.pony2.core.config.service;
 
 import net.dorokhov.pony2.api.config.domain.Config;
+import net.dorokhov.pony2.api.config.domain.ConfigChangeEvent;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.config.repository.ConfigRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -29,9 +31,14 @@ public class ConfigServiceImpl implements ConfigService {
     static final String CONFIG_LLM_API_KEY = "llmApiKey";
 
     private final ConfigRepository configRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public ConfigServiceImpl(ConfigRepository configRepository) {
+    public ConfigServiceImpl(
+            ConfigRepository configRepository,
+            ApplicationEventPublisher applicationEventPublisher
+    ) {
         this.configRepository = configRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -70,10 +77,13 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional
     public void update(ConfigSetUpdateCommand command) {
         validate(command);
+        ConfigSet oldConfig = get();
         saveLibraryFolders(command.getLibraryFolders());
         saveStringConfig(CONFIG_LLM_URL, command.getLlmUrl());
         saveStringConfig(CONFIG_LLM_MODEL, command.getLlmModel());
         saveStringConfig(CONFIG_LLM_API_KEY, command.getLlmApiKey());
+        ConfigSet newConfig = get();
+        applicationEventPublisher.publishEvent(new ConfigChangeEvent(oldConfig, newConfig));
     }
 
     private void validate(ConfigSetUpdateCommand command) {
