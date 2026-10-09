@@ -1,9 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery.task;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Stopwatch;
-import com.google.common.hash.Hashing;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -11,19 +8,18 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
-import net.dorokhov.pony2.core.library.service.discovery.DiscoveryChatClient;
+import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -51,11 +47,9 @@ public class SpotifyArtistDataService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final DiscoveryChatClient chatClient;
-    private final LlmCacheService cacheService;
+    private final DiscoveryTaskLlmExecutor llmOperation;
     private final Validator validator;
     private final ArtistRepository artistRepository;
-    private final DiscoveryTaskRepository discoveryTaskRepository;
     private final LogService logService;
     private final ShutdownService shutdownService;
     private final LibraryJobSynchronizer jobSynchronizer;
@@ -64,22 +58,18 @@ public class SpotifyArtistDataService {
     private final String systemPrompt;
 
     public SpotifyArtistDataService(
-            DiscoveryChatClient chatClient,
-            LlmCacheService cacheService,
+            DiscoveryTaskLlmExecutor llmOperation,
             Validator validator,
             ArtistRepository artistRepository,
-            DiscoveryTaskRepository discoveryTaskRepository,
             LogService logService,
             ShutdownService shutdownService,
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource
     ) throws IOException {
-        this.chatClient = chatClient;
-        this.cacheService = cacheService;
+        this.llmOperation = llmOperation;
         this.validator = validator;
         this.artistRepository = artistRepository;
-        this.discoveryTaskRepository = discoveryTaskRepository;
         this.logService = logService;
         this.shutdownService = shutdownService;
         this.jobSynchronizer = jobSynchronizer;
@@ -104,66 +94,14 @@ public class SpotifyArtistDataService {
         if (request == null) {
             return Optional.empty();
         }
-        saveRawExchange(task, request, null);
-        Artist artist = artistRepository.findById(artistId).orElseThrow();
-        String key = "SPOTIFY_ARTIST_DATA:" + Hashing.sha256().hashString(JsonConverter.toJson(request), UTF_8);
-        if (cacheEnabled) {
-            Optional<String> cached = cacheService.get(SPOTIFY, key, CACHE_VERSION);
-            if (cached.isPresent()) {
-                logger.debug("Spotify discovery cache hit for artist '{} -> {}'. Cache version: {}.",
-                        artist.getId(), artist.getName(), CACHE_VERSION);
-                CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
-                saveRawExchange(task, entry.request(), entry.response());
-                SpotifyArtistData result = JsonConverter.fromJson(entry.response(), SpotifyArtistData.class);
-                logResult(artist, result, "cache");
-                return Optional.of(result);
-            }
-        }
-        logger.debug("Requesting Spotify data from LLM for artist '{} -> {}'.\n\n{}\n\n",
-                artist.getId(), artist.getName(), request);
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        String response = chatClient.call(prompt -> prompt
-                .messages(new SystemMessage(request.systemPrompt()), new UserMessage(request.userPrompt()))
-                .call()
-                .content());
-        jobSynchronizer.interruptDiscoveryIfCancelled();
-        saveRawExchange(task, request, response);
-        logLlmExchange(artist, request, response, stopwatch);
-        SpotifyArtistData result = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;
-        validateResponse(result, request);
-        logResult(artist, result, "llm");
-        if (cacheEnabled) {
-            cacheService.put(SPOTIFY, key, CACHE_VERSION, JsonConverter.toJson(new CacheEntry(request, response)));
-            logger.debug("Cached Spotify discovery response for artist '{} -> {}'. Cache version: {}.",
-                    artist.getId(), artist.getName(), CACHE_VERSION);
-        }
+        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
+        SpotifyArtistData result = llmOperation.call(task, request, cacheSettings, response -> {
+            SpotifyArtistData data = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;
+            validateResponse(data, request);
+            return data;
+        });
+        logger.debug("Spotify discovery result for artist '{}': {}.", artistId, result);
         return Optional.of(result);
-    }
-
-    private void saveRawExchange(DiscoveryTask task, Request request, @Nullable String response) {
-        transactionTemplate.executeWithoutResult(status -> discoveryTaskRepository.save(task
-                .setRawRequest(JsonConverter.toJson(request))
-                .setRawResult(response)));
-    }
-
-    private void logLlmExchange(Artist artist, Request request, @Nullable String response, Stopwatch stopwatch) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("\n\nSpotify LLM exchange for artist '{} -> {}' completed in {} ms.\n\nRequest:\n{}\n\nResponse:\n{}\n\n",
-                    artist.getId(), artist.getName(), stopwatch.elapsed(), JsonConverter.toPrettyJson(request), formatResponseForLog(response));
-        }
-    }
-
-    private String formatResponseForLog(@Nullable String response) {
-        try {
-            return JsonConverter.toPrettyJson(JsonConverter.fromJson(response));
-        } catch (RuntimeException e) {
-            return "Invalid JSON:\n" + response;
-        }
-    }
-
-    private void logResult(Artist artist, SpotifyArtistData result, String source) {
-        logger.debug("Spotify discovery result for artist '{} -> {}'. Source: {}, result: {}.",
-                artist.getId(), artist.getName(), source, result);
     }
 
     @Nullable
@@ -214,19 +152,10 @@ public class SpotifyArtistDataService {
             String systemPrompt,
             String userPrompt,
             List<String> albumTitles
-    ) {
+    ) implements DiscoveryTaskLlmExecutor.Request {
         @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("systemPrompt", systemPrompt)
-                    .add("userPrompt", userPrompt)
-                    .add("albumTitles", albumTitles)
-                    .toString();
+        public Prompt toPrompt() {
+            return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
         }
     }
-
-    private record CacheEntry(
-            Request request,
-            String response
-    ) {}
 }

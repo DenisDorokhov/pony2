@@ -391,8 +391,10 @@ class SpotifyArtistDataServiceTest {
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient(customizer -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
-        return new SpotifyArtistDataService(discoveryClient,
-                cacheService, validator, artistRepository, discoveryTaskRepository, logService, shutdownService,
+        DiscoveryTaskLlmExecutor operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
+                discoveryTaskRepository, jobSynchronizer, shutdownService, transactionManager());
+        return new SpotifyArtistDataService(operation,
+                validator, artistRepository, logService, shutdownService,
                 jobSynchronizer, transactionManager(), promptResource);
     }
 
