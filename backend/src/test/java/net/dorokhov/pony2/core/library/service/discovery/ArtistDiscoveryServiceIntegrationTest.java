@@ -25,7 +25,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +36,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
     @Autowired
     private ArtistDiscoveryService service;
+    @Autowired
+    private DiscoveryTaskExecutor taskExecutor;
     @Autowired
     private LibraryJobSynchronizer jobSynchronizer;
     @Autowired
@@ -338,12 +339,32 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .setStatus(DiscoveryJob.Status.STARTED));
     }
 
-    private <P, R> void executeTask(ArtistDiscovery discovery, DiscoveryTaskType type, P parameter,
+    private <R> void executeTask(ArtistDiscovery discovery, DiscoveryTaskType type, Object parameter,
                                   Function<DiscoveryTask, R> action) {
-        Consumer<RuntimeException> errorHandler = error -> {
-            throw error;
-        };
-        ReflectionTestUtils.invokeMethod(service, "executeTask", discovery, type, parameter, action, errorHandler);
+        taskExecutor.execute(new DiscoveryTaskExecution<R>() {
+            @Override
+            public DiscoveryTask startTask() {
+                return ReflectionTestUtils.invokeMethod(service, "startTask", discovery, type, parameter);
+            }
+
+            @Override
+            public R executeTask(DiscoveryTask task) {
+                return action.apply(task);
+            }
+
+            @Override
+            public void onCompletion(DiscoveryTask task, R result) {
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+                DiscoveryTask persistedTask = taskRepository.findById(task.getId()).orElseThrow();
+                assertThat(persistedTask.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                assertThat(persistedTask.getResult()).isEqualTo(JsonConverter.toJson(result));
+            }
+
+            @Override
+            public void onError(DiscoveryTask task, RuntimeException error) {
+                throw error;
+            }
+        });
     }
 
     private SpotifyArtistData spotifyArtistData(String spotifyArtistId) {
