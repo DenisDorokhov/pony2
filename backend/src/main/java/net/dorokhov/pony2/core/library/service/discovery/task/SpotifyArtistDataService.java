@@ -18,11 +18,10 @@ import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
-import net.dorokhov.pony2.core.library.service.discovery.DiscoveryAdvisor;
+import net.dorokhov.pony2.core.library.service.discovery.DiscoveryChatClient;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.converter.BeanOutputConverter;
@@ -52,28 +51,26 @@ public class SpotifyArtistDataService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ChatClient chatClient;
+    private final DiscoveryChatClient chatClient;
     private final LlmCacheService cacheService;
     private final Validator validator;
     private final ArtistRepository artistRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final LogService logService;
     private final ShutdownService shutdownService;
-    private final DiscoveryAdvisor discoveryAdvisor;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
 
     private final String systemPrompt;
 
     public SpotifyArtistDataService(
-            ChatClient chatClient,
+            DiscoveryChatClient chatClient,
             LlmCacheService cacheService,
             Validator validator,
             ArtistRepository artistRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             LogService logService,
             ShutdownService shutdownService,
-            DiscoveryAdvisor discoveryAdvisor,
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource
@@ -85,7 +82,6 @@ public class SpotifyArtistDataService {
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.logService = logService;
         this.shutdownService = shutdownService;
-        this.discoveryAdvisor = discoveryAdvisor;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         systemPrompt = promptResource.getContentAsString(UTF_8) + "\n"
@@ -126,11 +122,10 @@ public class SpotifyArtistDataService {
         logger.debug("Requesting Spotify data from LLM for artist '{} -> {}'.\n\n{}\n\n",
                 artist.getId(), artist.getName(), request);
         Stopwatch stopwatch = Stopwatch.createStarted();
-        String response = chatClient.prompt()
-                .advisors(discoveryAdvisor)
+        String response = chatClient.call(prompt -> prompt
                 .messages(new SystemMessage(request.systemPrompt()), new UserMessage(request.userPrompt()))
                 .call()
-                .content();
+                .content());
         jobSynchronizer.interruptDiscoveryIfCancelled();
         saveRawExchange(task, request, response);
         logLlmExchange(artist, request, response, stopwatch);

@@ -11,6 +11,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.NoopApiKey;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,7 @@ public class ChatModelImpl implements ChatModel {
 
     @Override
     public @NonNull ChatResponse call(@NonNull Prompt prompt) {
-        ConfigSet configSet = configService.get();
-        return createChatModel(configSet).call(prompt);
+        return createChatModel(builder -> {}).call(prompt);
     }
 
     @Override
@@ -40,10 +40,11 @@ public class ChatModelImpl implements ChatModel {
         return createOptions(configService.get());
     }
 
-    private OpenAiChatModel createChatModel(ConfigSet configSet) {
+    public ChatModel createChatModel(OpenAiHttpClientBuilderCustomizer customizer) {
         return OpenAiChatModel.builder()
-                .options(createOptions(configSet))
+                .options(createOptions(configService.get()))
                 .observationRegistry(observationRegistry)
+                .httpClientBuilderCustomizer(customizer)
                 .build();
     }
 

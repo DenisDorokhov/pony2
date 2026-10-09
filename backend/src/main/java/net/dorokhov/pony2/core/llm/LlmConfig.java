@@ -1,23 +1,25 @@
 package net.dorokhov.pony2.core.llm;
 
 import io.micrometer.observation.ObservationRegistry;
+import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.llm.service.FetchUrlTool;
 import net.dorokhov.pony2.core.llm.service.PlaywrightMcpToolRateLimiter;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Configuration
 public class LlmConfig {
 
     @Bean
-    public ChatClient llmChatClient(
-            ChatModel chatModel,
+    public Function<OpenAiHttpClientBuilderCustomizer, ChatClient> llmChatClientFactory(
+            ChatModelImpl chatModel,
             ObservationRegistry observationRegistry,
             FetchUrlTool fetchUrlTool,
             PlaywrightMcpToolRateLimiter playwrightMcpToolRateLimiter,
@@ -27,7 +29,7 @@ public class LlmConfig {
                 Stream.of(fetchUrlTool),
                 playwrightMcpToolRateLimiter.rateLimit(toolCallbackProviders.orderedStream()).stream()
         ).toArray();
-        return ChatClient.builder(chatModel, observationRegistry, null, null)
+        return customizer -> ChatClient.builder(chatModel.createChatModel(customizer), observationRegistry, null, null)
                 .defaultTools(tools)
                 .build();
     }

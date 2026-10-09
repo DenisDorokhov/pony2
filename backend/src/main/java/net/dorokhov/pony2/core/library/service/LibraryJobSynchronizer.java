@@ -2,11 +2,19 @@ package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Coordinates exclusive library jobs and cooperative cancellation of discovery work.
@@ -21,6 +29,8 @@ import java.util.concurrent.TimeoutException;
 @Service
 public class LibraryJobSynchronizer {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Set<CancellationSubscription> cancellationSubscriptions = new LinkedHashSet<>();
     private final Object lock = new Object();
 
     private LibraryJobRegistration activeJob;
@@ -74,13 +84,17 @@ public class LibraryJobSynchronizer {
         }
         long timeoutNanos = timeout.toNanos();
         long started = System.nanoTime();
+        List<CancellationSubscription> subscriptions;
         synchronized (lock) {
             if (scanPending || (activeJob != null && !activeJob.discovery)) {
                 throw new ConcurrentLibraryJobException();
             }
             scanPending = true;
-            discoveryCancelled = true;
-            try {
+            subscriptions = cancelDiscoveryLocked();
+        }
+        try {
+            notifyCancellation(subscriptions);
+            synchronized (lock) {
                 // Wait for the discovery job and all registered tasks to close. timedWait releases
                 // lock so they can finish and notify us. scanPending reserves the next job slot,
                 // including the gap between activeJob being cleared and this thread reacquiring
@@ -95,10 +109,12 @@ public class LibraryJobSynchronizer {
                     TimeUnit.NANOSECONDS.timedWait(lock, remaining);
                 }
                 return activeJob = new LibraryJobRegistration(false);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while waiting for discovery cancellation.", e);
-            } finally {
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting for discovery cancellation.", e);
+        } finally {
+            synchronized (lock) {
                 scanPending = false;
             }
         }
@@ -136,8 +152,47 @@ public class LibraryJobSynchronizer {
      * job is registered. Cancellation remains set even if no discovery is currently active.
      */
     public void cancelDiscovery() {
+        List<CancellationSubscription> subscriptions;
         synchronized (lock) {
-            discoveryCancelled = true;
+            subscriptions = cancelDiscoveryLocked();
+        }
+        notifyCancellation(subscriptions);
+    }
+
+    /**
+     * Subscribes to the current discovery's cancellation. An already cancelled discovery invokes the callback immediately.
+     * Callbacks run outside the internal lock and must return promptly. Closing the subscription unregisters it;
+     * a callback already selected for notification may still run after closing.
+     */
+    public CancellationSubscription onCancel(Runnable callback) {
+        CancellationSubscription subscription = new CancellationSubscription(requireNonNull(callback));
+        synchronized (lock) {
+            if (!discoveryCancelled) {
+                if (activeJob == null || !activeJob.discovery) {
+                    throw new IllegalStateException("No discovery job is active.");
+                }
+                cancellationSubscriptions.add(subscription);
+                return subscription;
+            }
+        }
+        notifyCancellation(List.of(subscription));
+        return subscription;
+    }
+
+    private List<CancellationSubscription> cancelDiscoveryLocked() {
+        discoveryCancelled = true;
+        List<CancellationSubscription> subscriptions = new ArrayList<>(cancellationSubscriptions);
+        cancellationSubscriptions.clear();
+        return subscriptions;
+    }
+
+    private void notifyCancellation(List<CancellationSubscription> subscriptions) {
+        for (CancellationSubscription subscription : subscriptions) {
+            try {
+                subscription.callback.run();
+            } catch (RuntimeException e) {
+                logger.warn("Could not cancel discovery operation.", e);
+            }
         }
     }
 
@@ -185,7 +240,24 @@ public class LibraryJobSynchronizer {
     private void releaseIfFinished() {
         if (activeJob.closed && runningTasks == 0) {
             activeJob = null;
+            cancellationSubscriptions.clear();
             lock.notifyAll();
+        }
+    }
+
+    public class CancellationSubscription implements AutoCloseable {
+
+        private final Runnable callback;
+
+        private CancellationSubscription(Runnable callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void close() {
+            synchronized (lock) {
+                cancellationSubscriptions.remove(this);
+            }
         }
     }
 

@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
@@ -17,6 +18,84 @@ import static org.awaitility.Awaitility.await;
 class LibraryJobSynchronizerTest {
 
     private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer();
+
+    @Test
+    void shouldNotifyOutsideLockWhenStartingScan() throws Exception {
+        LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
+        LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        try (ExecutorService worker = Executors.newSingleThreadExecutor();
+             LibraryJobSynchronizer.CancellationSubscription subscription = synchronizer.onCancel(() -> {
+                 try {
+                     worker.submit(() -> {
+                         task.close();
+                         discovery.close();
+                     }).get(2, TimeUnit.SECONDS);
+                 } catch (Exception e) {
+                     throw new AssertionError(e);
+                 }
+             });
+             LibraryJobSynchronizer.LibraryJobRegistration scan = synchronizer.registerScanJob(Duration.ofSeconds(3))) {
+            assertThat(synchronizer.hasRunningTasks()).isFalse();
+            assertBusy();
+        } finally {
+            task.close();
+            discovery.close();
+        }
+    }
+
+    @Test
+    void shouldUnsubscribeIndependentlyAndNotifyOnlyOnce() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        Runnable callback = calls::incrementAndGet;
+        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
+             LibraryJobSynchronizer.CancellationSubscription first = synchronizer.onCancel(callback);
+             LibraryJobSynchronizer.CancellationSubscription second = synchronizer.onCancel(callback)) {
+            first.close();
+            first.close();
+            synchronizer.cancelDiscovery();
+            synchronizer.cancelDiscovery();
+            assertThat(calls).hasValue(1);
+            assertBusy();
+        }
+    }
+
+    @Test
+    void shouldImmediatelyNotifyLateSubscription() throws Exception {
+        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
+            synchronizer.cancelDiscovery();
+            AtomicInteger calls = new AtomicInteger();
+            try (LibraryJobSynchronizer.CancellationSubscription subscription = synchronizer.onCancel(calls::incrementAndGet)) {
+                assertThat(calls).hasValue(1);
+            }
+        }
+    }
+
+    @Test
+    void shouldClearSubscriptionsWhenJobFinishes() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        LibraryJobSynchronizer.CancellationSubscription subscription;
+        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
+            subscription = synchronizer.onCancel(calls::incrementAndGet);
+        }
+        try (LibraryJobSynchronizer.LibraryJobRegistration next = synchronizer.registerDiscoveryJob()) {
+            synchronizer.cancelDiscovery();
+            subscription.close();
+            assertThat(calls).hasValue(0);
+        }
+    }
+
+    @Test
+    void shouldContinueNotifyingAfterCallbackFailure() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
+             LibraryJobSynchronizer.CancellationSubscription first = synchronizer.onCancel(() -> {
+                 throw new IllegalStateException("Test failure");
+             });
+             LibraryJobSynchronizer.CancellationSubscription second = synchronizer.onCancel(calls::incrementAndGet)) {
+            synchronizer.cancelDiscovery();
+            assertThat(calls).hasValue(1);
+        }
+    }
 
     @Test
     void shouldReleaseFromAnotherThreadOnlyOnce() throws Exception {

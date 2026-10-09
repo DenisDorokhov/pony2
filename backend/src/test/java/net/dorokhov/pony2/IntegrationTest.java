@@ -2,6 +2,7 @@ package net.dorokhov.pony2;
 
 import jakarta.persistence.EntityManagerFactory;
 import net.dorokhov.pony2.common.RethrowingLambdas;
+import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import org.flywaydb.core.Flyway;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.mapping.SearchMapping;
@@ -9,7 +10,6 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -32,6 +32,8 @@ import java.util.Optional;
 
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony2.common.RethrowingLambdas.rethrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @ExtendWith(SpringExtension.class)
@@ -46,7 +48,7 @@ abstract public class IntegrationTest {
     private EntityManagerFactory entityManagerFactory;
 
     @MockitoBean
-    protected ChatModel model;
+    protected ChatModelImpl model;
 
     @Value("${pony.artwork.path}")
     private File artworkFolder;
@@ -66,6 +68,7 @@ abstract public class IntegrationTest {
 
     @BeforeEach
     void setUpIntegrationTest() {
+        lenient().when(model.createChatModel(any())).thenReturn(model);
         flyway.clean();
         purgeSearchIndexes();
         cleanFiles();
