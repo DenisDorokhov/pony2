@@ -226,4 +226,8 @@ export class SettingsComponent implements OnInit{
       error: () => this.secondaryLoadingState = LoadingState.ERROR
     });
   }
+
+  downloadLlmEvaluation() {
+    this.libraryService.downloadLlmEvaluation();
+  }
 }

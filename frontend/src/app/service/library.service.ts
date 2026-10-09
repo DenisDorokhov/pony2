@@ -486,4 +486,8 @@ export class LibraryService {
   downloadAlbum(id: string) {
     window.open(`/api/file/export/album/${id}`, '_blank', '');
   }
+
+  downloadLlmEvaluation() {
+    window.open('/api/admin/llm/evaluation', '_blank', '');
+  }
 }

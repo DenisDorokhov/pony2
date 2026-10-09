@@ -270,6 +270,8 @@ export default {
     clearLlmCacheLabel: 'LLM Cache:',
     clearLlmCachePlaceholder: 'Empty for all or region',
     clearLlmCacheButton: 'Clear Cache',
+    llmEvaluationLabel: 'Discovery Evaluation:',
+    downloadLlmEvaluationButton: 'Download JSON',
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
     llmUrlLabel: 'LLM URL:',

@@ -23,7 +23,12 @@ import org.zalando.logbook.Logbook;
 import org.zalando.logbook.core.*;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import static org.springframework.security.authorization.AuthorizationManagers.allOf;
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasAuthority;
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasRole;
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.pathPattern;
+import static org.zalando.logbook.core.Conditions.exclude;
+import static org.zalando.logbook.core.Conditions.requestTo;
 
 @Configuration
 @EnableWebSecurity
@@ -87,6 +92,8 @@ public class WebConfig {
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
                         .requestMatchers("/api/installation/**").permitAll()
                         .requestMatchers("/api/file/**").hasAuthority(WebAuthority.FILE_API.name())
+                        .requestMatchers(HttpMethod.GET, "/api/admin/llm/evaluation")
+                        .access(allOf(hasAuthority(WebAuthority.FILE_API.name()), hasRole("ADMIN")))
                         .requestMatchers("/api/admin/**").hasAuthority(WebAuthority.ADMIN_API.name())
                         .requestMatchers("/api/**").hasAuthority(WebAuthority.USER_API.name())
                         .requestMatchers(OpenSubsonicResponseService.PATH_PREFIX + "/**").hasAuthority(WebAuthority.OPEN_SUBSONIC_API.name())
@@ -99,6 +106,18 @@ public class WebConfig {
     @Bean
     public Logbook logbook() {
         return Logbook.builder()
+                // StatusAtLeastStrategy still buffers bodies, so exclude bulk transfers before processing.
+                .condition(exclude(
+                        requestTo("/api/file/**"),
+                        requestTo("/api/admin/llm/evaluation"),
+                        requestTo("/api/admin/playlists/backup"),
+                        requestTo("/api/admin/playlists/restore"),
+                        requestTo("/api/admin/history/backup"),
+                        requestTo("/api/admin/history/restore"),
+                        requestTo(OpenSubsonicResponseService.PATH_PREFIX + "/rest/stream.view"),
+                        requestTo(OpenSubsonicResponseService.PATH_PREFIX + "/rest/download.view"),
+                        requestTo(OpenSubsonicResponseService.PATH_PREFIX + "/rest/getCoverArt.view")
+                ))
                 .strategy(new StatusAtLeastStrategy(400))
                 .sink(new DefaultSink(new DefaultHttpLogFormatter(), new DefaultHttpLogWriter()))
                 .build();

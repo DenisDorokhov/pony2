@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Stream;
 
 public interface AlbumRepository extends JpaRepository<Album, String> {
@@ -24,6 +25,13 @@ public interface AlbumRepository extends JpaRepository<Album, String> {
     long countByArtistIdAndArtworkNotNull(String artistId);
 
     Album findByArtistIdAndName(String artistId, @Nullable String name);
+
+    @Query("""
+            SELECT a FROM Album a
+            WHERE a.id > :afterId
+            ORDER BY a.id
+            """)
+    List<Album> findForEvaluation(String afterId, Pageable pageable);
 
     Page<Album> findByArtistIdAndArtworkNotNull(String artistId, Pageable pageable);
 

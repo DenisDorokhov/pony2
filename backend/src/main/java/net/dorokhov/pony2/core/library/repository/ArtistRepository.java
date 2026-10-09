@@ -25,6 +25,13 @@ public interface ArtistRepository extends JpaRepository<Artist, String> {
 
     Artist findByName(@Nullable String name);
 
+    @Query("""
+            SELECT a FROM Artist a
+            WHERE a.id > :afterId
+            ORDER BY a.id
+            """)
+    List<Artist> findForEvaluation(String afterId, Pageable pageable);
+
     Page<Artist> findByArtworkId(@Nullable String artworkId, Pageable pageable);
 
     @Query("SELECT ar FROM Artist ar WHERE ar.artwork.id = ?1")
