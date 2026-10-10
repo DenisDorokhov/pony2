@@ -17,6 +17,7 @@ public interface ArtistDiscoveryRepository extends JpaRepository<ArtistDiscovery
     @Query("""
             SELECT d FROM ArtistDiscovery d
             WHERE d.artist.id = :artistId AND d.creationDate <= :maximumCreationDate
+              AND d.job.status IN (COMPLETE, MODERATE)
             ORDER BY d.creationDate DESC, d.id DESC
             """)
     Optional<ArtistDiscovery> findLatestForEvaluation(

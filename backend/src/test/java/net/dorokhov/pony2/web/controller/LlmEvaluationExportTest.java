@@ -6,7 +6,6 @@ import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony2.api.user.service.exception.DuplicateEmailException;
-import net.dorokhov.pony2.web.service.LlmEvaluationExportService.Kind;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,7 +86,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         assertThat(response.getHeaders().getContentDisposition().getFilename()).startsWith("pony-evaluation-").endsWith(".json");
         assertThat(response.getHeaders().getContentLength()).isEqualTo(-1);
         JsonNode document = jsonMapper.readTree(response.getBody());
-        assertThat(document.get("complete").booleanValue()).isTrue();
+        assertThat(document.has("complete")).isFalse();
         for (Kind kind : Kind.values()) {
             JsonNode discoveries = document.get(kind.entityName() + "Discoveries");
             assertThat(discoveries.size()).isEqualTo(2);
@@ -116,11 +115,93 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         assertThat(artist.get("name").asString()).isEqualTo("Björk \"quoted\"\n日本語");
         assertThat(artist.get("genres").size()).isEqualTo(103);
         assertThat(artist.get("genres").get(102).get("name").asString()).isEqualTo("Genre 103");
+        assertThat(artist.get("genres").get(0).get("creationDate").asString()).isEqualTo(CREATED.toString());
+        assertThat(artist.get("genres").get(0).has("updateDate")).isFalse();
+        assertThat(artist.get("genres").get(0).has("artworkId")).isFalse();
         assertThat(artist.get("artworkId").isNull()).isTrue();
         JsonNode album = document.get("albumDiscoveries").get(0).get("album");
         assertThat(album.get("name").asString()).isEqualTo("Album 1");
         assertThat(album.get("year").intValue()).isEqualTo(2020);
-        assertThat(album.get("artistId").asString()).isEqualTo(id(1));
+        assertThat(album.has("artistId")).isFalse();
+        assertThat(album.get("artist")).isEqualTo(artist);
+    }
+
+    @Test
+    void shouldExportLatestDiscoveriesFromCompleteAndModerateJobs() {
+        for (int index = 1; index <= 3; index++) {
+            insertArtist(index, "Artist " + index);
+            insertAlbum(index, index);
+        }
+        List<String> jobStatuses = List.of("COMPLETE", "MODERATE", "FAILED", "INTERRUPTED", "STARTED", "STARTING");
+        for (int index = 0; index < jobStatuses.size(); index++) {
+            insertJob(index + 1);
+            jdbcTemplate.update("UPDATE discovery_job SET status = ? WHERE id = ?", jobStatuses.get(index), id(index + 1));
+        }
+        for (Kind kind : Kind.values()) {
+            insertDiscovery(kind, 11, 1, 1, CREATED);
+            insertDiscovery(kind, 12, 1, 2, CREATED.plusDays(1));
+            for (int job = 3; job <= 6; job++) {
+                insertDiscovery(kind, 10 + job, 1, job, CREATED.plusDays(job));
+            }
+            insertDiscovery(kind, 20, 2, 1, CREATED);
+            insertDiscovery(kind, 21, 2, 3, CREATED.plusDays(1));
+            insertDiscovery(kind, 30, 3, 3, CREATED);
+            int firstTaskId = kind == Kind.ARTIST ? 100 : 200;
+            insertTask(kind, firstTaskId, 12, 2, "COMPLETE", "{}");
+            insertTask(kind, firstTaskId + 1, 12, 2, "FAILED", "error");
+        }
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        JsonNode document = jsonMapper.readTree(download(apiTemplate.createCookieRequest(authentication.getStaticToken())).getBody());
+
+        for (Kind kind : Kind.values()) {
+            JsonNode discoveries = document.get(kind.entityName() + "Discoveries");
+            assertThat(discoveries.size()).isEqualTo(2);
+            JsonNode latest = discoveries.get(0);
+            assertThat(latest.get("id").asString()).isEqualTo(id(12));
+            assertThat(latest.get("jobId").asString()).isEqualTo(id(2));
+            JsonNode tasks = latest.get("tasks");
+            assertThat(tasks.size()).isEqualTo(2);
+            assertThat(tasks.get(0).get("status").asString()).isEqualTo("COMPLETE");
+            assertThat(tasks.get(1).get("status").asString()).isEqualTo("FAILED");
+            assertThat(discoveries.get(1).get("id").asString()).isEqualTo(id(20));
+            assertThat(discoveries.get(1).get("jobId").asString()).isEqualTo(id(1));
+        }
+    }
+
+    @Test
+    void shouldExportAlbumWithFullArtistWithoutArtistDiscovery() {
+        insertArtist(1, null);
+        insertAlbum(1, 1);
+        jdbcTemplate.update("UPDATE album SET name = NULL, album_year = NULL WHERE id = ?", id(1));
+        LocalDateTime updated = CREATED.plusNanos(123456789);
+        jdbcTemplate.update("UPDATE artist SET update_date = ? WHERE id = ?", updated, id(1));
+        insertJob(1);
+        insertDiscovery(Kind.ALBUM, 1, 1, 1, CREATED);
+        jdbcTemplate.update("INSERT INTO genre (id, creation_date) VALUES (?, ?)", id(1), CREATED);
+        jdbcTemplate.update("INSERT INTO artist_genre (id, creation_date, artist_id, genre_id) VALUES (?, ?, ?, ?)",
+                id(1), CREATED, id(1), id(1));
+
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        JsonNode document = jsonMapper.readTree(download(apiTemplate.createCookieRequest(authentication.getStaticToken())).getBody());
+
+        assertThat(document.get("artistDiscoveries").isEmpty()).isTrue();
+        JsonNode album = document.get("albumDiscoveries").get(0).get("album");
+        assertThat(album.get("name").isNull()).isTrue();
+        assertThat(album.get("year").isNull()).isTrue();
+        JsonNode artist = album.get("artist");
+        assertThat(artist.get("id").asString()).isEqualTo(id(1));
+        assertThat(artist.get("creationDate").asString()).isEqualTo(CREATED.toString());
+        assertThat(artist.get("updateDate").asString()).isEqualTo(updated.toString());
+        assertThat(artist.get("name").isNull()).isTrue();
+        assertThat(artist.get("artworkId").isNull()).isTrue();
+        assertThat(artist.get("genres").size()).isEqualTo(1);
+        JsonNode genre = artist.get("genres").get(0);
+        assertThat(genre.get("id").asString()).isEqualTo(id(1));
+        assertThat(genre.get("creationDate").asString()).isEqualTo(CREATED.toString());
+        assertThat(genre.has("updateDate")).isFalse();
+        assertThat(genre.has("name")).isFalse();
+        assertThat(genre.has("artworkId")).isFalse();
     }
 
     @Test
@@ -143,7 +224,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         JsonNode document = jsonMapper.readTree(download(apiTemplate.createCookieRequest(authentication.getStaticToken())).getBody());
 
-        assertThat(document.get("complete").booleanValue()).isTrue();
+        assertThat(document.has("complete")).isFalse();
         for (Kind kind : Kind.values()) {
             JsonNode tasks = document.get(kind.entityName() + "Discoveries").get(0).get("tasks");
             assertThat(tasks.size()).isEqualTo(19);
@@ -230,5 +311,19 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
 
     private static String id(int number) {
         return "00000000-0000-0000-0000-%012d".formatted(number);
+    }
+
+    private enum Kind {
+        ARTIST("artist"), ALBUM("album");
+
+        private final String entityName;
+
+        Kind(String entityName) {
+            this.entityName = entityName;
+        }
+
+        String entityName() {
+            return entityName;
+        }
     }
 }

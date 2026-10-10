@@ -1,5 +1,7 @@
 package net.dorokhov.pony2.web.service;
 
+import net.dorokhov.pony2.api.library.domain.Album;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -73,6 +75,37 @@ class LlmEvaluationExportServiceTest {
         verify(artistDiscoveryRepository, never()).findTaskIdsForEvaluation(eq("discovery"), eq("task"), any(), any());
         verify(artistRepository, never()).findForEvaluation(eq("artist"), any());
         verify(albumRepository, never()).findForEvaluation(any(), any());
+    }
+
+    @Test
+    void shouldStopReadingAlbumTasksAfterClientDisconnects() {
+        Artist artist = new Artist().setId("artist").setCreationDate(maximumCreationDate).setName("Artist");
+        Album album = new Album().setId("album").setCreationDate(maximumCreationDate).setName("Album").setArtist(artist);
+        DiscoveryJob job = new DiscoveryJob().setId("job");
+        AlbumDiscovery discovery = new AlbumDiscovery().setId("discovery").setCreationDate(maximumCreationDate)
+                .setAlbum(album).setJob(job);
+        when(albumRepository.findForEvaluation(eq(""), any())).thenReturn(List.of(album));
+        when(albumDiscoveryRepository.findLatestForEvaluation("album", maximumCreationDate, Limit.of(1)))
+                .thenReturn(Optional.of(discovery));
+        when(albumDiscoveryRepository.findTaskIdsForEvaluation(
+                eq("discovery"), eq(""), eq(maximumCreationDate), any())).thenReturn(List.of("task"));
+        when(discoveryTaskRepository.findForEvaluationByIds(List.of("task")))
+                .thenReturn(List.of(task("x".repeat(65536))));
+        OutputStream disconnected = new OutputStream() {
+            private int remaining = 1024;
+
+            @Override
+            public void write(int value) throws IOException {
+                if (--remaining < 0) {
+                    throw new IOException("Connection reset by peer");
+                }
+            }
+        };
+
+        assertThatThrownBy(() -> service.write(disconnected, maximumCreationDate)).hasRootCauseInstanceOf(IOException.class);
+
+        verify(albumDiscoveryRepository, never()).findTaskIdsForEvaluation(eq("discovery"), eq("task"), any(), any());
+        verify(albumRepository, never()).findForEvaluation(eq("album"), any());
     }
 
     @Test

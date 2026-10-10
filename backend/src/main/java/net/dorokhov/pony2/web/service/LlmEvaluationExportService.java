@@ -5,6 +5,8 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.core.library.repository.*;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.PageRequest;
@@ -29,7 +31,7 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 @Service
 public class LlmEvaluationExportService {
 
-    private static final PageRequest METADATA_PAGE = PageRequest.of(0, 100);
+    private static final PageRequest ENTITY_PAGE = PageRequest.of(0, 100);
     private static final PageRequest TASK_PAGE = PageRequest.of(0, 8);
 
     private final ArtistRepository artistRepository;
@@ -72,84 +74,166 @@ public class LlmEvaluationExportService {
             generator.writeStartObject();
             generator.writeStringProperty("exportedAt", maximumCreationDate.toString());
             generator.flush();
-            for (Kind kind : Kind.values()) {
-                generator.writeArrayPropertyStart(kind.entityName() + "Discoveries");
-                writeDiscoveries(generator, kind, maximumCreationDate);
-                generator.writeEndArray();
-            }
-            generator.writeBooleanProperty("complete", true);
+
+            writeArtistDiscoveries(generator, maximumCreationDate);
+            writeAlbumDiscoveries(generator, maximumCreationDate);
+
             generator.writeEndObject();
         }
     }
 
-    private void writeDiscoveries(JsonGenerator generator, Kind kind, LocalDateTime maximumCreationDate) {
-        String afterEntityId = "";
+    private void writeArtistDiscoveries(JsonGenerator generator, LocalDateTime maximumCreationDate) {
+        generator.writeArrayPropertyStart("artistDiscoveries");
+        String afterArtistId = "";
         while (true) {
-            DiscoveryPage page = findDiscoveries(kind, afterEntityId, maximumCreationDate);
-            if (page.lastEntityId() == null) {
-                return;
+            ArtistDiscoveryPageDto page = findArtistDiscoveryPage(afterArtistId, maximumCreationDate);
+            if (page.lastArtistId() == null) {
+                break;
             }
-            for (DiscoveryRow discovery : page.discoveries()) {
-                generator.writeStartObject();
-                writeBase(generator, discovery.id(), discovery.creationDate(), discovery.updateDate());
-                generator.writeStringProperty("jobId", discovery.jobId());
-                generator.writeObjectPropertyStart(kind.entityName());
-                writeMetadata(generator, discovery.entity());
-                if (kind == Kind.ARTIST) {
-                    writeGenres(generator, discovery.entity().id());
-                } else {
-                    generator.writeName("year");
-                    if (discovery.year() != null) {
-                        generator.writeNumber(discovery.year());
-                    } else {
-                        generator.writeNull();
-                    }
-                    generator.writeStringProperty("artistId", discovery.artistId());
-                }
-                generator.writeEndObject();
-                generator.writeArrayPropertyStart("tasks");
-                writeTasks(generator, kind, discovery.id(), maximumCreationDate);
-                generator.writeEndArray();
-                generator.writeEndObject();
+            for (ArtistDiscoveryExportDto discovery : page.discoveries()) {
+                writeArtistDiscovery(generator, discovery, maximumCreationDate);
                 generator.flush();
             }
             generator.flush();
-            afterEntityId = page.lastEntityId();
+            afterArtistId = page.lastArtistId();
         }
+        generator.writeEndArray();
     }
 
-    private void writeTasks(
+    private void writeAlbumDiscoveries(JsonGenerator generator, LocalDateTime maximumCreationDate) {
+        generator.writeArrayPropertyStart("albumDiscoveries");
+        String afterAlbumId = "";
+        while (true) {
+            AlbumDiscoveryPageDto page = findAlbumDiscoveryPage(afterAlbumId, maximumCreationDate);
+            if (page.lastAlbumId() == null) {
+                break;
+            }
+            for (AlbumDiscoveryExportDto discovery : page.discoveries()) {
+                writeAlbumDiscovery(generator, discovery, maximumCreationDate);
+                generator.flush();
+            }
+            generator.flush();
+            afterAlbumId = page.lastAlbumId();
+        }
+        generator.writeEndArray();
+    }
+
+    private void writeArtistDiscovery(
             JsonGenerator generator,
-            Kind kind,
+            ArtistDiscoveryExportDto discovery,
+            LocalDateTime maximumCreationDate
+    ) {
+        generator.writeStartObject();
+        generator.writeStringProperty("id", discovery.id());
+        generator.writeStringProperty("creationDate", discovery.creationDate());
+        generator.writeStringProperty("updateDate", discovery.updateDate());
+        generator.writeStringProperty("jobId", discovery.jobId());
+
+        generator.writeName("artist");
+        writeArtist(generator, discovery.artist());
+        writeArtistTasks(generator, discovery.id(), maximumCreationDate);
+
+        generator.writeEndObject();
+    }
+
+    private void writeAlbumDiscovery(
+            JsonGenerator generator,
+            AlbumDiscoveryExportDto discovery,
+            LocalDateTime maximumCreationDate
+    ) {
+        generator.writeStartObject();
+        generator.writeStringProperty("id", discovery.id());
+        generator.writeStringProperty("creationDate", discovery.creationDate());
+        generator.writeStringProperty("updateDate", discovery.updateDate());
+        generator.writeStringProperty("jobId", discovery.jobId());
+
+        generator.writeName("album");
+        writeAlbum(generator, discovery.album());
+        writeAlbumTasks(generator, discovery.id(), maximumCreationDate);
+
+        generator.writeEndObject();
+    }
+
+    private void writeArtist(JsonGenerator generator, ArtistExportDto artist) {
+        generator.writeStartObject();
+        generator.writeStringProperty("id", artist.id());
+        generator.writeStringProperty("creationDate", artist.creationDate());
+        generator.writeStringProperty("updateDate", artist.updateDate());
+        generator.writeStringProperty("name", artist.name());
+        generator.writeStringProperty("artworkId", artist.artworkId());
+        writeArtistGenres(generator, artist.id());
+        generator.writeEndObject();
+    }
+
+    private void writeAlbum(JsonGenerator generator, AlbumExportDto album) {
+        generator.writeStartObject();
+        generator.writeStringProperty("id", album.id());
+        generator.writeStringProperty("creationDate", album.creationDate());
+        generator.writeStringProperty("updateDate", album.updateDate());
+        generator.writeStringProperty("name", album.name());
+        generator.writeStringProperty("artworkId", album.artworkId());
+        if (album.year() != null) {
+            generator.writeNumberProperty("year", album.year());
+        } else {
+            generator.writeNullProperty("year");
+        }
+        generator.writeName("artist");
+        writeArtist(generator, album.artist());
+        generator.writeEndObject();
+    }
+
+    private void writeArtistTasks(
+            JsonGenerator generator,
             String discoveryId,
             LocalDateTime maximumCreationDate
     ) {
+        generator.writeArrayPropertyStart("tasks");
         String afterTaskId = "";
         while (true) {
-            List<TaskRow> tasks = findTasks(kind, discoveryId, afterTaskId, maximumCreationDate);
+            List<TaskExportDto> tasks = findArtistTaskPage(discoveryId, afterTaskId, maximumCreationDate);
             if (tasks.isEmpty()) {
-                return;
+                break;
             }
-            for (TaskRow task : tasks) {
+            for (TaskExportDto task : tasks) {
                 generator.writePOJO(task);
             }
             generator.flush();
             afterTaskId = tasks.getLast().id();
         }
+        generator.writeEndArray();
     }
 
-    private void writeGenres(JsonGenerator generator, String artistId) {
+    private void writeAlbumTasks(
+            JsonGenerator generator,
+            String discoveryId,
+            LocalDateTime maximumCreationDate
+    ) {
+        generator.writeArrayPropertyStart("tasks");
+        String afterTaskId = "";
+        while (true) {
+            List<TaskExportDto> tasks = findAlbumTaskPage(discoveryId, afterTaskId, maximumCreationDate);
+            if (tasks.isEmpty()) {
+                break;
+            }
+            for (TaskExportDto task : tasks) {
+                generator.writePOJO(task);
+            }
+            generator.flush();
+            afterTaskId = tasks.getLast().id();
+        }
+        generator.writeEndArray();
+    }
+
+    private void writeArtistGenres(JsonGenerator generator, String artistId) {
         generator.writeArrayPropertyStart("genres");
         String afterGenreId = "";
         while (true) {
-            List<Metadata> genres = findGenres(artistId, afterGenreId);
+            List<GenreExportDto> genres = findGenrePage(artistId, afterGenreId);
             if (genres.isEmpty()) {
                 break;
             }
-            for (Metadata genre : genres) {
-                generator.writeStartObject();
-                writeMetadata(generator, genre);
-                generator.writeEndObject();
+            for (GenreExportDto genre : genres) {
+                generator.writePOJO(genre);
             }
             generator.flush();
             afterGenreId = genres.getLast().id();
@@ -157,95 +241,70 @@ public class LlmEvaluationExportService {
         generator.writeEndArray();
     }
 
-    private void writeMetadata(JsonGenerator generator, Metadata metadata) {
-        writeBase(generator, metadata.id(), metadata.creationDate(), metadata.updateDate());
-        generator.writeStringProperty("name", metadata.name());
-        generator.writeStringProperty("artworkId", metadata.artworkId());
-    }
-
-    private DiscoveryPage findDiscoveries(Kind kind, String afterEntityId, LocalDateTime maximumCreationDate) {
-        return inReadTransaction(() -> findDiscoveriesInTransaction(kind, afterEntityId, maximumCreationDate));
-    }
-
-    private DiscoveryPage findDiscoveriesInTransaction(
-            Kind kind,
-            String afterEntityId,
-            LocalDateTime maximumCreationDate
-    ) {
-        List<DiscoveryRow> discoveries = new ArrayList<>();
-        String lastEntityId = null;
-        switch (kind) {
-            case ARTIST -> {
-                for (Artist artist : artistRepository.findForEvaluation(afterEntityId, METADATA_PAGE)) {
-                    lastEntityId = artist.getId();
-                    artistDiscoveryRepository.findLatestForEvaluation(artist.getId(), maximumCreationDate, Limit.of(1))
-                            .map(this::toRow).ifPresent(discoveries::add);
-                }
+    private ArtistDiscoveryPageDto findArtistDiscoveryPage(String afterArtistId, LocalDateTime maximumCreationDate) {
+        return inReadTransaction(() -> {
+            List<Artist> artists = artistRepository.findForEvaluation(afterArtistId, ENTITY_PAGE);
+            List<ArtistDiscoveryExportDto> discoveries = new ArrayList<>();
+            for (Artist artist : artists) {
+                artistDiscoveryRepository.findLatestForEvaluation(artist.getId(), maximumCreationDate, Limit.of(1))
+                        .map(this::toArtistDiscoveryDto).ifPresent(discoveries::add);
             }
-            case ALBUM -> {
-                for (Album album : albumRepository.findForEvaluation(afterEntityId, METADATA_PAGE)) {
-                    lastEntityId = album.getId();
-                    albumDiscoveryRepository.findLatestForEvaluation(album.getId(), maximumCreationDate, Limit.of(1))
-                            .map(this::toRow).ifPresent(discoveries::add);
-                }
-            }
-        }
-        return new DiscoveryPage(discoveries, lastEntityId);
+            String lastArtistId = artists.isEmpty() ? null : artists.getLast().getId();
+            return new ArtistDiscoveryPageDto(discoveries, lastArtistId);
+        });
     }
 
-    private List<TaskRow> findTasks(
-            Kind kind,
+    private AlbumDiscoveryPageDto findAlbumDiscoveryPage(String afterAlbumId, LocalDateTime maximumCreationDate) {
+        return inReadTransaction(() -> {
+            List<Album> albums = albumRepository.findForEvaluation(afterAlbumId, ENTITY_PAGE);
+            List<AlbumDiscoveryExportDto> discoveries = new ArrayList<>();
+            for (Album album : albums) {
+                albumDiscoveryRepository.findLatestForEvaluation(album.getId(), maximumCreationDate, Limit.of(1))
+                        .map(this::toAlbumDiscoveryDto).ifPresent(discoveries::add);
+            }
+            String lastAlbumId = albums.isEmpty() ? null : albums.getLast().getId();
+            return new AlbumDiscoveryPageDto(discoveries, lastAlbumId);
+        });
+    }
+
+    private List<TaskExportDto> findArtistTaskPage(
             String discoveryId,
             String afterTaskId,
             LocalDateTime maximumCreationDate
     ) {
-        return inReadTransaction(() -> findTasksInTransaction(kind, discoveryId, afterTaskId, maximumCreationDate));
+        return inReadTransaction(() -> {
+            List<String> taskIds = artistDiscoveryRepository.findTaskIdsForEvaluation(
+                    discoveryId, afterTaskId, maximumCreationDate, TASK_PAGE);
+            return loadTasks(taskIds);
+        });
     }
 
-    private List<TaskRow> findTasksInTransaction(
-            Kind kind,
+    private List<TaskExportDto> findAlbumTaskPage(
             String discoveryId,
             String afterTaskId,
             LocalDateTime maximumCreationDate
     ) {
-        List<String> taskIds = switch (kind) {
-            case ARTIST -> artistDiscoveryRepository.findTaskIdsForEvaluation(
-                    discoveryId, afterTaskId, maximumCreationDate, TASK_PAGE
-            );
-            case ALBUM -> albumDiscoveryRepository.findTaskIdsForEvaluation(
-                    discoveryId, afterTaskId, maximumCreationDate, TASK_PAGE
-            );
-        };
+        return inReadTransaction(() -> {
+            List<String> taskIds = albumDiscoveryRepository.findTaskIdsForEvaluation(
+                    discoveryId, afterTaskId, maximumCreationDate, TASK_PAGE);
+            return loadTasks(taskIds);
+        });
+    }
+
+    private List<TaskExportDto> loadTasks(List<String> taskIds) {
         if (taskIds.isEmpty()) {
             return List.of();
         }
         return discoveryTaskRepository.findForEvaluationByIds(taskIds).stream()
-                .map(task -> new TaskRow(
-                        task.getId(),
-                        task.getCreationDate().toString(),
-                        task.getUpdateDate() != null ? task.getUpdateDate().toString() : null,
-                        task.getJob().getId(),
-                        task.getType().name(),
-                        task.getStatus().name(),
-                        task.getParameter(),
-                        task.getResult(),
-                        task.getRawRequest(),
-                        task.getRawResult()
-                ))
+                .map(this::toTaskDto)
                 .toList();
     }
 
-    private List<Metadata> findGenres(String artistId, String afterGenreId) {
+    private List<GenreExportDto> findGenrePage(String artistId, String afterGenreId) {
         return inReadTransaction(() -> artistGenreRepository
-                .findGenresForEvaluation(artistId, afterGenreId, METADATA_PAGE)
+                .findGenresForEvaluation(artistId, afterGenreId, ENTITY_PAGE)
                 .stream()
-                .map(genre -> new Metadata(
-                        genre.getId(),
-                        genre.getCreationDate(),
-                        genre.getUpdateDate(),
-                        genre.getName(),
-                        genre.getArtwork() != null ? genre.getArtwork().getId() : null
-                ))
+                .map(this::toGenreDto)
                 .toList());
     }
 
@@ -253,68 +312,120 @@ public class LlmEvaluationExportService {
         return requireNonNull(transactionTemplate.execute(status -> supplier.get()));
     }
 
-    private DiscoveryRow toRow(ArtistDiscovery discovery) {
-        Artist artist = discovery.getArtist();
-        Metadata metadata = new Metadata(artist.getId(), artist.getCreationDate(), artist.getUpdateDate(),
-                artist.getName(), artist.getArtwork() != null ? artist.getArtwork().getId() : null);
-        return new DiscoveryRow(discovery.getId(), discovery.getCreationDate(), discovery.getUpdateDate(),
-                discovery.getJob().getId(), metadata, null, null);
+    private ArtistDiscoveryExportDto toArtistDiscoveryDto(ArtistDiscovery discovery) {
+        return new ArtistDiscoveryExportDto(
+                discovery.getId(),
+                discovery.getCreationDate().toString(),
+                discovery.getUpdateDate() != null ? discovery.getUpdateDate().toString() : null,
+                discovery.getJob().getId(),
+                toArtistDto(discovery.getArtist())
+        );
     }
 
-    private DiscoveryRow toRow(AlbumDiscovery discovery) {
-        Album album = discovery.getAlbum();
-        Metadata metadata = new Metadata(album.getId(), album.getCreationDate(), album.getUpdateDate(),
-                album.getName(), album.getArtwork() != null ? album.getArtwork().getId() : null);
-        return new DiscoveryRow(discovery.getId(), discovery.getCreationDate(), discovery.getUpdateDate(),
-                discovery.getJob().getId(), metadata, album.getYear(), album.getArtist().getId());
+    private AlbumDiscoveryExportDto toAlbumDiscoveryDto(AlbumDiscovery discovery) {
+        return new AlbumDiscoveryExportDto(
+                discovery.getId(),
+                discovery.getCreationDate().toString(),
+                discovery.getUpdateDate() != null ? discovery.getUpdateDate().toString() : null,
+                discovery.getJob().getId(),
+                toAlbumDto(discovery.getAlbum())
+        );
     }
 
-    private void writeBase(
-            JsonGenerator generator,
+    private ArtistExportDto toArtistDto(Artist artist) {
+        return new ArtistExportDto(
+                artist.getId(),
+                artist.getCreationDate().toString(),
+                artist.getUpdateDate() != null ? artist.getUpdateDate().toString() : null,
+                artist.getName(),
+                artist.getArtwork() != null ? artist.getArtwork().getId() : null
+        );
+    }
+
+    private AlbumExportDto toAlbumDto(Album album) {
+        return new AlbumExportDto(
+                album.getId(),
+                album.getCreationDate().toString(),
+                album.getUpdateDate() != null ? album.getUpdateDate().toString() : null,
+                album.getName(),
+                album.getArtwork() != null ? album.getArtwork().getId() : null,
+                album.getYear(),
+                toArtistDto(album.getArtist())
+        );
+    }
+
+    private GenreExportDto toGenreDto(Genre genre) {
+        return new GenreExportDto(
+                genre.getId(),
+                genre.getCreationDate().toString(),
+                genre.getUpdateDate() != null ? genre.getUpdateDate().toString() : null,
+                genre.getName(),
+                genre.getArtwork() != null ? genre.getArtwork().getId() : null
+        );
+    }
+
+    private TaskExportDto toTaskDto(DiscoveryTask task) {
+        return new TaskExportDto(
+                task.getId(),
+                task.getCreationDate().toString(),
+                task.getUpdateDate() != null ? task.getUpdateDate().toString() : null,
+                task.getJob().getId(),
+                task.getType().name(),
+                task.getStatus().name(),
+                task.getParameter(),
+                task.getResult(),
+                task.getRawRequest(),
+                task.getRawResult()
+        );
+    }
+
+    private record ArtistExportDto(
             String id,
-            LocalDateTime creationDate,
-            @Nullable LocalDateTime updateDate
-    ) {
-        generator.writeStringProperty("id", id);
-        generator.writeStringProperty("creationDate", creationDate.toString());
-        generator.writeStringProperty("updateDate", updateDate != null ? updateDate.toString() : null);
-    }
-
-    public enum Kind {
-        ARTIST("artist"), ALBUM("album");
-
-        private final String entityName;
-
-        Kind(String entityName) {
-            this.entityName = entityName;
-        }
-
-        public String entityName() {
-            return entityName;
-        }
-    }
-
-    public record Metadata(
-            String id,
-            LocalDateTime creationDate,
-            @Nullable LocalDateTime updateDate,
+            String creationDate,
+            @Nullable String updateDate,
             @Nullable String name,
             @Nullable String artworkId
     ) {}
 
-    public record DiscoveryRow(
+    private record AlbumExportDto(
             String id,
-            LocalDateTime creationDate,
-            @Nullable LocalDateTime updateDate,
-            String jobId,
-            Metadata entity,
+            String creationDate,
+            @Nullable String updateDate,
+            @Nullable String name,
+            @Nullable String artworkId,
             @Nullable Integer year,
-            @Nullable String artistId
+            ArtistExportDto artist
     ) {}
 
-    public record DiscoveryPage(List<DiscoveryRow> discoveries, @Nullable String lastEntityId) {}
+    private record ArtistDiscoveryExportDto(
+            String id,
+            String creationDate,
+            @Nullable String updateDate,
+            String jobId,
+            ArtistExportDto artist
+    ) {}
 
-    public record TaskRow(
+    private record AlbumDiscoveryExportDto(
+            String id,
+            String creationDate,
+            @Nullable String updateDate,
+            String jobId,
+            AlbumExportDto album
+    ) {}
+
+    private record ArtistDiscoveryPageDto(List<ArtistDiscoveryExportDto> discoveries, @Nullable String lastArtistId) {}
+
+    private record AlbumDiscoveryPageDto(List<AlbumDiscoveryExportDto> discoveries, @Nullable String lastAlbumId) {}
+
+    private record GenreExportDto(
+            String id,
+            String creationDate,
+            @Nullable String updateDate,
+            @Nullable String name,
+            @Nullable String artworkId
+    ) {}
+
+    private record TaskExportDto(
             String id,
             String creationDate,
             @Nullable String updateDate,

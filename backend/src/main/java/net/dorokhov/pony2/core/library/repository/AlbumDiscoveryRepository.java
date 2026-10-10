@@ -17,6 +17,7 @@ public interface AlbumDiscoveryRepository extends JpaRepository<AlbumDiscovery, 
     @Query("""
             SELECT d FROM AlbumDiscovery d
             WHERE d.album.id = :albumId AND d.creationDate <= :maximumCreationDate
+              AND d.job.status IN (COMPLETE, MODERATE)
             ORDER BY d.creationDate DESC, d.id DESC
             """)
     Optional<AlbumDiscovery> findLatestForEvaluation(
