@@ -1,6 +1,8 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.IntegrationTest;
+import net.dorokhov.pony2.api.config.service.ConfigService;
+import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -37,6 +39,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private ArtistDiscoveryService service;
     @Autowired
+    private ConfigService configService;
+    @Autowired
     private DiscoveryTaskExecutor taskExecutor;
     @Autowired
     private LibraryJobSynchronizer jobSynchronizer;
@@ -67,6 +71,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         jobRegistration = jobSynchronizer.registerDiscoveryJob();
+        configService.update(new ConfigSetUpdateCommand()
+                .setLlmUrl("http://localhost:11434/v1")
+                .setLlmModel("test"));
         lenient().when(model.getOptions()).thenReturn(ToolCallingChatOptions.builder().build());
     }
 
@@ -153,7 +160,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getRawRequest()).isNotBlank();
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse);
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse, rawResponse);
             assertThat(task.getResult()).isNotBlank();
         });
         assertThat(cacheRepository.count()).isZero();

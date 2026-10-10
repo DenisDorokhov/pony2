@@ -58,7 +58,7 @@ public class LlmEvaluationExportService {
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.artistGenreRepository = artistGenreRepository;
         // An interrupted export must remain incomplete, and the servlet owns the output stream.
-        writer = jsonMapper.writer().withoutFeatures(
+        writer = jsonMapper.writerWithDefaultPrettyPrinter().withoutFeatures(
                 StreamWriteFeature.AUTO_CLOSE_CONTENT, StreamWriteFeature.AUTO_CLOSE_TARGET);
         DefaultTransactionDefinition transactionDefinition = new DefaultTransactionDefinition(
                 PROPAGATION_REQUIRES_NEW

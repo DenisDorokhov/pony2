@@ -6,7 +6,6 @@ import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony2.api.user.service.exception.DuplicateEmailException;
-import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.web.service.LlmEvaluationExportService.Kind;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import org.junit.jupiter.api.Test;
@@ -18,22 +17,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import tools.jackson.core.JsonParser;
-import tools.jackson.core.JsonToken;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 
 @TestPropertySource(properties = "pony.home=${user.dir}/build/llm-evaluation-test")
 public class LlmEvaluationExportTest extends InstallingIntegrationTest {
@@ -51,8 +42,6 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
     private JsonMapper jsonMapper;
     @Autowired
     private UserService userService;
-    @MockitoSpyBean
-    private ArtistRepository artistRepository;
 
     @Test
     void shouldExportLatestDiscoveriesWithMetadataAndEveryTaskUsingAdminCookie() {
@@ -109,7 +98,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
             assertThat(latest.get("updateDate").isNull()).isTrue();
             JsonNode tasks = latest.get("tasks");
             assertThat(tasks.size()).isEqualTo(19);
-            assertThat(tasks.get(0).get("result").isNull()).isTrue();
+            assertThat(tasks.get(0).has("result")).isFalse();
             for (JsonNode task : tasks) {
                 assertThat(task.get("rawRequest").asString()).isEqualTo(RAW_REQUEST);
                 assertThat(task.get("rawResult").asString()).isEqualTo(RAW_RESULT);
@@ -187,37 +176,6 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
             for (int index = 0; index < 205; index++) {
                 assertThat(discoveries.get(index).get("id").asString()).isEqualTo(id(index + 106));
             }
-        }
-    }
-
-    @Test
-    void shouldStreamHeaderBeforeLoadingExportDataEvenWithTraceLoggingEnabled() {
-        CountDownLatch firstBytesReceived = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            assertThat(firstBytesReceived.await(10, TimeUnit.SECONDS)).isTrue();
-            return List.of();
-        }).when(artistRepository).findForEvaluation(eq(""), any());
-        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        try {
-            apiTemplate.getRestTemplate().execute(PATH, HttpMethod.GET,
-                    request -> request.getHeaders().addAll(apiTemplate.createCookieRequest(authentication.getStaticToken()).getHeaders()),
-                    response -> {
-                        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                        try (JsonParser parser = jsonMapper.createParser(response.getBody())) {
-                            assertThat(parser.nextToken()).isEqualTo(JsonToken.START_OBJECT);
-                            firstBytesReceived.countDown();
-                            boolean complete = false;
-                            while (parser.nextToken() != null) {
-                                if (parser.currentToken() == JsonToken.PROPERTY_NAME && "complete".equals(parser.currentName())) {
-                                    complete = parser.nextToken() == JsonToken.VALUE_TRUE;
-                                }
-                            }
-                            assertThat(complete).isTrue();
-                        }
-                        return null;
-                    });
-        } finally {
-            firstBytesReceived.countDown();
         }
     }
 

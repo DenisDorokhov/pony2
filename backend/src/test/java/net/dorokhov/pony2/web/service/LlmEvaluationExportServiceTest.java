@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -72,6 +73,35 @@ class LlmEvaluationExportServiceTest {
         verify(artistDiscoveryRepository, never()).findTaskIdsForEvaluation(eq("discovery"), eq("task"), any(), any());
         verify(artistRepository, never()).findForEvaluation(eq("artist"), any());
         verify(albumRepository, never()).findForEvaluation(any(), any());
+    }
+
+    @Test
+    void shouldWriteFormattedJson() {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        service.write(output, maximumCreationDate);
+
+        String json = output.toString(StandardCharsets.UTF_8);
+        assertThat(json).contains(System.lineSeparator() + "  \"exportedAt\" : \"2020-01-01T00:00\"");
+        assertThat(json).endsWith(System.lineSeparator() + "}");
+    }
+
+    @Test
+    void shouldFlushHeaderBeforeLoadingExportData() {
+        AtomicBoolean headerFlushed = new AtomicBoolean();
+        OutputStream output = new ByteArrayOutputStream() {
+            @Override
+            public void flush() throws IOException {
+                headerFlushed.set(true);
+                super.flush();
+            }
+        };
+        when(artistRepository.findForEvaluation(eq(""), any())).thenAnswer(invocation -> {
+            assertThat(headerFlushed).isTrue();
+            return List.of();
+        });
+
+        service.write(output, maximumCreationDate);
     }
 
     @Test
