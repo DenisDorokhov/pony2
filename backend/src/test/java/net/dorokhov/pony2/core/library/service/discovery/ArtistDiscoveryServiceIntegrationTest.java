@@ -15,6 +15,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -26,11 +27,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -48,6 +53,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     private ArtistRepository artistRepository;
     @Autowired
     private AlbumRepository albumRepository;
+    @Autowired
+    private SongRepository songRepository;
+    @Autowired
+    private GenreRepository genreRepository;
     @Autowired
     private DiscoveryJobRepository jobRepository;
     @Autowired
@@ -114,16 +123,19 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         getTransactionTemplate().executeWithoutResult(status -> {
             ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
-            assertThat(discovery.getTasks()).singleElement().satisfies(task -> {
-                assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-                assertThat(task.getType()).isEqualTo(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
-                assertThat(task.getJob().getId()).isEqualTo(job.getId());
-                assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
-                assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
-                assertThat(task.getRawRequest()).isNotBlank();
-                assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse);
-            });
+            assertThat(discovery.getTasks()).hasSize(2);
+            assertThat(discovery.getTasks().stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_ARTIST_DATA))
+                    .singleElement().satisfies(task -> {
+                        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                        assertThat(task.getType()).isEqualTo(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
+                        assertThat(task.getJob().getId()).isEqualTo(job.getId());
+                        assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
+                        assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
+                        assertThat(task.getRawRequest()).isNotBlank();
+                        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse);
+                    });
         });
+        assertEmptyTopTracks();
     }
 
     @Test
@@ -135,12 +147,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         when(model.call(any(Prompt.class)))
                 .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse)))));
         service.discover(saveJob(), artist, true, null);
-        DiscoveryTask originalTask = taskRepository.findAll().getFirst();
+        DiscoveryTask originalTask = artistDataTasks().getFirst();
         clearInvocations(model);
 
         service.discover(saveJob(), artist, true, null);
 
-        assertThat(taskRepository.findAll()).hasSize(2).allSatisfy(task -> {
+        assertThat(taskRepository.findAll()).hasSize(4);
+        assertThat(artistDataTasks()).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getRawRequest()).isEqualTo(originalTask.getRawRequest());
             assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse);
@@ -157,12 +170,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         service.discover(saveJob(), artist, true, null);
 
-        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+        assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getRawRequest()).isNotBlank();
             assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse, rawResponse);
             assertThat(task.getResult()).isNotBlank();
         });
+        assertFailedTopTracks();
         assertThat(cacheRepository.count()).isZero();
     }
 
@@ -203,12 +217,14 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         service.discover(saveJob(), artist, true, null);
 
-        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+        assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("Browser unavailable");
             assertThat(task.getRawRequest()).isNotBlank();
             assertThat(task.getRawResult()).isEqualTo("[null]");
         });
+        assertFailedTopTracks();
+        verify(model).call(any(Prompt.class));
         assertThat(logRepository.findAll()).anySatisfy(log -> {
             assertThat(log.getLevel()).isEqualTo(LogMessage.Level.ERROR);
             assertThat(log.getText()).contains("Could not discover Spotify data", artist.getName(), artist.getId());
@@ -219,12 +235,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     void shouldCompleteTaskAndLogSkipWithoutCallingLlmForSingleNullAlbum() {
         service.discover(saveJob(), saveArtist(null), true, null);
 
-        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+        assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("null");
             assertThat(task.getRawRequest()).isNull();
             assertThat(task.getRawResult()).isNull();
         });
+        assertEmptyTopTracks();
         assertThat(artistDiscoveryRepository.count()).isEqualTo(1);
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).anySatisfy(log -> assertThat(log.getText()).contains("no album title"));
@@ -247,11 +264,131 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         service.discover(saveJob(), artist, true, null);
 
-        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+        assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
         });
+        assertEmptyTopTracks();
         assertThat(cacheRepository.count()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SpotifyArtistData.Status.class, names = {"NOT_FOUND", "AMBIGUOUS"})
+    void shouldCompleteTopTracksWithoutMatchingWhenArtistWasNotFound(SpotifyArtistData.Status status) {
+        SpotifyArtistData result = new SpotifyArtistData(status, null, null, null, null, null, null, null);
+        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result));
+
+        service.discover(saveJob(), saveArtist("Album"), true, null);
+
+        assertEmptyTopTracks();
+        verify(model).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldCompleteTopTracksWithoutMatchingWhenTopTracksAreAbsent(boolean emptyList) {
+        SpotifyArtistData found = spotifyArtistData("spotify-artist");
+        SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
+                emptyList ? List.of() : null, null, null, null, null);
+        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result));
+
+        service.discover(saveJob(), saveArtist("Album"), true, null);
+
+        assertEmptyTopTracks();
+        verify(model).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldMatchTopTracksInOrderAndPersistBothExchanges(boolean cacheEnabled) {
+        Artist artist = saveArtist("Album");
+        Album album = albumRepository.findAll().getFirst();
+        Album otherAlbum = albumRepository.save(new Album().setArtist(artist).setName("Other album"));
+        Genre genre = genreRepository.save(new Genre().setName("Genre"));
+        Song first = songRepository.save(song().setPath("first").setName("First").setTrackNumber(1).setAlbum(album).setGenre(genre));
+        Song second = songRepository.save(song().setPath("second").setName("Second").setTrackNumber(2).setAlbum(album).setGenre(genre));
+        Song other = songRepository.save(song().setPath("other").setName("Other").setAlbum(otherAlbum).setGenre(genre));
+        SpotifyArtistData found = spotifyArtistData("spotify-artist");
+        SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
+                List.of(topTrack("second", "Second", "spotify-album"), topTrack("missing", "Missing", "missing-album"),
+                        topTrack("first", "First", "spotify-album")), null, null, null, null);
+        Map<String, String> albumMatches = new LinkedHashMap<>();
+        albumMatches.put("spotify-album", album.getId());
+        albumMatches.put("missing-album", null);
+        String albumResponse = JsonConverter.toJson(albumMatches);
+        String trackResponse = JsonConverter.toJson(Arrays.asList(second.getId(), null, first.getId()));
+        List<String> responses = new ArrayList<>(List.of(JsonConverter.toJson(result), albumResponse, trackResponse));
+        List<Prompt> prompts = new ArrayList<>();
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            prompts.add(invocation.getArgument(0));
+            if (prompts.size() > 1) {
+                assertThat(artistDataTasks()).singleElement()
+                        .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
+                assertThat(topTracksTasks()).singleElement()
+                        .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
+            }
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(responses.removeFirst()))));
+        });
+
+        service.discover(saveJob(), artist, cacheEnabled, null);
+
+        assertThat(topTracksTasks()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(JsonConverter.fromJson(task.getResult(), String[].class)).containsExactly(second.getId(), null, first.getId());
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(albumResponse, trackResponse);
+            assertThat(JsonConverter.fromJson(task.getRawRequest(), RawRequest[].class)).hasSize(2);
+            DiscoveryTask.SpotifyTopTracksParameter parameter = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.SpotifyTopTracksParameter.class);
+            assertThat(parameter.artistId()).isEqualTo(artist.getId());
+            assertThat(parameter.spotifyArtistDataTaskId()).isEqualTo(artistDataTasks().getFirst().getId());
+        });
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.get(1).getInstructions().get(1).getText()).contains(album.getId(), otherAlbum.getId());
+        assertThat(prompts.get(2).getInstructions().get(1).getText()).contains(first.getId(), second.getId()).doesNotContain(other.getId());
+        assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 3 : 0);
+    }
+
+    @Test
+    void shouldCompleteTopTracksWhenEveryTrackIsUnmatched() {
+        Artist artist = saveArtist("Album");
+        SpotifyArtistData found = spotifyArtistData("spotify-artist");
+        SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
+                List.of(topTrack("missing", "Missing", "missing-album")), null, null, null, null);
+        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result),
+                new ChatResponse(List.of(new Generation(new AssistantMessage("{\"missing-album\":null}")))),
+                new ChatResponse(List.of(new Generation(new AssistantMessage("[null]")))));
+
+        service.discover(saveJob(), artist, true, null);
+
+        assertThat(topTracksTasks()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(task.getResult()).isEqualTo("[null]");
+        });
+        verify(model, times(3)).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldInterruptTopTracksWhenCancelledDuringAlbumMatching() {
+        Artist artist = saveArtist("Album");
+        SpotifyArtistData found = spotifyArtistData("spotify-artist");
+        SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
+                List.of(topTrack("track", "Track", "spotify-album")), null, null, null, null);
+        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result)).thenAnswer(invocation -> {
+            jobSynchronizer.cancelDiscovery();
+            return new ChatResponse(List.of(new Generation(new AssistantMessage("{}"))));
+        });
+
+        assertThatThrownBy(() -> service.discover(saveJob(), artist, true, null)).isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(artistDataTasks()).singleElement()
+                .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
+        assertThat(topTracksTasks()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
+            assertThat(task.getResult()).isNull();
+            assertThat(task.getRawResult()).isEqualTo("[null]");
+        });
+        assertThat(cacheRepository.count()).isEqualTo(1);
+        verify(model, times(2)).call(any(Prompt.class));
     }
 
     @Test
@@ -320,6 +457,37 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     }
 
     private record RawRequest(String systemPrompt, String userPrompt, List<String> albumTitles) {}
+
+    private List<DiscoveryTask> artistDataTasks() {
+        return taskRepository.findAll().stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_ARTIST_DATA).toList();
+    }
+
+    private List<DiscoveryTask> topTracksTasks() {
+        return taskRepository.findAll().stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS).toList();
+    }
+
+    private void assertEmptyTopTracks() {
+        assertThat(topTracksTasks()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(task.getResult()).isEqualTo("[]");
+            assertThat(task.getRawRequest()).isNull();
+            assertThat(task.getRawResult()).isNull();
+        });
+    }
+
+    private void assertFailedTopTracks() {
+        assertThat(topTracksTasks()).singleElement().satisfies(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+            assertThat(task.getResult()).contains("SPOTIFY_ARTIST_DATA", "FAILED");
+            assertThat(task.getRawRequest()).isNull();
+            assertThat(task.getRawResult()).isNull();
+        });
+    }
+
+    private SpotifyArtistData.TopTrack topTrack(String id, String title, String albumId) {
+        return new SpotifyArtistData.TopTrack(id, title, "https://open.spotify.com/track/" + id,
+                "Album", albumId, "https://open.spotify.com/album/" + albumId);
+    }
 
     private DiscoveryTask saveTask(DiscoveryJob job, DiscoveryTask.Status status, String result) {
         return taskRepository.save(new DiscoveryTask()

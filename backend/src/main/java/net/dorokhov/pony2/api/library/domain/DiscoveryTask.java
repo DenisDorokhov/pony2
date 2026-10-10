@@ -16,6 +16,8 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
 
     public record ArtistParameter(String artistId) {}
 
+    public record SpotifyTopTracksParameter(String artistId, String spotifyArtistDataTaskId) {}
+
     public record ErrorResult(String error) {}
 
     @Column(name = "status")
