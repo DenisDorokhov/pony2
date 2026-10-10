@@ -194,8 +194,27 @@ class SpotifyArtistDataServiceTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"Here is the result:\n%s", "%s\nDone.", "```json\n%s\n```",
+            "Here is the result:\n```json\n%s\n```\nDone."})
+    void shouldExtractJsonWithoutRequestingVerification(String responseTemplate) {
+        response = responseTemplate.formatted(response);
+        Artist artist = artist();
+        DiscoveryTask task = task(artist);
+
+        assertThat(service.discover(task, true)).contains(found());
+        assertThat(service.discover(task(artist), true)).contains(found());
+
+        assertThat(modelCalls).isOne();
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(response);
+        verifyNoInteractions(logService);
+        Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
+        assertThat(entry.get("response")).isEqualTo(response);
+    }
+
+    @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"not JSON", "Here is the result:\n%s", "%s\nDone.", "```json\n%s\n```", "{}", "{\"status\":\"FOUND\"}"})
+    @ValueSource(strings = {"not JSON", "{}", "{\"status\":\"FOUND\"}", "Result: {status: 'FOUND'}",
+            "Result: {\"status\":\"UNKNOWN\"}", "Result: {\"status\":\"FOUND\"}"})
     void shouldRequestVerificationAndWarnAboutInvalidResponse(String invalidResponseTemplate) throws IOException {
         configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate")).build();
         service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));

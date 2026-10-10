@@ -50,6 +50,7 @@ dependencies {
     implementation 'com.twelvemonkeys.imageio:imageio-webp:3.15.2'
     implementation 'com.github.spotbugs:spotbugs-annotations:4.10.4'
     implementation 'com.google.guava:guava:33.7.1-jre'
+    implementation 'io.github.glaforge.jsonspotter:jsonspotter:0.1.2'
 
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

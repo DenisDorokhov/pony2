@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -145,7 +146,7 @@ public class SpotifyTopTracksService {
     }
 
     private Map<String, String> parseAlbumMatches(@Nullable String response, Map<String, String> spotifyAlbums, List<AlbumData> albums) {
-        Object parsed = response != null ? JsonConverter.fromJson(response) : null;
+        Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
         checkState(parsed instanceof Map<?, ?>, "The LLM album response must be a JSON object.");
         Map<?, ?> matches = (Map<?, ?>) parsed;
         Map<String, String> result = new LinkedHashMap<>();
@@ -165,7 +166,7 @@ public class SpotifyTopTracksService {
 
     private List<String> parseTrackMatches(@Nullable String response, List<SpotifyArtistData.TopTrack> topTracks,
                                           Map<String, String> albumMatches, List<AlbumTracks> albums) {
-        Object parsed = response != null ? JsonConverter.fromJson(response) : null;
+        Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
         checkState(parsed instanceof List<?>, "The LLM track response must be a JSON array.");
         List<?> matches = (List<?>) parsed;
         checkState(matches.size() == topTracks.size(), "The LLM returned %s track positions, expected %s.", matches.size(), topTracks.size());
@@ -183,7 +184,7 @@ public class SpotifyTopTracksService {
     }
 
     private RuntimeException invalidResponse(String artistId, RuntimeException error) {
-        if (!(error instanceof IllegalStateException) && !(error.getCause() instanceof JacksonException)) {
+        if (!(error instanceof IllegalStateException) && !(error instanceof JacksonException)) {
             return error;
         }
         logService.warn(logger, "Invalid Spotify top tracks response from the LLM for artist '{}': {}", artistId, error.getMessage());

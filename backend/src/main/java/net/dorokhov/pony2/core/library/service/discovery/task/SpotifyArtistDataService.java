@@ -10,6 +10,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
@@ -103,11 +104,11 @@ public class SpotifyArtistDataService {
                 SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
         SpotifyArtistData result = llmOperation.call(task, request, cacheSettings, response -> {
             try {
-                SpotifyArtistData data = response != null ? JsonConverter.fromJson(response, SpotifyArtistData.class) : null;
+                SpotifyArtistData data = response != null ? LlmJsonConverter.fromJson(response, SpotifyArtistData.class) : null;
                 validateResponse(data, request);
                 return data;
             } catch (RuntimeException e) {
-                if (!(e instanceof IllegalStateException) && !(e.getCause() instanceof JacksonException)) {
+                if (!(e instanceof IllegalStateException) && !(e instanceof JacksonException)) {
                     throw e;
                 }
                 logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}': {}", artistId, e.getMessage());

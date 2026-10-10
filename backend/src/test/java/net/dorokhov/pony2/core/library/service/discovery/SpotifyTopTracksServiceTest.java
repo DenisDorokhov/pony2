@@ -153,9 +153,29 @@ class SpotifyTopTracksServiceTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"Here is the result:\n%s", "%s\nDone.", "```json\n%s\n```",
+            "Here is the result:\n```json\n%s\n```\nDone."})
+    void shouldExtractAlbumAndTrackJsonWithoutRequestingVerification(String responseTemplate) {
+        String albumResponse = responseTemplate.formatted(ALBUM_RESPONSE);
+        String trackResponse = responseTemplate.formatted(TRACK_RESPONSE);
+        responses.set(0, albumResponse);
+        responses.set(1, trackResponse);
+        DiscoveryTask task = task();
+
+        assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
+        assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
+
+        assertThat(prompts).hasSize(2);
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(albumResponse, trackResponse);
+        assertThat(cache).hasSize(2);
+        verifyNoInteractions(logService);
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"not JSON", "null", "[]", "{}", "{\"spotify-a\":\"album-a\"}",
             "{\"spotify-a\":\"album-a\",\"spotify-b\":\"album-b\"}", "{\"unknown\":\"album-a\"}",
-            "{\"spotify-a\":\"foreign-album\"}", "{\"spotify-a\":123}"})
+            "{\"spotify-a\":\"foreign-album\"}", "{\"spotify-a\":123}", "Result: {spotify_a: 'album-a'}",
+            "Result: {\"spotify-a\":\"album-a\"}"})
     void shouldVerifyInvalidAlbumResponse(String invalidResponse) {
         responses.addFirst(invalidResponse);
         DiscoveryTask task = task();
@@ -184,7 +204,8 @@ class SpotifyTopTracksServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"not JSON", "null", "{}", "[]", "[\"song-a\",null]",
             "[\"unknown\",\"song-b\",null]", "[\"song-b\",\"song-a\",null]",
-            "[\"song-a\",\"song-b\",\"song-a\"]", "[\"song-a\",123,null]"})
+            "[\"song-a\",\"song-b\",\"song-a\"]", "[\"song-a\",123,null]",
+            "Result: ['song-a','song-b',null]", "Result: [\"unknown\",\"song-b\",null]"})
     void shouldVerifyInvalidTrackResponse(String invalidResponse) {
         responses.add(1, invalidResponse);
         DiscoveryTask task = task();
