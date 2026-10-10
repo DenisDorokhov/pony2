@@ -25,6 +25,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -296,7 +297,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                     .setStatus(status)
                     .setDiscoveryResult(discoveryResult)
                     .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks,
-                            stopwatch.elapsed().toMillis()).orElse(null)));
+                            stopwatch.elapsed()).orElse(null)));
         });
     }
 
@@ -305,15 +306,15 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             DiscoveryJob.Status status,
             long completedTasks,
             long failedTasks,
-            long durationMillis
+            Duration duration
     ) {
         String resultDescription = String.format(
-                "Job '%s' (%s). Completed tasks: %s, failed tasks: %s, duration: %s ms",
+                "Job '%s' (%s). Completed tasks: %s, failed tasks: %s, duration: %s",
                 discoveryJob.getId(),
                 discoveryJobDescription(discoveryJob.getType(), discoveryJob.getParameter()),
                 completedTasks,
                 failedTasks,
-                durationMillis
+                duration
         );
         return switch (status) {
             case COMPLETE -> logService.info(logger, "Discovery job complete: {}.", resultDescription);

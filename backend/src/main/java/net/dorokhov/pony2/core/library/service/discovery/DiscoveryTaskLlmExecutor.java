@@ -110,8 +110,8 @@ public class DiscoveryTaskLlmExecutor {
         responses.set(responses.size() - 1, response);
         saveExchange(task, requests, responses);
         if (logger.isDebugEnabled()) {
-            logger.debug("LLM exchange for discovery task '{}' of type {} completed in {} ms. Source: {}.\n\nRequest:\n\n{}\n\nResponse:\n\n{}",
-                    task.getId(), task.getType(), stopwatch.elapsed().toMillis(), cached.isPresent() ? "cache" : "llm",
+            logger.debug("LLM exchange for discovery task '{}' of type {} completed in {}. Source: {}.\n\nRequest:\n\n{}\n\nResponse:\n\n{}",
+                    task.getId(), task.getType(), stopwatch.elapsed(), cached.isPresent() ? "cache" : "llm",
                     JsonConverter.toPrettyJson(requests.getLast()), formatResponseForLog(response));
         }
         R result;

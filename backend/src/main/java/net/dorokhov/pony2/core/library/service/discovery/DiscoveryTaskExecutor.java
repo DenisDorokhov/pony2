@@ -53,18 +53,18 @@ public class DiscoveryTaskExecutor {
             saveResult(task, DiscoveryTask.Status.COMPLETE, JsonConverter.toJson(result));
         } catch (DiscoveryInterruptedException e) {
             saveResult(task, DiscoveryTask.Status.INTERRUPTED, null);
-            logger.info("Interrupted execution of discovery task '{}' of type {} in job '{}' after {} ms.",
-                    task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed().toMillis());
+            logger.info("Interrupted execution of discovery task '{}' of type {} in job '{}' after {}.",
+                    task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
             throw e;
         } catch (RuntimeException e) {
             saveResult(task, DiscoveryTask.Status.FAILED, JsonConverter.toJson(new DiscoveryTask.ErrorResult(Throwables.getStackTraceAsString(e))));
-            logger.warn("Failed discovery task '{}' of type {} in job '{}' after {} ms.",
-                    task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed().toMillis());
+            logger.warn("Failed discovery task '{}' of type {} in job '{}' after {}.",
+                    task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
             execution.onError(task, e);
             return new TaskResult<>(DiscoveryTask.Status.FAILED, null);
         }
-        logger.debug("Completed discovery task '{}' of type {} in job '{}' after {} ms.",
-                task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed().toMillis());
+        logger.debug("Completed discovery task '{}' of type {} in job '{}' after {}.",
+                task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
         execution.onCompletion(task, result);
         return new TaskResult<>(DiscoveryTask.Status.COMPLETE, result);
     }
