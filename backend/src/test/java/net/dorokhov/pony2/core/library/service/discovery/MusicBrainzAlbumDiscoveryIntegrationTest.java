@@ -5,6 +5,8 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.google.common.hash.Hashing;
+import com.sun.net.httpserver.HttpServer;
+import io.micrometer.observation.ObservationRegistry;
 import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
@@ -34,6 +36,7 @@ import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainz
 import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzAlbumDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
+import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
 import net.dorokhov.pony2.core.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -52,6 +55,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -59,6 +64,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.MUSICBRAINZ;
@@ -250,6 +256,49 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         verify(model, times(cacheEnabled ? 1 : 2)).call(any(Prompt.class));
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 1 : 0);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldUseConfiguredModelForMusicBrainzSelectionAndRetry(boolean artistSelection) throws IOException {
+        String configuredModel = "qwen3.8-27b";
+        ConcurrentLinkedQueue<String> requests = new ConcurrentLinkedQueue<>();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/v1/chat/completions", exchange -> {
+            try (exchange) {
+                requests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
+                String content = requests.size() == 1 ? "not JSON" : artistSelection ? "\"artist\"" : "\"group\"";
+                byte[] body = """
+                        {"id":"test","object":"chat.completion","created":1,"model":"%s",
+                         "choices":[{"index":0,"message":{"role":"assistant","content":%s},"finish_reason":"stop"}]}
+                        """.formatted(configuredModel, JsonConverter.toJson(content)).getBytes(UTF_8);
+                exchange.sendResponseHeaders(200, body.length);
+                exchange.getResponseBody().write(body);
+            }
+        });
+        server.start();
+        try {
+            configService.update(new ConfigSetUpdateCommand()
+                    .setLlmUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1")
+                    .setLlmModel(configuredModel));
+            ChatModelImpl httpModel = new ChatModelImpl(configService, ObservationRegistry.NOOP);
+            when(model.createChatModel(any())).thenAnswer(invocation -> httpModel.createChatModel(invocation.getArgument(0)));
+            search(List.of(group("group", "Other", artistSelection ? album.getName() : "Deluxe title",
+                    artistSelection ? List.of(credit("artist", "A", null), credit("other", "B", null))
+                            : List.of(credit("artist", "Slayer", null)))));
+
+            albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+            assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(requests).hasSize(2);
+            for (String body : requests) {
+                Map<String, Object> request = JsonConverter.mapFromJson(body, String.class, Object.class);
+                assertThat(request.get("model")).isEqualTo(configuredModel);
+                assertThat(request.get("tool_choice")).isEqualTo("none");
+            }
+        } finally {
+            server.stop(0);
+        }
     }
 
     @ParameterizedTest

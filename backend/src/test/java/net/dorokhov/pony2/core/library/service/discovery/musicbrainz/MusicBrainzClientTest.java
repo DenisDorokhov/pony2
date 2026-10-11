@@ -138,6 +138,47 @@ class MusicBrainzClientTest {
     }
 
     @Test
+    void shouldRetryServiceUnavailableAndPreserveEachResponse() {
+        AtomicInteger requests = new AtomicInteger();
+        server.createContext("/ws/2/artist/artist", exchange -> {
+            if (requests.incrementAndGet() == 1) {
+                respond(exchange, 503, "service unavailable");
+            } else {
+                respond(exchange, 200, "{\"id\":\"artist\"}");
+            }
+        });
+        MusicBrainzClient client = new MusicBrainzClient(baseUrl, Duration.ZERO, Duration.ofMillis(100), 3,
+                Duration.ofSeconds(10), 1000);
+
+        try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer)) {
+            assertThat(session.getArtist("artist").id()).isEqualTo("artist");
+        }
+
+        assertThat(requests).hasValue(2);
+        assertThat(urls).hasSize(2);
+        assertThat(responses).containsExactly("service unavailable", "{\"id\":\"artist\"}");
+    }
+
+    @Test
+    void shouldStopAfterConfiguredRetries() {
+        AtomicInteger requests = new AtomicInteger();
+        server.createContext("/ws/2/artist/artist", exchange -> {
+            requests.incrementAndGet();
+            respond(exchange, 503, "service unavailable");
+        });
+        MusicBrainzClient client = new MusicBrainzClient(baseUrl, Duration.ZERO, Duration.ofMillis(10), 3,
+                Duration.ofSeconds(10), 1000);
+
+        try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer)) {
+            assertThatThrownBy(() -> session.getArtist("artist"))
+                    .isInstanceOf(IllegalStateException.class).hasMessageContaining("HTTP 503");
+        }
+
+        assertThat(requests).hasValue(4);
+        assertThat(responses).containsExactly("service unavailable", "service unavailable", "service unavailable", "service unavailable");
+    }
+
+    @Test
     void shouldNotBypassRateLimitWithAutomaticRedirectRequests() {
         AtomicInteger targetRequests = new AtomicInteger();
         server.createContext("/ws/2/artist/old", exchange -> {
@@ -221,7 +262,7 @@ class MusicBrainzClientTest {
     }
 
     private MusicBrainzClient client(Duration interval, int maxItems) {
-        return new MusicBrainzClient(baseUrl, interval, Duration.ofSeconds(10), maxItems);
+        return new MusicBrainzClient(baseUrl, interval, Duration.ZERO, 0, Duration.ofSeconds(10), maxItems);
     }
 
     private MusicBrainzDto.ReleaseGroup group(String id) {

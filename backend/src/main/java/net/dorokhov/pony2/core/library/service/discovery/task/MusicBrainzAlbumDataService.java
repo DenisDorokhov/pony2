@@ -180,7 +180,8 @@ public class MusicBrainzAlbumDataService {
         if (candidates.isEmpty() || !configService.get().llmEnabled()) {
             return null;
         }
-        Request request = new Request(releaseGroupPrompt, context(input, responses, false), context(input, responses, true));
+        Request request = new Request(releaseGroupPrompt, context(input, responses, false), context(input, responses, true),
+                configService.get().llmModel());
         String id = selectId(task, request, candidates.keySet(), "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP", cacheEnabled);
         return id != null ? candidates.get(id) : null;
     }
@@ -206,7 +207,7 @@ public class MusicBrainzAlbumDataService {
         }
         String selectedGroup = "\nSelected release group ID: " + JsonConverter.toJson(group.id());
         Request request = new Request(artistPrompt, context(input, responses, false) + selectedGroup,
-                context(input, responses, true) + selectedGroup);
+                context(input, responses, true) + selectedGroup, configService.get().llmModel());
         return selectId(task, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST", cacheEnabled);
     }
 
@@ -286,16 +287,18 @@ public class MusicBrainzAlbumDataService {
     }
 
     @JsonPropertyOrder({"systemPrompt", "userPrompt"})
-    private record Request(String systemPrompt, String userPrompt, @JsonIgnore String cacheUserPrompt) implements DiscoveryTaskLlmExecutor.Request {
+    private record Request(
+            String systemPrompt, String userPrompt, @JsonIgnore String cacheUserPrompt, @JsonIgnore String model
+    ) implements DiscoveryTaskLlmExecutor.Request {
         @Override
         public String toCacheJson() {
-            return JsonConverter.toJson(new Request(systemPrompt, cacheUserPrompt, cacheUserPrompt));
+            return JsonConverter.toJson(new Request(systemPrompt, cacheUserPrompt, cacheUserPrompt, model));
         }
 
         @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
-                    OpenAiChatOptions.builder().toolChoice("none").build());
+                    OpenAiChatOptions.builder().model(model).toolChoice("none").build());
         }
     }
 }

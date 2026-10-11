@@ -42,7 +42,7 @@ public class LlmAdminController implements ErrorHandlingController {
             LocalDateTime maximumCreationDate = LocalDateTime.now();
             String timestamp = maximumCreationDate.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
             response.setContentType(APPLICATION_JSON_VALUE);
-            response.setHeader("Content-Disposition", "attachment; filename=\"pony-evaluation-" + timestamp + ".json\"");
+            response.setHeader("Content-Disposition", "inline; filename=\"pony-evaluation-" + timestamp + ".json\"");
             evaluationExportService.write(response.getOutputStream(), maximumCreationDate);
         } catch (Exception e) {
             if (!isConnectionReset(e)) {

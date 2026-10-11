@@ -110,6 +110,72 @@ public class RateLimitedRequestExecutorTest {
     }
 
     @Test
+    public void shouldWaitAfterEachFailureAndKeepNormalRequestInterval() {
+        AtomicInteger calls = new AtomicInteger();
+        List<Instant> requestTimes = new ArrayList<>();
+        Instant start = clock.instant();
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(
+                new Settings(Duration.ofSeconds(3), Duration.ZERO, Duration.ofSeconds(10), 2, 1)
+        );
+
+        String result = requestExecutor.execute(() -> {
+            requestTimes.add(clock.instant());
+            if (calls.incrementAndGet() < 3) {
+                clock.plus(Duration.ofSeconds(2));
+                throw new IllegalStateException("Request failed.");
+            }
+            return "value";
+        });
+        requestExecutor.execute(() -> {
+            requestTimes.add(clock.instant());
+            return "next";
+        });
+
+        assertThat(result).isEqualTo("value");
+        assertThat(requestTimes).containsExactly(start, start.plusSeconds(12), start.plusSeconds(24), start.plusSeconds(27));
+        assertThat(sleepDurations).containsExactly(Duration.ofSeconds(10), Duration.ofSeconds(10), Duration.ofSeconds(3));
+    }
+
+    @Test
+    public void shouldRespectRateLimitWhenRetryDelayIsShorter() {
+        AtomicInteger calls = new AtomicInteger();
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(
+                new Settings(Duration.ofSeconds(3), Duration.ZERO, Duration.ofSeconds(1), 1, 1)
+        );
+
+        String result = requestExecutor.execute(() -> {
+            if (calls.incrementAndGet() == 1) {
+                throw new IllegalStateException("Request failed.");
+            }
+            return "value";
+        });
+
+        assertThat(result).isEqualTo("value");
+        assertThat(sleepDurations).containsExactly(Duration.ofSeconds(1), Duration.ofSeconds(2));
+    }
+
+    @Test
+    public void shouldCancelRetryWaitingWithoutAnotherAttempt() {
+        AtomicInteger calls = new AtomicInteger();
+        RuntimeException cancellation = new IllegalStateException("Cancelled");
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(
+                new Settings(Duration.ofSeconds(3), Duration.ZERO, Duration.ofSeconds(10), 3, 1)
+        );
+
+        assertThatThrownBy(() -> requestExecutor.execute("test", () -> {
+            calls.incrementAndGet();
+            throw new IllegalStateException("Request failed.");
+        }, () -> {
+            if (!sleepDurations.isEmpty()) {
+                throw cancellation;
+            }
+        })).isSameAs(cancellation);
+
+        assertThat(calls).hasValue(1);
+        assertThat(sleepDurations).containsExactly(Duration.ofMillis(100));
+    }
+
+    @Test
     public void shouldRethrowLastExceptionWhenRetriesAreExhausted() {
 
         AtomicInteger calls = new AtomicInteger();
@@ -139,6 +205,8 @@ public class RateLimitedRequestExecutorTest {
         assertThatThrownBy(() -> settings(Duration.ZERO, Duration.ZERO, -1))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Settings(Duration.ZERO, Duration.ZERO, 0, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Settings(Duration.ZERO, Duration.ZERO, Duration.ofSeconds(-1), 0, 1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

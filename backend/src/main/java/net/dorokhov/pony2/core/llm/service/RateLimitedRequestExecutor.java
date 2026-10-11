@@ -61,7 +61,7 @@ public class RateLimitedRequestExecutor {
     }
 
     /**
-     * Checks cancellation before the request and during rate-limit waiting.
+     * Checks cancellation before the request and during rate-limit and retry waiting.
      */
     public <T> T execute(Object context, Supplier<T> supplier, @Nullable Runnable cancellationCheck) {
         requireNonNull(context, "Context must not be null.");
@@ -77,8 +77,11 @@ public class RateLimitedRequestExecutor {
                             context, retryIndex + 1, e);
                     throw e;
                 }
-                logger.debug("Rate-limited request '{}' in context '{}' failed on attempt {}/{}. Retrying.", name,
-                        context, retryIndex + 1, settings.retriesOnException() + 1, e);
+                logger.debug("Rate-limited request '{}' in context '{}' failed on attempt {}/{}. Retrying after {}.", name,
+                        context, retryIndex + 1, settings.retriesOnException() + 1, settings.retryDelay(), e);
+                if (settings.retryDelay().isPositive()) {
+                    waitUntil(clock.instant().plus(settings.retryDelay()), cancellationCheck);
+                }
             }
         }
     }
@@ -155,18 +158,7 @@ public class RateLimitedRequestExecutor {
                     settings.notMoreOftenThan(),
                     randomDelay
             );
-            if (cancellationCheck == null) {
-                sleep(waitDuration);
-            } else {
-                while (true) {
-                    cancellationCheck.run();
-                    Duration remaining = Duration.between(clock.instant(), nextRequestDate);
-                    if (!remaining.isPositive()) {
-                        break;
-                    }
-                    sleep(remaining.compareTo(Duration.ofMillis(100)) > 0 ? Duration.ofMillis(100) : remaining);
-                }
-            }
+            waitUntil(nextRequestDate, cancellationCheck);
         } else {
             logger.trace(
                     "Rate limiter '{}' context '{}' does not wait. Last request: {}, now: {}, next request: {}, base delay: {}, random delay: {}.",
@@ -178,6 +170,24 @@ public class RateLimitedRequestExecutor {
                     settings.notMoreOftenThan(),
                     randomDelay
             );
+        }
+    }
+
+    private void waitUntil(Instant nextRequestDate, @Nullable Runnable cancellationCheck) {
+        if (cancellationCheck == null) {
+            Duration remaining = Duration.between(clock.instant(), nextRequestDate);
+            if (remaining.isPositive()) {
+                sleep(remaining);
+            }
+        } else {
+            while (true) {
+                cancellationCheck.run();
+                Duration remaining = Duration.between(clock.instant(), nextRequestDate);
+                if (!remaining.isPositive()) {
+                    break;
+                }
+                sleep(remaining.compareTo(Duration.ofMillis(100)) > 0 ? Duration.ofMillis(100) : remaining);
+            }
         }
     }
 
@@ -223,6 +233,7 @@ public class RateLimitedRequestExecutor {
     public record Settings(
             Duration notMoreOftenThan,
             Duration randomDelay,
+            Duration retryDelay,
             int retriesOnException,
             int maxContextCount
     ) {
@@ -231,14 +242,22 @@ public class RateLimitedRequestExecutor {
             this(notMoreOftenThan, randomDelay, retriesOnException, DEFAULT_MAX_CONTEXT_COUNT);
         }
 
+        public Settings(Duration notMoreOftenThan, Duration randomDelay, int retriesOnException, int maxContextCount) {
+            this(notMoreOftenThan, randomDelay, Duration.ZERO, retriesOnException, maxContextCount);
+        }
+
         public Settings {
             requireNonNull(notMoreOftenThan, "Request interval must not be null.");
             requireNonNull(randomDelay, "Random delay must not be null.");
+            requireNonNull(retryDelay, "Retry delay must not be null.");
             if (notMoreOftenThan.isNegative()) {
                 throw new IllegalArgumentException("Request interval must not be negative.");
             }
             if (randomDelay.isNegative()) {
                 throw new IllegalArgumentException("Random delay must not be negative.");
+            }
+            if (retryDelay.isNegative()) {
+                throw new IllegalArgumentException("Retry delay must not be negative.");
             }
             if (retriesOnException < 0) {
                 throw new IllegalArgumentException("Retries count must not be negative.");

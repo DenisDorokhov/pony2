@@ -43,6 +43,8 @@ public class MusicBrainzClient {
     public MusicBrainzClient(
             @Value("${pony.discovery.musicbrainz.url:https://musicbrainz.org/ws/2/}") String baseUrl,
             @Value("${pony.discovery.musicbrainz.rateLimit.notMoreOftenThan:3s}") Duration requestInterval,
+            @Value("${pony.discovery.musicbrainz.rateLimit.retryDelay:10s}") Duration retryDelay,
+            @Value("${pony.discovery.musicbrainz.rateLimit.retriesOnException:3}") int retriesOnException,
             @Value("${pony.discovery.musicbrainz.timeout:30s}") Duration timeout,
             @Value("${pony.discovery.musicbrainz.maxItems:1000}") int maxItems
     ) {
@@ -52,7 +54,7 @@ public class MusicBrainzClient {
         this.baseUrl = HttpUrl.get(baseUrl);
         this.maxItems = maxItems;
         requestExecutor = new RateLimitedRequestExecutor("musicbrainz",
-                new RateLimitedRequestExecutor.Settings(requestInterval, Duration.ZERO, 0, 1));
+                new RateLimitedRequestExecutor.Settings(requestInterval, Duration.ZERO, retryDelay, retriesOnException, 1));
         httpClient = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(false)
                 .followRedirects(false)

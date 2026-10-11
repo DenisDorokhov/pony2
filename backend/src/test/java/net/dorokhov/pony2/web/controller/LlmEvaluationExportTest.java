@@ -82,7 +82,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("attachment");
+        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
         assertThat(response.getHeaders().getContentDisposition().getFilename()).startsWith("pony-evaluation-").endsWith(".json");
         assertThat(response.getHeaders().getContentLength()).isEqualTo(-1);
         JsonNode document = jsonMapper.readTree(response.getBody());
