@@ -118,10 +118,17 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             return new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse))));
         });
 
-        service.discover(job, artist, cacheEnabled, progress::add);
+        service.discover(job, artist, cacheEnabled, value -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            assertThat(taskRepository.countByJobIdAndStatus(job.getId(), DiscoveryTask.Status.COMPLETE))
+                    .isEqualTo(value.getValue().getItemsComplete());
+            progress.add(value);
+        });
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 1 : 0);
-        assertThat(progress).singleElement().satisfies(value -> assertThat(value.getStep())
+        assertThat(progress).allSatisfy(value -> assertThat(value.getStep())
                 .isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY));
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
 
         getTransactionTemplate().executeWithoutResult(status -> {
             ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
@@ -138,6 +145,21 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                     });
         });
         assertEmptyTopTracks();
+    }
+
+    @Test
+    void shouldReportNoTasksWhenLlmIsDisabled() {
+        configService.update(new ConfigSetUpdateCommand());
+        List<DiscoveryProgress> progress = new ArrayList<>();
+
+        service.discover(saveJob(), saveArtist("Album"), true, progress::add);
+
+        assertThat(progress).singleElement().satisfies(value -> {
+            assertThat(value.getStep()).isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY);
+            assertThat(value.getValue()).isEqualTo(DiscoveryProgress.Value.of(0, 0));
+        });
+        assertThat(taskRepository.count()).isZero();
+        verify(model, never()).call(any(Prompt.class));
     }
 
     @Test
@@ -171,9 +193,12 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId()).orElseThrow();
         artistDiscoveryIndexRepository.deleteById(index.getId());
         clearInvocations(model);
+        List<DiscoveryProgress> progress = new ArrayList<>();
 
-        service.discover(saveJob(), artist, true, null);
+        service.discover(saveJob(), artist, true, progress::add);
 
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
                 .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("spotify-artist");
         assertThat(artistDiscoveryIndexRepository.count()).isOne();
@@ -286,9 +311,12 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         saveIndex(artist, "previous-spotify-artist");
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("Browser unavailable"));
+        List<DiscoveryProgress> progress = new ArrayList<>();
 
-        service.discover(saveJob(), artist, true, null);
+        service.discover(saveJob(), artist, true, progress::add);
 
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("Browser unavailable");
@@ -309,12 +337,15 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @ValueSource(booleans = {true, false})
     void shouldCompleteTaskAndLogSkipWithoutCallingLlmForSingleNullAlbum(boolean existingIndex) {
         Artist artist = saveArtist(null);
+        List<DiscoveryProgress> progress = new ArrayList<>();
         if (existingIndex) {
             saveIndex(artist, "previous-spotify-artist");
         }
 
-        service.discover(saveJob(), artist, true, null);
+        service.discover(saveJob(), artist, true, progress::add);
 
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("null");
@@ -417,9 +448,12 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         String trackResponse = JsonConverter.toJson(Arrays.asList(second.getId(), null, first.getId()));
         List<String> responses = new ArrayList<>(List.of(JsonConverter.toJson(result), albumResponse, trackResponse));
         List<Prompt> prompts = new ArrayList<>();
+        List<DiscoveryProgress> progress = new ArrayList<>();
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             prompts.add(invocation.getArgument(0));
+            assertThat(progress.getLast().getValue()).isEqualTo(
+                    DiscoveryProgress.Value.of(prompts.size() == 1 ? 0 : 1, 2));
             if (prompts.size() > 1) {
                 assertThat(artistDataTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
@@ -431,8 +465,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             return new ChatResponse(List.of(new Generation(new AssistantMessage(responses.removeFirst()))));
         });
 
-        service.discover(saveJob(), artist, cacheEnabled, null);
+        service.discover(saveJob(), artist, cacheEnabled, progress::add);
 
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), String[].class)).containsExactly(second.getId(), null, first.getId());
@@ -470,6 +506,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Test
     void shouldInterruptTopTracksWhenCancelledDuringAlbumMatching() {
         Artist artist = saveArtist("Album");
+        List<DiscoveryProgress> progress = new ArrayList<>();
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
                 List.of(topTrack("track", "Track", "spotify-album")), null, null, null, null);
@@ -478,8 +515,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             return new ChatResponse(List.of(new Generation(new AssistantMessage("{}"))));
         });
 
-        assertThatThrownBy(() -> service.discover(saveJob(), artist, true, null)).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatThrownBy(() -> service.discover(saveJob(), artist, true, progress::add)).isInstanceOf(DiscoveryInterruptedException.class);
 
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2));
         assertThat(artistDataTasks()).singleElement()
                 .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
@@ -543,13 +582,15 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     void shouldPersistInterruptionAndSkipCacheWhenCancelledDuringLlmCall() {
         Artist artist = saveArtist("Album");
         DiscoveryJob job = saveJob();
+        List<DiscoveryProgress> progress = new ArrayList<>();
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             jobSynchronizer.cancelDiscovery();
             return chatResponse(spotifyArtistData("spotify-artist"));
         });
 
-        assertThatThrownBy(() -> service.discover(job, artist, true, null))
+        assertThatThrownBy(() -> service.discover(job, artist, true, progress::add))
                 .isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(DiscoveryProgress.Value.of(0, 2));
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();

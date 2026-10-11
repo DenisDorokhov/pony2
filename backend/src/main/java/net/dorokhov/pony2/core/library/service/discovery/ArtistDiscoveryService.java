@@ -69,13 +69,17 @@ public class ArtistDiscoveryService {
     }
 
     public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
-        notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, null), observer);
         ArtistDiscovery artistDiscovery = createDiscovery(discoveryJob, artist);
         boolean llmEnabled = configService.get().llmEnabled();
+        long tasksComplete = 0;
+        long tasksTotal = llmEnabled ? 2 : 0;
+        notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
         if (llmEnabled) {
             taskExecutor.execute(new SpotifyArtistDataTaskExecution(artistDiscovery, cacheEnabled));
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
             String spotifyArtistDataTaskId = artistDiscovery.getTasks().getLast().getId();
             taskExecutor.execute(new SpotifyTopTracksTaskExecution(artistDiscovery, spotifyArtistDataTaskId, cacheEnabled));
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
     }
 
