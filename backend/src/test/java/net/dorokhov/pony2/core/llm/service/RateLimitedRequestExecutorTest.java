@@ -20,6 +20,20 @@ public class RateLimitedRequestExecutorTest {
     private final List<Duration> sleepDurations = new ArrayList<>();
 
     @Test
+    public void shouldStopWaitingWhenRequestIsCancelled() {
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(settings(Duration.ofSeconds(3), Duration.ZERO, 0));
+        requestExecutor.execute("test", () -> "first");
+
+        assertThatThrownBy(() -> requestExecutor.execute("test", () -> "second", () -> {
+            if (!sleepDurations.isEmpty()) {
+                throw new IllegalStateException("Cancelled");
+            }
+        })).isInstanceOf(IllegalStateException.class).hasMessage("Cancelled");
+
+        assertThat(sleepDurations).containsExactly(Duration.ofMillis(100));
+    }
+
+    @Test
     public void shouldExecuteFirstRequestImmediately() {
 
         RateLimitedRequestExecutor requestExecutor = requestExecutor(

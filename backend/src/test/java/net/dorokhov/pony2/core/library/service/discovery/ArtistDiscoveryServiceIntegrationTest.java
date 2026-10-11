@@ -4,6 +4,7 @@ import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
@@ -11,6 +12,7 @@ import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
+import net.dorokhov.pony2.core.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,16 +33,20 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static net.dorokhov.pony2.test.SongFixtures.song;
+import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private ArtistDiscoveryService service;
     @Autowired
@@ -82,6 +88,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         jobRegistration = jobSynchronizer.registerDiscoveryJob();
+        userRepository.save(user().setEmail("admin@example.com").setRoles(Set.of(User.Role.ADMIN)));
         configService.update(new ConfigSetUpdateCommand()
                 .setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("test"));
@@ -128,7 +135,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(progress).allSatisfy(value -> assertThat(value.getStep())
                 .isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY));
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3), DiscoveryProgress.Value.of(3, 3));
 
         getTransactionTemplate().executeWithoutResult(status -> {
             ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
@@ -148,17 +155,21 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldReportNoTasksWhenLlmIsDisabled() {
+    void shouldDiscoverAlbumsWhenLlmIsDisabled() {
         configService.update(new ConfigSetUpdateCommand());
         List<DiscoveryProgress> progress = new ArrayList<>();
 
         service.discover(saveJob(), saveArtist("Album"), true, progress::add);
 
-        assertThat(progress).singleElement().satisfies(value -> {
+        assertThat(progress).allSatisfy(value -> {
             assertThat(value.getStep()).isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY);
-            assertThat(value.getValue()).isEqualTo(DiscoveryProgress.Value.of(0, 0));
         });
-        assertThat(taskRepository.count()).isZero();
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 1), DiscoveryProgress.Value.of(1, 1));
+        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
+            assertThat(task.getType()).isEqualTo(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        });
         verify(model, never()).call(any(Prompt.class));
     }
 
@@ -198,7 +209,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         service.discover(saveJob(), artist, true, progress::add);
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3), DiscoveryProgress.Value.of(3, 3));
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
                 .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("spotify-artist");
         assertThat(artistDiscoveryIndexRepository.count()).isOne();
@@ -245,7 +256,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         service.discover(saveJob(), artist, true, null);
 
-        assertThat(taskRepository.findAll()).hasSize(4);
+        assertThat(taskRepository.findAll()).hasSize(6);
         assertThat(artistDataTasks()).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getRawRequest()).isEqualTo(originalTask.getRawRequest());
@@ -316,7 +327,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         service.discover(saveJob(), artist, true, progress::add);
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3), DiscoveryProgress.Value.of(3, 3));
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("Browser unavailable");
@@ -345,7 +356,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         service.discover(saveJob(), artist, true, progress::add);
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3), DiscoveryProgress.Value.of(3, 3));
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("null");
@@ -453,7 +464,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             prompts.add(invocation.getArgument(0));
             assertThat(progress.getLast().getValue()).isEqualTo(
-                    DiscoveryProgress.Value.of(prompts.size() == 1 ? 0 : 1, 2));
+                    DiscoveryProgress.Value.of(prompts.size() == 1 ? 0 : 1, 4));
             if (prompts.size() > 1) {
                 assertThat(artistDataTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
@@ -468,7 +479,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         service.discover(saveJob(), artist, cacheEnabled, progress::add);
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, 4), DiscoveryProgress.Value.of(1, 4), DiscoveryProgress.Value.of(2, 4), DiscoveryProgress.Value.of(3, 4), DiscoveryProgress.Value.of(4, 4));
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), String[].class)).containsExactly(second.getId(), null, first.getId());
@@ -518,7 +529,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThatThrownBy(() -> service.discover(saveJob(), artist, true, progress::add)).isInstanceOf(DiscoveryInterruptedException.class);
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2));
+                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3));
         assertThat(artistDataTasks()).singleElement()
                 .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
@@ -590,7 +601,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         assertThatThrownBy(() -> service.discover(job, artist, true, progress::add))
                 .isInstanceOf(DiscoveryInterruptedException.class);
-        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(DiscoveryProgress.Value.of(0, 2));
+        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(DiscoveryProgress.Value.of(0, 3));
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();

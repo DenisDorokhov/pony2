@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static net.dorokhov.pony2.test.UserFixtures.user;
@@ -59,6 +60,20 @@ public class UserServiceImplTest {
                 return user;
             }
         });
+    }
+
+    @Test
+    public void shouldGetMainAdmin() {
+        User admin = user().setRoles(Set.of(User.Role.ADMIN));
+        when(userRepository.findFirstByRolesContainingOrderByCreationDateAscIdAsc(User.Role.ADMIN)).thenReturn(Optional.of(admin));
+
+        assertThat(userService.getMainAdmin()).isSameAs(admin);
+    }
+
+    @Test
+    public void shouldFailWhenNoMainAdminExists() {
+        assertThatThrownBy(userService::getMainAdmin).isInstanceOf(IllegalStateException.class)
+                .hasMessage("No administrator is registered.");
     }
 
     @Test

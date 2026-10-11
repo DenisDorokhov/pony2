@@ -2,6 +2,7 @@ package net.dorokhov.pony2;
 
 import jakarta.persistence.EntityManagerFactory;
 import net.dorokhov.pony2.common.RethrowingLambdas;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import org.flywaydb.core.Flyway;
 import org.hibernate.search.mapper.orm.Search;
@@ -33,7 +34,9 @@ import java.util.Optional;
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony2.common.RethrowingLambdas.rethrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @ExtendWith(SpringExtension.class)
@@ -49,6 +52,9 @@ abstract public class IntegrationTest {
 
     @MockitoBean
     protected ChatModelImpl model;
+
+    @MockitoBean
+    protected MusicBrainzClient musicBrainzClient;
 
     @Value("${pony.artwork.path}")
     private File artworkFolder;
@@ -69,6 +75,7 @@ abstract public class IntegrationTest {
     @BeforeEach
     void setUpIntegrationTest() {
         lenient().when(model.createChatModel(any())).thenReturn(model);
+        lenient().when(musicBrainzClient.openSession(anyString(), any())).thenReturn(mock(MusicBrainzClient.Session.class));
         flyway.clean();
         purgeSearchIndexes();
         cleanFiles();

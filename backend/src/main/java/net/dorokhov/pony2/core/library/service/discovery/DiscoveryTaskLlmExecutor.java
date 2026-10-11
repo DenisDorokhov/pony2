@@ -72,7 +72,6 @@ public class DiscoveryTaskLlmExecutor {
 
         interruptIfNeeded();
 
-        String rawRequest = JsonConverter.toJson(request);
         List<Object> requests = task.getRawRequest() != null
                 ? new ArrayList<>(JsonConverter.listFromJson(task.getRawRequest(), Object.class)) : new ArrayList<>();
         List<String> responses = task.getRawResult() != null
@@ -81,7 +80,7 @@ public class DiscoveryTaskLlmExecutor {
         responses.add(null);
         saveExchange(task, requests, responses);
 
-        String key = cacheSettings != null ? cacheSettings.keyPrefix() + ":" + Hashing.sha256().hashString(rawRequest, UTF_8) : null;
+        String key = cacheSettings != null ? cacheSettings.keyPrefix() + ":" + Hashing.sha256().hashString(request.toCacheJson(), UTF_8) : null;
         Optional<String> cached = cacheSettings != null ? cacheService.get(cacheSettings.region(), key, cacheSettings.version()) : Optional.empty();
         Stopwatch stopwatch = Stopwatch.createStarted();
         String response;
@@ -159,10 +158,17 @@ public class DiscoveryTaskLlmExecutor {
 
     /**
      * A serializable snapshot of all prompt inputs, including previous messages and any model options.
-     * Its JSON is used for both the raw request and the cache key.
+     * Its JSON is used for the raw request and, by default, the cache key.
      */
     public interface Request {
         Prompt toPrompt();
+
+        /**
+         * Returns the JSON used to derive the cache key. Implementations may exclude volatile metadata.
+         */
+        default String toCacheJson() {
+            return JsonConverter.toJson(this);
+        }
     }
 
     public record CacheSettings(LlmCacheRegion region, String keyPrefix, int version) {}

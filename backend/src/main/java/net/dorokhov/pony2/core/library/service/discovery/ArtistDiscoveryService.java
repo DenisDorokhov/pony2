@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
@@ -41,6 +42,7 @@ public class ArtistDiscoveryService {
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final SpotifyTopTracksService spotifyTopTracksService;
+    private final AlbumDiscoveryService albumDiscoveryService;
     private final LogService logService;
     private final DiscoveryTaskExecutor taskExecutor;
     private final ConfigService configService;
@@ -52,6 +54,7 @@ public class ArtistDiscoveryService {
             DiscoveryTaskRepository discoveryTaskRepository,
             SpotifyArtistDataService spotifyArtistDataService,
             SpotifyTopTracksService spotifyTopTracksService,
+            AlbumDiscoveryService albumDiscoveryService,
             LogService logService,
             DiscoveryTaskExecutor taskExecutor,
             ConfigService configService,
@@ -62,6 +65,7 @@ public class ArtistDiscoveryService {
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.spotifyTopTracksService = spotifyTopTracksService;
+        this.albumDiscoveryService = albumDiscoveryService;
         this.logService = logService;
         this.taskExecutor = taskExecutor;
         this.configService = configService;
@@ -70,15 +74,22 @@ public class ArtistDiscoveryService {
 
     public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         ArtistDiscovery artistDiscovery = createDiscovery(discoveryJob, artist);
+        List<Album> albums = requireNonNull(transactionTemplate.execute(status ->
+                artistDiscoveryRepository.findById(artistDiscovery.getId()).orElseThrow()
+                        .getArtist().getAlbums().stream().sorted().toList()));
         boolean llmEnabled = configService.get().llmEnabled();
         long tasksComplete = 0;
-        long tasksTotal = llmEnabled ? 2 : 0;
+        long tasksTotal = (llmEnabled ? 2 : 0) + albums.size();
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
         if (llmEnabled) {
             taskExecutor.execute(new SpotifyArtistDataTaskExecution(artistDiscovery, cacheEnabled));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
             String spotifyArtistDataTaskId = artistDiscovery.getTasks().getLast().getId();
             taskExecutor.execute(new SpotifyTopTracksTaskExecution(artistDiscovery, spotifyArtistDataTaskId, cacheEnabled));
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+        }
+        for (Album album : albums) {
+            albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
     }

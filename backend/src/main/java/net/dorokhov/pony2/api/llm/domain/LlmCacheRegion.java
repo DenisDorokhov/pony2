@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 public enum LlmCacheRegion {
 
     SPOTIFY(Duration.of(30, ChronoUnit.DAYS).getSeconds()),
+    MUSICBRAINZ(Duration.of(30, ChronoUnit.DAYS).getSeconds()),
     ;
 
     private final long expirationInSeconds;

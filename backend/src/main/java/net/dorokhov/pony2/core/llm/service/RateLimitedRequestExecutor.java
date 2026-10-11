@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.llm.service;
 
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,13 +57,20 @@ public class RateLimitedRequestExecutor {
     }
 
     public <T> T execute(Object context, Supplier<T> supplier) {
+        return execute(context, supplier, null);
+    }
+
+    /**
+     * Checks cancellation before the request and during rate-limit waiting.
+     */
+    public <T> T execute(Object context, Supplier<T> supplier, @Nullable Runnable cancellationCheck) {
         requireNonNull(context, "Context must not be null.");
         requireNonNull(supplier, "Supplier must not be null.");
         for (int retryIndex = 0; ; retryIndex++) {
             try {
                 logger.trace("Executing rate-limited request '{}' in context '{}' attempt {}/{}.", name, context,
                         retryIndex + 1, settings.retriesOnException() + 1);
-                return executeOnce(context, supplier);
+                return executeOnce(context, supplier, cancellationCheck);
             } catch (RuntimeException e) {
                 if (retryIndex >= settings.retriesOnException()) {
                     logger.debug("Rate-limited request '{}' in context '{}' failed after {} attempt(s).", name,
@@ -75,11 +83,17 @@ public class RateLimitedRequestExecutor {
         }
     }
 
-    private <T> T executeOnce(Object context, Supplier<T> supplier) {
+    private <T> T executeOnce(Object context, Supplier<T> supplier, @Nullable Runnable cancellationCheck) {
         ContextState contextState = contextState(context);
         try {
             synchronized (contextState.lock) {
-                waitIfNeeded(context, contextState);
+                if (cancellationCheck != null) {
+                    cancellationCheck.run();
+                }
+                waitIfNeeded(context, contextState, cancellationCheck);
+                if (cancellationCheck != null) {
+                    cancellationCheck.run();
+                }
                 contextState.lastRequestDate = clock.instant();
                 return supplier.get();
             }
@@ -120,7 +134,7 @@ public class RateLimitedRequestExecutor {
         }
     }
 
-    private void waitIfNeeded(Object context, ContextState contextState) {
+    private void waitIfNeeded(Object context, ContextState contextState, @Nullable Runnable cancellationCheck) {
         if (contextState.lastRequestDate == null) {
             return;
         }
@@ -141,7 +155,18 @@ public class RateLimitedRequestExecutor {
                     settings.notMoreOftenThan(),
                     randomDelay
             );
-            sleep(waitDuration);
+            if (cancellationCheck == null) {
+                sleep(waitDuration);
+            } else {
+                while (true) {
+                    cancellationCheck.run();
+                    Duration remaining = Duration.between(clock.instant(), nextRequestDate);
+                    if (!remaining.isPositive()) {
+                        break;
+                    }
+                    sleep(remaining.compareTo(Duration.ofMillis(100)) > 0 ? Duration.ofMillis(100) : remaining);
+                }
+            }
         } else {
             logger.trace(
                     "Rate limiter '{}' context '{}' does not wait. Last request: {}, now: {}, next request: {}, base delay: {}, random delay: {}.",

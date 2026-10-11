@@ -1,0 +1,2 @@
+Your previous response was invalid: %s
+Review the supplied MusicBrainz data and return only a JSON string containing an allowed candidate ID, or JSON null if no reliable match exists. Do not return explanations or call tools.

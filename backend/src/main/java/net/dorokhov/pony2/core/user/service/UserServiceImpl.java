@@ -45,6 +45,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
+    public User getMainAdmin() {
+        return userRepository.findFirstByRolesContainingOrderByCreationDateAscIdAsc(User.Role.ADMIN)
+                .orElseThrow(() -> new IllegalStateException("No administrator is registered."));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<User> getById(String id) {
         return userRepository.findById(id);
     }
