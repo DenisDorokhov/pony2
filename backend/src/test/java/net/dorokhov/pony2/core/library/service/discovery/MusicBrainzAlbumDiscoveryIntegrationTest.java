@@ -18,7 +18,9 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.DiscoveryType;
+import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
+import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.llm.domain.LlmCache;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
@@ -30,6 +32,8 @@ import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
+import net.dorokhov.pony2.core.library.repository.GenreRepository;
+import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
@@ -45,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -68,6 +73,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.MUSICBRAINZ;
+import static net.dorokhov.pony2.test.SongFixtures.song;
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -87,6 +93,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private BuildVersionProvider buildVersionProvider;
     @Autowired private ArtistRepository artistRepository;
     @Autowired private AlbumRepository albumRepository;
+    @Autowired private GenreRepository genreRepository;
+    @Autowired private SongRepository songRepository;
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
     @Autowired private ArtistDiscoveryRepository artistDiscoveryRepository;
@@ -256,6 +264,67 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         verify(model, times(cacheEnabled ? 1 : 2)).call(any(Prompt.class));
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 1 : 0);
+    }
+
+    @Test
+    void shouldSupplyOrderedLibraryTracksForAmbiguousReleaseGroups() {
+        enableLlm();
+        Genre genre = genreRepository.save(new Genre().setName("Genre"));
+        songRepository.save(song().setPath("second").setName("Second").setDiscNumber(1).setTrackNumber(2)
+                .setDuration(240L).setArtistName("Second Artist").setAlbumArtistName("Various Artists").setAlbum(album).setGenre(genre));
+        songRepository.save(song().setPath("third").setName("Third").setDiscNumber(2).setTrackNumber(1)
+                .setDuration(300L).setArtistName("Third Artist").setAlbumArtistName("Various Artists").setAlbum(album).setGenre(genre));
+        songRepository.save(song().setPath("first").setName("First").setDiscNumber(1).setTrackNumber(1)
+                .setDuration(180L).setArtistName("First Artist").setAlbumArtistName("Various Artists").setAlbum(album).setGenre(genre));
+        MusicBrainzDto.ReleaseGroup albumGroup = groups.getFirst();
+        MusicBrainzDto.ReleaseGroup singleGroup = new MusicBrainzDto.ReleaseGroup("single", album.getName(), "Single", List.of(),
+                "1986-10", albumGroup.artistCredit(), List.of(new MusicBrainzDto.Release("single-release", album.getName())));
+        search(List.of(albumGroup, singleGroup));
+        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, null);
+
+        ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+        verify(model).call(captor.capture());
+        assertThat(captor.getValue().getInstructions().get(1).getText()).contains("Library album track count: 3");
+        String trackJson = captor.getValue().getInstructions().get(1).getText().split("\nLibrary album tracks: ", 2)[1];
+        assertThat(JsonConverter.listFromJson(trackJson, Object.class)).containsExactly(
+                Map.of("title", "First", "discNumber", 1, "trackNumber", 1, "durationSeconds", 180,
+                        "artistName", "First Artist", "albumArtistName", "Various Artists"),
+                Map.of("title", "Second", "discNumber", 1, "trackNumber", 2, "durationSeconds", 240,
+                        "artistName", "Second Artist", "albumArtistName", "Various Artists"),
+                Map.of("title", "Third", "discNumber", 2, "trackNumber", 1, "durationSeconds", 300,
+                        "artistName", "Third Artist", "albumArtistName", "Various Artists"));
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"title", "duration", "count", "artistName", "albumArtistName"})
+    void shouldNotReuseCacheWhenLibraryTracksChange(String change) {
+        enableLlm();
+        Genre genre = genreRepository.save(new Genre().setName("Genre"));
+        Song track = songRepository.save(song().setPath("first").setName("First").setAlbum(album).setGenre(genre));
+        search(List.of(group("group", "Other", "Reign in Blood (deluxe)", List.of(credit("artist", "Slayer", null)))));
+        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, null);
+        albumService.discover(job(DiscoveryType.ALBUM), album, null);
+        verify(model).call(any(Prompt.class));
+
+        switch (change) {
+            case "title" -> songRepository.save(track.setName("Updated title"));
+            case "duration" -> songRepository.save(track.setDuration(300L));
+            case "count" -> songRepository.save(song().setPath("second").setName("Second").setAlbum(album).setGenre(genre));
+            case "artistName" -> songRepository.save(track.setArtistName("Updated artist"));
+            case "albumArtistName" -> songRepository.save(track.setAlbumArtistName("Updated album artist"));
+            default -> throw new IllegalArgumentException(change);
+        }
+        albumService.discover(job(DiscoveryType.ALBUM), album, null);
+
+        verify(model, times(2)).call(any(Prompt.class));
+        assertThat(cacheRepository.count()).isEqualTo(2);
+        assertThat(taskRepository.findAll()).hasSize(3)
+                .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
     @ParameterizedTest

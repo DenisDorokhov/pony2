@@ -38,6 +38,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,7 +181,20 @@ public class MusicBrainzAlbumDataService {
         if (candidates.isEmpty() || !configService.get().llmEnabled()) {
             return null;
         }
-        Request request = new Request(releaseGroupPrompt, context(input, responses, false), context(input, responses, true),
+        String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
+        List<TrackInput> tracks = requireNonNull(transactionTemplate.execute(status ->
+                albumRepository.findById(albumId).orElseThrow().getSongs().stream()
+                        .map(song -> new TrackInput(song.getName(), song.getDiscNumber(), song.getTrackNumber(), song.getDuration(),
+                                song.getArtistName(), song.getAlbumArtistName()))
+                        .sorted(Comparator.comparingInt((TrackInput track) ->
+                                        track.discNumber() != null && track.discNumber() > 0 ? track.discNumber() : 1)
+                                .thenComparing(TrackInput::trackNumber, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(TrackInput::title, Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList()));
+        String trackContext = "\nLibrary album track count: " + tracks.size()
+                + "\nLibrary album tracks: " + JsonConverter.toJson(tracks);
+        Request request = new Request(releaseGroupPrompt, context(input, responses, false) + trackContext,
+                context(input, responses, true) + trackContext,
                 configService.get().llmModel());
         String id = selectId(task, request, candidates.keySet(), "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP", cacheEnabled);
         return id != null ? candidates.get(id) : null;
@@ -279,6 +293,13 @@ public class MusicBrainzAlbumDataService {
 
     @JsonPropertyOrder({"title", "year", "artistName"})
     private record AlbumInput(@Nullable String title, @Nullable Integer year, @Nullable String artistName) {
+    }
+
+    @JsonPropertyOrder({"title", "discNumber", "trackNumber", "durationSeconds", "artistName", "albumArtistName"})
+    private record TrackInput(
+            @Nullable String title, @Nullable Integer discNumber, @Nullable Integer trackNumber, Long durationSeconds,
+            @Nullable String artistName, @Nullable String albumArtistName
+    ) {
     }
 
     private record SearchResponse(
