@@ -14,6 +14,12 @@ public interface DiscoveryTaskExecution<R> {
     R executeTask(DiscoveryTask task);
 
     /**
+     * Runs in the transaction saving COMPLETE and its result. Hook failures roll back that transaction.
+     */
+    default void onResult(DiscoveryTask task, @Nullable R result) {
+    }
+
+    /**
      * Runs after COMPLETE is committed. Hook exceptions propagate without changing the task status.
      */
     default void onCompletion(DiscoveryTask task, @Nullable R result) {

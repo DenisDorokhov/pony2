@@ -37,6 +37,8 @@ public class LibraryCleanerTest {
     @Mock
     private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
+    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    @Mock
     private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Mock
     private ArtworkStorage artworkStorage;
@@ -50,6 +52,7 @@ public class LibraryCleanerTest {
                 genreRepository,
                 artistGenreRepository,
                 artistDiscoveryRepository,
+                artistDiscoveryIndexRepository,
                 albumDiscoveryRepository,
                 artworkStorage
         );
@@ -65,11 +68,13 @@ public class LibraryCleanerTest {
         when(albumRepository.countByArtistId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist1)).isTrue();
+        verify(artistDiscoveryIndexRepository).deleteByArtistId("1");
         verify(artistDiscoveryRepository).deleteByArtistId("1");
         verify(artistGenreRepository).deleteByArtistId("1");
         verify(artistRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist2)).isFalse();
+        verify(artistDiscoveryIndexRepository, never()).deleteByArtistId("2");
         verify(artistDiscoveryRepository, never()).deleteByArtistId("2");
         verify(artistGenreRepository, never()).deleteByArtistId("2");
         verify(artistRepository, never()).deleteById("2");

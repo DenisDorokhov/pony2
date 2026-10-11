@@ -24,6 +24,7 @@ public class LibraryCleaner {
     private final GenreRepository genreRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final ArtworkStorage artworkStorage;
 
@@ -34,6 +35,7 @@ public class LibraryCleaner {
             GenreRepository genreRepository,
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryRepository artistDiscoveryRepository,
+            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
             AlbumDiscoveryRepository albumDiscoveryRepository,
             ArtworkStorage artworkStorage
     ) {
@@ -43,6 +45,7 @@ public class LibraryCleaner {
         this.genreRepository = genreRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
         this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.artworkStorage = artworkStorage;
     }
@@ -50,6 +53,7 @@ public class LibraryCleaner {
     @Transactional
     public boolean deleteArtistIfUnused(Artist artist) {
         if (albumRepository.countByArtistId(artist.getId()) == 0) {
+            artistDiscoveryIndexRepository.deleteByArtistId(artist.getId());
             artistDiscoveryRepository.deleteByArtistId(artist.getId());
             artistGenreRepository.deleteByArtistId(artist.getId());
             artistRepository.deleteById(artist.getId());

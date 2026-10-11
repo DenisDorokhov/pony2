@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -11,6 +12,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
@@ -35,6 +37,7 @@ public class ArtistDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final SpotifyTopTracksService spotifyTopTracksService;
@@ -45,6 +48,7 @@ public class ArtistDiscoveryService {
 
     public ArtistDiscoveryService(
             ArtistDiscoveryRepository artistDiscoveryRepository,
+            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             SpotifyArtistDataService spotifyArtistDataService,
             SpotifyTopTracksService spotifyTopTracksService,
@@ -54,6 +58,7 @@ public class ArtistDiscoveryService {
             PlatformTransactionManager transactionManager
     ) {
         this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.spotifyTopTracksService = spotifyTopTracksService;
@@ -129,6 +134,19 @@ public class ArtistDiscoveryService {
         @Override
         public SpotifyArtistData executeTask(DiscoveryTask task) {
             return spotifyArtistDataService.discover(task, cacheEnabled).orElse(null);
+        }
+
+        @Override
+        public void onResult(DiscoveryTask task, @Nullable SpotifyArtistData result) {
+            if (result == null) {
+                return;
+            }
+            Artist artist = discovery.getArtist();
+            ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
+                    .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
+            String spotifyArtistId = result.status() == SpotifyArtistData.Status.FOUND
+                    ? requireNonNull(result.artist()).id() : null;
+            artistDiscoveryIndexRepository.save(index.setSpotifyArtistId(spotifyArtistId));
         }
 
         @Override

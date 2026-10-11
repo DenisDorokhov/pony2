@@ -50,7 +50,7 @@ public class DiscoveryTaskExecutor {
         R result;
         try {
             result = execution.executeTask(task);
-            saveResult(task, DiscoveryTask.Status.COMPLETE, JsonConverter.toJson(result));
+            saveCompletedResult(task, result, execution);
         } catch (DiscoveryInterruptedException e) {
             saveResult(task, DiscoveryTask.Status.INTERRUPTED, null);
             logger.info("Interrupted execution of discovery task '{}' of type {} in job '{}' after {}.",
@@ -67,6 +67,16 @@ public class DiscoveryTaskExecutor {
                 task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
         execution.onCompletion(task, result);
         return new TaskResult<>(DiscoveryTask.Status.COMPLETE, result);
+    }
+
+    private <R> void saveCompletedResult(DiscoveryTask task, @Nullable R result, DiscoveryTaskExecution<R> execution) {
+        String serializedResult = JsonConverter.toJson(result);
+        transactionTemplate.executeWithoutResult(transactionStatus -> {
+            discoveryTaskRepository.save(task
+                    .setStatus(DiscoveryTask.Status.COMPLETE)
+                    .setResult(serializedResult));
+            execution.onResult(task, result);
+        });
     }
 
     private void saveResult(DiscoveryTask task, DiscoveryTask.Status status, @Nullable String result) {

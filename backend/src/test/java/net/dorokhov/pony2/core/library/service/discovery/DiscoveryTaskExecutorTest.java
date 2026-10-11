@@ -68,6 +68,7 @@ class DiscoveryTaskExecutorTest {
 
         assertThat(result.status()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(result.value()).isEqualTo(value);
+        verify(execution).onResult(task, value);
         verify(execution).onCompletion(task, value);
         verify(execution, never()).onError(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
@@ -105,6 +106,7 @@ class DiscoveryTaskExecutorTest {
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(task.getResult()).contains("Task failed").doesNotContain("Hook failed");
         verify(execution, never()).onCompletion(any(), any());
+        verify(execution, never()).onResult(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }
 

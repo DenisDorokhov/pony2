@@ -22,6 +22,8 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     @Autowired
     private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired
+    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    @Autowired
     private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
@@ -41,16 +43,34 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
                     .setTasks(List.of(task)));
             artist = artistRepository.save(artist);
             artistRepository.flush();
+            artistDiscoveryIndexRepository.saveAndFlush(new ArtistDiscoveryIndex()
+                    .setArtist(artist)
+                    .setSpotifyArtistId("spotify-artist"));
 
             assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isTrue();
             artistRepository.flush();
 
             assertThat(artistRepository.findById(artist.getId())).isEmpty();
             assertThat(artistDiscoveryRepository.count()).isZero();
+            assertThat(artistDiscoveryIndexRepository.count()).isZero();
             assertThat(discoveryTaskRepository.count()).isOne();
 
             return null;
         });
+    }
+
+    @Test
+    public void shouldKeepDiscoveryIndexWhenArtistStillHasAlbums() {
+        Artist artist = artistRepository.save(new Artist());
+        albumRepository.save(new Album().setArtist(artist));
+        ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+                .setArtist(artist)
+                .setSpotifyArtistId("spotify-artist"));
+
+        assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isFalse();
+
+        assertThat(artistDiscoveryIndexRepository.findById(index.getId())).isNotEmpty();
+        assertThat(artistRepository.findById(artist.getId())).isNotEmpty();
     }
 
     @Test

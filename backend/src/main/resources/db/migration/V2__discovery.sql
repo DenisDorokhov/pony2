@@ -91,6 +91,25 @@ CREATE TABLE artist_discovery (
 
 CREATE INDEX index_artist_discovery_artist_id_creation_date ON artist_discovery (artist_id, creation_date desc);
 
+CREATE TABLE artist_discovery_index (
+
+  id CHAR(36) PRIMARY KEY,
+
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
+
+  artist_id CHAR(36) NOT NULL,
+  spotify_artist_id VARCHAR (255),
+
+  FOREIGN KEY (artist_id) REFERENCES artist (id),
+
+  UNIQUE (artist_id)
+);
+
+CREATE INDEX index_artist_discovery_index_creation_date ON artist_discovery_index (creation_date);
+CREATE INDEX index_artist_discovery_index_update_date ON artist_discovery_index (update_date);
+CREATE INDEX index_artist_discovery_index_spotify_artist_id ON artist_discovery_index (spotify_artist_id);
+
 CREATE TABLE artist_discovery_task (
 
   artist_discovery_id CHAR(36) NOT NULL,
