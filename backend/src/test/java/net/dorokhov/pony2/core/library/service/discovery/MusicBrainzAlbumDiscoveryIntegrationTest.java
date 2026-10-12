@@ -22,6 +22,7 @@ import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.llm.domain.DiscoveryCache;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -63,6 +64,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -70,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
@@ -78,6 +81,7 @@ import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -102,6 +106,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private DiscoveryCacheRepository cacheRepository;
+    @Autowired private DiscoveryCacheService cacheService;
     @Autowired private LogMessageRepository logRepository;
 
     private MusicBrainzClient.Session session;
@@ -125,7 +130,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         artist = artistRepository.save(new Artist().setName("Slayer"));
         album = albumRepository.save(new Album().setArtist(artist).setName("Reign in Blood").setYear(1986));
         session = mock(MusicBrainzClient.Session.class);
-        lenient().when(musicBrainzClient.openSession(anyString(), any())).thenAnswer(invocation -> {
+        lenient().when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             exchangeObserver = invocation.getArgument(1);
             return session;
@@ -174,7 +179,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(discovery.getJob().getId()).isEqualTo(job.getId());
             assertThat(discovery.getTasks()).singleElement().satisfies(value -> assertThat(value.getId()).isEqualTo(task.getId()));
         });
-        verify(musicBrainzClient).openSession(eq("pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (first@example.com)"), any());
+        verify(musicBrainzClient).openSession(eq("pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (first@example.com)"), any(), eq(cacheEnabled));
         verify(model, never()).call(any(Prompt.class));
     }
 
@@ -189,6 +194,74 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(onlyTask().getResult()).isNotEqualTo("null");
         verify(model, never()).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldCacheHttpResponsesPreserveLlmContextAndRefreshExpiredEntries(boolean cacheEnabled) throws IOException {
+        enableLlm();
+        search(List.of(group("group", "Other", "Deluxe title", List.of(credit("artist", "Slayer", null)))));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            assertThat(prompt.getInstructions().get(1).getText()).contains("complete-response-marker");
+            return response("\"group\"");
+        });
+        AtomicInteger requests = new AtomicInteger();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/ws/2/", exchange -> {
+            requests.incrementAndGet();
+            String body = exchange.getRequestURI().getPath().equals("/ws/2/artist/artist") ? rawArtistResponse : rawSearchResponse;
+            byte[] bytes = body.getBytes(UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
+        String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/";
+        MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0,
+                Duration.ofSeconds(10), 25);
+        when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            return client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2));
+        });
+        server.start();
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+            albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+
+            assertThat(requests).hasValue(cacheEnabled ? 2 : 4);
+            assertThat(taskRepository.findAll()).hasSize(2).allSatisfy(task -> {
+                assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                Object[] rawRequests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+                assertThat(rawRequests).hasSize(3);
+                assertThat(rawRequests[0]).asString().startsWith(baseUrl + "release-group?");
+                assertThat(rawRequests[2]).isEqualTo(baseUrl + "artist/artist?fmt=json");
+                assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+                        .containsExactly(rawSearchResponse, "\"group\"", rawArtistResponse);
+            });
+            List<DiscoveryCache> httpEntries = cacheRepository.findAll().stream()
+                    .filter(entry -> entry.getKey().startsWith("MUSICBRAINZ_HTTP:")).toList();
+            assertThat(httpEntries).hasSize(cacheEnabled ? 2 : 0);
+            assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 3 : 0);
+            if (cacheEnabled) {
+                assertThat(httpEntries).allSatisfy(entry -> {
+                    assertThat(entry.getRegion()).isEqualTo(MUSICBRAINZ);
+                    assertThat(entry.getExpirationDate()).isEqualTo(entry.getCreationDate().plusSeconds(MUSICBRAINZ.getExpirationInSeconds()));
+                }).extracting(DiscoveryCache::getValue).containsExactlyInAnyOrder(rawSearchResponse, rawArtistResponse);
+                cacheRepository.saveAll(httpEntries.stream()
+                        .map(entry -> entry.setExpirationDate(LocalDateTime.now().minusSeconds(1))).toList());
+
+                albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+                assertThat(requests).hasValue(4);
+                assertThat(taskRepository.findAll()).hasSize(3).allSatisfy(task ->
+                        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
+                assertThat(cacheRepository.count()).isEqualTo(3);
+            }
+            verify(model, times(cacheEnabled ? 1 : 2)).call(any(Prompt.class));
+        } finally {
+            client.onApplicationShutdown();
+            server.stop(0);
+        }
     }
 
     @Test

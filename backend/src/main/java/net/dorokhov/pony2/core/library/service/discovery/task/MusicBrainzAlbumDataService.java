@@ -134,7 +134,7 @@ public class MusicBrainzAlbumDataService {
             }
         };
         try (
-                MusicBrainzClient.Session session = client.openSession(userAgent, observer);
+                MusicBrainzClient.Session session = client.openSession(userAgent, observer, cacheEnabled);
                 LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(session::cancel)
         ) {
             String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(input.artistName()) + "\"";

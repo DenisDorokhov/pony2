@@ -34,6 +34,7 @@ import java.util.Optional;
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony2.common.RethrowingLambdas.rethrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -75,7 +76,7 @@ abstract public class IntegrationTest {
     @BeforeEach
     void setUpIntegrationTest() {
         lenient().when(model.createChatModel(any())).thenReturn(model);
-        lenient().when(musicBrainzClient.openSession(anyString(), any())).thenReturn(mock(MusicBrainzClient.Session.class));
+        lenient().when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenReturn(mock(MusicBrainzClient.Session.class));
         flyway.clean();
         purgeSearchIndexes();
         cleanFiles();

@@ -1,5 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
+import com.google.common.hash.Hashing;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.llm.service.RateLimitedRequestExecutor;
 import okhttp3.Call;
@@ -19,20 +21,27 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 
 @Component
 public class MusicBrainzClient {
 
+    private static final int CACHE_VERSION = 1;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final DiscoveryCacheService cacheService;
     private final HttpUrl baseUrl;
     private final OkHttpClient httpClient;
     private final RateLimitedRequestExecutor requestExecutor;
@@ -41,6 +50,7 @@ public class MusicBrainzClient {
     private final AtomicBoolean closed = new AtomicBoolean();
 
     public MusicBrainzClient(
+            DiscoveryCacheService cacheService,
             @Value("${pony.discovery.musicbrainz.url:https://musicbrainz.org/ws/2/}") String baseUrl,
             @Value("${pony.discovery.musicbrainz.rateLimit.notMoreOftenThan:3s}") Duration requestInterval,
             @Value("${pony.discovery.musicbrainz.rateLimit.retryDelay:10s}") Duration retryDelay,
@@ -51,6 +61,7 @@ public class MusicBrainzClient {
         checkArgument(!requestInterval.isNegative(), "Request interval must not be negative.");
         checkArgument(!timeout.isNegative() && !timeout.isZero(), "Request timeout must be positive.");
         checkArgument(searchLimit >= 1 && searchLimit <= 100, "Search limit must be between 1 and 100.");
+        this.cacheService = cacheService;
         this.baseUrl = HttpUrl.get(baseUrl);
         this.searchLimit = searchLimit;
         requestExecutor = new RateLimitedRequestExecutor("musicbrainz",
@@ -65,9 +76,9 @@ public class MusicBrainzClient {
                 .build();
     }
 
-    public Session openSession(String userAgent, ExchangeObserver observer) {
+    public Session openSession(String userAgent, ExchangeObserver observer, boolean cacheEnabled) {
         checkArgument(!userAgent.isBlank(), "User-Agent must not be blank.");
-        Session session = new Session(userAgent, observer);
+        Session session = new Session(userAgent, observer, cacheEnabled);
         sessions.add(session);
         if (closed.get()) {
             session.close();
@@ -94,12 +105,14 @@ public class MusicBrainzClient {
 
         private final String userAgent;
         private final ExchangeObserver observer;
+        private final boolean cacheEnabled;
         private final AtomicBoolean cancelled = new AtomicBoolean();
         private final AtomicReference<Call> currentCall = new AtomicReference<>();
 
-        private Session(String userAgent, ExchangeObserver observer) {
+        private Session(String userAgent, ExchangeObserver observer, boolean cacheEnabled) {
             this.userAgent = userAgent;
             this.observer = observer;
+            this.cacheEnabled = cacheEnabled;
         }
 
         public List<MusicBrainzDto.ReleaseGroup> searchReleaseGroups(String query) {
@@ -108,21 +121,20 @@ public class MusicBrainzClient {
                     .addQueryParameter("query", query)
                     .addQueryParameter("fmt", "json")
                     .addQueryParameter("limit", Integer.toString(searchLimit)).build();
-            MusicBrainzDto.ReleaseGroupSearch result = JsonConverter.fromJson(get(url), MusicBrainzDto.ReleaseGroupSearch.class);
-            checkState(result.count() >= 0 && result.offset() == 0, "Invalid MusicBrainz search response.");
-            checkState(result.count() == 0 || !result.releaseGroups().isEmpty(),
-                    "MusicBrainz returned no release groups for a non-empty search result.");
-            if (result.count() > searchLimit) {
-                logger.warn("MusicBrainz search '{}' found {} release groups, exceeding the limit of {}; using {} returned release groups.",
-                        query, result.count(), searchLimit, result.releaseGroups().size());
-            }
-            return result.releaseGroups();
+            return get(url, response -> {
+                MusicBrainzDto.ReleaseGroupSearch result = JsonConverter.fromJson(response, MusicBrainzDto.ReleaseGroupSearch.class);
+                if (result.count() > searchLimit) {
+                    logger.warn("MusicBrainz search '{}' found {} release groups, exceeding the limit of {}; using {} returned release groups.",
+                            query, result.count(), searchLimit, result.releaseGroups().size());
+                }
+                return result.releaseGroups();
+            });
         }
 
         public MusicBrainzDto.Artist getArtist(String id) {
             HttpUrl url = baseUrl.newBuilder().addPathSegment("artist").addPathSegment(id)
                     .addQueryParameter("fmt", "json").build();
-            return JsonConverter.fromJson(get(url), MusicBrainzDto.Artist.class);
+            return get(url, response -> JsonConverter.fromJson(response, MusicBrainzDto.Artist.class));
         }
 
         public void cancel() {
@@ -137,6 +149,30 @@ public class MusicBrainzClient {
         public void close() {
             cancel();
             sessions.remove(this);
+        }
+
+        private <T> T get(HttpUrl url, Function<String, T> responseHandler) {
+            checkCancelled();
+            String key = cacheEnabled ? "MUSICBRAINZ_HTTP:" + Hashing.sha256().hashString(url.toString(), UTF_8) : null;
+            Optional<String> cached = cacheEnabled ? cacheService.get(MUSICBRAINZ, key, CACHE_VERSION) : Optional.empty();
+            checkCancelled();
+            String response;
+            if (cached.isPresent()) {
+                observer.onRequest(url.toString());
+                checkCancelled();
+                response = cached.get();
+                observer.onResponse(url.toString(), response);
+            } else {
+                response = get(url);
+            }
+            checkCancelled();
+            T result = responseHandler.apply(response);
+            checkCancelled();
+            if (cacheEnabled && cached.isEmpty()) {
+                cacheService.put(MUSICBRAINZ, key, CACHE_VERSION, response);
+            }
+            checkCancelled();
+            return result;
         }
 
         private String get(HttpUrl url) {
