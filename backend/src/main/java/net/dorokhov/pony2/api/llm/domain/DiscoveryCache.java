@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 import static jakarta.persistence.GenerationType.UUID;
 
 @Entity
-@Table(name = "llm_cache")
-public class LlmCache {
+@Table(name = "discovery_cache")
+public class DiscoveryCache {
 
     @Id
     @GeneratedValue(strategy = UUID)
@@ -19,7 +19,7 @@ public class LlmCache {
     @Column(name = "region", nullable = false)
     @Enumerated(EnumType.STRING)
     @NotNull
-    private LlmCacheRegion region;
+    private DiscoveryCacheRegion region;
 
     @Column(name = "`key`", nullable = false)
     private String key;
@@ -40,16 +40,16 @@ public class LlmCache {
         return id;
     }
 
-    public LlmCache setId(String id) {
+    public DiscoveryCache setId(String id) {
         this.id = id;
         return this;
     }
 
-    public LlmCacheRegion getRegion() {
+    public DiscoveryCacheRegion getRegion() {
         return region;
     }
 
-    public LlmCache setRegion(LlmCacheRegion region) {
+    public DiscoveryCache setRegion(DiscoveryCacheRegion region) {
         this.region = region;
         return this;
     }
@@ -58,7 +58,7 @@ public class LlmCache {
         return key;
     }
 
-    public LlmCache setKey(String key) {
+    public DiscoveryCache setKey(String key) {
         this.key = key;
         return this;
     }
@@ -67,7 +67,7 @@ public class LlmCache {
         return version;
     }
 
-    public LlmCache setVersion(int version) {
+    public DiscoveryCache setVersion(int version) {
         this.version = version;
         return this;
     }
@@ -76,7 +76,7 @@ public class LlmCache {
         return value;
     }
 
-    public LlmCache setValue(String value) {
+    public DiscoveryCache setValue(String value) {
         this.value = value;
         return this;
     }
@@ -85,7 +85,7 @@ public class LlmCache {
         return creationDate;
     }
 
-    public LlmCache setCreationDate(LocalDateTime creationDate) {
+    public DiscoveryCache setCreationDate(LocalDateTime creationDate) {
         this.creationDate = creationDate;
         return this;
     }
@@ -94,7 +94,7 @@ public class LlmCache {
         return expirationDate;
     }
 
-    public LlmCache setExpirationDate(LocalDateTime expirationDate) {
+    public DiscoveryCache setExpirationDate(LocalDateTime expirationDate) {
         this.expirationDate = expirationDate;
         return this;
     }

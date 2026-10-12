@@ -1,6 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.web.service.LlmEvaluationExportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class LlmEvaluationDownloadTest {
 
     private final LlmEvaluationExportService exportService = mock(LlmEvaluationExportService.class);
-    private final LlmAdminController controller = new LlmAdminController(mock(LlmCacheService.class), exportService);
+    private final LlmAdminController controller = new LlmAdminController(mock(DiscoveryCacheService.class), exportService);
 
     @Test
     void shouldRejectOverlappingDownloadAndReleaseSlotAfterCompletion() throws IOException {

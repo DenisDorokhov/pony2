@@ -5,7 +5,7 @@ import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -50,7 +50,7 @@ class SpotifyTopTracksServiceTest {
     private static final String TRACK_RESPONSE = "[\"song-a\",\"song-b\",null]";
 
     @Mock private ChatModel model;
-    @Mock private LlmCacheService cacheService;
+    @Mock private DiscoveryCacheService cacheService;
     @Mock private ArtistRepository artistRepository;
     @Mock private DiscoveryTaskRepository taskRepository;
     @Mock private LogService logService;

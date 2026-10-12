@@ -21,7 +21,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
-import net.dorokhov.pony2.api.llm.domain.LlmCache;
+import net.dorokhov.pony2.api.llm.domain.DiscoveryCache;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -39,7 +39,7 @@ import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainz
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
 import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzAlbumDataService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
+import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
 import net.dorokhov.pony2.core.user.repository.UserRepository;
@@ -72,7 +72,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.MUSICBRAINZ;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,7 +101,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
-    @Autowired private LlmCacheRepository cacheRepository;
+    @Autowired private DiscoveryCacheRepository cacheRepository;
     @Autowired private LogMessageRepository logRepository;
 
     private MusicBrainzClient.Session session;
@@ -402,7 +402,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         if (cacheEnabled) {
             Object[] requests = JsonConverter.fromJson(tasks.getFirst().getRawRequest(), Object[].class);
             assertThat(cacheRepository.findAll()).allSatisfy(cache -> assertThat(cache.getRegion()).isEqualTo(MUSICBRAINZ))
-                    .extracting(LlmCache::getKey).containsExactlyInAnyOrder(
+                    .extracting(DiscoveryCache::getKey).containsExactlyInAnyOrder(
                             "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP:" + Hashing.sha256().hashString(JsonConverter.toJson(requests[1]), UTF_8),
                             "MUSICBRAINZ_ALBUM_DATA_ARTIST:" + Hashing.sha256().hashString(JsonConverter.toJson(requests[2]), UTF_8));
         } else {
@@ -421,7 +421,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), otherAlbum, null);
 
         verify(model, times(2)).call(any(Prompt.class));
-        assertThat(cacheRepository.findAll()).hasSize(2).extracting(LlmCache::getKey).doesNotHaveDuplicates();
+        assertThat(cacheRepository.findAll()).hasSize(2).extracting(DiscoveryCache::getKey).doesNotHaveDuplicates();
         assertThat(taskRepository.findAll()).allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
@@ -481,7 +481,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         verify(model, times(2)).call(any(Prompt.class));
-        assertThat(cacheRepository.findAll()).hasSize(2).extracting(LlmCache::getKey).doesNotHaveDuplicates();
+        assertThat(cacheRepository.findAll()).hasSize(2).extracting(DiscoveryCache::getKey).doesNotHaveDuplicates();
         assertThat(taskRepository.findAll()).allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE))
                 .extracting(task -> JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).firstReleaseDate())
                 .containsExactlyInAnyOrder("1986-10", "1987");

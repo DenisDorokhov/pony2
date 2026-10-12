@@ -10,7 +10,7 @@ import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
+import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
 import net.dorokhov.pony2.core.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -74,7 +74,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private DiscoveryJobInterruptionService interruptionService;
     @Autowired
-    private LlmCacheRepository cacheRepository;
+    private DiscoveryCacheRepository cacheRepository;
     @Autowired
     private LogMessageRepository logRepository;
 

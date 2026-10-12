@@ -4,8 +4,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.hash.Hashing;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
-import net.dorokhov.pony2.api.llm.domain.LlmCacheRegion;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
+import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -37,7 +37,7 @@ public class DiscoveryTaskLlmExecutor {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final DiscoveryChatClient chatClient;
-    private final LlmCacheService cacheService;
+    private final DiscoveryCacheService cacheService;
     private final DiscoveryTaskRepository taskRepository;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ShutdownService shutdownService;
@@ -45,7 +45,7 @@ public class DiscoveryTaskLlmExecutor {
 
     public DiscoveryTaskLlmExecutor(
             DiscoveryChatClient chatClient,
-            LlmCacheService cacheService,
+            DiscoveryCacheService cacheService,
             DiscoveryTaskRepository taskRepository,
             LibraryJobSynchronizer jobSynchronizer,
             ShutdownService shutdownService,
@@ -85,7 +85,7 @@ public class DiscoveryTaskLlmExecutor {
         Stopwatch stopwatch = Stopwatch.createStarted();
         String response;
         if (cached.isPresent()) {
-            logger.debug("LLM cache hit for discovery task '{}' of type {}. Region: {}, key: '{}', version: {}.",
+            logger.debug("Discovery cache hit for discovery task '{}' of type {}. Region: {}, key: '{}', version: {}.",
                     task.getId(), task.getType(), cacheSettings.region(), key, cacheSettings.version());
             CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
             requests.set(requests.size() - 1, entry.request());
@@ -171,7 +171,7 @@ public class DiscoveryTaskLlmExecutor {
         }
     }
 
-    public record CacheSettings(LlmCacheRegion region, String keyPrefix, int version) {}
+    public record CacheSettings(DiscoveryCacheRegion region, String keyPrefix, int version) {}
 
     private record CacheEntry(Object request, @Nullable String response) {}
 

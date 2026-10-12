@@ -46,7 +46,7 @@ export class SettingsComponent implements OnInit{
   error: ErrorDto | undefined;
   backupPlaylistsFileToRestore: File | undefined;
   backupHistoryFileToRestore: File | undefined;
-  llmCacheRegion = '';
+  discoveryCacheRegion = '';
 
   primaryLoadingState = LoadingState.LOADING;
   secondaryLoadingState = LoadingState.LOADED;
@@ -212,15 +212,15 @@ export class SettingsComponent implements OnInit{
     });
   }
 
-  clearLlmCache() {
-    const region = this.llmCacheRegion.trim();
+  clearDiscoveryCache() {
+    const region = this.discoveryCacheRegion.trim();
     this.secondaryLoadingState = LoadingState.LOADING;
-    this.libraryService.clearLlmCache(region === '' ? undefined : region).subscribe({
+    this.libraryService.clearDiscoveryCache(region === '' ? undefined : region).subscribe({
       next: () => {
         this.secondaryLoadingState = LoadingState.LOADED;
         this.notificationService.success(
           this.translateService.instant('notification.settingsTitle'),
-          this.translateService.instant('notification.clearLlmCacheText')
+          this.translateService.instant('notification.clearDiscoveryCacheText')
         );
       },
       error: () => this.secondaryLoadingState = LoadingState.ERROR

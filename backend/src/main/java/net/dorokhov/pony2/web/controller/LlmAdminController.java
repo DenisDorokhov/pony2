@@ -1,8 +1,8 @@
 package net.dorokhov.pony2.web.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
-import net.dorokhov.pony2.api.llm.domain.LlmCacheRegion;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
+import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.web.service.LlmEvaluationExportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,11 @@ public class LlmAdminController implements ErrorHandlingController {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Semaphore evaluationDownload = new Semaphore(1);
 
-    private final LlmCacheService llmCacheService;
+    private final DiscoveryCacheService discoveryCacheService;
     private final LlmEvaluationExportService evaluationExportService;
 
-    public LlmAdminController(LlmCacheService llmCacheService, LlmEvaluationExportService evaluationExportService) {
-        this.llmCacheService = llmCacheService;
+    public LlmAdminController(DiscoveryCacheService discoveryCacheService, LlmEvaluationExportService evaluationExportService) {
+        this.discoveryCacheService = discoveryCacheService;
         this.evaluationExportService = evaluationExportService;
     }
 
@@ -58,12 +58,12 @@ public class LlmAdminController implements ErrorHandlingController {
         }
     }
 
-    @DeleteMapping("/api/admin/llm/cache")
-    public void clearCache(@RequestParam(required = false) LlmCacheRegion region) {
+    @DeleteMapping("/api/admin/discovery/cache")
+    public void clearCache(@RequestParam(required = false) DiscoveryCacheRegion region) {
         if (region == null) {
-            llmCacheService.clear();
+            discoveryCacheService.clear();
         } else {
-            llmCacheService.clear(region);
+            discoveryCacheService.clear(region);
         }
     }
 }

@@ -1,4 +1,4 @@
-CREATE TABLE llm_cache (
+CREATE TABLE discovery_cache (
 
   id CHAR(36) PRIMARY KEY,
 
@@ -12,8 +12,8 @@ CREATE TABLE llm_cache (
   expiration_date TIMESTAMP(9) NOT NULL
 );
 
-CREATE UNIQUE INDEX index_llm_cache_region_key_version ON llm_cache (region, "key", "version");
-CREATE INDEX index_llm_cache_expiration_date ON llm_cache (expiration_date);
+CREATE UNIQUE INDEX index_discovery_cache_region_key_version ON discovery_cache (region, "key", "version");
+CREATE INDEX index_discovery_cache_expiration_date ON discovery_cache (expiration_date);
 
 CREATE TABLE discovery_result (
 

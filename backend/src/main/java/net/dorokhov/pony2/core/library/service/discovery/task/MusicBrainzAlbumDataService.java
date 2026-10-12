@@ -48,7 +48,7 @@ import static com.fasterxml.jackson.annotation.JsonFormat.Feature.WRITE_SORTED_M
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.MUSICBRAINZ;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Service

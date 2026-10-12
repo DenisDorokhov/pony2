@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,7 +48,7 @@ class DiscoveryTaskLlmExecutorTest {
             new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "dialogue", 1);
 
     @Mock private ChatModel model;
-    @Mock private LlmCacheService cacheService;
+    @Mock private DiscoveryCacheService cacheService;
     @Mock private DiscoveryTaskRepository taskRepository;
 
     private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();

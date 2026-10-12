@@ -7,7 +7,7 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -64,7 +64,7 @@ class SpotifyArtistDataServiceTest {
     private static final String ALBUM_ID = "b".repeat(22);
 
     @Mock private ChatModel model;
-    @Mock private LlmCacheService cacheService;
+    @Mock private DiscoveryCacheService cacheService;
     @Mock private ArtistRepository artistRepository;
     @Mock private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock private LogService logService;

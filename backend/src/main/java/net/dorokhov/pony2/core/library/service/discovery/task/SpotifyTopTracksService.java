@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.SpotifyArtistData.Status.FOUND;
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Service

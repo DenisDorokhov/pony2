@@ -4,8 +4,8 @@ import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
-import net.dorokhov.pony2.api.llm.service.LlmCacheService;
-import net.dorokhov.pony2.core.llm.repository.LlmCacheRepository;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.File;
 import java.util.List;
 
-import static net.dorokhov.pony2.api.llm.domain.LlmCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -23,9 +23,9 @@ class LlmConfigListenerTest extends IntegrationTest {
     @Autowired
     private ConfigService configService;
     @Autowired
-    private LlmCacheService llmCacheService;
+    private DiscoveryCacheService discoveryCacheService;
     @Autowired
-    private LlmCacheRepository llmCacheRepository;
+    private DiscoveryCacheRepository discoveryCacheRepository;
 
     @ParameterizedTest
     @ValueSource(strings = {"url", "model", "key", "removeKey", "disable", "enable"})
@@ -43,7 +43,7 @@ class LlmConfigListenerTest extends IntegrationTest {
 
         configService.update(updated);
 
-        assertThat(llmCacheRepository.count()).isZero();
+        assertThat(discoveryCacheRepository.count()).isZero();
         ConfigSet saved = configService.get();
         assertThat(saved.llmUrl()).isEqualTo(updated.getLlmUrl());
         assertThat(saved.llmModel()).isEqualTo(updated.getLlmModel());
@@ -74,7 +74,7 @@ class LlmConfigListenerTest extends IntegrationTest {
         getTransactionTemplate().executeWithoutResult(status -> {
             configService.update(config().setLlmModel("new-model"));
             assertThat(configService.get().llmModel()).isEqualTo("new-model");
-            assertThat(llmCacheRepository.count()).isZero();
+            assertThat(discoveryCacheRepository.count()).isZero();
             status.setRollbackOnly();
         });
 
@@ -95,13 +95,13 @@ class LlmConfigListenerTest extends IntegrationTest {
     }
 
     private void populateCache() {
-        llmCacheService.put(SPOTIFY, "first", 1, "first-response");
-        llmCacheService.put(SPOTIFY, "second", 2, "second-response");
+        discoveryCacheService.put(SPOTIFY, "first", 1, "first-response");
+        discoveryCacheService.put(SPOTIFY, "second", 2, "second-response");
     }
 
     private void assertCachePresent() {
-        assertThat(llmCacheService.get(SPOTIFY, "first", 1)).contains("first-response");
-        assertThat(llmCacheService.get(SPOTIFY, "second", 2)).contains("second-response");
+        assertThat(discoveryCacheService.get(SPOTIFY, "first", 1)).contains("first-response");
+        assertThat(discoveryCacheService.get(SPOTIFY, "second", 2)).contains("second-response");
     }
 
     private ConfigSetUpdateCommand config() {

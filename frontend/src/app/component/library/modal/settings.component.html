@@ -66,14 +66,14 @@
           </button>
         </div>
       </div>
-      <div class="maintenance-action clear-llm-cache-action">
-        <label class="form-label">{{ 'settings.clearLlmCacheLabel' | translate }}</label>
+      <div class="maintenance-action clear-discovery-cache-action">
+        <label class="form-label">{{ 'settings.clearDiscoveryCacheLabel' | translate }}</label>
         <div class="input-group">
-          <input type="text" class="form-control" [(ngModel)]="llmCacheRegion"
+          <input type="text" class="form-control" [(ngModel)]="discoveryCacheRegion"
                  [disabled]="secondaryLoadingState === LoadingState.LOADING"
-                 [placeholder]="'settings.clearLlmCachePlaceholder' | translate">
-          <button class="btn btn-primary" (click)="clearLlmCache()"
-                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.clearLlmCacheButton' | translate }}
+                 [placeholder]="'settings.clearDiscoveryCachePlaceholder' | translate">
+          <button class="btn btn-primary" (click)="clearDiscoveryCache()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.clearDiscoveryCacheButton' | translate }}
           </button>
         </div>
       </div>
