@@ -55,7 +55,7 @@ public class ChatModelImpl implements ChatModel {
         OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder()
                 .baseUrl(configSet.llmUrl())
                 .model(configSet.llmModel())
-                .timeout(Duration.ofMinutes(5));
+                .timeout(Duration.ofMinutes(10));
         if (configSet.llmApiKey() != null) {
             builder.apiKey(configSet.llmApiKey());
         } else {

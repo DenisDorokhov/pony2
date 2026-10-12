@@ -17,6 +17,7 @@ import {SongListComponent} from './song-list.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ImageLoaderComponent} from '../common/image-loader.component';
 import {LibraryService} from '../../service/library.service';
+import {LibraryDiscoveryService} from '../../service/library-discovery.service';
 import {fromEvent, Subscription} from 'rxjs';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import {ArtworkComponent} from './modal/artwork.component';
@@ -76,6 +77,7 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
 
   private readonly libraryService = inject(LibraryService);
+  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly translateService = inject(TranslateService);
   private readonly installationService = inject(InstallationService);
   private readonly playlistService = inject(PlaylistService);
@@ -141,7 +143,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   }
 
   protected startAlbumDiscovery() {
-    this.subscriptions.push(this.libraryService.startAlbumDiscoveryJob(this.albumSongs.album.id, false)
+    this.subscriptions.push(this.libraryDiscoveryService.startAlbumDiscoveryJob(this.albumSongs.album.id, false)
       .subscribe());
   }
 

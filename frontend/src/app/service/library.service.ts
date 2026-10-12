@@ -429,18 +429,6 @@ export class LibraryService {
       );
   }
 
-  startFullDiscoveryJob(cacheEnabled = true): Observable<void> {
-    return this.httpClient.post<void>('/api/admin/library/discoveryJobs/full', null, {params: {cacheEnabled}});
-  }
-
-  startArtistDiscoveryJob(artistId: string, cacheEnabled = true): Observable<void> {
-    return this.httpClient.post<void>(`/api/admin/library/discoveryJobs/artist/${artistId}`, null, {params: {cacheEnabled}});
-  }
-
-  startAlbumDiscoveryJob(albumId: string, cacheEnabled = true): Observable<void> {
-    return this.httpClient.post<void>(`/api/admin/library/discoveryJobs/album/${albumId}`, null, {params: {cacheEnabled}});
-  }
-
   reBuildSearchIndex(): Observable<void> {
     return this.httpClient.post<void>('/api/admin/library/reBuildSearchIndex', null);
   }

@@ -1,0 +1,141 @@
+:host {
+  --color-discovery-type-full: #7952b3;
+  --color-discovery-type-artist: #174e7a;
+  --color-discovery-type-album: #086157;
+}
+
+:host-context([data-bs-theme="dark"]) {
+  --color-discovery-type-full: #b49ad7;
+  --color-discovery-type-artist: #80b5e0;
+  --color-discovery-type-album: #76c9c0;
+}
+
+h4 {
+  i {
+    margin-right: 8px;
+  }
+}
+
+.modal-body {
+  overflow-x: auto;
+}
+
+table.status-container {
+  width: 100%;
+  margin-bottom: 16px;
+
+  td.label {
+    font-weight: bold;
+    width: 0;
+    padding-right: 20px;
+    padding-bottom: 8px;
+  }
+
+  td.value {
+    padding-bottom: 8px;
+  }
+
+  .progress {
+    height: 20px;
+  }
+
+  button {
+    margin-top: 6px;
+  }
+}
+
+.discovery-job-type.full {
+  color: var(--color-discovery-type-full);
+}
+
+.discovery-job-type.artist {
+  color: var(--color-discovery-type-artist);
+}
+
+.discovery-job-type.album {
+  color: var(--color-discovery-type-album);
+}
+
+.discovery-job-status.started {
+  color: var(--color-status-info);
+}
+
+.discovery-job-status.complete {
+  color: var(--color-status-success);
+}
+
+.discovery-job-status.failed {
+  color: var(--color-status-danger);
+}
+
+.discovery-job-status.moderate {
+  color: var(--color-status-warning);
+}
+
+.discovery-job-status.interrupted {
+  color: var(--color-status-warning);
+}
+
+table.log-container {
+  border: 1px solid var(--color-table-border);
+  width: 100%;
+  margin: 0 0 16px;
+
+  thead {
+    border-bottom: 1px solid var(--color-table-border);
+
+    .startDate {
+      width: 180px;
+    }
+
+    .updateDate {
+      width: 180px;
+    }
+
+    .type {
+      width: 80px;
+    }
+
+    .status {
+      width: 130px;
+    }
+  }
+
+  tbody {
+    border: 1px solid var(--color-table-border);
+  }
+
+  .log-message {
+    display: inline-block;
+    max-width: 320px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    margin-bottom: -6px;
+  }
+
+  td {
+    white-space: nowrap;
+    height: 56px;
+    vertical-align: middle;
+  }
+
+  td.details-button {
+    text-align: right;
+  }
+}
+
+.pagination-container {
+  .page-label {
+    text-align: center;
+    line-height: 37px;
+  }
+
+  .next-button-container {
+    text-align: right;
+  }
+
+  pony-loading-indicator, pony-error-indicator {
+    line-height: 37px;
+  }
+}

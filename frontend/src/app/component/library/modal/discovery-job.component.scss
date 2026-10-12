@@ -1,0 +1,68 @@
+:host {
+  --color-discovery-type-full: #7952b3;
+  --color-discovery-type-artist: #174e7a;
+  --color-discovery-type-album: #086157;
+}
+
+:host-context([data-bs-theme="dark"]) {
+  --color-discovery-type-full: #b49ad7;
+  --color-discovery-type-artist: #80b5e0;
+  --color-discovery-type-album: #76c9c0;
+}
+
+.modal-body {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+label {
+  font-weight: bold;
+}
+
+.discovery-job-type.full {
+  color: var(--color-discovery-type-full);
+}
+
+.discovery-job-type.artist {
+  color: var(--color-discovery-type-artist);
+}
+
+.discovery-job-type.album {
+  color: var(--color-discovery-type-album);
+}
+
+.discovery-job-status.started {
+  color: var(--color-status-info);
+}
+
+.discovery-job-status.complete {
+  color: var(--color-status-success);
+}
+
+.discovery-job-status.failed {
+  color: var(--color-status-danger);
+}
+
+.discovery-job-status.moderate {
+  color: var(--color-status-warning);
+}
+
+.discovery-job-status.interrupted {
+  color: var(--color-status-warning);
+}
+
+.log-level.info {
+  color: var(--color-status-success);
+}
+
+.log-level.error {
+  color: var(--color-status-danger);
+}
+
+.log-level.warn {
+  color: var(--color-status-warning);
+}
+
+.exception {
+  margin-top: 12px;
+}

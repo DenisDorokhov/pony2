@@ -194,6 +194,78 @@ export interface ScanJobPageDto extends PageDto {
   scanJobs: ScanJobDto[];
 }
 
+export enum DiscoveryType {
+  FULL = 'FULL',
+  ARTIST = 'ARTIST',
+  ALBUM = 'ALBUM',
+}
+
+export interface DiscoveryResultDto {
+  id: string;
+  date: string;
+  discoveryType: DiscoveryType;
+  completedTasks: number;
+  failedTasks: number;
+}
+
+export interface DiscoveryJobDto {
+  id: string;
+  creationDate: string;
+  updateDate: string | undefined;
+  discoveryType: DiscoveryType;
+  status: DiscoveryJobDto.Status;
+  parameter: string | undefined;
+  logMessage: LogMessageDto | undefined;
+  discoveryResult: DiscoveryResultDto | undefined;
+}
+
+export namespace DiscoveryJobDto {
+  export enum Status {
+    STARTING = 'STARTING',
+    STARTED = 'STARTED',
+    COMPLETE = 'COMPLETE',
+    MODERATE = 'MODERATE',
+    FAILED = 'FAILED',
+    INTERRUPTED = 'INTERRUPTED',
+  }
+}
+
+export interface DiscoveryProgressDto {
+  stepDescriptor: DiscoveryProgressDto.StepDescriptor;
+  value: DiscoveryProgressDto.Value | undefined;
+}
+
+export namespace DiscoveryProgressDto {
+
+  export enum Step {
+    FULL_ARTIST_DISCOVERY = 'FULL_ARTIST_DISCOVERY',
+    FULL_ALBUM_DISCOVERY = 'FULL_ALBUM_DISCOVERY',
+    ARTIST_DISCOVERY = 'ARTIST_DISCOVERY',
+    ALBUM_DISCOVERY = 'ALBUM_DISCOVERY',
+  }
+
+  export interface Value {
+    itemsComplete: number;
+    itemsTotal: number;
+  }
+
+  export interface StepDescriptor {
+    step: DiscoveryProgressDto.Step;
+    discoveryType: DiscoveryType;
+    stepNumber: number;
+    totalSteps: number;
+  }
+}
+
+export interface DiscoveryJobProgressDto {
+  discoveryJob: DiscoveryJobDto;
+  discoveryProgress: DiscoveryProgressDto | undefined;
+}
+
+export interface DiscoveryJobPageDto extends PageDto {
+  discoveryJobs: DiscoveryJobDto[];
+}
+
 export interface LogMessagePageDto extends PageDto {
   logMessages: LogMessageDto[];
 }

@@ -2,6 +2,7 @@ import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {CurrentUserComponent} from './modal/current-user.component';
 import {LogComponent} from './modal/log.component';
 import {ScanningComponent} from './modal/scanning.component';
+import {DiscoveryComponent} from './modal/discovery.component';
 import {SettingsComponent} from './modal/settings.component';
 import {UserListComponent} from './modal/user-list.component';
 import {UserDto} from '../../domain/user.dto';
@@ -9,7 +10,6 @@ import {AuthenticationService} from '../../service/authentication.service';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbDropdownModule, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {LibraryScanService} from '../../service/library-scan.service';
-import {LibraryService} from '../../service/library.service';
 import {Subscription} from 'rxjs';
 import {FastSearchComponent} from './fast-search.component';
 import {ErrorDto} from '../../domain/common.dto';
@@ -29,7 +29,6 @@ import Role = UserDto.Role;
 export class ToolbarComponent implements OnInit, OnDestroy {
 
   private readonly libraryScanService = inject(LibraryScanService);
-  private readonly libraryService = inject(LibraryService);
   private readonly authenticationService = inject(AuthenticationService);
   private readonly playbackService = inject(PlaybackService);
   private readonly themeService = inject(ThemeService);
@@ -103,9 +102,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.modal.open(ScanningComponent, {size: 'xl'});
   }
 
-  protected startFullDiscovery() {
-    this.subscriptions.push(this.libraryService.startFullDiscoveryJob(false)
-      .subscribe());
+  openDiscovery() {
+    this.modal.open(DiscoveryComponent, {size: 'xl'});
   }
 
   openLog() {

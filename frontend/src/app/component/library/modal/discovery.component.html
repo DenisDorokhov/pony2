@@ -1,0 +1,188 @@
+<div class="modal-header">
+  <h4 class="modal-title"><i class="bi bi-stars"></i>{{ 'discovery.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <table class="status-container">
+    @if (discoveryJobProgress) {
+      <tr>
+        <td class="label">{{ 'discovery.typeLabel' | translate }}</td>
+        <td class="value">
+          <span class="discovery-job-type"
+                [class.full]="discoveryJobProgress.discoveryJob.discoveryType === DiscoveryType.FULL"
+                [class.artist]="discoveryJobProgress.discoveryJob.discoveryType === DiscoveryType.ARTIST"
+                [class.album]="discoveryJobProgress.discoveryJob.discoveryType === DiscoveryType.ALBUM"
+          >{{ discoveryJobProgress.discoveryJob.discoveryType }}</span>
+        </td>
+      </tr>
+    }
+    <tr>
+      <td class="label">{{ 'discovery.statusLabel' | translate }}</td>
+      <td class="value">
+        @if (discoveryJobProgressLoadingState === LoadingState.LOADING) {
+          {{ 'discovery.discoveryJobProgress.loadingLabel' | translate }}
+        } @else if (discoveryJobProgressLoadingState === LoadingState.ERROR) {
+          {{ 'discovery.discoveryJobProgress.errorLabel' | translate }}
+        } @else if (!discoveryJobProgress) {
+          {{ 'discovery.discoveryJobProgress.inactiveLabel' | translate }}
+        } @else {
+          <span class="discovery-job-status"
+                [class.started]="discoveryJobProgress.discoveryJob.status === DiscoveryJobStatus.STARTED"
+          >{{ discoveryJobProgress.discoveryJob.status }}</span>
+        }
+      </td>
+    </tr>
+    @if (discoveryJobProgress) {
+      <tr>
+        <td class="label">{{ 'discovery.stepLabel' | translate }}</td>
+        <td class="value">
+          @switch (discoveryJobProgress.discoveryProgress?.stepDescriptor?.step) {
+            @case (Step.FULL_ARTIST_DISCOVERY) {
+              {{ 'discovery.discoveryJobProgress.artistDiscoveryLabel' | translate }}
+            }
+            @case (Step.ARTIST_DISCOVERY) {
+              {{ 'discovery.discoveryJobProgress.artistDiscoveryLabel' | translate }}
+            }
+            @case (Step.FULL_ALBUM_DISCOVERY) {
+              {{ 'discovery.discoveryJobProgress.albumDiscoveryLabel' | translate }}
+            }
+            @case (Step.ALBUM_DISCOVERY) {
+              {{ 'discovery.discoveryJobProgress.albumDiscoveryLabel' | translate }}
+            }
+            @default {
+              {{ 'discovery.discoveryJobProgress.preparingLabel' | translate }}
+            }
+          }
+          @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
+            {{ 'discovery.discoveryJobProgress.itemsProgressLabel' | translate:{
+              percentage: discoveryProgressValue.toFixed(0),
+              itemsComplete: discoveryJobProgress.discoveryProgress!.value!.itemsComplete,
+              itemsTotal: discoveryJobProgress.discoveryProgress!.value!.itemsTotal
+            } }}
+          }
+        </td>
+      </tr>
+    }
+    <tr>
+      <td class="label">{{ 'discovery.progressLabel' | translate }}</td>
+      <td class="value">
+        <div class="progress">
+          @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
+            @switch (discoveryJobProgress!.discoveryProgress!.stepDescriptor.step) {
+              @case (Step.FULL_ARTIST_DISCOVERY) {
+                <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
+                     [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
+              }
+              @case (Step.ARTIST_DISCOVERY) {
+                <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
+                     [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
+              }
+              @case (Step.FULL_ALBUM_DISCOVERY) {
+                <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
+                     [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
+              }
+              @case (Step.ALBUM_DISCOVERY) {
+                <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
+                     [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
+              }
+            }
+          } @else if (discoveryJobProgress) {
+            <div role="progressbar" class="progress-bar progress-bar-striped progress-bar-animated"
+                 [style.width]="'100%'"></div>
+          } @else {
+            <div role="progressbar" class="progress-bar" [style.width]="'0'"></div>
+          }
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        <button type="button" class="btn btn-primary"
+                [disabled]="discoveryJobProgressLoadingState === LoadingState.LOADING || discoveryJobProgress"
+                (click)="startFullDiscoveryJob()">
+          {{ 'discovery.startFullDiscoveryButton' | translate }}
+        </button>
+      </td>
+    </tr>
+  </table>
+
+  <table class="table table-striped log-container">
+    <thead>
+    <tr>
+      <th scope="col" class="startDate">{{ 'discovery.startDateColumn' | translate }}</th>
+      <th scope="col" class="updateDate">{{ 'discovery.updateDateColumn' | translate }}</th>
+      <th scope="col" class="type">{{ 'discovery.typeColumn' | translate }}</th>
+      <th scope="col" class="status">{{ 'discovery.statusColumn' | translate }}</th>
+      <th scope="col" class="lastMessage">{{ 'discovery.lastMessageColumn' | translate }}</th>
+      <th scope="col">{{ 'discovery.detailsColumn' | translate }}</th>
+    </tr>
+    </thead>
+    <tbody>
+      @for (discoveryJob of discoveryJobs; track discoveryJob) {
+        <tr>
+          <td>{{ discoveryJob.creationDate | date:('shared.dateTimeFormat' | translate) }}</td>
+          <td>{{ discoveryJob.updateDate | date:('shared.dateTimeFormat' | translate) }}</td>
+          <td><span class="discovery-job-type"
+                    [class.full]="discoveryJob.discoveryType === DiscoveryType.FULL"
+                    [class.artist]="discoveryJob.discoveryType === DiscoveryType.ARTIST"
+                    [class.album]="discoveryJob.discoveryType === DiscoveryType.ALBUM"
+          >{{ discoveryJob.discoveryType }}</span></td>
+          <td><span class="discovery-job-status"
+                    [class.starting]="discoveryJob.status === DiscoveryJobStatus.STARTING"
+                    [class.started]="discoveryJob.status === DiscoveryJobStatus.STARTED"
+                    [class.complete]="discoveryJob.status === DiscoveryJobStatus.COMPLETE"
+                    [class.moderate]="discoveryJob.status === DiscoveryJobStatus.MODERATE"
+                    [class.failed]="discoveryJob.status === DiscoveryJobStatus.FAILED"
+                    [class.interrupted]="discoveryJob.status === DiscoveryJobStatus.INTERRUPTED"
+          >{{ discoveryJob.status }}</span></td>
+          <td><span class="log-message">{{ discoveryJob.logMessage?.text }}</span></td>
+          <td class="details-button">
+            <button type="button" class="btn btn-outline-dark"
+                    [disabled]="discoveryJob.status === DiscoveryJobStatus.STARTING || discoveryJob.status === DiscoveryJobStatus.STARTED"
+                    (click)="showDetails(discoveryJob)">{{ 'discovery.detailsButton' | translate }}</button>
+          </td>
+        </tr>
+      }
+      @for (i of [].constructor(emptyDiscoveryJobRowCount); track $index) {
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="row pagination-container">
+    <div class="col prev-button-container">
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.previousPageButton' | translate"
+              [disabled]="(currentPage?.pageIndex ?? 0) === 0"
+              (click)="loadDiscoveryJobsPreviousPage()"></button>
+    </div>
+    <div class="col">
+      @if (discoveryJobsLoadingState === LoadingState.LOADING) {
+        <pony-loading-indicator></pony-loading-indicator>
+      }
+      @if (discoveryJobsLoadingState === LoadingState.ERROR) {
+        <pony-error-indicator></pony-error-indicator>
+      }
+      <div class="page-label" [hidden]="discoveryJobsLoadingState !== LoadingState.LOADED">
+        {{ 'shared.currentPageLabel' | translate:{
+          pageIndex: ((currentPage?.pageIndex ?? 0) + 1),
+          totalPages: (currentPage?.totalPages ?? 0)
+        } }}
+      </div>
+    </div>
+    <div class="col next-button-container">
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.nextPageButton' | translate"
+              [disabled]="(currentPage?.pageIndex ?? 0) >= ((currentPage?.totalPages ?? 0) - 1)"
+              (click)="loadDiscoveryJobsNextPage()"></button>
+    </div>
+  </div>
+</div>
