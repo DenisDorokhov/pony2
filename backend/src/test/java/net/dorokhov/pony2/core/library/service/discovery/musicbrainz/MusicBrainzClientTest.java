@@ -1,5 +1,9 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -7,6 +11,9 @@ import okhttp3.HttpUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -21,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,61 +70,85 @@ class MusicBrainzClientTest {
     }
 
     @Test
-    void shouldReadAllPagesAndSendUserAgentAndEncodedQuery() {
-        List<Integer> offsets = new ArrayList<>();
+    void shouldSearchOnceAndSendLimitUserAgentAndEncodedQuery() {
+        List<String> limits = new ArrayList<>();
+        List<String> offsets = new ArrayList<>();
         List<String> userAgents = new ArrayList<>();
         List<String> queries = new ArrayList<>();
         String query = "release:\"A \\\"B\\\" & C\" AND artistname:\"Artist\"";
         server.createContext("/ws/2/release-group", exchange -> {
             HttpUrl url = HttpUrl.get(baseUrl).resolve(exchange.getRequestURI().toString());
-            int offset = Integer.parseInt(url.queryParameter("offset"));
-            offsets.add(offset);
+            limits.add(url.queryParameter("limit"));
+            offsets.add(url.queryParameter("offset"));
             queries.add(url.queryParameter("query"));
             userAgents.add(exchange.getRequestHeaders().getFirst("User-Agent"));
-            List<MusicBrainzDto.ReleaseGroup> groups = offset == 0 ? List.of(group("one"), group("two")) : List.of(group("three"));
-            respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(3, offset, groups)));
+            List<MusicBrainzDto.ReleaseGroup> groups = List.of(group("one"), group("two"), group("three"));
+            respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(3, 0, groups)));
         });
-        MusicBrainzClient client = client(Duration.ZERO, 1000);
+        MusicBrainzClient client = client(Duration.ZERO);
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/2.0 (admin@example.com)", observer)) {
             assertThat(session.searchReleaseGroups(query)).extracting(MusicBrainzDto.ReleaseGroup::id).containsExactly("one", "two", "three");
         }
 
-        assertThat(offsets).containsExactly(0, 2);
-        assertThat(queries).containsExactly(query, query);
+        assertThat(limits).containsExactly("25");
+        assertThat(offsets).containsExactly((String) null);
+        assertThat(queries).containsExactly(query);
         assertThat(userAgents).containsOnly("pony2/2.0 (admin@example.com)");
-        assertThat(urls).hasSize(2);
+        assertThat(urls).hasSize(1);
         assertThat(responses).allSatisfy(response -> assertThat(response).contains("release-groups"));
     }
 
-    @Test
-    void shouldStopAtItemLimitWithoutReturningPartialResults() {
+    @ParameterizedTest
+    @CsvSource({"25,25", "25,26", "10,10", "10,11"})
+    void shouldReturnLimitedResultsAndWarnOnlyWhenMoreResultsExist(int searchLimit, int count) {
         AtomicInteger requests = new AtomicInteger();
+        List<MusicBrainzDto.ReleaseGroup> groups = IntStream.range(0, searchLimit)
+                .mapToObj(index -> group(Integer.toString(index))).toList();
         server.createContext("/ws/2/release-group", exchange -> {
             requests.incrementAndGet();
-            respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(1001, 0, List.of(group("one")))));
+            respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(count, 0, groups)));
         });
-
-        try (MusicBrainzClient.Session session = client(Duration.ZERO, 1000).openSession("pony2/test (admin@example.com)", observer)) {
-            assertThatThrownBy(() -> session.searchReleaseGroups("query")).isInstanceOf(MusicBrainzClient.ItemLimitException.class);
+        Logger logger = (Logger) LoggerFactory.getLogger(MusicBrainzClient.class);
+        Level previousLevel = logger.getLevel();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        logger.setLevel(Level.WARN);
+        MusicBrainzClient client = new MusicBrainzClient(baseUrl, Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), searchLimit);
+        try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer)) {
+            assertThat(session.searchReleaseGroups("query")).containsExactlyElementsOf(groups);
+            if (count > searchLimit) {
+                assertThat(appender.list).singleElement().satisfies(event -> {
+                    assertThat(event.getLevel()).isEqualTo(Level.WARN);
+                    assertThat(event.getArgumentArray()).containsExactly("query", count, searchLimit, searchLimit);
+                });
+            } else {
+                assertThat(appender.list).isEmpty();
+            }
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(previousLevel);
+            appender.stop();
         }
 
         assertThat(requests).hasValue(1);
-        assertThat(responses).singleElement().satisfies(response -> assertThat(response).contains("1001"));
+        assertThat(urls).hasSize(1);
+        assertThat(HttpUrl.get(urls.getFirst()).queryParameter("limit")).isEqualTo(Integer.toString(searchLimit));
     }
 
     @Test
-    void shouldAcceptExactlyTheItemLimitAndRejectPrematureEmptyPages() {
+    void shouldReturnEmptySearchAndRejectMissingResults() {
         server.createContext("/ws/2/release-group", exchange -> {
             String query = HttpUrl.get(baseUrl).resolve(exchange.getRequestURI().toString()).queryParameter("query");
-            List<MusicBrainzDto.ReleaseGroup> groups = "complete".equals(query) ? List.of(group("one"), group("two")) : List.of();
-            respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(2, 0, groups)));
+            int count = "empty".equals(query) ? 0 : 2;
+            respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(count, 0, List.of())));
         });
 
-        try (MusicBrainzClient.Session session = client(Duration.ZERO, 2).openSession("pony2/test (admin@example.com)", observer)) {
-            assertThat(session.searchReleaseGroups("complete")).hasSize(2);
+        try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer)) {
+            assertThat(session.searchReleaseGroups("empty")).isEmpty();
             assertThatThrownBy(() -> session.searchReleaseGroups("incomplete")).isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("empty page");
+                    .hasMessageContaining("no release groups");
         }
     }
 
@@ -129,7 +161,7 @@ class MusicBrainzClientTest {
         });
         server.createContext("/ws/2/artist/error", exchange -> respond(exchange, 503, "service unavailable"));
 
-        try (MusicBrainzClient.Session session = client(Duration.ZERO, 1000).openSession("pony2/test (admin@example.com)", observer)) {
+        try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer)) {
             assertThat(session.getArtist("artist").area().country()).containsExactly("US", "GB");
             assertThatThrownBy(() -> session.getArtist("error")).isInstanceOf(IllegalStateException.class).hasMessageContaining("HTTP 503");
         }
@@ -148,7 +180,7 @@ class MusicBrainzClientTest {
             }
         });
         MusicBrainzClient client = new MusicBrainzClient(baseUrl, Duration.ZERO, Duration.ofMillis(100), 3,
-                Duration.ofSeconds(10), 1000);
+                Duration.ofSeconds(10), 25);
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer)) {
             assertThat(session.getArtist("artist").id()).isEqualTo("artist");
@@ -167,7 +199,7 @@ class MusicBrainzClientTest {
             respond(exchange, 503, "service unavailable");
         });
         MusicBrainzClient client = new MusicBrainzClient(baseUrl, Duration.ZERO, Duration.ofMillis(10), 3,
-                Duration.ofSeconds(10), 1000);
+                Duration.ofSeconds(10), 25);
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer)) {
             assertThatThrownBy(() -> session.getArtist("artist"))
@@ -190,7 +222,7 @@ class MusicBrainzClientTest {
             respond(exchange, 200, "{\"id\":\"new\"}");
         });
 
-        try (MusicBrainzClient.Session session = client(Duration.ZERO, 1000).openSession("pony2/test (admin@example.com)", observer)) {
+        try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer)) {
             assertThatThrownBy(() -> session.getArtist("old")).isInstanceOf(IllegalStateException.class).hasMessageContaining("HTTP 301");
         }
 
@@ -211,7 +243,7 @@ class MusicBrainzClientTest {
                 Thread.currentThread().interrupt();
             }
         });
-        try (MusicBrainzClient.Session session = client(Duration.ZERO, 1000).openSession("pony2/test (admin@example.com)", observer)) {
+        try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer)) {
             Future<MusicBrainzDto.Artist> result = executor.submit(() -> session.getArtist("artist"));
             assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
             session.cancel();
@@ -226,7 +258,7 @@ class MusicBrainzClientTest {
     @Test
     void shouldCancelRateLimitWaitingAndRejectNewSessionsAfterShutdown() throws Exception {
         server.createContext("/ws/2/artist/artist", exchange -> respond(exchange, 200, "{\"id\":\"artist\"}"));
-        MusicBrainzClient client = client(Duration.ofSeconds(30), 1000);
+        MusicBrainzClient client = client(Duration.ofSeconds(30));
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer)) {
             session.getArtist("artist");
             Future<MusicBrainzDto.Artist> result = executor.submit(() -> session.getArtist("artist"));
@@ -242,7 +274,7 @@ class MusicBrainzClientTest {
     @Test
     void shouldShareRateLimitBetweenSessions() {
         server.createContext("/ws/2/artist/artist", exchange -> respond(exchange, 200, "{\"id\":\"artist\"}"));
-        MusicBrainzClient client = client(Duration.ofSeconds(3), 1000);
+        MusicBrainzClient client = client(Duration.ofSeconds(3));
         List<Long> requestTimes = new ArrayList<>();
         MusicBrainzClient.ExchangeObserver timedObserver = new MusicBrainzClient.ExchangeObserver() {
             @Override
@@ -261,8 +293,8 @@ class MusicBrainzClientTest {
         assertThat(requestTimes.get(1) - requestTimes.get(0)).isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(2900));
     }
 
-    private MusicBrainzClient client(Duration interval, int maxItems) {
-        return new MusicBrainzClient(baseUrl, interval, Duration.ZERO, 0, Duration.ofSeconds(10), maxItems);
+    private MusicBrainzClient client(Duration interval) {
+        return new MusicBrainzClient(baseUrl, interval, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
     }
 
     private MusicBrainzDto.ReleaseGroup group(String id) {

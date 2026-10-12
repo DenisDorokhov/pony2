@@ -156,9 +156,6 @@ public class MusicBrainzAlbumDataService {
                     artist.id(), artist.area() != null ? artist.area().country() : List.of());
             logger.debug("MusicBrainz discovery result for album '{}': {}.", albumId, result);
             return result;
-        } catch (MusicBrainzClient.ItemLimitException e) {
-            logger.debug("Skipping MusicBrainz discovery for album '{}': {}", albumId, e.getMessage());
-            return null;
         } catch (MusicBrainzClient.CancelledException e) {
             throw new DiscoveryInterruptedException();
         }

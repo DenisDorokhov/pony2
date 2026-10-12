@@ -7,6 +7,8 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,12 +32,11 @@ import static java.util.Objects.requireNonNull;
 @Component
 public class MusicBrainzClient {
 
-    private static final int PAGE_SIZE = 100;
-
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final HttpUrl baseUrl;
     private final OkHttpClient httpClient;
     private final RateLimitedRequestExecutor requestExecutor;
-    private final int maxItems;
+    private final int searchLimit;
     private final Set<Session> sessions = ConcurrentHashMap.newKeySet();
     private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -46,13 +46,13 @@ public class MusicBrainzClient {
             @Value("${pony.discovery.musicbrainz.rateLimit.retryDelay:10s}") Duration retryDelay,
             @Value("${pony.discovery.musicbrainz.rateLimit.retriesOnException:3}") int retriesOnException,
             @Value("${pony.discovery.musicbrainz.timeout:30s}") Duration timeout,
-            @Value("${pony.discovery.musicbrainz.maxItems:1000}") int maxItems
+            @Value("${pony.discovery.musicbrainz.searchLimit:25}") int searchLimit
     ) {
         checkArgument(!requestInterval.isNegative(), "Request interval must not be negative.");
         checkArgument(!timeout.isNegative() && !timeout.isZero(), "Request timeout must be positive.");
-        checkArgument(maxItems > 0, "Maximum item count must be positive.");
+        checkArgument(searchLimit >= 1 && searchLimit <= 100, "Search limit must be between 1 and 100.");
         this.baseUrl = HttpUrl.get(baseUrl);
-        this.maxItems = maxItems;
+        this.searchLimit = searchLimit;
         requestExecutor = new RateLimitedRequestExecutor("musicbrainz",
                 new RateLimitedRequestExecutor.Settings(requestInterval, Duration.ZERO, retryDelay, retriesOnException, 1));
         httpClient = new OkHttpClient.Builder()
@@ -88,12 +88,6 @@ public class MusicBrainzClient {
         void onResponse(String url, String response);
     }
 
-    public static class ItemLimitException extends RuntimeException {
-        public ItemLimitException(int maxItems) {
-            super("MusicBrainz search exceeds the maximum of " + maxItems + " items.");
-        }
-    }
-
     public static class CancelledException extends RuntimeException {}
 
     public class Session implements AutoCloseable {
@@ -109,30 +103,20 @@ public class MusicBrainzClient {
         }
 
         public List<MusicBrainzDto.ReleaseGroup> searchReleaseGroups(String query) {
-            List<MusicBrainzDto.ReleaseGroup> groups = new ArrayList<>();
-            int offset = 0;
-            while (true) {
-                checkCancelled();
-                HttpUrl url = baseUrl.newBuilder().addPathSegment("release-group")
-                        .addQueryParameter("query", query)
-                        .addQueryParameter("fmt", "json")
-                        .addQueryParameter("limit", Integer.toString(Math.min(PAGE_SIZE, maxItems - offset)))
-                        .addQueryParameter("offset", Integer.toString(offset)).build();
-                MusicBrainzDto.ReleaseGroupSearch page = JsonConverter.fromJson(get(url), MusicBrainzDto.ReleaseGroupSearch.class);
-                checkState(page.count() >= 0 && page.offset() == offset, "Invalid MusicBrainz pagination response.");
-                if (page.count() > maxItems || page.releaseGroups().size() > maxItems - groups.size()) {
-                    throw new ItemLimitException(maxItems);
-                }
-                groups.addAll(page.releaseGroups());
-                offset += page.releaseGroups().size();
-                if (offset >= page.count()) {
-                    return List.copyOf(groups);
-                }
-                checkState(!page.releaseGroups().isEmpty(), "MusicBrainz returned an empty page before the end of its results.");
-                if (offset >= maxItems) {
-                    throw new ItemLimitException(maxItems);
-                }
+            checkCancelled();
+            HttpUrl url = baseUrl.newBuilder().addPathSegment("release-group")
+                    .addQueryParameter("query", query)
+                    .addQueryParameter("fmt", "json")
+                    .addQueryParameter("limit", Integer.toString(searchLimit)).build();
+            MusicBrainzDto.ReleaseGroupSearch result = JsonConverter.fromJson(get(url), MusicBrainzDto.ReleaseGroupSearch.class);
+            checkState(result.count() >= 0 && result.offset() == 0, "Invalid MusicBrainz search response.");
+            checkState(result.count() == 0 || !result.releaseGroups().isEmpty(),
+                    "MusicBrainz returned no release groups for a non-empty search result.");
+            if (result.count() > searchLimit) {
+                logger.warn("MusicBrainz search '{}' found {} release groups, exceeding the limit of {}; using {} returned release groups.",
+                        query, result.count(), searchLimit, result.releaseGroups().size());
             }
+            return result.releaseGroups();
         }
 
         public MusicBrainzDto.Artist getArtist(String id) {

@@ -588,14 +588,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldCompleteEmptySearchAndItemLimitWithNull() {
+    void shouldCompleteEmptySearchWithNull() {
         search(List.of());
-        albumService.discover(job(DiscoveryType.ALBUM), album, null);
-        doAnswer(invocation -> {
-            exchangeObserver.onRequest(SEARCH_URL);
-            exchangeObserver.onResponse(SEARCH_URL, "{\"count\":1001}");
-            throw new MusicBrainzClient.ItemLimitException(1000);
-        }).when(session).searchReleaseGroups(anyString());
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
