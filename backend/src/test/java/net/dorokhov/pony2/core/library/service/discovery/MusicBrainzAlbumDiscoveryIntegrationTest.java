@@ -27,6 +27,7 @@ import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
 import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
@@ -207,7 +208,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             assertThat(prompt.getInstructions().get(1).getText()).contains("complete-response-marker");
-            return response("\"group\"");
+            return response("{\"id\":\"group\"}");
         });
         AtomicInteger requests = new AtomicInteger();
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -239,7 +240,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 assertThat(rawRequests[0]).asString().startsWith(baseUrl + "release-group?");
                 assertThat(rawRequests[2]).isEqualTo(baseUrl + "artist/artist?fmt=json");
                 assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
-                        .containsExactly(rawSearchResponse, "\"group\"", rawArtistResponse);
+                        .containsExactly(rawSearchResponse, "{\"id\":\"group\"}", rawArtistResponse);
             });
             List<DiscoveryCache> httpEntries = cacheRepository.findAll().stream()
                     .filter(entry -> entry.getKey().startsWith("MUSICBRAINZ_HTTP:")).toList();
@@ -322,7 +323,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             DiscoveryTask task = taskRepository.findAll().stream().filter(value -> value.getStatus() == DiscoveryTask.Status.STARTED).findFirst().orElseThrow();
             assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).hasSize(2);
             assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, null);
-            return response("\"group\"");
+            return response("{\"id\":\"group\"}");
         });
 
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
@@ -336,7 +337,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(requests[0]).isEqualTo(SEARCH_URL);
             assertThat(requests[1]).isInstanceOf(Map.class);
             assertThat(requests[2]).isEqualTo(ARTIST_URL);
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, "\"group\"", rawArtistResponse);
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, "{\"id\":\"group\"}", rawArtistResponse);
         });
         verify(model, times(cacheEnabled ? 1 : 2)).call(any(Prompt.class));
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 1 : 0);
@@ -356,7 +357,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         MusicBrainzDto.ReleaseGroup singleGroup = new MusicBrainzDto.ReleaseGroup("single", album.getName(), "Single", List.of(),
                 "1986-10", albumGroup.artistCredit(), List.of(new MusicBrainzDto.Release("single-release", album.getName())));
         search(List.of(albumGroup, singleGroup));
-        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"group\"}"));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
@@ -381,7 +382,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         Genre genre = genreRepository.save(new Genre().setName("Genre"));
         Song track = songRepository.save(song().setPath("first").setName("First").setAlbum(album).setGenre(genre));
         search(List.of(group("group", "Other", "Reign in Blood (deluxe)", List.of(credit("artist", "Slayer", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"group\"}"));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
@@ -412,7 +413,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         server.createContext("/v1/chat/completions", exchange -> {
             try (exchange) {
                 requests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
-                String content = requests.size() == 1 ? "not JSON" : artistSelection ? "\"artist\"" : "\"group\"";
+                String content = requests.size() == 1 ? "not JSON" : artistSelection ? "{\"id\":\"artist\"}" : "{\"id\":\"group\"}";
                 byte[] body = """
                         {"id":"test","object":"chat.completion","created":1,"model":"%s",
                          "choices":[{"index":0,"message":{"role":"assistant","content":%s},"finish_reason":"stop"}]}
@@ -452,8 +453,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         enableLlm();
         search(List.of(group("group", "Other", album.getName(), List.of(credit("artist", "A", null), credit("other", "B", null))),
                 group("second", "Other", album.getName(), List.of(credit("second-artist", "C", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""), response("\"artist\""),
-                response("\"group\""), response("\"artist\""));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"group\"}"), response("{\"id\":\"artist\"}"),
+                response("{\"id\":\"group\"}"), response("{\"id\":\"artist\"}"));
         String originalResponse = rawSearchResponse;
 
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
@@ -490,7 +491,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldNotReuseCacheForDifferentAlbums() {
         enableLlm();
         search(List.of(group("group", "Other", "Deluxe title", List.of(credit("artist", "Slayer", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"group\"}"));
         Album otherAlbum = albumRepository.save(new Album().setArtist(artist).setName("South of Heaven").setYear(1988));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
@@ -517,7 +518,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             String currentCreated = JsonConverter.mapFromJson(rawSearchResponse, String.class, Object.class).get("created").toString();
             assertThat(prompt.getInstructions().get(1).getText()).contains(
                     "\"created\":\"" + currentCreated + "\"", "\"metadata\":{\"created\":\"album-metadata\"}", "complete-response-marker");
-            return response(prompt.getInstructions().get(1).getText().contains("Selected release group ID:") ? "\"artist\"" : "\"group\"");
+            return response(prompt.getInstructions().get(1).getText().contains("Selected release group ID:") ? "{\"id\":\"artist\"}" : "{\"id\":\"group\"}");
         });
 
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
@@ -548,7 +549,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldNotReuseCacheWhenMusicBrainzDataChanges() {
         enableLlm();
         search(List.of(group("group", "Other", "Deluxe title", List.of(credit("artist", "Slayer", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response("\"group\""));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"group\"}"));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
         MusicBrainzDto.ReleaseGroup original = groups.getFirst();
@@ -564,16 +565,29 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"false, not JSON", "false, '\"invented\"'", "true, not JSON", "true, '\"invented\"'"})
+    @CsvSource({"false, not JSON", "false, '{\"id\":\"invented\"}'", "false, '{}'", "false, '{\"id\":123}'",
+            "false, 'null'", "false, '\"group\"'", "false, '{\"release-group-id\":\"group\"}'",
+            "true, not JSON", "true, '{\"id\":\"invented\"}'", "true, '{}'", "true, '{\"id\":123}'",
+            "true, 'null'", "true, '\"artist\"'", "true, '{\"artist-id\":\"artist\"}'"})
     void shouldPersistWarningAfterSuccessfulLlmRetry(boolean artistSelection, String rejectedResponse) {
         enableLlm();
         search(List.of(group("group", "Other", artistSelection ? album.getName() : "Deluxe title",
                 artistSelection ? List.of(credit("artist", "A", null), credit("other", "B", null)) : List.of(credit("artist", "Slayer", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response(rejectedResponse), response(artistSelection ? "\"artist\"" : "\"group\""));
+        when(model.call(any(Prompt.class))).thenReturn(response(rejectedResponse), response(artistSelection ? "{\"id\":\"artist\"}" : "{\"id\":\"group\"}"));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(2)).call(captor.capture());
+        for (Prompt prompt : captor.getAllValues()) {
+            Map<?, ?> schema = (Map<?, ?>) LlmJsonConverter.fromJson(prompt.getInstructions().getFirst().getText());
+            assertThat(schema.get("type")).isEqualTo("object");
+            assertThat(schema.get("required")).isEqualTo(List.of("id"));
+            Map<?, ?> idSchema = (Map<?, ?>) ((Map<?, ?>) schema.get("properties")).get("id");
+            assertThat(idSchema.get("type")).isEqualTo(List.of("string", "null"));
+        }
+        assertThat(captor.getAllValues().getLast().getInstructions().getLast().getText()).contains("JSON object", "Set id");
         assertThat(logRepository.findAll()).filteredOn(log -> log.getText().startsWith("Invalid MusicBrainz response from the LLM"))
                 .singleElement().satisfies(log -> {
                     assertThat(log.getLevel()).isEqualTo(LogMessage.Level.WARN);
@@ -612,22 +626,25 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         enableLlm();
         search(List.of(group("group", "Other", album.getName(), List.of(credit("artist", "A", null), credit("other", "B", null))),
                 group("second", "Other", album.getName(), List.of(credit("second-artist", "C", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response("\"invented\""), response("\"group\""), response("\"artist\""));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"invented\"}"), response("{\"id\":\"group\"}"), response("{\"id\":\"artist\"}"));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(
-                rawSearchResponse, "\"invented\"", "\"group\"", "\"artist\"", rawArtistResponse);
+                rawSearchResponse, "{\"id\":\"invented\"}", "{\"id\":\"group\"}", "{\"id\":\"artist\"}", rawArtistResponse);
         verify(session).getArtist("artist");
         assertThat(cacheRepository.count()).isEqualTo(2);
     }
 
-    @Test
-    void shouldReturnWholeResultNullWhenLlmCannotChooseArtist() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReturnWholeResultNullWhenLlmCannotChoose(boolean artistSelection) {
         enableLlm();
-        search(List.of(group("group", "Other", album.getName(), List.of(credit("one", "A", null), credit("two", "B", null)))));
-        when(model.call(any(Prompt.class))).thenReturn(response("null"));
+        search(List.of(group("group", "Other", artistSelection ? album.getName() : "Deluxe title",
+                artistSelection ? List.of(credit("one", "A", null), credit("two", "B", null))
+                        : List.of(credit("artist", "Slayer", null)))));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":null}"));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 

@@ -8,6 +8,7 @@ import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -46,8 +47,20 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SpotifyTopTracksServiceTest {
 
-    private static final String ALBUM_RESPONSE = "{\"spotify-a\":\"album-a\",\"spotify-b\":\"album-b\",\"spotify-missing\":null}";
-    private static final String TRACK_RESPONSE = "[\"song-a\",\"song-b\",null]";
+    private static final String ALBUM_RESPONSE = """
+            {"albumMatches":[
+                {"spotifyAlbumId":"spotify-a","databaseAlbumId":"album-a"},
+                {"spotifyAlbumId":"spotify-b","databaseAlbumId":"album-b"},
+                {"spotifyAlbumId":"spotify-missing","databaseAlbumId":null}
+            ]}
+            """;
+    private static final String TRACK_RESPONSE = """
+            {"trackMatches":[
+                {"databaseTrackId":"song-a"},
+                {"databaseTrackId":"song-b"},
+                {"databaseTrackId":null}
+            ]}
+            """;
 
     @Mock private ChatModel model;
     @Mock private DiscoveryCacheService cacheService;
@@ -120,6 +133,22 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(ALBUM_RESPONSE, TRACK_RESPONSE);
         assertThat(prompts).hasSize(2);
+        Map<?, ?> albumSchema = (Map<?, ?>) LlmJsonConverter.fromJson(prompts.getFirst().getInstructions().getFirst().getText());
+        assertThat(albumSchema.get("type")).isEqualTo("object");
+        assertThat(albumSchema.get("required")).isEqualTo(List.of("albumMatches"));
+        Map<?, ?> albumMatchesSchema = (Map<?, ?>) ((Map<?, ?>) albumSchema.get("properties")).get("albumMatches");
+        Map<?, ?> albumItemSchema = (Map<?, ?>) albumMatchesSchema.get("items");
+        assertThat(albumItemSchema.get("required")).isEqualTo(List.of("databaseAlbumId", "spotifyAlbumId"));
+        Map<?, ?> albumIdSchema = (Map<?, ?>) ((Map<?, ?>) albumItemSchema.get("properties")).get("databaseAlbumId");
+        assertThat(albumIdSchema.get("type")).isEqualTo(List.of("string", "null"));
+        Map<?, ?> trackSchema = (Map<?, ?>) LlmJsonConverter.fromJson(prompts.getLast().getInstructions().getFirst().getText());
+        assertThat(trackSchema.get("type")).isEqualTo("object");
+        assertThat(trackSchema.get("required")).isEqualTo(List.of("trackMatches"));
+        Map<?, ?> trackMatchesSchema = (Map<?, ?>) ((Map<?, ?>) trackSchema.get("properties")).get("trackMatches");
+        Map<?, ?> trackItemSchema = (Map<?, ?>) trackMatchesSchema.get("items");
+        assertThat(trackItemSchema.get("required")).isEqualTo(List.of("databaseTrackId"));
+        Map<?, ?> trackIdSchema = (Map<?, ?>) ((Map<?, ?>) trackItemSchema.get("properties")).get("databaseTrackId");
+        assertThat(trackIdSchema.get("type")).isEqualTo(List.of("string", "null"));
         assertThat(prompts.getFirst().getInstructions().get(1).getText()).contains("spotify-a", "album-a", "2000");
         assertThat(prompts.getLast().getInstructions().get(1).getText()).contains("song-a", "song-b", "Shared title");
         assertThat(cache).hasSize(cacheEnabled ? 2 : 0);
@@ -131,7 +160,13 @@ class SpotifyTopTracksServiceTest {
     @Test
     void shouldAcceptAllUnmatchedTracks() {
         responses.clear();
-        responses.addAll(List.of("{\"spotify-a\":null,\"spotify-b\":null,\"spotify-missing\":null}", "[null,null,null]"));
+        responses.addAll(List.of("""
+                {"albumMatches":[
+                    {"spotifyAlbumId":"spotify-a","databaseAlbumId":null},
+                    {"spotifyAlbumId":"spotify-b","databaseAlbumId":null},
+                    {"spotifyAlbumId":"spotify-missing","databaseAlbumId":null}
+                ]}
+                """, "{\"trackMatches\":[{\"databaseTrackId\":null},{\"databaseTrackId\":null},{\"databaseTrackId\":null}]}"));
 
         assertThat(service.discover(task(), true)).containsExactly(null, null, null);
 
@@ -173,9 +208,14 @@ class SpotifyTopTracksServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"not JSON", "null", "[]", "{}", "{\"spotify-a\":\"album-a\"}",
-            "{\"spotify-a\":\"album-a\",\"spotify-b\":\"album-b\"}", "{\"unknown\":\"album-a\"}",
-            "{\"spotify-a\":\"foreign-album\"}", "{\"spotify-a\":123}", "Result: {spotify_a: 'album-a'}",
-            "Result: {\"spotify-a\":\"album-a\"}"})
+            "{\"albumMatches\":null}", "{\"albumMatches\":{}}", "{\"albumMatches\":[null]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\"}]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":\"album-a\"}]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"unknown\",\"databaseAlbumId\":\"album-a\"}]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":\"foreign-album\"}]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":123}]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":null},{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":null}]}",
+            "Result: {albumMatches: []}", "Result: {\"albumMatches\":[]}"})
     void shouldVerifyInvalidAlbumResponse(String invalidResponse) {
         responses.addFirst(invalidResponse);
         DiscoveryTask task = task();
@@ -191,21 +231,29 @@ class SpotifyTopTracksServiceTest {
     @Test
     void shouldFailAfterSecondIncompleteAlbumResponseWithoutCachingIt() {
         responses.clear();
-        responses.addAll(List.of("{}", "{}"));
+        String incompleteResponse = "{\"albumMatches\":[]}";
+        responses.addAll(List.of(incompleteResponse, incompleteResponse));
         DiscoveryTask task = task();
 
         assertThatThrownBy(() -> service.discover(task, true)).hasMessageContaining("must include every supplied Spotify album ID");
 
         assertThat(prompts).hasSize(2);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly("{}", "{}");
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(incompleteResponse, incompleteResponse);
         assertThat(cache).isEmpty();
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"not JSON", "null", "{}", "[]", "[\"song-a\",null]",
-            "[\"unknown\",\"song-b\",null]", "[\"song-b\",\"song-a\",null]",
-            "[\"song-a\",\"song-b\",\"song-a\"]", "[\"song-a\",123,null]",
-            "Result: ['song-a','song-b',null]", "Result: [\"unknown\",\"song-b\",null]"})
+    @ValueSource(strings = {"not JSON", "null", "{}", "[]", "[\"song-a\",\"song-b\",null]",
+            "{\"trackMatches\":null}", "{\"trackMatches\":{}}", "{\"trackMatches\":[]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":null}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"unknown\"},{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":null}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":null}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":\"song-a\"}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":123},{\"databaseTrackId\":null}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":\"song-b\"},{}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":\"song-b\"},null]}",
+            "Result: {trackMatches: []}",
+            "Result: {\"trackMatches\":[{\"databaseTrackId\":\"unknown\"},{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":null}]}"})
     void shouldVerifyInvalidTrackResponse(String invalidResponse) {
         responses.add(1, invalidResponse);
         DiscoveryTask task = task();
@@ -220,8 +268,8 @@ class SpotifyTopTracksServiceTest {
 
     @Test
     void shouldFailAfterSecondInvalidTrackResponseWithoutCachingIt() {
-        responses.set(1, "[]");
-        responses.add("[]");
+        responses.set(1, "{\"trackMatches\":[]}");
+        responses.add("{\"trackMatches\":[]}");
 
         assertThatThrownBy(() -> service.discover(task(), true)).hasMessageContaining("expected 3");
 

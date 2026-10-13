@@ -8,7 +8,8 @@ Remastered when they refer to the same album. Do not match unrelated releases
 merely because their names are similar. If there is no confident match, use null.
 Multiple Spotify album IDs may refer to the same database album.
 
-Return only a JSON object mapping Spotify album IDs to database album IDs.
-Use only supplied Spotify album IDs as keys and supplied database album IDs as
-non-null values. Include each Spotify album ID with null when it has no match.
+Return only a JSON object matching the supplied schema. In albumMatches, include
+exactly one object for each supplied Spotify album ID, with spotifyAlbumId and
+databaseAlbumId. Use only supplied IDs. Set databaseAlbumId to null when there is
+no match. Always include both fields, including null databaseAlbumId values.
 Do not include Markdown or additional text.

@@ -9,5 +9,5 @@ Different track artists and a Various Artists album artist may support Compilati
 The supplied MusicBrainz search responses do not contain candidate tracklists or durations. Do not assume candidate track counts, track titles, durations, or track artists, and do not interpret MusicBrainz count fields as track counts.
 Null or blank library artist tags mean unavailable information. Do not invent missing credits.
 Choose only when the evidence identifies one corresponding release group. Do not choose arbitrarily between plausible candidates.
-Return only a JSON string containing its release group ID, or JSON null if there is no reliable match.
+Return only a JSON object matching the supplied schema. Set id to its release group ID, or null if there is no reliable match. Always include id.
 Use only the supplied data. Do not call tools, browse, invent IDs, or return explanations.

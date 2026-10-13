@@ -9,7 +9,8 @@ confuse different songs or live recordings with studio recordings. If the album
 has no match, the track is absent, or the match is ambiguous, return null for that
 position. Do not search other albums or choose a track merely to avoid null.
 
-Return only a JSON array of database track IDs or null values, with exactly one
-element per supplied Spotify top track in the same order. Preserve all positions,
-including unmatched tracks. An array containing only null values is valid.
+Return only a JSON object matching the supplied schema. In trackMatches, include
+exactly one object per supplied Spotify top track in the same order. Set databaseTrackId
+to its database track ID, or null if there is no match. Always include databaseTrackId.
+Preserve all positions, including unmatched tracks. All databaseTrackId values may be null.
 Do not include Markdown or additional text.

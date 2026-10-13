@@ -1,5 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery.task;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -77,8 +81,10 @@ public class SpotifyTopTracksService {
         this.shutdownService = shutdownService;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        albumsPrompt = albumsPromptResource.getContentAsString(UTF_8);
-        tracksPrompt = tracksPromptResource.getContentAsString(UTF_8);
+        albumsPrompt = albumsPromptResource.getContentAsString(UTF_8) + "\n"
+                + new BeanOutputConverter<>(AlbumMatchesResponse.class).getFormat();
+        tracksPrompt = tracksPromptResource.getContentAsString(UTF_8) + "\n"
+                + new BeanOutputConverter<>(TrackMatchesResponse.class).getFormat();
         verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
     }
 
@@ -147,16 +153,24 @@ public class SpotifyTopTracksService {
 
     private Map<String, String> parseAlbumMatches(@Nullable String response, Map<String, String> spotifyAlbums, List<AlbumData> albums) {
         Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
-        checkState(parsed instanceof Map<?, ?>, "The LLM album response must be a JSON object.");
-        Map<?, ?> matches = (Map<?, ?>) parsed;
+        checkState(parsed instanceof Map<?, ?> && ((Map<?, ?>) parsed).keySet().equals(Set.of("albumMatches")),
+                "The LLM album response must be a JSON object containing only the albumMatches field.");
+        Object matchesValue = ((Map<?, ?>) parsed).get("albumMatches");
+        checkState(matchesValue instanceof List<?>, "The LLM albumMatches field must be a JSON array.");
+        List<?> matches = (List<?>) matchesValue;
         Map<String, String> result = new LinkedHashMap<>();
-        for (Map.Entry<?, ?> entry : matches.entrySet()) {
-            checkState(entry.getKey() instanceof String && spotifyAlbums.containsKey(entry.getKey()),
-                    "The LLM returned an unknown Spotify album ID: %s.", entry.getKey());
-            Object albumId = entry.getValue();
+        for (Object match : matches) {
+            checkState(match instanceof Map<?, ?> && ((Map<?, ?>) match).keySet().equals(Set.of("spotifyAlbumId", "databaseAlbumId")),
+                    "Each LLM album match must contain only spotifyAlbumId and databaseAlbumId.");
+            Map<?, ?> entry = (Map<?, ?>) match;
+            Object spotifyAlbumId = entry.get("spotifyAlbumId");
+            checkState(spotifyAlbumId instanceof String && spotifyAlbums.containsKey(spotifyAlbumId),
+                    "The LLM returned an unknown Spotify album ID: %s.", spotifyAlbumId);
+            checkState(!result.containsKey(spotifyAlbumId), "The LLM returned a duplicate Spotify album ID: %s.", spotifyAlbumId);
+            Object albumId = entry.get("databaseAlbumId");
             checkState(albumId == null || (albumId instanceof String && albums.stream().anyMatch(album -> album.id().equals(albumId))),
                     "The LLM returned an unknown database album ID: %s.", albumId);
-            result.put((String) entry.getKey(), (String) albumId);
+            result.put((String) spotifyAlbumId, (String) albumId);
         }
         checkState(result.keySet().equals(spotifyAlbums.keySet()),
                 "The LLM album response must include every supplied Spotify album ID. Expected IDs: %s. Returned IDs: %s.",
@@ -167,12 +181,18 @@ public class SpotifyTopTracksService {
     private List<String> parseTrackMatches(@Nullable String response, List<SpotifyArtistData.TopTrack> topTracks,
                                           Map<String, String> albumMatches, List<AlbumTracks> albums) {
         Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
-        checkState(parsed instanceof List<?>, "The LLM track response must be a JSON array.");
-        List<?> matches = (List<?>) parsed;
+        checkState(parsed instanceof Map<?, ?> && ((Map<?, ?>) parsed).keySet().equals(Set.of("trackMatches")),
+                "The LLM track response must be a JSON object containing only the trackMatches field.");
+        Object matchesValue = ((Map<?, ?>) parsed).get("trackMatches");
+        checkState(matchesValue instanceof List<?>, "The LLM trackMatches field must be a JSON array.");
+        List<?> matches = (List<?>) matchesValue;
         checkState(matches.size() == topTracks.size(), "The LLM returned %s track positions, expected %s.", matches.size(), topTracks.size());
         List<String> result = new ArrayList<>();
         for (int i = 0; i < matches.size(); i++) {
-            Object trackId = matches.get(i);
+            Object match = matches.get(i);
+            checkState(match instanceof Map<?, ?> && ((Map<?, ?>) match).keySet().equals(Set.of("databaseTrackId")),
+                    "Each LLM track match must contain only databaseTrackId.");
+            Object trackId = ((Map<?, ?>) match).get("databaseTrackId");
             String albumId = albumMatches.get(topTracks.get(i).albumId());
             checkState(trackId == null || (trackId instanceof String && albums.stream()
                             .filter(album -> album.id().equals(albumId))
@@ -196,6 +216,17 @@ public class SpotifyTopTracksService {
     private record TrackData(String id, @Nullable String title, @Nullable Integer discNumber, @Nullable Integer trackNumber) {}
 
     private record AlbumTracks(String id, @Nullable String title, List<TrackData> tracks) {}
+
+    private record AlbumMatchesResponse(List<AlbumMatch> albumMatches) {}
+
+    private record AlbumMatch(
+            String spotifyAlbumId,
+            @JsonProperty(required = true) @Schema(nullable = true) @Nullable String databaseAlbumId
+    ) {}
+
+    private record TrackMatchesResponse(List<TrackMatch> trackMatches) {}
+
+    private record TrackMatch(@JsonProperty(required = true) @Schema(nullable = true) @Nullable String databaseTrackId) {}
 
     private record Request(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
         @Override
