@@ -200,14 +200,6 @@ export enum DiscoveryType {
   ALBUM = 'ALBUM',
 }
 
-export interface DiscoveryResultDto {
-  id: string;
-  date: string;
-  discoveryType: DiscoveryType;
-  completedTasks: number;
-  failedTasks: number;
-}
-
 export interface DiscoveryJobDto {
   id: string;
   creationDate: string;
@@ -216,7 +208,6 @@ export interface DiscoveryJobDto {
   status: DiscoveryJobDto.Status;
   parameter: string | undefined;
   logMessage: LogMessageDto | undefined;
-  discoveryResult: DiscoveryResultDto | undefined;
 }
 
 export namespace DiscoveryJobDto {

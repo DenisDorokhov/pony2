@@ -57,15 +57,4 @@
       }
     </div>
   }
-
-  @if (discoveryJob.discoveryResult; as discoveryResult) {
-    <div class="mb-3">
-      <label class="form-label">{{ 'discoveryJob.completedTasksLabel' | translate }}</label>
-      <div>{{ discoveryResult.completedTasks | number }}</div>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">{{ 'discoveryJob.failedTasksLabel' | translate }}</label>
-      <div>{{ discoveryResult.failedTasks | number }}</div>
-    </div>
-  }
 </div>

@@ -15,19 +15,6 @@ CREATE TABLE discovery_cache (
 CREATE UNIQUE INDEX index_discovery_cache_region_key_version ON discovery_cache (region, "key", "version");
 CREATE INDEX index_discovery_cache_expiration_date ON discovery_cache (expiration_date);
 
-CREATE TABLE discovery_result (
-
-  id CHAR(36) PRIMARY KEY,
-
-  date TIMESTAMP(9) NOT NULL,
-  discovery_type VARCHAR (255) NOT NULL,
-
-  completed_tasks_count BIGINT NOT NULL,
-  failed_tasks_count BIGINT NOT NULL
-);
-
-CREATE INDEX index_discovery_result_date ON discovery_result (date desc);
-
 CREATE TABLE discovery_job (
 
   id CHAR(36) PRIMARY KEY,
@@ -40,13 +27,10 @@ CREATE TABLE discovery_job (
   parameter LONGVARCHAR,
 
   log_message_id CHAR(36),
-  discovery_result_id CHAR(36),
 
   FOREIGN KEY (log_message_id) REFERENCES log_message (id),
-  FOREIGN KEY (discovery_result_id) REFERENCES discovery_result (id),
 
-  UNIQUE (log_message_id),
-  UNIQUE (discovery_result_id)
+  UNIQUE (log_message_id)
 );
 
 CREATE INDEX index_discovery_job_status ON discovery_job (status);

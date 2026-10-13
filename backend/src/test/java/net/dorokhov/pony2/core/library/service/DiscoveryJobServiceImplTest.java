@@ -133,7 +133,6 @@ public class DiscoveryJobServiceImplTest {
         assertThat(discoveryJobStarting.getStatus()).isSameAs(STARTING);
         assertThat(discoveryJobStarting.getParameter()).isNull();
         assertThat(discoveryJobStarting.getLogMessage()).isNotNull();
-        assertThat(discoveryJobStarting.getDiscoveryResult()).isNull();
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
 
@@ -144,9 +143,6 @@ public class DiscoveryJobServiceImplTest {
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getStatus()).isSameAs(COMPLETE);
-        assertThat(discoveryJobComplete.getDiscoveryResult()).isNotNull();
-        assertThat(discoveryJobComplete.getDiscoveryResult().getCompletedTasks()).isZero();
-        assertThat(discoveryJobComplete.getDiscoveryResult().getFailedTasks()).isZero();
 
         assertThat(observer.getCallCount()).isEqualTo(5);
         observer.assertThatStartingAt(0);
@@ -226,7 +222,6 @@ public class DiscoveryJobServiceImplTest {
         assertThat(discoveryJobComplete.getType()).isSameAs(ARTIST);
         assertThat(discoveryJobComplete.getStatus()).isSameAs(COMPLETE);
         assertThat(discoveryJobComplete.getParameter()).isEqualTo("artist1");
-        assertThat(discoveryJobComplete.getDiscoveryResult()).isNotNull();
 
         assertThat(observer.getCallCount()).isEqualTo(5);
         observer.assertThatStartingAt(0);
@@ -267,7 +262,6 @@ public class DiscoveryJobServiceImplTest {
         assertThat(discoveryJobComplete.getType()).isSameAs(ALBUM);
         assertThat(discoveryJobComplete.getStatus()).isSameAs(COMPLETE);
         assertThat(discoveryJobComplete.getParameter()).isEqualTo("album1");
-        assertThat(discoveryJobComplete.getDiscoveryResult()).isNotNull();
 
         assertThat(observer.getCallCount()).isEqualTo(5);
         observer.assertThatStartingAt(0);
@@ -303,8 +297,6 @@ public class DiscoveryJobServiceImplTest {
 
         DiscoveryJob discoveryJobModerate = savedDiscoveryJob.getValue();
         assertThat(discoveryJobModerate.getStatus()).isSameAs(MODERATE);
-        assertThat(discoveryJobModerate.getDiscoveryResult().getCompletedTasks()).isEqualTo(1L);
-        assertThat(discoveryJobModerate.getDiscoveryResult().getFailedTasks()).isEqualTo(1L);
 
         assertThat(observer.getCallCount()).isEqualTo(4);
         observer.assertThatStartingAt(0);
@@ -335,8 +327,6 @@ public class DiscoveryJobServiceImplTest {
 
         DiscoveryJob discoveryJobFailed = savedDiscoveryJob.getValue();
         assertThat(discoveryJobFailed.getStatus()).isSameAs(FAILED);
-        assertThat(discoveryJobFailed.getDiscoveryResult().getCompletedTasks()).isZero();
-        assertThat(discoveryJobFailed.getDiscoveryResult().getFailedTasks()).isEqualTo(2L);
 
         assertThat(observer.getCallCount()).isEqualTo(4);
         observer.assertThatStartingAt(0);
@@ -392,7 +382,6 @@ public class DiscoveryJobServiceImplTest {
         assertThat(discoveryJobFailed.getType()).isSameAs(ARTIST);
         assertThat(discoveryJobFailed.getStatus()).isSameAs(FAILED);
         assertThat(discoveryJobFailed.getLogMessage()).isNotNull();
-        assertThat(discoveryJobFailed.getDiscoveryResult()).isNull();
 
         assertThat(observer.getCallCount()).isEqualTo(4);
         observer.assertThatStartingAt(0);
@@ -427,7 +416,6 @@ public class DiscoveryJobServiceImplTest {
         DiscoveryJob discoveryJobInterrupted = savedDiscoveryJob.getValue();
         assertThat(discoveryJobInterrupted.getStatus()).isSameAs(INTERRUPTED);
         assertThat(discoveryJobInterrupted.getLogMessage()).isNotNull();
-        assertThat(discoveryJobInterrupted.getDiscoveryResult()).isNull();
         assertThat(discoveryJobService.getCurrentDiscoveryJobProgress()).isEmpty();
 
         assertThat(observer.getCallCount()).isEqualTo(4);
@@ -587,7 +575,6 @@ public class DiscoveryJobServiceImplTest {
             assertThat(discoveryJob).isNotNull();
             assertThat(discoveryJob.getStatus()).isSameAs(STARTED);
             assertThat(discoveryJob.getLogMessage()).isNotNull();
-            assertThat(discoveryJob.getDiscoveryResult()).isNull();
             calls.add(new Call(Call.Type.STARTED));
         }
 

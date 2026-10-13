@@ -289,13 +289,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         }
 
         changeDiscoveryJobStatusInTransaction(() -> {
-            DiscoveryResult discoveryResult = new DiscoveryResult()
-                    .setType(discoveryJob.getType())
-                    .setCompletedTasks(completedTasks)
-                    .setFailedTasks(failedTasks);
             return discoveryJobRepository.save(discoveryJob
                     .setStatus(status)
-                    .setDiscoveryResult(discoveryResult)
                     .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks,
                             stopwatch.elapsed()).orElse(null)));
         });

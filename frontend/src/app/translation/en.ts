@@ -249,8 +249,6 @@ export default {
     artistIdLabel: 'Target artist ID:',
     albumIdLabel: 'Target album ID:',
     logMessageLabel: 'Log message:',
-    completedTasksLabel: 'Completed tasks:',
-    failedTasksLabel: 'Failed tasks:',
   },
   userList: {
     header: 'Users',

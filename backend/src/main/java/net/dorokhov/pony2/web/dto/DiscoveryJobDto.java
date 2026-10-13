@@ -10,7 +10,6 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
     private DiscoveryJob.Status status;
     private String parameter;
     private LogMessageDto logMessage;
-    private DiscoveryResultDto discoveryResult;
 
     public DiscoveryType getDiscoveryType() {
         return discoveryType;
@@ -50,16 +49,6 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    @Nullable
-    public DiscoveryResultDto getDiscoveryResult() {
-        return discoveryResult;
-    }
-
-    public DiscoveryJobDto setDiscoveryResult(@Nullable DiscoveryResultDto discoveryResult) {
-        this.discoveryResult = discoveryResult;
-        return this;
-    }
-
     public static DiscoveryJobDto of(DiscoveryJob discoveryJob) {
         return new DiscoveryJobDto()
                 .setId(discoveryJob.getId())
@@ -68,7 +57,6 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
                 .setDiscoveryType(discoveryJob.getType())
                 .setStatus(discoveryJob.getStatus())
                 .setParameter(discoveryJob.getParameter())
-                .setLogMessage(discoveryJob.getLogMessage() != null ? LogMessageDto.of(discoveryJob.getLogMessage()) : null)
-                .setDiscoveryResult(discoveryJob.getDiscoveryResult() != null ? DiscoveryResultDto.of(discoveryJob.getDiscoveryResult()) : null);
+                .setLogMessage(discoveryJob.getLogMessage() != null ? LogMessageDto.of(discoveryJob.getLogMessage()) : null);
     }
 }

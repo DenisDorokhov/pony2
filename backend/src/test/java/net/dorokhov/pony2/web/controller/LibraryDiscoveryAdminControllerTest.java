@@ -29,7 +29,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -104,7 +103,6 @@ public class LibraryDiscoveryAdminControllerTest {
                 assertThat(logMessage.getId()).isEqualTo("log1");
                 assertThat(logMessage.getText()).isEqualTo("Starting discovery.");
             });
-            assertThat(discoveryJob.getDiscoveryResult()).isNull();
         });
 
         switch (type) {
@@ -145,13 +143,14 @@ public class LibraryDiscoveryAdminControllerTest {
     }
 
     @Test
-    public void shouldGetDiscoveryJobWithResult() throws Exception {
+    public void shouldGetCompletedDiscoveryJob() throws Exception {
         DiscoveryJob job = completedJob();
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(job));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobs/job1"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+        assertThat(objectMapper.readTree(response).has("discoveryResult")).isFalse();
         DiscoveryJobDto dto = objectMapper.readValue(response, DiscoveryJobDto.class);
 
         assertThat(dto).satisfies(discoveryJob -> {
@@ -159,13 +158,6 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(discoveryJob.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
             assertThat(discoveryJob.getStatus()).isSameAs(DiscoveryJob.Status.MODERATE);
             assertThat(discoveryJob.getUpdateDate()).isNotNull();
-            assertThat(discoveryJob.getDiscoveryResult()).satisfies(result -> {
-                assertThat(result.getId()).isEqualTo("result1");
-                assertThat(result.getDate()).isNotNull();
-                assertThat(result.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
-                assertThat(result.getCompletedTasks()).isEqualTo(7L);
-                assertThat(result.getFailedTasks()).isEqualTo(2L);
-            });
         });
     }
 
@@ -201,8 +193,6 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(page.getTotalPages()).isEqualTo((100 + pageSize - 1) / pageSize);
             assertThat(page.getDiscoveryJobs()).singleElement().satisfies(discoveryJob -> {
                 assertThat(discoveryJob.getId()).isEqualTo("job1");
-                assertThat(discoveryJob.getDiscoveryResult()).satisfies(result ->
-                        assertThat(result.getCompletedTasks()).isEqualTo(7L));
             });
         });
 
@@ -333,13 +323,7 @@ public class LibraryDiscoveryAdminControllerTest {
     private DiscoveryJob completedJob() {
         return discoveryJob(DiscoveryType.FULL)
                 .setId("job1")
-                .setStatus(DiscoveryJob.Status.MODERATE)
-                .setDiscoveryResult(new DiscoveryResult()
-                        .setId("result1")
-                        .setDate(LocalDateTime.now())
-                        .setType(DiscoveryType.FULL)
-                        .setCompletedTasks(7L)
-                        .setFailedTasks(2L));
+                .setStatus(DiscoveryJob.Status.MODERATE);
     }
 
     private void mockProgress(String suffix, DiscoveryJobProgress progress) {

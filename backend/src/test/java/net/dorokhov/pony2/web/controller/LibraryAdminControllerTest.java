@@ -6,7 +6,6 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
-import net.dorokhov.pony2.api.library.domain.DiscoveryResult;
 import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJob.Status;
@@ -216,7 +215,6 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(discoveryJob.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
         assertThat(discoveryJob.getStatus()).isSameAs(DiscoveryJob.Status.STARTING);
         assertThat(discoveryJob.getLogMessage()).isNotNull();
-        assertThat(discoveryJob.getDiscoveryResult()).isNull();
 
         await().until(() -> {
             DiscoveryJobProgress discoveryJobProgress = discoveryJobService.getDiscoveryJobProgress(discoveryJob.getId()).orElse(null);
@@ -293,10 +291,6 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(completedDiscoveryJobResponse.getBody()).satisfies(dto -> {
             checkDiscoveryJobDto(dto, discoveryJob.getId());
             assertThat(dto.getStatus()).isSameAs(DiscoveryJob.Status.COMPLETE);
-            assertThat(dto.getDiscoveryResult()).satisfies(discoveryResult -> {
-                assertThat(discoveryResult.getCompletedTasks()).isZero();
-                assertThat(discoveryResult.getFailedTasks()).isZero();
-            });
         });
 
         ResponseEntity<DiscoveryJobPageDto> discoveryJobsResponse = apiTemplate.getRestTemplate().exchange(
@@ -421,7 +415,6 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(dto.getStatus()).isEqualTo(discoveryJob.getStatus());
             assertThat(dto.getParameter()).isEqualTo(discoveryJob.getParameter());
             checkLogMessageDto(dto.getLogMessage(), discoveryJob.getLogMessage());
-            checkDiscoveryResultDto(dto.getDiscoveryResult(), discoveryJob.getDiscoveryResult());
             return null;
         });
     }
@@ -467,16 +460,6 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getDeletedGenreCount()).isEqualTo(scanResult.getDeletedGenreCount());
         assertThat(dto.getCreatedArtworkCount()).isEqualTo(scanResult.getCreatedArtworkCount());
         assertThat(dto.getDeletedArtworkCount()).isEqualTo(scanResult.getDeletedArtworkCount());
-    }
-
-    private void checkDiscoveryResultDto(@Nullable DiscoveryResultDto dto, @Nullable DiscoveryResult discoveryResult) {
-        assertThat(discoveryResult).isNotNull();
-        assertThat(dto).isNotNull();
-        assertThat(dto.getId()).isEqualTo(discoveryResult.getId());
-        assertThat(dto.getDate()).isEqualTo(discoveryResult.getDate());
-        assertThat(dto.getDiscoveryType()).isEqualTo(discoveryResult.getType());
-        assertThat(dto.getCompletedTasks()).isEqualTo(discoveryResult.getCompletedTasks());
-        assertThat(dto.getFailedTasks()).isEqualTo(discoveryResult.getFailedTasks());
     }
 
     private void runAndVerifyDeletionScan() throws IOException, ConcurrentLibraryJobException {

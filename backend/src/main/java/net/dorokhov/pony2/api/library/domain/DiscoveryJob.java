@@ -37,10 +37,6 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "job")
     private List<DiscoveryTask> tasks = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "discovery_result_id", unique = true)
-    private DiscoveryResult discoveryResult;
-
     public DiscoveryType getType() {
         return type;
     }
@@ -83,15 +79,6 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
 
     public DiscoveryJob setTasks(List<DiscoveryTask> tasks) {
         this.tasks = tasks;
-        return this;
-    }
-
-    public DiscoveryResult getDiscoveryResult() {
-        return discoveryResult;
-    }
-
-    public DiscoveryJob setDiscoveryResult(DiscoveryResult discoveryResult) {
-        this.discoveryResult = discoveryResult;
         return this;
     }
 
