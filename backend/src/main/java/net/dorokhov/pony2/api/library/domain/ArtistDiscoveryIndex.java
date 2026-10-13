@@ -18,6 +18,12 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
     @Column(name = "spotify_artist_id")
     private String spotifyArtistId;
 
+    @Column(name = "music_brainz_artist_id")
+    private String musicBrainzArtistId;
+
+    @Column(name = "country_code")
+    private String countryCode;
+
     public Artist getArtist() {
         return artist;
     }
@@ -37,6 +43,26 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return this;
     }
 
+    @Nullable
+    public String getMusicBrainzArtistId() {
+        return musicBrainzArtistId;
+    }
+
+    public ArtistDiscoveryIndex setMusicBrainzArtistId(@Nullable String musicBrainzArtistId) {
+        this.musicBrainzArtistId = musicBrainzArtistId;
+        return this;
+    }
+
+    @Nullable
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public ArtistDiscoveryIndex setCountryCode(@Nullable String countryCode) {
+        this.countryCode = countryCode;
+        return this;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -45,6 +71,8 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
                 .add("updateDate", updateDate)
                 .add("artist", artist != null ? artist.getId() : "null")
                 .add("spotifyArtistId", spotifyArtistId)
+                .add("musicBrainzArtistId", musicBrainzArtistId)
+                .add("countryCode", countryCode)
                 .toString();
     }
 }

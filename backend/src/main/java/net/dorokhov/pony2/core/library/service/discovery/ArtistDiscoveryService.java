@@ -10,9 +10,11 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
+import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -26,6 +28,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
@@ -39,6 +42,7 @@ public class ArtistDiscoveryService {
 
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final SpotifyTopTracksService spotifyTopTracksService;
@@ -51,6 +55,7 @@ public class ArtistDiscoveryService {
     public ArtistDiscoveryService(
             ArtistDiscoveryRepository artistDiscoveryRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            AlbumDiscoveryRepository albumDiscoveryRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             SpotifyArtistDataService spotifyArtistDataService,
             SpotifyTopTracksService spotifyTopTracksService,
@@ -62,6 +67,7 @@ public class ArtistDiscoveryService {
     ) {
         this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.spotifyTopTracksService = spotifyTopTracksService;
@@ -91,6 +97,22 @@ public class ArtistDiscoveryService {
         for (Album album : albums) {
             albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+        }
+        if (!albums.isEmpty()) {
+            albumDiscoveryRepository.findCompletedTaskResultByAlbumIdAndJobIdAndType(
+                            albums.getFirst().getId(), discoveryJob.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
+                    .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class))
+                    .ifPresent(result -> {
+                        String countryCode = result.country().isEmpty() ? null : result.country().getFirst();
+                        ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
+                                .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
+                        if (!Objects.equals(index.getMusicBrainzArtistId(), result.artistId()) ||
+                                !Objects.equals(index.getCountryCode(), countryCode)) {
+                            artistDiscoveryIndexRepository.save(index
+                                    .setMusicBrainzArtistId(result.artistId())
+                                    .setCountryCode(countryCode));
+                        }
+                    });
         }
     }
 

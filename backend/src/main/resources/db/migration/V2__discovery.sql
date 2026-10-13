@@ -84,15 +84,17 @@ CREATE TABLE artist_discovery_index (
 
   artist_id CHAR(36) NOT NULL,
   spotify_artist_id VARCHAR (255),
+  music_brainz_artist_id VARCHAR (255),
+  country_code VARCHAR (255),
 
   FOREIGN KEY (artist_id) REFERENCES artist (id),
 
   UNIQUE (artist_id)
 );
 
-CREATE INDEX index_artist_discovery_index_creation_date ON artist_discovery_index (creation_date);
-CREATE INDEX index_artist_discovery_index_update_date ON artist_discovery_index (update_date);
 CREATE INDEX index_artist_discovery_index_spotify_artist_id ON artist_discovery_index (spotify_artist_id);
+CREATE INDEX index_artist_discovery_index_music_brainz_artist_id ON artist_discovery_index (music_brainz_artist_id);
+CREATE INDEX index_artist_discovery_index_country_code ON artist_discovery_index (country_code);
 
 CREATE TABLE artist_discovery_task (
 
