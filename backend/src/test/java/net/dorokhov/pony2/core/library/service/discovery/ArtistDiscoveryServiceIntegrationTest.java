@@ -29,10 +29,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -452,11 +449,19 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
                 List.of(topTrack("second", "Second", "spotify-album"), topTrack("missing", "Missing", "missing-album"),
                         topTrack("first", "First", "spotify-album")), null, null, null, null);
-        Map<String, String> albumMatches = new LinkedHashMap<>();
-        albumMatches.put("spotify-album", album.getId());
-        albumMatches.put("missing-album", null);
-        String albumResponse = JsonConverter.toJson(albumMatches);
-        String trackResponse = JsonConverter.toJson(Arrays.asList(second.getId(), null, first.getId()));
+        String albumResponse = """
+                {"albumMatches":[
+                    {"spotifyAlbumId":"spotify-album","databaseAlbumId":"%s"},
+                    {"spotifyAlbumId":"missing-album","databaseAlbumId":null}
+                ]}
+                """.formatted(album.getId());
+        String trackResponse = """
+                {"trackMatches":[
+                    {"databaseTrackId":"%s"},
+                    {"databaseTrackId":null},
+                    {"databaseTrackId":"%s"}
+                ]}
+                """.formatted(second.getId(), first.getId());
         List<String> responses = new ArrayList<>(List.of(JsonConverter.toJson(result), albumResponse, trackResponse));
         List<Prompt> prompts = new ArrayList<>();
         List<DiscoveryProgress> progress = new ArrayList<>();
@@ -502,8 +507,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
                 List.of(topTrack("missing", "Missing", "missing-album")), null, null, null, null);
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(result),
-                new ChatResponse(List.of(new Generation(new AssistantMessage("{\"missing-album\":null}")))),
-                new ChatResponse(List.of(new Generation(new AssistantMessage("[null]")))));
+                new ChatResponse(List.of(new Generation(new AssistantMessage("""
+                        {"albumMatches":[{"spotifyAlbumId":"missing-album","databaseAlbumId":null}]}
+                        """)))),
+                new ChatResponse(List.of(new Generation(new AssistantMessage("{\"trackMatches\":[{\"databaseTrackId\":null}]}")))));
 
         service.discover(saveJob(), artist, true, null);
 
