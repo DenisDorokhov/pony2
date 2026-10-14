@@ -16,6 +16,12 @@ public interface AlbumDiscoveryRepository extends JpaRepository<AlbumDiscovery, 
     Optional<AlbumDiscovery> findFirstByAlbumIdOrderByCreationDateDesc(String albumId);
 
     @Query("""
+            SELECT COUNT(t) FROM AlbumDiscovery d JOIN d.tasks t
+            WHERE d.id = :discoveryId AND t.status = COMPLETE
+            """)
+    long countCompletedTasksByDiscoveryId(String discoveryId);
+
+    @Query("""
             SELECT t.result FROM AlbumDiscovery d JOIN d.tasks t
             WHERE d.album.id = :albumId AND d.job.id = :jobId
               AND t.type = :taskType AND t.status = COMPLETE

@@ -229,8 +229,7 @@ export interface DiscoveryProgressDto {
 export namespace DiscoveryProgressDto {
 
   export enum Step {
-    FULL_ARTIST_DISCOVERY = 'FULL_ARTIST_DISCOVERY',
-    FULL_ALBUM_DISCOVERY = 'FULL_ALBUM_DISCOVERY',
+    FULL_DISCOVERY = 'FULL_DISCOVERY',
     ARTIST_DISCOVERY = 'ARTIST_DISCOVERY',
     ALBUM_DISCOVERY = 'ALBUM_DISCOVERY',
   }

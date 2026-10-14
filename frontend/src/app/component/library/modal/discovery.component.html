@@ -5,53 +5,19 @@
 
 <div class="modal-body">
   <table class="status-container">
-    @if (discoveryJobProgress) {
-      <tr>
-        <td class="label">{{ 'discovery.typeLabel' | translate }}</td>
-        <td class="value">
-          <span class="discovery-job-type"
-                [class.full]="discoveryJobProgress.discoveryJob.discoveryType === DiscoveryType.FULL"
-                [class.artist]="discoveryJobProgress.discoveryJob.discoveryType === DiscoveryType.ARTIST"
-                [class.album]="discoveryJobProgress.discoveryJob.discoveryType === DiscoveryType.ALBUM"
-          >{{ discoveryJobProgress.discoveryJob.discoveryType }}</span>
-        </td>
-      </tr>
-    }
     <tr>
       <td class="label">{{ 'discovery.statusLabel' | translate }}</td>
       <td class="value">
-        @if (discoveryJobProgressLoadingState === LoadingState.LOADING) {
-          {{ 'discovery.discoveryJobProgress.loadingLabel' | translate }}
-        } @else if (discoveryJobProgressLoadingState === LoadingState.ERROR) {
-          {{ 'discovery.discoveryJobProgress.errorLabel' | translate }}
-        } @else if (!discoveryJobProgress) {
-          {{ 'discovery.discoveryJobProgress.inactiveLabel' | translate }}
-        } @else {
-          <span class="discovery-job-status"
-                [class.started]="discoveryJobProgress.discoveryJob.status === DiscoveryJobStatus.STARTED"
-          >{{ discoveryJobProgress.discoveryJob.status }}</span>
-        }
-      </td>
-    </tr>
-    @if (discoveryJobProgress) {
-      <tr>
-        <td class="label">{{ 'discovery.stepLabel' | translate }}</td>
-        <td class="value">
-          @switch (discoveryJobProgress.discoveryProgress?.stepDescriptor?.step) {
-            @case (Step.FULL_ARTIST_DISCOVERY) {
+        @if (discoveryJobProgress) {
+          @switch (discoveryJobProgress.discoveryJob.discoveryType) {
+            @case (DiscoveryType.FULL) {
+              {{ 'discovery.discoveryJobProgress.fullDiscoveryLabel' | translate }}
+            }
+            @case (DiscoveryType.ARTIST) {
               {{ 'discovery.discoveryJobProgress.artistDiscoveryLabel' | translate }}
             }
-            @case (Step.ARTIST_DISCOVERY) {
-              {{ 'discovery.discoveryJobProgress.artistDiscoveryLabel' | translate }}
-            }
-            @case (Step.FULL_ALBUM_DISCOVERY) {
+            @case (DiscoveryType.ALBUM) {
               {{ 'discovery.discoveryJobProgress.albumDiscoveryLabel' | translate }}
-            }
-            @case (Step.ALBUM_DISCOVERY) {
-              {{ 'discovery.discoveryJobProgress.albumDiscoveryLabel' | translate }}
-            }
-            @default {
-              {{ 'discovery.discoveryJobProgress.preparingLabel' | translate }}
             }
           }
           @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
@@ -61,24 +27,22 @@
               itemsTotal: discoveryJobProgress.discoveryProgress!.value!.itemsTotal
             } }}
           }
-        </td>
-      </tr>
-    }
+        } @else {
+          {{ 'discovery.discoveryJobProgress.inactiveLabel' | translate }}
+        }
+      </td>
+    </tr>
     <tr>
       <td class="label">{{ 'discovery.progressLabel' | translate }}</td>
       <td class="value">
         <div class="progress">
           @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
             @switch (discoveryJobProgress!.discoveryProgress!.stepDescriptor.step) {
-              @case (Step.FULL_ARTIST_DISCOVERY) {
+              @case (Step.FULL_DISCOVERY) {
                 <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
                      [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
               }
               @case (Step.ARTIST_DISCOVERY) {
-                <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
-                     [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
-              }
-              @case (Step.FULL_ALBUM_DISCOVERY) {
                 <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
                      [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
               }

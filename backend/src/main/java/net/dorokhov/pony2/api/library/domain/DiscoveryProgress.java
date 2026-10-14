@@ -14,8 +14,7 @@ public final class DiscoveryProgress {
 
     public enum Step {
 
-        FULL_ARTIST_DISCOVERY(FULL, 0, 2),
-        FULL_ALBUM_DISCOVERY(FULL, 1, 2),
+        FULL_DISCOVERY(FULL, 0, 1),
 
         ARTIST_DISCOVERY(ARTIST, 0, 1),
 

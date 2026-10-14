@@ -15,6 +15,12 @@ public interface ArtistDiscoveryRepository extends JpaRepository<ArtistDiscovery
     Optional<ArtistDiscovery> findFirstByArtistIdOrderByCreationDateDesc(String artistId);
 
     @Query("""
+            SELECT COUNT(t) FROM ArtistDiscovery d JOIN d.tasks t
+            WHERE d.id = :discoveryId AND t.status = COMPLETE
+            """)
+    long countCompletedTasksByDiscoveryId(String discoveryId);
+
+    @Query("""
             SELECT d FROM ArtistDiscovery d
             WHERE d.artist.id = :artistId AND d.creationDate <= :maximumCreationDate
               AND d.job.status IN (COMPLETE, MODERATE)

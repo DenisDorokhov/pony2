@@ -218,7 +218,7 @@ public class LibraryDiscoveryAdminControllerTest {
     @ValueSource(strings = {"", "/job1"})
     public void shouldGetDiscoveryJobProgress(String suffix) throws Exception {
         DiscoveryJobProgress progress = new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
-                new DiscoveryProgress(DiscoveryProgress.Step.FULL_ALBUM_DISCOVERY, DiscoveryProgress.Value.of(3, 10)));
+                new DiscoveryProgress(DiscoveryProgress.Step.FULL_DISCOVERY, DiscoveryProgress.Value.of(3, 10)));
         mockProgress(suffix, progress);
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress" + suffix))
@@ -232,10 +232,10 @@ public class LibraryDiscoveryAdminControllerTest {
                 assertThat(discoveryJobProgress.getDiscoveryJob().getId()).isEqualTo("job1");
                 assertThat(discoveryJobProgress.getDiscoveryProgress()).satisfies(discoveryProgress -> {
                     assertThat(discoveryProgress.getStepDescriptor()).satisfies(stepDescriptor -> {
-                        assertThat(stepDescriptor.getStep()).isSameAs(DiscoveryProgress.Step.FULL_ALBUM_DISCOVERY);
+                        assertThat(stepDescriptor.getStep()).isSameAs(DiscoveryProgress.Step.FULL_DISCOVERY);
                         assertThat(stepDescriptor.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
-                        assertThat(stepDescriptor.getStepNumber()).isEqualTo(1);
-                        assertThat(stepDescriptor.getTotalSteps()).isEqualTo(2);
+                        assertThat(stepDescriptor.getStepNumber()).isEqualTo(0);
+                        assertThat(stepDescriptor.getTotalSteps()).isEqualTo(1);
                     });
                     assertThat(discoveryProgress.getValue()).satisfies(value -> {
                         assertThat(value.getItemsComplete()).isEqualTo(3);

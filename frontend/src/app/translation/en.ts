@@ -220,9 +220,7 @@ export default {
   },
   discovery: {
     header: 'Discovery',
-    typeLabel: 'Type:',
     statusLabel: 'Status:',
-    stepLabel: 'Stage:',
     progressLabel: 'Progress:',
     startFullDiscoveryButton: 'Full Discovery',
     startDateColumn: 'Start Date',
@@ -234,9 +232,7 @@ export default {
     detailsButton: 'Details',
     discoveryJobProgress: {
       inactiveLabel: 'inactive',
-      errorLabel: 'could not start discovery job :-(',
-      loadingLabel: 'loading...',
-      preparingLabel: 'preparing...',
+      fullDiscoveryLabel: 'processing full discovery tasks...',
       artistDiscoveryLabel: 'processing artist discovery tasks...',
       albumDiscoveryLabel: 'processing album discovery tasks...',
       itemsProgressLabel: '{percentage}% ({itemsComplete, number} of {itemsTotal, number} processed)',

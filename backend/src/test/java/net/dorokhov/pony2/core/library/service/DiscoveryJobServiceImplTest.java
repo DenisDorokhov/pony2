@@ -121,7 +121,7 @@ public class DiscoveryJobServiceImplTest {
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
-            observer.accept(new DiscoveryProgress(FULL_ARTIST_DISCOVERY, null));
+            observer.accept(new DiscoveryProgress(FULL_DISCOVERY, null));
             return null;
         }).when(fullDiscoveryService).discover(any(), eq(true), any());
 
@@ -149,7 +149,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatProgressedAt(2, discoveryJobProgress -> {
             //noinspection ConstantConditions
-            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(FULL_ARTIST_DISCOVERY);
+            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(FULL_DISCOVERY);
             assertThat(discoveryJobProgress.getDiscoveryProgress().getValue()).isNull();
         });
         observer.assertThatCompletingAt(3);

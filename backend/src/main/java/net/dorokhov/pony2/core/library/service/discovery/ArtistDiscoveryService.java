@@ -30,6 +30,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_DISCOVERY;
@@ -83,11 +84,30 @@ public class ArtistDiscoveryService {
         List<Album> albums = requireNonNull(transactionTemplate.execute(status ->
                 artistDiscoveryRepository.findById(artistDiscovery.getId()).orElseThrow()
                         .getArtist().getAlbums().stream().sorted().toList()));
+        discover(discoveryJob, cacheEnabled, artistDiscovery, albums, album -> true, observer);
+        if (!albums.isEmpty()) {
+            updateArtistIndex(discoveryJob.getId(), artist, albums.getFirst());
+        }
+    }
+
+    void discoverForFullJob(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
+                            boolean discoverArtist, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
+        ArtistDiscovery artistDiscovery = discoverArtist ? createDiscovery(discoveryJob, artist) : null;
+        discover(discoveryJob, cacheEnabled, artistDiscovery, albums, shouldDiscoverAlbum, observer);
+        if (!albums.isEmpty()) {
+            Album firstAlbum = albums.getFirst();
+            albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(firstAlbum.getId())
+                    .ifPresent(discovery -> updateArtistIndex(discovery.getJob().getId(), artist, firstAlbum));
+        }
+    }
+
+    private void discover(DiscoveryJob discoveryJob, boolean cacheEnabled, @Nullable ArtistDiscovery artistDiscovery,
+                          List<Album> albums, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
         boolean llmEnabled = configService.get().llmEnabled();
-        long tasksComplete = 0;
+        long tasksComplete = artistDiscovery == null && llmEnabled ? 2 : 0;
         long tasksTotal = (llmEnabled ? 2 : 0) + albums.size();
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
-        if (llmEnabled) {
+        if (llmEnabled && artistDiscovery != null) {
             taskExecutor.execute(new SpotifyArtistDataTaskExecution(artistDiscovery, cacheEnabled));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
             String spotifyArtistDataTaskId = artistDiscovery.getTasks().getLast().getId();
@@ -95,25 +115,28 @@ public class ArtistDiscoveryService {
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
         for (Album album : albums) {
-            albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
+            if (shouldDiscoverAlbum.test(album)) {
+                albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
+            }
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
-        if (!albums.isEmpty()) {
-            albumDiscoveryRepository.findCompletedTaskResultByAlbumIdAndJobIdAndType(
-                            albums.getFirst().getId(), discoveryJob.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
-                    .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class))
-                    .ifPresent(result -> {
-                        String countryCode = result.country().isEmpty() ? null : result.country().getFirst();
-                        ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
-                                .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
-                        if (!Objects.equals(index.getMusicBrainzArtistId(), result.artistId()) ||
-                                !Objects.equals(index.getCountryCode(), countryCode)) {
-                            artistDiscoveryIndexRepository.save(index
-                                    .setMusicBrainzArtistId(result.artistId())
-                                    .setCountryCode(countryCode));
-                        }
-                    });
-        }
+    }
+
+    private void updateArtistIndex(String jobId, Artist artist, Album firstAlbum) {
+        albumDiscoveryRepository.findCompletedTaskResultByAlbumIdAndJobIdAndType(
+                        firstAlbum.getId(), jobId, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
+                .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class))
+                .ifPresent(result -> {
+                    String countryCode = result.country().isEmpty() ? null : result.country().getFirst();
+                    ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
+                            .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
+                    if (!Objects.equals(index.getMusicBrainzArtistId(), result.artistId()) ||
+                            !Objects.equals(index.getCountryCode(), countryCode)) {
+                        artistDiscoveryIndexRepository.save(index
+                                .setMusicBrainzArtistId(result.artistId())
+                                .setCountryCode(countryCode));
+                    }
+                });
     }
 
     private ArtistDiscovery createDiscovery(DiscoveryJob discoveryJob, Artist artist) {

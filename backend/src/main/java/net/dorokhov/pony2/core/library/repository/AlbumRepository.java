@@ -18,6 +18,9 @@ public interface AlbumRepository extends JpaRepository<Album, String> {
 
     long countByArtistId(String artistId);
 
+    @Query("SELECT a FROM Album a JOIN FETCH a.artist WHERE a.artist.id = :artistId")
+    List<Album> findByArtistId(String artistId);
+
     long countByCreationDateGreaterThan(LocalDateTime date);
 
     long countByCreationDateLessThanAndUpdateDateGreaterThan(LocalDateTime creationDate, LocalDateTime updateDate);
