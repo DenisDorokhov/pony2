@@ -275,7 +275,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getRawRequest()).isNotBlank();
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse, rawResponse);
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+                    .containsExactly(rawResponse, rawResponse, rawResponse, rawResponse);
             assertThat(task.getResult()).isNotBlank();
         });
         assertFailedTopTracks();

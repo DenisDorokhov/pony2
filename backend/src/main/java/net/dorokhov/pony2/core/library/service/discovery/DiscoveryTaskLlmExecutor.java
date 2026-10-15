@@ -18,6 +18,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -42,6 +43,7 @@ public class DiscoveryTaskLlmExecutor {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ShutdownService shutdownService;
     private final TransactionTemplate transactionTemplate;
+    private final int retriesOnFollowUpException;
 
     public DiscoveryTaskLlmExecutor(
             DiscoveryChatClient chatClient,
@@ -49,7 +51,8 @@ public class DiscoveryTaskLlmExecutor {
             DiscoveryTaskRepository taskRepository,
             LibraryJobSynchronizer jobSynchronizer,
             ShutdownService shutdownService,
-            PlatformTransactionManager transactionManager
+            PlatformTransactionManager transactionManager,
+            @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException
     ) {
         this.chatClient = chatClient;
         this.cacheService = cacheService;
@@ -57,11 +60,12 @@ public class DiscoveryTaskLlmExecutor {
         this.jobSynchronizer = jobSynchronizer;
         this.shutdownService = shutdownService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
+        this.retriesOnFollowUpException = retriesOnFollowUpException;
     }
 
     /**
      * Makes a synchronous model call, or reuses its cached response. The caller supplies conversation history.
-     * The response handler may throw FollowUpException to append a prompt and request one additional response.
+     * The response handler may throw FollowUpException to append a prompt and retry up to the configured limit.
      * Raw requests and responses are appended to parallel JSON arrays before the response is processed.
      * Only an accepted response enters the cache, under the original request's key. Null cache settings disable caching.
      * Calls for the same task must be sequential; task status and the final result belong to its lifecycle.
@@ -115,17 +119,22 @@ public class DiscoveryTaskLlmExecutor {
         }
         R result;
         Request acceptedRequest = request;
-        boolean retried = false;
-        try {
-            result = responseHandler.apply(response);
-        } catch (FollowUpException e) {
-            acceptedRequest = new FollowUpRequest(request, response, e.getPrompt());
-            response = call(task, acceptedRequest, null, Function.identity());
-            result = responseHandler.apply(response);
-            retried = true;
+        int retries = 0;
+        while (true) {
+            try {
+                result = responseHandler.apply(response);
+                break;
+            } catch (FollowUpException e) {
+                if (retries >= retriesOnFollowUpException) {
+                    throw e;
+                }
+                acceptedRequest = new FollowUpRequest(acceptedRequest, response, e.getPrompt());
+                response = call(task, acceptedRequest, null, Function.identity());
+                retries++;
+            }
         }
         interruptIfNeeded();
-        if (cacheSettings != null && (cached.isEmpty() || retried)) {
+        if (cacheSettings != null && (cached.isEmpty() || retries > 0)) {
             cacheService.put(cacheSettings.region(), key, cacheSettings.version(),
                     JsonConverter.toJson(new CacheEntry(acceptedRequest, response)));
         }

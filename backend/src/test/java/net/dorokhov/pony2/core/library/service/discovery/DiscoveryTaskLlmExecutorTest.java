@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,6 +27,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +59,7 @@ class DiscoveryTaskLlmExecutorTest {
     private final Map<String, String> cache = new HashMap<>();
     private final List<Prompt> prompts = new ArrayList<>();
     private LibraryJobSynchronizer.LibraryJobRegistration jobRegistration;
+    private DiscoveryChatClient discoveryClient;
     private DiscoveryTaskLlmExecutor operation;
 
     @BeforeEach
@@ -74,10 +78,10 @@ class DiscoveryTaskLlmExecutorTest {
             return response("answer " + prompts.size());
         });
         ChatClient client = ChatClient.builder(model).build();
-        DiscoveryChatClient discoveryClient = new DiscoveryChatClient(customizer -> client,
+        discoveryClient = new DiscoveryChatClient(customizer -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService, taskRepository,
-                jobSynchronizer, shutdownService, transactionManager());
+                jobSynchronizer, shutdownService, transactionManager(), 3);
     }
 
     @AfterEach
@@ -200,7 +204,7 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @Test
-    void shouldStopAfterOneAdditionalPromptWithoutCachingRejectedResponses() {
+    void shouldStopAfterThreeAdditionalPromptsWithoutCachingRejectedResponses() {
         DiscoveryTask task = task();
         FollowUpException rejected = new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
 
@@ -208,9 +212,70 @@ class DiscoveryTaskLlmExecutorTest {
             throw rejected;
         })).isSameAs(rejected);
 
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly("answer 1", "answer 2");
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+                .containsExactly("answer 1", "answer 2", "answer 3", "answer 4");
         assertThat(cache).isEmpty();
-        verify(model, times(2)).call(any(Prompt.class));
+        verify(model, times(4)).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldPreserveMultipleFollowUpsAndCacheAcceptedResponse(boolean cachedResponse) {
+        DialogueRequest request = searchRequest();
+        if (cachedResponse) {
+            operation.call(task(), request, CACHE_SETTINGS, Function.identity());
+        }
+        DiscoveryTask task = task();
+
+        String result = operation.call(task, request, CACHE_SETTINGS, answer -> {
+            if (!answer.equals("answer 4")) {
+                throw new FollowUpException("Verify " + answer, new IllegalStateException("Invalid response"));
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo("answer 4");
+        assertThat(prompts.getLast().getInstructions()).extracting(Message::getText)
+                .containsExactly("Find artist data", "Artist", "answer 1", "Verify answer 1",
+                        "answer 2", "Verify answer 2", "answer 3", "Verify answer 3");
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+                .containsExactly("answer 1", "answer 2", "answer 3", "answer 4");
+        Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+        assertThat(requests).hasSize(4);
+        assertThat(cache).hasSize(1);
+
+        DiscoveryTask cachedTask = task();
+        assertThat(operation.call(cachedTask, request, CACHE_SETTINGS, Function.identity())).isEqualTo("answer 4");
+        assertThat(JsonConverter.fromJson(cachedTask.getRawRequest(), Object[].class)).containsExactly(requests[3]);
+        verify(model, times(4)).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"'', 3", "0, 0", "1, 1", "5, 5"})
+    void shouldUseDefaultOrConfiguredFollowUpRetryLimit(String configuredRetries, int expectedRetries) {
+        ApplicationContextRunner runner = new ApplicationContextRunner()
+                .withUserConfiguration(DiscoveryTaskLlmExecutor.class)
+                .withBean(DiscoveryChatClient.class, () -> discoveryClient)
+                .withBean(DiscoveryCacheService.class, () -> cacheService)
+                .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
+                .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
+                .withBean(ShutdownService.class, () -> shutdownService)
+                .withBean(PlatformTransactionManager.class, () -> transactionManager());
+        if (!configuredRetries.isEmpty()) {
+            runner = runner.withPropertyValues("pony.discovery.llm.retriesOnFollowUpException=" + configuredRetries);
+        }
+
+        runner.run(context -> {
+            DiscoveryTaskLlmExecutor executor = context.getBean(DiscoveryTaskLlmExecutor.class);
+            FollowUpException rejected = new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+
+            assertThatThrownBy(() -> executor.call(task(), searchRequest(), CACHE_SETTINGS, answer -> {
+                throw rejected;
+            })).isSameAs(rejected);
+
+            verify(model, times(expectedRetries + 1)).call(any(Prompt.class));
+            assertThat(cache).isEmpty();
+        });
     }
 
     @Test

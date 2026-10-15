@@ -657,7 +657,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldFailInvalidLlmResponseAfterOneVerificationAttempt() {
+    void shouldFailInvalidLlmResponseAfterThreeVerificationAttempts() {
         enableLlm();
         search(List.of(group("group", "Other", "Deluxe title", List.of(credit("artist", "Slayer", null)))));
         when(model.call(any(Prompt.class))).thenReturn(response("not JSON"));
@@ -665,9 +665,10 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(rawSearchResponse, "not JSON", "not JSON");
+        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class))
+                .containsExactly(rawSearchResponse, "not JSON", "not JSON", "not JSON", "not JSON");
         assertThat(cacheRepository.count()).isZero();
-        verify(model, times(2)).call(any(Prompt.class));
+        verify(model, times(4)).call(any(Prompt.class));
     }
 
     @Test
