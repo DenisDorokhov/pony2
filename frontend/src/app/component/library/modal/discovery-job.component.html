@@ -3,58 +3,74 @@
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
-  <div class="mb-3">
-    <label class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
-    <div>{{ discoveryJob.creationDate | date:('shared.dateTimeFormat' | translate) }}</div>
-  </div>
-
-  @if (discoveryJob.updateDate) {
-    <div class="mb-3">
-      <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
-      <div>{{ discoveryJob.updateDate | date:('shared.dateTimeFormat' | translate) }}</div>
-    </div>
+  @if (loadingState === LoadingState.LOADING) {
+    <pony-loading-indicator></pony-loading-indicator>
   }
-
-  <div class="mb-3">
-    <label class="form-label">{{ 'discoveryJob.typeLabel' | translate }}</label>
-    <div class="discovery-job-type"
-         [class.full]="discoveryJob.discoveryType === DiscoveryType.FULL"
-         [class.artist]="discoveryJob.discoveryType === DiscoveryType.ARTIST"
-         [class.album]="discoveryJob.discoveryType === DiscoveryType.ALBUM"
-    >{{ discoveryJob.discoveryType }}</div>
-  </div>
-
-  <div class="mb-3">
-    <label class="form-label">{{ 'discoveryJob.statusLabel' | translate }}</label>
-    <div class="discovery-job-status"
-         [class.starting]="discoveryJob.status === DiscoveryJobStatus.STARTING"
-         [class.started]="discoveryJob.status === DiscoveryJobStatus.STARTED"
-         [class.complete]="discoveryJob.status === DiscoveryJobStatus.COMPLETE"
-         [class.moderate]="discoveryJob.status === DiscoveryJobStatus.MODERATE"
-         [class.failed]="discoveryJob.status === DiscoveryJobStatus.FAILED"
-         [class.interrupted]="discoveryJob.status === DiscoveryJobStatus.INTERRUPTED"
-    >{{ discoveryJob.status }}</div>
-  </div>
-
-  @if (discoveryJob.parameter) {
-    <div class="mb-3">
-      <label class="form-label">{{ (discoveryJob.discoveryType === DiscoveryType.ARTIST
-        ? 'discoveryJob.artistIdLabel' : 'discoveryJob.albumIdLabel') | translate }}</label>
-      <div>{{ discoveryJob.parameter }}</div>
-    </div>
+  @if (loadingState === LoadingState.ERROR) {
+    <pony-error-indicator></pony-error-indicator>
   }
-
-  @if (discoveryJob.logMessage; as logMessage) {
+  @if (discoveryJobDetails; as details) {
     <div class="mb-3">
-      <label class="form-label">{{ 'discoveryJob.logMessageLabel' | translate }}</label>
-      <div><span class="log-level"
-                 [class.info]="logMessage.level === LogMessageLevel.INFO"
-                 [class.warn]="logMessage.level === LogMessageLevel.WARN"
-                 [class.error]="logMessage.level === LogMessageLevel.ERROR"
-      >[{{ logMessage.level }}]</span> {{ logMessage.text }}</div>
-      @if (exception) {
-        <div title="{{ exception }}" class="exception"><pre>{{ exception }}</pre></div>
-      }
+      <label class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
+      <div>{{ details.discoveryJob.creationDate | date:('shared.dateTimeFormat' | translate) }}</div>
     </div>
+
+    @if (details.discoveryJob.updateDate) {
+      <div class="mb-3">
+        <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
+        <div>{{ details.discoveryJob.updateDate | date:('shared.dateTimeFormat' | translate) }}</div>
+      </div>
+    }
+
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryJob.typeLabel' | translate }}</label>
+      <div class="discovery-job-type"
+           [class.full]="details.discoveryJob.discoveryType === DiscoveryType.FULL"
+           [class.artist]="details.discoveryJob.discoveryType === DiscoveryType.ARTIST"
+           [class.album]="details.discoveryJob.discoveryType === DiscoveryType.ALBUM"
+      >{{ details.discoveryJob.discoveryType }}</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryJob.statusLabel' | translate }}</label>
+      <div class="discovery-job-status"
+           [class.starting]="details.discoveryJob.status === DiscoveryJobStatus.STARTING"
+           [class.started]="details.discoveryJob.status === DiscoveryJobStatus.STARTED"
+           [class.complete]="details.discoveryJob.status === DiscoveryJobStatus.COMPLETE"
+           [class.moderate]="details.discoveryJob.status === DiscoveryJobStatus.MODERATE"
+           [class.failed]="details.discoveryJob.status === DiscoveryJobStatus.FAILED"
+           [class.interrupted]="details.discoveryJob.status === DiscoveryJobStatus.INTERRUPTED"
+      >{{ details.discoveryJob.status }}</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryJob.tasksLabel' | translate }}</label>
+      <div>
+        {{ details.taskCount }}
+        <button type="button" class="btn btn-outline-dark ms-2" (click)="showTasks()">{{ 'discoveryJob.detailsButton' | translate }}</button>
+      </div>
+    </div>
+
+    @if (details.discoveryJob.parameter) {
+      <div class="mb-3">
+        <label class="form-label">{{ (details.discoveryJob.discoveryType === DiscoveryType.ARTIST
+          ? 'discoveryJob.artistIdLabel' : 'discoveryJob.albumIdLabel') | translate }}</label>
+        <div>{{ details.discoveryJob.parameter }}</div>
+      </div>
+    }
+
+    @if (details.discoveryJob.logMessage; as logMessage) {
+      <div class="mb-3">
+        <label class="form-label">{{ 'discoveryJob.logMessageLabel' | translate }}</label>
+        <div><span class="log-level"
+                   [class.info]="logMessage.level === LogMessageLevel.INFO"
+                   [class.warn]="logMessage.level === LogMessageLevel.WARN"
+                   [class.error]="logMessage.level === LogMessageLevel.ERROR"
+        >[{{ logMessage.level }}]</span> {{ logMessage.text }}</div>
+        @if (exception) {
+          <div title="{{ exception }}" class="exception"><pre>{{ exception }}</pre></div>
+        }
+      </div>
+    }
   }
 </div>

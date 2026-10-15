@@ -1,0 +1,98 @@
+.modal-body {
+  overflow-x: auto;
+}
+
+.btn-group {
+  margin-bottom: 16px;
+
+  .selected {
+    font-weight: bold;
+  }
+}
+
+.table-scroller {
+  width: 100%;
+  height: 500px;
+  margin: 0 0 16px;
+  overflow: auto;
+  border: 1px solid var(--color-table-border);
+}
+
+table {
+  width: 100%;
+  min-width: 1100px;
+  margin: 0;
+  table-layout: fixed;
+
+  thead {
+    border-bottom: 1px solid var(--color-table-border);
+
+    .date {
+      width: 170px;
+    }
+
+    .duration {
+      width: 85px;
+    }
+
+    .status {
+      width: 140px;
+    }
+
+    .type {
+      width: 230px;
+    }
+
+    .details {
+      width: 100px;
+    }
+  }
+
+  td {
+    height: 56px;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .target-text {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .details-button {
+    text-align: right;
+  }
+}
+
+.discovery-task-status.started {
+  color: var(--color-status-info);
+}
+
+.discovery-task-status.complete {
+  color: var(--color-status-success);
+}
+
+.discovery-task-status.failed {
+  color: var(--color-status-danger);
+}
+
+.discovery-task-status.interrupted {
+  color: var(--color-status-warning);
+}
+
+.pagination-container {
+  .page-label {
+    text-align: center;
+    line-height: 37px;
+  }
+
+  .next-button-container {
+    text-align: right;
+  }
+
+  pony-loading-indicator, pony-error-indicator {
+    line-height: 37px;
+  }
+}

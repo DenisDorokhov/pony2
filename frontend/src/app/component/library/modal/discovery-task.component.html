@@ -1,0 +1,51 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'discoveryTask.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  @if (loadingState === LoadingState.LOADING) {
+    <pony-loading-indicator></pony-loading-indicator>
+  }
+  @if (loadingState === LoadingState.ERROR) {
+    <pony-error-indicator></pony-error-indicator>
+  }
+  @if (discoveryTask; as task) {
+    <div class="mb-3">
+      <label class="form-label">{{ 'shared.creationDateLabel' | translate }}</label>
+      <div>{{ task.creationDate | date:('shared.dateTimeFormat' | translate) }}</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'shared.updateDateLabel' | translate }}</label>
+      <div>{{ (task.updateDate | date:('shared.dateTimeFormat' | translate)) ?? '—' }}</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryTask.statusLabel' | translate }}</label>
+      <div class="discovery-task-status"
+           [class.started]="task.status === TaskStatus.STARTED"
+           [class.complete]="task.status === TaskStatus.COMPLETE"
+           [class.failed]="task.status === TaskStatus.FAILED"
+           [class.interrupted]="task.status === TaskStatus.INTERRUPTED"
+      >{{ task.status }}</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryTask.typeLabel' | translate }}</label>
+      <div>{{ task.type }}</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryTask.parameterLabel' | translate }}</label>
+      <pre>{{ task.parameter }}</pre>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryTask.resultLabel' | translate }}</label>
+      <pre>{{ task.result ?? '—' }}</pre>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryTask.rawRequestLabel' | translate }}</label>
+      <div class="raw-message"><pre>{{ task.rawRequest ?? '—' }}</pre></div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'discoveryTask.rawResultLabel' | translate }}</label>
+      <div class="raw-message"><pre>{{ task.rawResult ?? '—' }}</pre></div>
+    </div>
+  }
+</div>

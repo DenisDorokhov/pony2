@@ -1,0 +1,39 @@
+.modal-body {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+label {
+  font-weight: bold;
+}
+
+.discovery-task-status.started {
+  color: var(--color-status-info);
+}
+
+.discovery-task-status.complete {
+  color: var(--color-status-success);
+}
+
+.discovery-task-status.failed {
+  color: var(--color-status-danger);
+}
+
+.discovery-task-status.interrupted {
+  color: var(--color-status-warning);
+}
+
+pre {
+  min-height: 43px;
+  padding-bottom: 16px;
+}
+
+.raw-message {
+  max-height: 240px;
+  overflow: auto;
+
+  pre {
+    margin-bottom: 0;
+    overflow: visible;
+  }
+}

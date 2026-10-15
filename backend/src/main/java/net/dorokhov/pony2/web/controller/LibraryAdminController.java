@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
@@ -89,6 +90,26 @@ public class LibraryAdminController implements ErrorHandlingController {
     @GetMapping("/api/admin/library/discoveryJobs/{discoveryJobId}")
     public DiscoveryJobDto getDiscoveryJob(@PathVariable String discoveryJobId) throws ObjectNotFoundException {
         return discoveryFacade.getDiscoveryJob(discoveryJobId);
+    }
+
+    @GetMapping("/api/admin/library/discoveryJobs/{discoveryJobId}/details")
+    public DiscoveryJobDetailsDto getDiscoveryJobDetails(@PathVariable String discoveryJobId) throws ObjectNotFoundException {
+        return discoveryFacade.getDiscoveryJobDetails(discoveryJobId);
+    }
+
+    @GetMapping("/api/admin/library/discoveryJobs/{discoveryJobId}/tasks")
+    public DiscoveryTaskPageDto getDiscoveryTasks(
+            @PathVariable String discoveryJobId,
+            @RequestParam(required = false) DiscoveryTaskType type,
+            @RequestParam(defaultValue = "0") int pageIndex,
+            @RequestParam(defaultValue = "30") int pageSize
+    ) throws ObjectNotFoundException {
+        return discoveryFacade.getDiscoveryTasks(discoveryJobId, type, pageIndex, pageSize);
+    }
+
+    @GetMapping("/api/admin/library/discoveryTasks/{discoveryTaskId}")
+    public DiscoveryTaskDto getDiscoveryTask(@PathVariable String discoveryTaskId) throws ObjectNotFoundException {
+        return discoveryFacade.getDiscoveryTask(discoveryTaskId);
     }
 
     @PostMapping("/api/admin/library/discoveryJobs/full")

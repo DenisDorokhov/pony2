@@ -130,6 +130,24 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public long getTaskCount(String discoveryJobId) {
+        return discoveryTaskRepository.countByJobId(discoveryJobId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DiscoveryTask> getTasks(String discoveryJobId, @Nullable DiscoveryTaskType type, Pageable pageable) {
+        return discoveryTaskRepository.findByJobIdAndType(discoveryJobId, type, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<DiscoveryTask> getTaskById(String id) {
+        return discoveryTaskRepository.findById(id);
+    }
+
+    @Override
     @Transactional
     public DiscoveryJob startFullJob() throws ConcurrentLibraryJobException {
         return startFullJob(true);

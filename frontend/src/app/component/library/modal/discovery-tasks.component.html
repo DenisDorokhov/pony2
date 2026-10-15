@@ -1,0 +1,92 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'discoveryTasks.header' | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <div ngbDropdown class="btn-group">
+    <button ngbDropdownToggle type="button" class="btn btn-light">
+      {{ taskType ?? ('discoveryTasks.allTypes' | translate) }}
+      <span class="caret"></span>
+    </button>
+    <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
+      <button ngbDropdownItem [class.selected]="!taskType" (click)="applyFilter()">{{ 'discoveryTasks.allTypes' | translate }}</button>
+      @for (type of taskTypes; track type) {
+        <button ngbDropdownItem [class.selected]="taskType === type" (click)="applyFilter(type)">{{ type }}</button>
+      }
+    </ul>
+  </div>
+
+  <div #scroller class="table-scroller">
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th scope="col" class="target">{{ 'discoveryTasks.targetColumn' | translate }}</th>
+        <th scope="col" class="date">{{ 'discoveryTasks.creationDateColumn' | translate }}</th>
+        <th scope="col" class="duration">{{ 'discoveryTasks.durationColumn' | translate }}</th>
+        <th scope="col" class="status">{{ 'discoveryTasks.statusColumn' | translate }}</th>
+        <th scope="col" class="type">{{ 'discoveryTasks.typeColumn' | translate }}</th>
+        <th scope="col" class="details"></th>
+      </tr>
+      </thead>
+      <tbody>
+        @for (task of discoveryTasks; track task.id) {
+          <tr>
+            <td>
+              <span class="target-text" [title]="task.target">
+                @if (task.artist; as artist) {
+                  <a href="javascript:void(0);" (click)="goToArtist(artist)">{{ artist.name | ponyUnknownArtist }}</a>
+                  @if (task.album; as album) {
+                    - <a href="javascript:void(0);" (click)="goToAlbum(album, artist)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
+                  }
+                } @else {
+                  {{ task.target }}
+                }
+              </span>
+            </td>
+            <td>{{ task.creationDate | date:('shared.dateTimeFormat' | translate) }}</td>
+            <td>{{ task.durationText }}</td>
+            <td><span class="discovery-task-status"
+                      [class.started]="task.status === TaskStatus.STARTED"
+                      [class.complete]="task.status === TaskStatus.COMPLETE"
+                      [class.failed]="task.status === TaskStatus.FAILED"
+                      [class.interrupted]="task.status === TaskStatus.INTERRUPTED"
+            >{{ task.status }}</span></td>
+            <td>{{ task.type }}</td>
+            <td class="details-button">
+              <button type="button" class="btn btn-outline-dark" (click)="showDetails(task)">{{ 'discoveryTasks.detailsButton' | translate }}</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row pagination-container">
+    <div class="col prev-button-container">
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.previousPageButton' | translate"
+              [disabled]="(page?.pageIndex ?? 0) === 0"
+              (click)="loadPreviousPage()"></button>
+    </div>
+    <div class="col">
+      @if (loadingState === LoadingState.LOADING) {
+        <pony-loading-indicator></pony-loading-indicator>
+      }
+      @if (loadingState === LoadingState.ERROR) {
+        <pony-error-indicator></pony-error-indicator>
+      }
+      <div class="page-label" [hidden]="loadingState !== LoadingState.LOADED">
+        {{ 'shared.currentPageLabel' | translate:{
+          pageIndex: ((page?.pageIndex ?? 0) + 1),
+          totalPages: (page?.totalPages ?? 0)
+        } }}
+      </div>
+    </div>
+    <div class="col next-button-container">
+      <button type="button" class="btn btn-outline-dark"
+              [innerHtml]="'shared.nextPageButton' | translate"
+              [disabled]="(page?.pageIndex ?? 0) >= ((page?.totalPages ?? 0) - 1)"
+              (click)="loadNextPage()"></button>
+    </div>
+  </div>
+</div>

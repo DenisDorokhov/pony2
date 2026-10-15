@@ -35,6 +35,16 @@ export function formatDuration(durationSeconds: number, translateService: Transl
   return parts.join(' ');
 }
 
+export function formatCompactDuration(durationSeconds: number, translateService: TranslateService) {
+  if (durationSeconds >= 3600) {
+    return translateService.instant('shared.difference.hours', {value: Math.floor(durationSeconds / 3600)});
+  } else if (durationSeconds >= 60) {
+    return translateService.instant('shared.difference.minutes', {value: Math.floor(durationSeconds / 60)});
+  } else {
+    return translateService.instant('shared.difference.seconds', {value: Math.floor(durationSeconds)});
+  }
+}
+
 export function formatTimeDifference(differenceSeconds: number, translateService: TranslateService) {
   const years = Math.floor(differenceSeconds / (3600*24*365));
   const months = Math.floor(differenceSeconds / (3600*24*30));

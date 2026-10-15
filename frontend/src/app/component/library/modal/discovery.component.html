@@ -103,7 +103,6 @@
           <td><span class="log-message">{{ discoveryJob.logMessage?.text }}</span></td>
           <td class="details-button">
             <button type="button" class="btn btn-outline-dark"
-                    [disabled]="discoveryJob.status === DiscoveryJobStatus.STARTING || discoveryJob.status === DiscoveryJobStatus.STARTED"
                     (click)="showDetails(discoveryJob)">{{ 'discovery.detailsButton' | translate }}</button>
           </td>
         </tr>

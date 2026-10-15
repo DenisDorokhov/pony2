@@ -14,7 +14,15 @@ import {
   timer
 } from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
-import {DiscoveryJobDto, DiscoveryJobPageDto, DiscoveryJobProgressDto} from '../domain/library.dto';
+import {
+  DiscoveryJobDetailsDto,
+  DiscoveryJobDto,
+  DiscoveryJobPageDto,
+  DiscoveryJobProgressDto,
+  DiscoveryTaskDto,
+  DiscoveryTaskPageDto,
+  DiscoveryTaskType
+} from '../domain/library.dto';
 import {AuthenticationService} from './authentication.service';
 import {ErrorDto, OptionalResponseDto} from '../domain/common.dto';
 import {LibraryService} from './library.service';
@@ -139,6 +147,22 @@ export class LibraryDiscoveryService {
 
   getDiscoveryJob(id: string): Observable<DiscoveryJobDto> {
     return this.httpClient.get<DiscoveryJobDto>('/api/admin/library/discoveryJobs/' + id);
+  }
+
+  getDiscoveryJobDetails(id: string): Observable<DiscoveryJobDetailsDto> {
+    return this.httpClient.get<DiscoveryJobDetailsDto>(`/api/admin/library/discoveryJobs/${id}/details`);
+  }
+
+  getDiscoveryTasks(jobId: string, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
+    const params: Record<string, string | number> = {pageIndex, pageSize};
+    if (type) {
+      params['type'] = type;
+    }
+    return this.httpClient.get<DiscoveryTaskPageDto>(`/api/admin/library/discoveryJobs/${jobId}/tasks`, {params});
+  }
+
+  getDiscoveryTask(id: string): Observable<DiscoveryTaskDto> {
+    return this.httpClient.get<DiscoveryTaskDto>('/api/admin/library/discoveryTasks/' + id);
   }
 
   getDiscoveryJobProgress(id: string): Observable<DiscoveryJobProgressDto | null> {

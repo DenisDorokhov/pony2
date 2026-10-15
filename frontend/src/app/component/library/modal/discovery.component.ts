@@ -128,6 +128,6 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
 
   showDetails(discoveryJob: DiscoveryJobDto) {
     const modalRef = this.modal.open(DiscoveryJobComponent, {size: 'lg'});
-    (modalRef.componentInstance as DiscoveryJobComponent).discoveryJob = discoveryJob;
+    (modalRef.componentInstance as DiscoveryJobComponent).discoveryJobId = discoveryJob.id;
   }
 }

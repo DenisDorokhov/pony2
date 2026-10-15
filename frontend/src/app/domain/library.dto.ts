@@ -256,6 +256,54 @@ export interface DiscoveryJobPageDto extends PageDto {
   discoveryJobs: DiscoveryJobDto[];
 }
 
+export interface DiscoveryJobDetailsDto {
+  discoveryJob: DiscoveryJobDto;
+  taskCount: number;
+}
+
+export enum DiscoveryTaskType {
+  SPOTIFY_ARTIST_DATA = 'SPOTIFY_ARTIST_DATA',
+  SPOTIFY_TOP_TRACKS = 'SPOTIFY_TOP_TRACKS',
+  MUSICBRAINZ_ALBUM_DATA = 'MUSICBRAINZ_ALBUM_DATA',
+}
+
+export interface DiscoveryTaskDto {
+  id: string;
+  creationDate: string;
+  updateDate: string | undefined;
+  status: DiscoveryTaskDto.Status;
+  type: DiscoveryTaskType;
+  parameter: string;
+  result: string | undefined;
+  rawRequest: string | undefined;
+  rawResult: string | undefined;
+}
+
+export namespace DiscoveryTaskDto {
+  export enum Status {
+    STARTED = 'STARTED',
+    COMPLETE = 'COMPLETE',
+    FAILED = 'FAILED',
+    INTERRUPTED = 'INTERRUPTED',
+  }
+}
+
+export interface DiscoveryTaskSummaryDto {
+  id: string;
+  creationDate: string;
+  updateDate: string | undefined;
+  status: DiscoveryTaskDto.Status;
+  type: DiscoveryTaskType;
+  duration: number | undefined;
+  targetId: string;
+  artist: ArtistDto | undefined;
+  album: AlbumDto | undefined;
+}
+
+export interface DiscoveryTaskPageDto extends PageDto {
+  discoveryTasks: DiscoveryTaskSummaryDto[];
+}
+
 export interface LogMessagePageDto extends PageDto {
   logMessages: LogMessageDto[];
 }
