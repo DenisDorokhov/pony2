@@ -1,10 +1,13 @@
 package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData.ReleaseType;
 import net.dorokhov.pony2.api.library.service.LibraryService;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.OffsetBasedPageRequest;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +30,8 @@ public class LibraryServiceImpl implements LibraryService {
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
+    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
     private final RandomFetcher randomFetcher;
@@ -36,6 +41,8 @@ public class LibraryServiceImpl implements LibraryService {
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
+            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            AlbumDiscoveryRepository albumDiscoveryRepository,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
             RandomFetcher randomFetcher
@@ -44,6 +51,8 @@ public class LibraryServiceImpl implements LibraryService {
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
+        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
         this.randomFetcher = randomFetcher;
@@ -95,6 +104,37 @@ public class LibraryServiceImpl implements LibraryService {
     @Transactional(readOnly = true)
     public Optional<Artist> getArtistById(String id) {
         return artistRepository.findById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArtistDiscoveryData getArtistDiscoveryData(String artistId) {
+        return new ArtistDiscoveryData(artistDiscoveryIndexRepository.findByArtistId(artistId)
+                .map(ArtistDiscoveryIndex::getCountryCode).orElse(null));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AlbumDiscoveryData getAlbumDiscoveryData(String albumId) {
+        MusicBrainzAlbumData data = albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
+                .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
+        if (data == null) {
+            return new AlbumDiscoveryData(ReleaseType.UNKNOWN);
+        }
+        ReleaseType releaseType;
+        if (data.secondaryTypes().contains("Compilation")) {
+            releaseType = ReleaseType.COMPILATION;
+        } else if (data.secondaryTypes().contains("Live")) {
+            releaseType = ReleaseType.LIVE;
+        } else {
+            releaseType = switch (data.primaryType()) {
+                case "Album" -> ReleaseType.LP;
+                case "EP" -> ReleaseType.EP;
+                case "Single" -> ReleaseType.SINGLE;
+                case null, default -> ReleaseType.UNKNOWN;
+            };
+        }
+        return new AlbumDiscoveryData(releaseType);
     }
 
     @Override

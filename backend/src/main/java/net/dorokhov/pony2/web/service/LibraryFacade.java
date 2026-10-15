@@ -75,7 +75,14 @@ public class LibraryFacade {
         if (artist == null) {
             throw new ObjectNotFoundException(Artist.class, artistId);
         }
-        return ArtistSongsDto.of(artist, isAdmin());
+        boolean admin = isAdmin();
+        return ArtistSongsDto.of(
+                artist,
+                libraryService.getArtistDiscoveryData(artistId),
+                album -> AlbumSongsDto.of(
+                        album,
+                        libraryService.getAlbumDiscoveryData(album.getId()),
+                        admin));
     }
 
     @Transactional(readOnly = true)

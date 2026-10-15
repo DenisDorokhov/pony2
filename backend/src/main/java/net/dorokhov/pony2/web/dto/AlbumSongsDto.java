@@ -1,12 +1,14 @@
 package net.dorokhov.pony2.web.dto;
 
 import net.dorokhov.pony2.api.library.domain.Album;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
 
 import java.util.List;
 
 public final class AlbumSongsDto {
 
     private AlbumDto album;
+    private AlbumDiscoveryDataDto albumDiscoveryData;
     private List<SongDto> songs;
 
     public AlbumDto getAlbum() {
@@ -15,6 +17,15 @@ public final class AlbumSongsDto {
 
     public AlbumSongsDto setAlbum(AlbumDto album) {
         this.album = album;
+        return this;
+    }
+
+    public AlbumDiscoveryDataDto getAlbumDiscoveryData() {
+        return albumDiscoveryData;
+    }
+
+    public AlbumSongsDto setAlbumDiscoveryData(AlbumDiscoveryDataDto albumDiscoveryData) {
+        this.albumDiscoveryData = albumDiscoveryData;
         return this;
     }
 
@@ -27,9 +38,10 @@ public final class AlbumSongsDto {
         return this;
     }
 
-    public static AlbumSongsDto of(Album album, boolean isAdmin) {
+    public static AlbumSongsDto of(Album album, AlbumDiscoveryData albumDiscoveryData, boolean isAdmin) {
         return new AlbumSongsDto()
                 .setAlbum(AlbumDto.of(album))
+                .setAlbumDiscoveryData(AlbumDiscoveryDataDto.of(albumDiscoveryData))
                 .setSongs(album.getSongs().stream()
                         .sorted()
                         .map(song -> SongDto.of(song, isAdmin))

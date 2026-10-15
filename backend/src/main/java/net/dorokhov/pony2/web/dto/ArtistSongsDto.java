@@ -1,12 +1,16 @@
 package net.dorokhov.pony2.web.dto;
 
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
 
 import java.util.List;
+import java.util.function.Function;
 
 public final class ArtistSongsDto {
 
     private ArtistDto artist;
+    private ArtistDiscoveryDataDto artistDiscoveryData;
     private List<AlbumSongsDto> albumSongs;
 
     public ArtistDto getArtist() {
@@ -15,6 +19,15 @@ public final class ArtistSongsDto {
 
     public ArtistSongsDto setArtist(ArtistDto artist) {
         this.artist = artist;
+        return this;
+    }
+
+    public ArtistDiscoveryDataDto getArtistDiscoveryData() {
+        return artistDiscoveryData;
+    }
+
+    public ArtistSongsDto setArtistDiscoveryData(ArtistDiscoveryDataDto artistDiscoveryData) {
+        this.artistDiscoveryData = artistDiscoveryData;
         return this;
     }
 
@@ -27,12 +40,13 @@ public final class ArtistSongsDto {
         return this;
     }
 
-    public static ArtistSongsDto of(Artist artist, boolean isAdmin) {
+    public static ArtistSongsDto of(Artist artist, ArtistDiscoveryData artistDiscoveryData, Function<Album, AlbumSongsDto> albumMapper) {
         return new ArtistSongsDto()
                 .setArtist(ArtistDto.of(artist))
+                .setArtistDiscoveryData(ArtistDiscoveryDataDto.of(artistDiscoveryData))
                 .setAlbumSongs(artist.getAlbums().stream()
                         .sorted()
-                        .map(albums -> AlbumSongsDto.of(albums, isAdmin))
+                        .map(albumMapper)
                         .toList());
     }
 }

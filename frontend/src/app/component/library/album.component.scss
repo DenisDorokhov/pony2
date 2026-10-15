@@ -42,13 +42,13 @@
       border-bottom: 1px solid var(--color-content-divider);
       padding-bottom: 2px;
 
-      span, small {
+      .album-name, small {
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
       }
 
-      span {
+      .album-name {
         font-size: 24px;
         display: inline-block;
         line-height: 32px;
@@ -56,18 +56,53 @@
       }
 
       @media (0 <= width < 1060px) {
-        span {
+        .album-name {
           max-width: 350px;
         }
       }
       @media (1060px <= width < 1200px) {
-        span {
+        .album-name {
           max-width: 400px;
         }
       }
       @media (1200px <= width < 1472px) {
-        span {
+        .album-name {
           max-width: 550px;
+        }
+      }
+
+      .release-type {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 6px;
+        padding: 1.5px 3px 2.5px 2.5px;
+        border: 1px solid rgb(255 255 255 / 25%);
+        border-radius: 2px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        line-height: 1;
+        vertical-align: 11px;
+
+        &[data-release-type="LP"] {
+          background-color: #800020;
+        }
+
+        &[data-release-type="EP"] {
+          background-color: #287d3c;
+        }
+
+        &[data-release-type="SINGLE"] {
+          background-color: #666;
+        }
+
+        &[data-release-type="LIVE"] {
+          background-color: #2466a8;
+        }
+
+        &[data-release-type="COMPILATION"] {
+          background-color: #7541a0;
         }
       }
 

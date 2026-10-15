@@ -29,6 +29,13 @@ public interface AlbumDiscoveryRepository extends JpaRepository<AlbumDiscovery, 
     Optional<String> findCompletedTaskResultByAlbumIdAndJobIdAndType(String albumId, String jobId, DiscoveryTaskType taskType);
 
     @Query("""
+            SELECT t.result FROM AlbumDiscovery d JOIN d.tasks t
+            WHERE d.album.id = :albumId AND t.type = MUSICBRAINZ_ALBUM_DATA AND t.status = COMPLETE
+            ORDER BY t.creationDate DESC, t.id DESC
+            """)
+    Optional<String> findLatestCompletedMusicBrainzResultByAlbumId(String albumId, Limit limit);
+
+    @Query("""
             SELECT d FROM AlbumDiscovery d
             WHERE d.album.id = :albumId AND d.creationDate <= :maximumCreationDate
               AND d.job.status IN (COMPLETE, MODERATE)

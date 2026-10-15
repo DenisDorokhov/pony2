@@ -6,8 +6,13 @@ import net.dorokhov.pony2.InstallingIntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
+import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
+import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -17,6 +22,9 @@ import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
@@ -24,8 +32,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -48,6 +60,16 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private AlbumRepository albumRepository;
     @Autowired
     private SongRepository songRepository;
+    @Autowired
+    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    @Autowired
+    private AlbumDiscoveryRepository albumDiscoveryRepository;
+    @Autowired
+    private DiscoveryJobRepository discoveryJobRepository;
+    @Autowired
+    private DiscoveryTaskRepository discoveryTaskRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private ArtworkStorage artworkStorage;
 
@@ -234,6 +256,10 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
             checkArtistDto(artistSongs.getArtist(), artist1);
+            assertThat(artistSongs.getArtistDiscoveryData()).isNotNull();
+            assertThat(artistSongs.getArtistDiscoveryData().getCountryCode()).isNull();
+            assertThat(artistSongs.getAlbumSongs()).allSatisfy(album ->
+                    assertThat(album.getAlbumDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN));
             assertThat(artistSongs.getAlbumSongs()).satisfies(albums -> {
                 assertThat(albums).hasSize(2);
                 assertThat(albums.get(0)).satisfies(album -> {
@@ -252,6 +278,89 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     });
                 });
             });
+        });
+    }
+
+    @Test
+    public void shouldIncludeUnknownDiscoveryDataInArtistSongsResponse() {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class, artist1.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        JsonNode artistSongs = JsonConverter.fromJson(requireNonNull(response.getBody()), JsonNode.class);
+        assertThat(artistSongs.path("artistDiscoveryData").has("countryCode")).isTrue();
+        assertThat(artistSongs.path("artistDiscoveryData").path("countryCode").isNull()).isTrue();
+        assertThat(artistSongs.path("albumSongs").get(0).path("albumDiscoveryData").path("releaseType").asString()).isEqualTo("UNKNOWN");
+    }
+
+    @Test
+    public void shouldGetArtistSongsWithLatestCompletedDiscoveryData() {
+        artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex().setArtist(artist1).setCountryCode("DE"));
+        artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex().setArtist(artist2).setCountryCode("GB"));
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.FAILED));
+        LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
+        String single = JsonConverter.toJson(new MusicBrainzAlbumData("single", "Single", List.of(), null, "artist", List.of("US")));
+        String compilation = JsonConverter.toJson(new MusicBrainzAlbumData("compilation", "Album", List.of("Live", "Compilation"),
+                null, "artist", List.of("US")));
+        String ep = JsonConverter.toJson(new MusicBrainzAlbumData("ep", "EP", List.of(), null, "artist", List.of("US")));
+        DiscoveryTask older = saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
+                DiscoveryTask.Status.COMPLETE, date.minusHours(1), single);
+        jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?", Timestamp.valueOf(date.plusHours(5)), older.getId());
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, compilation);
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(1), single);
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.FAILED, date.plusHours(2), single);
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.INTERRUPTED, date.plusHours(3), single);
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.STARTED, date.plusHours(4), single);
+        saveAlbumDiscoveryTask(album1_2, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, ep);
+        saveAlbumDiscoveryTask(album2_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(5), single);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        ArtistSongsDto artistSongs = requireNonNull(response.getBody());
+        assertThat(artistSongs.getArtistDiscoveryData().getCountryCode()).isEqualTo("DE");
+        assertThat(artistSongs.getAlbumSongs()).extracting(album -> album.getAlbumDiscoveryData().getReleaseType())
+                .containsExactly(AlbumDiscoveryData.ReleaseType.COMPILATION, AlbumDiscoveryData.ReleaseType.EP);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "null")
+    public void shouldReturnUnknownWhenLatestCompletedDiscoveryResultIsEmpty(String result) {
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM).setStatus(DiscoveryJob.Status.COMPLETE));
+        LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
+        String album = JsonConverter.toJson(new MusicBrainzAlbumData("album", "Album", List.of(), null, "artist", List.of()));
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.minusHours(1), album);
+        saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, result);
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(requireNonNull(response.getBody()).getAlbumSongs()).allSatisfy(albumSongs ->
+                assertThat(albumSongs.getAlbumDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN));
+    }
+
+    private DiscoveryTask saveAlbumDiscoveryTask(Album album, DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status,
+                                                LocalDateTime creationDate, String result) {
+        return getTransactionTemplate().execute(transactionStatus -> {
+            DiscoveryTask task = discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setType(type).setStatus(status)
+                    .setParameter(JsonConverter.toJson(new DiscoveryTask.AlbumParameter(album.getId()))).setResult(result));
+            AlbumDiscovery discovery = albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId())
+                    .filter(candidate -> candidate.getJob().getId().equals(job.getId()))
+                    .orElseGet(() -> new AlbumDiscovery().setAlbum(album).setJob(job));
+            discovery.getTasks().add(task);
+            albumDiscoveryRepository.save(discovery);
+            jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", Timestamp.valueOf(creationDate), task.getId());
+            return task;
         });
     }
 

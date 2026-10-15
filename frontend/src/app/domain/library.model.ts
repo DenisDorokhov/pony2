@@ -1,7 +1,9 @@
 import {
+  AlbumDiscoveryDataDto,
   AlbumDto,
   AlbumSongsDto,
   ArtistDto,
+  ArtistDiscoveryDataDto,
   ArtistSongsDto,
   GenreDto,
   PlaybackHistoryDto,
@@ -173,10 +175,12 @@ export class Album {
 export class AlbumSongs {
 
   album: Album;
+  albumDiscoveryData: AlbumDiscoveryDataDto;
   songs: Song[];
 
   constructor(albumSongsDto: AlbumSongsDto, artist: Artist) {
     this.album = new Album(albumSongsDto.album, artist);
+    this.albumDiscoveryData = albumSongsDto.albumDiscoveryData;
     this.songs = albumSongsDto.songs
       .map(songDto => new Song(songDto, this.album));
   }
@@ -267,10 +271,12 @@ export class Artist {
 export class ArtistSongs {
 
   artist: Artist;
+  artistDiscoveryData: ArtistDiscoveryDataDto;
   albumSongs: AlbumSongs[];
 
   constructor(artistSongsDto: ArtistSongsDto) {
     this.artist = new Artist(artistSongsDto.artist);
+    this.artistDiscoveryData = artistSongsDto.artistDiscoveryData;
     this.albumSongs = artistSongsDto.albumSongs
       .map(albumSongsDto => new AlbumSongs(albumSongsDto, this.artist));
   }

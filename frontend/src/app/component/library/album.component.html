@@ -15,7 +15,12 @@
       (albumSongs.album.year ? ' [' + albumSongs.album.year + ']' : '') + '\n' +
       ('library.album.sizeLabel' | translate:{ songCount: albumSongs.songs.length, duration })
     }}">
-      <span>{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
+      <span class="album-name">{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
+      @if (albumSongs.albumDiscoveryData.releaseType !== ReleaseType.UNKNOWN) {
+        <span class="release-type" [attr.data-release-type]="albumSongs.albumDiscoveryData.releaseType">{{
+          albumSongs.albumDiscoveryData.releaseType === ReleaseType.COMPILATION ? 'COMP' : albumSongs.albumDiscoveryData.releaseType
+        }}</span>
+      }
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
       <div ngbDropdown class="options" container="body">
         <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>

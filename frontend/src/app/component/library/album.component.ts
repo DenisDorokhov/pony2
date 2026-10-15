@@ -33,7 +33,7 @@ import {formatDuration} from '../../utils/format.utils';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {InstallationService} from '../../service/installation.service';
-import {PlaylistDto} from '../../domain/library.dto';
+import {AlbumDiscoveryDataDto, PlaylistDto} from '../../domain/library.dto';
 import {PlaylistService} from '../../service/playlist.service';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
@@ -88,6 +88,8 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   private readonly rootElement = inject(ElementRef);
 
   @Input() albumSongs!: AlbumSongs;
+
+  ReleaseType = AlbumDiscoveryDataDto.ReleaseType;
 
   @Output() switchQueueRequested = new EventEmitter<Song>();
 

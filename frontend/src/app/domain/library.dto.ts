@@ -13,7 +13,23 @@ export interface AlbumDto {
 
 export interface AlbumSongsDto {
   album: AlbumDto;
+  albumDiscoveryData: AlbumDiscoveryDataDto;
   songs: SongDto[];
+}
+
+export interface AlbumDiscoveryDataDto {
+  releaseType: AlbumDiscoveryDataDto.ReleaseType;
+}
+
+export namespace AlbumDiscoveryDataDto {
+  export enum ReleaseType {
+    LP = 'LP',
+    EP = 'EP',
+    SINGLE = 'SINGLE',
+    LIVE = 'LIVE',
+    COMPILATION = 'COMPILATION',
+    UNKNOWN = 'UNKNOWN',
+  }
 }
 
 export interface ArtistDto {
@@ -27,7 +43,12 @@ export interface ArtistDto {
 
 export interface ArtistSongsDto {
   artist: ArtistDto;
+  artistDiscoveryData: ArtistDiscoveryDataDto;
   albumSongs: AlbumSongsDto[];
+}
+
+export interface ArtistDiscoveryDataDto {
+  countryCode: string | null;
 }
 
 export interface SongDto {

@@ -24,6 +24,7 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import {ArtistLikesComponent} from './modal/artist-likes.component';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
+import countryFlags from 'flag-icons/country.json';
 
 @Component({
   imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
@@ -48,6 +49,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   artistSongs!: ArtistSongs;
   genreNames: string[] = [];
   genreNamesAsString = '';
+  countryFlagCode: string | undefined;
   sortingOrder: AlbumSortingOrder | undefined = undefined;
 
   albumCount = 0;
@@ -146,6 +148,8 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.albumCount = 0;
           this.songCount = 0;
           this.artistSongs = artistSongs;
+          const countryCode = artistSongs.artistDiscoveryData.countryCode?.trim().toLowerCase();
+          this.countryFlagCode = countryFlags.some(country => country.code !== 'xx' && country.code === countryCode) ? countryCode : undefined;
           this.genreNames = this.artistSongs.artist.genres.map(genre => {
             if (genre.name) {
               return genre.name;

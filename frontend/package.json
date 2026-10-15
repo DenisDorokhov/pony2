@@ -28,6 +28,7 @@
     "bootstrap": "5.3.3",
     "bootstrap-icons": "1.11.3",
     "file-saver": "2.0.5",
+    "flag-icons": "7.5.0",
     "howler": "2.2.4",
     "ngx-cookie": "6.0.1",
     "ngx-toastr": "20.0.5",
