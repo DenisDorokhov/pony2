@@ -16,7 +16,7 @@ import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -110,7 +110,7 @@ public class SpotifyArtistDataService {
                     throw e;
                 }
                 logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}': {}", artistId, e.getMessage());
-                throw new FollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
+                throw new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
             }
         });
         logger.debug("Spotify discovery result for artist '{}': {}.", artistId, result);

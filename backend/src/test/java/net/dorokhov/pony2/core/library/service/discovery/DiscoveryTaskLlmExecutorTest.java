@@ -3,12 +3,14 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +65,7 @@ class DiscoveryTaskLlmExecutorTest {
     @Mock private ChatModel model;
     @Mock private DiscoveryCacheService cacheService;
     @Mock private DiscoveryTaskRepository taskRepository;
+    @Mock private LogService logService;
 
     private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
     private final ShutdownService shutdownService = new ShutdownService();
@@ -91,7 +94,7 @@ class DiscoveryTaskLlmExecutorTest {
         discoveryClient = new DiscoveryChatClient(customizer -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService, taskRepository,
-                jobSynchronizer, shutdownService, transactionManager(), 3);
+                logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1);
     }
 
     @AfterEach
@@ -157,7 +160,7 @@ class DiscoveryTaskLlmExecutorTest {
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient(customizer -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
-                taskRepository, jobSynchronizer, shutdownService, transactionManager(), 3);
+                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1);
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -209,13 +212,204 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(cache).hasSize(1);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"<tool_call>", "Collected data\n<tool_call>\n<function=browser_close>\n</function>\n</tool_call>"})
+    void shouldRestartCallChainOnToolCallHallucination(String hallucinatedResponse) {
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("browser_navigate").description("Open Spotify").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
+        ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
+        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient(customizer -> client,
+                jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
+                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1);
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            prompts.add(prompt);
+            return switch (prompts.size()) {
+                case 1 -> new ChatResponse(List.of(new Generation(AssistantMessage.builder()
+                        .toolCalls(List.of(new AssistantMessage.ToolCall("call-1", "function", "browser_navigate", "{}")))
+                        .build())));
+                case 2 -> response(hallucinatedResponse);
+                case 3 -> response("Collected artist data");
+                default -> response("{\"answer\":\"Collected artist data\"}");
+            };
+        });
+        DiscoveryTask task = task();
+
+        assertThat(operation.call(task, new ToolRequest("auto"), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isEqualTo("{\"answer\":\"Collected artist data\"}");
+
+        assertThat(prompts).hasSize(4);
+        assertThat(prompts.get(1).getInstructions()).anyMatch(ToolResponseMessage.class::isInstance);
+        assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
+                .containsExactlyElementsOf(prompts.getFirst().getInstructions().stream().map(Message::getText).toList());
+        assertThat(prompts.get(2).getInstructions()).noneMatch(ToolResponseMessage.class::isInstance);
+        assertThat(prompts.getLast().getInstructions().getLast().getText()).isEqualTo("Collected artist data");
+        assertThat(cache).hasSize(1);
+        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
+                eq(task.getId()), eq(task.getType()));
+        verifyNoMoreInteractions(logService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldFailAfterSecondToolCallHallucination(boolean afterFollowUp) {
+        List<ChatResponse> modelResponses = new ArrayList<>(afterFollowUp
+                ? List.of(response("Collected data"), response("Rejected answer"), response("<tool_call>"),
+                        response("Collected data again"), response("Rejected answer again"), response("<tool_call>"))
+                : List.of(response("<tool_call>"), response("<tool_call>")));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            prompts.add(invocation.getArgument(0));
+            return modelResponses.removeFirst();
+        });
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+        })).isInstanceOf(LlmHallucinationException.class)
+                .hasMessage("Model tool call hallucination detected in the LLM data collection response.");
+
+        verify(model, times(afterFollowUp ? 6 : 2)).call(any(Prompt.class));
+        assertThat(cache).isEmpty();
+        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
+                eq(task.getId()), eq(task.getType()));
+        verify(logService).error(any(), startsWith("Model hallucination detected, call chain restart limit exhausted."),
+                eq(task.getId()), eq(task.getType()));
+        verifyNoMoreInteractions(logService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"'', 1", "0, 0", "1, 1", "3, 3"})
+    void shouldUseDefaultOrConfiguredHallucinationRestartLimit(String configuredRestarts, int expectedRestarts) {
+        when(model.call(any(Prompt.class))).thenReturn(response("<tool_call>"));
+        ApplicationContextRunner runner = new ApplicationContextRunner()
+                .withUserConfiguration(DiscoveryTaskLlmExecutor.class)
+                .withBean(DiscoveryChatClient.class, () -> discoveryClient)
+                .withBean(DiscoveryCacheService.class, () -> cacheService)
+                .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
+                .withBean(LogService.class, () -> logService)
+                .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
+                .withBean(ShutdownService.class, () -> shutdownService)
+                .withBean(PlatformTransactionManager.class, () -> transactionManager());
+        if (!configuredRestarts.isEmpty()) {
+            runner = runner.withPropertyValues("pony.discovery.llm.restartsOnHallucination=" + configuredRestarts);
+        }
+
+        runner.run(context -> {
+            DiscoveryTaskLlmExecutor executor = context.getBean(DiscoveryTaskLlmExecutor.class);
+            DiscoveryTask task = task();
+
+            assertThatThrownBy(() -> executor.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                    .isInstanceOf(LlmHallucinationException.class)
+                    .hasMessage("Model tool call hallucination detected in the LLM data collection response.");
+
+            verify(model, times(expectedRestarts + 1)).call(any(Prompt.class));
+            verify(logService, times(expectedRestarts)).warn(any(),
+                    startsWith("Model hallucination detected, restarting the call chain."), eq(task.getId()), eq(task.getType()));
+            verify(logService).error(any(), startsWith("Model hallucination detected, call chain restart limit exhausted."),
+                    eq(task.getId()), eq(task.getType()));
+            assertThat(cache).isEmpty();
+        });
+    }
+
+    @Test
+    void shouldPropagateResponseHandlerHallucinationAfterRestartLimit() {
+        DiscoveryTask task = task();
+        LlmHallucinationException hallucination = new LlmHallucinationException("The response contains an invented artist.");
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            throw hallucination;
+        })).isSameAs(hallucination);
+
+        verify(model, times(4)).call(any(Prompt.class));
+        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
+                eq(task.getId()), eq(task.getType()));
+        verify(logService).error(any(), startsWith("Model hallucination detected, call chain restart limit exhausted."),
+                eq(task.getId()), eq(task.getType()));
+        assertThat(cache).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldRestartOriginalRequestWhenResponseHandlerDetectsHallucination(boolean afterFollowUp) {
+        DiscoveryTask task = task();
+        DialogueRequest request = searchRequest();
+        String result = operation.call(task, request, AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            if (afterFollowUp && answer.equals("answer 1")) {
+                throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            }
+            if (answer.equals(afterFollowUp ? "answer 2" : "answer 1")) {
+                throw new LlmHallucinationException("The response contains an invented artist.");
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo(afterFollowUp ? "answer 3" : "answer 2");
+        int restartedPromptIndex = afterFollowUp ? 4 : 2;
+        assertThat(prompts).hasSize(restartedPromptIndex + 2);
+        assertThat(prompts.get(restartedPromptIndex).getInstructions()).extracting(Message::getText)
+                .containsExactlyElementsOf(prompts.getFirst().getInstructions().stream().map(Message::getText).toList());
+        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
+                eq(task.getId()), eq(task.getType()));
+        verifyNoMoreInteractions(logService);
+        assertThat(cache).hasSize(1);
+        assertThat(operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(result);
+        verify(model, times(restartedPromptIndex + 2)).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldRestartOriginalRequestAfterHallucinatedFollowUp() {
+        List<ChatResponse> modelResponses = new ArrayList<>(List.of(
+                response("Collected data"), response("Rejected answer"), response("<tool_call>"),
+                response("Recovered data"), response("Accepted answer")));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            prompts.add(invocation.getArgument(0));
+            return modelResponses.removeFirst();
+        });
+        DialogueRequest request = searchRequest();
+
+        String result = operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            if (answer.equals("Rejected answer")) {
+                throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo("Accepted answer");
+
+        assertThat(prompts).hasSize(5);
+        assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
+                .contains("Rejected answer", "Verify this answer");
+        assertThat(prompts.get(3).getInstructions()).extracting(Message::getText)
+                .containsExactlyElementsOf(prompts.getFirst().getInstructions().stream().map(Message::getText).toList());
+        verify(cacheService, times(2)).get(eq(SPOTIFY), anyString(), eq(1));
+        assertThat(operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isEqualTo("Accepted answer");
+        verify(model, times(5)).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldNotRestartForToolCallMarkerInFormattedResponse() {
+        String formattedResponse = "{\"answer\":\"<tool_call>\"}";
+        when(model.call(any(Prompt.class)))
+                .thenReturn(response("Collected data"), response(formattedResponse));
+
+        assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isEqualTo(formattedResponse);
+
+        verify(model, times(2)).call(any(Prompt.class));
+        verifyNoInteractions(logService);
+    }
+
     @Test
     void shouldRepeatBothStagesAfterRejectedFormattedResponse() {
         DiscoveryTask task = task();
 
         String result = operation.call(task, new ToolRequest(null), AnswerResponse.class, CACHE_SETTINGS, answer -> {
             if (answer.equals("answer 1")) {
-                throw new FollowUpException("Recheck the artist", new IllegalStateException("Invalid response"));
+                throw new LlmFollowUpException("Recheck the artist", new IllegalStateException("Invalid response"));
             }
             return answer;
         });
@@ -410,7 +604,7 @@ class DiscoveryTaskLlmExecutorTest {
         }
         String result = operation.call(task, search, AnswerResponse.class, CACHE_SETTINGS, answer -> {
             if (answer.equals("answer 1")) {
-                throw new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+                throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
             }
             return answer;
         });
@@ -433,7 +627,7 @@ class DiscoveryTaskLlmExecutorTest {
     @Test
     void shouldStopAfterThreeAdditionalPromptsWithoutCachingRejectedResponses() {
         DiscoveryTask task = task();
-        FollowUpException rejected = new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+        LlmFollowUpException rejected = new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
 
         assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
             throw rejected;
@@ -456,7 +650,7 @@ class DiscoveryTaskLlmExecutorTest {
 
         String result = operation.call(task, request, AnswerResponse.class, CACHE_SETTINGS, answer -> {
             if (!answer.equals("answer 4")) {
-                throw new FollowUpException("Verify " + answer, new IllegalStateException("Invalid response"));
+                throw new LlmFollowUpException("Verify " + answer, new IllegalStateException("Invalid response"));
             }
             return answer;
         });
@@ -492,6 +686,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .withBean(DiscoveryChatClient.class, () -> discoveryClient)
                 .withBean(DiscoveryCacheService.class, () -> cacheService)
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
+                .withBean(LogService.class, () -> logService)
                 .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
                 .withBean(ShutdownService.class, () -> shutdownService)
                 .withBean(PlatformTransactionManager.class, () -> transactionManager());
@@ -501,7 +696,7 @@ class DiscoveryTaskLlmExecutorTest {
 
         runner.run(context -> {
             DiscoveryTaskLlmExecutor executor = context.getBean(DiscoveryTaskLlmExecutor.class);
-            FollowUpException rejected = new FollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            LlmFollowUpException rejected = new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
 
             assertThatThrownBy(() -> executor.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
                 throw rejected;

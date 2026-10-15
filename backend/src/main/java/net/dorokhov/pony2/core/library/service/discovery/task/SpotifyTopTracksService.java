@@ -14,7 +14,7 @@ import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -204,7 +204,7 @@ public class SpotifyTopTracksService {
             return error;
         }
         logService.warn(logger, "Invalid Spotify top tracks response from the LLM for artist '{}': {}", artistId, error.getMessage());
-        return new FollowUpException(verificationPrompt.formatted(JsonConverter.toJson(error.getMessage())), error);
+        return new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
     private record AlbumData(String id, @Nullable String title, @Nullable Integer year) {}

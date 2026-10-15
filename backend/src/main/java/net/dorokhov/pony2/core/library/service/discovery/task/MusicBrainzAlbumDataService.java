@@ -23,7 +23,7 @@ import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecuto
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -243,11 +243,11 @@ public class MusicBrainzAlbumDataService {
         });
     }
 
-    private FollowUpException invalidResponse(DiscoveryTask task, String selection, RuntimeException error) {
+    private LlmFollowUpException invalidResponse(DiscoveryTask task, String selection, RuntimeException error) {
         String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
         logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' during '{}': {}",
                 albumId, selection, error.getMessage());
-        return new FollowUpException(verificationPrompt.formatted(JsonConverter.toJson(error.getMessage())), error);
+        return new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
     private String context(AlbumInput input, List<String> responses, boolean forCache) {

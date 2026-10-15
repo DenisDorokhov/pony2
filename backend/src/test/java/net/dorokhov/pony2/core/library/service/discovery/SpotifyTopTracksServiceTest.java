@@ -115,7 +115,7 @@ class SpotifyTopTracksServiceTest {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient(customizer -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
-                taskRepository, jobSynchronizer, shutdownService, transactionManager(), 1);
+                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1);
         service = new SpotifyTopTracksService(executor, artistRepository, taskRepository, logService,
                 shutdownService, jobSynchronizer, transactionManager(),
                 new ClassPathResource("prompts/spotify-top-tracks-albums.txt"),

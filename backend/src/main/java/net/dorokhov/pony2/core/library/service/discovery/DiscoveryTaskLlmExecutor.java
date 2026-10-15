@@ -13,12 +13,14 @@ import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.library.service.exception.FollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
+import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -52,34 +54,41 @@ public class DiscoveryTaskLlmExecutor {
     private final DiscoveryChatClient chatClient;
     private final DiscoveryCacheService cacheService;
     private final DiscoveryTaskRepository taskRepository;
+    private final LogService logService;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ShutdownService shutdownService;
     private final TransactionTemplate transactionTemplate;
     private final int retriesOnFollowUpException;
+    private final int restartsOnHallucination;
 
     public DiscoveryTaskLlmExecutor(
             DiscoveryChatClient chatClient,
             DiscoveryCacheService cacheService,
             DiscoveryTaskRepository taskRepository,
+            LogService logService,
             LibraryJobSynchronizer jobSynchronizer,
             ShutdownService shutdownService,
             PlatformTransactionManager transactionManager,
-            @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException
+            @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException,
+            @Value("${pony.discovery.llm.restartsOnHallucination:1}") int restartsOnHallucination
     ) {
         this.chatClient = chatClient;
         this.cacheService = cacheService;
         this.taskRepository = taskRepository;
+        this.logService = logService;
         this.jobSynchronizer = jobSynchronizer;
         this.shutdownService = shutdownService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         this.retriesOnFollowUpException = retriesOnFollowUpException;
+        this.restartsOnHallucination = restartsOnHallucination;
     }
 
     /**
      * Makes a synchronous model call, or reuses its cached response. The caller supplies conversation history
      * and the response class used to generate a strict JSON schema.
      * Requests collect data first, then format only the collected answer with tools disabled.
-     * The response handler may throw FollowUpException to append a prompt and retry up to the configured limit.
+     * LlmHallucinationException restarts the call chain with the original request up to the configured limit.
+     * The response handler may throw LlmFollowUpException to append a prompt and retry up to the configured limit.
      * Raw requests and responses are appended to parallel JSON arrays before the response is processed.
      * Only an accepted response enters the cache, under the original request's key. Null cache settings disable caching.
      * Calls for the same task must be sequential; task status and the final result belong to its lifecycle.
@@ -90,7 +99,21 @@ public class DiscoveryTaskLlmExecutor {
     ) {
         interruptIfNeeded();
         String responseSchema = responseSchema(responseClass);
-        return call(task, request, responseSchema, cacheSettings, responseHandler);
+        int restarts = 0;
+        while (true) {
+            try {
+                return call(task, request, responseSchema, cacheSettings, responseHandler);
+            } catch (LlmHallucinationException e) {
+                if (restarts >= restartsOnHallucination) {
+                    logService.error(logger, "Model hallucination detected, call chain restart limit exhausted. Discovery task '{}' of type {}.",
+                            task.getId(), task.getType());
+                    throw e;
+                }
+                logService.warn(logger, "Model hallucination detected, restarting the call chain. Discovery task '{}' of type {}.",
+                        task.getId(), task.getType());
+                restarts++;
+            }
+        }
     }
 
     private <R> R call(
@@ -143,7 +166,7 @@ public class DiscoveryTaskLlmExecutor {
             try {
                 result = responseHandler.apply(response);
                 break;
-            } catch (FollowUpException e) {
+            } catch (LlmFollowUpException e) {
                 if (retries >= retriesOnFollowUpException) {
                     logger.error("Discovery task '{}' of type {}: retry limit exhausted after {} attempts.",
                             task.getId(), task.getType(), retries + 1);
@@ -185,6 +208,9 @@ public class DiscoveryTaskLlmExecutor {
         if (logger.isDebugEnabled()) {
             logger.debug("LLM data collection for discovery task '{}' of type {} completed.\n\nResponse:\n\n{}",
                     task.getId(), task.getType(), formatResponseForLog(collectedResponse));
+        }
+        if (collectedResponse.contains("<tool_call>")) {
+            throw new LlmHallucinationException("Model tool call hallucination detected in the LLM data collection response.");
         }
         List<Message> formattingMessages = List.of(
                 new SystemMessage("Convert the supplied result into a JSON object matching the JSON Schema below. "
