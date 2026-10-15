@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery.task;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -81,10 +79,8 @@ public class SpotifyTopTracksService {
         this.shutdownService = shutdownService;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        albumsPrompt = albumsPromptResource.getContentAsString(UTF_8) + "\n"
-                + new BeanOutputConverter<>(AlbumMatchesResponse.class).getFormat();
-        tracksPrompt = tracksPromptResource.getContentAsString(UTF_8) + "\n"
-                + new BeanOutputConverter<>(TrackMatchesResponse.class).getFormat();
+        albumsPrompt = albumsPromptResource.getContentAsString(UTF_8);
+        tracksPrompt = tracksPromptResource.getContentAsString(UTF_8);
         verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
     }
 
@@ -110,7 +106,7 @@ public class SpotifyTopTracksService {
             Request albumsRequest = new Request(albumsPrompt,
                     "Spotify albums (ID to title): " + JsonConverter.toJson(spotifyAlbums)
                             + "\nAlbums from the database: " + JsonConverter.toJson(albums));
-            Map<String, String> albumMatches = llmOperation.call(task, albumsRequest,
+            Map<String, String> albumMatches = llmOperation.call(task, albumsRequest, AlbumMatchesResponse.class,
                     cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_TOP_TRACKS_ALBUMS", CACHE_VERSION) : null,
                     response -> {
                         try {
@@ -131,7 +127,7 @@ public class SpotifyTopTracksService {
                     "Spotify top tracks in original order: " + JsonConverter.toJson(data.topTracks())
                             + "\nAlbum matches (Spotify ID to database ID): " + JsonConverter.toJson(albumMatches)
                             + "\nDatabase tracks grouped by album: " + JsonConverter.toJson(albumTracks));
-            return llmOperation.call(task, tracksRequest,
+            return llmOperation.call(task, tracksRequest, TrackMatchesResponse.class,
                     cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_TOP_TRACKS", CACHE_VERSION) : null,
                     response -> {
                         try {
@@ -221,12 +217,12 @@ public class SpotifyTopTracksService {
 
     private record AlbumMatch(
             String spotifyAlbumId,
-            @JsonProperty(required = true) @Schema(nullable = true) @Nullable String databaseAlbumId
+            @JsonProperty(required = true) @Nullable String databaseAlbumId
     ) {}
 
     private record TrackMatchesResponse(List<TrackMatch> trackMatches) {}
 
-    private record TrackMatch(@JsonProperty(required = true) @Schema(nullable = true) @Nullable String databaseTrackId) {}
+    private record TrackMatch(@JsonProperty(required = true) @Nullable String databaseTrackId) {}
 
     private record Request(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
         @Override

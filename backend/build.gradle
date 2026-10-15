@@ -38,6 +38,8 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-mcp-client'
     implementation 'org.springframework.ai:spring-ai-openai'
 
+    implementation 'com.github.victools:jsonschema-generator:5.0.0'
+    implementation 'com.github.victools:jsonschema-module-jackson:5.0.0'
     implementation 'org.hibernate.search:hibernate-search-mapper-orm:8.4.0.Final'
     implementation 'org.hibernate.search:hibernate-search-backend-lucene:8.4.0.Final'
     implementation 'org.apache.lucene:lucene-backward-codecs:9.12.3'

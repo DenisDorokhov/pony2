@@ -34,6 +34,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
@@ -94,11 +96,14 @@ class SpotifyArtistDataServiceTest {
             cache.put(invocation.getArgument(1), invocation.getArgument(3));
             return null;
         });
-        lenient().when(model.getOptions()).thenReturn(ToolCallingChatOptions.builder().build());
+        lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         lenient().when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
             modelCalls++;
+            if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.TEXT) {
+                return new ChatResponse(List.of(new Generation(new AssistantMessage("Collected Spotify artist data"))));
+            }
             String nextResponse = queuedResponses.isEmpty() ? response : queuedResponses.removeFirst();
             return new ChatResponse(List.of(new Generation(new AssistantMessage(nextResponse))));
         });
@@ -122,7 +127,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task(artist), true)).contains(found());
         assertThat(service.discover(task(artist), true)).contains(found());
 
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
         assertThat(prompts.getFirst().getInstructions()).anySatisfy(message ->
                 assertThat(message.getText()).contains("Playwright MCP", "browser_navigate", "open.spotify.com"));
         assertThat(((ToolCallingChatOptions) prompts.getFirst().getOptions()).getToolCallbacks())
@@ -130,11 +135,31 @@ class SpotifyArtistDataServiceTest {
         assertThat(cache).hasSize(1);
         Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
         Map<?, ?> request = (Map<?, ?>) entry.get("request");
-        assertThat(request).hasSize(3);
+        assertThat(request).hasSize(4);
         assertThat(request.get("systemPrompt")).isEqualTo(prompts.getFirst().getInstructions().getFirst().getText());
         assertThat(request.get("userPrompt")).isEqualTo(prompts.getFirst().getInstructions().get(1).getText());
         assertThat(request.get("albumTitles")).isEqualTo(List.of("Album"));
         assertThat(entry.get("response")).isEqualTo(response);
+        Map<?, ?> schema = JsonConverter.fromJson(
+                ((OpenAiChatOptions) prompts.getLast().getOptions()).getResponseFormat().getJsonSchema(), Map.class);
+        assertThat(((OpenAiChatOptions) prompts.getFirst().getOptions()).getResponseFormat().getType())
+                .isEqualTo(ResponseFormat.Type.TEXT);
+        assertThat(((OpenAiChatOptions) prompts.getLast().getOptions()).getToolChoice()).isEqualTo("none");
+        assertThat(request.get("responseSchema")).isEqualTo(schema);
+        assertThat(schema.get("additionalProperties")).isEqualTo(false);
+        assertThat((List<?>) schema.get("required")).extracting(Object::toString).containsExactlyInAnyOrder(
+                "status", "artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl");
+        Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
+        for (String field : List.of("artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl")) {
+            Map<?, ?> property = (Map<?, ?>) properties.get(field);
+            if (property.get("type") instanceof List<?> types) {
+                assertThat(types).extracting(Object::toString).contains("null");
+            } else {
+                assertThat((List<?>) property.get("anyOf")).anySatisfy(option ->
+                        assertThat(((Map<?, ?>) option).get("type")).isEqualTo("null"));
+            }
+        }
+        assertThat(prompts.getFirst().getInstructions().getFirst().getText()).doesNotContain("```", "\"$schema\"");
     }
 
     @Test
@@ -152,11 +177,11 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task(artist), false)).contains(freshResult);
 
         verifyNoInteractions(cacheService);
-        assertThat(modelCalls).isEqualTo(3);
+        assertThat(modelCalls).isEqualTo(6);
         assertThat(cache).isEqualTo(originalCache);
 
         assertThat(service.discover(task(artist), true)).contains(found());
-        assertThat(modelCalls).isEqualTo(3);
+        assertThat(modelCalls).isEqualTo(6);
     }
 
     @Test
@@ -167,7 +192,7 @@ class SpotifyArtistDataServiceTest {
 
         verifyNoInteractions(cacheService);
         assertThat(cache).isEmpty();
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
     }
 
     @Test
@@ -181,7 +206,7 @@ class SpotifyArtistDataServiceTest {
         changedService.discover(task(original), true);
 
         assertThat(cache).hasSize(3);
-        assertThat(modelCalls).isEqualTo(3);
+        assertThat(modelCalls).isEqualTo(6);
     }
 
     @Test
@@ -204,7 +229,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task, true)).contains(found());
         assertThat(service.discover(task(artist), true)).contains(found());
 
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
         assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(response);
         verifyNoInteractions(logService);
         Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
@@ -225,22 +250,23 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task, true)).contains(found());
 
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(4);
         assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2).endsWith(response);
-        Prompt verification = prompts.get(1);
-        assertThat(verification.getInstructions().subList(0, 2)).isEqualTo(prompts.getFirst().getInstructions());
+        Prompt verification = prompts.get(2);
+        assertThat(verification.getInstructions().subList(0, 2)).isEqualTo(prompts.getFirst().getInstructions().subList(0, 2));
         if (invalidResponse != null && !invalidResponse.isBlank()) {
             assertThat(verification.getInstructions().get(2)).isInstanceOf(AssistantMessage.class);
             assertThat(verification.getInstructions().get(2).getText()).isEqualTo(invalidResponse);
         }
-        assertThat(verification.getInstructions().getLast().getText()).contains("Recheck the entire answer", "all URLs");
+        String verificationPrompt = verification.getInstructions().get(verification.getInstructions().size() - 2).getText();
+        assertThat(verificationPrompt).contains("Recheck the entire answer", "all URLs");
         assertThat(((ToolCallingChatOptions) verification.getOptions()).getToolCallbacks())
                 .extracting(callback -> callback.getToolDefinition().name()).containsExactly("browser_navigate");
         verify(logService).warn(any(), contains("Invalid Spotify response"), eq(artist.getId()), anyString());
         assertThat(cache).hasSize(1);
         Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
         assertThat(entry.get("response")).isEqualTo(response);
-        assertThat(((Map<?, ?>) entry.get("request")).get("userPrompt")).isEqualTo(verification.getInstructions().getLast().getText());
+        assertThat(((Map<?, ?>) entry.get("request")).get("userPrompt")).isEqualTo(verificationPrompt);
     }
 
     @Test
@@ -249,7 +275,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist()), false)).contains(found());
 
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(4);
         verifyNoInteractions(cacheService);
     }
 
@@ -263,7 +289,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
         assertThat(cache).isEmpty();
     }
 
@@ -275,7 +301,7 @@ class SpotifyArtistDataServiceTest {
         Artist artist = artist();
         assertThatThrownBy(() -> service.discover(task(artist), true)).isInstanceOf(RuntimeException.class);
         assertThat(cache).isEmpty();
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(4);
         verify(logService, times(2)).warn(any(), contains("Invalid Spotify response"), eq(artist.getId()), anyString());
     }
 
@@ -290,7 +316,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task(artist), true)).contains(result);
 
         assertThat(cache).hasSize(1);
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
     }
 
     @Test
@@ -321,7 +347,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist), true)).contains(data);
         assertThat(service.discover(task(artist), true)).contains(data);
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
     }
 
     @Test
@@ -443,7 +469,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(prompts.getFirst().getInstructions().get(1).getText())
                 .contains("- \"Z album\" (year: 2000)\n- \"Album\" (year: 2010)");
         assertThat(cache).hasSize(1);
-        assertThat(modelCalls).isOne();
+        assertThat(modelCalls).isEqualTo(2);
     }
 
     @Test

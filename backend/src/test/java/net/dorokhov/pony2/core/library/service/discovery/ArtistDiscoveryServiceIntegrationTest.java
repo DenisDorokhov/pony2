@@ -23,7 +23,8 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.model.tool.ToolCallingChatOptions;
+import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -89,7 +90,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         configService.update(new ConfigSetUpdateCommand()
                 .setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("test"));
-        lenient().when(model.getOptions()).thenReturn(ToolCallingChatOptions.builder().build());
+        lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
     }
 
     @ParameterizedTest
@@ -104,13 +105,18 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             Prompt prompt = invocation.getArgument(0);
-            assertThat(prompt.getInstructions().get(1).getText()).contains("- \"Album\"");
             assertThat(taskRepository.findAll()).singleElement()
                     .satisfies(task -> {
                         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED);
                         RawRequest rawRequest = JsonConverter.fromJson(task.getRawRequest(), RawRequest[].class)[0];
-                        assertThat(rawRequest.systemPrompt()).isEqualTo(prompt.getInstructions().getFirst().getText());
-                        assertThat(rawRequest.userPrompt()).isEqualTo(prompt.getInstructions().get(1).getText());
+                        assertThat(rawRequest.userPrompt()).contains("- \"Album\"");
+                        if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.TEXT) {
+                            assertThat(rawRequest.systemPrompt()).isEqualTo(prompt.getInstructions().getFirst().getText());
+                            assertThat(rawRequest.userPrompt()).isEqualTo(prompt.getInstructions().get(1).getText());
+                        } else {
+                            assertThat(prompt.getInstructions()).hasSize(2);
+                            assertThat(prompt.getInstructions().getLast().getText()).isEqualTo(rawResponse);
+                        }
                         assertThat(rawRequest.albumTitles()).isEqualTo(List.of("Album"));
                         assertThat(task.getRawResult()).isEqualTo("[null]");
                     });
@@ -174,6 +180,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     void shouldUpdateSpotifyArtistIdInDiscoveryIndex() {
         Artist artist = saveArtist("Album");
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(spotifyArtistData("first-spotify-artist")),
+                chatResponse(spotifyArtistData("first-spotify-artist")),
                 chatResponse(spotifyArtistData("second-spotify-artist")));
 
         service.discover(saveJob(), artist, false, null);
@@ -383,8 +390,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             Prompt prompt = invocation.getArgument(0);
-            assertThat(prompt.getInstructions().get(1).getText())
-                    .contains("Artist name: \"Artist\"", "- \"Z album\" (year: 2000)\n- \"Album\"");
+            if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.TEXT) {
+                assertThat(prompt.getInstructions().get(1).getText())
+                        .contains("Artist name: \"Artist\"", "- \"Z album\" (year: 2000)\n- \"Album\"");
+            }
             return chatResponse(result);
         });
 
@@ -419,7 +428,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(index.getSpotifyArtistId()).isNull();
         });
         assertThat(artistDiscoveryIndexRepository.count()).isOne();
-        verify(model).call(any(Prompt.class));
+        verify(model, times(2)).call(any(Prompt.class));
     }
 
     @ParameterizedTest
@@ -433,7 +442,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         service.discover(saveJob(), saveArtist("Album"), true, null);
 
         assertEmptyTopTracks();
-        verify(model).call(any(Prompt.class));
+        verify(model, times(2)).call(any(Prompt.class));
     }
 
     @ParameterizedTest
@@ -468,10 +477,11 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         List<DiscoveryProgress> progress = new ArrayList<>();
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
-            prompts.add(invocation.getArgument(0));
+            Prompt prompt = invocation.getArgument(0);
+            prompts.add(prompt);
             assertThat(progress.getLast().getValue()).isEqualTo(
-                    DiscoveryProgress.Value.of(prompts.size() == 1 ? 0 : 1, 4));
-            if (prompts.size() > 1) {
+                    DiscoveryProgress.Value.of(prompts.size() <= 2 ? 0 : 1, 4));
+            if (prompts.size() > 2) {
                 assertThat(artistDataTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
                 assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
@@ -479,7 +489,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 assertThat(topTracksTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
             }
-            return new ChatResponse(List.of(new Generation(new AssistantMessage(responses.removeFirst()))));
+            String response = ((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.TEXT
+                    ? responses.getFirst() : responses.removeFirst();
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(response))));
         });
 
         service.discover(saveJob(), artist, cacheEnabled, progress::add);
@@ -495,9 +507,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(parameter.artistId()).isEqualTo(artist.getId());
             assertThat(parameter.spotifyArtistDataTaskId()).isEqualTo(artistDataTasks().getFirst().getId());
         });
-        assertThat(prompts).hasSize(3);
-        assertThat(prompts.get(1).getInstructions().get(1).getText()).contains(album.getId(), otherAlbum.getId());
-        assertThat(prompts.get(2).getInstructions().get(1).getText()).contains(first.getId(), second.getId()).doesNotContain(other.getId());
+        assertThat(prompts).hasSize(6);
+        assertThat(prompts.get(2).getInstructions().get(1).getText()).contains(album.getId(), otherAlbum.getId());
+        assertThat(prompts.get(4).getInstructions().get(1).getText()).contains(first.getId(), second.getId()).doesNotContain(other.getId());
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 3 : 0);
     }
 
@@ -507,11 +519,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
                 List.of(topTrack("missing", "Missing", "missing-album")), null, null, null, null);
-        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result),
-                new ChatResponse(List.of(new Generation(new AssistantMessage("""
-                        {"albumMatches":[{"spotifyAlbumId":"missing-album","databaseAlbumId":null}]}
-                        """)))),
-                new ChatResponse(List.of(new Generation(new AssistantMessage("{\"trackMatches\":[{\"databaseTrackId\":null}]}")))));
+        ChatResponse artistResponse = chatResponse(result);
+        ChatResponse albumResponse = new ChatResponse(List.of(new Generation(new AssistantMessage("""
+                {"albumMatches":[{"spotifyAlbumId":"missing-album","databaseAlbumId":null}]}
+                """))));
+        ChatResponse trackResponse = new ChatResponse(List.of(new Generation(new AssistantMessage("{\"trackMatches\":[{\"databaseTrackId\":null}]}"))));
+        when(model.call(any(Prompt.class))).thenReturn(artistResponse, artistResponse, albumResponse, albumResponse,
+                trackResponse, trackResponse);
 
         service.discover(saveJob(), artist, true, null);
 
@@ -519,7 +533,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("[null]");
         });
-        verify(model, times(3)).call(any(Prompt.class));
+        verify(model, times(6)).call(any(Prompt.class));
     }
 
     @Test
@@ -529,7 +543,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
                 List.of(topTrack("track", "Track", "spotify-album")), null, null, null, null);
-        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result)).thenAnswer(invocation -> {
+        when(model.call(any(Prompt.class))).thenReturn(chatResponse(result), chatResponse(result)).thenAnswer(invocation -> {
             jobSynchronizer.cancelDiscovery();
             return new ChatResponse(List.of(new Generation(new AssistantMessage("{}"))));
         });
@@ -546,7 +560,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getRawResult()).isEqualTo("[null]");
         });
         assertThat(cacheRepository.count()).isEqualTo(1);
-        verify(model, times(2)).call(any(Prompt.class));
+        verify(model, times(3)).call(any(Prompt.class));
     }
 
     @Test

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
@@ -30,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -102,9 +100,8 @@ public class MusicBrainzAlbumDataService {
         this.jobSynchronizer = jobSynchronizer;
         this.shutdownService = shutdownService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        String responseFormat = new BeanOutputConverter<>(IdResponse.class).getFormat();
-        this.releaseGroupPrompt = releaseGroupPrompt.getContentAsString(UTF_8) + "\n" + responseFormat;
-        this.artistPrompt = artistPrompt.getContentAsString(UTF_8) + "\n" + responseFormat;
+        this.releaseGroupPrompt = releaseGroupPrompt.getContentAsString(UTF_8);
+        this.artistPrompt = artistPrompt.getContentAsString(UTF_8);
         this.verificationPrompt = verificationPrompt.getContentAsString(UTF_8);
     }
 
@@ -230,7 +227,7 @@ public class MusicBrainzAlbumDataService {
     private String selectId(DiscoveryTask task, Request request, Set<String> candidates, String keyPrefix, boolean cacheEnabled) {
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, keyPrefix, CACHE_VERSION) : null;
-        return llmExecutor.call(task, request, cacheSettings, response -> {
+        return llmExecutor.call(task, request, IdResponse.class, cacheSettings, response -> {
             try {
                 Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
                 checkState(parsed instanceof Map<?, ?>, "The LLM response must be a JSON object containing the id field.");
@@ -308,7 +305,7 @@ public class MusicBrainzAlbumDataService {
     ) {
     }
 
-    private record IdResponse(@JsonProperty(required = true) @Schema(nullable = true) @Nullable String id) {
+    private record IdResponse(@JsonProperty(required = true) @Nullable String id) {
     }
 
     @JsonPropertyOrder({"systemPrompt", "userPrompt"})

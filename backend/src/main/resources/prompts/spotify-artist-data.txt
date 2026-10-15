@@ -14,7 +14,7 @@ release to establish the match. Copy inputTitle exactly from the supplied list a
 title exactly from Spotify. Use years, when provided, to help distinguish artists.
 If no matching artist can be established after searching, return NOT_FOUND. If
 multiple artists satisfy the evidence and cannot be distinguished, return AMBIGUOUS.
-For NOT_FOUND or AMBIGUOUS, omit every field except status. A login wall, browser
+For NOT_FOUND or AMBIGUOUS, set every field except status to null. A login wall, browser
 error, or blocked page is a technical failure: report the failure instead of NOT_FOUND.
 
 For FOUND, collect:
@@ -38,13 +38,13 @@ For FOUND, collect:
 - imageUrl: the URL of the first image in the artist's About photo gallery with
   dimensions of at least 400×300 pixels. Check dimensions using img.naturalWidth and
   img.naturalHeight. Do not analyze image contents or search for alternatives. If no
-  image qualifies, omit this field.
+  image qualifies, set this field to null.
 
 Read Spotify IDs from links or page data observed in the browser. Copy the actual
 artist, album and track page URLs. Do not construct URLs or assume a fixed URL path,
 domain, or ID format. Preserve locale segments and query parameters when present.
-Omit unavailable optional fields. Use an empty list only when the section was
-inspected and contains no items. Do not include placeholder items, duplicate IDs, or
+Always include every field. Set unavailable optional fields to null. Use an empty
+list only when the section was inspected and contains no items. Do not include placeholder items, duplicate IDs, or
 the selected artist in similarArtists. If a section is blocked or fails to load,
 report the technical failure rather than silently treating it as absent. Return only
 the JSON object matching the supplied schema, with no additional text.

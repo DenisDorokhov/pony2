@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -79,8 +78,7 @@ public class SpotifyArtistDataService {
         this.shutdownService = shutdownService;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        systemPrompt = promptResource.getContentAsString(UTF_8) + "\n"
-                + new BeanOutputConverter<>(SpotifyArtistData.class).getFormat();
+        systemPrompt = promptResource.getContentAsString(UTF_8);
         verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
     }
 
@@ -102,7 +100,7 @@ public class SpotifyArtistDataService {
         }
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(
                 SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
-        SpotifyArtistData result = llmOperation.call(task, request, cacheSettings, response -> {
+        SpotifyArtistData result = llmOperation.call(task, request, SpotifyArtistData.class, cacheSettings, response -> {
             try {
                 SpotifyArtistData data = response != null ? LlmJsonConverter.fromJson(response, SpotifyArtistData.class) : null;
                 validateResponse(data, request);
