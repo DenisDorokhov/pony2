@@ -10,8 +10,8 @@ Return ONLY one valid JSON object with exactly these fields:
 
 searchTitle:
 1. Remove clearly external technical metadata: codecs, bitrate, bit depth, sampling rate, rip source, platform/source tags, log/cue information, catalog and release identifiers, UUID/MBID/UPC/matrix labels, and carrier/disc annotations such as [Disc 1] or (CD1 of 2).
-2. Remove clearly external edition labels and bracketed release types, such as [Deluxe Edition], (2015 Remaster), [Reissue], or (EP).
-3. Preserve meaningful words, diacritics, non-Latin text, punctuation, and subdivisions such as Part 1, Vol. II, Chapter III, and Act I. Preserve Live, Demo, Acoustic, Instrumental, and Re-recording when they can distinguish recordings.
+2. Remove clearly external edition labels and bracketed release types, such as [Deluxe Edition], (2015 Remaster), [Reissue], (EP), or (Demo).
+3. Preserve meaningful words, diacritics, non-Latin text, punctuation, and subdivisions such as Part 1, Vol. II, Chapter III, and Act I. Preserve Live, Acoustic, Instrumental, and Re-recording when they can distinguish recordings.
 4. Do not remove brackets or their contents just because they are brackets. EP in EP (The Album), meaningful years/ranges, and an unusual title consisting of punctuation may be part of the title.
 5. Do not guess that the text before a dash or colon is an artist. Artist-prefix removal, if supported by a separately known artist, is handled outside this task.
 6. Preserve uncertain years, numeric prefixes, and uncertain title components in searchTitle. Search fragments may omit such components to make a candidate search less restrictive.
@@ -32,6 +32,9 @@ Examples:
 
 Input: {"albumTitle":"Memento Mori (CD1 of 2) [WAV+CUE]"}
 Output: {"searchTitle":"Memento Mori","searchFragments":[]}
+
+Input: {"albumTitle":"Midnight Echoes (Demo)"}
+Output: {"searchTitle":"Midnight Echoes","searchFragments":[]}
 
 Input: {"albumTitle":"No. 4: Black & White [FLAC]"}
 Output: {"searchTitle":"No. 4: Black & White","searchFragments":["Black & White"]}
