@@ -51,8 +51,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
@@ -63,11 +65,14 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -78,6 +83,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
@@ -94,8 +100,11 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     private static final String SEARCH_URL = "https://musicbrainz.org/ws/2/release-group?query=test&fmt=json";
     private static final String ARTIST_URL = "https://musicbrainz.org/ws/2/artist/artist?fmt=json";
+    private static final String NORMALIZED_SEARCH_URL = "https://musicbrainz.org/ws/2/release-group?query=normalized&fmt=json";
+    private static final String EMPTY_SEARCH_RESPONSE = "{\"count\":0,\"offset\":0,\"release-groups\":[]}";
 
     @Autowired private AlbumDiscoveryService albumService;
+    @Autowired private MusicBrainzAlbumDataService musicBrainzAlbumDataService;
     @Autowired private ArtistDiscoveryService artistService;
     @Autowired private FullDiscoveryService fullDiscoveryService;
     @Autowired private LibraryJobSynchronizer jobSynchronizer;
@@ -188,6 +197,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         verify(musicBrainzClient).openSession(eq("pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (first@example.com)"), any(), eq(cacheEnabled));
         verify(model, never()).call(any(Prompt.class));
+        verify(session, times(1)).searchReleaseGroups(anyString());
     }
 
     @Test
@@ -733,6 +743,345 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(task.getResult()).isEqualTo("null");
         });
         verify(model, never()).call(any(Prompt.class));
+        verify(session, times(1)).searchReleaseGroups(anyString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldNormalizeEmptySearchInTwoStagesAndPreserveHistoryAndCache(boolean cacheEnabled) throws IOException {
+        enableLlm();
+        searchAfterEmpty(groups);
+        String normalization = "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[\"Reign\"]}";
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            return response(normalization);
+        });
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+        albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+
+        ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(cacheEnabled ? 2 : 4)).call(captor.capture());
+        String systemPrompt = new ClassPathResource("prompts/musicbrainz-album-normalization.txt").getContentAsString(UTF_8);
+        for (int index = 0; index < captor.getAllValues().size(); index++) {
+            Prompt prompt = captor.getAllValues().get(index);
+            OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
+            assertThat(options.getModel()).isEqualTo("test");
+            assertThat(options.getTemperature()).isEqualTo(0.0);
+            assertThat(options.getToolChoice()).isEqualTo("none");
+            if (index % 2 == 0) {
+                assertThat(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.TEXT);
+                assertThat(prompt.getInstructions()).hasSize(3);
+                assertThat(prompt.getInstructions().getFirst().getText()).isEqualTo(systemPrompt);
+                assertThat(JsonConverter.fromJson(prompt.getInstructions().get(1).getText(), Map.class))
+                        .isEqualTo(Map.of("albumTitle", album.getName()));
+                assertThat(prompt.getInstructions().getLast().getText()).contains("Collect all data needed");
+            } else {
+                assertThat(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+                assertThat(prompt.getInstructions()).hasSize(2);
+                assertThat(prompt.getInstructions().getLast().getText()).isEqualTo(normalization);
+                Map<?, ?> schema = JsonConverter.fromJson(options.getResponseFormat().getJsonSchema(), Map.class);
+                assertThat(schema.get("required")).isEqualTo(List.of("searchTitle", "searchFragments"));
+                assertThat(schema.get("additionalProperties")).isEqualTo(false);
+                Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
+                assertThat(((Map<?, ?>) properties.get("searchTitle")).get("type")).isEqualTo("string");
+                assertThat(((Map<?, ?>) properties.get("searchFragments")).get("type")).isEqualTo("array");
+            }
+        }
+        assertThat(taskRepository.findAll()).hasSize(2).allSatisfy(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
+            Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+            assertThat(requests).hasSize(4);
+            assertThat(requests[0]).isEqualTo(SEARCH_URL);
+            assertThat(requests[1]).isInstanceOf(Map.class);
+            Map<?, ?> snapshot = (Map<?, ?>) requests[1];
+            assertThat(snapshot.get("systemPrompt")).isEqualTo(systemPrompt);
+            assertThat(snapshot.get("model")).isEqualTo("test");
+            assertThat(snapshot.get("temperature")).isEqualTo(0.0);
+            assertThat(snapshot.get("toolChoice")).isEqualTo("none");
+            assertThat(snapshot.get("responseSchema")).isInstanceOf(Map.class);
+            assertThat(requests[2]).isEqualTo(NORMALIZED_SEARCH_URL);
+            assertThat(requests[3]).isEqualTo(ARTIST_URL);
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+                    .containsExactly(EMPTY_SEARCH_RESPONSE, normalization, rawSearchResponse, rawArtistResponse);
+        });
+        verify(session, times(2)).searchReleaseGroups("artistname:\"Slayer\" AND release:\"Reign\"");
+        verify(session, times(4)).searchReleaseGroups(anyString());
+        assertThat(cacheRepository.findAll()).hasSize(cacheEnabled ? 1 : 0).allSatisfy(entry -> {
+            assertThat(entry.getRegion()).isEqualTo(MUSICBRAINZ);
+            assertThat(entry.getKey()).startsWith("MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION:");
+        });
+    }
+
+    @ParameterizedTest
+    @MethodSource("normalizationQueries")
+    void shouldBuildNormalizedQueryAndStopAfterSecondEmptySearch(String original, String title, List<String> fragments, String expected) {
+        enableLlm();
+        albumRepository.save(album.setName(original));
+        searchAfterEmpty(List.of());
+        String normalization = JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", fragments));
+        when(model.call(any(Prompt.class))).thenReturn(response(normalization));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(onlyTask().getResult()).isEqualTo("null");
+        ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
+        verify(session, times(expected == null ? 1 : 2)).searchReleaseGroups(queries.capture());
+        if (expected != null) {
+            assertThat(queries.getAllValues().getLast()).isEqualTo("artistname:\"Slayer\" AND " + expected);
+        }
+        verify(model, times(2)).call(any(Prompt.class));
+        verify(session, never()).getArtist(anyString());
+    }
+
+    private static Stream<Arguments> normalizationQueries() {
+        return Stream.of(
+                Arguments.of("Memento Mori (CD1 of 2) [WAV+CUE]", "Memento Mori", List.of(), "release:\"Memento Mori\""),
+                Arguments.of("No. 4: Black & White [FLAC]", "No. 4: Black & White", List.of("Black & White"),
+                        "(release:\"No. 4\\: Black \\& White\" OR release:\"Black \\& White\")"),
+                Arguments.of("Collecting Data MM.V.I: Spine Coated Catalyst", "Collecting Data MM.V.I: Spine Coated Catalyst",
+                        List.of("Collecting Data", "Spine Coated Catalyst"),
+                        "(release:\"Collecting Data\" AND release:\"Spine Coated Catalyst\")"),
+                Arguments.of("L'Éternité…", "L'Éternité…", List.of("L'Éternité"), "release:\"L'Éternité\""),
+                Arguments.of("Who? What! Why... [FLAC]", "Who? What! Why...", List.of("Who", "What", "Why"),
+                        "(release:\"Who\\? What\\! Why...\" OR (release:\"Who\" AND release:\"What\" AND release:\"Why\"))"),
+                Arguments.of("Dead//Alive: Vol. 1 [FLAC]", "Dead//Alive: Vol. 1", List.of("Dead", "Alive"),
+                        "(release:\"Dead\\/\\/Alive\\: Vol. 1\" OR (release:\"Dead\" AND release:\"Alive\"))"),
+                Arguments.of("EP (The Album)", "EP (The Album)", List.of(), null),
+                Arguments.of("Title", "Title", List.of("Title", "Title"), null),
+                Arguments.of("Title [FLAC]", "Title", List.of("Title", "Title"), "release:\"Title\""),
+                Arguments.of("Title", "Title: Subtitle", List.of("Title"), "release:\"Title\\: Subtitle\""),
+                Arguments.of("Title: Subtitle", "Title: Subtitle", List.of("Title", "Title", "Subtitle"),
+                        "(release:\"Title\" AND release:\"Subtitle\")"),
+                Arguments.of("No. 4: Black & White", "No. 4: Black & White", List.of("No. 4"), "release:\"No. 4\""));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidNormalizations")
+    void shouldVerifyInvalidNormalizationAndCacheOnlyAcceptedResponse(String rejected, String diagnostic) {
+        enableLlm();
+        search(List.of());
+        String accepted = "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[]}";
+        AtomicInteger calls = new AtomicInteger();
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            assertThat(cacheRepository.count()).isZero();
+            return response(calls.incrementAndGet() <= 2 ? rejected : accepted);
+        });
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class))
+                .containsExactly(rawSearchResponse, rejected, accepted);
+        assertThat(cacheRepository.findAll()).singleElement().satisfies(entry ->
+                assertThat(JsonConverter.mapFromJson(entry.getValue(), String.class, Object.class).get("response")).isEqualTo(accepted));
+        ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(4)).call(captor.capture());
+        assertThat(captor.getAllValues().get(2).getInstructions()).anySatisfy(message ->
+                assertThat(message.getText()).contains("Your previous response was invalid", diagnostic, "searchTitle", "searchFragments")
+                        .doesNotContain("Always include id"));
+        assertThat(logRepository.findAll()).anySatisfy(log ->
+                assertThat(log.getText()).contains("MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION", diagnostic));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+        verify(model, times(4)).call(any(Prompt.class));
+        verify(session, times(2)).searchReleaseGroups(anyString());
+    }
+
+    private static Stream<Arguments> invalidNormalizations() {
+        return Stream.of(
+                Arguments.of("not JSON", "Unrecognized token"),
+                Arguments.of("null", "must be a JSON object"),
+                Arguments.of("[]", "must be a JSON object"),
+                Arguments.of("{}", "exactly searchTitle and searchFragments"),
+                Arguments.of("{\"searchTitle\":\"Title\"}", "exactly searchTitle and searchFragments"),
+                Arguments.of("{\"searchFragments\":[]}", "exactly searchTitle and searchFragments"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"extra\":true}", "exactly searchTitle and searchFragments"),
+                Arguments.of("{\"searchTitle\":null,\"searchFragments\":[]}", "searchTitle must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":123,\"searchFragments\":[]}", "searchTitle must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":false,\"searchFragments\":[]}", "searchTitle must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"\",\"searchFragments\":[]}", "searchTitle must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\" \\t\",\"searchFragments\":[]}", "searchTitle must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":null}", "searchFragments must be an array"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":\"Title\"}", "searchFragments must be an array"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\"T\",\"i\",\"t\",\"l\"]}", "at most three"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[null]}", "item must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"123\",\"searchFragments\":[123]}", "item must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\"\"]}", "item must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\" \"]}", "item must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\"title\"]}", "literal contiguous substring"),
+                Arguments.of("{\"searchTitle\":\"Title: Subtitle\",\"searchFragments\":[\"Title Subtitle\"]}", "literal contiguous substring"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"model", "prompt", "title"})
+    void shouldSeparateNormalizationCacheByModelPromptAndOriginalTitle(String change) throws IOException {
+        enableLlm();
+        search(List.of());
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.JSON_SCHEMA) {
+                return response(prompt.getInstructions().getLast().getText());
+            }
+            String title = (String) JsonConverter.fromJson(prompt.getInstructions().get(1).getText(), Map.class).get("albumTitle");
+            return response(JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", List.of())));
+        });
+        String originalPrompt = new ClassPathResource("prompts/musicbrainz-album-normalization.txt").getContentAsString(UTF_8);
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+            albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+            verify(model, times(2)).call(any(Prompt.class));
+            String originalKey = cacheRepository.findAll().getFirst().getKey();
+            switch (change) {
+                case "model" -> configService.update(new ConfigSetUpdateCommand()
+                        .setLlmUrl("http://localhost:11434/v1").setLlmModel("different-model"));
+                case "prompt" -> ReflectionTestUtils.setField(musicBrainzAlbumDataService, "normalizationPrompt", originalPrompt + "\n");
+                case "title" -> albumRepository.save(album.setName("Different title"));
+                default -> throw new IllegalArgumentException(change);
+            }
+
+            albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+            verify(model, times(4)).call(any(Prompt.class));
+            assertThat(cacheRepository.findAll()).hasSize(change.equals("model") ? 1 : 2)
+                    .extracting(DiscoveryCache::getKey).doesNotHaveDuplicates();
+            assertThat(cacheRepository.findAll()).anySatisfy(entry -> assertThat(entry.getKey()).isNotEqualTo(originalKey));
+            assertThat(taskRepository.findAll()).hasSize(3)
+                    .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
+        } finally {
+            ReflectionTestUtils.setField(musicBrainzAlbumDataService, "normalizationPrompt", originalPrompt);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldFailNormalizationInsteadOfReturningNotFound(boolean invalidResponse) {
+        enableLlm();
+        search(List.of());
+        if (invalidResponse) {
+            when(model.call(any(Prompt.class))).thenReturn(response("{\"searchTitle\":123,\"searchFragments\":[]}"));
+        } else {
+            when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("Normalization unavailable"));
+        }
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(onlyTask().getResult()).contains(invalidResponse ? "searchTitle must be a non-blank string" : "Normalization unavailable");
+        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).hasSize(invalidResponse ? 5 : 2);
+        assertThat(cacheRepository.count()).isZero();
+        verify(session, times(1)).searchReleaseGroups(anyString());
+        verify(model, times(invalidResponse ? 8 : 1)).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"collection", "formatting", "search"})
+    void shouldCancelNormalizationAndAdditionalSearch(String phase) {
+        enableLlm();
+        searchAfterEmpty(groups);
+        String normalization = "{\"searchTitle\":\"Reign\",\"searchFragments\":[]}";
+        AtomicInteger calls = new AtomicInteger();
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            int call = calls.incrementAndGet();
+            if ((phase.equals("collection") && call == 1) || (phase.equals("formatting") && call == 2)) {
+                jobSynchronizer.cancelDiscovery();
+            }
+            return response(normalization);
+        });
+        if (phase.equals("search")) {
+            doAnswer(invocation -> {
+                exchangeObserver.onRequest(NORMALIZED_SEARCH_URL);
+                jobSynchronizer.cancelDiscovery();
+                throw new MusicBrainzClient.CancelledException();
+            }).when(session).searchReleaseGroups("artistname:\"Slayer\" AND release:\"Reign\"");
+        }
+
+        assertThatThrownBy(() -> albumService.discover(job(DiscoveryType.ALBUM), album, true, null))
+                .isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
+        assertThat(cacheRepository.count()).isEqualTo(phase.equals("search") ? 1 : 0);
+        verify(model, times(phase.equals("collection") ? 1 : 2)).call(any(Prompt.class));
+        verify(session, times(phase.equals("search") ? 2 : 1)).searchReleaseGroups(anyString());
+        verify(session).cancel();
+        verify(session).close();
+        verify(session, never()).getArtist(anyString());
+    }
+
+    @Test
+    void shouldSelectNewCandidatesWithOriginalAlbumAndTracksAfterNormalization() {
+        enableLlm();
+        albumRepository.save(album.setName("Reign in Blood (CD1 of 2)"));
+        Genre genre = genreRepository.save(new Genre().setName("Genre"));
+        songRepository.save(song().setName("Original track").setAlbum(album).setGenre(genre));
+        searchAfterEmpty(List.of(group("normalized-group", "Other", "Reign in Blood",
+                List.of(credit("artist", "A", null), credit("other", "B", null)))));
+        String normalization = "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[]}";
+        when(model.call(any(Prompt.class))).thenReturn(response(normalization), response(normalization),
+                response("{\"id\":\"outside-new-candidates\"}"), response("{\"id\":\"outside-new-candidates\"}"),
+                response("{\"id\":\"normalized-group\"}"), response("{\"id\":\"normalized-group\"}"),
+                response("{\"id\":\"artist\"}"));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("normalized-group");
+        assertThat(albumRepository.findById(album.getId()).orElseThrow().getName()).isEqualTo("Reign in Blood (CD1 of 2)");
+        ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(8)).call(captor.capture());
+        assertThat(captor.getAllValues().get(2).getInstructions().get(1).getText())
+                .contains("Reign in Blood (CD1 of 2)", "1986", "Slayer", "Original track", "normalized-group", EMPTY_SEARCH_RESPONSE);
+        assertThat(captor.getAllValues().get(6).getInstructions().get(1).getText())
+                .contains("Reign in Blood (CD1 of 2)", "Slayer", "normalized-group");
+        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(
+                EMPTY_SEARCH_RESPONSE, normalization, rawSearchResponse, "{\"id\":\"outside-new-candidates\"}",
+                "{\"id\":\"normalized-group\"}", "{\"id\":\"artist\"}", rawArtistResponse);
+        verify(session).getArtist("artist");
+    }
+
+    @Test
+    void shouldEscapeNormalizedQueryAndUrlEncodeUnicodeOnlyOnce() throws IOException {
+        enableLlm();
+        artistRepository.save(artist.setName("A&B / \"Группа\"\\"));
+        albumRepository.save(album.setName("Исходное \"название\" \\ [FLAC]"));
+        String title = "L'Éternité… \"B\" \\ C/D: & + - ! () {} [] ^ ~ * ? |";
+        String normalization = JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", List.of("L'Éternité")));
+        when(model.call(any(Prompt.class))).thenReturn(response(normalization));
+        ConcurrentLinkedQueue<String> queries = new ConcurrentLinkedQueue<>();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/ws/2/", exchange -> {
+            try (exchange) {
+                queries.add(URLDecoder.decode(exchange.getRequestURI().getRawQuery(), UTF_8));
+                byte[] body = EMPTY_SEARCH_RESPONSE.getBytes(UTF_8);
+                exchange.sendResponseHeaders(200, body.length);
+                exchange.getResponseBody().write(body);
+            }
+        });
+        MusicBrainzClient client = new MusicBrainzClient(cacheService,
+                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
+        when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation ->
+                client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+        server.start();
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+            assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(queries).hasSize(2);
+            assertThat(new ArrayList<>(queries).getLast()).contains(
+                    "query=artistname:\"A\\&B \\/ \\\"Группа\\\"\\\\\" AND "
+                            + "(release:\"L'Éternité… \\\"B\\\" \\\\ C\\/D\\: \\& \\+ \\- \\! \\(\\) \\{\\} \\[\\] \\^ \\~ \\* \\? \\|\" "
+                            + "OR release:\"L'Éternité\")");
+            ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+            verify(model, times(2)).call(captor.capture());
+            assertThat(JsonConverter.fromJson(captor.getAllValues().getFirst().getInstructions().get(1).getText(), Map.class))
+                    .isEqualTo(Map.of("albumTitle", album.getName()));
+        } finally {
+            client.onApplicationShutdown();
+            server.stop(0);
+        }
     }
 
     @Test
@@ -759,6 +1108,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @Test
     void shouldFailApiErrorsAndInterruptCancellation() {
+        enableLlm();
         doAnswer(invocation -> {
             exchangeObserver.onRequest(SEARCH_URL);
             throw new IllegalStateException("MusicBrainz unavailable");
@@ -778,6 +1128,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(DiscoveryProgress.Value.of(0, 1));
         assertThat(taskRepository.findByStatus(DiscoveryTask.Status.INTERRUPTED)).hasSize(1);
         verify(session).cancel();
+        verify(model, never()).call(any(Prompt.class));
     }
 
     @ParameterizedTest
@@ -785,7 +1136,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldDiscoverEveryAlbumAfterSpotifyAndKeepArtistProgress(boolean llmEnabled) {
         if (llmEnabled) {
             enableLlm();
-            when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+            notFoundResponses();
         }
         Album second = albumRepository.save(new Album().setArtist(artist).setName("Second album"));
         search(List.of());
@@ -822,7 +1173,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldReportFullDiscoveryProgressInTaskCounts(boolean llmEnabled) {
         if (llmEnabled) {
             enableLlm();
-            when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+            notFoundResponses();
         }
         albumRepository.save(new Album().setArtist(artist).setName("Second album"));
         search(List.of());
@@ -879,7 +1230,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldResumeFullDiscoveryByCompletedTaskCounts(DiscoveryJob.Status previousStatus, int artistTasks,
                                                        int albumTasks, int expectedNewTasks) {
         enableLlm();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+        notFoundResponses();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(previousStatus));
         saveDiscoveryHistory(previousJob, artistTasks, albumTasks);
         search(List.of());
@@ -899,7 +1250,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @EnumSource(value = DiscoveryTask.Status.class, names = {"STARTED", "FAILED", "INTERRUPTED"})
     void shouldCountOnlyCompleteTasksWhenResumingFullDiscovery(DiscoveryTask.Status incompleteStatus) {
         enableLlm();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+        notFoundResponses();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.INTERRUPTED));
         DiscoveryTask completedTask = task(previousJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE);
         DiscoveryTask incompleteArtistTask = task(previousJob, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, incompleteStatus);
@@ -923,7 +1274,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Test
     void shouldResumeEachAlbumIndependentlyAfterInterruption() {
         enableLlm();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+        notFoundResponses();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.INTERRUPTED));
         saveDiscoveryHistory(previousJob, 2, 1);
         Album emptyAlbum = albumRepository.save(new Album().setArtist(artist).setName("Empty discovery"));
@@ -947,7 +1298,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Test
     void shouldRetryLatestIncompleteArtistWithoutFallingBackToOlderCompleteDiscovery() {
         enableLlm();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+        notFoundResponses();
         DiscoveryJob completedJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         saveDiscoveryHistory(completedJob, 2, 1);
         ArtistDiscovery completedDiscovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
@@ -968,7 +1319,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @CsvSource({"true,false,3", "false,true,1", "true,true,3"})
     void shouldRetryOutdatedPartsOfFullDiscovery(boolean artistUpdated, boolean albumUpdated, int expectedNewTasks) {
         enableLlm();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+        notFoundResponses();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         saveDiscoveryHistory(previousJob, 2, 1);
         LocalDateTime now = LocalDateTime.now();
@@ -994,7 +1345,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @EnumSource(value = DiscoveryType.class, names = {"ARTIST", "ALBUM"})
     void shouldKeepExplicitArtistAndAlbumDiscoveriesForced(DiscoveryType type) {
         enableLlm();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"status\":\"NOT_FOUND\"}"));
+        notFoundResponses();
         search(List.of());
         DiscoveryJob previousJob = job(DiscoveryType.ARTIST);
         artistService.discover(previousJob, artist, false, null);
@@ -1308,6 +1659,19 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         }).when(session).searchReleaseGroups(anyString());
     }
 
+    private void searchAfterEmpty(List<MusicBrainzDto.ReleaseGroup> candidates) {
+        search(candidates);
+        AtomicInteger calls = new AtomicInteger();
+        doAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            boolean initial = calls.getAndIncrement() % 2 == 0;
+            String url = initial ? SEARCH_URL : NORMALIZED_SEARCH_URL;
+            exchangeObserver.onRequest(url);
+            exchangeObserver.onResponse(url, initial ? EMPTY_SEARCH_RESPONSE : rawSearchResponse);
+            return initial ? List.of() : groups;
+        }).when(session).searchReleaseGroups(anyString());
+    }
+
     private Object reverseObjectFields(Object value) {
         if (value instanceof Map<?, ?> object) {
             Map<String, Object> reversed = new LinkedHashMap<>();
@@ -1362,6 +1726,20 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     private void enableLlm() {
         configService.update(new ConfigSetUpdateCommand().setLlmUrl("http://localhost:11434/v1").setLlmModel("test"));
+    }
+
+    private void notFoundResponses() {
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.JSON_SCHEMA) {
+                return response(prompt.getInstructions().getLast().getText());
+            }
+            if (prompt.getInstructions().getFirst().getText().startsWith("You normalize untrusted album-title text")) {
+                String title = (String) JsonConverter.fromJson(prompt.getInstructions().get(1).getText(), Map.class).get("albumTitle");
+                return response(JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", List.of())));
+            }
+            return response("{\"status\":\"NOT_FOUND\"}");
+        });
     }
 
     private ChatResponse response(String value) {

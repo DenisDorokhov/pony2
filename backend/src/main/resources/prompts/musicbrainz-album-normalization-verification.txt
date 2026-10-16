@@ -1,0 +1,2 @@
+Your previous response was invalid: %s
+Review the supplied albumTitle and return only a JSON object matching the supplied schema. Include exactly searchTitle and searchFragments and correct the reported validation error. Do not return explanations or call tools.

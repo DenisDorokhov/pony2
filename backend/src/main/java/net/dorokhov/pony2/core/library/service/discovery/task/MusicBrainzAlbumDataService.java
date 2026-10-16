@@ -57,6 +57,9 @@ public class MusicBrainzAlbumDataService {
 
     private static final int CACHE_VERSION = 1;
 
+    private static final int NORMALIZATION_CACHE_VERSION = 1;
+    private static final String NORMALIZATION_CACHE_PREFIX = "MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION";
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final MusicBrainzClient client;
     private final AlbumRepository albumRepository;
@@ -69,9 +72,12 @@ public class MusicBrainzAlbumDataService {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ShutdownService shutdownService;
     private final TransactionTemplate transactionTemplate;
+
     private final String releaseGroupPrompt;
     private final String artistPrompt;
     private final String verificationPrompt;
+    private final String normalizationPrompt;
+    private final String normalizationVerificationPrompt;
 
     public MusicBrainzAlbumDataService(
             MusicBrainzClient client,
@@ -87,7 +93,9 @@ public class MusicBrainzAlbumDataService {
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/musicbrainz-release-group.txt") Resource releaseGroupPrompt,
             @Value("classpath:prompts/musicbrainz-artist.txt") Resource artistPrompt,
-            @Value("classpath:prompts/musicbrainz-verification.txt") Resource verificationPrompt
+            @Value("classpath:prompts/musicbrainz-verification.txt") Resource verificationPrompt,
+            @Value("classpath:prompts/musicbrainz-album-normalization.txt") Resource normalizationPrompt,
+            @Value("classpath:prompts/musicbrainz-album-normalization-verification.txt") Resource normalizationVerificationPrompt
     ) throws IOException {
         this.client = client;
         this.albumRepository = albumRepository;
@@ -103,6 +111,8 @@ public class MusicBrainzAlbumDataService {
         this.releaseGroupPrompt = releaseGroupPrompt.getContentAsString(UTF_8);
         this.artistPrompt = artistPrompt.getContentAsString(UTF_8);
         this.verificationPrompt = verificationPrompt.getContentAsString(UTF_8);
+        this.normalizationPrompt = normalizationPrompt.getContentAsString(UTF_8);
+        this.normalizationVerificationPrompt = normalizationVerificationPrompt.getContentAsString(UTF_8);
     }
 
     @Nullable
@@ -141,6 +151,15 @@ public class MusicBrainzAlbumDataService {
             String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(input.artistName()) + "\"";
             List<MusicBrainzDto.ReleaseGroup> groups = session.searchReleaseGroups(query);
             interruptIfNeeded();
+            if (groups.isEmpty() && configService.get().llmEnabled()) {
+                NormalizationResponse normalization = normalizeTitle(task, input.title(), cacheEnabled);
+                String normalizedQuery = normalizationQuery(input, normalization);
+                interruptIfNeeded();
+                if (normalizedQuery != null) {
+                    groups = session.searchReleaseGroups(normalizedQuery);
+                    interruptIfNeeded();
+                }
+            }
             MusicBrainzDto.ReleaseGroup group = selectReleaseGroup(task, input, groups, searchResponses, cacheEnabled);
             if (group == null) {
                 logger.debug("No unambiguous MusicBrainz release group was selected for album '{}'.", albumId);
@@ -160,6 +179,61 @@ public class MusicBrainzAlbumDataService {
         } catch (MusicBrainzClient.CancelledException e) {
             throw new DiscoveryInterruptedException();
         }
+    }
+
+    private NormalizationResponse normalizeTitle(DiscoveryTask task, String title, boolean cacheEnabled) {
+        NormalizationRequest request = new NormalizationRequest(normalizationPrompt,
+                JsonConverter.toJson(Map.of("albumTitle", title)), configService.get().llmModel(), 0.0, "none");
+        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
+                ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, NORMALIZATION_CACHE_PREFIX, NORMALIZATION_CACHE_VERSION) : null;
+        return llmExecutor.call(task, request, NormalizationResponse.class, cacheSettings, response -> {
+            try {
+                Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
+                checkState(parsed instanceof Map<?, ?>, "The normalization response must be a JSON object.");
+                Map<?, ?> data = (Map<?, ?>) parsed;
+                checkState(data.keySet().equals(Set.of("searchTitle", "searchFragments")),
+                        "The normalization response must contain exactly searchTitle and searchFragments.");
+                Object searchTitle = data.get("searchTitle");
+                checkState(searchTitle instanceof String && !((String) searchTitle).isBlank(),
+                        "searchTitle must be a non-blank string.");
+                Object searchFragments = data.get("searchFragments");
+                checkState(searchFragments instanceof List<?>, "searchFragments must be an array.");
+                List<?> fragments = (List<?>) searchFragments;
+                checkState(fragments.size() <= 3, "searchFragments must contain at most three strings.");
+                List<String> validatedFragments = new ArrayList<>();
+                for (Object fragment : fragments) {
+                    checkState(fragment instanceof String && !((String) fragment).isBlank(),
+                            "Each searchFragments item must be a non-blank string.");
+                    checkState(((String) searchTitle).contains((String) fragment),
+                            "Each searchFragments item must be a literal contiguous substring of searchTitle: %s", fragment);
+                    validatedFragments.add((String) fragment);
+                }
+                return new NormalizationResponse((String) searchTitle, validatedFragments);
+            } catch (RuntimeException e) {
+                throw invalidResponse(task, NORMALIZATION_CACHE_PREFIX, e);
+            }
+        });
+    }
+
+    @Nullable
+    private String normalizationQuery(AlbumInput input, NormalizationResponse normalization) {
+        String original = "release:\"" + escapeQuery(input.title()) + "\"";
+        String full = "release:\"" + escapeQuery(normalization.searchTitle()) + "\"";
+        List<String> fragmentClauses = normalization.searchFragments().stream().distinct()
+                .map(fragment -> "release:\"" + escapeQuery(fragment) + "\"").toList();
+        String fragments = String.join(" AND ", fragmentClauses);
+        List<String> branches = new ArrayList<>();
+        if (!full.equals(original)) {
+            branches.add(full);
+        }
+        if (!fragments.isEmpty() && !fragments.equals(original) && !fragments.equals(full)) {
+            branches.add(fragmentClauses.size() > 1 ? "(" + fragments + ")" : fragments);
+        }
+        if (branches.isEmpty()) {
+            return null;
+        }
+        String conditions = branches.size() > 1 ? "(" + String.join(" OR ", branches) + ")" : branches.getFirst();
+        return "artistname:\"" + escapeQuery(input.artistName()) + "\" AND " + conditions;
     }
 
     @Nullable
@@ -247,7 +321,8 @@ public class MusicBrainzAlbumDataService {
         String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
         logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' during '{}': {}",
                 albumId, selection, error.getMessage());
-        return new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(error.getMessage())), error);
+        String prompt = NORMALIZATION_CACHE_PREFIX.equals(selection) ? normalizationVerificationPrompt : verificationPrompt;
+        return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
     private String context(AlbumInput input, List<String> responses, boolean forCache) {
@@ -306,6 +381,21 @@ public class MusicBrainzAlbumDataService {
     }
 
     private record IdResponse(@JsonProperty(required = true) @Nullable String id) {
+    }
+
+    @JsonPropertyOrder({"searchTitle", "searchFragments"})
+    private record NormalizationResponse(String searchTitle, List<String> searchFragments) {
+    }
+
+    @JsonPropertyOrder({"systemPrompt", "userPrompt", "model", "temperature", "toolChoice"})
+    private record NormalizationRequest(
+            String systemPrompt, String userPrompt, String model, double temperature, String toolChoice
+    ) implements DiscoveryTaskLlmExecutor.Request {
+        @Override
+        public Prompt toPrompt() {
+            return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
+                    OpenAiChatOptions.builder().model(model).temperature(temperature).toolChoice(toolChoice).build());
+        }
     }
 
     @JsonPropertyOrder({"systemPrompt", "userPrompt"})

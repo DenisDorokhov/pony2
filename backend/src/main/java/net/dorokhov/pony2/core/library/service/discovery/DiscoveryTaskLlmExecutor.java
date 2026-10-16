@@ -70,7 +70,7 @@ public class DiscoveryTaskLlmExecutor {
             ShutdownService shutdownService,
             PlatformTransactionManager transactionManager,
             @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException,
-            @Value("${pony.discovery.llm.restartsOnHallucination:1}") int restartsOnHallucination
+            @Value("${pony.discovery.llm.restartsOnHallucination:3}") int restartsOnHallucination
     ) {
         this.chatClient = chatClient;
         this.cacheService = cacheService;

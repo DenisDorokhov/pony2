@@ -211,7 +211,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   protected startArtistDiscovery() {
-    this.subscriptions.push(this.libraryDiscoveryService.startArtistDiscoveryJob(this.artistSongs.artist.id, false)
+    this.subscriptions.push(this.libraryDiscoveryService.startArtistDiscoveryJob(this.artistSongs.artist.id)
       .subscribe());
   }
 

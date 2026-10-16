@@ -9,6 +9,8 @@ import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.*;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
@@ -39,6 +41,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
@@ -91,6 +95,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("test"));
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
+        MusicBrainzClient.Session session = mock(MusicBrainzClient.Session.class);
+        lenient().when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenReturn(session);
+        lenient().when(session.searchReleaseGroups(anyString())).thenAnswer(invocation -> {
+            List<MusicBrainzDto.Release> releases = albumRepository.findAll().stream()
+                    .map(album -> new MusicBrainzDto.Release(album.getId(), album.getName())).toList();
+            return List.of(new MusicBrainzDto.ReleaseGroup("group-without-artists", null, null, List.of(), null, List.of(), releases));
+        });
     }
 
     @ParameterizedTest

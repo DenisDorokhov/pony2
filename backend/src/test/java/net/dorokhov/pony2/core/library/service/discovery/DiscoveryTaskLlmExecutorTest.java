@@ -281,7 +281,7 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"'', 1", "0, 0", "1, 1", "3, 3"})
+    @CsvSource({"'', 3", "0, 0", "1, 1", "3, 3"})
     void shouldUseDefaultOrConfiguredHallucinationRestartLimit(String configuredRestarts, int expectedRestarts) {
         when(model.call(any(Prompt.class))).thenReturn(response("<tool_call>"));
         ApplicationContextRunner runner = new ApplicationContextRunner()

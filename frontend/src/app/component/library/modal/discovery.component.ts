@@ -100,7 +100,7 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
       totalPages: this.pageToLoad?.totalPages ?? 0
     };
     this.discoveryJobProgressLoadingState = LoadingState.LOADING;
-    this.libraryDiscoveryService.startFullDiscoveryJob(false).subscribe({
+    this.libraryDiscoveryService.startFullDiscoveryJob().subscribe({
       next: () => {
         this.discoveryJobProgressLoadingState = LoadingState.LOADED;
       },
