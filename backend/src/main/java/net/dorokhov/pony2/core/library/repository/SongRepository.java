@@ -41,6 +41,9 @@ public interface SongRepository extends JpaRepository<Song, String> {
 
     List<Song> findByAlbumId(String albumId, Sort sort);
 
+    @Query("SELECT s.id FROM Song s WHERE s.id IN :ids")
+    List<String> findExistingIds(List<String> ids);
+
     List<Song> findByArtistId(String artistId, Sort sort);
 
     List<Song> findByArtistId(String artistId, Pageable pageable);

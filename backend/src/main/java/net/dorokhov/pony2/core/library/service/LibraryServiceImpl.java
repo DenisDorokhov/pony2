@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData.ReleaseType;
 import net.dorokhov.pony2.api.library.service.LibraryService;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -31,6 +35,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
@@ -42,6 +47,7 @@ public class LibraryServiceImpl implements LibraryService {
             AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            ArtistDiscoveryRepository artistDiscoveryRepository,
             AlbumDiscoveryRepository albumDiscoveryRepository,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
@@ -52,6 +58,7 @@ public class LibraryServiceImpl implements LibraryService {
         this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
@@ -109,8 +116,15 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public ArtistDiscoveryData getArtistDiscoveryData(String artistId) {
+        List<String> topSongIds = artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
+                .map(json -> JsonConverter.listFromJson(json, String.class)).orElse(emptyList()).stream()
+                .filter(Objects::nonNull).toList();
+        if (!topSongIds.isEmpty()) {
+            Set<String> existingSongIds = new HashSet<>(songRepository.findExistingIds(topSongIds));
+            topSongIds = topSongIds.stream().filter(existingSongIds::contains).toList();
+        }
         return new ArtistDiscoveryData(artistDiscoveryIndexRepository.findByArtistId(artistId)
-                .map(ArtistDiscoveryIndex::getCountryCode).orElse(null));
+                .map(ArtistDiscoveryIndex::getCountryCode).orElse(null), topSongIds);
     }
 
     @Override
@@ -119,7 +133,7 @@ public class LibraryServiceImpl implements LibraryService {
         MusicBrainzAlbumData data = albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
                 .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
         if (data == null) {
-            return new AlbumDiscoveryData(ReleaseType.UNKNOWN);
+            return new AlbumDiscoveryData(ReleaseType.UNKNOWN, null);
         }
         ReleaseType releaseType;
         if (data.secondaryTypes().contains("Compilation")) {
@@ -134,7 +148,7 @@ public class LibraryServiceImpl implements LibraryService {
                 case null, default -> ReleaseType.UNKNOWN;
             };
         }
-        return new AlbumDiscoveryData(releaseType);
+        return new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate()));
     }
 
     @Override
@@ -183,6 +197,23 @@ public class LibraryServiceImpl implements LibraryService {
                 return emptyList();
             }
             return randomFetcher.fetch(request.getCount(), new RandomFetcherRepository(allArtistIds, request.getLastArtistId()));
+        }
+    }
+
+    @Nullable
+    private LocalDateTime parseReleaseDate(@Nullable String releaseDate) {
+        if (releaseDate == null || releaseDate.isBlank()) {
+            return null;
+        }
+        try {
+            String fullDate = switch (releaseDate.length()) {
+                case 4 -> releaseDate + "-01-01";
+                case 7 -> releaseDate + "-01";
+                default -> releaseDate;
+            };
+            return LocalDate.parse(fullDate).atStartOfDay();
+        } catch (DateTimeParseException e) {
+            return null;
         }
     }
 

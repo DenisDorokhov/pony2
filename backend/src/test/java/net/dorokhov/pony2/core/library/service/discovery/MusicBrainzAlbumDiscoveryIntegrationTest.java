@@ -954,22 +954,50 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         return Stream.of(
                 Arguments.of("Memento Mori (CD1 of 2) [WAV+CUE]", "Memento Mori", List.of(), "release:\"Memento Mori\""),
                 Arguments.of("No. 4: Black & White [FLAC]", "No. 4: Black & White", List.of("Black & White"),
-                        "(release:\"No. 4\\: Black \\& White\" OR release:\"Black \\& White\")"),
+                        "(release:\"No. 4\\: Black \\& White\" OR release:\"Black \\& White\" "
+                                + "OR release:\"No 4 Black White\" OR release:\"Black White\")"),
                 Arguments.of("Collecting Data MM.V.I: Spine Coated Catalyst", "Collecting Data MM.V.I: Spine Coated Catalyst",
                         List.of("Collecting Data", "Spine Coated Catalyst"),
-                        "(release:\"Collecting Data\" AND release:\"Spine Coated Catalyst\")"),
-                Arguments.of("L'Éternité…", "L'Éternité…", List.of("L'Éternité"), "release:\"L'Éternité\""),
+                        "((release:\"Collecting Data\" AND release:\"Spine Coated Catalyst\") "
+                                + "OR release:\"Collecting Data MM V I Spine Coated Catalyst\" "
+                                + "OR release:\"Collecting Data MMVI Spine Coated Catalyst\")"),
+                Arguments.of("L'Éternité…", "L'Éternité…", List.of("L'Éternité"),
+                        "(release:\"L'Éternité\" OR release:\"L Éternité\" OR release:\"LÉternité\")"),
                 Arguments.of("Who? What! Why... [FLAC]", "Who? What! Why...", List.of("Who", "What", "Why"),
-                        "(release:\"Who\\? What\\! Why...\" OR (release:\"Who\" AND release:\"What\" AND release:\"Why\"))"),
+                        "(release:\"Who\\? What\\! Why...\" OR (release:\"Who\" AND release:\"What\" AND release:\"Why\") "
+                                + "OR release:\"Who What Why\")"),
                 Arguments.of("Dead//Alive: Vol. 1 [FLAC]", "Dead//Alive: Vol. 1", List.of("Dead", "Alive"),
-                        "(release:\"Dead\\/\\/Alive\\: Vol. 1\" OR (release:\"Dead\" AND release:\"Alive\"))"),
-                Arguments.of("EP (The Album)", "EP (The Album)", List.of(), null),
+                        "(release:\"Dead\\/\\/Alive\\: Vol. 1\" OR (release:\"Dead\" AND release:\"Alive\") "
+                                + "OR release:\"Dead Alive Vol 1\" OR release:\"DeadAlive Vol 1\")"),
+                Arguments.of("EP (The Album)", "EP (The Album)", List.of(), "release:\"EP The Album\""),
                 Arguments.of("Title", "Title", List.of("Title", "Title"), null),
                 Arguments.of("Title [FLAC]", "Title", List.of("Title", "Title"), "release:\"Title\""),
-                Arguments.of("Title", "Title: Subtitle", List.of("Title"), "release:\"Title\\: Subtitle\""),
+                Arguments.of("Title", "Title: Subtitle", List.of("Title"),
+                        "(release:\"Title\\: Subtitle\" OR release:\"Title Subtitle\")"),
                 Arguments.of("Title: Subtitle", "Title: Subtitle", List.of("Title", "Title", "Subtitle"),
-                        "(release:\"Title\" AND release:\"Subtitle\")"),
-                Arguments.of("No. 4: Black & White", "No. 4: Black & White", List.of("No. 4"), "release:\"No. 4\""));
+                        "((release:\"Title\" AND release:\"Subtitle\") OR release:\"Title Subtitle\")"),
+                Arguments.of("No. 4: Black & White", "No. 4: Black & White", List.of("No. 4"),
+                        "(release:\"No. 4\" OR release:\"No 4 Black White\" OR release:\"No 4\")"),
+                Arguments.of("Submit To Self-Destruction", "Submit To Self-Destruction", List.of(),
+                        "(release:\"Submit To Self Destruction\" OR release:\"Submit To SelfDestruction\")"),
+                Arguments.of("Submit To Self-Destruction [FLAC]", "Submit To Self-Destruction", List.of(),
+                        "(release:\"Submit To Self\\-Destruction\" OR release:\"Submit To Self Destruction\" "
+                                + "OR release:\"Submit To SelfDestruction\")"),
+                Arguments.of("Alpha-Beta / Gamma.Delta [FLAC]", "Alpha-Beta / Gamma.Delta", List.of("Alpha-Beta", "Gamma.Delta"),
+                        "(release:\"Alpha\\-Beta \\/ Gamma.Delta\" OR (release:\"Alpha\\-Beta\" AND release:\"Gamma.Delta\") "
+                                + "OR release:\"Alpha Beta Gamma Delta\" OR (release:\"Alpha Beta\" AND release:\"Gamma Delta\") "
+                                + "OR release:\"AlphaBeta GammaDelta\" OR (release:\"AlphaBeta\" AND release:\"GammaDelta\"))"),
+                Arguments.of("A-B A/B", "A-B A/B", List.of("A-B", "A/B"),
+                        "((release:\"A\\-B\" AND release:\"A\\/B\") OR release:\"A B A B\" OR release:\"A B\" "
+                                + "OR release:\"AB AB\" OR release:\"AB\")"),
+                Arguments.of("Été-東京_Группа ١２", "Été-東京_Группа ١２", List.of(),
+                        "(release:\"Été 東京 Группа ١２\" OR release:\"Été東京Группа ١２\")"),
+                Arguments.of("  Submit  To  Self--Destruction!  ", "  Submit  To  Self--Destruction!  ", List.of(),
+                        "(release:\"Submit To Self Destruction\" OR release:\"Submit To SelfDestruction\")"),
+                Arguments.of("---", "---", List.of(), null),
+                Arguments.of("---", "---", List.of("-"), "release:\"\\-\""),
+                Arguments.of("Alpha & Beta", "Alpha & Beta", List.of("Alpha", "&", "Beta"),
+                        "((release:\"Alpha\" AND release:\"\\&\" AND release:\"Beta\") OR release:\"Alpha Beta\")"));
     }
 
     @ParameterizedTest
@@ -1184,7 +1212,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(new ArrayList<>(queries).getLast()).contains(
                     "query=artistname:\"A\\&B \\/ \\\"Группа\\\"\\\\\" AND "
                             + "(release:\"L'Éternité… \\\"B\\\" \\\\ C\\/D\\: \\& \\+ \\- \\! \\(\\) \\{\\} \\[\\] \\^ \\~ \\* \\? \\|\" "
-                            + "OR release:\"L'Éternité\")");
+                            + "OR release:\"L'Éternité\" OR release:\"L Éternité B C D\" OR release:\"L Éternité\" "
+                            + "OR release:\"LÉternité B CD\" OR release:\"LÉternité\")");
             ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
             verify(model, times(1)).call(captor.capture());
             assertThat(JsonConverter.fromJson(captor.getAllValues().getFirst().getInstructions().get(1).getText(), Map.class))

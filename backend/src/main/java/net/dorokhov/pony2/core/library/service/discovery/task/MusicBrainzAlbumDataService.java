@@ -44,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import static com.fasterxml.jackson.annotation.JsonFormat.Feature.WRITE_SORTED_MAP_ENTRIES;
 import static com.google.common.base.Preconditions.checkState;
@@ -214,16 +215,27 @@ public class MusicBrainzAlbumDataService {
     @Nullable
     private String normalizationQuery(AlbumInput input, NormalizationResponse normalization) {
         String original = "release:\"" + escapeQuery(input.title()) + "\"";
-        String full = "release:\"" + escapeQuery(normalization.searchTitle()) + "\"";
-        List<String> fragmentClauses = normalization.searchFragments().stream().distinct()
-                .map(fragment -> "release:\"" + escapeQuery(fragment) + "\"").toList();
-        String fragments = String.join(" AND ", fragmentClauses);
+        List<UnaryOperator<String>> normalizers = List.of(
+                UnaryOperator.identity(),
+                term -> term.replaceAll("[^\\p{L}\\p{N} ]", " ").replaceAll(" +", " ").strip(),
+                term -> term.replaceAll("[^\\p{L}\\p{N} ]", "").replaceAll(" +", " ").strip());
         List<String> branches = new ArrayList<>();
-        if (!full.equals(original)) {
-            branches.add(full);
-        }
-        if (!fragments.isEmpty() && !fragments.equals(original) && !fragments.equals(full)) {
-            branches.add(fragmentClauses.size() > 1 ? "(" + fragments + ")" : fragments);
+        for (UnaryOperator<String> normalizer : normalizers) {
+            String title = normalizer.apply(normalization.searchTitle());
+            String full = "release:\"" + escapeQuery(title) + "\"";
+            if (!title.isBlank() && !full.equals(original) && !branches.contains(full)) {
+                branches.add(full);
+            }
+            List<String> normalizedFragments = normalization.searchFragments().stream().map(normalizer).distinct().toList();
+            if (!normalizedFragments.isEmpty() && normalizedFragments.stream().noneMatch(String::isBlank)) {
+                List<String> fragmentClauses = normalizedFragments.stream()
+                        .map(fragment -> "release:\"" + escapeQuery(fragment) + "\"").toList();
+                String fragments = String.join(" AND ", fragmentClauses);
+                String branch = fragmentClauses.size() > 1 ? "(" + fragments + ")" : fragments;
+                if (!fragments.equals(original) && !branches.contains(branch)) {
+                    branches.add(branch);
+                }
+            }
         }
         if (branches.isEmpty()) {
             return null;

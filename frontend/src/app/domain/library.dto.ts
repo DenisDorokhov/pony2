@@ -19,6 +19,7 @@ export interface AlbumSongsDto {
 
 export interface AlbumDiscoveryDataDto {
   releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  releaseDate: string | undefined;
 }
 
 export namespace AlbumDiscoveryDataDto {
@@ -49,6 +50,7 @@ export interface ArtistSongsDto {
 
 export interface ArtistDiscoveryDataDto {
   countryCode: string | null;
+  topSongIds: string[];
 }
 
 export interface SongDto {

@@ -21,6 +21,13 @@ public interface ArtistDiscoveryRepository extends JpaRepository<ArtistDiscovery
     long countCompletedTasksByDiscoveryId(String discoveryId);
 
     @Query("""
+            SELECT t.result FROM ArtistDiscovery d JOIN d.tasks t
+            WHERE d.artist.id = :artistId AND t.type = SPOTIFY_TOP_TRACKS AND t.status = COMPLETE
+            ORDER BY t.creationDate DESC, t.id DESC
+            """)
+    Optional<String> findLatestCompletedSpotifyTopTracksResultByArtistId(String artistId, Limit limit);
+
+    @Query("""
             SELECT d FROM ArtistDiscovery d
             WHERE d.artist.id = :artistId AND d.creationDate <= :maximumCreationDate
               AND d.job.status IN (COMPLETE, MODERATE)

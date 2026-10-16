@@ -3,12 +3,16 @@ package net.dorokhov.pony2.core.library.service;
 import com.google.common.collect.ImmutableList;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
 import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
 import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -18,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
@@ -29,6 +34,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +62,10 @@ public class LibraryServiceImplTest {
     private ArtistGenreRepository artistGenreRepository;
     @Mock
     private AlbumDiscoveryRepository albumDiscoveryRepository;
+    @Mock
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
+    @Mock
+    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     @Mock
     private SongRepository songRepository;
     @Mock
@@ -107,11 +118,51 @@ public class LibraryServiceImplTest {
     }, delimiter = '|')
     void shouldDetermineAlbumReleaseType(String primaryType, String secondaryTypes, AlbumDiscoveryData.ReleaseType expected) {
         MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", primaryType,
-                secondaryTypes != null ? List.of(secondaryTypes.split(";")) : List.of(), null, "artist", List.of());
+                secondaryTypes != null ? List.of(secondaryTypes.split(";")) : List.of(), "1986-10-07", "artist", List.of());
         when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
-        assertThat(libraryService.getAlbumDiscoveryData("album").releaseType()).isSameAs(expected);
+        assertThat(libraryService.getAlbumDiscoveryData("album"))
+                .isEqualTo(new AlbumDiscoveryData(expected, LocalDateTime.of(1986, 10, 7, 0, 0)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1986-10-07, 1986-10-07T00:00",
+            "1986-10, 1986-10-01T00:00",
+            "1986, 1986-01-01T00:00",
+            "2000-02-29, 2000-02-29T00:00"
+    })
+    void shouldDetermineAlbumReleaseDate(String firstReleaseDate, String expected) {
+        MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of());
+        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+                .thenReturn(Optional.of(JsonConverter.toJson(data)));
+
+        assertThat(libraryService.getAlbumDiscoveryData("album").releaseDate()).isEqualTo(LocalDateTime.parse(expected));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "not a date", "1986-02-29", "1986-13", "1986-10-32", "1986-00", "1986-1", "1986-10-07T12:00"})
+    void shouldReturnNullWhenAlbumReleaseDateIsMissingOrInvalid(String firstReleaseDate) {
+        MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of());
+        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+                .thenReturn(Optional.of(JsonConverter.toJson(data)));
+
+        assertThat(libraryService.getAlbumDiscoveryData("album"))
+                .isEqualTo(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
+    }
+
+    @Test
+    void shouldReturnNullWhenAlbumReleaseDateFieldIsMissing() {
+        String result = """
+                {"releaseGroupId":"release-group","primaryType":"Album","secondaryTypes":[],"artistId":"artist","country":[]}
+                """;
+        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+                .thenReturn(Optional.of(result));
+
+        assertThat(libraryService.getAlbumDiscoveryData("album"))
+                .isEqualTo(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
     }
 
     @ParameterizedTest
@@ -121,7 +172,43 @@ public class LibraryServiceImplTest {
         when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.ofNullable(result));
 
-        assertThat(libraryService.getAlbumDiscoveryData("album").releaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN);
+        assertThat(libraryService.getAlbumDiscoveryData("album"))
+                .isEqualTo(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnExistingArtistTopSongsInOriginalOrder(boolean countryCodeAvailable) {
+        when(artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+                .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\"]"));
+        when(songRepository.findExistingIds(List.of("second", "deleted", "first"))).thenReturn(List.of("first", "second"));
+        if (countryCodeAvailable) {
+            when(artistDiscoveryIndexRepository.findByArtistId("artist"))
+                    .thenReturn(Optional.of(new ArtistDiscoveryIndex().setCountryCode("DE")));
+        }
+
+        assertThat(libraryService.getArtistDiscoveryData("artist"))
+                .isEqualTo(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first")));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"null", "[]", "[null]"})
+    void shouldReturnEmptyTopSongsWhenDiscoveryResultIsMissingOrEmpty(String result) {
+        when(artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+                .thenReturn(Optional.ofNullable(result));
+
+        assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).isEmpty();
+        verifyNoInteractions(songRepository);
+    }
+
+    @Test
+    void shouldReturnEmptyTopSongsWhenAllMatchesAreDeleted() {
+        when(artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+                .thenReturn(Optional.of("[\"deleted\"]"));
+        when(songRepository.findExistingIds(List.of("deleted"))).thenReturn(List.of());
+
+        assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).isEmpty();
     }
 
     @Test

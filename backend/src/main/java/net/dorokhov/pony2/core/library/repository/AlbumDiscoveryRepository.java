@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.repository;
 
 import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
-import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,13 +19,6 @@ public interface AlbumDiscoveryRepository extends JpaRepository<AlbumDiscovery, 
             WHERE d.id = :discoveryId AND t.status = COMPLETE
             """)
     long countCompletedTasksByDiscoveryId(String discoveryId);
-
-    @Query("""
-            SELECT t.result FROM AlbumDiscovery d JOIN d.tasks t
-            WHERE d.album.id = :albumId AND d.job.id = :jobId
-              AND t.type = :taskType AND t.status = COMPLETE
-            """)
-    Optional<String> findCompletedTaskResultByAlbumIdAndJobIdAndType(String albumId, String jobId, DiscoveryTaskType taskType);
 
     @Query("""
             SELECT t.result FROM AlbumDiscovery d JOIN d.tasks t

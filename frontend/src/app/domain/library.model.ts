@@ -172,15 +172,26 @@ export class Album {
   }
 }
 
+export class AlbumDiscoveryData {
+
+  releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  releaseDate: Date | undefined;
+
+  constructor(dto: AlbumDiscoveryDataDto) {
+    this.releaseType = dto.releaseType;
+    this.releaseDate = dto.releaseDate ? new Date(dto.releaseDate) : undefined;
+  }
+}
+
 export class AlbumSongs {
 
   album: Album;
-  albumDiscoveryData: AlbumDiscoveryDataDto;
+  albumDiscoveryData: AlbumDiscoveryData;
   songs: Song[];
 
   constructor(albumSongsDto: AlbumSongsDto, artist: Artist) {
     this.album = new Album(albumSongsDto.album, artist);
-    this.albumDiscoveryData = albumSongsDto.albumDiscoveryData;
+    this.albumDiscoveryData = new AlbumDiscoveryData(albumSongsDto.albumDiscoveryData);
     this.songs = albumSongsDto.songs
       .map(songDto => new Song(songDto, this.album));
   }
@@ -268,15 +279,26 @@ export class Artist {
   }
 }
 
+export class ArtistDiscoveryData {
+
+  countryCode: string | null;
+  topSongIds: string[];
+
+  constructor(dto: ArtistDiscoveryDataDto) {
+    this.countryCode = dto.countryCode;
+    this.topSongIds = dto.topSongIds;
+  }
+}
+
 export class ArtistSongs {
 
   artist: Artist;
-  artistDiscoveryData: ArtistDiscoveryDataDto;
+  artistDiscoveryData: ArtistDiscoveryData;
   albumSongs: AlbumSongs[];
 
   constructor(artistSongsDto: ArtistSongsDto) {
     this.artist = new Artist(artistSongsDto.artist);
-    this.artistDiscoveryData = artistSongsDto.artistDiscoveryData;
+    this.artistDiscoveryData = new ArtistDiscoveryData(artistSongsDto.artistDiscoveryData);
     this.albumSongs = artistSongsDto.albumSongs
       .map(albumSongsDto => new AlbumSongs(albumSongsDto, this.artist));
   }

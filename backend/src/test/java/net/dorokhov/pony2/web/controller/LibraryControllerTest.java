@@ -10,6 +10,7 @@ import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -62,6 +63,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private SongRepository songRepository;
     @Autowired
     private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    @Autowired
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired
     private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired
@@ -291,9 +294,15 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         JsonNode artistSongs = JsonConverter.fromJson(requireNonNull(response.getBody()), JsonNode.class);
-        assertThat(artistSongs.path("artistDiscoveryData").has("countryCode")).isTrue();
-        assertThat(artistSongs.path("artistDiscoveryData").path("countryCode").isNull()).isTrue();
-        assertThat(artistSongs.path("albumSongs").get(0).path("albumDiscoveryData").path("releaseType").asString()).isEqualTo("UNKNOWN");
+        JsonNode artistDiscoveryData = artistSongs.path("artistDiscoveryData");
+        assertThat(artistDiscoveryData.has("countryCode")).isTrue();
+        assertThat(artistDiscoveryData.path("countryCode").isNull()).isTrue();
+        assertThat(artistDiscoveryData.path("topSongIds").isArray()).isTrue();
+        assertThat(artistDiscoveryData.path("topSongIds").size()).isZero();
+        JsonNode albumDiscoveryData = artistSongs.path("albumSongs").get(0).path("albumDiscoveryData");
+        assertThat(albumDiscoveryData.path("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(albumDiscoveryData.has("releaseDate")).isFalse();
+        assertThat(albumDiscoveryData.has("topSongIds")).isFalse();
     }
 
     @Test
@@ -304,8 +313,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
         String single = JsonConverter.toJson(new MusicBrainzAlbumData("single", "Single", List.of(), null, "artist", List.of("US")));
         String compilation = JsonConverter.toJson(new MusicBrainzAlbumData("compilation", "Album", List.of("Live", "Compilation"),
-                null, "artist", List.of("US")));
-        String ep = JsonConverter.toJson(new MusicBrainzAlbumData("ep", "EP", List.of(), null, "artist", List.of("US")));
+                "1986-10", "artist", List.of("US")));
+        String ep = JsonConverter.toJson(new MusicBrainzAlbumData("ep", "EP", List.of(), "1987", "artist", List.of("US")));
         DiscoveryTask older = saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
                 DiscoveryTask.Status.COMPLETE, date.minusHours(1), single);
         jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?", Timestamp.valueOf(date.plusHours(5)), older.getId());
@@ -316,6 +325,13 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.STARTED, date.plusHours(4), single);
         saveAlbumDiscoveryTask(album1_2, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, ep);
         saveAlbumDiscoveryTask(album2_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(5), single);
+        DiscoveryTask topTracks = discoveryTaskRepository.save(new DiscoveryTask().setJob(job)
+                .setType(DiscoveryTaskType.SPOTIFY_TOP_TRACKS).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setParameter(JsonConverter.toJson(new DiscoveryTask.SpotifyTopTracksParameter(artist1.getId(), "artist-data")))
+                .setResult(JsonConverter.toJson(new String[]{song1_1_2.getId(), null, "missing", song1_2_1.getId(), song1_1_1.getId()})));
+        ArtistDiscovery artistDiscovery = new ArtistDiscovery().setArtist(artist1).setJob(job);
+        artistDiscovery.getTasks().add(topTracks);
+        artistDiscoveryRepository.save(artistDiscovery);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
@@ -325,8 +341,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         ArtistSongsDto artistSongs = requireNonNull(response.getBody());
         assertThat(artistSongs.getArtistDiscoveryData().getCountryCode()).isEqualTo("DE");
+        assertThat(artistSongs.getArtistDiscoveryData().getTopSongIds())
+                .containsExactly(song1_1_2.getId(), song1_2_1.getId(), song1_1_1.getId());
         assertThat(artistSongs.getAlbumSongs()).extracting(album -> album.getAlbumDiscoveryData().getReleaseType())
                 .containsExactly(AlbumDiscoveryData.ReleaseType.COMPILATION, AlbumDiscoveryData.ReleaseType.EP);
+        assertThat(artistSongs.getAlbumSongs()).extracting(album -> album.getAlbumDiscoveryData().getReleaseDate())
+                .containsExactly(LocalDateTime.of(1986, 10, 1, 0, 0), LocalDateTime.of(1987, 1, 1, 0, 0));
     }
 
     @ParameterizedTest
