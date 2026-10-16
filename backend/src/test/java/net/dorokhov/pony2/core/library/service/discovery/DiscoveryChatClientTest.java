@@ -316,13 +316,17 @@ class DiscoveryChatClientTest {
         ConfigService configService = mock(ConfigService.class);
         when(configService.get()).thenReturn(new ConfigSet(null, List.of(),
                 "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "test", null));
-        ChatModelImpl model = new ChatModelImpl(configService, ObservationRegistry.NOOP);
-        return new DiscoveryChatClient(customizer -> {
+        ChatModelImpl model = new ChatModelImpl(configService, ObservationRegistry.NOOP, Duration.ofMinutes(10));
+        return new DiscoveryChatClient((customizer, toolsEnabled) -> {
             beforeClientCreation.run();
-            return ChatClient.builder(model.createChatModel(builder -> {
+            ChatClient.Builder clientBuilder = ChatClient.builder(model.createChatModel(builder -> {
                 customizer.customize(builder);
                 builder.interceptor(this::observeResponseBody);
-            })).defaultTools(tools).build();
+            }));
+            if (toolsEnabled) {
+                clientBuilder.defaultTools(tools);
+            }
+            return clientBuilder.build();
         },
                 synchronizer, new DiscoveryAdvisor(new ShutdownService(), synchronizer));
     }

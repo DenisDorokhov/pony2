@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -38,6 +40,7 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
+import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -49,6 +52,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,10 +95,10 @@ class DiscoveryTaskLlmExecutorTest {
             return response("answer " + ((prompts.size() + 1) / 2));
         });
         ChatClient client = ChatClient.builder(model).build();
-        discoveryClient = new DiscoveryChatClient(customizer -> client,
+        discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService, taskRepository,
-                logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1);
+                logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
     }
 
     @AfterEach
@@ -150,6 +154,71 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(prompts).hasSize(2);
     }
 
+    @ParameterizedTest
+    @EnumSource(DiscoveryTaskType.class)
+    void shouldPreserveTaskToolsPolicyAcrossRestartsAndFollowUps(DiscoveryTaskType type) {
+        List<Boolean> toolsEnabledValues = new ArrayList<>();
+        ChatClient client = ChatClient.builder(model).build();
+        DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> {
+            toolsEnabledValues.add(toolsEnabled);
+            return client;
+        }, jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
+        DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService, taskRepository,
+                logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
+        List<ChatResponse> responses = new ArrayList<>(type.isToolsEnabled()
+                ? List.of(response("<tool_call>"), response("Collected data"), response("Rejected answer"),
+                        response("Rechecked data"), response("Accepted answer"))
+                : List.of(response("<tool_call>"), response("Rejected answer"), response("Accepted answer")));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> responses.removeFirst());
+
+        String result = executor.call(task().setType(type), searchRequest(), AnswerResponse.class, null, answer -> {
+            if (answer.equals("Rejected answer")) {
+                throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo("Accepted answer");
+        assertThat(toolsEnabledValues).hasSize(type.isToolsEnabled() ? 5 : 3).containsOnly(type != MUSICBRAINZ_ALBUM_DATA);
+        assertThat(responses).isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(doubles = 0.2)
+    void shouldReturnAndCacheStructuredResponseInOneCallWithoutTools(@Nullable Double temperature) {
+        when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().model("settings-model")
+                .timeout(Duration.ofMinutes(10)).temperature(0.7).build());
+        String answer = "{\"answer\":\"Structured answer\"}";
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            prompts.add(invocation.getArgument(0));
+            return response(answer);
+        });
+        DiscoveryTask task = task().setType(MUSICBRAINZ_ALBUM_DATA);
+        RequestWithoutModel request = new RequestWithoutModel(temperature);
+
+        assertThat(operation.call(task, request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(answer);
+
+        assertThat(prompts).singleElement().satisfies(prompt -> {
+            OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
+            assertThat(options.getModel()).isEqualTo("settings-model");
+            assertThat(options.getTimeout()).isEqualTo(Duration.ofMinutes(10));
+            assertThat(options.getTemperature()).isEqualTo(temperature != null ? temperature : 0.7);
+            assertThat(options.getToolChoice()).isEqualTo("none");
+            assertThat(options.getToolCallbacks()).isNullOrEmpty();
+            ResponseFormat format = options.getResponseFormat();
+            assertThat(format.getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+            assertThat(format.getStrict()).isTrue();
+            assertThat(prompt.getInstructions().getFirst().getText()).isEqualTo("Artist");
+            assertThat(prompt.getInstructions().getLast().getText()).endsWith(format.getJsonSchema());
+        });
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(answer);
+        assertThat(operation.call(task().setType(MUSICBRAINZ_ALBUM_DATA), request, AnswerResponse.class,
+                CACHE_SETTINGS, Function.identity())).isEqualTo(answer);
+        verify(model).call(any(Prompt.class));
+        assertThat(cache).hasSize(1);
+    }
+
     @Test
     void shouldCollectWithToolsAndFormatOnlyTheCollectedAnswer() {
         ToolCallback tool = mock(ToolCallback.class);
@@ -158,9 +227,9 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
         when(tool.call(anyString(), any())).thenReturn("Large browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
-        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient(customizer -> client,
+        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
-                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1);
+                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -221,9 +290,9 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
         when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
-        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient(customizer -> client,
+        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
-                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1);
+                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -285,6 +354,7 @@ class DiscoveryTaskLlmExecutorTest {
     void shouldUseDefaultOrConfiguredHallucinationRestartLimit(String configuredRestarts, int expectedRestarts) {
         when(model.call(any(Prompt.class))).thenReturn(response("<tool_call>"));
         ApplicationContextRunner runner = new ApplicationContextRunner()
+                .withInitializer(context -> context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance()))
                 .withUserConfiguration(DiscoveryTaskLlmExecutor.class)
                 .withBean(DiscoveryChatClient.class, () -> discoveryClient)
                 .withBean(DiscoveryCacheService.class, () -> cacheService)
@@ -682,6 +752,7 @@ class DiscoveryTaskLlmExecutorTest {
     @CsvSource({"'', 3", "0, 0", "1, 1", "5, 5"})
     void shouldUseDefaultOrConfiguredFollowUpRetryLimit(String configuredRetries, int expectedRetries) {
         ApplicationContextRunner runner = new ApplicationContextRunner()
+                .withInitializer(context -> context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance()))
                 .withUserConfiguration(DiscoveryTaskLlmExecutor.class)
                 .withBean(DiscoveryChatClient.class, () -> discoveryClient)
                 .withBean(DiscoveryCacheService.class, () -> cacheService)
@@ -727,7 +798,7 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     private DiscoveryTask task() {
-        return new DiscoveryTask().setStatus(DiscoveryTask.Status.STARTED);
+        return new DiscoveryTask().setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.STARTED);
     }
 
     private DialogueRequest searchRequest() {

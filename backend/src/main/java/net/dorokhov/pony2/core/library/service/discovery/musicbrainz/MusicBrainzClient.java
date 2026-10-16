@@ -54,7 +54,7 @@ public class MusicBrainzClient {
             @Value("${pony.discovery.musicbrainz.url:https://musicbrainz.org/ws/2/}") String baseUrl,
             @Value("${pony.discovery.musicbrainz.rateLimit.notMoreOftenThan:5s}") Duration requestInterval,
             @Value("${pony.discovery.musicbrainz.rateLimit.retryDelay:10s}") Duration retryDelay,
-            @Value("${pony.discovery.musicbrainz.rateLimit.retriesOnException:3}") int retriesOnException,
+            @Value("${pony.discovery.musicbrainz.rateLimit.retriesOnException:9}") int retriesOnException,
             @Value("${pony.discovery.musicbrainz.timeout:30s}") Duration timeout,
             @Value("${pony.discovery.musicbrainz.searchLimit:25}") int searchLimit
     ) {

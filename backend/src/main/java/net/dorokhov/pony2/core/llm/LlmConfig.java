@@ -11,14 +11,14 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 @Configuration
 public class LlmConfig {
 
     @Bean
-    public Function<OpenAiHttpClientBuilderCustomizer, ChatClient> llmChatClientFactory(
+    public BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> llmChatClientFactory(
             ChatModelImpl chatModel,
             ObservationRegistry observationRegistry,
             FetchUrlTool fetchUrlTool,
@@ -29,8 +29,12 @@ public class LlmConfig {
                 Stream.of(fetchUrlTool),
                 playwrightMcpToolRateLimiter.rateLimit(toolCallbackProviders.orderedStream()).stream()
         ).toArray();
-        return customizer -> ChatClient.builder(chatModel.createChatModel(customizer), observationRegistry, null, null)
-                .defaultTools(tools)
-                .build();
+        return (customizer, toolsEnabled) -> {
+            ChatClient.Builder builder = ChatClient.builder(chatModel.createChatModel(customizer), observationRegistry, null, null);
+            if (toolsEnabled) {
+                builder.defaultTools(tools);
+            }
+            return builder.build();
+        };
     }
 }

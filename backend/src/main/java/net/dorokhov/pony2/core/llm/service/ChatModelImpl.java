@@ -12,6 +12,7 @@ import org.springframework.ai.model.NoopApiKey;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -21,13 +22,16 @@ public class ChatModelImpl implements ChatModel {
 
     private final ConfigService configService;
     private final ObservationRegistry observationRegistry;
+    private final Duration timeout;
 
     public ChatModelImpl(
             ConfigService configService,
-            ObservationRegistry observationRegistry
+            ObservationRegistry observationRegistry,
+            @Value("${pony.llm.timeout:10m}") Duration timeout
     ) {
         this.configService = configService;
         this.observationRegistry = observationRegistry;
+        this.timeout = timeout;
     }
 
     @Override
@@ -55,7 +59,7 @@ public class ChatModelImpl implements ChatModel {
         OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder()
                 .baseUrl(configSet.llmUrl())
                 .model(configSet.llmModel())
-                .timeout(Duration.ofMinutes(10));
+                .timeout(timeout);
         if (configSet.llmApiKey() != null) {
             builder.apiKey(configSet.llmApiKey());
         } else {

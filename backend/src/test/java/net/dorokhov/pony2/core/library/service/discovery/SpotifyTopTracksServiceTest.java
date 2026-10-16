@@ -3,6 +3,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
@@ -33,6 +34,7 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.core.io.ClassPathResource;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,10 +114,10 @@ class SpotifyTopTracksServiceTest {
             return null;
         });
         ChatClient client = ChatClient.builder(model).build();
-        DiscoveryChatClient discoveryClient = new DiscoveryChatClient(customizer -> client,
+        DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
-                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1);
+                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1, Duration.ofMinutes(10));
         service = new SpotifyTopTracksService(executor, artistRepository, taskRepository, logService,
                 shutdownService, jobSynchronizer, transactionManager(),
                 new ClassPathResource("prompts/spotify-top-tracks-albums.txt"),
@@ -305,7 +307,8 @@ class SpotifyTopTracksServiceTest {
     }
 
     private DiscoveryTask task() {
-        return new DiscoveryTask().setParameter(JsonConverter.toJson(new DiscoveryTask.SpotifyTopTracksParameter("artist", "previous")));
+        return new DiscoveryTask().setType(DiscoveryTaskType.SPOTIFY_TOP_TRACKS)
+                .setParameter(JsonConverter.toJson(new DiscoveryTask.SpotifyTopTracksParameter("artist", "previous")));
     }
 
     private SpotifyArtistData.TopTrack topTrack(String id, String albumId) {

@@ -6,6 +6,7 @@ import jakarta.validation.ValidatorFactory;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
@@ -44,6 +45,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -495,10 +497,10 @@ class SpotifyArtistDataServiceTest {
     }
 
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
-        DiscoveryChatClient discoveryClient = new DiscoveryChatClient(customizer -> client,
+        DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         DiscoveryTaskLlmExecutor operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
-                discoveryTaskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1);
+                discoveryTaskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1, Duration.ofMinutes(10));
         return new SpotifyArtistDataService(operation,
                 validator, artistRepository, logService, shutdownService,
                 jobSynchronizer, transactionManager(), promptResource,
@@ -511,6 +513,7 @@ class SpotifyArtistDataServiceTest {
 
     private DiscoveryTask task(Artist artist) {
         return new DiscoveryTask()
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setParameter(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
     }
 

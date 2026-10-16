@@ -20,12 +20,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Component
 public class DiscoveryChatClient {
 
-    private final Function<OpenAiHttpClientBuilderCustomizer, ChatClient> chatClientFactory;
+    private final BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> chatClientFactory;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final DiscoveryAdvisor discoveryAdvisor;
 
@@ -35,7 +36,7 @@ public class DiscoveryChatClient {
     private boolean shutdown;
 
     public DiscoveryChatClient(
-            Function<OpenAiHttpClientBuilderCustomizer, ChatClient> chatClientFactory,
+            BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> chatClientFactory,
             LibraryJobSynchronizer jobSynchronizer,
             DiscoveryAdvisor discoveryAdvisor
     ) {
@@ -60,6 +61,10 @@ public class DiscoveryChatClient {
      * The callback must consume the response before returning; deferred and streaming results are not supported.
      */
     public <T> T call(Function<ChatClient.ChatClientRequestSpec, T> request) {
+        return call(true, request);
+    }
+
+    public <T> T call(boolean toolsEnabled, Function<ChatClient.ChatClientRequestSpec, T> request) {
         Cancellation cancellation = new Cancellation();
         synchronized (lock) {
             if (shutdown) {
@@ -69,7 +74,7 @@ public class DiscoveryChatClient {
         }
         try (LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(cancellation::cancel)) {
             cancellation.check();
-            ChatClient client = chatClientFactory.apply(builder -> builder.interceptor(cancellation::intercept));
+            ChatClient client = chatClientFactory.apply(builder -> builder.interceptor(cancellation::intercept), toolsEnabled);
             T result = request.apply(client.prompt().advisors(discoveryAdvisor));
             cancellation.check();
             return result;
