@@ -100,7 +100,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         lenient().when(session.searchReleaseGroups(anyString())).thenAnswer(invocation -> {
             List<MusicBrainzDto.Release> releases = albumRepository.findAll().stream()
                     .map(album -> new MusicBrainzDto.Release(album.getId(), album.getName())).toList();
-            return List.of(new MusicBrainzDto.ReleaseGroup("group-without-artists", null, null, List.of(), null, List.of(), releases));
+            List<MusicBrainzDto.ReleaseGroup> groups = List.of(
+                    new MusicBrainzDto.ReleaseGroup("group-without-artists", null, null, List.of(), null, List.of(), releases));
+            return new MusicBrainzClient.ReleaseGroupSearchResult(groups,
+                    JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(groups.size(), 0, groups)));
         });
     }
 

@@ -101,6 +101,8 @@ public class MusicBrainzClient {
 
     public static class CancelledException extends RuntimeException {}
 
+    public record ReleaseGroupSearchResult(List<MusicBrainzDto.ReleaseGroup> groups, String rawResponse) {}
+
     public class Session implements AutoCloseable {
 
         private final String userAgent;
@@ -115,7 +117,7 @@ public class MusicBrainzClient {
             this.cacheEnabled = cacheEnabled;
         }
 
-        public List<MusicBrainzDto.ReleaseGroup> searchReleaseGroups(String query) {
+        public ReleaseGroupSearchResult searchReleaseGroups(String query) {
             checkCancelled();
             HttpUrl url = baseUrl.newBuilder().addPathSegment("release-group")
                     .addQueryParameter("query", query)
@@ -127,7 +129,7 @@ public class MusicBrainzClient {
                     logger.warn("MusicBrainz search '{}' found {} release groups, exceeding the limit of {}; using {} returned release groups.",
                             query, result.count(), searchLimit, result.releaseGroups().size());
                 }
-                return result.releaseGroups();
+                return new ReleaseGroupSearchResult(result.releaseGroups(), response);
             });
         }
 

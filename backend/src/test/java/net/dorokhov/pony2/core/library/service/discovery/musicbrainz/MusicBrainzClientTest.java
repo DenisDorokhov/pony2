@@ -105,7 +105,7 @@ class MusicBrainzClientTest {
         MusicBrainzClient client = client(Duration.ZERO);
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/2.0 (admin@example.com)", observer, false)) {
-            assertThat(session.searchReleaseGroups(query)).extracting(MusicBrainzDto.ReleaseGroup::id).containsExactly("one", "two", "three");
+            assertThat(session.searchReleaseGroups(query).groups()).extracting(MusicBrainzDto.ReleaseGroup::id).containsExactly("one", "two", "three");
         }
 
         assertThat(limits).containsExactly("25");
@@ -134,8 +134,8 @@ class MusicBrainzClientTest {
         logger.setLevel(Level.WARN);
         MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), searchLimit);
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer, true)) {
-            assertThat(session.searchReleaseGroups("query")).containsExactlyElementsOf(groups);
-            assertThat(session.searchReleaseGroups("query")).containsExactlyElementsOf(groups);
+            assertThat(session.searchReleaseGroups("query").groups()).containsExactlyElementsOf(groups);
+            assertThat(session.searchReleaseGroups("query").groups()).containsExactlyElementsOf(groups);
             if (count > searchLimit) {
                 assertThat(appender.list).hasSize(2).allSatisfy(event -> {
                     assertThat(event.getLevel()).isEqualTo(Level.WARN);
@@ -172,7 +172,9 @@ class MusicBrainzClientTest {
 
         for (String userAgent : List.of("pony2/first", "pony2/second")) {
             try (MusicBrainzClient.Session session = client.openSession(userAgent, observer, cacheEnabled)) {
-                assertThat(session.searchReleaseGroups("query")).containsExactlyElementsOf(groups);
+                MusicBrainzClient.ReleaseGroupSearchResult result = session.searchReleaseGroups("query");
+                assertThat(result.groups()).containsExactlyElementsOf(groups);
+                assertThat(result.rawResponse()).isEqualTo(response);
             }
         }
 
@@ -259,6 +261,25 @@ class MusicBrainzClientTest {
         verify(cacheService, never()).put(eq(MUSICBRAINZ), anyString(), eq(1), anyString());
     }
 
+    @ParameterizedTest
+    @CsvSource({"503,service unavailable", "200,not JSON", "200,'{\"error\":\"server busy\"}'"})
+    void shouldNotReturnOrCacheFailedSearchResults(int status, String response) {
+        AtomicInteger requests = new AtomicInteger();
+        server.createContext("/ws/2/release-group", exchange -> {
+            requests.incrementAndGet();
+            respond(exchange, status, response);
+        });
+
+        try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test", observer, true)) {
+            assertThatThrownBy(() -> session.searchReleaseGroups("query")).isInstanceOf(RuntimeException.class);
+            assertThatThrownBy(() -> session.searchReleaseGroups("query")).isInstanceOf(RuntimeException.class);
+        }
+
+        assertThat(requests).hasValue(2);
+        assertThat(responses).containsExactly(response, response);
+        verify(cacheService, never()).put(eq(MUSICBRAINZ), anyString(), eq(1), anyString());
+    }
+
     @Test
     void shouldCheckCancellationAfterCacheLookup() {
         MusicBrainzClient client = client(Duration.ZERO);
@@ -303,7 +324,7 @@ class MusicBrainzClientTest {
                 respond(exchange, 200, JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(0, 0, List.of()))));
 
         try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer, false)) {
-            assertThat(session.searchReleaseGroups("empty")).isEmpty();
+            assertThat(session.searchReleaseGroups("empty").groups()).isEmpty();
         }
     }
 

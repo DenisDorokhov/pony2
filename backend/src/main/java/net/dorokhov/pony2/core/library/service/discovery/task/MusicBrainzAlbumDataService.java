@@ -128,7 +128,6 @@ public class MusicBrainzAlbumDataService {
             return null;
         }
         String userAgent = "pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (" + userService.getMainAdmin().getEmail() + ")";
-        List<String> searchResponses = new ArrayList<>();
         MusicBrainzClient.ExchangeObserver observer = new MusicBrainzClient.ExchangeObserver() {
             @Override
             public void onRequest(String url) {
@@ -139,9 +138,6 @@ public class MusicBrainzAlbumDataService {
             @Override
             public void onResponse(String url, String response) {
                 saveExchange(task, url, response);
-                if (url.contains("/release-group?")) {
-                    searchResponses.add(response);
-                }
             }
         };
         try (
@@ -149,23 +145,23 @@ public class MusicBrainzAlbumDataService {
                 LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(session::cancel)
         ) {
             String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(input.artistName()) + "\"";
-            List<MusicBrainzDto.ReleaseGroup> groups = session.searchReleaseGroups(query);
+            MusicBrainzClient.ReleaseGroupSearchResult searchResult = session.searchReleaseGroups(query);
             interruptIfNeeded();
-            if (groups.isEmpty() && configService.get().llmEnabled()) {
+            if (searchResult.groups().isEmpty() && configService.get().llmEnabled()) {
                 NormalizationResponse normalization = normalizeTitle(task, input.title(), cacheEnabled);
                 String normalizedQuery = normalizationQuery(input, normalization);
                 interruptIfNeeded();
                 if (normalizedQuery != null) {
-                    groups = session.searchReleaseGroups(normalizedQuery);
+                    searchResult = session.searchReleaseGroups(normalizedQuery);
                     interruptIfNeeded();
                 }
             }
-            MusicBrainzDto.ReleaseGroup group = selectReleaseGroup(task, input, groups, searchResponses, cacheEnabled);
+            MusicBrainzDto.ReleaseGroup group = selectReleaseGroup(task, input, searchResult.groups(), searchResult.rawResponse(), cacheEnabled);
             if (group == null) {
                 logger.debug("No unambiguous MusicBrainz release group was selected for album '{}'.", albumId);
                 return null;
             }
-            String artistId = selectArtist(task, input, group, searchResponses, cacheEnabled);
+            String artistId = selectArtist(task, input, group, searchResult.rawResponse(), cacheEnabled);
             if (artistId == null) {
                 logger.debug("No corresponding MusicBrainz artist was selected for album '{}' in release group '{}'.", albumId, group.id());
                 return null;
@@ -239,7 +235,7 @@ public class MusicBrainzAlbumDataService {
     @Nullable
     private MusicBrainzDto.ReleaseGroup selectReleaseGroup(
             DiscoveryTask task, AlbumInput input,
-            List<MusicBrainzDto.ReleaseGroup> groups, List<String> responses,
+            List<MusicBrainzDto.ReleaseGroup> groups, String response,
             boolean cacheEnabled
     ) {
         Map<String, MusicBrainzDto.ReleaseGroup> candidates = new LinkedHashMap<>();
@@ -265,8 +261,8 @@ public class MusicBrainzAlbumDataService {
                         .toList()));
         String trackContext = "\nLibrary album track count: " + tracks.size()
                 + "\nLibrary album tracks: " + JsonConverter.toJson(tracks);
-        Request request = new Request(releaseGroupPrompt, context(input, responses, false) + trackContext,
-                context(input, responses, true) + trackContext,
+        Request request = new Request(releaseGroupPrompt, context(input, response, false) + trackContext,
+                context(input, response, true) + trackContext,
                 configService.get().llmModel());
         String id = selectId(task, request, candidates.keySet(), "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP", cacheEnabled);
         return id != null ? candidates.get(id) : null;
@@ -275,7 +271,7 @@ public class MusicBrainzAlbumDataService {
     @Nullable
     private String selectArtist(
             DiscoveryTask task, AlbumInput input, MusicBrainzDto.ReleaseGroup group,
-            List<String> responses, boolean cacheEnabled
+            String response, boolean cacheEnabled
     ) {
         List<String> ids = group.artistCredit().stream().map(credit -> credit.artist().id()).distinct().toList();
         if (ids.size() == 1) {
@@ -292,8 +288,8 @@ public class MusicBrainzAlbumDataService {
             return null;
         }
         String selectedGroup = "\nSelected release group ID: " + JsonConverter.toJson(group.id());
-        Request request = new Request(artistPrompt, context(input, responses, false) + selectedGroup,
-                context(input, responses, true) + selectedGroup, configService.get().llmModel());
+        Request request = new Request(artistPrompt, context(input, response, false) + selectedGroup,
+                context(input, response, true) + selectedGroup, configService.get().llmModel());
         return selectId(task, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST", cacheEnabled);
     }
 
@@ -325,16 +321,13 @@ public class MusicBrainzAlbumDataService {
         return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
-    private String context(AlbumInput input, List<String> responses, boolean forCache) {
+    private String context(AlbumInput input, String response, boolean forCache) {
+        Map<String, Object> data = JsonConverter.mapFromJson(response, String.class, Object.class);
+        if (forCache) {
+            data.remove("created");
+        }
         return "Album from the library: " + JsonConverter.toJson(input)
-                + "\nComplete MusicBrainz search responses: " + JsonConverter.toJson(responses.stream()
-                .map(response -> {
-                    Map<String, Object> data = JsonConverter.mapFromJson(response, String.class, Object.class);
-                    if (forCache) {
-                        data.remove("created");
-                    }
-                    return new SearchResponse(data);
-                }).toList());
+                + "\nMusicBrainz search response: " + JsonConverter.toJson(new SearchResponse(data));
     }
 
     private String escapeQuery(String value) {

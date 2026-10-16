@@ -302,6 +302,128 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         verify(model, never()).call(any(Prompt.class));
     }
 
+    @ParameterizedTest
+    @CsvSource({"true,true", "false,true", "true,false", "false,false"})
+    void shouldUseOnlyCurrentSuccessfulSearchAndReuseSelectionCacheAfterHttpRetries(boolean normalizedSearch, boolean cacheEnabled) throws IOException {
+        enableLlm();
+        if (normalizedSearch) {
+            albumRepository.save(album.setName("Reign in Blood (CD1 of 2)"));
+        }
+        search(List.of(group("group", "Other", "Reign in Blood (deluxe)",
+                List.of(credit("artist", "A", null), credit("other", "B", null)))));
+        String normalization = "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[]}";
+        String busy = "{\"error\":\"server-busy-marker\"}";
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            Prompt prompt = invocation.getArgument(0);
+            if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.JSON_SCHEMA) {
+                return response(prompt.getInstructions().getLast().getText());
+            }
+            if (prompt.getInstructions().getFirst().getText().startsWith("You normalize untrusted album-title text")) {
+                return response(normalization);
+            }
+            String userPrompt = prompt.getInstructions().get(1).getText();
+            assertThat(userPrompt).doesNotContain("server-busy-marker", EMPTY_SEARCH_RESPONSE, "Complete MusicBrainz search responses");
+            String searchJson = userPrompt.split("\nMusicBrainz search response: ", 2)[1].split("\n", 2)[0];
+            assertThat(JsonConverter.fromJson(searchJson)).isEqualTo(JsonConverter.fromJson(rawSearchResponse));
+            return response(userPrompt.contains("\nSelected release group ID:") ? "{\"id\":\"artist\"}" : "{\"id\":\"group\"}");
+        });
+        AtomicInteger requests = new AtomicInteger();
+        AtomicInteger candidateRequests = new AtomicInteger();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/ws/2/", exchange -> {
+            try (exchange) {
+                requests.incrementAndGet();
+                int status = 200;
+                String body;
+                if (exchange.getRequestURI().getPath().contains("/artist/")) {
+                    body = rawArtistResponse;
+                } else if (normalizedSearch && URLDecoder.decode(exchange.getRequestURI().getRawQuery(), UTF_8).contains("CD1")) {
+                    body = EMPTY_SEARCH_RESPONSE;
+                } else if (candidateRequests.incrementAndGet() <= 2) {
+                    status = 503;
+                    body = busy;
+                } else {
+                    body = rawSearchResponse;
+                }
+                byte[] bytes = body.getBytes(UTF_8);
+                exchange.sendResponseHeaders(status, bytes.length);
+                exchange.getResponseBody().write(bytes);
+            }
+        });
+        MusicBrainzClient client = new MusicBrainzClient(cacheService,
+                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 2, Duration.ofSeconds(10), 25);
+        when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            return client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2));
+        });
+        server.start();
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+            albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+
+            List<DiscoveryTask> tasks = taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)).toList();
+            assertThat(tasks).hasSize(2).allSatisfy(task -> {
+                assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
+                assertThat(task.getRawRequest()).doesNotContain("server-busy-marker");
+            });
+            List<String> expectedResponses = new ArrayList<>();
+            if (normalizedSearch) {
+                expectedResponses.add(EMPTY_SEARCH_RESPONSE);
+                expectedResponses.add(normalization);
+            }
+            expectedResponses.addAll(List.of(busy, busy, rawSearchResponse, "{\"id\":\"group\"}", "{\"id\":\"artist\"}", rawArtistResponse));
+            assertThat(JsonConverter.listFromJson(tasks.getFirst().getRawResult(), String.class)).containsExactlyElementsOf(expectedResponses);
+            expectedResponses.removeAll(List.of(busy));
+            assertThat(JsonConverter.listFromJson(tasks.getLast().getRawResult(), String.class)).containsExactlyElementsOf(expectedResponses);
+            Object[] firstRequests = JsonConverter.fromJson(tasks.getFirst().getRawRequest(), Object[].class);
+            Object[] secondRequests = JsonConverter.fromJson(tasks.getLast().getRawRequest(), Object[].class);
+            int groupRequestIndex = normalizedSearch ? 5 : 3;
+            assertThat(firstRequests[groupRequestIndex]).isEqualTo(secondRequests[groupRequestIndex - 2]);
+            assertThat(firstRequests[groupRequestIndex + 1]).isEqualTo(secondRequests[groupRequestIndex - 1]);
+            int callsPerDiscovery = normalizedSearch ? 6 : 4;
+            verify(model, times(cacheEnabled ? callsPerDiscovery : 2 * callsPerDiscovery)).call(any(Prompt.class));
+            assertThat(requests).hasValue((normalizedSearch ? 5 : 4) + (cacheEnabled ? 0 : normalizedSearch ? 3 : 2));
+            assertThat(candidateRequests).hasValue(cacheEnabled ? 3 : 4);
+            assertThat(cacheRepository.findAll()).hasSize(cacheEnabled ? normalizedSearch ? 6 : 4 : 0).allSatisfy(entry ->
+                    assertThat(entry.getValue()).doesNotContain("server-busy-marker"));
+        } finally {
+            client.onApplicationShutdown();
+            server.stop(0);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"503,service unavailable", "200,not JSON", "200,'{\"error\":\"server busy\"}'"})
+    void shouldFailInvalidSearchWithoutCallingLlm(int status, String response) throws IOException {
+        enableLlm();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/ws/2/", exchange -> {
+            try (exchange) {
+                byte[] bytes = response.getBytes(UTF_8);
+                exchange.sendResponseHeaders(status, bytes.length);
+                exchange.getResponseBody().write(bytes);
+            }
+        });
+        MusicBrainzClient client = new MusicBrainzClient(cacheService,
+                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
+        when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation ->
+                client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+        server.start();
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+            assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+            assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(response);
+            assertThat(cacheRepository.count()).isZero();
+            verify(model, never()).call(any(Prompt.class));
+        } finally {
+            client.onApplicationShutdown();
+            server.stop(0);
+        }
+    }
+
     @Test
     void shouldChooseArtistByCanonicalOrCreditedNameWithoutLlm() {
         search(List.of(group("group", "Other", album.getName(), List.of(
@@ -1033,9 +1155,11 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
         verify(model, times(8)).call(captor.capture());
         assertThat(captor.getAllValues().get(2).getInstructions().get(1).getText())
-                .contains("Reign in Blood (CD1 of 2)", "1986", "Slayer", "Original track", "normalized-group", EMPTY_SEARCH_RESPONSE);
+                .contains("Reign in Blood (CD1 of 2)", "1986", "Slayer", "Original track", "normalized-group")
+                .doesNotContain(EMPTY_SEARCH_RESPONSE);
         assertThat(captor.getAllValues().get(6).getInstructions().get(1).getText())
-                .contains("Reign in Blood (CD1 of 2)", "Slayer", "normalized-group");
+                .contains("Reign in Blood (CD1 of 2)", "Slayer", "normalized-group")
+                .doesNotContain(EMPTY_SEARCH_RESPONSE);
         assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(
                 EMPTY_SEARCH_RESPONSE, normalization, rawSearchResponse, "{\"id\":\"outside-new-candidates\"}",
                 "{\"id\":\"normalized-group\"}", "{\"id\":\"artist\"}", rawArtistResponse);
@@ -1262,7 +1386,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         doAnswer(invocation -> {
             exchangeObserver.onRequest(SEARCH_URL);
             exchangeObserver.onResponse(SEARCH_URL, rawSearchResponse);
-            return groups;
+            return new MusicBrainzClient.ReleaseGroupSearchResult(groups, rawSearchResponse);
         }).when(session).searchReleaseGroups(anyString());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
 
@@ -1410,7 +1534,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             if (searchCalls.getAndIncrement() == 1) {
                 throw new DiscoveryInterruptedException();
             }
-            return groups;
+            return new MusicBrainzClient.ReleaseGroupSearchResult(groups, rawSearchResponse);
         }).when(session).searchReleaseGroups(anyString());
         DiscoveryJob interruptedJob = job(DiscoveryType.ARTIST);
 
@@ -1424,7 +1548,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getCountryCode()).isEqualTo("US");
         });
         jobRepository.save(interruptedJob.setStatus(DiscoveryJob.Status.INTERRUPTED));
-        doReturn(List.of()).when(session).searchReleaseGroups(anyString());
+        doReturn(new MusicBrainzClient.ReleaseGroupSearchResult(List.of(), EMPTY_SEARCH_RESPONSE)).when(session).searchReleaseGroups(anyString());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
 
         fullDiscoveryService.discover(nextJob, false, null);
@@ -1607,11 +1731,13 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 if (failed) {
                     throw new IllegalStateException("MusicBrainz unavailable");
                 }
-                return List.of();
+                return new MusicBrainzClient.ReleaseGroupSearchResult(List.of(), EMPTY_SEARCH_RESPONSE);
             }
-            return List.of(
+            List<MusicBrainzDto.ReleaseGroup> candidates = List.of(
                     group("first-group", "First group", "Reign in Blood", List.of(credit("artist", "Slayer", "Slayer"))),
                     group("second-group", "Second group", "Second album", List.of(credit("artist", "Slayer", "Slayer"))));
+            return new MusicBrainzClient.ReleaseGroupSearchResult(candidates,
+                    JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(candidates.size(), 0, candidates)));
         }).when(session).searchReleaseGroups(anyString());
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
@@ -1655,7 +1781,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(task.getRawRequest()).contains(SEARCH_URL);
             assertThat(task.getRawResult()).isEqualTo("[null]");
             exchangeObserver.onResponse(SEARCH_URL, rawSearchResponse);
-            return groups;
+            return new MusicBrainzClient.ReleaseGroupSearchResult(groups, rawSearchResponse);
         }).when(session).searchReleaseGroups(anyString());
     }
 
@@ -1668,7 +1794,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             String url = initial ? SEARCH_URL : NORMALIZED_SEARCH_URL;
             exchangeObserver.onRequest(url);
             exchangeObserver.onResponse(url, initial ? EMPTY_SEARCH_RESPONSE : rawSearchResponse);
-            return initial ? List.of() : groups;
+            return new MusicBrainzClient.ReleaseGroupSearchResult(initial ? List.of() : groups, initial ? EMPTY_SEARCH_RESPONSE : rawSearchResponse);
         }).when(session).searchReleaseGroups(anyString());
     }
 
