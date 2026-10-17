@@ -7,10 +7,8 @@ import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -63,10 +61,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private SongRepository songRepository;
     @Autowired
     private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    @Autowired
-    private ArtistDiscoveryRepository artistDiscoveryRepository;
-    @Autowired
-    private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
     @Autowired
@@ -325,13 +319,10 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.STARTED, date.plusHours(4), single);
         saveAlbumDiscoveryTask(album1_2, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, ep);
         saveAlbumDiscoveryTask(album2_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(5), single);
-        DiscoveryTask topTracks = discoveryTaskRepository.save(new DiscoveryTask().setJob(job)
+        DiscoveryTask topTracks = discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
                 .setType(DiscoveryTaskType.SPOTIFY_TOP_TRACKS).setStatus(DiscoveryTask.Status.COMPLETE)
                 .setParameter(JsonConverter.toJson(new DiscoveryTask.SpotifyTopTracksParameter(artist1.getId(), "artist-data")))
                 .setResult(JsonConverter.toJson(new String[]{song1_1_2.getId(), null, "missing", song1_2_1.getId(), song1_1_1.getId()})));
-        ArtistDiscovery artistDiscovery = new ArtistDiscovery().setArtist(artist1).setJob(job);
-        artistDiscovery.getTasks().add(topTracks);
-        artistDiscoveryRepository.save(artistDiscovery);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
@@ -372,13 +363,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private DiscoveryTask saveAlbumDiscoveryTask(Album album, DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status,
                                                 LocalDateTime creationDate, String result) {
         return getTransactionTemplate().execute(transactionStatus -> {
-            DiscoveryTask task = discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setType(type).setStatus(status)
+            DiscoveryTask task = discoveryTaskRepository.saveAndFlush(new DiscoveryTask().setJob(job).setAlbum(album).setType(type).setStatus(status)
                     .setParameter(JsonConverter.toJson(new DiscoveryTask.AlbumParameter(album.getId()))).setResult(result));
-            AlbumDiscovery discovery = albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId())
-                    .filter(candidate -> candidate.getJob().getId().equals(job.getId()))
-                    .orElseGet(() -> new AlbumDiscovery().setAlbum(album).setJob(job));
-            discovery.getTasks().add(task);
-            albumDiscoveryRepository.save(discovery);
             jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", Timestamp.valueOf(creationDate), task.getId());
             return task;
         });

@@ -10,9 +10,7 @@ import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -55,15 +53,13 @@ public class LibraryServiceImplTest {
     private LibraryServiceImpl libraryService;
 
     @Mock
+    private net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository discoveryTaskRepository;
+    @Mock
     private GenreRepository genreRepository;
     @Mock
     private ArtistRepository artistRepository;
     @Mock
     private ArtistGenreRepository artistGenreRepository;
-    @Mock
-    private AlbumDiscoveryRepository albumDiscoveryRepository;
-    @Mock
-    private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
     private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     @Mock
@@ -119,7 +115,7 @@ public class LibraryServiceImplTest {
     void shouldDetermineAlbumReleaseType(String primaryType, String secondaryTypes, AlbumDiscoveryData.ReleaseType expected) {
         MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", primaryType,
                 secondaryTypes != null ? List.of(secondaryTypes.split(";")) : List.of(), "1986-10-07", "artist", List.of());
-        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
@@ -135,7 +131,7 @@ public class LibraryServiceImplTest {
     })
     void shouldDetermineAlbumReleaseDate(String firstReleaseDate, String expected) {
         MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of());
-        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album").releaseDate()).isEqualTo(LocalDateTime.parse(expected));
@@ -146,7 +142,7 @@ public class LibraryServiceImplTest {
     @ValueSource(strings = {" ", "not a date", "1986-02-29", "1986-13", "1986-10-32", "1986-00", "1986-1", "1986-10-07T12:00"})
     void shouldReturnNullWhenAlbumReleaseDateIsMissingOrInvalid(String firstReleaseDate) {
         MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of());
-        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
@@ -158,7 +154,7 @@ public class LibraryServiceImplTest {
         String result = """
                 {"releaseGroupId":"release-group","primaryType":"Album","secondaryTypes":[],"artistId":"artist","country":[]}
                 """;
-        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.of(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
@@ -169,7 +165,7 @@ public class LibraryServiceImplTest {
     @NullSource
     @ValueSource(strings = "null")
     void shouldReturnUnknownWhenAlbumDiscoveryDataIsMissing(String result) {
-        when(albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.ofNullable(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
@@ -179,7 +175,7 @@ public class LibraryServiceImplTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void shouldReturnExistingArtistTopSongsInOriginalOrder(boolean countryCodeAvailable) {
-        when(artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
                 .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\"]"));
         when(songRepository.findExistingIds(List.of("second", "deleted", "first"))).thenReturn(List.of("first", "second"));
         if (countryCodeAvailable) {
@@ -195,7 +191,7 @@ public class LibraryServiceImplTest {
     @NullSource
     @ValueSource(strings = {"null", "[]", "[null]"})
     void shouldReturnEmptyTopSongsWhenDiscoveryResultIsMissingOrEmpty(String result) {
-        when(artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
                 .thenReturn(Optional.ofNullable(result));
 
         assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).isEmpty();
@@ -204,7 +200,7 @@ public class LibraryServiceImplTest {
 
     @Test
     void shouldReturnEmptyTopSongsWhenAllMatchesAreDeleted() {
-        when(artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+        when(discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
                 .thenReturn(Optional.of("[\"deleted\"]"));
         when(songRepository.findExistingIds(List.of("deleted"))).thenReturn(List.of());
 

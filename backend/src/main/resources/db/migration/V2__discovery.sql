@@ -50,30 +50,32 @@ CREATE TABLE discovery_task (
   raw_result LONGVARCHAR,
 
   discovery_job_id CHAR(36) NOT NULL,
+  genre_id CHAR(36),
+  artist_id CHAR(36),
+  album_id CHAR(36),
+  song_id CHAR(36),
 
-  FOREIGN KEY (discovery_job_id) REFERENCES discovery_job (id)
+  FOREIGN KEY (discovery_job_id) REFERENCES discovery_job (id),
+  FOREIGN KEY (genre_id) REFERENCES genre (id) ON DELETE SET NULL,
+  FOREIGN KEY (artist_id) REFERENCES artist (id) ON DELETE SET NULL,
+  FOREIGN KEY (album_id) REFERENCES album (id) ON DELETE SET NULL,
+  FOREIGN KEY (song_id) REFERENCES song (id) ON DELETE SET NULL,
+
+  CONSTRAINT check_discovery_task_target CHECK (
+    (CASE WHEN genre_id IS NULL THEN 0 ELSE 1 END) +
+    (CASE WHEN artist_id IS NULL THEN 0 ELSE 1 END) +
+    (CASE WHEN album_id IS NULL THEN 0 ELSE 1 END) +
+    (CASE WHEN song_id IS NULL THEN 0 ELSE 1 END) <= 1
+  )
 );
 
 CREATE INDEX index_discovery_task_status ON discovery_task (status);
 CREATE INDEX index_discovery_task_job_id_status ON discovery_task (discovery_job_id, status);
 
-CREATE TABLE artist_discovery (
-
-  id CHAR(36) PRIMARY KEY,
-
-  creation_date TIMESTAMP(9) NOT NULL,
-  update_date TIMESTAMP(9),
-
-  artist_id CHAR(36) NOT NULL,
-  discovery_job_id CHAR(36) NOT NULL,
-
-  FOREIGN KEY (artist_id) REFERENCES artist (id),
-  FOREIGN KEY (discovery_job_id) REFERENCES discovery_job (id),
-
-  UNIQUE (artist_id, discovery_job_id)
-);
-
-CREATE INDEX index_artist_discovery_artist_id_creation_date ON artist_discovery (artist_id, creation_date desc);
+CREATE INDEX index_discovery_task_genre_status_type_creation_date ON discovery_task (genre_id, status, type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_artist_status_type_creation_date ON discovery_task (artist_id, status, type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_album_status_type_creation_date ON discovery_task (album_id, status, type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_song_status_type_creation_date ON discovery_task (song_id, status, type, creation_date DESC, id DESC);
 
 CREATE TABLE artist_discovery_index (
 
@@ -96,44 +98,11 @@ CREATE INDEX index_artist_discovery_index_spotify_artist_id ON artist_discovery_
 CREATE INDEX index_artist_discovery_index_music_brainz_artist_id ON artist_discovery_index (music_brainz_artist_id);
 CREATE INDEX index_artist_discovery_index_country_code ON artist_discovery_index (country_code);
 
-CREATE TABLE artist_discovery_task (
+CREATE INDEX index_song_creation_date ON song (creation_date);
+CREATE INDEX index_song_update_date_creation_date ON song (update_date, creation_date);
+CREATE INDEX index_album_creation_date ON album (creation_date);
+CREATE INDEX index_album_update_date_creation_date ON album (update_date, creation_date);
+CREATE INDEX index_artwork_date ON artwork (date);
+CREATE INDEX index_album_artist_id_name ON album (artist_id, name);
 
-  artist_discovery_id CHAR(36) NOT NULL,
-  discovery_task_id CHAR(36) NOT NULL,
-
-  FOREIGN KEY (artist_discovery_id) REFERENCES artist_discovery (id),
-  FOREIGN KEY (discovery_task_id) REFERENCES discovery_task (id),
-
-  PRIMARY KEY (artist_discovery_id, discovery_task_id),
-  UNIQUE (discovery_task_id)
-);
-
-CREATE TABLE album_discovery (
-
-  id CHAR(36) PRIMARY KEY,
-
-  creation_date TIMESTAMP(9) NOT NULL,
-  update_date TIMESTAMP(9),
-
-  album_id CHAR(36) NOT NULL,
-  discovery_job_id CHAR(36) NOT NULL,
-
-  FOREIGN KEY (album_id) REFERENCES album (id),
-  FOREIGN KEY (discovery_job_id) REFERENCES discovery_job (id),
-
-  UNIQUE (album_id, discovery_job_id)
-);
-
-CREATE INDEX index_album_discovery_album_id_creation_date ON album_discovery (album_id, creation_date desc);
-
-CREATE TABLE album_discovery_task (
-
-  album_discovery_id CHAR(36) NOT NULL,
-  discovery_task_id CHAR(36) NOT NULL,
-
-  FOREIGN KEY (album_discovery_id) REFERENCES album_discovery (id),
-  FOREIGN KEY (discovery_task_id) REFERENCES discovery_task (id),
-
-  PRIMARY KEY (album_discovery_id, discovery_task_id),
-  UNIQUE (discovery_task_id)
-);
+DROP INDEX index_user_email;

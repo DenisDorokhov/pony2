@@ -27,6 +27,8 @@ public interface DiscoveryJobService {
         void onDiscoveryJobInterrupted(DiscoveryJob discoveryJob);
     }
 
+    void cleanDiscoveryData() throws ConcurrentLibraryJobException;
+
     void addObserver(Observer observer);
     void removeObserver(Observer observer);
 

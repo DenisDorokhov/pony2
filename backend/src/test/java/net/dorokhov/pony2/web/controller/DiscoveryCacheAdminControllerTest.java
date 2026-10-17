@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class LlmAdminControllerTest extends InstallingIntegrationTest {
+public class DiscoveryCacheAdminControllerTest extends InstallingIntegrationTest {
 
     @Autowired
     private ApiTemplate apiTemplate;

@@ -212,7 +212,35 @@ export class SettingsComponent implements OnInit{
     });
   }
 
+  cleanDiscoveryData() {
+    if (!window.confirm(this.translateService.instant('settings.cleanDiscoveryDataConfirmation'))) {
+      return;
+    }
+    this.secondaryLoadingState = LoadingState.LOADING;
+    this.libraryService.cleanDiscoveryData().subscribe({
+      next: () => {
+        this.secondaryLoadingState = LoadingState.LOADED;
+        this.notificationService.success(
+          this.translateService.instant('notification.settingsTitle'),
+          this.translateService.instant('notification.cleanDiscoveryDataText')
+        );
+      },
+      error: response => {
+        this.secondaryLoadingState = LoadingState.ERROR;
+        if (response.error?.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
+          this.notificationService.error(
+            this.translateService.instant('notification.settingsTitle'),
+            this.translateService.instant('notification.cleanDiscoveryDataBusyText')
+          );
+        }
+      }
+    });
+  }
+
   clearDiscoveryCache() {
+    if (!window.confirm(this.translateService.instant('settings.clearDiscoveryCacheConfirmation'))) {
+      return;
+    }
     const region = this.discoveryCacheRegion.trim();
     this.secondaryLoadingState = LoadingState.LOADING;
     this.libraryService.clearDiscoveryCache(region === '' ? undefined : region).subscribe({

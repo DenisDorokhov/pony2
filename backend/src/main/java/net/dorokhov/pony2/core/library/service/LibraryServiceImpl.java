@@ -35,8 +35,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    private final ArtistDiscoveryRepository artistDiscoveryRepository;
-    private final AlbumDiscoveryRepository albumDiscoveryRepository;
+    private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
     private final RandomFetcher randomFetcher;
@@ -47,8 +46,7 @@ public class LibraryServiceImpl implements LibraryService {
             AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
-            ArtistDiscoveryRepository artistDiscoveryRepository,
-            AlbumDiscoveryRepository albumDiscoveryRepository,
+            DiscoveryTaskRepository discoveryTaskRepository,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
             RandomFetcher randomFetcher
@@ -58,8 +56,7 @@ public class LibraryServiceImpl implements LibraryService {
         this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
-        this.artistDiscoveryRepository = artistDiscoveryRepository;
-        this.albumDiscoveryRepository = albumDiscoveryRepository;
+        this.discoveryTaskRepository = discoveryTaskRepository;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
         this.randomFetcher = randomFetcher;
@@ -116,7 +113,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public ArtistDiscoveryData getArtistDiscoveryData(String artistId) {
-        List<String> topSongIds = artistDiscoveryRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
+        List<String> topSongIds = discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
                 .map(json -> JsonConverter.listFromJson(json, String.class)).orElse(emptyList()).stream()
                 .filter(Objects::nonNull).toList();
         if (!topSongIds.isEmpty()) {
@@ -130,7 +127,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public AlbumDiscoveryData getAlbumDiscoveryData(String albumId) {
-        MusicBrainzAlbumData data = albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
+        MusicBrainzAlbumData data = discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
                 .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
         if (data == null) {
             return new AlbumDiscoveryData(ReleaseType.UNKNOWN, null);

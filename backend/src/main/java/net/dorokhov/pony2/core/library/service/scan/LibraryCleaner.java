@@ -23,9 +23,7 @@ public class LibraryCleaner {
     private final ArtistRepository artistRepository;
     private final GenreRepository genreRepository;
     private final ArtistGenreRepository artistGenreRepository;
-    private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final ArtworkStorage artworkStorage;
 
     public LibraryCleaner(
@@ -34,9 +32,7 @@ public class LibraryCleaner {
             ArtistRepository artistRepository,
             GenreRepository genreRepository,
             ArtistGenreRepository artistGenreRepository,
-            ArtistDiscoveryRepository artistDiscoveryRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
-            AlbumDiscoveryRepository albumDiscoveryRepository,
             ArtworkStorage artworkStorage
     ) {
         this.songRepository = songRepository;
@@ -44,9 +40,7 @@ public class LibraryCleaner {
         this.artistRepository = artistRepository;
         this.genreRepository = genreRepository;
         this.artistGenreRepository = artistGenreRepository;
-        this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
-        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.artworkStorage = artworkStorage;
     }
 
@@ -54,7 +48,6 @@ public class LibraryCleaner {
     public boolean deleteArtistIfUnused(Artist artist) {
         if (albumRepository.countByArtistId(artist.getId()) == 0) {
             artistDiscoveryIndexRepository.deleteByArtistId(artist.getId());
-            artistDiscoveryRepository.deleteByArtistId(artist.getId());
             artistGenreRepository.deleteByArtistId(artist.getId());
             artistRepository.deleteById(artist.getId());
             logger.debug("Deleting artist '{}'.", artist);
@@ -66,7 +59,6 @@ public class LibraryCleaner {
     @Transactional
     public boolean deleteAlbumIfUnused(Album album) {
         if (songRepository.countByAlbumId(album.getId()) == 0) {
-            albumDiscoveryRepository.deleteByAlbumId(album.getId());
             albumRepository.deleteById(album.getId());
             logger.debug("Deleting album '{}'.", album);
             return true;

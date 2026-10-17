@@ -4,7 +4,6 @@ import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
@@ -14,10 +13,8 @@ import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyTopTracksService;
@@ -43,9 +40,7 @@ public class ArtistDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final AlbumRepository albumRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final SpotifyArtistDataService spotifyArtistDataService;
@@ -57,9 +52,7 @@ public class ArtistDiscoveryService {
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
-            ArtistDiscoveryRepository artistDiscoveryRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
-            AlbumDiscoveryRepository albumDiscoveryRepository,
             AlbumRepository albumRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             SpotifyArtistDataService spotifyArtistDataService,
@@ -70,9 +63,7 @@ public class ArtistDiscoveryService {
             ConfigService configService,
             PlatformTransactionManager transactionManager
     ) {
-        this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
-        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.albumRepository = albumRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.spotifyArtistDataService = spotifyArtistDataService;
@@ -85,30 +76,28 @@ public class ArtistDiscoveryService {
     }
 
     public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
-        ArtistDiscovery artistDiscovery = createDiscovery(discoveryJob, artist);
         List<Album> albums = requireNonNull(transactionTemplate.execute(status ->
-                artistDiscoveryRepository.findById(artistDiscovery.getId()).orElseThrow()
-                        .getArtist().getAlbums().stream().sorted().toList()));
-        discover(discoveryJob, cacheEnabled, artistDiscovery, albums, album -> true, observer);
+                albumRepository.findByArtistId(artist.getId()).stream().sorted().toList()));
+        discover(discoveryJob, artist, cacheEnabled, albums, true, album -> true, observer);
     }
 
     void discoverForFullJob(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
                             boolean discoverArtist, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
-        ArtistDiscovery artistDiscovery = discoverArtist ? createDiscovery(discoveryJob, artist) : null;
-        discover(discoveryJob, cacheEnabled, artistDiscovery, albums, shouldDiscoverAlbum, observer);
+        discover(discoveryJob, artist, cacheEnabled, albums, discoverArtist, shouldDiscoverAlbum, observer);
     }
 
-    private void discover(DiscoveryJob discoveryJob, boolean cacheEnabled, @Nullable ArtistDiscovery artistDiscovery,
-                          List<Album> albums, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
+    private void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
+                          boolean discoverArtist, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
         boolean llmEnabled = configService.get().llmEnabled();
-        long tasksComplete = artistDiscovery == null && llmEnabled ? 2 : 0;
+        long tasksComplete = !discoverArtist && llmEnabled ? 2 : 0;
         long tasksTotal = (llmEnabled ? 2 : 0) + albums.size();
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
-        if (llmEnabled && artistDiscovery != null) {
-            taskExecutor.execute(new SpotifyArtistDataTaskExecution(artistDiscovery, cacheEnabled));
+        if (llmEnabled && discoverArtist) {
+            SpotifyArtistDataTaskExecution artistDataExecution = new SpotifyArtistDataTaskExecution(discoveryJob, artist, cacheEnabled);
+            taskExecutor.execute(artistDataExecution);
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
-            String spotifyArtistDataTaskId = artistDiscovery.getTasks().getLast().getId();
-            taskExecutor.execute(new SpotifyTopTracksTaskExecution(artistDiscovery, spotifyArtistDataTaskId, cacheEnabled));
+            String spotifyArtistDataTaskId = requireNonNull(artistDataExecution.taskId);
+            taskExecutor.execute(new SpotifyTopTracksTaskExecution(discoveryJob, artist, spotifyArtistDataTaskId, cacheEnabled));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
         for (Album album : albums) {
@@ -126,7 +115,7 @@ public class ArtistDiscoveryService {
             String musicBrainzArtistId = null;
             String countryCode = null;
             for (Album album : albums) {
-                MusicBrainzAlbumData data = albumDiscoveryRepository.findLatestCompletedMusicBrainzResultByAlbumId(album.getId(), Limit.of(1))
+                MusicBrainzAlbumData data = discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(album.getId(), Limit.of(1))
                         .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
                 if (data == null) {
                     continue;
@@ -152,26 +141,13 @@ public class ArtistDiscoveryService {
         });
     }
 
-    private ArtistDiscovery createDiscovery(DiscoveryJob discoveryJob, Artist artist) {
-        return requireNonNull(transactionTemplate.execute(status ->
-                artistDiscoveryRepository.save(new ArtistDiscovery()
-                        .setArtist(artist)
-                        .setJob(discoveryJob))));
-    }
-
-    private DiscoveryTask startTask(ArtistDiscovery discovery, DiscoveryTaskType type, Object parameter) {
-        DiscoveryTask task = requireNonNull(transactionTemplate.execute(status -> {
-            ArtistDiscovery persistedDiscovery = artistDiscoveryRepository.findById(discovery.getId()).orElseThrow();
-            DiscoveryTask startedTask = discoveryTaskRepository.save(new DiscoveryTask()
-                    .setJob(persistedDiscovery.getJob())
-                    .setType(type)
-                    .setStatus(DiscoveryTask.Status.STARTED)
-                    .setParameter(JsonConverter.toJson(parameter)));
-            persistedDiscovery.getTasks().add(startedTask);
-            return startedTask;
-        }));
-        discovery.getTasks().add(task);
-        return task;
+    private DiscoveryTask startTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type, Object parameter) {
+        return requireNonNull(transactionTemplate.execute(status -> discoveryTaskRepository.save(new DiscoveryTask()
+                .setJob(job)
+                .setArtist(artist)
+                .setType(type)
+                .setStatus(DiscoveryTask.Status.STARTED)
+                .setParameter(JsonConverter.toJson(parameter)))));
     }
 
     private void notifyProgressObserver(DiscoveryProgress discoveryProgress, @Nullable Consumer<DiscoveryProgress> handler) {
@@ -186,21 +162,25 @@ public class ArtistDiscoveryService {
 
     private class SpotifyArtistDataTaskExecution implements DiscoveryTaskExecution<SpotifyArtistData> {
 
-        private final ArtistDiscovery discovery;
+        private final DiscoveryJob job;
+        private final Artist artist;
         private final boolean cacheEnabled;
 
-        private SpotifyArtistDataTaskExecution(ArtistDiscovery discovery, boolean cacheEnabled) {
-            this.discovery = discovery;
+        private String taskId;
+
+        private SpotifyArtistDataTaskExecution(DiscoveryJob job, Artist artist, boolean cacheEnabled) {
+            this.job = job;
+            this.artist = artist;
             this.cacheEnabled = cacheEnabled;
         }
 
         @Override
         public DiscoveryTask startTask() {
-            return ArtistDiscoveryService.this.startTask(
-                    discovery,
-                    DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                    new DiscoveryTask.ArtistParameter(discovery.getArtist().getId())
-            );
+            DiscoveryTask task = ArtistDiscoveryService.this.startTask(
+                    job, artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+                    new DiscoveryTask.ArtistParameter(artist.getId()));
+            taskId = task.getId();
+            return task;
         }
 
         @Nullable
@@ -214,7 +194,6 @@ public class ArtistDiscoveryService {
             if (result == null) {
                 return;
             }
-            Artist artist = discovery.getArtist();
             ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
                     .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
             String spotifyArtistId = result.status() == SpotifyArtistData.Status.FOUND
@@ -224,7 +203,6 @@ public class ArtistDiscoveryService {
 
         @Override
         public void onError(DiscoveryTask task, RuntimeException error) {
-            Artist artist = discovery.getArtist();
             logService.error(logger, "Could not discover Spotify data for artist '{} -> {}'.",
                     artist.getId(), artist.getName(), error);
         }
@@ -232,12 +210,14 @@ public class ArtistDiscoveryService {
 
     private class SpotifyTopTracksTaskExecution implements DiscoveryTaskExecution<List<String>> {
 
-        private final ArtistDiscovery discovery;
+        private final DiscoveryJob job;
+        private final Artist artist;
         private final String spotifyArtistDataTaskId;
         private final boolean cacheEnabled;
 
-        private SpotifyTopTracksTaskExecution(ArtistDiscovery discovery, String spotifyArtistDataTaskId, boolean cacheEnabled) {
-            this.discovery = discovery;
+        private SpotifyTopTracksTaskExecution(DiscoveryJob job, Artist artist, String spotifyArtistDataTaskId, boolean cacheEnabled) {
+            this.job = job;
+            this.artist = artist;
             this.spotifyArtistDataTaskId = spotifyArtistDataTaskId;
             this.cacheEnabled = cacheEnabled;
         }
@@ -245,9 +225,10 @@ public class ArtistDiscoveryService {
         @Override
         public DiscoveryTask startTask() {
             return ArtistDiscoveryService.this.startTask(
-                    discovery,
+                    job,
+                    artist,
                     DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
-                    new DiscoveryTask.SpotifyTopTracksParameter(discovery.getArtist().getId(), spotifyArtistDataTaskId)
+                    new DiscoveryTask.SpotifyTopTracksParameter(artist.getId(), spotifyArtistDataTaskId)
             );
         }
 
@@ -258,7 +239,6 @@ public class ArtistDiscoveryService {
 
         @Override
         public void onError(DiscoveryTask task, RuntimeException error) {
-            Artist artist = discovery.getArtist();
             logService.error(logger, "Could not match Spotify top tracks for artist '{} -> {}'.",
                     artist.getId(), artist.getName(), error);
         }

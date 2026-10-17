@@ -6,8 +6,6 @@ import net.dorokhov.pony2.core.library.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class LibraryCleanerIntegrationTest extends IntegrationTest {
@@ -20,11 +18,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     @Autowired
     private AlbumRepository albumRepository;
     @Autowired
-    private ArtistDiscoveryRepository artistDiscoveryRepository;
-    @Autowired
     private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    @Autowired
-    private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
     @Autowired
@@ -32,31 +26,20 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldDeleteArtistWithDiscovery() {
+        Artist artist = artistRepository.save(new Artist());
+        DiscoveryTask task = discoveryTaskRepository.saveAndFlush(
+                new DiscoveryTask().setArtist(artist).setJob(saveDiscoveryJob())
+                        .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                        .setParameter("{}").setResult("{}"));
+        artistDiscoveryIndexRepository.saveAndFlush(new ArtistDiscoveryIndex()
+                .setArtist(artist).setSpotifyArtistId("spotify-artist"));
 
-        getTransactionTemplate().execute(status -> {
+        assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isTrue();
 
-            DiscoveryTask task = saveDiscoveryTask(saveDiscoveryJob());
-            Artist artist = new Artist();
-            artist.getDiscoveries().add(new ArtistDiscovery()
-                    .setArtist(artist)
-                    .setJob(task.getJob())
-                    .setTasks(List.of(task)));
-            artist = artistRepository.save(artist);
-            artistRepository.flush();
-            artistDiscoveryIndexRepository.saveAndFlush(new ArtistDiscoveryIndex()
-                    .setArtist(artist)
-                    .setSpotifyArtistId("spotify-artist"));
-
-            assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isTrue();
-            artistRepository.flush();
-
-            assertThat(artistRepository.findById(artist.getId())).isEmpty();
-            assertThat(artistDiscoveryRepository.count()).isZero();
-            assertThat(artistDiscoveryIndexRepository.count()).isZero();
-            assertThat(discoveryTaskRepository.count()).isOne();
-
-            return null;
-        });
+        assertThat(artistRepository.findById(artist.getId())).isEmpty();
+        assertThat(artistDiscoveryIndexRepository.count()).isZero();
+        assertThat(discoveryTaskRepository.count()).isOne();
+        assertThat(discoveryTaskRepository.findById(task.getId()).orElseThrow().getArtist()).isNull();
     }
 
     @Test
@@ -75,28 +58,18 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldDeleteAlbumWithDiscovery() {
+        Artist artist = artistRepository.save(new Artist());
+        Album album = albumRepository.save(new Album().setArtist(artist));
+        DiscoveryTask task = discoveryTaskRepository.saveAndFlush(
+                new DiscoveryTask().setAlbum(album).setJob(saveDiscoveryJob())
+                        .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                        .setParameter("{}").setResult("{}"));
 
-        getTransactionTemplate().execute(status -> {
+        assertThat(libraryCleaner.deleteAlbumIfUnused(album)).isTrue();
 
-            Artist artist = artistRepository.save(new Artist());
-            DiscoveryTask task = saveDiscoveryTask(saveDiscoveryJob());
-            Album album = new Album().setArtist(artist);
-            album.getDiscoveries().add(new AlbumDiscovery()
-                    .setAlbum(album)
-                    .setJob(task.getJob())
-                    .setTasks(List.of(task)));
-            album = albumRepository.save(album);
-            albumRepository.flush();
-
-            assertThat(libraryCleaner.deleteAlbumIfUnused(album)).isTrue();
-            albumRepository.flush();
-
-            assertThat(albumRepository.findById(album.getId())).isEmpty();
-            assertThat(albumDiscoveryRepository.count()).isZero();
-            assertThat(discoveryTaskRepository.count()).isOne();
-
-            return null;
-        });
+        assertThat(albumRepository.findById(album.getId())).isEmpty();
+        assertThat(discoveryTaskRepository.count()).isOne();
+        assertThat(discoveryTaskRepository.findById(task.getId()).orElseThrow().getAlbum()).isNull();
     }
 
     private DiscoveryJob saveDiscoveryJob() {

@@ -68,8 +68,6 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private DiscoveryJobRepository jobRepository;
     @Autowired
-    private ArtistDiscoveryRepository artistDiscoveryRepository;
-    @Autowired
     private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     @Autowired
     private DiscoveryTaskRepository taskRepository;
@@ -135,8 +133,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                         assertThat(task.getRawResult()).isEqualTo("[null]");
                     });
             getTransactionTemplate().executeWithoutResult(status -> {
-                ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
-                assertThat(discovery.getTasks()).singleElement()
+                List<DiscoveryTask> tasks = taskRepository.findAll().stream()
+                        .filter(task -> task.getArtist() != null && task.getArtist().getId().equals(artist.getId())).toList();
+                assertThat(tasks).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
             });
             return new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse))));
@@ -155,9 +154,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3), DiscoveryProgress.Value.of(3, 3));
 
         getTransactionTemplate().executeWithoutResult(status -> {
-            ArtistDiscovery discovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
-            assertThat(discovery.getTasks()).hasSize(2);
-            assertThat(discovery.getTasks().stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_ARTIST_DATA))
+            List<DiscoveryTask> tasks = taskRepository.findAll().stream()
+                        .filter(task -> task.getArtist() != null && task.getArtist().getId().equals(artist.getId())).toList();
+            assertThat(tasks).hasSize(2);
+            assertThat(tasks.stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_ARTIST_DATA))
                     .singleElement().satisfies(task -> {
                         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
                         assertThat(task.getType()).isEqualTo(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
@@ -309,18 +309,16 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Test
     void shouldReadSpotifyArtistIdFromPreviousTask() {
         Artist artist = saveArtist("Album");
-        ArtistDiscovery discovery = artistDiscoveryRepository.save(new ArtistDiscovery()
-                .setArtist(artist)
-                .setJob(saveJob()));
+        DiscoveryJob job = saveJob();
         SpotifyArtistData artistData = spotifyArtistData("spotify-artist");
         List<String> tracks = List.of("track-1", "track-2");
 
-        executeTask(discovery, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+        executeTask(job, artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 new DiscoveryTask.ArtistParameter(artist.getId()), task -> artistData);
-        executeTask(discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, "spotify-artist", task -> {
+        executeTask(job, artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, "spotify-artist", task -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             String spotifyArtistId = JsonConverter.fromJson(task.getParameter(), String.class);
-            DiscoveryTask previousTask = discovery.getTasks().getFirst();
+            DiscoveryTask previousTask = artistDataTasks().getFirst();
             assertThat(previousTask.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             SpotifyArtistData previousResult = JsonConverter.fromJson(previousTask.getResult(), SpotifyArtistData.class);
             assertThat(previousResult.artist().id()).isEqualTo(spotifyArtistId);
@@ -328,10 +326,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         });
 
         getTransactionTemplate().executeWithoutResult(status -> {
-            ArtistDiscovery persistedDiscovery = artistDiscoveryRepository.findById(discovery.getId()).orElseThrow();
-            assertThat(persistedDiscovery.getTasks()).extracting(DiscoveryTask::getStatus)
+            List<DiscoveryTask> persistedTasks = taskRepository.findAll();
+            assertThat(persistedTasks).extracting(DiscoveryTask::getStatus)
                     .containsOnly(DiscoveryTask.Status.COMPLETE);
-            assertThat(persistedDiscovery.getTasks()).extracting(DiscoveryTask::getResult)
+            assertThat(persistedTasks).extracting(DiscoveryTask::getResult)
                     .containsExactlyInAnyOrder(JsonConverter.toJson(artistData), JsonConverter.toJson(tracks));
         });
     }
@@ -383,7 +381,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getRawResult()).isNull();
         });
         assertEmptyTopTracks();
-        assertThat(artistDiscoveryRepository.count()).isEqualTo(1);
+        assertThat(artistDataTasks()).singleElement().satisfies(task ->
+                assertThat(task.getArtist().getId()).isEqualTo(artist.getId()));
         assertThat(cacheRepository.count()).isZero();
         if (existingIndex) {
             assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
@@ -711,12 +710,12 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .setStatus(DiscoveryJob.Status.STARTED));
     }
 
-    private <R> void executeTask(ArtistDiscovery discovery, DiscoveryTaskType type, Object parameter,
+    private <R> void executeTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type, Object parameter,
                                   Function<DiscoveryTask, R> action) {
         taskExecutor.execute(new DiscoveryTaskExecution<R>() {
             @Override
             public DiscoveryTask startTask() {
-                return ReflectionTestUtils.invokeMethod(service, "startTask", discovery, type, parameter);
+                return ReflectionTestUtils.invokeMethod(service, "startTask", job, artist, type, parameter);
             }
 
             @Override

@@ -109,6 +109,10 @@ public class DiscoveryFacade {
         };
     }
 
+    public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
+        discoveryJobService.cleanDiscoveryData();
+    }
+
     @Transactional
     public DiscoveryJobDto startFullDiscoveryJob(boolean cacheEnabled) throws ConcurrentLibraryJobException {
         return DiscoveryJobDto.of(discoveryJobService.startFullJob(cacheEnabled));

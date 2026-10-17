@@ -5,15 +5,16 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
+import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
-import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,8 +30,7 @@ public class FullDiscoveryService {
 
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
-    private final AlbumDiscoveryRepository albumDiscoveryRepository;
-    private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final DiscoveryTaskRepository discoveryTaskRepository;
     private final ArtistDiscoveryService artistDiscoveryService;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ConfigService configService;
@@ -38,16 +38,14 @@ public class FullDiscoveryService {
     public FullDiscoveryService(
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
-            AlbumDiscoveryRepository albumDiscoveryRepository,
-            ArtistDiscoveryRepository artistDiscoveryRepository,
+            DiscoveryTaskRepository discoveryTaskRepository,
             ArtistDiscoveryService artistDiscoveryService,
             LibraryJobSynchronizer jobSynchronizer,
             ConfigService configService
     ) {
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
-        this.albumDiscoveryRepository = albumDiscoveryRepository;
-        this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.discoveryTaskRepository = discoveryTaskRepository;
         this.artistDiscoveryService = artistDiscoveryService;
         this.jobSynchronizer = jobSynchronizer;
         this.configService = configService;
@@ -108,21 +106,22 @@ public class FullDiscoveryService {
     }
 
     private boolean shouldDiscoverArtist(Artist artist, long tasksTotal) {
-        return artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId())
-                .map(discovery -> isDiscoveryOutdated(artist.getUpdateDate(), discovery.getCreationDate()) ||
-                        artistDiscoveryRepository.countCompletedTasksByDiscoveryId(discovery.getId()) < tasksTotal)
-                .orElse(true);
+        if (tasksTotal == 0) {
+            return false;
+        }
+        LocalDateTime entityDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
+        return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                        artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))
+                .map(entityDate::isAfter).orElse(true) ||
+                discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                                artist.getId(), DiscoveryTaskType.SPOTIFY_TOP_TRACKS, Limit.of(1))
+                        .map(entityDate::isAfter).orElse(true);
     }
 
     private boolean shouldDiscoverAlbum(Album album) {
-        return albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId())
-                .map(discovery -> isDiscoveryOutdated(album.getUpdateDate(), discovery.getCreationDate()) ||
-                        isDiscoveryOutdated(album.getArtist().getUpdateDate(), discovery.getCreationDate()) ||
-                        albumDiscoveryRepository.countCompletedTasksByDiscoveryId(discovery.getId()) < 1)
-                .orElse(true);
-    }
-
-    private boolean isDiscoveryOutdated(@Nullable LocalDateTime updateDate, @Nullable LocalDateTime discoveryDate) {
-        return updateDate != null && (discoveryDate == null || updateDate.isAfter(discoveryDate));
+        LocalDateTime entityDate = album.getUpdateDate() != null ? album.getUpdateDate() : album.getCreationDate();
+        return discoveryTaskRepository.findLatestCompletedCreationDateByAlbumIdAndType(
+                        album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, Limit.of(1))
+                .map(entityDate::isAfter).orElse(true);
     }
 }

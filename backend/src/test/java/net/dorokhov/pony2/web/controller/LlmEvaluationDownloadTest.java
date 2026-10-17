@@ -1,25 +1,34 @@
 package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.web.service.DiscoveryFacade;
+import net.dorokhov.pony2.web.service.LibraryFacade;
 import net.dorokhov.pony2.web.service.LlmEvaluationExportService;
+import net.dorokhov.pony2.web.service.ScanFacade;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LlmEvaluationDownloadTest {
 
     private final LlmEvaluationExportService exportService = mock(LlmEvaluationExportService.class);
-    private final LlmAdminController controller = new LlmAdminController(mock(DiscoveryCacheService.class), exportService);
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
+    private final LibraryAdminController controller = new LibraryAdminController(mock(ScanFacade.class),
+            mock(DiscoveryFacade.class), mock(LibraryFacade.class), mock(DiscoveryCacheService.class),
+            exportService, jobSynchronizer);
 
     @Test
-    void shouldRejectOverlappingDownloadAndReleaseSlotAfterCompletion() throws IOException {
+    void shouldRejectOverlappingDownloadAndReleaseSlotAfterCompletion() throws Exception {
         MockHttpServletResponse overlapping = new MockHttpServletResponse();
         doAnswer(invocation -> {
             controller.downloadEvaluation(overlapping);
@@ -36,7 +45,7 @@ class LlmEvaluationDownloadTest {
     }
 
     @Test
-    void shouldLeavePartialDownloadUntouchedWhenExportFailsAfterCommit() throws IOException {
+    void shouldLeavePartialDownloadUntouchedWhenExportFailsAfterCommit() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         doAnswer(invocation -> {
             OutputStream output = invocation.getArgument(0);
@@ -53,6 +62,23 @@ class LlmEvaluationDownloadTest {
         controller.downloadEvaluation(next);
         assertThat(next.getStatus()).isEqualTo(200);
         verify(exportService, times(2)).write(any(), any());
+    }
+
+    @Test
+    void shouldHoldLibraryLockUntilExportFinishes() throws Exception {
+        doAnswer(invocation -> {
+            assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
+            assertThatThrownBy(() -> jobSynchronizer.registerScanJob(Duration.ZERO))
+                    .isInstanceOf(ConcurrentLibraryJobException.class);
+            assertThatThrownBy(jobSynchronizer::registerMaintenanceJob).isInstanceOf(ConcurrentLibraryJobException.class);
+            return null;
+        }).when(exportService).write(any(), any());
+
+        controller.downloadEvaluation(new MockHttpServletResponse());
+
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerDiscoveryJob()) {
+            assertThat(jobSynchronizer.isDiscoveryCancelled()).isFalse();
+        }
     }
 
 }

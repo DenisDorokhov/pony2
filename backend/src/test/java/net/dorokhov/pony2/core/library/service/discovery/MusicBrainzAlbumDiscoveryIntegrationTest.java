@@ -11,9 +11,7 @@ import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
@@ -29,9 +27,7 @@ import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
-import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
@@ -117,9 +113,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private SongRepository songRepository;
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
-    @Autowired private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    @Autowired private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private DiscoveryCacheRepository cacheRepository;
@@ -193,11 +187,13 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 new MusicBrainzAlbumData("group", "Album", List.of("Live", "Compilation"), "1986-10", "artist", List.of("US", "GB")));
         assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).containsExactly(SEARCH_URL, ARTIST_URL);
         assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, rawArtistResponse);
-        assertThat(artistDiscoveryRepository.count()).isZero();
+        assertThat(artistTasks()).isEmpty();
         getTransactionTemplate().executeWithoutResult(status -> {
-            AlbumDiscovery discovery = albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId()).orElseThrow();
-            assertThat(discovery.getJob().getId()).isEqualTo(job.getId());
-            assertThat(discovery.getTasks()).singleElement().satisfies(value -> assertThat(value.getId()).isEqualTo(task.getId()));
+            assertThat(taskRepository.findById(task.getId())).get().satisfies(value -> {
+                assertThat(value.getJob().getId()).isEqualTo(job.getId());
+                assertThat(value.getAlbum().getId()).isEqualTo(album.getId());
+                assertThat(value.getArtist()).isNull();
+            });
         });
         verify(musicBrainzClient).openSession(eq("pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (first@example.com)"), any(), eq(cacheEnabled));
         verify(model, never()).call(any(Prompt.class));
@@ -1298,13 +1294,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
         }
         getTransactionTemplate().executeWithoutResult(status -> {
-            assertThat(artistDiscoveryRepository.findAll()).singleElement().satisfies(discovery ->
-                    assertThat(discovery.getTasks()).hasSize(llmEnabled ? 2 : 0));
-            assertThat(albumDiscoveryRepository.findAll()).extracting(discovery -> discovery.getAlbum().getId())
-                    .containsExactlyInAnyOrder(album.getId(), second.getId());
-            assertThat(albumDiscoveryRepository.findAll()).allSatisfy(discovery ->
-                    assertThat(discovery.getTasks()).singleElement().satisfies(task ->
-                            assertThat(task.getType()).isEqualTo(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)));
+            assertThat(artistTasks()).hasSize(llmEnabled ? 2 : 0);
+            assertThat(taskRepository.findAll().stream().filter(value -> value.getAlbum() != null))
+                    .extracting(value -> value.getAlbum().getId()).containsExactlyInAnyOrder(album.getId(), second.getId());
         });
     }
 
@@ -1354,8 +1346,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(progressCalls).hasSize(expectedProgressCalls);
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(completedTasksBeforeCancellation, 3));
         assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
-        assertThat(artistDiscoveryRepository.count()).isEqualTo(1);
-        assertThat(albumDiscoveryRepository.count()).isEqualTo(1);
+        assertThat(artistTasks()).hasSize(2);
+        assertThat(albumTasks(album)).hasSize(1);
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
         verifyNoInteractions(musicBrainzClient);
         verify(model, never()).call(any(Prompt.class));
@@ -1380,8 +1372,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, progressCalls::add);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(expectedNewTasks);
-        assertThat(artistDiscoveryRepository.count()).isEqualTo((artistTasks >= 0 ? 1 : 0) + (artistTasks < 2 ? 1 : 0));
-        assertThat(albumDiscoveryRepository.count()).isEqualTo((albumTasks >= 0 ? 1 : 0) + (albumTasks < 1 ? 1 : 0));
+        assertThat(artistTasks()).hasSize(Math.max(artistTasks, 0) + (artistTasks < 2 ? 2 : 0));
+        assertThat(albumTasks(album)).hasSize(Math.max(albumTasks, 0) + (albumTasks < 1 ? 1 : 0));
         assertThat(progressCalls.getFirst().getValue()).isEqualTo(DiscoveryProgress.Value.of(0, 3));
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(3, 3));
     }
@@ -1394,10 +1386,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.INTERRUPTED));
         DiscoveryTask completedTask = task(previousJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE);
         DiscoveryTask incompleteArtistTask = task(previousJob, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, incompleteStatus);
-        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setJob(previousJob)
-                .setTasks(List.of(completedTask, incompleteArtistTask)));
         DiscoveryTask incompleteAlbumTask = task(previousJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, incompleteStatus);
-        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setJob(previousJob).setTasks(List.of(incompleteAlbumTask)));
         search(List.of());
         doAnswer(invocation -> {
             exchangeObserver.onRequest(SEARCH_URL);
@@ -1418,7 +1407,6 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.INTERRUPTED));
         saveDiscoveryHistory(previousJob, 2, 1);
         Album emptyAlbum = albumRepository.save(new Album().setArtist(artist).setName("Empty discovery"));
-        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(emptyAlbum).setJob(previousJob));
         Album missingAlbum = albumRepository.save(new Album().setArtist(artist).setName("Missing discovery"));
         search(List.of());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
@@ -1426,47 +1414,44 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, null);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(2);
-        assertThat(artistDiscoveryRepository.count()).isEqualTo(1);
-        assertThat(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId())).get()
-                .satisfies(discovery -> assertThat(discovery.getJob().getId()).isEqualTo(previousJob.getId()));
-        assertThat(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(emptyAlbum.getId())).get()
-                .satisfies(discovery -> assertThat(discovery.getJob().getId()).isEqualTo(nextJob.getId()));
-        assertThat(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(missingAlbum.getId())).get()
-                .satisfies(discovery -> assertThat(discovery.getJob().getId()).isEqualTo(nextJob.getId()));
+        assertThat(artistTasks()).hasSize(2);
+        assertThat(albumTasks(album)).singleElement()
+                .satisfies(task -> assertThat(task.getJob().getId()).isEqualTo(previousJob.getId()));
+        assertThat(albumTasks(emptyAlbum)).singleElement()
+                .satisfies(task -> assertThat(task.getJob().getId()).isEqualTo(nextJob.getId()));
+        assertThat(albumTasks(missingAlbum)).singleElement()
+                .satisfies(task -> assertThat(task.getJob().getId()).isEqualTo(nextJob.getId()));
     }
 
     @Test
-    void shouldRetryLatestIncompleteArtistWithoutFallingBackToOlderCompleteDiscovery() {
+    void shouldReuseSuccessfulArtistTasksDespiteLaterFailedTask() {
         enableLlm();
         notFoundResponses();
         DiscoveryJob completedJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         saveDiscoveryHistory(completedJob, 2, 1);
-        ArtistDiscovery completedDiscovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
-        jdbcTemplate.update("UPDATE artist_discovery SET creation_date = ? WHERE id = ?",
-                LocalDateTime.now().minusDays(1), completedDiscovery.getId());
         DiscoveryJob interruptedJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.INTERRUPTED));
-        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setJob(interruptedJob));
+        task(interruptedJob, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.FAILED);
         search(List.of());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
 
         fullDiscoveryService.discover(nextJob, false, null);
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(2);
-        assertThat(albumDiscoveryRepository.count()).isEqualTo(1);
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
+        assertThat(albumTasks(album)).hasSize(1);
     }
 
     @ParameterizedTest
-    @CsvSource({"true,false,3", "false,true,1", "true,true,3"})
+    @CsvSource({"true,false,2", "false,true,1", "true,true,3"})
     void shouldRetryOutdatedPartsOfFullDiscovery(boolean artistUpdated, boolean albumUpdated, int expectedNewTasks) {
         enableLlm();
         notFoundResponses();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         saveDiscoveryHistory(previousJob, 2, 1);
         LocalDateTime now = LocalDateTime.now();
-        ArtistDiscovery previousArtistDiscovery = artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc(artist.getId()).orElseThrow();
-        AlbumDiscovery previousAlbumDiscovery = albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId()).orElseThrow();
-        jdbcTemplate.update("UPDATE artist_discovery SET creation_date = ? WHERE id = ?", now.minusHours(1), previousArtistDiscovery.getId());
-        jdbcTemplate.update("UPDATE album_discovery SET creation_date = ? WHERE id = ?", now.minusHours(1), previousAlbumDiscovery.getId());
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ?, update_date = NULL WHERE discovery_job_id = ?",
+                now.minusHours(1), previousJob.getId());
+        jdbcTemplate.update("UPDATE artist SET creation_date = ?, update_date = NULL WHERE id = ?", now.minusDays(1), artist.getId());
+        jdbcTemplate.update("UPDATE album SET creation_date = ?, update_date = NULL WHERE id = ?", now.minusDays(1), album.getId());
         if (artistUpdated) {
             jdbcTemplate.update("UPDATE artist SET update_date = ? WHERE id = ?", now, artist.getId());
         }
@@ -1608,7 +1593,6 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         DiscoveryTask incompleteTask = task(incompleteJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, incompleteStatus);
         taskRepository.save(incompleteTask.setResult(JsonConverter.toJson(
                 new MusicBrainzAlbumData("incomplete", "Album", List.of(), null, "incomplete-artist", List.of("DE")))));
-        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setJob(incompleteJob).setTasks(List.of(incompleteTask)));
 
         artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> false, null);
 
@@ -1692,8 +1676,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> false, null);
 
         assertThat(taskRepository.findAll()).hasSize(2);
-        assertThat(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc(album.getId())).get()
-                .extracting(discovery -> discovery.getJob().getId()).isEqualTo(otherJob.getId());
+        assertThat(taskRepository.findLatestCompletedByAlbumIdAndType(album.getId(),
+                DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, org.springframework.data.domain.Limit.of(1))).get()
+                .extracting(task -> task.getJob().getId()).isEqualTo(otherJob.getId());
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("other-job-artist");
             assertThat(index.getCountryCode()).isEqualTo("DE");
@@ -1845,21 +1830,34 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             if (artistTasks >= 2) {
                 tasks.add(task(job, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE));
             }
-            artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setJob(job).setTasks(tasks));
         }
         if (albumTasks >= 0) {
             List<DiscoveryTask> tasks = albumTasks == 0 ? List.of()
                     : List.of(task(job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE));
-            albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setJob(job).setTasks(tasks));
         }
     }
 
     private DiscoveryTask task(DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status) {
-        return taskRepository.save(new DiscoveryTask().setJob(job).setType(type).setStatus(status).setParameter("{}"));
+        DiscoveryTask task = new DiscoveryTask().setJob(job).setType(type).setStatus(status).setParameter("{}");
+        if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
+            task.setAlbum(album);
+        } else {
+            task.setArtist(artist);
+        }
+        return taskRepository.save(task);
     }
 
     private DiscoveryJob job(DiscoveryType type) {
         return jobRepository.save(new DiscoveryJob().setType(type).setStatus(DiscoveryJob.Status.STARTED));
+    }
+
+    private List<DiscoveryTask> artistTasks() {
+        return taskRepository.findAll().stream().filter(task -> task.getArtist() != null).toList();
+    }
+
+    private List<DiscoveryTask> albumTasks(Album target) {
+        return taskRepository.findAll().stream().filter(task -> task.getAlbum() != null &&
+                task.getAlbum().getId().equals(target.getId())).toList();
     }
 
     private DiscoveryTask onlyTask() {

@@ -29,13 +29,6 @@ public interface AlbumRepository extends JpaRepository<Album, String> {
 
     Album findByArtistIdAndName(String artistId, @Nullable String name);
 
-    @Query("""
-            SELECT a FROM Album a
-            WHERE a.id > :afterId
-            ORDER BY a.id
-            """)
-    List<Album> findForEvaluation(String afterId, Pageable pageable);
-
     Page<Album> findByArtistIdAndArtworkNotNull(String artistId, Pageable pageable);
 
     Page<Album> findByArtworkId(@Nullable String artworkId, Pageable pageable);

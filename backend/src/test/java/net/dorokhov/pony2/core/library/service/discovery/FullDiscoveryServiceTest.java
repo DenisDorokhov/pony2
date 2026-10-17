@@ -3,15 +3,11 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryType;
-import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
@@ -24,6 +20,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Limit;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
+import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -52,9 +51,7 @@ public class FullDiscoveryServiceTest {
     @Mock
     private AlbumRepository albumRepository;
     @Mock
-    private AlbumDiscoveryRepository albumDiscoveryRepository;
-    @Mock
-    private ArtistDiscoveryRepository artistDiscoveryRepository;
+    private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock
     private ArtistDiscoveryService artistDiscoveryService;
     @Mock
@@ -87,11 +84,8 @@ public class FullDiscoveryServiceTest {
     public void shouldRetryArtistWhenCompletedTasksAreMissing(long completedTasks, boolean required) {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1");
-        ArtistDiscovery discovery = new ArtistDiscovery().setId("discovery1").setCreationDate(LocalDateTime.now());
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist1"))
-                .thenReturn(Optional.of(discovery));
-        when(artistDiscoveryRepository.countCompletedTasksByDiscoveryId("discovery1")).thenReturn(completedTasks);
+        artistTasks("artist1", completedTasks, LocalDateTime.now());
 
         fullDiscoveryService.discover(job, null);
 
@@ -106,14 +100,13 @@ public class FullDiscoveryServiceTest {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1").setUpdateDate(now);
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist1"))
-                .thenReturn(Optional.of(new ArtistDiscovery().setId("discovery1").setCreationDate(now.minusMinutes(1))));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(eq("artist1"), any(), any()))
+                .thenReturn(Optional.of(now.minusMinutes(1)));
 
         fullDiscoveryService.discover(job, null);
 
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
                 eq(List.of()), eq(true), any(), isNull());
-        verify(artistDiscoveryRepository, never()).countCompletedTasksByDiscoveryId(any());
     }
 
     @ParameterizedTest
@@ -131,15 +124,9 @@ public class FullDiscoveryServiceTest {
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
         when(albumRepository.count()).thenReturn(1L);
         when(albumRepository.findByArtistId("artist1")).thenReturn(albums);
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist1"))
-                .thenReturn(Optional.of(new ArtistDiscovery().setId("artistDiscovery1").setCreationDate(now)));
-        when(artistDiscoveryRepository.countCompletedTasksByDiscoveryId("artistDiscovery1")).thenReturn(2L);
+        artistTasks("artist1", 2L, now);
         if (exists) {
-            when(albumDiscoveryRepository.findFirstByAlbumIdOrderByCreationDateDesc("album1"))
-                    .thenReturn(Optional.of(new AlbumDiscovery().setId("albumDiscovery1").setCreationDate(now.minusMinutes(1))));
-            if (!outdated) {
-                when(albumDiscoveryRepository.countCompletedTasksByDiscoveryId("albumDiscovery1")).thenReturn(completedTasks);
-            }
+            albumTasks("album1", completedTasks, now.minusMinutes(1));
         }
         doAnswer(invocation -> {
             Predicate<Album> predicate = invocation.getArgument(5);
@@ -162,7 +149,7 @@ public class FullDiscoveryServiceTest {
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
                 .containsExactly(DiscoveryProgress.Value.of(0, 0));
-        verifyNoInteractions(artistDiscoveryRepository, albumDiscoveryRepository, artistDiscoveryService);
+        verifyNoInteractions(discoveryTaskRepository, artistDiscoveryService);
     }
 
     @Test
@@ -176,11 +163,8 @@ public class FullDiscoveryServiceTest {
         when(albumRepository.count()).thenReturn(3L);
         when(albumRepository.findByArtistId("artist1")).thenReturn(firstAlbums);
         when(albumRepository.findByArtistId("artist2")).thenReturn(secondAlbums);
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist1"))
-                .thenReturn(Optional.empty());
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist2"))
-                .thenReturn(Optional.of(new ArtistDiscovery().setId("discovery2").setCreationDate(LocalDateTime.now())));
-        when(artistDiscoveryRepository.countCompletedTasksByDiscoveryId("discovery2")).thenReturn(2L);
+        artistTasks("artist1", 0, LocalDateTime.now());
+        artistTasks("artist2", 2L, LocalDateTime.now());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(6);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 4)));
@@ -220,7 +204,7 @@ public class FullDiscoveryServiceTest {
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
                 .containsExactly(DiscoveryProgress.Value.of(0, 2));
-        verifyNoInteractions(artistDiscoveryService, artistDiscoveryRepository, albumDiscoveryRepository);
+        verifyNoInteractions(artistDiscoveryService, discoveryTaskRepository);
         verify(albumRepository, never()).findByArtistId(any());
         verify(taskRegistration).close();
     }
@@ -233,9 +217,7 @@ public class FullDiscoveryServiceTest {
         when(jobSynchronizer.registerDiscoveryTask()).thenReturn(taskRegistration);
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
         when(albumRepository.findByArtistId("artist1")).thenReturn(List.of(album));
-        when(artistDiscoveryRepository.findFirstByArtistIdOrderByCreationDateDesc("artist1"))
-                .thenReturn(Optional.of(new ArtistDiscovery().setId("discovery1").setCreationDate(LocalDateTime.now())));
-        when(artistDiscoveryRepository.countCompletedTasksByDiscoveryId("discovery1")).thenReturn(2L);
+        artistTasks("artist1", 2L, LocalDateTime.now());
         doNothing().doThrow(new DiscoveryInterruptedException()).when(jobSynchronizer).interruptDiscoveryIfCancelled();
         doAnswer(invocation -> {
             Predicate<Album> predicate = invocation.getArgument(5);
@@ -247,7 +229,7 @@ public class FullDiscoveryServiceTest {
         assertThatThrownBy(() -> fullDiscoveryService.discover(job, null))
                 .isInstanceOf(DiscoveryInterruptedException.class);
 
-        verifyNoInteractions(albumDiscoveryRepository);
+        verify(discoveryTaskRepository, never()).findLatestCompletedCreationDateByAlbumIdAndType(any(), any(), any());
         verify(taskRegistration).close();
     }
 
@@ -271,7 +253,7 @@ public class FullDiscoveryServiceTest {
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, 4), DiscoveryProgress.Value.of(1, 4));
-        verify(artistDiscoveryRepository, never()).findFirstByArtistIdOrderByCreationDateDesc("artist2");
+        verify(discoveryTaskRepository, never()).findLatestCompletedCreationDateByArtistIdAndType(eq("artist2"), any(), any());
         verify(taskRegistration).close();
     }
 
@@ -310,7 +292,22 @@ public class FullDiscoveryServiceTest {
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsOnly(DiscoveryProgress.Value.of(0, 0));
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of()), eq(true), any(), any());
+                eq(List.of()), eq(false), any(), any());
+    }
+
+    private void artistTasks(String artistId, long count, LocalDateTime date) {
+        lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                artistId, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(count >= 1 ? Optional.of(date) : Optional.empty());
+        lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                artistId, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, Limit.of(1)))
+                .thenReturn(count >= 2 ? Optional.of(date) : Optional.empty());
+    }
+
+    private void albumTasks(String albumId, long count, LocalDateTime date) {
+        lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByAlbumIdAndType(
+                albumId, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, Limit.of(1)))
+                .thenReturn(count >= 1 ? Optional.of(date) : Optional.empty());
     }
 
     private DiscoveryJob discoveryJob() {
@@ -318,10 +315,10 @@ public class FullDiscoveryServiceTest {
     }
 
     private Artist artist(String id) {
-        return new Artist().setId(id).setName("Artist");
+        return new Artist().setId(id).setName("Artist").setCreationDate(LocalDateTime.now().minusDays(1));
     }
 
     private Album album(String id, Artist artist) {
-        return new Album().setId(id).setArtist(artist).setName(id);
+        return new Album().setId(id).setArtist(artist).setName(id).setCreationDate(artist.getCreationDate());
     }
 }

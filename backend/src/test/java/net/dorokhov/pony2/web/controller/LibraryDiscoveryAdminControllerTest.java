@@ -5,11 +5,14 @@ import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JacksonConfig;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.DiscoveryFacade;
 import net.dorokhov.pony2.web.service.LibraryFacade;
+import net.dorokhov.pony2.web.service.LlmEvaluationExportService;
 import net.dorokhov.pony2.web.service.ScanFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,7 +66,8 @@ public class LibraryDiscoveryAdminControllerTest {
         JsonMapper.Builder mapperBuilder = JsonMapper.builder();
         new JacksonConfig().jsonMapperBuilderCustomizer().customize(mapperBuilder);
         objectMapper = mapperBuilder.build();
-        mockMvc = MockMvcBuilders.standaloneSetup(new LibraryAdminController(scanFacade, discoveryFacade, libraryFacade))
+        mockMvc = MockMvcBuilders.standaloneSetup(new LibraryAdminController(scanFacade, discoveryFacade, libraryFacade,
+                        mock(DiscoveryCacheService.class), mock(LlmEvaluationExportService.class), mock(LibraryJobSynchronizer.class)))
                 .setMessageConverters(new JacksonJsonHttpMessageConverter(objectMapper))
                 .setControllerAdvice(new LibraryAdminController.Advice(), new ErrorHandlingController.Advice())
                 .build();

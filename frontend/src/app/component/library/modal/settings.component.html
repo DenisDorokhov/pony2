@@ -66,6 +66,14 @@
           </button>
         </div>
       </div>
+      <div class="maintenance-action">
+        <label class="form-label">{{ 'settings.cleanDiscoveryDataLabel' | translate }}</label>
+        <div>
+          <button type="button" class="btn btn-primary" (click)="cleanDiscoveryData()"
+                  [disabled]="secondaryLoadingState === LoadingState.LOADING">{{ 'settings.cleanDiscoveryDataButton' | translate }}
+          </button>
+        </div>
+      </div>
       <div class="maintenance-action clear-discovery-cache-action">
         <label class="form-label">{{ 'settings.clearDiscoveryCacheLabel' | translate }}</label>
         <div class="input-group">

@@ -59,6 +59,18 @@ public class LibraryJobSynchronizer {
     }
 
     /**
+     * Reserves the library for maintenance, rejecting any active or pending job without cancellation.
+     */
+    public LibraryJobRegistration registerMaintenanceJob() throws ConcurrentLibraryJobException {
+        synchronized (lock) {
+            if (activeJob != null || scanPending) {
+                throw new ConcurrentLibraryJobException();
+            }
+            return activeJob = new LibraryJobRegistration(false);
+        }
+    }
+
+    /**
      * Reserves the library for a scan or edit job, cancelling and waiting for discovery if needed.
      *
      * <p>New jobs are rejected while this request waits for the discovery job registration and all task registrations

@@ -67,6 +67,8 @@ class LibraryJobConcurrencyTest {
         scanService = new ScanJobServiceImpl(scanJobRepository, configService, libraryScanner, jobSynchronizer,
                 logService, executor, transactionManager());
         discoveryService = new DiscoveryJobServiceImpl(discoveryJobRepository, discoveryTaskRepository,
+                mock(net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository.class),
+                mock(net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository.class),
                 artistRepository, albumRepository, fullDiscoveryService, jobSynchronizer,
                 artistDiscoveryService, albumDiscoveryService, logService, executor, transactionManager());
 
@@ -322,7 +324,7 @@ class LibraryJobConcurrencyTest {
         }
     }
 
-    private Object startAndCommit(JobKind kind) throws Exception {
+    private Object startAndCommit(JobKind kind) {
         initSynchronization();
         try {
             Object job = start(kind);

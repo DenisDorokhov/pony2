@@ -1,18 +1,31 @@
 package net.dorokhov.pony2.web.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
+import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import net.dorokhov.pony2.web.service.DiscoveryFacade;
 import net.dorokhov.pony2.web.service.LibraryFacade;
+import net.dorokhov.pony2.web.service.LlmEvaluationExportService;
 import net.dorokhov.pony2.web.service.ScanFacade;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.Semaphore;
+
+import static net.dorokhov.pony2.web.common.StreamingUtils.isConnectionReset;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -33,18 +46,30 @@ public class LibraryAdminController implements ErrorHandlingController {
         }
     }
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Semaphore evaluationDownload = new Semaphore(1);
+
     private final ScanFacade scanFacade;
     private final DiscoveryFacade discoveryFacade;
     private final LibraryFacade libraryFacade;
+    private final DiscoveryCacheService discoveryCacheService;
+    private final LlmEvaluationExportService evaluationExportService;
+    private final LibraryJobSynchronizer jobSynchronizer;
 
     public LibraryAdminController(
             ScanFacade scanFacade,
             DiscoveryFacade discoveryFacade,
-            LibraryFacade libraryFacade
+            LibraryFacade libraryFacade,
+            DiscoveryCacheService discoveryCacheService,
+            LlmEvaluationExportService evaluationExportService,
+            LibraryJobSynchronizer jobSynchronizer
     ) {
         this.scanFacade = scanFacade;
         this.discoveryFacade = discoveryFacade;
         this.libraryFacade = libraryFacade;
+        this.discoveryCacheService = discoveryCacheService;
+        this.evaluationExportService = evaluationExportService;
+        this.jobSynchronizer = jobSynchronizer;
     }
 
     @GetMapping("/api/admin/library/scanJobProgress")
@@ -125,6 +150,48 @@ public class LibraryAdminController implements ErrorHandlingController {
     @PostMapping("/api/admin/library/discoveryJobs/album/{albumId}")
     public DiscoveryJobDto startAlbumDiscoveryJob(@PathVariable String albumId, @RequestParam(defaultValue = "true") boolean cacheEnabled) throws ObjectNotFoundException, ConcurrentLibraryJobException {
         return discoveryFacade.startAlbumDiscoveryJob(albumId, cacheEnabled);
+    }
+
+    @DeleteMapping("/api/admin/discovery/data")
+    public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
+        discoveryFacade.cleanDiscoveryData();
+    }
+
+    @GetMapping("/api/admin/llm/evaluation")
+    public void downloadEvaluation(HttpServletResponse response) throws IOException, ConcurrentLibraryJobException {
+        if (!evaluationDownload.tryAcquire()) {
+            response.sendError(HttpStatus.TOO_MANY_REQUESTS.value(), "An evaluation download is already running.");
+            return;
+        }
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerMaintenanceJob()) {
+            LocalDateTime exportedAt = LocalDateTime.now();
+            String timestamp = exportedAt.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+            response.setContentType(APPLICATION_JSON_VALUE);
+            response.setHeader("Content-Disposition", "inline; filename=\"pony-evaluation-" + timestamp + ".json\"");
+            evaluationExportService.write(response.getOutputStream(), exportedAt);
+        } catch (ConcurrentLibraryJobException e) {
+            throw e;
+        } catch (Exception e) {
+            if (!isConnectionReset(e)) {
+                logger.error("Could not export LLM evaluation data.", e);
+            }
+            // Never append an ErrorDto to a partially written JSON document.
+            if (!response.isCommitted()) {
+                response.reset();
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        } finally {
+            evaluationDownload.release();
+        }
+    }
+
+    @DeleteMapping("/api/admin/discovery/cache")
+    public void clearCache(@RequestParam(required = false) DiscoveryCacheRegion region) {
+        if (region == null) {
+            discoveryCacheService.clear();
+        } else {
+            discoveryCacheService.clear(region);
+        }
     }
 
     @PostMapping("/api/admin/library/reBuildSearchIndex")

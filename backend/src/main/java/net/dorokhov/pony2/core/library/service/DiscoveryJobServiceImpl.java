@@ -5,6 +5,7 @@ import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
+import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.log.service.LogService;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -46,6 +48,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     private final DiscoveryJobRepository discoveryJobRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
+    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final DiscoveryCacheRepository discoveryCacheRepository;
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
     private final FullDiscoveryService fullDiscoveryService;
@@ -64,6 +68,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     public DiscoveryJobServiceImpl(
             DiscoveryJobRepository discoveryJobRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
+            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            DiscoveryCacheRepository discoveryCacheRepository,
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             FullDiscoveryService fullDiscoveryService,
@@ -77,6 +83,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
         this.discoveryJobRepository = discoveryJobRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
+        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.discoveryCacheRepository = discoveryCacheRepository;
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.fullDiscoveryService = fullDiscoveryService;
@@ -87,6 +95,27 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         this.jobSynchronizer = jobSynchronizer;
 
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
+    }
+
+    @Override
+    public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerMaintenanceJob()) {
+            while (true) {
+                List<String> jobIds = Objects.requireNonNull(transactionTemplate.execute(status ->
+                        discoveryJobRepository.findIdsForCleanup(PageRequest.of(0, 100))));
+                if (jobIds.isEmpty()) {
+                    break;
+                }
+                for (String jobId : jobIds) {
+                    transactionTemplate.executeWithoutResult(status -> {
+                        discoveryTaskRepository.deleteByJobId(jobId);
+                        discoveryJobRepository.deleteById(jobId);
+                    });
+                }
+            }
+            transactionTemplate.executeWithoutResult(status -> artistDiscoveryIndexRepository.deleteAllInBatch());
+            transactionTemplate.executeWithoutResult(status -> discoveryCacheRepository.deleteAllInBatch());
+        }
     }
 
     @Override
@@ -306,12 +335,10 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             default -> throw new IllegalStateException("Unexpected discovery job status.");
         }
 
-        changeDiscoveryJobStatusInTransaction(() -> {
-            return discoveryJobRepository.save(discoveryJob
-                    .setStatus(status)
-                    .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks,
-                            stopwatch.elapsed()).orElse(null)));
-        });
+        changeDiscoveryJobStatusInTransaction(() -> discoveryJobRepository.save(discoveryJob
+                .setStatus(status)
+                .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks,
+                        stopwatch.elapsed()).orElse(null))));
     }
 
     private Optional<LogMessage> completionLogMessage(

@@ -50,6 +50,62 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @NotNull
     private DiscoveryJob job;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "genre_id")
+    private Genre genre;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "artist_id")
+    private Artist artist;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id")
+    private Album album;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "song_id")
+    private Song song;
+
+    @Nullable
+    public Genre getGenre() {
+        return genre;
+    }
+
+    public DiscoveryTask setGenre(@Nullable Genre genre) {
+        this.genre = genre;
+        return this;
+    }
+
+    @Nullable
+    public Artist getArtist() {
+        return artist;
+    }
+
+    public DiscoveryTask setArtist(@Nullable Artist artist) {
+        this.artist = artist;
+        return this;
+    }
+
+    @Nullable
+    public Album getAlbum() {
+        return album;
+    }
+
+    public DiscoveryTask setAlbum(@Nullable Album album) {
+        this.album = album;
+        return this;
+    }
+
+    @Nullable
+    public Song getSong() {
+        return song;
+    }
+
+    public DiscoveryTask setSong(@Nullable Song song) {
+        this.song = song;
+        return this;
+    }
+
     public Status getStatus() {
         return status;
     }
