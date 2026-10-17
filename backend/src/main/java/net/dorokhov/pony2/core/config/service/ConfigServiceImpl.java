@@ -70,7 +70,12 @@ public class ConfigServiceImpl implements ConfigService {
         return JsonConverter.listFromJson(value, String.class)
                 .stream()
                 .map(File::new)
+                .map(this::normalizeFile)
                 .toList();
+    }
+
+    private File normalizeFile(File file) {
+        return file.toPath().toAbsolutePath().normalize().toFile();
     }
 
     @Override
@@ -101,6 +106,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     private void saveLibraryFolders(List<File> files) {
         String value = JsonConverter.toJson(files.stream()
+                .map(this::normalizeFile)
                 .map(File::getPath)
                 .toList());
         saveStringConfig(CONFIG_LIBRARY_FOLDERS, value);

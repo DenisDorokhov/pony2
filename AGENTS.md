@@ -2,6 +2,7 @@
 
 - Use explicit types for local variables. Do not use `var`, including in tests and try-with-resources declarations.
 - For multiline Java conditions, place logical operators (`&&`, `||`) at the end of the preceding line.
+- Place private methods as close as possible to their first use.
 
 # Comments
 

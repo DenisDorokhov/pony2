@@ -5,9 +5,14 @@ import net.dorokhov.pony2.api.config.domain.Config;
 import net.dorokhov.pony2.api.config.domain.ConfigChangeEvent;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.config.repository.ConfigRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -78,11 +83,70 @@ public class ConfigServiceImplTest {
         ConfigSet configSet = configService.get();
 
         assertThat(configSet.updateDate()).isEqualTo(updateDate);
-        assertThat(configSet.libraryFolders()).containsExactly(new File("foo"), new File("bar"));
+        assertThat(configSet.libraryFolders()).containsExactly(new File("foo").getAbsoluteFile(), new File("bar").getAbsoluteFile());
         assertThat(configSet.llmUrl()).isEqualTo("http://localhost:11434/v1");
         assertThat(configSet.llmModel()).isEqualTo("qwen3.5-35b-a3b");
         assertThat(configSet.llmApiKey()).isEqualTo("secret");
         assertThat(configSet.llmEnabled()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"music", "./music", "other/../music/."})
+    public void shouldNormalizeLibraryFoldersWhenReading(String path) {
+        String originalValue = JsonConverter.toJson(List.of(path));
+        Config folders = Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, originalValue);
+        when(configRepository.findAll()).thenReturn(List.of(folders));
+
+        ConfigSet configSet = configService.get();
+
+        assertThat(configSet.libraryFolders()).containsExactly(new File("music").getAbsoluteFile());
+        assertThat(folders.getValue()).isEqualTo(originalValue);
+        verify(configRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"music", "./music", "other/../music/."})
+    public void shouldNormalizeLibraryFoldersWhenSaving(String path) {
+        Config folders = Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[]");
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS)).thenReturn(Optional.of(folders));
+
+        configService.update(new ConfigSetUpdateCommand().setLibraryFolders(List.of(new File(path))));
+
+        assertThat(JsonConverter.listFromJson(folders.getValue(), String.class))
+                .containsExactly(new File("music").getAbsolutePath());
+    }
+
+    @EnabledOnOs(OS.WINDOWS)
+    @ParameterizedTest
+    @ValueSource(strings = {"M:", "M:\\", "M:\\\\"})
+    public void shouldKeepWindowsLibraryFolderStableAfterSettingsSave(String path) {
+        Config folders = Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, JsonConverter.toJson(List.of(path)));
+        when(configRepository.findAll()).thenReturn(List.of(folders));
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS)).thenReturn(Optional.of(folders));
+        File folderBeforeSave = configService.get().libraryFolders().getFirst();
+
+        configService.update(new ConfigSetUpdateCommand()
+                .setLibraryFolders(List.of(new File(folderBeforeSave.getAbsolutePath()))));
+
+        File folderAfterSave = configService.get().libraryFolders().getFirst();
+        assertThat(folderBeforeSave.isAbsolute()).isTrue();
+        assertThat(folderAfterSave).isEqualTo(folderBeforeSave);
+        assertThat(JsonConverter.listFromJson(folders.getValue(), String.class)).containsExactly(folderBeforeSave.getPath());
+    }
+
+    @Test
+    @EnabledOnOs(OS.LINUX)
+    public void shouldKeepAbsoluteLinuxLibraryFolderUnchanged() {
+        String originalValue = "[\"/home/pony/music\"]";
+        Config folders = Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, originalValue);
+        when(configRepository.findAll()).thenReturn(List.of(folders));
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS)).thenReturn(Optional.of(folders));
+        ConfigSet configSet = configService.get();
+
+        configService.update(new ConfigSetUpdateCommand().setLibraryFolders(configSet.libraryFolders()));
+
+        assertThat(configSet.libraryFolders()).containsExactly(new File("/home/pony/music"));
+        assertThat(folders.getValue()).isEqualTo(originalValue);
     }
 
     @Test
@@ -143,7 +207,8 @@ public class ConfigServiceImplTest {
         assertThat(savedConfig.getAllValues()).satisfiesExactly(
                 libraryFolders -> {
                     assertThat(libraryFolders.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS);
-                    assertThat(libraryFolders.getValue()).isEqualTo("[\"foobar\"]");
+                    assertThat(JsonConverter.listFromJson(libraryFolders.getValue(), String.class))
+                            .containsExactly(new File("foobar").getAbsolutePath());
                 },
                 llmUrl -> {
                     assertThat(llmUrl.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LLM_URL);
@@ -218,7 +283,8 @@ public class ConfigServiceImplTest {
         assertThat(savedConfig.getAllValues()).satisfiesExactly(
                 libraryFolders -> {
                     assertThat(libraryFolders.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS);
-                    assertThat(libraryFolders.getValue()).isEqualTo("[\"foobar\"]");
+                    assertThat(JsonConverter.listFromJson(libraryFolders.getValue(), String.class))
+                            .containsExactly(new File("foobar").getAbsolutePath());
                 },
                 llmUrl -> {
                     assertThat(llmUrl.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LLM_URL);
