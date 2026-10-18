@@ -89,6 +89,16 @@ button.playback {
     margin: 0;
     padding: 0;
     color: var(--color-like-icon);
+
+    &:active:hover {
+      .bi-star::before {
+        content: '\f586'; // Bootstrap Icons: star-fill.
+      }
+
+      .bi-star-fill::before {
+        content: '\f588'; // Bootstrap Icons: star.
+      }
+    }
   }
 
   &.liked button {
