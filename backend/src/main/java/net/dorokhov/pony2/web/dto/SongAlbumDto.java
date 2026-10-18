@@ -1,6 +1,9 @@
 package net.dorokhov.pony2.web.dto;
 
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Song;
+
+import java.util.function.Function;
 
 public final class SongAlbumDto {
 
@@ -25,9 +28,9 @@ public final class SongAlbumDto {
         return this;
     }
 
-    public static SongAlbumDto of(Song song, boolean isAdmin) {
+    public static SongAlbumDto of(Song song, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
         return new SongAlbumDto()
                 .setSong(SongDto.of(song, isAdmin))
-                .setAlbumDetails(AlbumDetailsDto.of(song.getAlbum()));
+                .setAlbumDetails(albumMapper.apply(song.getAlbum()));
     }
 }

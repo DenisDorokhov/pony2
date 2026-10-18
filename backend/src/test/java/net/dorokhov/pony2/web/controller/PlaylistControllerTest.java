@@ -251,6 +251,9 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(artist.getName());
         assertThat(dto.getArtworkId()).isNull();
+        assertThat(dto.getDiscoveryData()).isNotNull();
+        assertThat(dto.getDiscoveryData().getCountryCode()).isNull();
+        assertThat(dto.getDiscoveryData().getTopSongIds()).isEmpty();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -262,6 +265,9 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getYear()).isEqualTo(album.getYear());
         assertThat(dto.getArtworkId()).isNull();
         assertThat(dto.getArtistId()).isEqualTo(album.getArtist().getId());
+        assertThat(dto.getDiscoveryData()).isNotNull();
+        assertThat(dto.getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN);
+        assertThat(dto.getDiscoveryData().getReleaseDate()).isNull();
     }
 
     private void checkSongDto(SongDto dto, Song song) {

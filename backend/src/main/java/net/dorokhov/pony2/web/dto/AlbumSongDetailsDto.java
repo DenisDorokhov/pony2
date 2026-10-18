@@ -3,6 +3,7 @@ package net.dorokhov.pony2.web.dto;
 import net.dorokhov.pony2.api.library.domain.Album;
 
 import java.util.List;
+import java.util.function.Function;
 
 public final class AlbumSongDetailsDto {
 
@@ -27,12 +28,12 @@ public final class AlbumSongDetailsDto {
         return this;
     }
 
-    public static AlbumSongDetailsDto of(Album album, boolean isAdmin) {
+    public static AlbumSongDetailsDto of(Album album, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
         return new AlbumSongDetailsDto()
-                .setDetails(AlbumDetailsDto.of(album))
+                .setDetails(albumMapper.apply(album))
                 .setSongs(album.getSongs().stream()
                         .sorted()
-                        .map(song -> SongDetailsDto.of(song, isAdmin))
+                        .map(song -> SongDetailsDto.of(song, albumMapper, isAdmin))
                         .toList());
     }
 }

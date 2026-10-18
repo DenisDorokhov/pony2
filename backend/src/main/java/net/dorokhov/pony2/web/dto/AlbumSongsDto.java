@@ -8,7 +8,6 @@ import java.util.List;
 public final class AlbumSongsDto {
 
     private AlbumDto album;
-    private AlbumDiscoveryDataDto albumDiscoveryData;
     private List<SongDto> songs;
 
     public AlbumDto getAlbum() {
@@ -17,15 +16,6 @@ public final class AlbumSongsDto {
 
     public AlbumSongsDto setAlbum(AlbumDto album) {
         this.album = album;
-        return this;
-    }
-
-    public AlbumDiscoveryDataDto getAlbumDiscoveryData() {
-        return albumDiscoveryData;
-    }
-
-    public AlbumSongsDto setAlbumDiscoveryData(AlbumDiscoveryDataDto albumDiscoveryData) {
-        this.albumDiscoveryData = albumDiscoveryData;
         return this;
     }
 
@@ -40,8 +30,7 @@ public final class AlbumSongsDto {
 
     public static AlbumSongsDto of(Album album, AlbumDiscoveryData albumDiscoveryData, boolean isAdmin) {
         return new AlbumSongsDto()
-                .setAlbum(AlbumDto.of(album))
-                .setAlbumDiscoveryData(AlbumDiscoveryDataDto.of(albumDiscoveryData))
+                .setAlbum(AlbumDto.of(album, albumDiscoveryData))
                 .setSongs(album.getSongs().stream()
                         .sorted()
                         .map(song -> SongDto.of(song, isAdmin))

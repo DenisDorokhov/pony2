@@ -325,8 +325,12 @@ public class LibraryDiscoveryAdminControllerTest {
     public void shouldGetDiscoveryTasksWithTargets(DiscoveryTaskType type) throws Exception {
         Artist artist = new Artist().setId("artist1").setName("Artist");
         Album album = new Album().setId("album1").setName("Album").setYear(2001).setArtist(artist);
+        when(libraryService.getArtistDiscoveryData("artist1"))
+                .thenReturn(new ArtistDiscoveryData("DE", List.of("song1")));
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             when(libraryService.getAlbumById("album1")).thenReturn(Optional.of(album));
+            when(libraryService.getAlbumDiscoveryData("album1"))
+                    .thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.EP, LocalDateTime.of(2001, 1, 1, 0, 0)));
         } else {
             when(libraryService.getArtistById("artist1")).thenReturn(Optional.of(artist));
         }
@@ -353,10 +357,14 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(summary.getStatus()).isSameAs(DiscoveryTask.Status.COMPLETE);
             assertThat(summary.getDuration()).isEqualTo(900L);
             assertThat(summary.getArtist().getName()).isEqualTo("Artist");
+            assertThat(summary.getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
+            assertThat(summary.getArtist().getDiscoveryData().getTopSongIds()).containsExactly("song1");
             if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
                 assertThat(summary.getTargetId()).isEqualTo("album1");
                 assertThat(summary.getAlbum().getName()).isEqualTo("Album");
                 assertThat(summary.getAlbum().getYear()).isEqualTo(2001);
+                assertThat(summary.getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.EP);
+                assertThat(summary.getAlbum().getDiscoveryData().getReleaseDate()).isEqualTo(LocalDateTime.of(2001, 1, 1, 0, 0));
             } else {
                 assertThat(summary.getTargetId()).isEqualTo("artist1");
                 assertThat(summary.getAlbum()).isNull();

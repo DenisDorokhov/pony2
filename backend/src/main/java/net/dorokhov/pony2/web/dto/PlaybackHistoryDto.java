@@ -1,9 +1,11 @@
 package net.dorokhov.pony2.web.dto;
 
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.PlaybackHistorySong;
 import net.dorokhov.pony2.api.library.domain.PlaybackHistoryStatistics;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class PlaybackHistoryDto {
 
@@ -47,10 +49,15 @@ public class PlaybackHistoryDto {
         return this;
     }
 
-    public static PlaybackHistoryDto of(List<PlaybackHistorySong> songs, PlaybackHistoryStatistics statistics, boolean isAdmin) {
+    public static PlaybackHistoryDto of(
+            List<PlaybackHistorySong> songs,
+            PlaybackHistoryStatistics statistics,
+            Function<Album, AlbumDetailsDto> albumMapper,
+            boolean isAdmin
+    ) {
         return new PlaybackHistoryDto()
                 .setSongs(songs.stream()
-                        .map(song -> PlaybackHistorySongDto.of(song, isAdmin))
+                        .map(song -> PlaybackHistorySongDto.of(song, albumMapper, isAdmin))
                         .toList())
                 .setStatistics(Statistics.of(statistics));
     }

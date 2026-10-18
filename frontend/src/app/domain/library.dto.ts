@@ -9,11 +9,11 @@ export interface AlbumDto {
   year: number | undefined;
   artworkId: string | undefined;
   artistId: string;
+  discoveryData: AlbumDiscoveryDataDto;
 }
 
 export interface AlbumSongsDto {
   album: AlbumDto;
-  albumDiscoveryData: AlbumDiscoveryDataDto;
   songs: SongDto[];
 }
 
@@ -40,11 +40,11 @@ export interface ArtistDto {
   name: string | undefined;
   artworkId: string | undefined;
   genres: GenreDto[],
+  discoveryData: ArtistDiscoveryDataDto;
 }
 
 export interface ArtistSongsDto {
   artist: ArtistDto;
-  artistDiscoveryData: ArtistDiscoveryDataDto;
   albumSongs: AlbumSongsDto[];
 }
 

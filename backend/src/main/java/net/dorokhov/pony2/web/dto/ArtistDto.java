@@ -2,6 +2,7 @@ package net.dorokhov.pony2.web.dto;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
 import net.dorokhov.pony2.api.library.domain.ArtistGenre;
 
 import java.util.List;
@@ -11,6 +12,7 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
     private String name;
     private String artworkId;
     private List<GenreDto> genres;
+    private ArtistDiscoveryDataDto discoveryData;
 
     @Nullable
     public String getName() {
@@ -41,7 +43,16 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
         return this;
     }
 
-    public static ArtistDto of(Artist artist) {
+    public ArtistDiscoveryDataDto getDiscoveryData() {
+        return discoveryData;
+    }
+
+    public ArtistDto setDiscoveryData(ArtistDiscoveryDataDto discoveryData) {
+        this.discoveryData = discoveryData;
+        return this;
+    }
+
+    public static ArtistDto of(Artist artist, ArtistDiscoveryData discoveryData) {
         return new ArtistDto()
                 .setId(artist.getId())
                 .setCreationDate(artist.getCreationDate())
@@ -52,6 +63,7 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
                         .sorted()
                         .map(ArtistGenre::getGenre)
                         .map(GenreDto::of)
-                        .toList());
+                        .toList())
+                .setDiscoveryData(ArtistDiscoveryDataDto.of(discoveryData));
     }
 }

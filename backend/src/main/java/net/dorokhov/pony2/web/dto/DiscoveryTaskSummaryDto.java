@@ -1,8 +1,6 @@
 package net.dorokhov.pony2.web.dto;
 
 import jakarta.annotation.Nullable;
-import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 
@@ -75,7 +73,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    public static DiscoveryTaskSummaryDto of(DiscoveryTask task, String targetId, @Nullable Artist artist, @Nullable Album album) {
+    public static DiscoveryTaskSummaryDto of(DiscoveryTask task, String targetId, @Nullable ArtistDto artist, @Nullable AlbumDto album) {
         LocalDateTime endDate = task.getStatus() == DiscoveryTask.Status.STARTED ? LocalDateTime.now() : task.getUpdateDate();
         return new DiscoveryTaskSummaryDto()
                 .setId(task.getId())
@@ -85,7 +83,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
                 .setType(task.getType())
                 .setDuration(endDate != null ? Duration.between(task.getCreationDate(), endDate).toSeconds() : null)
                 .setTargetId(targetId)
-                .setArtist(artist != null ? ArtistDto.of(artist) : null)
-                .setAlbum(album != null ? AlbumDto.of(album) : null);
+                .setArtist(artist)
+                .setAlbum(album);
     }
 }

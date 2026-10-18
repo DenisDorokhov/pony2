@@ -49,7 +49,7 @@
         }}">
           @if (countryFlagCode) {
             <span class="country-flag fi" [class]="'fi-' + countryFlagCode"
-                  role="img" [attr.aria-label]="artistSongs.artistDiscoveryData.countryCode"></span>
+                  role="img" [attr.aria-label]="artistSongs.artist.discoveryData.countryCode"></span>
           }
           @for (genre of artistSongs.artist.genres; track genre) {
             <a (click)="onGenreClick(genre)">{{ genre.name | ponyUnknownGenre }}</a>,

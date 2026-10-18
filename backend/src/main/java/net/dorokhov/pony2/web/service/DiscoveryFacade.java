@@ -95,18 +95,24 @@ public class DiscoveryFacade {
         return switch (task.getType()) {
             case SPOTIFY_ARTIST_DATA -> {
                 String artistId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.ArtistParameter.class).artistId();
-                yield DiscoveryTaskSummaryDto.of(task, artistId, libraryService.getArtistById(artistId).orElse(null), null);
+                yield toDiscoveryTaskSummary(task, artistId, libraryService.getArtistById(artistId).orElse(null), null);
             }
             case SPOTIFY_TOP_TRACKS -> {
                 String artistId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.SpotifyTopTracksParameter.class).artistId();
-                yield DiscoveryTaskSummaryDto.of(task, artistId, libraryService.getArtistById(artistId).orElse(null), null);
+                yield toDiscoveryTaskSummary(task, artistId, libraryService.getArtistById(artistId).orElse(null), null);
             }
             case MUSICBRAINZ_ALBUM_DATA -> {
                 String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
                 Album album = libraryService.getAlbumById(albumId).orElse(null);
-                yield DiscoveryTaskSummaryDto.of(task, albumId, album != null ? album.getArtist() : null, album);
+                yield toDiscoveryTaskSummary(task, albumId, album != null ? album.getArtist() : null, album);
             }
         };
+    }
+
+    private DiscoveryTaskSummaryDto toDiscoveryTaskSummary(DiscoveryTask task, String targetId, @Nullable Artist artist, @Nullable Album album) {
+        return DiscoveryTaskSummaryDto.of(task, targetId,
+                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId())) : null,
+                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId())) : null);
     }
 
     public void cleanDiscoveryData() throws ConcurrentLibraryJobException {

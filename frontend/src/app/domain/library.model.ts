@@ -130,6 +130,7 @@ export class Album {
   year: number | undefined;
   artworkId: string | undefined;
   artist: Artist;
+  discoveryData: AlbumDiscoveryData;
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
 
@@ -143,6 +144,7 @@ export class Album {
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.artist = artist;
+    this.discoveryData = new AlbumDiscoveryData(albumDto.discoveryData);
   }
 
   static compareByName(album1: Album, album2: Album): number {
@@ -186,12 +188,10 @@ export class AlbumDiscoveryData {
 export class AlbumSongs {
 
   album: Album;
-  albumDiscoveryData: AlbumDiscoveryData;
   songs: Song[];
 
   constructor(albumSongsDto: AlbumSongsDto, artist: Artist) {
     this.album = new Album(albumSongsDto.album, artist);
-    this.albumDiscoveryData = new AlbumDiscoveryData(albumSongsDto.albumDiscoveryData);
     this.songs = albumSongsDto.songs
       .map(songDto => new Song(songDto, this.album));
   }
@@ -240,6 +240,7 @@ export class Artist {
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
   genres: Genre[];
+  discoveryData: ArtistDiscoveryData;
 
   constructor(artistDto: ArtistDto) {
     this.id = artistDto.id;
@@ -250,6 +251,7 @@ export class Artist {
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.genres = artistDto.genres.map(genreDto => new Genre(genreDto));
+    this.discoveryData = new ArtistDiscoveryData(artistDto.discoveryData);
   }
 
   static equals(artist1: Artist | undefined, artist2: Artist | undefined) {
@@ -293,12 +295,10 @@ export class ArtistDiscoveryData {
 export class ArtistSongs {
 
   artist: Artist;
-  artistDiscoveryData: ArtistDiscoveryData;
   albumSongs: AlbumSongs[];
 
   constructor(artistSongsDto: ArtistSongsDto) {
     this.artist = new Artist(artistSongsDto.artist);
-    this.artistDiscoveryData = new ArtistDiscoveryData(artistSongsDto.artistDiscoveryData);
     this.albumSongs = artistSongsDto.albumSongs
       .map(albumSongsDto => new AlbumSongs(albumSongsDto, this.artist));
   }

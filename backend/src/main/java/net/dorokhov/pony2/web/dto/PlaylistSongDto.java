@@ -1,8 +1,10 @@
 package net.dorokhov.pony2.web.dto;
 
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.PlaylistSong;
 
 import java.time.LocalDateTime;
+import java.util.function.Function;
 
 public class PlaylistSongDto {
 
@@ -37,10 +39,10 @@ public class PlaylistSongDto {
         return this;
     }
 
-    public static PlaylistSongDto of(PlaylistSong playlistSong, boolean isAdmin) {
+    public static PlaylistSongDto of(PlaylistSong playlistSong, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
         return new PlaylistSongDto()
                 .setId(playlistSong.getId())
                 .setCreationDate(playlistSong.getCreationDate())
-                .setSong(SongDetailsDto.of(playlistSong.getSong(), isAdmin));
+                .setSong(SongDetailsDto.of(playlistSong.getSong(), albumMapper, isAdmin));
     }
 }

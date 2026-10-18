@@ -7,6 +7,7 @@ import net.dorokhov.pony2.api.library.domain.Song;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public final class SearchResultDto {
 
@@ -63,19 +64,23 @@ public final class SearchResultDto {
         return this;
     }
 
-    public static SearchResultDto of(List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs, boolean isAdmin) {
+    public static SearchResultDto of(
+            List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs,
+            Function<Artist, ArtistDto> artistMapper, Function<Album, AlbumDetailsDto> albumMapper,
+            boolean isAdmin
+    ) {
         return new SearchResultDto()
                 .setGenres(genres.stream()
                         .map(GenreDto::of)
                         .toList())
                 .setArtists(artists.stream()
-                        .map(ArtistDto::of)
+                        .map(artistMapper)
                         .toList())
                 .setAlbumDetails(albums.stream()
-                        .map(AlbumDetailsDto::of)
+                        .map(albumMapper)
                         .toList())
                 .setSongDetails(songs.stream()
-                        .map(song -> SongDetailsDto.of(song, isAdmin))
+                        .map(song -> SongDetailsDto.of(song, albumMapper, isAdmin))
                         .toList());
     }
 }
