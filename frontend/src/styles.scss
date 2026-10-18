@@ -94,6 +94,8 @@ $dropdown-min-width: 100px;
   --color-playback-progress-background: #{rgba($color-brand-accent, 0.75)};
   --color-button-background-transparent: transparent;
   --color-like-icon: #{$color-like-icon-light};
+  --color-top-track-icon: var(--color-text-default);
+  --color-top-track-icon-selected: var(--color-selection-text);
   --color-new-badge-background: #{$color-new-badge-background-light};
   --color-new-badge-text: var(--bs-white);
   --color-new-badge-border: #{$color-new-badge-border-light};
@@ -156,6 +158,8 @@ $dropdown-min-width: 100px;
 
   --color-button-background-transparent: transparent;
   --color-like-icon: #{$color-like-icon-dark};
+  --color-top-track-icon: var(--color-text-default);
+  --color-top-track-icon-selected: var(--color-selection-text);
   --color-new-badge-background: #{$color-new-badge-background-dark};
   --color-new-badge-text: var(--bs-white);
   --color-new-badge-border: #{$color-new-badge-border-dark};

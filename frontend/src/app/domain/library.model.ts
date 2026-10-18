@@ -67,6 +67,10 @@ export class Song {
     return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 
+  get isTopTrack(): boolean {
+    return this.album.artist.discoveryData.topSongIds.includes(this.id);
+  }
+
   getRelativeDurationInMinutes(progress: number, fractionDigits = 0) {
     return this.formatSecondsInMinutes(this.duration * progress, fractionDigits);
   }
@@ -283,7 +287,7 @@ export class Artist {
 
 export class ArtistDiscoveryData {
 
-  countryCode: string | null;
+  countryCode: string | undefined;
   topSongIds: string[];
 
   constructor(dto: ArtistDiscoveryDataDto) {

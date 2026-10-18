@@ -49,7 +49,7 @@ export interface ArtistSongsDto {
 }
 
 export interface ArtistDiscoveryDataDto {
-  countryCode: string | null;
+  countryCode: string | undefined;
   topSongIds: string[];
 }
 

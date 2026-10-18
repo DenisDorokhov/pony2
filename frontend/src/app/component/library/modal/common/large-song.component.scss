@@ -73,6 +73,10 @@ button.playback {
   line-height: 75px;
   text-align: center;
 
+  .top-track-icon {
+    color: var(--color-top-track-icon);
+  }
+
   button {
     border: none;
     background-color: var(--color-button-background-transparent);
@@ -123,6 +127,7 @@ button.playback {
 }
 
 .columns-container.selected {
+  --color-top-track-icon: var(--color-top-track-icon-selected);
   background-color: var(--color-selection-background) !important;
   color: var(--color-selection-text);
 

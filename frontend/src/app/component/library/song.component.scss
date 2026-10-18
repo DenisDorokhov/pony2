@@ -84,6 +84,10 @@
     right: 52px;
     height: 26px;
 
+    .top-track-icon {
+      color: var(--color-top-track-icon);
+    }
+
     button {
       border: none;
       background-color: var(--color-button-background-transparent);
@@ -124,6 +128,7 @@
 }
 
 .song-container.selected {
+  --color-top-track-icon: var(--color-top-track-icon-selected);
   background-color: var(--color-selection-background) !important;
 
   .track-number, .title, .artist, .duration {
