@@ -68,21 +68,31 @@ button.playback {
 }
 
 .like-container {
+  display: none;
   min-width: 36px;
   max-width: 36px;
   line-height: 75px;
   text-align: center;
+
+  &.liked, &.top-track {
+    display: block;
+  }
 
   .top-track-icon {
     color: var(--color-top-track-icon);
   }
 
   button {
+    display: none;
     border: none;
     background-color: var(--color-button-background-transparent);
     margin: 0;
     padding: 0;
     color: var(--color-like-icon);
+  }
+
+  &.liked button {
+    display: inline-block;
   }
 }
 
@@ -124,6 +134,18 @@ button.playback {
 .columns-container:hover {
   background-color: var(--color-list-hover-background);
   cursor: pointer;
+
+  .like-container {
+    display: block;
+
+    button {
+      display: inline-block;
+    }
+
+    .top-track-icon {
+      display: none;
+    }
+  }
 }
 
 .columns-container.selected {

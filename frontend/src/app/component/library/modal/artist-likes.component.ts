@@ -33,6 +33,7 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
   artistSongs!: ArtistSongs;
 
   songs: Song[] = [];
+  likeCount = 0;
   lastPlaybackEvent: PlaybackEvent | undefined;
   selectedIndex = -1;
 
@@ -43,12 +44,19 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist =>
-      this.songs = [...likePlaylist ? likePlaylist.songs : []]
+    const artistSongs = this.artistSongs.albumSongs.flatMap(albumSongs => albumSongs.songs);
+    const topSongs = this.artistSongs.artist.discoveryData.topSongIds
+      .map(songId => artistSongs.find(song => song.id === songId))
+      .filter((song): song is Song => song !== undefined);
+    this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist => {
+      const likedSongs = [...likePlaylist ? likePlaylist.songs : []]
         .sort((song1, song2) => song1.creationDate.getTime() - song2.creationDate.getTime())
         .map(next => next.song)
-        .filter(song => song.album.artist.id === this.artistSongs.artist.id)
-    ));
+        .filter(song => song.album.artist.id === this.artistSongs.artist.id);
+      const likedSongIds = new Set(likedSongs.map(song => song.id));
+      this.likeCount = likedSongs.length;
+      this.songs = [...likedSongs, ...topSongs.filter(song => !likedSongIds.has(song.id))];
+    }));
     this.subscriptions.push(this.playbackService.observePlaybackEvent()
       .subscribe(playbackEvent => this.lastPlaybackEvent = playbackEvent));
   }

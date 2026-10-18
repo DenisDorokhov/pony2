@@ -63,6 +63,8 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   selected = false;
   @Input()
   isCurrentSong = false;
+  @Input()
+  removable = true;
 
   get song(): Song {
     return this._song;

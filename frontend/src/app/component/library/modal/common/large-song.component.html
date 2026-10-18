@@ -33,14 +33,13 @@
       <small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small>
     </div>
   </div>
-  <div class="like-container" [hidden]="!isMouseOver && !isLikedSong && !song.isTopTrack">
-    @if (isMouseOver || isLikedSong) {
-      <button
-        [title]="isLikedSong ? ('library.song.likedSongButtonTooltip' | translate) : ('library.song.notLikedSongButtonTooltip' | translate)"
-        (click)="onLikeClick()">
-        <i class="bi" [class.bi-star-fill]="isLikedSong" [class.bi-star]="!isLikedSong"></i>
-      </button>
-    } @else if (song.isTopTrack) {
+  <div class="like-container" [class.liked]="isLikedSong" [class.top-track]="song.isTopTrack">
+    <button
+      [title]="isLikedSong ? ('library.song.likedSongButtonTooltip' | translate) : ('library.song.notLikedSongButtonTooltip' | translate)"
+      (click)="onLikeClick()">
+      <i class="bi" [class.bi-star-fill]="isLikedSong" [class.bi-star]="!isLikedSong"></i>
+    </button>
+    @if (song.isTopTrack && !isLikedSong) {
       <i class="bi bi-fire top-track-icon" aria-hidden="true"></i>
     }
   </div>
@@ -53,7 +52,7 @@
       <button ngbDropdownItem (click)="goToSong()">
         <i class="bi bi-arrow-right"></i>{{ 'largeSong.goToSongButton' | translate }}
       </button>
-      @if (removalRequested.observed) {
+      @if (removalRequested.observed && removable) {
         <button ngbDropdownItem (click)="removeSong()"><i
           class="bi bi-x-circle"></i>{{ 'largeSong.removeSongButton' | translate }}
         </button>
