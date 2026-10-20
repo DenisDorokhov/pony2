@@ -162,6 +162,14 @@ export class Album {
     if ((album1.year ?? 0) < (album2.year ?? 0)) {
       return -1;
     }
+    const releaseDate1 = album1.discoveryData.releaseDate?.getTime() ?? Number.NEGATIVE_INFINITY;
+    const releaseDate2 = album2.discoveryData.releaseDate?.getTime() ?? Number.NEGATIVE_INFINITY;
+    if (releaseDate1 > releaseDate2) {
+      return 1;
+    }
+    if (releaseDate1 < releaseDate2) {
+      return -1;
+    }
     return Album.compareByName(album1, album2);
   }
 
