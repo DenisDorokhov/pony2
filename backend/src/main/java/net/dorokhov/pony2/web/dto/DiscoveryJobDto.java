@@ -8,7 +8,10 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
 
     private DiscoveryType discoveryType;
     private DiscoveryJob.Status status;
-    private String parameter;
+    private GenreDto genre;
+    private ArtistDto artist;
+    private AlbumDto album;
+    private SongDto song;
     private LogMessageDto logMessage;
 
     public DiscoveryType getDiscoveryType() {
@@ -30,12 +33,42 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
     }
 
     @Nullable
-    public String getParameter() {
-        return parameter;
+    public GenreDto getGenre() {
+        return genre;
     }
 
-    public DiscoveryJobDto setParameter(@Nullable String parameter) {
-        this.parameter = parameter;
+    public DiscoveryJobDto setGenre(@Nullable GenreDto genre) {
+        this.genre = genre;
+        return this;
+    }
+
+    @Nullable
+    public ArtistDto getArtist() {
+        return artist;
+    }
+
+    public DiscoveryJobDto setArtist(@Nullable ArtistDto artist) {
+        this.artist = artist;
+        return this;
+    }
+
+    @Nullable
+    public AlbumDto getAlbum() {
+        return album;
+    }
+
+    public DiscoveryJobDto setAlbum(@Nullable AlbumDto album) {
+        this.album = album;
+        return this;
+    }
+
+    @Nullable
+    public SongDto getSong() {
+        return song;
+    }
+
+    public DiscoveryJobDto setSong(@Nullable SongDto song) {
+        this.song = song;
         return this;
     }
 
@@ -49,14 +82,23 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    public static DiscoveryJobDto of(DiscoveryJob discoveryJob) {
+    public static DiscoveryJobDto of(
+            DiscoveryJob discoveryJob,
+            @Nullable GenreDto genre,
+            @Nullable ArtistDto artist,
+            @Nullable AlbumDto album,
+            @Nullable SongDto song
+    ) {
         return new DiscoveryJobDto()
                 .setId(discoveryJob.getId())
                 .setCreationDate(discoveryJob.getCreationDate())
                 .setUpdateDate(discoveryJob.getUpdateDate())
                 .setDiscoveryType(discoveryJob.getType())
                 .setStatus(discoveryJob.getStatus())
-                .setParameter(discoveryJob.getParameter())
+                .setGenre(genre)
+                .setArtist(artist)
+                .setAlbum(album)
+                .setSong(song)
                 .setLogMessage(discoveryJob.getLogMessage() != null ? LogMessageDto.of(discoveryJob.getLogMessage()) : null);
     }
 }

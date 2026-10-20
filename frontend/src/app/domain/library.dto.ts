@@ -219,8 +219,10 @@ export interface ScanJobPageDto extends PageDto {
 
 export enum DiscoveryType {
   FULL = 'FULL',
+  GENRE = 'GENRE',
   ARTIST = 'ARTIST',
   ALBUM = 'ALBUM',
+  SONG = 'SONG',
 }
 
 export interface DiscoveryJobDto {
@@ -229,7 +231,10 @@ export interface DiscoveryJobDto {
   updateDate: string | undefined;
   discoveryType: DiscoveryType;
   status: DiscoveryJobDto.Status;
-  parameter: string | undefined;
+  genre: GenreDto | undefined;
+  artist: ArtistDto | undefined;
+  album: AlbumDto | undefined;
+  song: SongDto | undefined;
   logMessage: LogMessageDto | undefined;
 }
 

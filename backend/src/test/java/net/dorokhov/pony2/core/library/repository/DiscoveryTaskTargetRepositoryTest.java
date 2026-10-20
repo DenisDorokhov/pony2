@@ -32,10 +32,22 @@ class DiscoveryTaskTargetRepositoryTest extends IntegrationTest {
         Genre genre = genreRepository.save(new Genre().setName("Genre"));
         Song song = songRepository.save(song().setAlbum(album).setGenre(genre));
         DiscoveryJob job = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
-        DiscoveryTask artistTask = taskRepository.save(task(job).setArtist(artist));
-        DiscoveryTask albumTask = taskRepository.save(task(job).setAlbum(album));
-        DiscoveryTask genreTask = taskRepository.save(task(job).setGenre(genre));
-        DiscoveryTask songTask = taskRepository.save(task(job).setSong(song));
+        DiscoveryJob artistJob = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.ARTIST)
+                .setStatus(DiscoveryJob.Status.COMPLETE).setArtist(artist));
+        DiscoveryJob albumJob = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM)
+                .setStatus(DiscoveryJob.Status.COMPLETE).setAlbum(album));
+        DiscoveryJob genreJob = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.GENRE)
+                .setStatus(DiscoveryJob.Status.COMPLETE).setGenre(genre));
+        DiscoveryJob songJob = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.SONG)
+                .setStatus(DiscoveryJob.Status.COMPLETE).setSong(song));
+        DiscoveryTask artistTask = taskRepository.save(task(artistJob).setArtist(artist));
+        DiscoveryTask albumTask = taskRepository.save(task(albumJob).setAlbum(album));
+        DiscoveryTask genreTask = taskRepository.save(task(genreJob).setGenre(genre));
+        DiscoveryTask songTask = taskRepository.save(task(songJob).setSong(song));
+
+        assertThatThrownBy(() -> jobRepository.saveAndFlush(new DiscoveryJob().setType(DiscoveryType.ARTIST)
+                .setStatus(DiscoveryJob.Status.COMPLETE).setArtist(artist).setAlbum(album)))
+                .isInstanceOf(DataIntegrityViolationException.class);
 
         assertThatThrownBy(() -> taskRepository.saveAndFlush(task(job).setArtist(artist).setAlbum(album)))
                 .isInstanceOf(DataIntegrityViolationException.class);
@@ -49,12 +61,23 @@ class DiscoveryTaskTargetRepositoryTest extends IntegrationTest {
         assertThat(albumRepository.count()).isZero();
         assertThat(artistRepository.count()).isZero();
         assertThat(genreRepository.count()).isZero();
+        assertThat(jobRepository.count()).isEqualTo(5);
+        assertThat(jobRepository.findById(job.getId())).isPresent();
+        assertThat(jobRepository.findById(artistJob.getId()).orElseThrow().getArtist()).isNull();
+        assertThat(jobRepository.findById(albumJob.getId()).orElseThrow().getAlbum()).isNull();
+        assertThat(jobRepository.findById(genreJob.getId()).orElseThrow().getGenre()).isNull();
+        assertThat(jobRepository.findById(songJob.getId()).orElseThrow().getSong()).isNull();
+        assertThat(jobRepository.findAll()).allSatisfy(savedJob -> assertThat(savedJob.getStatus()).isEqualTo(DiscoveryJob.Status.COMPLETE));
         assertThat(taskRepository.count()).isEqualTo(4);
         assertThat(taskRepository.findById(artistTask.getId()).orElseThrow().getArtist()).isNull();
         assertThat(taskRepository.findById(albumTask.getId()).orElseThrow().getAlbum()).isNull();
         assertThat(taskRepository.findById(genreTask.getId()).orElseThrow().getGenre()).isNull();
         assertThat(taskRepository.findById(songTask.getId()).orElseThrow().getSong()).isNull();
-        assertThat(taskRepository.findAll()).allSatisfy(task -> assertThat(task.getResult()).isEqualTo("{}"));
+        assertThat(taskRepository.findAll()).allSatisfy(task -> {
+            assertThat(task.getResult()).isEqualTo("{}");
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(jobRepository.existsById(task.getJob().getId())).isTrue();
+        });
     }
 
     private DiscoveryTask task(DiscoveryJob job) {

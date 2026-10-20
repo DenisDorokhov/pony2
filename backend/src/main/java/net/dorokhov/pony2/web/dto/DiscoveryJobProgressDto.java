@@ -27,9 +27,9 @@ public final class DiscoveryJobProgressDto {
         return this;
     }
 
-    public static DiscoveryJobProgressDto of(DiscoveryJobProgress discoveryJobProgress) {
+    public static DiscoveryJobProgressDto of(DiscoveryJobProgress discoveryJobProgress, DiscoveryJobDto discoveryJob) {
         return new DiscoveryJobProgressDto()
-                .setDiscoveryJob(DiscoveryJobDto.of(discoveryJobProgress.getDiscoveryJob()))
+                .setDiscoveryJob(discoveryJob)
                 .setDiscoveryProgress(discoveryJobProgress.getDiscoveryProgress() != null
                         ? DiscoveryProgressDto.of(discoveryJobProgress.getDiscoveryProgress()) : null);
     }

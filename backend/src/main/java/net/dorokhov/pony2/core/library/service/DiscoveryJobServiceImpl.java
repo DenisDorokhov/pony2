@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.synchronizedSet;
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryJob.Status.*;
 import static net.dorokhov.pony2.core.library.LibraryConfig.DISCOVERY_JOB_EXECUTOR;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
@@ -101,7 +102,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
         try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerMaintenanceJob()) {
             while (true) {
-                List<String> jobIds = Objects.requireNonNull(transactionTemplate.execute(status ->
+                List<String> jobIds = requireNonNull(transactionTemplate.execute(status ->
                         discoveryJobRepository.findIdsForCleanup(PageRequest.of(0, 100))));
                 if (jobIds.isEmpty()) {
                     break;
@@ -212,25 +213,31 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         return startDiscoveryJob(DiscoveryType.ALBUM, albumId, cacheEnabled);
     }
 
-    private DiscoveryJob startDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled) throws ConcurrentLibraryJobException {
+    private DiscoveryJob startDiscoveryJob(DiscoveryType discoveryType, @Nullable String targetId, boolean cacheEnabled) throws ConcurrentLibraryJobException {
         LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerDiscoveryJob();
         try {
-            return doStartDiscoveryJob(discoveryType, parameter, cacheEnabled, jobRegistration);
+            return doStartDiscoveryJob(discoveryType, targetId, cacheEnabled, jobRegistration);
         } catch (RuntimeException | Error e) {
             jobRegistration.close();
             throw e;
         }
     }
 
-    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String parameter, boolean cacheEnabled, LibraryJobSynchronizer.LibraryJobRegistration jobRegistration) {
+    private DiscoveryJob doStartDiscoveryJob(DiscoveryType discoveryType, @Nullable String targetId, boolean cacheEnabled, LibraryJobSynchronizer.LibraryJobRegistration jobRegistration) {
 
-        String jobDescription = discoveryJobDescription(discoveryType, parameter);
+        DiscoveryJob startingJob = new DiscoveryJob().setType(discoveryType).setStatus(STARTING);
+        switch (discoveryType) {
+            case FULL -> {}
+            case ARTIST -> startingJob.setArtist(artistRepository.findById(
+                    requireNonNull(targetId, "Artist ID must not be null.")).orElseThrow());
+            case ALBUM -> startingJob.setAlbum(albumRepository.findById(
+                    requireNonNull(targetId, "Album ID must not be null.")).orElseThrow());
+            case GENRE, SONG ->
+                    throw new UnsupportedOperationException("Discovery type " + discoveryType + " is not supported yet.");
+        }
+        String jobDescription = discoveryJobDescription(startingJob);
         Optional<LogMessage> logStarting = logService.info(logger, "Starting discovery job {}... Cache enabled: {}.", jobDescription, cacheEnabled);
-        DiscoveryJob discoveryJob = discoveryJobRepository.save(new DiscoveryJob()
-                .setType(discoveryType)
-                .setStatus(STARTING)
-                .setParameter(parameter)
-                .setLogMessage(logStarting.orElse(null)));
+        DiscoveryJob discoveryJob = discoveryJobRepository.save(startingJob.setLogMessage(logStarting.orElse(null)));
 
         registerSynchronization(new TransactionSynchronization() {
             @Override
@@ -293,6 +300,17 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         return discoveryJob;
     }
 
+    private String discoveryJobDescription(DiscoveryJob job) {
+        String targetId = switch (job.getType()) {
+            case FULL -> null;
+            case GENRE -> job.getGenre() != null ? job.getGenre().getId() : null;
+            case ARTIST -> job.getArtist() != null ? job.getArtist().getId() : null;
+            case ALBUM -> job.getAlbum() != null ? job.getAlbum().getId() : null;
+            case SONG -> job.getSong() != null ? job.getSong().getId() : null;
+        };
+        return targetId != null ? job.getType() + " for " + targetId : job.getType().toString();
+    }
+
     private void doDiscoveryJob(DiscoveryJob discoveryJob, boolean cacheEnabled) {
         Consumer<DiscoveryProgress> progressObserver = discoveryProgress ->
                 onDiscoveryJobProgress(new DiscoveryJobProgress(discoveryJob, discoveryProgress));
@@ -300,16 +318,19 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             case FULL -> fullDiscoveryService.discover(discoveryJob, cacheEnabled, progressObserver);
             case ARTIST -> artistDiscoveryService.discover(
                     discoveryJob,
-                    artistRepository.findById(Objects.requireNonNull(discoveryJob.getParameter())).orElseThrow(),
+                    artistRepository.findById(requireNonNull(discoveryJob.getArtist(),
+                            () -> "Discovery job '" + discoveryJob.getId() + "' has no associated artist.").getId()).orElseThrow(),
                     cacheEnabled,
                     progressObserver
             );
             case ALBUM -> albumDiscoveryService.discover(
                     discoveryJob,
-                    albumRepository.findById(Objects.requireNonNull(discoveryJob.getParameter())).orElseThrow(),
+                    albumRepository.findById(requireNonNull(discoveryJob.getAlbum(),
+                            () -> "Discovery job '" + discoveryJob.getId() + "' has no associated album.").getId()).orElseThrow(),
                     cacheEnabled,
                     progressObserver
             );
+            case GENRE, SONG -> throw new UnsupportedOperationException("Discovery type " + discoveryJob.getType() + " is not supported yet.");
         }
     }
 
@@ -351,7 +372,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         String resultDescription = String.format(
                 "Job '%s' (%s). Completed tasks: %s, failed tasks: %s, duration: %s",
                 discoveryJob.getId(),
-                discoveryJobDescription(discoveryJob.getType(), discoveryJob.getParameter()),
+                discoveryJobDescription(discoveryJob),
                 completedTasks,
                 failedTasks,
                 duration
@@ -362,10 +383,6 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             case FAILED -> logService.error(logger, "Discovery job failed: {}.", resultDescription);
             default -> throw new IllegalStateException("Unexpected discovery job status.");
         };
-    }
-
-    private String discoveryJobDescription(DiscoveryType discoveryType, @Nullable String parameter) {
-        return parameter != null ? discoveryType + " for " + parameter : discoveryType.toString();
     }
 
     private DiscoveryJob onDiscoveryJobStatusChange(DiscoveryJob discoveryJob) {

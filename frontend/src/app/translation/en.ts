@@ -244,8 +244,10 @@ export default {
     statusLabel: 'Status:',
     tasksLabel: 'Tasks:',
     detailsButton: 'Details',
-    artistIdLabel: 'Target artist ID:',
-    albumIdLabel: 'Target album ID:',
+    targetLabel: 'Target:',
+    fullLibrary: 'Full library',
+    deletedGenre: 'Deleted genre',
+    deletedSong: 'Deleted song',
     logMessageLabel: 'Log message:',
   },
   discoveryTasks: {

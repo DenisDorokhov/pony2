@@ -25,6 +25,7 @@ public class LibraryCleaner {
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
+    private final DiscoveryJobRepository discoveryJobRepository;
     private final ArtworkStorage artworkStorage;
 
     public LibraryCleaner(
@@ -35,6 +36,7 @@ public class LibraryCleaner {
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
+            DiscoveryJobRepository discoveryJobRepository,
             ArtworkStorage artworkStorage
     ) {
         this.songRepository = songRepository;
@@ -44,6 +46,7 @@ public class LibraryCleaner {
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
+        this.discoveryJobRepository = discoveryJobRepository;
         this.artworkStorage = artworkStorage;
     }
 
@@ -53,6 +56,7 @@ public class LibraryCleaner {
             artistDiscoveryIndexRepository.deleteByArtistId(artist.getId());
             artistGenreRepository.deleteByArtistId(artist.getId());
             discoveryTaskRepository.clearArtistByArtistId(artist.getId());
+            discoveryJobRepository.clearArtistByArtistId(artist.getId());
             artistRepository.deleteById(artist.getId());
             logger.debug("Deleting artist '{}'.", artist);
             return true;
@@ -64,6 +68,7 @@ public class LibraryCleaner {
     public boolean deleteAlbumIfUnused(Album album) {
         if (songRepository.countByAlbumId(album.getId()) == 0) {
             discoveryTaskRepository.clearAlbumByAlbumId(album.getId());
+            discoveryJobRepository.clearAlbumByAlbumId(album.getId());
             albumRepository.deleteById(album.getId());
             logger.debug("Deleting album '{}'.", album);
             return true;
@@ -76,6 +81,7 @@ public class LibraryCleaner {
         if (songRepository.countByGenreId(genre.getId()) == 0) {
             artistGenreRepository.deleteByGenreId(genre.getId());
             discoveryTaskRepository.clearGenreByGenreId(genre.getId());
+            discoveryJobRepository.clearGenreByGenreId(genre.getId());
             genreRepository.deleteById(genre.getId());
             logger.debug("Deleting genre '{}'.", genre);
             return true;

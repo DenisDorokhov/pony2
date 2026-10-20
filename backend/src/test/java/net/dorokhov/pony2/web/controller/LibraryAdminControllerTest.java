@@ -5,6 +5,8 @@ import net.dorokhov.pony2.*;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
+import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
@@ -13,12 +15,16 @@ import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony2.api.library.domain.ScanResult;
 import net.dorokhov.pony2.api.library.domain.ScanType;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
+import net.dorokhov.pony2.core.library.repository.ArtistRepository;
+import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
@@ -45,6 +51,10 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     private ScanJobService scanJobService;
     @Autowired
     private DiscoveryJobService discoveryJobService;
+    @Autowired
+    private ArtistRepository artistRepository;
+    @Autowired
+    private AlbumRepository albumRepository;
     @Autowired
     private ConfigService configService;
     @Autowired
@@ -197,14 +207,32 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         });
     }
 
-    @Test
-    public void shouldPerformFullDiscoveryFlow() {
-
+    @ParameterizedTest
+    @EnumSource(value = DiscoveryType.class, names = {"FULL", "ARTIST", "ALBUM"})
+    public void shouldPerformDiscoveryFlow(DiscoveryType type) {
+        String targetId = switch (type) {
+            case FULL -> null;
+            case ARTIST -> artistRepository.save(new Artist().setName("Artist")).getId();
+            case ALBUM -> albumRepository.save(new Album().setArtist(artistRepository.save(new Artist().setName("Artist")))).getId();
+            case GENRE, SONG -> throw new UnsupportedOperationException();
+        };
+        String path = switch (type) {
+            case FULL -> "/api/admin/library/discoveryJobs/full";
+            case ARTIST -> "/api/admin/library/discoveryJobs/artist/" + targetId;
+            case ALBUM -> "/api/admin/library/discoveryJobs/album/" + targetId;
+            case GENRE, SONG -> throw new UnsupportedOperationException();
+        };
+        long tasksTotal = switch (type) {
+            case FULL -> 0;
+            case ARTIST -> configService.get().llmEnabled() ? 2 : 0;
+            case ALBUM -> 1;
+            case GENRE, SONG -> throw new UnsupportedOperationException();
+        };
         discoveryJobService.addObserver(blockingDiscoveryObserver);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<DiscoveryJobDto> discoveryJobResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/library/discoveryJobs/full", HttpMethod.POST,
+                path, HttpMethod.POST,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), DiscoveryJobDto.class);
 
         assertThat(discoveryJobResponse.getStatusCode()).isSameAs(HttpStatus.OK);
@@ -212,7 +240,14 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         assertThat(discoveryJob.getId()).isNotNull();
         assertThat(discoveryJob.getCreationDate()).isNotNull();
         assertThat(discoveryJob.getUpdateDate()).isNull();
-        assertThat(discoveryJob.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
+        assertThat(discoveryJob.getDiscoveryType()).isSameAs(type);
+        if (type == DiscoveryType.ARTIST) {
+            assertThat(discoveryJob.getArtist().getId()).isEqualTo(targetId);
+            assertThat(discoveryJob.getArtist().getName()).isEqualTo("Artist");
+        } else if (type == DiscoveryType.ALBUM) {
+            assertThat(discoveryJob.getAlbum().getId()).isEqualTo(targetId);
+            assertThat(discoveryJob.getArtist().getName()).isEqualTo("Artist");
+        }
         assertThat(discoveryJob.getStatus()).isSameAs(DiscoveryJob.Status.STARTING);
         assertThat(discoveryJob.getLogMessage()).isNotNull();
 
@@ -234,6 +269,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
                 assertThat(discoveryJobProgress.getDiscoveryProgress()).isNotNull();
                 assertThat(discoveryJobProgress.getDiscoveryJob().getId()).isEqualTo(discoveryJob.getId());
                 assertThat(discoveryJobProgress.getDiscoveryJob().getStatus()).isSameAs(DiscoveryJob.Status.STARTED);
+                checkDiscoveryJobDto(discoveryJobProgress.getDiscoveryJob(), discoveryJob.getId());
                 assertThat(discoveryJobProgress.getDiscoveryProgress().getStepDescriptor()).satisfies(stepDescriptor -> {
                     assertThat(stepDescriptor.getStep()).isNotNull();
                     assertThat(stepDescriptor.getDiscoveryType()).isSameAs(stepDescriptor.getStep().getDiscoveryType());
@@ -241,7 +277,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
                     assertThat(stepDescriptor.getTotalSteps()).isEqualTo(stepDescriptor.getStep().getTotalSteps());
                 });
                 assertThat(discoveryJobProgress.getDiscoveryProgress().getValue()).satisfies(value ->
-                        assertThat(value.getItemsTotal()).isZero());
+                        assertThat(value.getItemsTotal()).isEqualTo(tasksTotal));
             });
         });
 
@@ -258,6 +294,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(optionalResponse.getValue().getDiscoveryProgress()).isNotNull();
             assertThat(optionalResponse.getValue().getDiscoveryJob().getId()).isEqualTo(discoveryJob.getId());
             assertThat(optionalResponse.getValue().getDiscoveryJob().getStatus()).isSameAs(DiscoveryJob.Status.STARTED);
+            checkDiscoveryJobDto(optionalResponse.getValue().getDiscoveryJob(), discoveryJob.getId());
             assertThat(optionalResponse.getValue().getDiscoveryProgress().getStepDescriptor()).satisfies(stepDescriptor -> {
                 assertThat(stepDescriptor.getStep()).isNotNull();
                 assertThat(stepDescriptor.getDiscoveryType()).isSameAs(stepDescriptor.getStep().getDiscoveryType());
@@ -265,7 +302,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
                 assertThat(stepDescriptor.getTotalSteps()).isEqualTo(stepDescriptor.getStep().getTotalSteps());
             });
             assertThat(optionalResponse.getValue().getDiscoveryProgress().getValue()).satisfies(value ->
-                    assertThat(value.getItemsTotal()).isZero());
+                    assertThat(value.getItemsTotal()).isEqualTo(tasksTotal));
         });
 
         ResponseEntity<ErrorDto> concurrentDiscoveryResponse = apiTemplate.getRestTemplate().exchange(
@@ -413,7 +450,15 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             assertThat(dto.getUpdateDate()).isEqualTo(discoveryJob.getUpdateDate());
             assertThat(dto.getDiscoveryType()).isEqualTo(discoveryJob.getType());
             assertThat(dto.getStatus()).isEqualTo(discoveryJob.getStatus());
-            assertThat(dto.getParameter()).isEqualTo(discoveryJob.getParameter());
+            Artist artist = discoveryJob.getAlbum() != null ? discoveryJob.getAlbum().getArtist() : discoveryJob.getArtist();
+            assertThat(dto.getArtist() != null ? dto.getArtist().getId() : null)
+                    .isEqualTo(artist != null ? artist.getId() : null);
+            assertThat(dto.getAlbum() != null ? dto.getAlbum().getId() : null)
+                    .isEqualTo(discoveryJob.getAlbum() != null ? discoveryJob.getAlbum().getId() : null);
+            assertThat(dto.getGenre() != null ? dto.getGenre().getId() : null)
+                    .isEqualTo(discoveryJob.getGenre() != null ? discoveryJob.getGenre().getId() : null);
+            assertThat(dto.getSong() != null ? dto.getSong().getId() : null)
+                    .isEqualTo(discoveryJob.getSong() != null ? discoveryJob.getSong().getId() : null);
             checkLogMessageDto(dto.getLogMessage(), discoveryJob.getLogMessage());
             return null;
         });

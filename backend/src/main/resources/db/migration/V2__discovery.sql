@@ -24,13 +24,27 @@ CREATE TABLE discovery_job (
 
   discovery_type VARCHAR (255) NOT NULL,
   status VARCHAR (255) NOT NULL,
-  parameter LONGVARCHAR,
 
   log_message_id CHAR(36),
+  genre_id CHAR(36),
+  artist_id CHAR(36),
+  album_id CHAR(36),
+  song_id CHAR(36),
 
   FOREIGN KEY (log_message_id) REFERENCES log_message (id),
+  FOREIGN KEY (genre_id) REFERENCES genre (id),
+  FOREIGN KEY (artist_id) REFERENCES artist (id),
+  FOREIGN KEY (album_id) REFERENCES album (id),
+  FOREIGN KEY (song_id) REFERENCES song (id),
 
-  UNIQUE (log_message_id)
+  UNIQUE (log_message_id),
+
+  CONSTRAINT check_discovery_job_target CHECK (
+    (CASE WHEN genre_id IS NULL THEN 0 ELSE 1 END) +
+    (CASE WHEN artist_id IS NULL THEN 0 ELSE 1 END) +
+    (CASE WHEN album_id IS NULL THEN 0 ELSE 1 END) +
+    (CASE WHEN song_id IS NULL THEN 0 ELSE 1 END) <= 1
+  )
 );
 
 CREATE INDEX index_discovery_job_status ON discovery_job (status);

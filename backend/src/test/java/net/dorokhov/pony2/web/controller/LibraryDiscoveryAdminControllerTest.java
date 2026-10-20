@@ -80,15 +80,21 @@ public class LibraryDiscoveryAdminControllerTest {
             "FULL, false, false", "ARTIST, false, false", "ALBUM, false, false"
     })
     public void shouldStartDiscoveryJob(DiscoveryType type, String cacheEnabledParameter, boolean cacheEnabled) throws Exception {
+        Artist artist = new Artist().setId("artistId").setName("Artist");
+        Album album = new Album().setId("albumId").setName("Album").setArtist(artist);
         DiscoveryJob job = discoveryJob(type)
                 .setId("job1")
-                .setParameter(switch (type) {
-                    case FULL -> null;
-                    case ARTIST -> "artistId";
-                    case ALBUM -> "albumId";
-                })
+                .setArtist(type == DiscoveryType.ARTIST ? artist : null)
+                .setAlbum(type == DiscoveryType.ALBUM ? album : null)
                 .setLogMessage(new LogMessage().setId("log1").setText("Starting discovery."));
         when(startJob(type, cacheEnabled)).thenReturn(job);
+        if (type != DiscoveryType.FULL) {
+            when(libraryService.getArtistDiscoveryData("artistId")).thenReturn(new ArtistDiscoveryData(null, List.of()));
+        }
+        if (type == DiscoveryType.ALBUM) {
+            when(libraryService.getAlbumDiscoveryData("albumId"))
+                    .thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+        }
 
         MockHttpServletRequestBuilder request = post(startJobPath(type));
         if (cacheEnabledParameter != null) {
@@ -104,7 +110,13 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(discoveryJob.getCreationDate()).isNotNull();
             assertThat(discoveryJob.getDiscoveryType()).isSameAs(type);
             assertThat(discoveryJob.getStatus()).isSameAs(DiscoveryJob.Status.STARTING);
-            assertThat(discoveryJob.getParameter()).isEqualTo(job.getParameter());
+            assertThat(objectMapper.readTree(response).has("parameter")).isFalse();
+            if (type == DiscoveryType.ARTIST || type == DiscoveryType.ALBUM) {
+                assertThat(discoveryJob.getArtist().getId()).isEqualTo(artist.getId());
+            }
+            if (type == DiscoveryType.ALBUM) {
+                assertThat(discoveryJob.getAlbum().getId()).isEqualTo(album.getId());
+            }
             assertThat(discoveryJob.getLogMessage()).satisfies(logMessage -> {
                 assertThat(logMessage.getId()).isEqualTo("log1");
                 assertThat(logMessage.getText()).isEqualTo("Starting discovery.");
@@ -119,7 +131,7 @@ public class LibraryDiscoveryAdminControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(DiscoveryType.class)
+    @EnumSource(value = DiscoveryType.class, names = {"FULL", "ARTIST", "ALBUM"})
     public void shouldRejectConcurrentDiscoveryJob(DiscoveryType type) throws Exception {
         when(startJob(type, true)).thenThrow(new ConcurrentLibraryJobException());
 
@@ -559,6 +571,7 @@ public class LibraryDiscoveryAdminControllerTest {
                 when(libraryService.getAlbumById("albumId")).thenReturn(Optional.of(new Album().setId("albumId")));
                 yield discoveryJobService.startAlbumJob("albumId", cacheEnabled);
             }
+            case GENRE, SONG -> throw new UnsupportedOperationException();
         };
     }
 
@@ -567,6 +580,7 @@ public class LibraryDiscoveryAdminControllerTest {
             case FULL -> "/api/admin/library/discoveryJobs/full";
             case ARTIST -> "/api/admin/library/discoveryJobs/artist/artistId";
             case ALBUM -> "/api/admin/library/discoveryJobs/album/albumId";
+            case GENRE, SONG -> throw new UnsupportedOperationException();
         };
     }
 
@@ -577,6 +591,7 @@ public class LibraryDiscoveryAdminControllerTest {
     }
 
     private void mockProgress(String suffix, DiscoveryJobProgress progress) {
+        when(discoveryJobService.getById("job1")).thenReturn(Optional.of(progress.getDiscoveryJob()));
         if (suffix.isEmpty()) {
             when(discoveryJobService.getCurrentDiscoveryJobProgress()).thenReturn(Optional.of(progress));
         } else {

@@ -4,6 +4,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.function.Function;
 
 public final class DiscoveryJobPageDto extends PageDto<DiscoveryJobPageDto> {
 
@@ -18,13 +19,13 @@ public final class DiscoveryJobPageDto extends PageDto<DiscoveryJobPageDto> {
         return this;
     }
 
-    public static DiscoveryJobPageDto of(Page<DiscoveryJob> discoveryJobPage) {
+    public static DiscoveryJobPageDto of(Page<DiscoveryJob> discoveryJobPage, Function<DiscoveryJob, DiscoveryJobDto> mapper) {
         return new DiscoveryJobPageDto()
                 .setPageIndex(discoveryJobPage.getNumber())
                 .setPageSize(discoveryJobPage.getSize())
                 .setTotalPages(discoveryJobPage.getTotalPages())
                 .setDiscoveryJobs(discoveryJobPage.getContent().stream()
-                        .map(DiscoveryJobDto::of)
+                        .map(mapper)
                         .toList());
     }
 }

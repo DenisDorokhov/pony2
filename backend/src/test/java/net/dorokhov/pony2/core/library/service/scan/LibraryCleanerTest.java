@@ -39,6 +39,8 @@ public class LibraryCleanerTest {
     @Mock
     private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock
+    private DiscoveryJobRepository discoveryJobRepository;
+    @Mock
     private ArtworkStorage artworkStorage;
 
     @BeforeEach
@@ -51,6 +53,7 @@ public class LibraryCleanerTest {
                 artistGenreRepository,
                 artistDiscoveryIndexRepository,
                 discoveryTaskRepository,
+                discoveryJobRepository,
                 artworkStorage
         );
     }

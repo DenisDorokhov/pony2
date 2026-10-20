@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.api.library.domain;
 
 import com.google.common.base.MoreObjects;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony2.api.common.BaseEntity;
@@ -27,8 +28,21 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
     @NotNull
     private Status status;
 
-    @Column(name = "parameter")
-    private String parameter;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "genre_id")
+    private Genre genre;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "artist_id")
+    private Artist artist;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id")
+    private Album album;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "song_id")
+    private Song song;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "log_message_id", unique = true)
@@ -55,12 +69,43 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
         return this;
     }
 
-    public String getParameter() {
-        return parameter;
+    @Nullable
+    public Genre getGenre() {
+        return genre;
     }
 
-    public DiscoveryJob setParameter(String parameter) {
-        this.parameter = parameter;
+    public DiscoveryJob setGenre(@Nullable Genre genre) {
+        this.genre = genre;
+        return this;
+    }
+
+    @Nullable
+    public Artist getArtist() {
+        return artist;
+    }
+
+    public DiscoveryJob setArtist(@Nullable Artist artist) {
+        this.artist = artist;
+        return this;
+    }
+
+    @Nullable
+    public Album getAlbum() {
+        return album;
+    }
+
+    public DiscoveryJob setAlbum(@Nullable Album album) {
+        this.album = album;
+        return this;
+    }
+
+    @Nullable
+    public Song getSong() {
+        return song;
+    }
+
+    public DiscoveryJob setSong(@Nullable Song song) {
+        this.song = song;
         return this;
     }
 
@@ -90,7 +135,6 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
                 .add("updateDate", updateDate)
                 .add("type", type)
                 .add("status", status)
-                .add("parameter", parameter)
                 .toString();
     }
 }

@@ -38,7 +38,23 @@ public class DiscoveryFacade {
         if (discoveryJobProgress == null) {
             return OptionalResponseDto.empty();
         }
-        return OptionalResponseDto.of(DiscoveryJobProgressDto.of(discoveryJobProgress));
+        return toDiscoveryJobProgress(discoveryJobProgress);
+    }
+
+    private OptionalResponseDto<DiscoveryJobProgressDto> toDiscoveryJobProgress(DiscoveryJobProgress progress) {
+        DiscoveryJob job = discoveryJobService.getById(progress.getDiscoveryJob().getId()).orElse(null);
+        return job != null ? OptionalResponseDto.of(DiscoveryJobProgressDto.of(progress, toDiscoveryJobDto(job)))
+                : OptionalResponseDto.empty();
+    }
+
+    private DiscoveryJobDto toDiscoveryJobDto(DiscoveryJob job) {
+        Album album = job.getAlbum();
+        Artist artist = album != null ? album.getArtist() : job.getArtist();
+        return DiscoveryJobDto.of(job,
+                job.getGenre() != null ? GenreDto.of(job.getGenre()) : null,
+                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId())) : null,
+                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId())) : null,
+                job.getSong() != null ? SongDto.of(job.getSong(), true) : null);
     }
 
     @Transactional(readOnly = true)
@@ -47,13 +63,13 @@ public class DiscoveryFacade {
         if (discoveryJobProgress == null) {
             return OptionalResponseDto.empty();
         }
-        return OptionalResponseDto.of(DiscoveryJobProgressDto.of(discoveryJobProgress));
+        return toDiscoveryJobProgress(discoveryJobProgress);
     }
 
     @Transactional(readOnly = true)
     public DiscoveryJobPageDto getDiscoveryJobs(int pageIndex, int pageSize) {
         return DiscoveryJobPageDto.of(discoveryJobService.getAll(PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)),
-                Sort.by(DESC, "creationDate", "updateDate"))));
+                Sort.by(DESC, "creationDate", "updateDate"))), this::toDiscoveryJobDto);
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +78,7 @@ public class DiscoveryFacade {
         if (discoveryJob == null) {
             throw new ObjectNotFoundException(DiscoveryJob.class, discoveryJobId);
         }
-        return DiscoveryJobDto.of(discoveryJob);
+        return toDiscoveryJobDto(discoveryJob);
     }
 
     @Transactional(readOnly = true)
@@ -106,7 +122,7 @@ public class DiscoveryFacade {
 
     @Transactional
     public DiscoveryJobDto startFullDiscoveryJob(boolean cacheEnabled) throws ConcurrentLibraryJobException {
-        return DiscoveryJobDto.of(discoveryJobService.startFullJob(cacheEnabled));
+        return toDiscoveryJobDto(discoveryJobService.startFullJob(cacheEnabled));
     }
 
     @Transactional
@@ -115,7 +131,7 @@ public class DiscoveryFacade {
         if (artist == null) {
             throw new ObjectNotFoundException(Artist.class, artistId);
         }
-        return DiscoveryJobDto.of(discoveryJobService.startArtistJob(artistId, cacheEnabled));
+        return toDiscoveryJobDto(discoveryJobService.startArtistJob(artistId, cacheEnabled));
     }
 
     @Transactional
@@ -124,6 +140,6 @@ public class DiscoveryFacade {
         if (album == null) {
             throw new ObjectNotFoundException(Album.class, albumId);
         }
-        return DiscoveryJobDto.of(discoveryJobService.startAlbumJob(albumId, cacheEnabled));
+        return toDiscoveryJobDto(discoveryJobService.startAlbumJob(albumId, cacheEnabled));
     }
 }

@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -96,6 +98,20 @@ public class DiscoveryJobServiceImplTest {
         clearSynchronization();
     }
 
+    @ParameterizedTest
+    @EnumSource(value = DiscoveryType.class, names = {"GENRE", "SONG"})
+    public void shouldRejectReservedDiscoveryTypes(DiscoveryType type) {
+        DiscoveryJob job = new DiscoveryJob().setType(type);
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(discoveryJobService, "startDiscoveryJob", type, null, true))
+                .isInstanceOf(UnsupportedOperationException.class).hasMessageContaining(type.name());
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(discoveryJobService, "doDiscoveryJob", job, true))
+                .isInstanceOf(UnsupportedOperationException.class).hasMessageContaining(type.name());
+
+        verifyNoInteractions(discoveryJobRepository, fullDiscoveryService, artistDiscoveryService, albumDiscoveryService);
+        assertThatCode(() -> jobSynchronizer.registerDiscoveryJob().close()).doesNotThrowAnyException();
+    }
+
     @Test
     public void shouldGetAll() {
 
@@ -131,7 +147,10 @@ public class DiscoveryJobServiceImplTest {
         DiscoveryJob discoveryJobStarting = discoveryJobService.startFullJob();
         assertThat(discoveryJobStarting.getType()).isSameAs(FULL);
         assertThat(discoveryJobStarting.getStatus()).isSameAs(STARTING);
-        assertThat(discoveryJobStarting.getParameter()).isNull();
+        assertThat(discoveryJobStarting.getGenre()).isNull();
+        assertThat(discoveryJobStarting.getArtist()).isNull();
+        assertThat(discoveryJobStarting.getAlbum()).isNull();
+        assertThat(discoveryJobStarting.getSong()).isNull();
         assertThat(discoveryJobStarting.getLogMessage()).isNotNull();
 
         getSynchronizations().forEach(TransactionSynchronization::afterCommit);
@@ -221,7 +240,7 @@ public class DiscoveryJobServiceImplTest {
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getType()).isSameAs(ARTIST);
         assertThat(discoveryJobComplete.getStatus()).isSameAs(COMPLETE);
-        assertThat(discoveryJobComplete.getParameter()).isEqualTo("artist1");
+        assertThat(discoveryJobComplete.getArtist()).isSameAs(artist);
 
         assertThat(observer.getCallCount()).isEqualTo(5);
         observer.assertThatStartingAt(0);
@@ -261,7 +280,7 @@ public class DiscoveryJobServiceImplTest {
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getType()).isSameAs(ALBUM);
         assertThat(discoveryJobComplete.getStatus()).isSameAs(COMPLETE);
-        assertThat(discoveryJobComplete.getParameter()).isEqualTo("album1");
+        assertThat(discoveryJobComplete.getAlbum()).isSameAs(album);
 
         assertThat(observer.getCallCount()).isEqualTo(5);
         observer.assertThatStartingAt(0);
