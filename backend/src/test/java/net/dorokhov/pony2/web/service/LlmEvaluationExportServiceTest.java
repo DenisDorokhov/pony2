@@ -122,7 +122,7 @@ class LlmEvaluationExportServiceTest {
     private DiscoveryTask task(String rawResult) {
         return new DiscoveryTask().setId("task").setCreationDate(exportedAt).setJob(new DiscoveryJob().setId("job"))
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
-                .setParameter("{}").setResult("{}").setRawRequest("[]").setRawResult(rawResult);
+                .setResult("{}").setRawRequest("[]").setRawResult(rawResult);
     }
 
     private OutputStream disconnected() {

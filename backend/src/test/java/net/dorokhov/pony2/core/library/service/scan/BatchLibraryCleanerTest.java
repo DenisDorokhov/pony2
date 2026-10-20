@@ -63,6 +63,8 @@ public class BatchLibraryCleanerTest {
     @Mock
     private PlaybackHistorySongRepository playbackHistorySongRepository;
     @Mock
+    private DiscoveryTaskRepository discoveryTaskRepository;
+    @Mock
     private LogService logService;
     @Mock
     private ShutdownService shutdownService;
@@ -81,6 +83,7 @@ public class BatchLibraryCleanerTest {
                 artworkStorage,
                 playlistSongRepository,
                 playbackHistorySongRepository,
+                discoveryTaskRepository,
                 logService,
                 shutdownService,
                 1,

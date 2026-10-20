@@ -12,9 +12,10 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
     private DiscoveryTask.Status status;
     private DiscoveryTaskType type;
     private Long duration;
-    private String targetId;
+    private GenreDto genre;
     private ArtistDto artist;
     private AlbumDto album;
+    private SongDto song;
 
     public DiscoveryTask.Status getStatus() {
         return status;
@@ -44,12 +45,13 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    public String getTargetId() {
-        return targetId;
+    @Nullable
+    public GenreDto getGenre() {
+        return genre;
     }
 
-    public DiscoveryTaskSummaryDto setTargetId(String targetId) {
-        this.targetId = targetId;
+    public DiscoveryTaskSummaryDto setGenre(@Nullable GenreDto genre) {
+        this.genre = genre;
         return this;
     }
 
@@ -73,7 +75,18 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    public static DiscoveryTaskSummaryDto of(DiscoveryTask task, String targetId, @Nullable ArtistDto artist, @Nullable AlbumDto album) {
+    @Nullable
+    public SongDto getSong() {
+        return song;
+    }
+
+    public DiscoveryTaskSummaryDto setSong(@Nullable SongDto song) {
+        this.song = song;
+        return this;
+    }
+
+    public static DiscoveryTaskSummaryDto of(DiscoveryTask task, @Nullable GenreDto genre, @Nullable ArtistDto artist,
+                                            @Nullable AlbumDto album, @Nullable SongDto song) {
         LocalDateTime endDate = task.getStatus() == DiscoveryTask.Status.STARTED ? LocalDateTime.now() : task.getUpdateDate();
         return new DiscoveryTaskSummaryDto()
                 .setId(task.getId())
@@ -82,8 +95,9 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
                 .setStatus(task.getStatus())
                 .setType(task.getType())
                 .setDuration(endDate != null ? Duration.between(task.getCreationDate(), endDate).toSeconds() : null)
-                .setTargetId(targetId)
+                .setGenre(genre)
                 .setArtist(artist)
-                .setAlbum(album);
+                .setAlbum(album)
+                .setSong(song);
     }
 }

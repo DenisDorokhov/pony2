@@ -182,7 +182,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 DiscoveryProgress.Value.of(0, 1), DiscoveryProgress.Value.of(1, 1));
         DiscoveryTask task = onlyTask();
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(new DiscoveryTask.AlbumParameter(album.getId())));
+        assertThat(task.getAlbum().getId()).isEqualTo(album.getId());
         assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class)).isEqualTo(
                 new MusicBrainzAlbumData("group", "Album", List.of("Live", "Compilation"), "1986-10", "artist", List.of("US", "GB")));
         assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).containsExactly(SEARCH_URL, ARTIST_URL);
@@ -1838,7 +1838,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private DiscoveryTask task(DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status) {
-        DiscoveryTask task = new DiscoveryTask().setJob(job).setType(type).setStatus(status).setParameter("{}");
+        DiscoveryTask task = new DiscoveryTask().setJob(job).setType(type).setStatus(status);
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             task.setAlbum(album);
         } else {

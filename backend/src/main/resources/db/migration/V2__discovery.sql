@@ -44,7 +44,6 @@ CREATE TABLE discovery_task (
 
   status VARCHAR (255) NOT NULL,
   type VARCHAR (255) NOT NULL,
-  parameter LONGVARCHAR NOT NULL,
   result LONGVARCHAR,
   raw_request LONGVARCHAR,
   raw_result LONGVARCHAR,
@@ -56,10 +55,10 @@ CREATE TABLE discovery_task (
   song_id CHAR(36),
 
   FOREIGN KEY (discovery_job_id) REFERENCES discovery_job (id),
-  FOREIGN KEY (genre_id) REFERENCES genre (id) ON DELETE SET NULL,
-  FOREIGN KEY (artist_id) REFERENCES artist (id) ON DELETE SET NULL,
-  FOREIGN KEY (album_id) REFERENCES album (id) ON DELETE SET NULL,
-  FOREIGN KEY (song_id) REFERENCES song (id) ON DELETE SET NULL,
+  FOREIGN KEY (genre_id) REFERENCES genre (id),
+  FOREIGN KEY (artist_id) REFERENCES artist (id),
+  FOREIGN KEY (album_id) REFERENCES album (id),
+  FOREIGN KEY (song_id) REFERENCES song (id),
 
   CONSTRAINT check_discovery_task_target CHECK (
     (CASE WHEN genre_id IS NULL THEN 0 ELSE 1 END) +

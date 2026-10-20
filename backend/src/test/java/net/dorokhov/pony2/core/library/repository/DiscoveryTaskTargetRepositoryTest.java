@@ -2,10 +2,13 @@ package net.dorokhov.pony2.core.library.repository;
 
 import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.core.library.service.scan.BatchLibraryCleaner;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.util.List;
 
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +23,7 @@ class DiscoveryTaskTargetRepositoryTest extends IntegrationTest {
     @Autowired private GenreRepository genreRepository;
     @Autowired private SongRepository songRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private BatchLibraryCleaner batchLibraryCleaner;
 
     @Test
     void shouldEnforceSingleTargetAndKeepHistoryAfterDeletingEveryTargetKind() {
@@ -36,11 +40,15 @@ class DiscoveryTaskTargetRepositoryTest extends IntegrationTest {
         assertThatThrownBy(() -> taskRepository.saveAndFlush(task(job).setArtist(artist).setAlbum(album)))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
-        jdbcTemplate.update("DELETE FROM song WHERE id = ?", song.getId());
-        jdbcTemplate.update("DELETE FROM album WHERE id = ?", album.getId());
-        jdbcTemplate.update("DELETE FROM artist WHERE id = ?", artist.getId());
-        jdbcTemplate.update("DELETE FROM genre WHERE id = ?", genre.getId());
+        assertThatThrownBy(() -> jdbcTemplate.update("DELETE FROM song WHERE id = ?", song.getId()))
+                .isInstanceOf(DataIntegrityViolationException.class);
 
+        batchLibraryCleaner.cleanSongs(List.of(), (itemsComplete, itemsTotal) -> {});
+
+        assertThat(songRepository.count()).isZero();
+        assertThat(albumRepository.count()).isZero();
+        assertThat(artistRepository.count()).isZero();
+        assertThat(genreRepository.count()).isZero();
         assertThat(taskRepository.count()).isEqualTo(4);
         assertThat(taskRepository.findById(artistTask.getId()).orElseThrow().getArtist()).isNull();
         assertThat(taskRepository.findById(albumTask.getId()).orElseThrow().getAlbum()).isNull();
@@ -51,6 +59,6 @@ class DiscoveryTaskTargetRepositoryTest extends IntegrationTest {
 
     private DiscoveryTask task(DiscoveryJob job) {
         return new DiscoveryTask().setJob(job).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
-                .setStatus(DiscoveryTask.Status.COMPLETE).setParameter("{}").setResult("{}");
+                .setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}");
     }
 }

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -33,6 +34,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Limit;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -96,7 +98,8 @@ class SpotifyTopTracksServiceTest {
                 List.of(topTrack("first", "spotify-a"), topTrack("second", "spotify-b"), topTrack("missing", "spotify-missing")),
                 null, null, null, null);
         previousTask = new DiscoveryTask().setId("previous").setStatus(DiscoveryTask.Status.COMPLETE).setResult(JsonConverter.toJson(data));
-        lenient().when(taskRepository.findById("previous")).thenReturn(Optional.of(previousTask));
+        lenient().when(taskRepository.findLatestCompletedByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(Optional.of(previousTask));
         lenient().when(artistRepository.findById("artist")).thenReturn(Optional.of(artist));
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         lenient().when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
@@ -287,10 +290,32 @@ class SpotifyTopTracksServiceTest {
     }
 
     @Test
-    void shouldFailBeforeCallingLlmWhenPreviousTaskFailed() {
-        previousTask.setStatus(DiscoveryTask.Status.FAILED).setResult("{\"error\":\"failure\"}");
+    void shouldReturnNoTracksWhenArtistWasNotFound() {
+        previousTask.setResult(JsonConverter.toJson(new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
+                null, null, null, null, null, null, null)));
 
-        assertThatThrownBy(() -> service.discover(task(), true)).hasMessageContaining("SPOTIFY_ARTIST_DATA").hasMessageContaining("FAILED");
+        assertThat(service.discover(task(), true)).isEmpty();
+
+        verifyNoInteractions(model, cacheService, artistRepository);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"null"})
+    void shouldReturnNoTracksWhenCompletedArtistDataIsEmpty(String result) {
+        previousTask.setResult(result);
+
+        assertThat(service.discover(task(), true)).isEmpty();
+
+        verifyNoInteractions(model, cacheService, artistRepository);
+    }
+
+    @Test
+    void shouldFailBeforeCallingLlmWhenNoCompletedArtistDataTaskExists() {
+        when(taskRepository.findLatestCompletedByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.discover(task(), true)).hasMessageContaining("No completed SPOTIFY_ARTIST_DATA task").hasMessageContaining("artist");
 
         verify(model, never()).call(any(Prompt.class));
         verifyNoInteractions(cacheService, artistRepository);
@@ -308,7 +333,7 @@ class SpotifyTopTracksServiceTest {
 
     private DiscoveryTask task() {
         return new DiscoveryTask().setType(DiscoveryTaskType.SPOTIFY_TOP_TRACKS)
-                .setParameter(JsonConverter.toJson(new DiscoveryTask.SpotifyTopTracksParameter("artist", "previous")));
+                .setArtist(artist);
     }
 
     private SpotifyArtistData.TopTrack topTrack(String id, String albumId) {

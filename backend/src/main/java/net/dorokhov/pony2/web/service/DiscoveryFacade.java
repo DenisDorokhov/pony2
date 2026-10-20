@@ -10,7 +10,6 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
-import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
@@ -92,27 +91,13 @@ public class DiscoveryFacade {
     }
 
     private DiscoveryTaskSummaryDto toDiscoveryTaskSummary(DiscoveryTask task) {
-        return switch (task.getType()) {
-            case SPOTIFY_ARTIST_DATA -> {
-                String artistId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.ArtistParameter.class).artistId();
-                yield toDiscoveryTaskSummary(task, artistId, libraryService.getArtistById(artistId).orElse(null), null);
-            }
-            case SPOTIFY_TOP_TRACKS -> {
-                String artistId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.SpotifyTopTracksParameter.class).artistId();
-                yield toDiscoveryTaskSummary(task, artistId, libraryService.getArtistById(artistId).orElse(null), null);
-            }
-            case MUSICBRAINZ_ALBUM_DATA -> {
-                String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
-                Album album = libraryService.getAlbumById(albumId).orElse(null);
-                yield toDiscoveryTaskSummary(task, albumId, album != null ? album.getArtist() : null, album);
-            }
-        };
-    }
-
-    private DiscoveryTaskSummaryDto toDiscoveryTaskSummary(DiscoveryTask task, String targetId, @Nullable Artist artist, @Nullable Album album) {
-        return DiscoveryTaskSummaryDto.of(task, targetId,
+        Album album = task.getAlbum();
+        Artist artist = album != null ? album.getArtist() : task.getArtist();
+        return DiscoveryTaskSummaryDto.of(task,
+                task.getGenre() != null ? GenreDto.of(task.getGenre()) : null,
                 artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId())) : null,
-                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId())) : null);
+                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId())) : null,
+                task.getSong() != null ? SongDto.of(task.getSong(), true) : null);
     }
 
     public void cleanDiscoveryData() throws ConcurrentLibraryJobException {

@@ -14,12 +14,6 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         STARTED, COMPLETE, FAILED, INTERRUPTED
     }
 
-    public record ArtistParameter(String artistId) {}
-
-    public record AlbumParameter(String albumId) {}
-
-    public record SpotifyTopTracksParameter(String artistId, String spotifyArtistDataTaskId) {}
-
     public record ErrorResult(String error) {}
 
     @Column(name = "status")
@@ -31,10 +25,6 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @Enumerated(EnumType.STRING)
     @NotNull
     private DiscoveryTaskType type;
-
-    @Column(name = "parameter")
-    @NotNull
-    private String parameter;
 
     @Column(name = "result")
     private String result;
@@ -124,15 +114,6 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    public String getParameter() {
-        return parameter;
-    }
-
-    public DiscoveryTask setParameter(String parameter) {
-        this.parameter = parameter;
-        return this;
-    }
-
     @Nullable
     public String getResult() {
         return result;
@@ -180,7 +161,6 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
                 .add("updateDate", updateDate)
                 .add("status", status)
                 .add("type", type)
-                .add("parameter", parameter)
                 .add("result", result)
                 .toString();
     }

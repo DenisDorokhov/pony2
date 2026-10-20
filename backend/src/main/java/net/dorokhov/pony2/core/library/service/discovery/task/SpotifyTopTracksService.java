@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -22,6 +23,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -90,13 +92,14 @@ public class SpotifyTopTracksService {
             if (shutdownService.isShutdown()) {
                 throw new DiscoveryInterruptedException();
             }
-            DiscoveryTask.SpotifyTopTracksParameter parameter = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.SpotifyTopTracksParameter.class);
-            SpotifyArtistData data = transactionTemplate.execute(status -> readArtistData(parameter.spotifyArtistDataTaskId()));
+            String artistId = requireNonNull(task.getArtist(),
+                    () -> "Discovery task '" + task.getId() + "' has no associated artist.").getId();
+            SpotifyArtistData data = transactionTemplate.execute(status -> readArtistData(artistId));
             if (data == null || data.status() != FOUND || data.topTracks() == null || data.topTracks().isEmpty()) {
                 return List.of();
             }
             List<AlbumData> albums = requireNonNull(transactionTemplate.execute(status -> {
-                Artist artist = artistRepository.findById(parameter.artistId()).orElseThrow();
+                Artist artist = artistRepository.findById(artistId).orElseThrow();
                 return artist.getAlbums().stream().sorted()
                         .map(album -> new AlbumData(album.getId(), album.getName(), album.getYear()))
                         .toList();
@@ -112,11 +115,11 @@ public class SpotifyTopTracksService {
                         try {
                             return parseAlbumMatches(response, spotifyAlbums, albums);
                         } catch (RuntimeException e) {
-                            throw invalidResponse(parameter.artistId(), e);
+                            throw invalidResponse(artistId, e);
                         }
                     });
             List<AlbumTracks> albumTracks = requireNonNull(transactionTemplate.execute(status -> {
-                Artist artist = artistRepository.findById(parameter.artistId()).orElseThrow();
+                Artist artist = artistRepository.findById(artistId).orElseThrow();
                 return artist.getAlbums().stream().filter(album -> albumMatches.containsValue(album.getId())).sorted()
                         .map(album -> new AlbumTracks(album.getId(), album.getName(), album.getSongs().stream().sorted()
                                 .map(song -> new TrackData(song.getId(), song.getName(), song.getDiscNumber(), song.getTrackNumber()))
@@ -133,17 +136,17 @@ public class SpotifyTopTracksService {
                         try {
                             return parseTrackMatches(response, data.topTracks(), albumMatches, albumTracks);
                         } catch (RuntimeException e) {
-                            throw invalidResponse(parameter.artistId(), e);
+                            throw invalidResponse(artistId, e);
                         }
                     });
         }
     }
 
     @Nullable
-    private SpotifyArtistData readArtistData(String taskId) {
-        DiscoveryTask task = taskRepository.findById(taskId).orElseThrow();
-        checkState(task.getStatus() == DiscoveryTask.Status.COMPLETE,
-                "SPOTIFY_ARTIST_DATA task '%s' has status %s.", taskId, task.getStatus());
+    private SpotifyArtistData readArtistData(String artistId) {
+        DiscoveryTask task = taskRepository.findLatestCompletedByArtistIdAndType(
+                        artistId, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))
+                .orElseThrow(() -> new IllegalStateException("No completed SPOTIFY_ARTIST_DATA task for artist '" + artistId + "'."));
         return task.getResult() != null ? JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class) : null;
     }
 

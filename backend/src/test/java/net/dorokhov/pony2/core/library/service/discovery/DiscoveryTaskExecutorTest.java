@@ -137,7 +137,6 @@ class DiscoveryTaskExecutorTest {
         return new DiscoveryTask()
                 .setJob(new DiscoveryJob().setId("job"))
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
-                .setStatus(DiscoveryTask.Status.STARTED)
-                .setParameter("{}");
+                .setStatus(DiscoveryTask.Status.STARTED);
     }
 }

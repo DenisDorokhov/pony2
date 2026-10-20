@@ -318,7 +318,6 @@ public class LlmEvaluationExportService {
         return new TaskExportDto(task.getId(), task.getCreationDate().toString(),
                 task.getUpdateDate() != null ? task.getUpdateDate().toString() : null,
                 task.getJob().getId(), task.getType().name(), task.getStatus().name(),
-                jsonMapper.readTree(task.getParameter()),
                 task.getResult() != null ? jsonMapper.readTree(task.getResult()) : null,
                 task.getRawRequest(), task.getRawResult());
     }
@@ -370,7 +369,6 @@ public class LlmEvaluationExportService {
             String jobId,
             String type,
             String status,
-            JsonNode parameter,
             @Nullable JsonNode result,
             @Nullable String rawRequest,
             @Nullable String rawResult

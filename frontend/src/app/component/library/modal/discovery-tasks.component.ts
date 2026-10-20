@@ -4,7 +4,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {interval, Subscription} from 'rxjs';
 import {map, mergeMap} from 'rxjs/operators';
-import {AlbumDto, ArtistDto, DiscoveryJobDto, DiscoveryTaskDto, DiscoveryTaskSummaryDto, DiscoveryTaskType} from '../../../domain/library.dto';
+import {AlbumDto, ArtistDto, DiscoveryJobDto, DiscoveryTaskDto, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
 import {PageDto} from '../../../domain/common.dto';
 import {LoadingState} from '../../../domain/common.model';
@@ -25,9 +25,10 @@ class DiscoveryTaskWithTarget implements DiscoveryTaskSummaryDto {
   status!: DiscoveryTaskDto.Status;
   type!: DiscoveryTaskType;
   duration: number | undefined;
-  targetId!: string;
+  genre: GenreDto | undefined;
   artist: ArtistDto | undefined;
   album: AlbumDto | undefined;
+  song: SongDto | undefined;
   target!: string;
   durationText!: string;
 
@@ -38,9 +39,10 @@ class DiscoveryTaskWithTarget implements DiscoveryTaskSummaryDto {
     this.status = task.status;
     this.type = task.type;
     this.duration = task.duration;
-    this.targetId = task.targetId;
+    this.genre = task.genre;
     this.artist = task.artist;
     this.album = task.album;
+    this.song = task.song;
     this.target = this.formatTarget(translateService);
     this.durationText = task.duration !== undefined ? formatCompactDuration(task.duration, translateService) : '—';
   }
@@ -48,14 +50,14 @@ class DiscoveryTaskWithTarget implements DiscoveryTaskSummaryDto {
   private formatTarget(translateService: TranslateService): string {
     if (this.type === DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
       if (!this.album) {
-        return translateService.instant('discoveryTasks.deletedAlbum', {id: this.targetId});
+        return translateService.instant('discoveryTasks.deletedAlbum');
       }
       const artist = this.artist?.name || translateService.instant('library.artist.unknownLabel');
       const album = this.album.name || translateService.instant('library.album.unknownLabel');
       return artist + ' - ' + album + (this.album.year ? ' (' + this.album.year + ')' : '');
     }
     if (!this.artist) {
-      return translateService.instant('discoveryTasks.deletedArtist', {id: this.targetId});
+      return translateService.instant('discoveryTasks.deletedArtist');
     }
     return this.artist.name || translateService.instant('library.artist.unknownLabel');
   }

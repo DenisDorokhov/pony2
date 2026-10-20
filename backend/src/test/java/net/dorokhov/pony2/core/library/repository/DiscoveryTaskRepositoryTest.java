@@ -74,7 +74,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
     }
 
     private DiscoveryTask saveTask(DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status, LocalDateTime updateDate) {
-        DiscoveryTask task = taskRepository.save(new DiscoveryTask().setJob(job).setType(type).setStatus(status).setParameter("{}"));
+        DiscoveryTask task = taskRepository.save(new DiscoveryTask().setJob(job).setType(type).setStatus(status));
         if (updateDate != null) {
             jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?", Timestamp.valueOf(updateDate), task.getId());
         }

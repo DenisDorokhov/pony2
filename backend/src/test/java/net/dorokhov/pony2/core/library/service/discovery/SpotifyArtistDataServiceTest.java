@@ -514,7 +514,7 @@ class SpotifyArtistDataServiceTest {
     private DiscoveryTask task(Artist artist) {
         return new DiscoveryTask()
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
-                .setParameter(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
+                .setArtist(artist);
     }
 
     private Artist artist(String name, Album... albums) {

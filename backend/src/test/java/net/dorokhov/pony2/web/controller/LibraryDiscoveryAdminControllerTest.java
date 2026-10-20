@@ -7,7 +7,6 @@ import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobExce
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JacksonConfig;
-import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.DiscoveryFacade;
@@ -38,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static net.dorokhov.pony2.test.DiscoveryJobFixtures.discoveryJob;
+import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -328,13 +328,15 @@ public class LibraryDiscoveryAdminControllerTest {
         when(libraryService.getArtistDiscoveryData("artist1"))
                 .thenReturn(new ArtistDiscoveryData("DE", List.of("song1")));
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
-            when(libraryService.getAlbumById("album1")).thenReturn(Optional.of(album));
             when(libraryService.getAlbumDiscoveryData("album1"))
                     .thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.EP, LocalDateTime.of(2001, 1, 1, 0, 0)));
-        } else {
-            when(libraryService.getArtistById("artist1")).thenReturn(Optional.of(artist));
         }
         DiscoveryTask task = task(type, DiscoveryTask.Status.COMPLETE);
+        if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
+            task.setAlbum(album);
+        } else {
+            task.setArtist(artist);
+        }
         PageRequest pageRequest = PageRequest.of(2, 5);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
         when(discoveryJobService.getTasks("job1", type, pageRequest))
@@ -360,18 +362,50 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(summary.getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
             assertThat(summary.getArtist().getDiscoveryData().getTopSongIds()).containsExactly("song1");
             if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
-                assertThat(summary.getTargetId()).isEqualTo("album1");
                 assertThat(summary.getAlbum().getName()).isEqualTo("Album");
                 assertThat(summary.getAlbum().getYear()).isEqualTo(2001);
                 assertThat(summary.getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.EP);
                 assertThat(summary.getAlbum().getDiscoveryData().getReleaseDate()).isEqualTo(LocalDateTime.of(2001, 1, 1, 0, 0));
             } else {
-                assertThat(summary.getTargetId()).isEqualTo("artist1");
                 assertThat(summary.getAlbum()).isNull();
             }
         });
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("rawRequest")).isFalse();
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("parameter")).isFalse();
+        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("targetId")).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void shouldIncludeGenreAndSongTargets(boolean genreTarget) throws Exception {
+        Genre genre = new Genre().setId("genre1").setName("Genre");
+        Artist artist = new Artist().setId("artist1");
+        Album album = new Album().setId("album1").setArtist(artist);
+        Song song = song().setId("song1").setAlbum(album).setGenre(genre);
+        DiscoveryTask task = task(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE);
+        if (genreTarget) {
+            task.setGenre(genre);
+        } else {
+            task.setSong(song);
+        }
+        PageRequest pageRequest = PageRequest.of(0, 30);
+        when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
+        when(discoveryJobService.getTasks("job1", null, pageRequest))
+                .thenReturn(new PageImpl<>(List.of(task), pageRequest, 1));
+
+        String response = mockMvc.perform(get("/api/admin/library/discoveryJobs/job1/tasks"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        DiscoveryTaskSummaryDto summary = objectMapper.readValue(response, DiscoveryTaskPageDto.class).getDiscoveryTasks().getFirst();
+
+        if (genreTarget) {
+            assertThat(summary.getGenre().getId()).isEqualTo(genre.getId());
+            assertThat(summary.getSong()).isNull();
+        } else {
+            assertThat(summary.getSong().getId()).isEqualTo(song.getId());
+            assertThat(summary.getSong().getName()).isEqualTo(song.getName());
+            assertThat(summary.getGenre()).isNull();
+        }
     }
 
     @ParameterizedTest
@@ -388,7 +422,6 @@ public class LibraryDiscoveryAdminControllerTest {
         DiscoveryTaskPageDto page = objectMapper.readValue(response, DiscoveryTaskPageDto.class);
 
         assertThat(page.getDiscoveryTasks()).singleElement().satisfies(summary -> {
-            assertThat(summary.getTargetId()).isEqualTo(type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA ? "album1" : "artist1");
             assertThat(summary.getArtist()).isNull();
             assertThat(summary.getAlbum()).isNull();
             assertThat(summary.getStatus()).isSameAs(DiscoveryTask.Status.FAILED);
@@ -466,7 +499,7 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(dto.getUpdateDate()).isEqualTo(task.getUpdateDate());
         assertThat(dto.getStatus()).isSameAs(taskStatus);
         assertThat(dto.getType()).isSameAs(task.getType());
-        assertThat(dto.getParameter()).isEqualTo(task.getParameter());
+        assertThat(objectMapper.readTree(response).has("parameter")).isFalse();
         assertThat(dto.getResult()).isEqualTo(task.getResult());
         assertThat(dto.getRawRequest()).isEqualTo(task.getRawRequest());
         assertThat(dto.getRawResult()).isEqualTo(task.getRawResult());
@@ -511,13 +544,8 @@ public class LibraryDiscoveryAdminControllerTest {
 
     private DiscoveryTask task(DiscoveryTaskType type, DiscoveryTask.Status status) {
         LocalDateTime endDate = LocalDateTime.now();
-        Object parameter = switch (type) {
-            case SPOTIFY_ARTIST_DATA -> new DiscoveryTask.ArtistParameter("artist1");
-            case SPOTIFY_TOP_TRACKS -> new DiscoveryTask.SpotifyTopTracksParameter("artist1", "dataTask1");
-            case MUSICBRAINZ_ALBUM_DATA -> new DiscoveryTask.AlbumParameter("album1");
-        };
         return new DiscoveryTask().setId("task1").setCreationDate(endDate.minusMinutes(15)).setUpdateDate(endDate)
-                .setStatus(status).setType(type).setParameter(JsonConverter.toJson(parameter));
+                .setStatus(status).setType(type);
     }
 
     private DiscoveryJob startJob(DiscoveryType type, boolean cacheEnabled) throws ConcurrentLibraryJobException {

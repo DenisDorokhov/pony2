@@ -324,7 +324,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         saveAlbumDiscoveryTask(album2_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(5), single);
         DiscoveryTask topTracks = discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
                 .setType(DiscoveryTaskType.SPOTIFY_TOP_TRACKS).setStatus(DiscoveryTask.Status.COMPLETE)
-                .setParameter(JsonConverter.toJson(new DiscoveryTask.SpotifyTopTracksParameter(artist1.getId(), "artist-data")))
                 .setResult(JsonConverter.toJson(new String[]{song1_1_2.getId(), null, "missing", song1_2_1.getId(), song1_1_1.getId()})));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -390,7 +389,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                                                 LocalDateTime creationDate, String result) {
         return getTransactionTemplate().execute(transactionStatus -> {
             DiscoveryTask task = discoveryTaskRepository.saveAndFlush(new DiscoveryTask().setJob(job).setAlbum(album).setType(type).setStatus(status)
-                    .setParameter(JsonConverter.toJson(new DiscoveryTask.AlbumParameter(album.getId()))).setResult(result));
+                    .setResult(result));
             jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", Timestamp.valueOf(creationDate), task.getId());
             return task;
         });

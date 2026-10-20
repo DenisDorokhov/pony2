@@ -296,7 +296,6 @@ export interface DiscoveryTaskDto {
   updateDate: string | undefined;
   status: DiscoveryTaskDto.Status;
   type: DiscoveryTaskType;
-  parameter: string;
   result: string | undefined;
   rawRequest: string | undefined;
   rawResult: string | undefined;
@@ -318,9 +317,10 @@ export interface DiscoveryTaskSummaryDto {
   status: DiscoveryTaskDto.Status;
   type: DiscoveryTaskType;
   duration: number | undefined;
-  targetId: string;
+  genre: GenreDto | undefined;
   artist: ArtistDto | undefined;
   album: AlbumDto | undefined;
+  song: SongDto | undefined;
 }
 
 export interface DiscoveryTaskPageDto extends PageDto {

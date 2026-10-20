@@ -8,7 +8,6 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
 
     private DiscoveryTask.Status status;
     private DiscoveryTaskType type;
-    private String parameter;
     private String result;
     private String rawRequest;
     private String rawResult;
@@ -28,15 +27,6 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
 
     public DiscoveryTaskDto setType(DiscoveryTaskType type) {
         this.type = type;
-        return this;
-    }
-
-    public String getParameter() {
-        return parameter;
-    }
-
-    public DiscoveryTaskDto setParameter(String parameter) {
-        this.parameter = parameter;
         return this;
     }
 
@@ -77,7 +67,6 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
                 .setUpdateDate(task.getUpdateDate())
                 .setStatus(task.getStatus())
                 .setType(task.getType())
-                .setParameter(task.getParameter())
                 .setResult(task.getResult())
                 .setRawRequest(task.getRawRequest())
                 .setRawResult(task.getRawResult());

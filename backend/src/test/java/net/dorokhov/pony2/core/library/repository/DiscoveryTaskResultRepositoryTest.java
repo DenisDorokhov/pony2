@@ -37,6 +37,35 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
+    void shouldReadLatestCompletedArtistDataAcrossJobs() {
+        Artist artist = saveArtist();
+        Artist otherArtist = saveArtist();
+        DiscoveryJob olderJob = saveDiscovery(artist, DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob currentJob = saveDiscovery(artist, DiscoveryJob.Status.STARTED);
+        LocalDateTime date = LocalDateTime.of(2026, 10, 16, 12, 0);
+        DiscoveryTask older = saveTask(artist, olderJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+                DiscoveryTask.Status.COMPLETE, date.minusHours(1), "older");
+        jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?", Timestamp.valueOf(date.plusHours(5)), older.getId());
+        DiscoveryTask latest = saveTask(artist, currentJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+                DiscoveryTask.Status.COMPLETE, date, "latest");
+        for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.FAILED, DiscoveryTask.Status.INTERRUPTED, DiscoveryTask.Status.STARTED)) {
+            saveTask(artist, currentJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, status, date.plusHours(1), "incomplete");
+        }
+        saveTask(artist, currentJob, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE, date.plusHours(2), "wrong type");
+        saveTask(otherArtist, currentJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(3), "other artist");
+
+        assertThat(taskRepository.findLatestCompletedByArtistIdAndType(artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .get().extracting(DiscoveryTask::getId).isEqualTo(latest.getId());
+
+        taskRepository.deleteById(latest.getId());
+
+        assertThat(taskRepository.findLatestCompletedByArtistIdAndType(artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .get().extracting(DiscoveryTask::getId).isEqualTo(older.getId());
+        assertThat(taskRepository.findLatestCompletedByArtistIdAndType("missing", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .isEmpty();
+    }
+
+    @Test
     void shouldReadLatestCompletedTopTracksForArtistAcrossJobs() {
         Artist artist = saveArtist();
         Artist otherArtist = saveArtist();
@@ -142,7 +171,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
                                    LocalDateTime creationDate, @Nullable String result) {
         return getTransactionTemplate().execute(transactionStatus -> {
             DiscoveryTask task = taskRepository.saveAndFlush(new DiscoveryTask().setJob(job).setArtist(artist).setType(type)
-                    .setStatus(status).setParameter("{}").setResult(result));
+                    .setStatus(status).setResult(result));
             jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", Timestamp.valueOf(creationDate), task.getId());
             return task;
         });
@@ -152,7 +181,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
                                         LocalDateTime creationDate) {
         return getTransactionTemplate().execute(transactionStatus -> {
             DiscoveryTask task = taskRepository.saveAndFlush(new DiscoveryTask().setJob(job).setAlbum(album).setType(type)
-                    .setStatus(status).setParameter("{}"));
+                    .setStatus(status));
             jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", Timestamp.valueOf(creationDate), task.getId());
             return task;
         });

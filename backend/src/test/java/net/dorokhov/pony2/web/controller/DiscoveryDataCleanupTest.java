@@ -139,6 +139,6 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
 
     private DiscoveryTask task(DiscoveryJob job) {
         return new DiscoveryTask().setJob(job).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
-                .setStatus(DiscoveryTask.Status.COMPLETE).setParameter("{}").setResult("{}");
+                .setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}");
     }
 }

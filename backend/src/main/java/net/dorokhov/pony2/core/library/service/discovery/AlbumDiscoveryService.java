@@ -8,7 +8,6 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.log.service.LogService;
-import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzAlbumDataService;
@@ -82,8 +81,7 @@ public class AlbumDiscoveryService {
                     .setJob(job)
                     .setAlbum(album)
                     .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
-                    .setStatus(DiscoveryTask.Status.STARTED)
-                    .setParameter(JsonConverter.toJson(new DiscoveryTask.AlbumParameter(album.getId()))))));
+                    .setStatus(DiscoveryTask.Status.STARTED))));
         }
 
         @Nullable

@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.SpotifyArtistData.Status.FOUND;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
@@ -93,7 +94,8 @@ public class SpotifyArtistDataService {
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }
-        String artistId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.ArtistParameter.class).artistId();
+        String artistId = requireNonNull(task.getArtist(),
+                () -> "Discovery task '" + task.getId() + "' has no associated artist.").getId();
         Request request = transactionTemplate.execute(status -> prepareRequest(artistId));
         if (request == null) {
             return Optional.empty();

@@ -30,7 +30,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
         DiscoveryTask task = discoveryTaskRepository.saveAndFlush(
                 new DiscoveryTask().setArtist(artist).setJob(saveDiscoveryJob())
                         .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
-                        .setParameter("{}").setResult("{}"));
+                        .setResult("{}"));
         artistDiscoveryIndexRepository.saveAndFlush(new ArtistDiscoveryIndex()
                 .setArtist(artist).setSpotifyArtistId("spotify-artist"));
 
@@ -63,7 +63,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
         DiscoveryTask task = discoveryTaskRepository.saveAndFlush(
                 new DiscoveryTask().setAlbum(album).setJob(saveDiscoveryJob())
                         .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
-                        .setParameter("{}").setResult("{}"));
+                        .setResult("{}"));
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album)).isTrue();
 
@@ -83,7 +83,6 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
                 .setJob(job)
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(DiscoveryTask.Status.COMPLETE)
-                .setParameter("{}")
                 .setResult("{}"));
     }
 }

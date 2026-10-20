@@ -119,7 +119,8 @@ public class MusicBrainzAlbumDataService {
     @Nullable
     public MusicBrainzAlbumData discover(DiscoveryTask task, boolean cacheEnabled) {
         interruptIfNeeded();
-        String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
+        String albumId = requireNonNull(task.getAlbum(),
+                () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
         AlbumInput input = requireNonNull(transactionTemplate.execute(status -> {
             Album album = albumRepository.findById(albumId).orElseThrow();
             return new AlbumInput(album.getName(), album.getYear(), album.getArtist().getName());
@@ -261,7 +262,8 @@ public class MusicBrainzAlbumDataService {
         if (candidates.isEmpty() || !configService.get().llmEnabled()) {
             return null;
         }
-        String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
+        String albumId = requireNonNull(task.getAlbum(),
+                () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
         List<TrackInput> tracks = requireNonNull(transactionTemplate.execute(status ->
                 albumRepository.findById(albumId).orElseThrow().getSongs().stream()
                         .map(song -> new TrackInput(song.getName(), song.getDiscNumber(), song.getTrackNumber(), song.getDuration(),
@@ -326,7 +328,8 @@ public class MusicBrainzAlbumDataService {
     }
 
     private LlmFollowUpException invalidResponse(DiscoveryTask task, String selection, RuntimeException error) {
-        String albumId = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.AlbumParameter.class).albumId();
+        String albumId = requireNonNull(task.getAlbum(),
+                () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
         logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' during '{}': {}",
                 albumId, selection, error.getMessage());
         String prompt = NORMALIZATION_CACHE_PREFIX.equals(selection) ? normalizationVerificationPrompt : verificationPrompt;

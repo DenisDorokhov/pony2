@@ -162,7 +162,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
                         assertThat(task.getType()).isEqualTo(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
                         assertThat(task.getJob().getId()).isEqualTo(job.getId());
-                        assertThat(task.getParameter()).isEqualTo(JsonConverter.toJson(new DiscoveryTask.ArtistParameter(artist.getId())));
+                        assertThat(task.getArtist().getId()).isEqualTo(artist.getId());
                         assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
                         assertThat(task.getRawRequest()).isNotBlank();
                         assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawResponse);
@@ -313,15 +313,14 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData artistData = spotifyArtistData("spotify-artist");
         List<String> tracks = List.of("track-1", "track-2");
 
-        executeTask(job, artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                new DiscoveryTask.ArtistParameter(artist.getId()), task -> artistData);
-        executeTask(job, artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, "spotify-artist", task -> {
+        executeTask(job, artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, task -> artistData);
+        executeTask(job, artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, task -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
-            String spotifyArtistId = JsonConverter.fromJson(task.getParameter(), String.class);
+            assertThat(task.getArtist().getId()).isEqualTo(artist.getId());
             DiscoveryTask previousTask = artistDataTasks().getFirst();
             assertThat(previousTask.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             SpotifyArtistData previousResult = JsonConverter.fromJson(previousTask.getResult(), SpotifyArtistData.class);
-            assertThat(previousResult.artist().id()).isEqualTo(spotifyArtistId);
+            assertThat(previousResult.artist().id()).isEqualTo("spotify-artist");
             return tracks;
         });
 
@@ -516,9 +515,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(JsonConverter.fromJson(task.getResult(), String[].class)).containsExactly(second.getId(), null, first.getId());
             assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(albumResponse, trackResponse);
             assertThat(JsonConverter.fromJson(task.getRawRequest(), RawRequest[].class)).hasSize(2);
-            DiscoveryTask.SpotifyTopTracksParameter parameter = JsonConverter.fromJson(task.getParameter(), DiscoveryTask.SpotifyTopTracksParameter.class);
-            assertThat(parameter.artistId()).isEqualTo(artist.getId());
-            assertThat(parameter.spotifyArtistDataTaskId()).isEqualTo(artistDataTasks().getFirst().getId());
+            assertThat(task.getArtist().getId()).isEqualTo(artist.getId());
         });
         assertThat(prompts).hasSize(6);
         assertThat(prompts.get(2).getInstructions().get(1).getText()).contains(album.getId(), otherAlbum.getId());
@@ -668,7 +665,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     private void assertFailedTopTracks() {
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-            assertThat(task.getResult()).contains("SPOTIFY_ARTIST_DATA", "FAILED");
+            assertThat(task.getResult()).contains("No completed SPOTIFY_ARTIST_DATA task");
             assertThat(task.getRawRequest()).isNull();
             assertThat(task.getRawResult()).isNull();
         });
@@ -684,7 +681,6 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .setJob(job)
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(status)
-                .setParameter("{}")
                 .setResult(result));
     }
 
@@ -710,12 +706,12 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .setStatus(DiscoveryJob.Status.STARTED));
     }
 
-    private <R> void executeTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type, Object parameter,
+    private <R> void executeTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type,
                                   Function<DiscoveryTask, R> action) {
         taskExecutor.execute(new DiscoveryTaskExecution<R>() {
             @Override
             public DiscoveryTask startTask() {
-                return ReflectionTestUtils.invokeMethod(service, "startTask", job, artist, type, parameter);
+                return ReflectionTestUtils.invokeMethod(service, "startTask", job, artist, type);
             }
 
             @Override

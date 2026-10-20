@@ -115,7 +115,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
             assertThat(tasks.get(1).get("type").asString()).isEqualTo("SPOTIFY_ARTIST_DATA");
             assertThat(tasks.get(1).get("id").asString()).isEqualTo(id((kind.ordinal() + 1) * 100 + 4));
             assertThat(tasks.get(1).get("jobId").asString()).isEqualTo(id(2));
-            assertThat(tasks.get(1).get("parameter").isObject()).isTrue();
+            assertThat(tasks.get(1).has("parameter")).isFalse();
             assertThat(tasks.get(1).get("result").get("selected").asBoolean()).isTrue();
             assertThat(tasks.get(2).get("type").asString()).isEqualTo("SPOTIFY_TOP_TRACKS");
             assertThat(tasks.get(2).get("result").isArray()).isTrue();
@@ -252,8 +252,8 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
     private void insertTask(Kind kind, int number, int entity, int job, String type, String status, LocalDateTime date, String result) {
         jdbcTemplate.update("""
                 INSERT INTO discovery_task (id, creation_date, update_date, discovery_job_id, type, status,
-                                            parameter, result, raw_request, raw_result, %s_id)
-                VALUES (?, ?, ?, ?, ?, ?, '{}', ?, ?, ?, ?)
+                                            result, raw_request, raw_result, %s_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """.formatted(kind.entityName()), id(number), date, date.plusMinutes(1), id(job), type, status,
                 result, RAW_REQUEST, RAW_RESULT, id(entity));
     }

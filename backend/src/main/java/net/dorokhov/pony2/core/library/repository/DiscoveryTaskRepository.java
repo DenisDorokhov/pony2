@@ -89,6 +89,22 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
     @Query("DELETE FROM DiscoveryTask t WHERE t.job.id = :jobId")
     void deleteByJobId(String jobId);
 
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE DiscoveryTask t SET t.genre = NULL WHERE t.genre.id = :genreId")
+    void clearGenreByGenreId(String genreId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE DiscoveryTask t SET t.artist = NULL WHERE t.artist.id = :artistId")
+    void clearArtistByArtistId(String artistId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE DiscoveryTask t SET t.album = NULL WHERE t.album.id = :albumId")
+    void clearAlbumByAlbumId(String albumId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE DiscoveryTask t SET t.song = NULL WHERE t.song.id = :songId")
+    void clearSongBySongId(String songId);
+
     @Query("""
             SELECT DISTINCT t.genre.id FROM DiscoveryTask t
             WHERE t.genre.id > :afterId AND t.status = COMPLETE
