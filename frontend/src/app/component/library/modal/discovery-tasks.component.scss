@@ -78,6 +78,14 @@ table {
   }
 }
 
+.discovery-task-duration.minutes {
+  color: var(--color-status-warning);
+}
+
+.discovery-task-duration.hours {
+  color: var(--color-status-danger);
+}
+
 .discovery-task-status.started {
   color: var(--color-status-info);
 }

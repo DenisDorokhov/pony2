@@ -178,6 +178,8 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
 
   showDetails(task: DiscoveryTaskSummaryDto) {
     const modalRef = this.modal.open(DiscoveryTaskComponent, {size: 'lg'});
-    (modalRef.componentInstance as DiscoveryTaskComponent).discoveryTaskId = task.id;
+    const component = modalRef.componentInstance as DiscoveryTaskComponent;
+    component.discoveryTaskId = task.id;
+    component.taskSummary = task;
   }
 }

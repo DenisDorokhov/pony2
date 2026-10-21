@@ -64,7 +64,10 @@
               </span>
             </td>
             <td>{{ task.creationDate | date:('shared.dateTimeFormat' | translate) }}</td>
-            <td>{{ task.durationText }}</td>
+            <td><span class="discovery-task-duration"
+                      [class.minutes]="(task.duration ?? -1) >= 60 && (task.duration ?? -1) < 3600"
+                      [class.hours]="(task.duration ?? -1) >= 3600"
+            >{{ task.durationText }}</span></td>
             <td><span class="discovery-task-status"
                       [class.started]="task.status === TaskStatus.STARTED"
                       [class.complete]="task.status === TaskStatus.COMPLETE"

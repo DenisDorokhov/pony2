@@ -23,17 +23,21 @@ label {
   color: var(--color-status-warning);
 }
 
-pre {
-  min-height: 43px;
-  padding-bottom: 16px;
-}
-
-.raw-message {
-  max-height: 240px;
-  overflow: auto;
+.json-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
   pre {
-    margin-bottom: 0;
-    overflow: visible;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .details-button {
+    flex-shrink: 0;
   }
 }

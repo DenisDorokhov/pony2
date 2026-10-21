@@ -1,16 +1,23 @@
 import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {interval, Subscription} from 'rxjs';
-import {DiscoveryTaskDto} from '../../../domain/library.dto';
+import {Highlight} from 'ngx-highlightjs';
+import {AlbumDto, ArtistDto, DiscoveryTaskDto, DiscoveryTaskSummaryDto, DiscoveryTaskType} from '../../../domain/library.dto';
+import {Album, Artist} from '../../../domain/library.model';
 import {LoadingState} from '../../../domain/common.model';
 import {LibraryDiscoveryService} from '../../../service/library-discovery.service';
+import {LibraryService} from '../../../service/library.service';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
+import {JsonDetailsComponent} from '../../common/json-details.component';
+import {UnknownArtistPipe} from '../../../pipe/unknown-artist.pipe';
+import {UnknownAlbumPipe} from '../../../pipe/unknown-album.pipe';
 
 @Component({
-  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
+  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent, Highlight,
+    UnknownArtistPipe, UnknownAlbumPipe],
   selector: 'pony-discovery-task',
   templateUrl: './discovery-task.component.html',
   styleUrls: ['./discovery-task.component.scss']
@@ -20,12 +27,18 @@ export class DiscoveryTaskComponent implements OnInit, OnDestroy {
   readonly activeModal = inject(NgbActiveModal);
 
   private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
+  private readonly libraryService = inject(LibraryService);
+  private readonly modal = inject(NgbModal);
 
   readonly LoadingState = LoadingState;
   readonly TaskStatus = DiscoveryTaskDto.Status;
+  readonly TaskType = DiscoveryTaskType;
 
   @Input()
   discoveryTaskId!: string;
+
+  @Input()
+  taskSummary: DiscoveryTaskSummaryDto | undefined;
 
   discoveryTask: DiscoveryTaskDto | undefined;
   loadingState = LoadingState.LOADING;
@@ -55,5 +68,29 @@ export class DiscoveryTaskComponent implements OnInit, OnDestroy {
       },
       error: () => this.loadingState = LoadingState.ERROR
     });
+  }
+
+  goToArtist(artistDto: ArtistDto): void {
+    const artist = new Artist(artistDto);
+    this.libraryService.selectArtistAndMakeDefault(artist);
+    this.libraryService.requestScrollToArtist(artist);
+    this.modal.dismissAll();
+  }
+
+  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto): void {
+    const album = new Album(albumDto, new Artist(artistDto));
+    this.libraryService.selectArtistAndMakeDefault(album.artist);
+    this.libraryService.requestScrollToAlbum(album);
+    this.modal.dismissAll();
+  }
+
+  showDetails(value: string | undefined, title: string): void {
+    if (value == null) {
+      return;
+    }
+    const modalRef = this.modal.open(JsonDetailsComponent, {size: 'xl', scrollable: true});
+    const details = modalRef.componentInstance as JsonDetailsComponent;
+    details.title = title;
+    details.value = value;
   }
 }

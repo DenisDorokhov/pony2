@@ -19,12 +19,19 @@ import {ReactiveFormsModule} from '@angular/forms';
 import {provideToastr} from 'ngx-toastr';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {NgbDateAdapter, NgbDateNativeAdapter} from '@ng-bootstrap/ng-bootstrap';
+import {provideHighlightOptions} from 'ngx-highlightjs';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
+    provideHighlightOptions({
+      coreLibraryLoader: () => import('highlight.js/lib/core'),
+      languages: {
+        json: () => import('highlight.js/lib/languages/json')
+      }
+    }),
     provideAnimations(),
     provideToastr({
       timeOut: 1500,

@@ -269,11 +269,16 @@ export default {
   },
   discoveryTask: {
     header: 'Discovery Task',
+    targetLabel: 'Target:',
     statusLabel: 'Status:',
     typeLabel: 'Type:',
     resultLabel: 'Result:',
     rawRequestLabel: 'Raw Request:',
     rawResultLabel: 'Raw Result:',
+    detailsButton: 'More',
+    resultDetailsHeader: 'Result',
+    rawRequestDetailsHeader: 'Raw Request',
+    rawResultDetailsHeader: 'Raw Result',
   },
   userList: {
     header: 'Users',

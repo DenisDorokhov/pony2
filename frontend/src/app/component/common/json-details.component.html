@@ -1,0 +1,22 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ title | translate }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <pre><code><ng-container [ngTemplateOutlet]="jsonContent" /></code></pre>
+</div>
+
+<ng-template #jsonContent>
+  @for (part of parts; track $index) {
+    @if (part.href) {
+      <a
+        [class]="part.className"
+        [href]="part.href"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{{ part.text }}</a>
+    } @else {
+      <span [class]="part.className">{{ part.text }}</span>
+    }
+  }
+</ng-template>

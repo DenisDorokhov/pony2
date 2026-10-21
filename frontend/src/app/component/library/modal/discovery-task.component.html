@@ -31,17 +31,50 @@
       <label class="form-label">{{ 'discoveryTask.typeLabel' | translate }}</label>
       <div>{{ task.type }}</div>
     </div>
+    @if (taskSummary; as summary) {
+      <div class="mb-3">
+        <label class="form-label">{{ 'discoveryTask.targetLabel' | translate }}</label>
+        <div>
+          @if (summary.artist; as artist) {
+            <a href="javascript:void(0);" (click)="goToArtist(artist)">{{ artist.name | ponyUnknownArtist }}</a>
+            @if (summary.album; as album) {
+              - <a href="javascript:void(0);" (click)="goToAlbum(album, artist)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
+            }
+          } @else {
+            {{ (summary.type === TaskType.MUSICBRAINZ_ALBUM_DATA ? 'discoveryTasks.deletedAlbum' : 'discoveryTasks.deletedArtist') | translate }}
+          }
+        </div>
+      </div>
+    }
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.resultLabel' | translate }}</label>
-      <pre>{{ task.result ?? '—' }}</pre>
+      <div class="json-value">
+        <pre><code [highlight]="task.result ?? '—'" language="json"></code></pre>
+        @if (task.result) {
+          <button type="button" class="btn btn-outline-dark btn-sm details-button"
+                  (click)="showDetails(task.result, 'discoveryTask.resultDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+        }
+      </div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.rawRequestLabel' | translate }}</label>
-      <div class="raw-message"><pre>{{ task.rawRequest ?? '—' }}</pre></div>
+      <div class="json-value">
+        <pre><code [highlight]="task.rawRequest ?? '—'" language="json"></code></pre>
+        @if (task.rawRequest) {
+          <button type="button" class="btn btn-outline-dark btn-sm details-button"
+                  (click)="showDetails(task.rawRequest, 'discoveryTask.rawRequestDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+        }
+      </div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.rawResultLabel' | translate }}</label>
-      <div class="raw-message"><pre>{{ task.rawResult ?? '—' }}</pre></div>
+      <div class="json-value">
+        <pre><code [highlight]="task.rawResult ?? '—'" language="json"></code></pre>
+        @if (task.rawResult) {
+          <button type="button" class="btn btn-outline-dark btn-sm details-button"
+                  (click)="showDetails(task.rawResult, 'discoveryTask.rawResultDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+        }
+      </div>
     </div>
   }
 </div>
