@@ -118,8 +118,8 @@ public class InstallationServiceImpl implements InstallationService {
                                 logService.error(logger, "Could not start scan job after installation: library job is already running.");
                             }
                         });
-                    } catch (Exception e) {
-                        logger.error("Could not start scan job due to unexpected error.", e);
+                    } catch (Throwable t) {
+                        logger.error("Could not start scan job due to unexpected error.", t);
                     }
                 }
             }

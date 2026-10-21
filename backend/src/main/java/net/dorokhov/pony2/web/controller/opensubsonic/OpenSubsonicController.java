@@ -35,10 +35,10 @@ public interface OpenSubsonicController {
             return responseFactory.createError(ERROR_NOT_FOUND, "Object not found.");
         }
 
-        @ExceptionHandler(Exception.class)
+        @ExceptionHandler(Throwable.class)
         @ResponseStatus(HttpStatus.OK)
-        public Object onUnexpectedError(Exception e, HttpServletRequest request) {
-            logger.error("Unexpected error occurred when accessing '{}'.", request.getServletPath(), e);
+        public Object onUnexpectedError(Throwable t, HttpServletRequest request) {
+            logger.error("Unexpected error occurred when accessing '{}'.", request.getServletPath(), t);
             return responseFactory.createError(ERROR_GENERIC, "Unexpected error occurred.");
         }
     }

@@ -27,8 +27,8 @@ public interface DiscoveryTaskExecution<R> {
 
     /**
      * Runs after FAILED is committed, except for discovery interruption or a failure to start the task.
-     * Hook exceptions propagate without changing the task status.
+     * Hook failures are logged without changing the task status.
      */
-    default void onError(DiscoveryTask task, RuntimeException error) {
+    default void onError(DiscoveryTask task, Throwable error) {
     }
 }

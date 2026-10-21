@@ -91,7 +91,7 @@ public class AlbumDiscoveryService {
         }
 
         @Override
-        public void onError(DiscoveryTask task, RuntimeException error) {
+        public void onError(DiscoveryTask task, Throwable error) {
             logService.error(logger, "Could not discover MusicBrainz data for album '{} -> {}'.", album.getId(), album.getName(), error);
         }
     }
@@ -100,8 +100,8 @@ public class AlbumDiscoveryService {
         if (handler != null) {
             try {
                 handler.accept(discoveryProgress);
-            } catch (Exception e) {
-                logger.error("Could not call discovery progress observer.", e);
+            } catch (Throwable t) {
+                logger.error("Could not call discovery progress observer.", t);
             }
         }
     }

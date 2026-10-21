@@ -65,9 +65,9 @@ public class ArtworkThumbnailMaintenanceServiceImpl implements ArtworkThumbnailM
                     thumbnailRegenerationSemaphore.release();
                 }
             });
-        } catch (RuntimeException e) {
+        } catch (Throwable t) {
             thumbnailRegenerationSemaphore.release();
-            throw e;
+            throw t;
         }
     }
 
@@ -92,8 +92,8 @@ public class ArtworkThumbnailMaintenanceServiceImpl implements ArtworkThumbnailM
                 try {
                     reGenerateThumbnails(artwork);
                     reGeneratedCount++;
-                } catch (Exception e) {
-                    logger.error("Could not re-generate artwork thumbnails for artwork '{}'.", artwork.getSourceUri(), e);
+                } catch (Throwable t) {
+                    logger.error("Could not re-generate artwork thumbnails for artwork '{}'.", artwork.getSourceUri(), t);
                     failedCount++;
                 }
                 processedCount++;

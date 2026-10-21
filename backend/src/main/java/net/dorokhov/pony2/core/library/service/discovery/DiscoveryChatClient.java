@@ -78,9 +78,9 @@ public class DiscoveryChatClient {
             T result = request.apply(client.prompt().advisors(discoveryAdvisor));
             cancellation.check();
             return result;
-        } catch (RuntimeException e) {
+        } catch (Throwable t) {
             cancellation.check();
-            throw e;
+            throw t;
         } finally {
             cancellation.currentCall.set(null);
             synchronized (lock) {

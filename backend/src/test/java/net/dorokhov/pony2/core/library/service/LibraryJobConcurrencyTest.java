@@ -165,7 +165,7 @@ class LibraryJobConcurrencyTest {
             doThrow(failure).when(discoveryJobRepository).save(any());
         }
         commit();
-        assertThatThrownBy(this::runNextTask).isSameAs(failure);
+        runNextTask();
         assertReleased();
     }
 

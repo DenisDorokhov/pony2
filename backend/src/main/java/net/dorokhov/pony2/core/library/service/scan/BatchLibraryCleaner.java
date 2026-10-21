@@ -222,8 +222,8 @@ public class BatchLibraryCleaner {
     private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
         try {
             observer.onProgress(itemsComplete, itemsTotal);
-        } catch (Exception e) {
-            logger.error("Could not call progress observer {}.", observer, e);
+        } catch (Throwable t) {
+            logger.error("Could not call progress observer {}.", observer, t);
         }
     }
 

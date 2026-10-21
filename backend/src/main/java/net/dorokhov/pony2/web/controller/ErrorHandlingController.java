@@ -102,10 +102,10 @@ public interface ErrorHandlingController {
                     .setArguments(argumentsBuilder.build());
         }
 
-        @ExceptionHandler(Exception.class)
+        @ExceptionHandler(Throwable.class)
         @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-        public Object onUnexpectedError(Exception e) {
-            logger.error("Unexpected error occurred.", e);
+        public Object onUnexpectedError(Throwable t) {
+            logger.error("Unexpected error occurred.", t);
             return ErrorDto.unexpected();
         }
     }

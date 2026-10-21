@@ -264,7 +264,7 @@ public class DiscoveryTaskLlmExecutor {
         }
         try {
             return JsonConverter.toPrettyJson(JsonConverter.fromJson(response));
-        } catch (RuntimeException e) {
+        } catch (Throwable t) {
             return response;
         }
     }

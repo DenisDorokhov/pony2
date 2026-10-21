@@ -228,9 +228,9 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerDiscoveryJob();
         try {
             return doStartDiscoveryJob(discoveryType, targetId, cacheEnabled, jobRegistration);
-        } catch (RuntimeException | Error e) {
+        } catch (Throwable t) {
             jobRegistration.close();
-            throw e;
+            throw t;
         }
     }
 
@@ -268,31 +268,35 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                         });
                         doDiscoveryJob(currentDiscoveryJob, cacheEnabled);
                         completeDiscoveryJob(currentDiscoveryJob, stopwatch);
-                    } catch (Exception e) {
-                        DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
-                        boolean interrupted = Throwables.getCausalChain(e).stream()
-                                .anyMatch(t -> t instanceof DiscoveryInterruptedException);
-                        if (interrupted) {
-                            notifyObservers(observer -> observer.onDiscoveryJobInterrupting(failedDiscoveryJob));
-                        } else {
-                            notifyObservers(observer -> observer.onDiscoveryJobFailing(failedDiscoveryJob));
-                        }
-                        changeDiscoveryJobStatusInTransaction(() -> {
+                    } catch (Throwable t) {
+                        try {
+                            DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
+                            boolean interrupted = Throwables.getCausalChain(t).stream()
+                                    .anyMatch(cause -> cause instanceof DiscoveryInterruptedException);
                             if (interrupted) {
-                                Optional<LogMessage> logMessage = logService.warn(logger, "Discovery job has been interrupted.", e);
-                                return discoveryJobRepository.save(
-                                        discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
-                                                .setStatus(INTERRUPTED)
-                                                .setLogMessage(logMessage.orElse(null)));
+                                notifyObservers(observer -> observer.onDiscoveryJobInterrupting(failedDiscoveryJob));
                             } else {
-                                Optional<LogMessage> logMessage = logService.error(logger,
-                                        "Unexpected error occurred when performing discovery job {}.", jobDescription, e);
-                                return discoveryJobRepository.save(
-                                        discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
-                                                .setStatus(FAILED)
-                                                .setLogMessage(logMessage.orElse(null)));
+                                notifyObservers(observer -> observer.onDiscoveryJobFailing(failedDiscoveryJob));
                             }
-                        });
+                            changeDiscoveryJobStatusInTransaction(() -> {
+                                if (interrupted) {
+                                    Optional<LogMessage> logMessage = logService.warn(logger, "Discovery job has been interrupted.", t);
+                                    return discoveryJobRepository.save(
+                                            discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
+                                                    .setStatus(INTERRUPTED)
+                                                    .setLogMessage(logMessage.orElse(null)));
+                                } else {
+                                    Optional<LogMessage> logMessage = logService.error(logger,
+                                            "Unexpected error occurred when performing discovery job {}.", jobDescription, t);
+                                    return discoveryJobRepository.save(
+                                            discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
+                                                    .setStatus(FAILED)
+                                                    .setLogMessage(logMessage.orElse(null)));
+                                }
+                            });
+                        } catch (Throwable failure) {
+                            logger.error("Could not finalize failed discovery job '{}'.", discoveryJob.getId(), failure);
+                        }
                     } finally {
                         discoveryJobProgressReference.set(null);
                         jobRegistration.close();
@@ -432,8 +436,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         for (Observer observer : new ArrayList<>(observers)) {
             try {
                 handler.accept(observer);
-            } catch (Exception e) {
-                logger.error("Could not call discovery job observer {}.", observer, e);
+            } catch (Throwable t) {
+                logger.error("Could not call discovery job observer {}.", observer, t);
             }
         }
     }

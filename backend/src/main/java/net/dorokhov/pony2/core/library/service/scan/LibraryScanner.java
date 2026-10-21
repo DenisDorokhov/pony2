@@ -106,9 +106,9 @@ public class LibraryScanner {
             ScanResult scanResult = doEdit(writeAndImportCommands, observer);
             logService.info(logger, "Edit of {} has been finished with result '{}'.", targetFiles, scanResult);
             return scanResult;
-        } catch (Exception e) {
-            logService.error(logger, "Edit failed.", e);
-            throw e;
+        } catch (Throwable t) {
+            logService.error(logger, "Edit failed.", t);
+            throw t;
         }
     }
 
@@ -217,8 +217,8 @@ public class LibraryScanner {
         if (handler != null) {
             try {
                 handler.accept(scanProgress);
-            } catch (Exception e) {
-                logger.error("Could not call progress observer.", e);
+            } catch (Throwable t) {
+                logger.error("Could not call progress observer.", t);
             }
         }
     }

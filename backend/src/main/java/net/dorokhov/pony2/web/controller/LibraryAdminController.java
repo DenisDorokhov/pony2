@@ -173,9 +173,9 @@ public class LibraryAdminController implements ErrorHandlingController {
             evaluationExportService.write(response.getOutputStream(), exportedAt);
         } catch (ConcurrentLibraryJobException e) {
             throw e;
-        } catch (Exception e) {
-            if (!isConnectionReset(e)) {
-                logger.error("Could not export LLM evaluation data.", e);
+        } catch (Throwable t) {
+            if (!isConnectionReset(t)) {
+                logger.error("Could not export LLM evaluation data.", t);
             }
             // Never append an ErrorDto to a partially written JSON document.
             if (!response.isCommitted()) {

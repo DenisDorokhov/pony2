@@ -100,13 +100,53 @@ class DiscoveryTaskExecutorTest {
         when(execution.executeTask(task)).thenThrow(taskFailure);
         doThrow(hookFailure).when(execution).onError(task, taskFailure);
 
-        assertThatThrownBy(() -> executor.execute(execution)).isSameAs(hookFailure);
+        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+
+        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(result.value()).isNull();
 
         verify(taskRepository).save(task);
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(task.getResult()).contains("Task failed").doesNotContain("Hook failed");
         verify(execution, never()).onCompletion(any(), any());
         verify(execution, never()).onResult(any(), any());
+        assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnFailedResultOnTaskFailure(boolean error) {
+        DiscoveryTask task = task();
+        Throwable failure = error ? new AssertionError("Task failed") : new IllegalArgumentException("Task failed");
+        when(execution.startTask()).thenReturn(task);
+        when(execution.executeTask(task)).thenThrow(failure);
+
+        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+
+        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(result.value()).isNull();
+        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(task.getResult()).contains("Task failed");
+        verify(execution).onError(task, failure);
+        verify(execution, never()).onCompletion(any(), any());
+        assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnFailedResultWhenSavingFailureFails(boolean error) {
+        DiscoveryTask task = task();
+        Throwable taskFailure = error ? new AssertionError("Task failed") : new IllegalArgumentException("Task failed");
+        IllegalStateException persistenceFailure = new IllegalStateException("Database unavailable");
+        when(execution.startTask()).thenReturn(task);
+        when(execution.executeTask(task)).thenThrow(taskFailure);
+        when(taskRepository.save(task)).thenThrow(persistenceFailure);
+
+        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+
+        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(result.value()).isNull();
+        verify(execution, never()).onError(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }
 

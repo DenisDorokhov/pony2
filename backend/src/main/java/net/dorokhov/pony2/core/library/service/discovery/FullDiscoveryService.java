@@ -99,8 +99,8 @@ public class FullDiscoveryService {
         if (handler != null) {
             try {
                 handler.accept(discoveryProgress);
-            } catch (Exception e) {
-                logger.error("Could not call discovery progress observer.", e);
+            } catch (Throwable t) {
+                logger.error("Could not call discovery progress observer.", t);
             }
         }
     }

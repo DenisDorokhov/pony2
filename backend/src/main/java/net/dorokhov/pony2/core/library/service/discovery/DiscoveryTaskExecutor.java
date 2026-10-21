@@ -56,11 +56,15 @@ public class DiscoveryTaskExecutor {
             logger.info("Interrupted execution of discovery task '{}' of type {} in job '{}' after {}.",
                     task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
             throw e;
-        } catch (RuntimeException e) {
-            saveResult(task, DiscoveryTask.Status.FAILED, JsonConverter.toJson(new DiscoveryTask.ErrorResult(Throwables.getStackTraceAsString(e))));
+        } catch (Throwable t) {
             logger.warn("Failed discovery task '{}' of type {} in job '{}' after {}.",
-                    task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
-            execution.onError(task, e);
+                    task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed(), t);
+            try {
+                saveResult(task, DiscoveryTask.Status.FAILED, JsonConverter.toJson(new DiscoveryTask.ErrorResult(Throwables.getStackTraceAsString(t))));
+                execution.onError(task, t);
+            } catch (Throwable failure) {
+                logger.error("Could not finalize failed discovery task '{}'.", task.getId(), failure);
+            }
             return new TaskResult<>(DiscoveryTask.Status.FAILED, null);
         }
         logger.debug("Completed discovery task '{}' of type {} in job '{}' after {}.",

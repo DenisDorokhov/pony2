@@ -115,8 +115,8 @@ public class TokenService {
     private Algorithm buildSignatureAlgorithm(byte[] key) {
         try {
             return Algorithm.HMAC256(key);
-        } catch (Exception e) {
-            throw new IllegalStateException("Could not initialize signature algorithm.", e);
+        } catch (Throwable t) {
+            throw new IllegalStateException("Could not initialize signature algorithm.", t);
         }
     }
 }

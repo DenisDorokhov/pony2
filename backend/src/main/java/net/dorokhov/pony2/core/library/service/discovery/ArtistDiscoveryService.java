@@ -152,8 +152,8 @@ public class ArtistDiscoveryService {
         if (handler != null) {
             try {
                 handler.accept(discoveryProgress);
-            } catch (Exception e) {
-                logger.error("Could not call discovery progress observer.", e);
+            } catch (Throwable t) {
+                logger.error("Could not call discovery progress observer.", t);
             }
         }
     }
@@ -194,7 +194,7 @@ public class ArtistDiscoveryService {
         }
 
         @Override
-        public void onError(DiscoveryTask task, RuntimeException error) {
+        public void onError(DiscoveryTask task, Throwable error) {
             logService.error(logger, "Could not discover Spotify data for artist '{} -> {}'.",
                     artist.getId(), artist.getName(), error);
         }
@@ -223,7 +223,7 @@ public class ArtistDiscoveryService {
         }
 
         @Override
-        public void onError(DiscoveryTask task, RuntimeException error) {
+        public void onError(DiscoveryTask task, Throwable error) {
             logService.error(logger, "Could not match Spotify top tracks for artist '{} -> {}'.",
                     artist.getId(), artist.getName(), error);
         }

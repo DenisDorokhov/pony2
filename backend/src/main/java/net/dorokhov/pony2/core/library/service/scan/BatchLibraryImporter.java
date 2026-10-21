@@ -136,8 +136,11 @@ public class BatchLibraryImporter {
                     failedFiles.add(audioNode.getFile());
                 } finally {
                     synchronized (progressLock) {
-                        notifyObserver(observer, itemsTotal - latch.getCount() + 1, itemsTotal);
-                        latch.countDown();
+                        try {
+                            notifyObserver(observer, itemsTotal - latch.getCount() + 1, itemsTotal);
+                        } finally {
+                            latch.countDown();
+                        }
                     }
                 }
             });
@@ -188,8 +191,11 @@ public class BatchLibraryImporter {
                     failedFiles.add(command.getAudioNode().getFile());
                 } finally {
                     synchronized (progressLock) {
-                        notifyObserver(observer, itemsTotal - latch.getCount() + 1, itemsTotal);
-                        latch.countDown();
+                        try {
+                            notifyObserver(observer, itemsTotal - latch.getCount() + 1, itemsTotal);
+                        } finally {
+                            latch.countDown();
+                        }
                     }
                 }
             });
@@ -217,8 +223,8 @@ public class BatchLibraryImporter {
     private void notifyObserver(ProgressObserver observer, long itemsComplete, long itemsTotal) {
         try {
             observer.onProgress(itemsComplete, itemsTotal);
-        } catch (Exception e) {
-            logger.error("Could not call progress observer {}.", observer, e);
+        } catch (Throwable t) {
+            logger.error("Could not call progress observer {}.", observer, t);
         }
     }
 

@@ -205,16 +205,16 @@ public class ArtworkStorage {
 
         try (InputStream stream = streamSupplier.get()) {
             thumbnailGenerator.generateThumbnail(stream, artworkSizeSmall, THUMBNAIL_FORMAT, smallImageFile);
-        } catch (Exception e) {
+        } catch (Throwable t) {
             deleteThumbnailFiles(smallImageFile, largeImageFile);
-            throw new IOException("Could not generate small thumbnail for: " + sourceUri, e);
+            throw new IOException("Could not generate small thumbnail for: " + sourceUri, t);
         }
 
         try (InputStream stream = streamSupplier.get()) {
             thumbnailGenerator.generateThumbnail(stream, artworkSizeLarge, THUMBNAIL_FORMAT, largeImageFile);
-        } catch (Exception e) {
+        } catch (Throwable t) {
             deleteThumbnailFiles(smallImageFile, largeImageFile);
-            throw new IOException("Could not generate large thumbnail for: " + sourceUri, e);
+            throw new IOException("Could not generate large thumbnail for: " + sourceUri, t);
         }
 
         return new GeneratedThumbnails(smallImagePath, largeImagePath, smallImageFile, largeImageFile);
@@ -226,8 +226,8 @@ public class ArtworkStorage {
                 if (file.exists() && !file.delete()) {
                     logger.warn("Could not delete thumbnail file: '{}'.", file);
                 }
-            } catch (Exception e) {
-                logger.warn("Could not delete thumbnail file: '{}'.", file, e);
+            } catch (Throwable t) {
+                logger.warn("Could not delete thumbnail file: '{}'.", file, t);
             }
         }
     }

@@ -202,8 +202,8 @@ public class LibraryJobSynchronizer {
         for (CancellationSubscription subscription : subscriptions) {
             try {
                 subscription.callback.run();
-            } catch (RuntimeException e) {
-                logger.warn("Could not cancel discovery operation.", e);
+            } catch (Throwable t) {
+                logger.warn("Could not cancel discovery operation.", t);
             }
         }
     }

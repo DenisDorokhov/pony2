@@ -4,8 +4,14 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +45,20 @@ public class RepeatPasswordValidatorTest {
     public void shouldPassValidationWhenFieldsMatch() {
         Object target = new ValidTarget("somePassword", "somePassword");
         assertThat(validator.isValid(target, constraintValidatorContext)).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void shouldFailValidationWhenReadingFieldFails(boolean error) throws NoSuchFieldException {
+        Object target = new ValidTarget("somePassword", "somePassword");
+        Field field = ValidTarget.class.getDeclaredField("repeatPassword");
+        field.setAccessible(true);
+        Throwable failure = error ? new AssertionError("Could not read field") : new IllegalStateException("Could not read field");
+        try (MockedStatic<ReflectionUtils> reflectionUtils = mockStatic(ReflectionUtils.class, CALLS_REAL_METHODS)) {
+            reflectionUtils.when(() -> ReflectionUtils.getField(field, target)).thenThrow(failure);
+
+            assertThat(validator.isValid(target, constraintValidatorContext)).isFalse();
+        }
     }
 
     @Test

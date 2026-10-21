@@ -8,10 +8,9 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class RepeatPasswordValidator implements ConstraintValidator<RepeatPassword, Object> {
     
@@ -42,17 +41,16 @@ public class RepeatPasswordValidator implements ConstraintValidator<RepeatPasswo
         if (constraintViolationValueFields.isEmpty()) {
             constraintViolationValueFields.add(valueFields.getFirst());
         }
-        Set<Object> values = valueFields.stream()
-                .flatMap(field -> {
-                    try {
-                        field.setAccessible(true);
-                        return Stream.of(ReflectionUtils.getField(field, value));
-                    } catch (Exception e) {
-                        logger.warn("Could not get repeat password field value.", e);
-                        return Stream.of();
-                    }
-                })
-                .collect(Collectors.toSet());
+        Set<Object> values = new HashSet<>();
+        for (Field field : valueFields) {
+            try {
+                field.setAccessible(true);
+                values.add(ReflectionUtils.getField(field, value));
+            } catch (Throwable t) {
+                logger.warn("Could not get repeat password field value.", t);
+                return false;
+            }
+        }
         if (values.size() <= 1) {
             return true;
         } else {

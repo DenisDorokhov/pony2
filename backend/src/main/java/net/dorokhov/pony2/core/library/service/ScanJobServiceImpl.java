@@ -141,9 +141,9 @@ public class ScanJobServiceImpl implements ScanJobService {
         LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerScanJob(DISCOVERY_CANCELLATION_TIMEOUT);
         try {
             return doStartScanJob(configService.get().libraryFolders(), jobRegistration);
-        } catch (RuntimeException | Error e) {
+        } catch (Throwable t) {
             jobRegistration.close();
-            throw e;
+            throw t;
         }
     }
 
@@ -153,9 +153,9 @@ public class ScanJobServiceImpl implements ScanJobService {
         LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = jobSynchronizer.registerScanJob(DISCOVERY_CANCELLATION_TIMEOUT);
         try {
             return doStartEditJob(commands, jobRegistration);
-        } catch (RuntimeException | Error e) {
+        } catch (Throwable t) {
             jobRegistration.close();
-            throw e;
+            throw t;
         }
     }
 
@@ -185,16 +185,21 @@ public class ScanJobServiceImpl implements ScanJobService {
                                     .setLogMessage(logStarted.orElse(null)));
                         }));
                         currentScanJob = doEditJob(currentScanJob, commands);
-                    } catch (Exception e) {
-                        final ScanJob failedScanJob = currentScanJob;
-                        notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
-                        currentScanJob = changeScanJobStatusInTransaction(() -> {
-                            Optional<LogMessage> logFailed = logService.error(logger, "Unexpected error occurred when performing edit job.", e);
-                            return scanJobRepository.save(
-                                    scanJobRepository.findById(scanJob.getId()).orElseThrow()
-                                            .setStatus(Status.FAILED)
-                                            .setLogMessage(logFailed.orElse(null)));
-                        });
+                    } catch (Throwable t) {
+                        try {
+                            final ScanJob failedScanJob = currentScanJob;
+                            notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
+                            currentScanJob = changeScanJobStatusInTransaction(() -> {
+                                Optional<LogMessage> logFailed = logService.error(logger, "Unexpected error occurred when performing edit job.", t);
+                                return scanJobRepository.save(
+                                        scanJobRepository.findById(scanJob.getId()).orElseThrow()
+                                                .setStatus(Status.FAILED)
+                                                .setLogMessage(logFailed.orElse(null)));
+                            });
+                        } catch (Throwable failure) {
+                            logger.error("Could not finalize edit job '{}'.", scanJob.getId(), failure);
+                            return;
+                        }
                     } finally {
                         scanJobProgressReference.set(null);
                         jobRegistration.close();
@@ -238,30 +243,35 @@ public class ScanJobServiceImpl implements ScanJobService {
                                     .setLogMessage(logStarted.orElse(null)));
                         }));
                         currentScanJob = doScanJob(currentScanJob, targetFolders);
-                    } catch (Exception e) {
-                        ScanJob failedScanJob = currentScanJob;
-                        boolean interrupted = Throwables.getCausalChain(e).stream()
-                                .anyMatch(t -> t instanceof ScanInterruptedException);
-                        if (interrupted) {
-                            notifyObservers(observer -> observer.onScanJobInterrupting(failedScanJob));
-                        } else {
-                            notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
-                        }
-                        currentScanJob = changeScanJobStatusInTransaction(() -> {
+                    } catch (Throwable t) {
+                        try {
+                            ScanJob failedScanJob = currentScanJob;
+                            boolean interrupted = Throwables.getCausalChain(t).stream()
+                                    .anyMatch(cause -> cause instanceof ScanInterruptedException);
                             if (interrupted) {
-                                Optional<LogMessage> logMessage = logService.warn(logger, "Scan job has been interrupted.", e);
-                                return scanJobRepository.save(
-                                        scanJobRepository.findById(scanJob.getId()).orElseThrow()
-                                                .setStatus(Status.INTERRUPTED)
-                                                .setLogMessage(logMessage.orElse(null)));
+                                notifyObservers(observer -> observer.onScanJobInterrupting(failedScanJob));
                             } else {
-                                Optional<LogMessage> logMessage = logService.error(logger, "Unexpected error occurred when performing scan job.", e);
-                                return scanJobRepository.save(
-                                        scanJobRepository.findById(scanJob.getId()).orElseThrow()
-                                                .setStatus(Status.FAILED)
-                                                .setLogMessage(logMessage.orElse(null)));
+                                notifyObservers(observer -> observer.onScanJobFailing(failedScanJob));
                             }
-                        });
+                            currentScanJob = changeScanJobStatusInTransaction(() -> {
+                                if (interrupted) {
+                                    Optional<LogMessage> logMessage = logService.warn(logger, "Scan job has been interrupted.", t);
+                                    return scanJobRepository.save(
+                                            scanJobRepository.findById(scanJob.getId()).orElseThrow()
+                                                    .setStatus(Status.INTERRUPTED)
+                                                    .setLogMessage(logMessage.orElse(null)));
+                                } else {
+                                    Optional<LogMessage> logMessage = logService.error(logger, "Unexpected error occurred when performing scan job.", t);
+                                    return scanJobRepository.save(
+                                            scanJobRepository.findById(scanJob.getId()).orElseThrow()
+                                                    .setStatus(Status.FAILED)
+                                                    .setLogMessage(logMessage.orElse(null)));
+                                }
+                            });
+                        } catch (Throwable failure) {
+                            logger.error("Could not finalize scan job '{}'.", scanJob.getId(), failure);
+                            return;
+                        }
                     } finally {
                         scanJobProgressReference.set(null);
                         jobRegistration.close();
@@ -368,8 +378,8 @@ public class ScanJobServiceImpl implements ScanJobService {
         for (Observer observer : new ArrayList<>(observers)) {
             try {
                 handler.accept(observer);
-            } catch (Exception e) {
-                logger.error("Could not call progress observer {}.", observer, e);
+            } catch (Throwable t) {
+                logger.error("Could not call progress observer {}.", observer, t);
             }
         }
     }

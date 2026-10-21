@@ -167,9 +167,9 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                     reIndexSemaphore.release();
                 }
             });
-        } catch (RuntimeException e) {
+        } catch (Throwable t) {
             reIndexSemaphore.release();
-            throw e;
+            throw t;
         }
     }
 }

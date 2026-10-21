@@ -27,8 +27,8 @@ public final class FolderExistsValidator implements ConstraintValidator<FolderEx
             return Files.isDirectory(Path.of(value));
         } catch (InvalidPathException e) {
             return false;
-        } catch (Exception e) {
-            logger.debug("Could not check if folder exists.", e);
+        } catch (Throwable t) {
+            logger.debug("Could not check if folder exists.", t);
             return false;
         }
     }

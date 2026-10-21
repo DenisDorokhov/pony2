@@ -180,9 +180,9 @@ public class MusicBrainzClient {
         private String get(HttpUrl url) {
             try {
                 return requestExecutor.execute("musicbrainz", () -> request(url), this::checkCancelled);
-            } catch (RuntimeException e) {
+            } catch (Throwable t) {
                 checkCancelled();
-                throw e;
+                throw t;
             }
         }
 

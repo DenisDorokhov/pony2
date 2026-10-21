@@ -31,8 +31,8 @@ public class ErrorControllerImpl implements ErrorController {
         }
         try {
             return HttpStatus.valueOf(statusCode);
-        } catch (Exception e) {
-            logger.error("Unknown HTTP status: '{}'.", statusCode, e);
+        } catch (Throwable t) {
+            logger.error("Unknown HTTP status: '{}'.", statusCode, t);
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
     }

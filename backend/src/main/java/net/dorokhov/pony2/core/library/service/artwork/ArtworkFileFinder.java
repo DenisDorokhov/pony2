@@ -101,8 +101,8 @@ public class ArtworkFileFinder {
         ImageSize size;
         try {
             size = imageNode.getImageSize();
-        } catch (Exception e) {
-            logger.warn("Could not get size of image '{}'.", imageNode.getFile().getName(), e);
+        } catch (Throwable t) {
+            logger.warn("Could not get size of image '{}'.", imageNode.getFile().getName(), t);
             return false;
         }
         double sizeRatio = size.getWidth() / (double) size.getHeight();

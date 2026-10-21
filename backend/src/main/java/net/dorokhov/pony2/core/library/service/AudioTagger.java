@@ -39,16 +39,16 @@ public class AudioTagger {
     public ReadableAudioData read(File file) throws IOException {
         try {
             return doRead(file);
-        } catch (Exception e) {
-            throw new IOException("Could not read audio data.", e);
+        } catch (Throwable t) {
+            throw new IOException("Could not read audio data.", t);
         }
     }
 
     public ReadableAudioData write(File file, WritableAudioData data) throws IOException {
         try {
             return doWrite(file, data);
-        } catch (Exception e) {
-            throw new IOException("Could not write audio data.", e);
+        } catch (Throwable t) {
+            throw new IOException("Could not write audio data.", t);
         }
     }
 
@@ -265,8 +265,8 @@ public class AudioTagger {
             try {
                 String value = tag.getFirst(key);
                 return value != null ? value.trim() : null;
-            } catch (Exception e) {
-                logger.debug("Could not fetch tag '{}' from file '{}'.", key, audioFile.getFile().getAbsolutePath(), e);
+            } catch (Throwable t) {
+                logger.debug("Could not fetch tag '{}' from file '{}'.", key, audioFile.getFile().getAbsolutePath(), t);
             }
         }
         return null;

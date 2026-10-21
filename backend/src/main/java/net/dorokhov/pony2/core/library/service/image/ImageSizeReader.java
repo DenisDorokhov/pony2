@@ -26,8 +26,8 @@ public class ImageSizeReader {
             } else {
                 throw new IOException("No image readers registered for the supplied data.");
             }
-        } catch (Exception e) {
-            throw new IOException("Could not read image size.", e);
+        } catch (Throwable t) {
+            throw new IOException("Could not read image size.", t);
         }
     }
 
