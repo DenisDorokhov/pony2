@@ -104,15 +104,6 @@ public class LibraryFacade {
     }
 
     @Transactional(readOnly = true)
-    public GenreSongsPageDto getGenreSongs(String genreId, int pageIndex) throws ObjectNotFoundException {
-        Genre genre = libraryService.getGenreById(genreId).orElse(null);
-        if (genre == null) {
-            throw new ObjectNotFoundException(Genre.class, genreId);
-        }
-        return GenreSongsPageDto.of(genre, libraryService.getSongsByGenreId(genreId, pageIndex), this::toAlbumDetailsDto, isAdmin());
-    }
-
-    @Transactional(readOnly = true)
     public SearchResultDto search(String query) {
         List<Genre> genres = librarySearchService.searchGenres(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         List<Artist> artists = librarySearchService.searchArtists(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);

@@ -27,8 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
 
 import java.io.File;
@@ -208,32 +206,12 @@ public class LibraryServiceImplTest {
     }
 
     @Test
-    public void shouldGetGenreById() {
-
-        Genre genre = new Genre();
-        when(genreRepository.findById(any())).thenReturn(Optional.of(genre));
-
-        assertThat(libraryService.getGenreById("1")).containsSame(genre);
-    }
-
-    @Test
     public void shouldGetSongById() {
 
         Song song = song();
         when(songRepository.findById(any())).thenReturn(Optional.ofNullable(song));
 
         assertThat(libraryService.getSongById("1")).containsSame(song);
-    }
-
-    @Test
-    public void shouldGetSongsByGenreId() {
-
-        List<Song> songs = ImmutableList.of(song(), song());
-        when(songRepository.findPageByGenreId(any(), any())).thenReturn(new PageImpl<>(songs));
-
-        Page<Song> result = libraryService.getSongsByGenreId("1", 0);
-
-        assertThat(result.getContent()).isEqualTo(songs);
     }
 
     @Test

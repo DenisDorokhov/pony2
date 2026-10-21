@@ -9,8 +9,6 @@ import net.dorokhov.pony2.common.OffsetBasedPageRequest;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
 import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -27,8 +25,6 @@ import static java.util.Collections.emptyList;
 
 @Service
 public class LibraryServiceImpl implements LibraryService {
-
-    private final static int PAGE_SIZE = 50;
 
     private final GenreRepository genreRepository;
     private final ArtistRepository artistRepository;
@@ -89,19 +85,6 @@ public class LibraryServiceImpl implements LibraryService {
                 .map(songs::get)
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<Song> getSongsByGenreId(String genreId, int pageIndex) {
-        return songRepository.findPageByGenreId(genreId, PageRequest.of(pageIndex, PAGE_SIZE,
-                Sort.by("album.year", "album.name", "discNumber", "trackNumber", "name")));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<Genre> getGenreById(String genreId) {
-        return genreRepository.findById(genreId);
     }
 
     @Override

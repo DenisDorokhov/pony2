@@ -43,11 +43,6 @@ public class LibraryController implements ErrorHandlingController {
         return libraryFacade.getGenres();
     }
 
-    @GetMapping("/api/library/genreSongs/{genreId}")
-    public GenreSongsPageDto getGenreSongs(@PathVariable String genreId, @RequestParam(defaultValue = "0") int pageIndex) throws ObjectNotFoundException {
-        return libraryFacade.getGenreSongs(genreId, pageIndex);
-    }
-
     @GetMapping("/api/library/search")
     public SearchResultDto search(@RequestParam String query) {
         return libraryFacade.search(query);
@@ -56,11 +51,6 @@ public class LibraryController implements ErrorHandlingController {
     @PostMapping("/api/library/fetchRandomSongs")
     public List<SongDetailsDto> getGenreRandomSongs(@Valid @RequestBody RandomSongsRequestDto request) {
         return libraryFacade.getRandomSongs(request);
-    }
-
-    @GetMapping("/api/library/scanStatus")
-    public ScanStatusDto getScanStatus() {
-        return scanFacade.getScanStatus();
     }
 
     @GetMapping("/api/library/scanStatistics")

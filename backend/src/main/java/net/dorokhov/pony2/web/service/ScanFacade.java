@@ -25,12 +25,6 @@ public class ScanFacade {
     }
 
     @Transactional(readOnly = true)
-    public ScanStatusDto getScanStatus() {
-        ScanJobProgress scanJobProgress = scanJobService.getCurrentScanJobProgress().orElse(null);
-        return new ScanStatusDto().setScanning(scanJobProgress != null);
-    }
-
-    @Transactional(readOnly = true)
     public OptionalResponseDto<ScanStatisticsDto> getScanStatistics() {
         return scanJobService.getLastSuccessfulJob()
                 .map(ScanJob::getScanResult)

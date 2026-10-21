@@ -48,8 +48,6 @@ public interface SongRepository extends JpaRepository<Song, String> {
 
     List<Song> findByArtistId(String artistId, Pageable pageable);
 
-    Page<Song> findPageByGenreId(String genreId, Pageable pageable);
-
     Page<Song> findByGenreIdAndArtworkNotNull(String genreId, Pageable pageable);
 
     Song findFirstByAlbumIdAndArtworkNotNull(String albumId);
