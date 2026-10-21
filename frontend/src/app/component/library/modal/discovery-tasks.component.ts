@@ -4,7 +4,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {interval, Subscription} from 'rxjs';
 import {map, mergeMap} from 'rxjs/operators';
-import {AlbumDto, ArtistDto, DiscoveryJobDto, DiscoveryTaskDto, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
+import {AlbumDto, ArtistDto, DiscoveryJobDto, DiscoveryTaskDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
 import {PageDto} from '../../../domain/common.dto';
 import {LoadingState} from '../../../domain/common.model';
@@ -81,6 +81,7 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
 
   readonly LoadingState = LoadingState;
   readonly TaskStatus = DiscoveryTaskDto.Status;
+  readonly TaskResultFilter = DiscoveryTaskResultFilter;
   readonly taskTypes = Object.values(DiscoveryTaskType);
 
   @Input()
@@ -90,6 +91,7 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
   containerElement!: ElementRef;
 
   loadingState = LoadingState.LOADING;
+  taskResult: DiscoveryTaskResultFilter | undefined;
   taskType: DiscoveryTaskType | undefined;
   discoveryTasks: DiscoveryTaskWithTarget[] = [];
   page: PageDto | undefined;
@@ -118,7 +120,7 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
     }
     this.tasksSubscription?.unsubscribe();
     this.tasksSubscription = this.libraryDiscoveryService.getDiscoveryJob(this.discoveryJobId).pipe(
-      mergeMap(discoveryJob => this.libraryDiscoveryService.getDiscoveryTasks(this.discoveryJobId, this.taskType, pageIndex, pageSize).pipe(
+      mergeMap(discoveryJob => this.libraryDiscoveryService.getDiscoveryTasks(this.discoveryJobId, this.taskResult, this.taskType, pageIndex, pageSize).pipe(
         map(page => ({discoveryJob, page}))
       ))
     ).subscribe({
@@ -138,7 +140,12 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
     });
   }
 
-  applyFilter(type?: DiscoveryTaskType) {
+  applyResultFilter(result?: DiscoveryTaskResultFilter) {
+    this.taskResult = result;
+    this.loadPage(0, this.pageToLoad?.pageSize ?? 30);
+  }
+
+  applyTypeFilter(type?: DiscoveryTaskType) {
     this.taskType = type;
     this.loadPage(0, this.pageToLoad?.pageSize ?? 30);
   }

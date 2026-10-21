@@ -83,7 +83,11 @@ CREATE TABLE discovery_task (
 );
 
 CREATE INDEX index_discovery_task_status ON discovery_task (status);
-CREATE INDEX index_discovery_task_job_id_status ON discovery_task (discovery_job_id, status);
+CREATE INDEX index_discovery_task_job_type_update_date ON discovery_task (discovery_job_id, type, update_date DESC NULLS LAST, id DESC);
+CREATE INDEX index_discovery_task_job_status_update_date ON discovery_task (discovery_job_id, status, update_date DESC NULLS LAST, id DESC);
+CREATE INDEX index_discovery_task_job_status_type_update_date ON discovery_task (discovery_job_id, status, type, update_date DESC NULLS LAST, id DESC);
+CREATE INDEX index_discovery_task_job_status_result_update_date ON discovery_task (discovery_job_id, status, result, update_date DESC NULLS LAST, id DESC);
+CREATE INDEX index_discovery_task_job_status_type_result_update_date ON discovery_task (discovery_job_id, status, type, result, update_date DESC NULLS LAST, id DESC);
 
 CREATE INDEX index_discovery_task_genre_status_type_creation_date ON discovery_task (genre_id, status, type, creation_date DESC, id DESC);
 CREATE INDEX index_discovery_task_artist_status_type_creation_date ON discovery_task (artist_id, status, type, creation_date DESC, id DESC);

@@ -1,12 +1,11 @@
 package net.dorokhov.pony2.web.service;
 
-import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
-import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
@@ -89,11 +88,11 @@ public class DiscoveryFacade {
     }
 
     @Transactional(readOnly = true)
-    public DiscoveryTaskPageDto getDiscoveryTasks(String discoveryJobId, @Nullable DiscoveryTaskType type, int pageIndex, int pageSize) throws ObjectNotFoundException {
+    public DiscoveryTaskPageDto getDiscoveryTasks(String discoveryJobId, DiscoveryTaskFilter filter, int pageIndex, int pageSize) throws ObjectNotFoundException {
         if (discoveryJobService.getById(discoveryJobId).isEmpty()) {
             throw new ObjectNotFoundException(DiscoveryJob.class, discoveryJobId);
         }
-        return DiscoveryTaskPageDto.of(discoveryJobService.getTasks(discoveryJobId, type,
+        return DiscoveryTaskPageDto.of(discoveryJobService.getTasks(discoveryJobId, filter,
                 PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)))), this::toDiscoveryTaskSummary);
     }
 

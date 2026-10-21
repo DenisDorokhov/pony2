@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.web.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
@@ -125,11 +126,12 @@ public class LibraryAdminController implements ErrorHandlingController {
     @GetMapping("/api/admin/library/discoveryJobs/{discoveryJobId}/tasks")
     public DiscoveryTaskPageDto getDiscoveryTasks(
             @PathVariable String discoveryJobId,
+            @RequestParam(required = false) DiscoveryTaskFilter.Result result,
             @RequestParam(required = false) DiscoveryTaskType type,
             @RequestParam(defaultValue = "0") int pageIndex,
             @RequestParam(defaultValue = "30") int pageSize
     ) throws ObjectNotFoundException {
-        return discoveryFacade.getDiscoveryTasks(discoveryJobId, type, pageIndex, pageSize);
+        return discoveryFacade.getDiscoveryTasks(discoveryJobId, new DiscoveryTaskFilter(result, type), pageIndex, pageSize);
     }
 
     @GetMapping("/api/admin/library/discoveryTasks/{discoveryTaskId}")

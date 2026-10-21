@@ -21,6 +21,7 @@ import {
   DiscoveryJobProgressDto,
   DiscoveryTaskDto,
   DiscoveryTaskPageDto,
+  DiscoveryTaskResultFilter,
   DiscoveryTaskType
 } from '../domain/library.dto';
 import {AuthenticationService} from './authentication.service';
@@ -153,8 +154,11 @@ export class LibraryDiscoveryService {
     return this.httpClient.get<DiscoveryJobDetailsDto>(`/api/admin/library/discoveryJobs/${id}/details`);
   }
 
-  getDiscoveryTasks(jobId: string, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
+  getDiscoveryTasks(jobId: string, result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
     const params: Record<string, string | number> = {pageIndex, pageSize};
+    if (result) {
+      params['result'] = result;
+    }
     if (type) {
       params['type'] = type;
     }

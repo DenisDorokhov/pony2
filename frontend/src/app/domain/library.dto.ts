@@ -295,6 +295,11 @@ export enum DiscoveryTaskType {
   MUSICBRAINZ_ALBUM_DATA = 'MUSICBRAINZ_ALBUM_DATA',
 }
 
+export enum DiscoveryTaskResultFilter {
+  FAILED = 'FAILED',
+  NO_RESULT = 'NO_RESULT',
+}
+
 export interface DiscoveryTaskDto {
   id: string;
   creationDate: string;

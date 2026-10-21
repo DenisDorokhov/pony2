@@ -1,10 +1,9 @@
 package net.dorokhov.pony2.api.library.service;
 
-import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
-import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,7 +41,7 @@ public interface DiscoveryJobService {
 
     long getTaskCount(String discoveryJobId);
 
-    Page<DiscoveryTask> getTasks(String discoveryJobId, @Nullable DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTask> getTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable);
 
     Optional<DiscoveryTask> getTaskById(String id);
 

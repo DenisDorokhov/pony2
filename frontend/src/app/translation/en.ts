@@ -252,6 +252,11 @@ export default {
   },
   discoveryTasks: {
     header: 'Discovery Tasks',
+    resultLabel: 'Result:',
+    typeLabel: 'Type:',
+    allResults: 'All',
+    failed: 'Failed',
+    noResult: 'No result',
     allTypes: 'All',
     targetColumn: 'Target',
     creationDateColumn: 'Started',

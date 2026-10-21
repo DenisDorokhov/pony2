@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.repository;
 
-import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import org.springframework.data.domain.Limit;
@@ -22,10 +21,45 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
 
     @Query("""
             SELECT t FROM DiscoveryTask t
-            WHERE t.job.id = :jobId AND (:type IS NULL OR t.type = :type)
-            ORDER BY t.updateDate DESC NULLS LAST, t.id DESC
+            WHERE t.job.id = :jobId
+            ORDER BY t.job.id, t.updateDate DESC NULLS LAST, t.id DESC
             """)
-    Page<DiscoveryTask> findByJobIdAndType(String jobId, @Nullable DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTask> findByJobId(String jobId, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.job.id = :jobId AND t.type = :type
+            ORDER BY t.job.id, t.type, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.job.id = :jobId AND t.status = FAILED
+            ORDER BY t.job.id, t.status, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findFailedByJobId(String jobId, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.job.id = :jobId AND t.status = FAILED AND t.type = :type
+            ORDER BY t.job.id, t.status, t.type, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findFailedByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.result = 'null'
+            ORDER BY t.job.id, t.status, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findWithoutResultByJobId(String jobId, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.type = :type AND t.result = 'null'
+            ORDER BY t.job.id, t.status, t.type, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
     long countByJobIdAndStatus(String jobId, DiscoveryTask.Status status);
 
