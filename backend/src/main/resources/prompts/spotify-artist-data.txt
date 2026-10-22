@@ -39,6 +39,21 @@ For FOUND, collect:
   dimensions of at least 400×300 pixels. Check dimensions using img.naturalWidth and
   img.naturalHeight. Do not analyze image contents or search for alternatives. If no
   image qualifies, set this field to null.
+- avatarUrl: the image URL from the confirmed artist's Spotify search-result
+  card (including the Top result card when applicable). Collect it while the
+  search results are visible, before navigating away. Identify the correct
+  artist card by its observed artist link or ID, not by name alone.
+  Inspect only the image belonging to that artist card, not nearby album,
+  playlist or track artwork. Use browser_evaluate to read the loaded image's
+  currentSrc, falling back to src if currentSrc is empty. Copy the observed
+  URL unchanged.
+  Do not substitute the artist profile header, About gallery images, or
+  images from other sections. Do not analyze image contents, construct URLs,
+  or search for alternative images.
+  Preserve the image Spotify actually displays in the artist card, including
+  Spotify-provided fallback images, but exclude generic placeholders when
+  identifiable from page attributes or markup.
+  If the card has no usable image URL after loading, set avatarUrl to null.
 
 Read Spotify IDs from links or page data observed in the browser. Copy the actual
 artist, album and track page URLs. Do not construct URLs or assume a fixed URL path,

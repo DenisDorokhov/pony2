@@ -26,7 +26,9 @@ public record SpotifyArtistData(
         @Nullable
         List<@NotNull @Valid ExternalLink> links,
         @Nullable
-        String imageUrl
+        String imageUrl,
+        @Nullable
+        String avatarUrl
 ) {
 
     @Override
@@ -40,6 +42,7 @@ public record SpotifyArtistData(
                 .add("biography", biography)
                 .add("links", links)
                 .add("imageUrl", imageUrl)
+                .add("avatarUrl", avatarUrl)
                 .toString();
     }
 

@@ -112,7 +112,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         DiscoveryJob job = saveJob();
         List<DiscoveryProgress> progress = new ArrayList<>();
         SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, "Biography".repeat(1000), null, null);
+                null, null, null, null, "Biography".repeat(1000), null, null, null);
         String rawResponse = "\n " + JsonConverter.toJson(result) + "\n";
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
@@ -264,7 +264,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     void shouldPersistRawExchangeFromCache() {
         Artist artist = saveArtist("Album");
         SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
         String rawResponse = "\n " + JsonConverter.toJson(result) + "\n";
         when(model.call(any(Prompt.class)))
                 .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse)))));
@@ -398,7 +398,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         albumRepository.save(new Album().setArtist(artist).setName("Z album").setYear(2000));
         SpotifyArtistData result = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             Prompt prompt = invocation.getArgument(0);
@@ -423,7 +423,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @EnumSource(value = SpotifyArtistData.Status.class, names = {"NOT_FOUND", "AMBIGUOUS"})
     void shouldCompleteTopTracksWithoutMatchingWhenArtistWasNotFound(SpotifyArtistData.Status status) {
         Artist artist = saveArtist("Album");
-        SpotifyArtistData result = new SpotifyArtistData(status, null, null, null, null, null, null, null);
+        SpotifyArtistData result = new SpotifyArtistData(status, null, null, null, null, null, null, null, null);
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(result));
 
         service.discover(saveJob(), artist, true, null);
@@ -448,7 +448,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     void shouldCompleteTopTracksWithoutMatchingWhenTopTracksAreAbsent(boolean emptyList) {
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
-                emptyList ? List.of() : null, null, null, null, null);
+                emptyList ? List.of() : null, null, null, null, null, null);
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(result));
 
         service.discover(saveJob(), saveArtist("Album"), true, null);
@@ -470,7 +470,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
                 List.of(topTrack("second", "Second", "spotify-album"), topTrack("missing", "Missing", "missing-album"),
-                        topTrack("first", "First", "spotify-album")), null, null, null, null);
+                        topTrack("first", "First", "spotify-album")), null, null, null, null, null);
         String albumResponse = """
                 {"albumMatches":[
                     {"spotifyAlbumId":"spotify-album","databaseAlbumId":"%s"},
@@ -528,7 +528,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
-                List.of(topTrack("missing", "Missing", "missing-album")), null, null, null, null);
+                List.of(topTrack("missing", "Missing", "missing-album")), null, null, null, null, null);
         ChatResponse artistResponse = chatResponse(result);
         ChatResponse albumResponse = new ChatResponse(List.of(new Generation(new AssistantMessage("""
                 {"albumMatches":[{"spotifyAlbumId":"missing-album","databaseAlbumId":null}]}
@@ -552,7 +552,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         List<DiscoveryProgress> progress = new ArrayList<>();
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.status(), found.artist(), found.matchedAlbum(),
-                List.of(topTrack("track", "Track", "spotify-album")), null, null, null, null);
+                List.of(topTrack("track", "Track", "spotify-album")), null, null, null, null, null);
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(result), chatResponse(result)).thenAnswer(invocation -> {
             jobSynchronizer.cancelDiscovery();
             return new ChatResponse(List.of(new Generation(new AssistantMessage("{}"))));
@@ -734,6 +734,6 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         return new SpotifyArtistData(SpotifyArtistData.Status.FOUND,
                 new SpotifyArtistData.SpotifyArtist(spotifyArtistId, "Artist", "https://open.spotify.com/artist/" + spotifyArtistId),
                 new SpotifyArtistData.MatchedAlbum("Album", "Album", "spotify-album", "https://open.spotify.com/album/spotify-album"),
-                null, null, null, null, null);
+                null, null, null, null, null, "https://i.scdn.co/image/avatar");
     }
 }

@@ -98,13 +98,18 @@ public class LibraryServiceImpl implements LibraryService {
     public ArtistDiscoveryData getArtistDiscoveryData(String artistId) {
         List<String> topSongIds = discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
                 .map(json -> JsonConverter.listFromJson(json, String.class)).orElse(emptyList()).stream()
-                .filter(Objects::nonNull).toList();
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
         if (!topSongIds.isEmpty()) {
             Set<String> existingSongIds = new HashSet<>(songRepository.findExistingIds(topSongIds));
-            topSongIds = topSongIds.stream().filter(existingSongIds::contains).toList();
+            topSongIds = topSongIds.stream()
+                    .filter(existingSongIds::contains)
+                    .toList();
         }
         return new ArtistDiscoveryData(artistDiscoveryIndexRepository.findByArtistId(artistId)
-                .map(ArtistDiscoveryIndex::getCountryCode).orElse(null), topSongIds);
+                .map(ArtistDiscoveryIndex::getCountryCode)
+                .orElse(null), topSongIds);
     }
 
     @Override

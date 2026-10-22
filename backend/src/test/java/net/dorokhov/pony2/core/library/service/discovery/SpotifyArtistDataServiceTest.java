@@ -150,9 +150,11 @@ class SpotifyArtistDataServiceTest {
         assertThat(request.get("responseSchema")).isEqualTo(schema);
         assertThat(schema.get("additionalProperties")).isEqualTo(false);
         assertThat((List<?>) schema.get("required")).extracting(Object::toString).containsExactlyInAnyOrder(
-                "status", "artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl");
+                "status", "artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl", "avatarUrl");
         Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
-        for (String field : List.of("artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl")) {
+        Map<?, ?> avatarSchema = (Map<?, ?>) properties.get("avatarUrl");
+        assertThat((List<?>) avatarSchema.get("type")).extracting(Object::toString).containsExactlyInAnyOrder("string", "null");
+        for (String field : List.of("artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl", "avatarUrl")) {
             Map<?, ?> property = (Map<?, ?>) properties.get(field);
             if (property.get("type") instanceof List<?> types) {
                 assertThat(types).extracting(Object::toString).contains("null");
@@ -172,7 +174,7 @@ class SpotifyArtistDataServiceTest {
         Map<String, String> originalCache = Map.copyOf(cache);
         clearInvocations(cacheService);
         SpotifyArtistData freshResult = new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
         response = JsonConverter.toJson(freshResult);
 
         assertThat(service.discover(task(artist), false)).contains(freshResult);
@@ -311,7 +313,7 @@ class SpotifyArtistDataServiceTest {
     @EnumSource(value = SpotifyArtistData.Status.class, names = {"NOT_FOUND", "AMBIGUOUS"})
     void shouldCacheUnconfirmedArtists(SpotifyArtistData.Status status) {
         Artist artist = artist();
-        SpotifyArtistData result = new SpotifyArtistData(status, null, null, null, null, null, null, null);
+        SpotifyArtistData result = new SpotifyArtistData(status, null, null, null, null, null, null, null, null);
         response = JsonConverter.toJson(result);
 
         assertThat(service.discover(task(artist), true)).contains(result);
@@ -326,7 +328,7 @@ class SpotifyArtistDataServiceTest {
         SpotifyArtistData data = found();
         response = JsonConverter.toJson(new SpotifyArtistData(data.status(), data.artist(),
                 new SpotifyArtistData.MatchedAlbum("Other album", "Album", ALBUM_ID, albumUrl()),
-                data.topTracks(), data.similarArtists(), data.biography(), data.links(), data.imageUrl()));
+                data.topTracks(), data.similarArtists(), data.biography(), data.links(), data.imageUrl(), data.avatarUrl()));
         assertThatThrownBy(() -> service.discover(task(artist()), true)).hasMessageContaining("invalid Spotify response");
         assertThat(cache).isEmpty();
     }
@@ -343,7 +345,7 @@ class SpotifyArtistDataServiceTest {
                         "Album", "album-id-v2", albumUrl)),
                 List.of(new SpotifyArtistData.SpotifyArtist("related-id-v2", "Related artist",
                         "https://open.spotify.com/intl-de/artist/related-id-v2?si=example")),
-                null, null, null);
+                null, null, null, null);
         response = JsonConverter.toJson(data);
         Artist artist = artist();
 
@@ -356,10 +358,36 @@ class SpotifyArtistDataServiceTest {
     void shouldAllowUnavailableOptionalSections() {
         SpotifyArtistData data = found();
         SpotifyArtistData partial = new SpotifyArtistData(data.status(), data.artist(), data.matchedAlbum(),
-                null, null, null, null, null);
+                null, null, null, null, null, null);
         response = JsonConverter.toJson(partial);
 
         assertThat(service.discover(task(artist()), true)).contains(partial);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldAcceptAndCacheImageAndAvatarIndependently(boolean hasAvatar) {
+        SpotifyArtistData data = found();
+        SpotifyArtistData partial = new SpotifyArtistData(data.status(), data.artist(), data.matchedAlbum(),
+                data.topTracks(), data.similarArtists(), data.biography(), data.links(),
+                hasAvatar ? null : data.imageUrl(), hasAvatar ? data.avatarUrl() : null);
+        response = JsonConverter.toJson(partial);
+        Artist artist = artist();
+
+        assertThat(service.discover(task(artist), true)).contains(partial);
+        assertThat(service.discover(task(artist), true)).contains(partial);
+        assertThat(modelCalls).isEqualTo(2);
+    }
+
+    @Test
+    void shouldReadStoredArtistDataWithoutAvatarUrl() {
+        Map<String, Object> legacyData = new HashMap<>(JsonConverter.mapFromJson(response, String.class, Object.class));
+        legacyData.remove("avatarUrl");
+
+        SpotifyArtistData data = JsonConverter.fromJson(JsonConverter.toJson(legacyData), SpotifyArtistData.class);
+
+        assertThat(data.avatarUrl()).isNull();
+        assertThat(data.imageUrl()).isEqualTo(found().imageUrl());
     }
 
     @ParameterizedTest
@@ -450,7 +478,7 @@ class SpotifyArtistDataServiceTest {
         Artist artist = artist("Artist {name}",
                 new Album().setName(null), new Album().setName("Album\n\"Quoted\"").setYear(2000));
         response = JsonConverter.toJson(new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, null, null, null));
+                null, null, null, null, null, null, null, null));
 
         service.discover(task(artist), true);
 
@@ -533,7 +561,7 @@ class SpotifyArtistDataServiceTest {
                 List.of(new SpotifyArtistData.SpotifyArtist("d".repeat(22), "Related artist",
                         "https://open.spotify.com/artist/" + "d".repeat(22))),
                 "Artist biography", List.of(new SpotifyArtistData.ExternalLink("Website", "https://example.com/")),
-                "https://i.scdn.co/image/artist");
+                "https://i.scdn.co/image/artist", "https://i.scdn.co/image/avatar");
     }
 
     private static String albumUrl() {
@@ -543,11 +571,11 @@ class SpotifyArtistDataServiceTest {
     private static Stream<SpotifyArtistData> invalidResponses() {
         SpotifyArtistData data = found();
         return Stream.of(
-                new SpotifyArtistData(null, null, null, null, null, null, null, null),
-                new SpotifyArtistData(data.status(), null, data.matchedAlbum(), null, null, null, null, null),
-                new SpotifyArtistData(data.status(), data.artist(), null, null, null, null, null, null),
+                new SpotifyArtistData(null, null, null, null, null, null, null, null, null),
+                new SpotifyArtistData(data.status(), null, data.matchedAlbum(), null, null, null, null, null, null),
+                new SpotifyArtistData(data.status(), data.artist(), null, null, null, null, null, null, null),
                 new SpotifyArtistData(data.status(), new SpotifyArtistData.SpotifyArtist("", "Artist", "url"),
-                        data.matchedAlbum(), null, null, null, null, null));
+                        data.matchedAlbum(), null, null, null, null, null, null));
     }
 
     private ChatResponse toolCallResponse(String name) {

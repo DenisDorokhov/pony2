@@ -96,7 +96,7 @@ class SpotifyTopTracksServiceTest {
                 new SpotifyArtistData.SpotifyArtist("spotify-artist", "Artist", "artist-url"),
                 new SpotifyArtistData.MatchedAlbum("First album", "First album", "spotify-a", "album-url"),
                 List.of(topTrack("first", "spotify-a"), topTrack("second", "spotify-b"), topTrack("missing", "spotify-missing")),
-                null, null, null, null);
+                null, null, null, null, null);
         previousTask = new DiscoveryTask().setId("previous").setStatus(DiscoveryTask.Status.COMPLETE).setResult(JsonConverter.toJson(data));
         lenient().when(taskRepository.findLatestCompletedByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.of(previousTask));
@@ -292,7 +292,7 @@ class SpotifyTopTracksServiceTest {
     @Test
     void shouldReturnNoTracksWhenArtistWasNotFound() {
         previousTask.setResult(JsonConverter.toJson(new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, null, null, null)));
+                null, null, null, null, null, null, null, null)));
 
         assertThat(service.discover(task(), true)).isEmpty();
 

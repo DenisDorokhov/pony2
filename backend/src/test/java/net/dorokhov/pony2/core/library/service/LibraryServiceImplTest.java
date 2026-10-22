@@ -185,6 +185,15 @@ public class LibraryServiceImplTest {
                 .isEqualTo(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first")));
     }
 
+    @Test
+    void shouldReturnDistinctArtistTopSongsInOriginalOrder() {
+        when(discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
+                .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\",\"second\",\"first\"]"));
+        when(songRepository.findExistingIds(any())).thenReturn(List.of("first", "second"));
+
+        assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).containsExactly("second", "first");
+    }
+
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"null", "[]", "[null]"})
