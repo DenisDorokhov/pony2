@@ -22,11 +22,12 @@ searchFragments:
 2. These are search anchors. The caller searches each anchor as an escaped quoted clause joined with AND. The original untrusted-title search has already returned no results, but the provided text may already have had technical suffixes removed by code. The caller detects duplicate queries. An unchanged result is allowed when the text provides no justified alternative: never invent a change merely to make a different query. The original title remains available for later matching.
 3. Prefer informative phrases, but a useful single title word is allowed. Do not reject all useful anchors merely because the title consists of common words. Select anchors that are useful together, especially within a separately applied artist constraint.
 4. Use fragments when they can avoid unstable adjacency across separators, omit a problematic stylized expression, or relax an uncertain external year/prefix. If a standalone parenthetical recording-version label such as (Live) is preserved by the searchTitle rules, omitting it from search anchors is also a valid reason to use fragments. In that case, use anchors from the remaining title when useful, even if the remaining title is a single common word. Do not treat Live as a detachable label when it is part of the main title, as in Live at Leeds. Do not fragment a simple cleaned title without a reason.
-5. MusicBrainz does NOT use a generic whitespace/standard analyzer. Standalone punctuation can be indexed as a token. Punctuation attached to a word can also change how the whole word is tokenized. A contiguous substring is not necessarily analyzed into the same tokens as that substring inside the full title.
-6. In particular, No. 4: and No. 4 can tokenize differently; I.II.III: and I.II.III can tokenize differently; removing the final ellipsis from L'Éternité… can change apostrophe handling. When a separate stable phrase is available, prefer it: Black & White or A Broken Circle in these examples. A context-changing fragment is not necessarily useless: it may match an alternative indexed spelling. The caller handles alternative queries; do not pretend you have verified Lucene compatibility.
-7. Do not create a multi-word fragment spanning a potentially variable separator merely to make the fragment longer. For Dead//Alive: Vol. 1, separate Dead, Alive, and Vol. 1 can be more robust than requiring the adjacent phrase Alive: Vol. 1. For Who? What! Why..., independent word anchors can tolerate spaced punctuation.
-8. If there is no useful safer anchor, never invent a modified word. If removing a punctuation suffix creates a plausible alternative spelling, a literal substring anchor is allowed: L'Éternité… can keep its full searchTitle and use L'Éternité as its anchor. The caller treats the full title and the complete AND-anchor query as alternatives, not as mandatory conditions together. An empty array is allowed when there is no justified alternative.
-9. Do not output Lucene syntax, field names, boolean operators, wildcards, URL encoding, or escaped query strings. Query construction and analyzer validation happen outside the LLM.
+5. Numbers retained in searchTitle may be written as digits, number words, or Roman numerals in other title variants. This is a valid reason to fragment an otherwise simple title. When a useful textual anchor remains within the artist constraint, fragments may omit an entire standalone numeric component, even if it is meaningful rather than external metadata. Do not change searchTitle to guess an alternative spelling, remove digits from inside words, or add the omitted number as another fragment: all fragments are joined with AND. For an entirely numeric title, do not drop or shorten the number merely to produce a fragment.
+6. MusicBrainz does NOT use a generic whitespace/standard analyzer. Standalone punctuation can be indexed as a token. Punctuation attached to a word can also change how the whole word is tokenized. A contiguous substring is not necessarily analyzed into the same tokens as that substring inside the full title.
+7. In particular, No. 4: and No. 4 can tokenize differently; I.II.III: and I.II.III can tokenize differently; removing the final ellipsis from L'Éternité… can change apostrophe handling. When a separate stable phrase is available, prefer it: Black & White or A Broken Circle in these examples. A context-changing fragment is not necessarily useless: it may match an alternative indexed spelling. The caller handles alternative queries; do not pretend you have verified Lucene compatibility.
+8. Do not create a multi-word fragment spanning a potentially variable separator merely to make the fragment longer. For Dead//Alive: Vol. 1, separate Dead, Alive, and Vol. 1 can be more robust than requiring the adjacent phrase Alive: Vol. 1. For Who? What! Why..., independent word anchors can tolerate spaced punctuation.
+9. If there is no useful safer anchor, never invent a modified word. If removing a punctuation suffix creates a plausible alternative spelling, a literal substring anchor is allowed: L'Éternité… can keep its full searchTitle and use L'Éternité as its anchor. The caller treats the full title and the complete AND-anchor query as alternatives, not as mandatory conditions together. An empty array is allowed when there is no justified alternative.
+10. Do not output Lucene syntax, field names, boolean operators, wildcards, URL encoding, or escaped query strings. Query construction and analyzer validation happen outside the LLM.
 
 Examples:
 
@@ -44,6 +45,12 @@ Output: {"searchTitle":"Alive (Live)","searchFragments":["Alive"]}
 
 Input: {"albumTitle":"Live at Leeds"}
 Output: {"searchTitle":"Live at Leeds","searchFragments":[]}
+
+Input: {"albumTitle":"Catch 33"}
+Output: {"searchTitle":"Catch 33","searchFragments":["Catch"]}
+
+Input: {"albumTitle":"1989"}
+Output: {"searchTitle":"1989","searchFragments":[]}
 
 Input: {"albumTitle":"No. 4: Black & White [FLAC]"}
 Output: {"searchTitle":"No. 4: Black & White","searchFragments":["Black & White"]}
