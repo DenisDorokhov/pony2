@@ -155,6 +155,10 @@ export class LibraryDiscoveryService {
   }
 
   getDiscoveryTasks(jobId: string, result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
+    return this.getDiscoveryTasksPage(`/api/admin/library/discoveryJobs/${jobId}/tasks`, result, type, pageIndex, pageSize);
+  }
+
+  private getDiscoveryTasksPage(url: string, result: DiscoveryTaskResultFilter | undefined, type: DiscoveryTaskType | undefined, pageIndex: number, pageSize: number): Observable<DiscoveryTaskPageDto> {
     const params: Record<string, string | number> = {pageIndex, pageSize};
     if (result) {
       params['result'] = result;
@@ -162,7 +166,15 @@ export class LibraryDiscoveryService {
     if (type) {
       params['type'] = type;
     }
-    return this.httpClient.get<DiscoveryTaskPageDto>(`/api/admin/library/discoveryJobs/${jobId}/tasks`, {params});
+    return this.httpClient.get<DiscoveryTaskPageDto>(url, {params});
+  }
+
+  getArtistDiscoveryTasks(artistId: string, result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
+    return this.getDiscoveryTasksPage(`/api/admin/library/artists/${artistId}/discoveryTasks`, result, type, pageIndex, pageSize);
+  }
+
+  getAlbumDiscoveryTasks(albumId: string, result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
+    return this.getDiscoveryTasksPage(`/api/admin/library/albums/${albumId}/discoveryTasks`, result, type, pageIndex, pageSize);
   }
 
   getDiscoveryTask(id: string): Observable<DiscoveryTaskDto> {

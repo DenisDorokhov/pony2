@@ -351,7 +351,7 @@ public class LibraryDiscoveryAdminControllerTest {
         }
         PageRequest pageRequest = PageRequest.of(2, 5);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(null, type), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(null, type), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(task), pageRequest, 21));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobs/job1/tasks")
@@ -394,7 +394,7 @@ public class LibraryDiscoveryAdminControllerTest {
         DiscoveryTask task = task(type != null ? type : DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 result == DiscoveryTaskFilter.Result.FAILED ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(result, type), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(result, type), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(task), pageRequest, 5));
         MockHttpServletRequestBuilder request = get("/api/admin/library/discoveryJobs/job1/tasks")
                 .param("result", result.name()).param("pageIndex", "1").param("pageSize", "2");
@@ -421,6 +421,93 @@ public class LibraryDiscoveryAdminControllerTest {
     }
 
     @ParameterizedTest
+    @CsvSource({
+            "ARTIST,,", "ALBUM,,", "ARTIST,FAILED,", "ALBUM,FAILED,MUSICBRAINZ_ALBUM_DATA",
+            "ARTIST,NO_RESULT,SPOTIFY_ARTIST_DATA", "ALBUM,NO_RESULT,"
+    })
+    public void shouldGetTargetDiscoveryTasks(DiscoveryType scope, DiscoveryTaskFilter.Result result, DiscoveryTaskType type) throws Exception {
+        Artist artist = new Artist().setId("artist1").setName("Artist");
+        Album album = new Album().setId("album1").setName("Album").setArtist(artist);
+        DiscoveryTask task = task(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE).setAlbum(album);
+        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(new ArtistDiscoveryData(null, List.of()));
+        when(libraryService.getAlbumDiscoveryData("album1")).thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+        DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, type);
+        PageRequest pageRequest = PageRequest.of(1, 2);
+        String path;
+        if (scope == DiscoveryType.ARTIST) {
+            path = "/api/admin/library/artists/artist1/discoveryTasks";
+            when(libraryService.getArtistById("artist1")).thenReturn(Optional.of(artist));
+            when(discoveryJobService.getArtistTasks("artist1", filter, pageRequest))
+                    .thenReturn(new PageImpl<>(List.of(task), pageRequest, 5));
+        } else {
+            path = "/api/admin/library/albums/album1/discoveryTasks";
+            when(libraryService.getAlbumById("album1")).thenReturn(Optional.of(album));
+            when(discoveryJobService.getAlbumTasks("album1", filter, pageRequest))
+                    .thenReturn(new PageImpl<>(List.of(task), pageRequest, 5));
+        }
+        MockHttpServletRequestBuilder request = get(path).param("pageIndex", "1").param("pageSize", "2");
+        if (result != null) {
+            request.param("result", result.name());
+        }
+        if (type != null) {
+            request.param("type", type.name());
+        }
+
+        String response = mockMvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        DiscoveryTaskPageDto page = objectMapper.readValue(response, DiscoveryTaskPageDto.class);
+
+        assertThat(page.getPageIndex()).isEqualTo(1);
+        assertThat(page.getPageSize()).isEqualTo(2);
+        assertThat(page.getTotalPages()).isEqualTo(3);
+        assertThat(page.getDiscoveryTasks()).singleElement().satisfies(summary -> {
+            assertThat(summary.getId()).isEqualTo(task.getId());
+            assertThat(summary.getArtist().getId()).isEqualTo("artist1");
+            assertThat(summary.getAlbum().getId()).isEqualTo("album1");
+        });
+        verify(discoveryJobService, never()).getById(any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ARTIST,0", "ARTIST,100", "ALBUM,0", "ALBUM,100"})
+    public void shouldGetEmptyTargetDiscoveryTasksAndLimitPageSize(DiscoveryType scope, int requestedSize) throws Exception {
+        PageRequest pageRequest = PageRequest.of(0, 30);
+        DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, null);
+        String path;
+        if (scope == DiscoveryType.ARTIST) {
+            path = "/api/admin/library/artists/artist1/discoveryTasks";
+            when(libraryService.getArtistById("artist1")).thenReturn(Optional.of(new Artist().setId("artist1")));
+            when(discoveryJobService.getArtistTasks("artist1", filter, pageRequest)).thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+        } else {
+            path = "/api/admin/library/albums/album1/discoveryTasks";
+            when(libraryService.getAlbumById("album1")).thenReturn(Optional.of(new Album().setId("album1")));
+            when(discoveryJobService.getAlbumTasks("album1", filter, pageRequest)).thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+        }
+        MockHttpServletRequestBuilder request = get(path);
+        if (requestedSize > 0) {
+            request.param("pageSize", String.valueOf(requestedSize));
+        }
+
+        String response = mockMvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        DiscoveryTaskPageDto page = objectMapper.readValue(response, DiscoveryTaskPageDto.class);
+
+        assertThat(page.getPageSize()).isEqualTo(30);
+        assertThat(page.getTotalPages()).isZero();
+        assertThat(page.getDiscoveryTasks()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"artists,Artist", "albums,Album"})
+    public void shouldReturnNotFoundForUnknownDiscoveryTaskTarget(String path, String entity) throws Exception {
+        String response = mockMvc.perform(get("/api/admin/library/" + path + "/missing/discoveryTasks"))
+                .andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
+
+        ErrorDto error = objectMapper.readValue(response, ErrorDto.class);
+        assertThat(error.getCode()).isSameAs(ErrorDto.Code.NOT_FOUND);
+        assertThat(error.getArguments()).containsExactly(entity, "missing");
+        verifyNoInteractions(discoveryJobService);
+    }
+
+    @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void shouldIncludeGenreAndSongTargets(boolean genreTarget) throws Exception {
         Genre genre = new Genre().setId("genre1").setName("Genre");
@@ -435,7 +522,7 @@ public class LibraryDiscoveryAdminControllerTest {
         }
         PageRequest pageRequest = PageRequest.of(0, 30);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(task), pageRequest, 1));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobs/job1/tasks"))
@@ -458,7 +545,7 @@ public class LibraryDiscoveryAdminControllerTest {
     public void shouldKeepTasksOfDeletedTargets(DiscoveryTaskType type) throws Exception {
         PageRequest pageRequest = PageRequest.of(0, 30);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(task(type, DiscoveryTask.Status.FAILED)), pageRequest, 1));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobs/job1/tasks"))
@@ -478,7 +565,7 @@ public class LibraryDiscoveryAdminControllerTest {
     public void shouldGetEmptyDiscoveryTasksAndLimitPageSize(int requestedSize, int pageSize) throws Exception {
         PageRequest pageRequest = PageRequest.of(0, pageSize);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
         MockHttpServletRequestBuilder request = get("/api/admin/library/discoveryJobs/job1/tasks");
         if (requestedSize > 0) {
@@ -501,7 +588,7 @@ public class LibraryDiscoveryAdminControllerTest {
         DiscoveryTask task = task(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.STARTED)
                 .setUpdateDate(LocalDateTime.now().minusMinutes(10));
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob().setStatus(DiscoveryJob.Status.STARTED)));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(task), pageRequest, 1));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobs/job1/tasks"))
@@ -516,7 +603,7 @@ public class LibraryDiscoveryAdminControllerTest {
     public void shouldLeaveDurationUnknownWithoutEndDate() throws Exception {
         PageRequest pageRequest = PageRequest.of(0, 30);
         when(discoveryJobService.getById("job1")).thenReturn(Optional.of(completedJob()));
-        when(discoveryJobService.getTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
+        when(discoveryJobService.getJobTasks("job1", new DiscoveryTaskFilter(null, null), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(task(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.INTERRUPTED)
                         .setUpdateDate(null)), pageRequest, 1));
 

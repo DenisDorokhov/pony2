@@ -92,7 +92,25 @@ public class DiscoveryFacade {
         if (discoveryJobService.getById(discoveryJobId).isEmpty()) {
             throw new ObjectNotFoundException(DiscoveryJob.class, discoveryJobId);
         }
-        return DiscoveryTaskPageDto.of(discoveryJobService.getTasks(discoveryJobId, filter,
+        return DiscoveryTaskPageDto.of(discoveryJobService.getJobTasks(discoveryJobId, filter,
+                PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)))), this::toDiscoveryTaskSummary);
+    }
+
+    @Transactional(readOnly = true)
+    public DiscoveryTaskPageDto getArtistDiscoveryTasks(String artistId, DiscoveryTaskFilter filter, int pageIndex, int pageSize) throws ObjectNotFoundException {
+        if (libraryService.getArtistById(artistId).isEmpty()) {
+            throw new ObjectNotFoundException(Artist.class, artistId);
+        }
+        return DiscoveryTaskPageDto.of(discoveryJobService.getArtistTasks(artistId, filter,
+                PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)))), this::toDiscoveryTaskSummary);
+    }
+
+    @Transactional(readOnly = true)
+    public DiscoveryTaskPageDto getAlbumDiscoveryTasks(String albumId, DiscoveryTaskFilter filter, int pageIndex, int pageSize) throws ObjectNotFoundException {
+        if (libraryService.getAlbumById(albumId).isEmpty()) {
+            throw new ObjectNotFoundException(Album.class, albumId);
+        }
+        return DiscoveryTaskPageDto.of(discoveryJobService.getAlbumTasks(albumId, filter,
                 PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)))), this::toDiscoveryTaskSummary);
     }
 

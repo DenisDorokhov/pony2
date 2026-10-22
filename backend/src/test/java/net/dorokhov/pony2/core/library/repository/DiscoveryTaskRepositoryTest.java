@@ -46,8 +46,8 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         List<String> newestIds = List.of(album.getId(), topTracks.getId()).stream().sorted(Comparator.reverseOrder()).toList();
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, null);
 
-        Page<DiscoveryTask> first = discoveryJobService.getTasks(job.getId(), filter, PageRequest.of(0, 2));
-        Page<DiscoveryTask> second = discoveryJobService.getTasks(job.getId(), filter, PageRequest.of(1, 2));
+        Page<DiscoveryTask> first = discoveryJobService.getJobTasks(job.getId(), filter, PageRequest.of(0, 2));
+        Page<DiscoveryTask> second = discoveryJobService.getJobTasks(job.getId(), filter, PageRequest.of(1, 2));
 
         assertThat(first.getTotalElements()).isEqualTo(4);
         assertThat(first.getTotalPages()).isEqualTo(2);
@@ -67,8 +67,8 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(3));
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
 
-        Page<DiscoveryTask> first = discoveryJobService.getTasks(job.getId(), filter, PageRequest.of(0, 1));
-        Page<DiscoveryTask> second = discoveryJobService.getTasks(job.getId(), filter, PageRequest.of(1, 1));
+        Page<DiscoveryTask> first = discoveryJobService.getJobTasks(job.getId(), filter, PageRequest.of(0, 1));
+        Page<DiscoveryTask> second = discoveryJobService.getJobTasks(job.getId(), filter, PageRequest.of(1, 1));
 
         assertThat(first.getTotalElements()).isEqualTo(2);
         assertThat(first.getTotalPages()).isEqualTo(2);
@@ -105,13 +105,13 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, type);
 
         for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
-            Page<DiscoveryTask> page = discoveryJobService.getTasks(job.getId(), filter, PageRequest.of(pageIndex, 1));
+            Page<DiscoveryTask> page = discoveryJobService.getJobTasks(job.getId(), filter, PageRequest.of(pageIndex, 1));
 
             assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
             assertThat(page.getTotalPages()).isEqualTo(expectedIds.size());
             assertThat(page.getContent()).extracting(DiscoveryTask::getId).containsExactly(expectedIds.get(pageIndex));
         }
-        assertThat(discoveryJobService.getTasks(job.getId(), new DiscoveryTaskFilter(result, DiscoveryTaskType.SPOTIFY_TOP_TRACKS), PageRequest.of(0, 30)))
+        assertThat(discoveryJobService.getJobTasks(job.getId(), new DiscoveryTaskFilter(result, DiscoveryTaskType.SPOTIFY_TOP_TRACKS), PageRequest.of(0, 30)))
                 .isEmpty();
     }
 

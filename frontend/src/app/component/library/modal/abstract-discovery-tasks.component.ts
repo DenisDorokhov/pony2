@@ -1,10 +1,10 @@
-import {Component, ElementRef, inject, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Directive, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {interval, Subscription} from 'rxjs';
-import {map, mergeMap} from 'rxjs/operators';
-import {AlbumDto, ArtistDto, DiscoveryJobDto, DiscoveryTaskDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
+import {defer, interval, Observable, Subscription} from 'rxjs';
+import {finalize, mergeMap} from 'rxjs/operators';
+import {AlbumDto, ArtistDto, DiscoveryJobProgressDto, DiscoveryTaskDto, DiscoveryTaskPageDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
 import {PageDto} from '../../../domain/common.dto';
 import {LoadingState} from '../../../domain/common.model';
@@ -63,18 +63,17 @@ class DiscoveryTaskWithTarget implements DiscoveryTaskSummaryDto {
   }
 }
 
-@Component({
-  imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent,
-    NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownItem, UnknownArtistPipe, UnknownAlbumPipe],
-  selector: 'pony-discovery-tasks',
-  templateUrl: './discovery-tasks.component.html',
-  styleUrls: ['./discovery-tasks.component.scss']
-})
-export class DiscoveryTasksComponent implements OnInit, OnDestroy {
+export const DISCOVERY_TASKS_IMPORTS = [
+  TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent,
+  NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownItem, UnknownArtistPipe, UnknownAlbumPipe
+];
+
+@Directive()
+export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestroy {
 
   readonly activeModal = inject(NgbActiveModal);
 
-  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
+  protected readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly libraryService = inject(LibraryService);
   private readonly translateService = inject(TranslateService);
   private readonly modal = inject(NgbModal);
@@ -84,8 +83,8 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
   readonly TaskResultFilter = DiscoveryTaskResultFilter;
   readonly taskTypes = Object.values(DiscoveryTaskType);
 
-  @Input()
-  discoveryJobId!: string;
+  abstract readonly titleKey: string;
+  protected readonly refreshOnDiscoveryEnd: boolean = true;
 
   @ViewChild('scroller')
   containerElement!: ElementRef;
@@ -95,22 +94,44 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
   taskType: DiscoveryTaskType | undefined;
   discoveryTasks: DiscoveryTaskWithTarget[] = [];
   page: PageDto | undefined;
+  startingDiscovery = false;
+  discoveryRunning = false;
 
   private pageToLoad: PageDto | undefined;
   private resetScrollOnLoad = false;
   private tasksSubscription: Subscription | undefined;
   private refreshSubscription: Subscription | undefined;
+  private progressSubscription: Subscription | undefined;
+  private startSubscription: Subscription | undefined;
 
   ngOnInit(): void {
-    this.refreshSubscription = interval(15000).subscribe(() =>
-      this.loadPage(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 30, false));
+    this.progressSubscription = this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe(progress => {
+      const wasRunning = this.discoveryRunning;
+      this.discoveryRunning = !!progress;
+      if (wasRunning && !this.discoveryRunning && this.refreshOnDiscoveryEnd) {
+        this.loadPage(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 30, false);
+      }
+    });
+    this.refreshSubscription = interval(15000).subscribe(() => {
+      if (this.shouldRefreshTasks) {
+        this.loadPage(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 30, false);
+      }
+    });
     this.loadPage();
+  }
+
+  protected get shouldRefreshTasks(): boolean {
+    return this.discoveryRunning;
   }
 
   ngOnDestroy(): void {
     this.tasksSubscription?.unsubscribe();
     this.refreshSubscription?.unsubscribe();
+    this.progressSubscription?.unsubscribe();
+    this.startSubscription?.unsubscribe();
   }
+
+  protected abstract loadTasks(pageIndex: number, pageSize: number): Observable<DiscoveryTaskPageDto>;
 
   private loadPage(pageIndex = 0, pageSize = 30, resetScroll = true) {
     this.pageToLoad = {pageIndex, pageSize, totalPages: this.page?.totalPages ?? 0};
@@ -119,12 +140,8 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
       this.loadingState = LoadingState.LOADING;
     }
     this.tasksSubscription?.unsubscribe();
-    this.tasksSubscription = this.libraryDiscoveryService.getDiscoveryJob(this.discoveryJobId).pipe(
-      mergeMap(discoveryJob => this.libraryDiscoveryService.getDiscoveryTasks(this.discoveryJobId, this.taskResult, this.taskType, pageIndex, pageSize).pipe(
-        map(page => ({discoveryJob, page}))
-      ))
-    ).subscribe({
-      next: ({discoveryJob, page}) => {
+    this.tasksSubscription = this.loadTasks(pageIndex, pageSize).subscribe({
+      next: page => {
         this.discoveryTasks = page.discoveryTasks.map(task => new DiscoveryTaskWithTarget(task, this.translateService));
         this.page = this.pageToLoad = page;
         if (this.resetScrollOnLoad) {
@@ -132,13 +149,36 @@ export class DiscoveryTasksComponent implements OnInit, OnDestroy {
           this.resetScrollOnLoad = false;
         }
         this.loadingState = this.discoveryTasks.length > 0 ? LoadingState.LOADED : LoadingState.EMPTY;
-        if (discoveryJob.status !== DiscoveryJobDto.Status.STARTING && discoveryJob.status !== DiscoveryJobDto.Status.STARTED) {
-          this.refreshSubscription?.unsubscribe();
-        }
       },
       error: () => this.loadingState = LoadingState.ERROR
     });
   }
+
+  get startDiscoveryDisabled(): boolean {
+    return this.startingDiscovery || this.discoveryRunning || !this.hasDiscoveryTarget;
+  }
+
+  protected abstract get hasDiscoveryTarget(): boolean;
+
+  startDiscovery() {
+    if (this.startDiscoveryDisabled) {
+      return;
+    }
+    this.startingDiscovery = true;
+    this.startSubscription = defer(() => this.startDiscoveryJob()).pipe(
+      // Load lazily to avoid a cycle through the discovery job's tasks component.
+      mergeMap(() => import('./discovery.component')),
+      finalize(() => this.startingDiscovery = false)
+    ).subscribe({
+      next: ({DiscoveryComponent}) => {
+        this.modal.dismissAll();
+        this.modal.open(DiscoveryComponent, {size: 'xl'});
+      },
+      error: () => undefined
+    });
+  }
+
+  protected abstract startDiscoveryJob(): Observable<DiscoveryJobProgressDto | null>;
 
   applyResultFilter(result?: DiscoveryTaskResultFilter) {
     this.taskResult = result;

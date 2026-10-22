@@ -251,7 +251,10 @@ export default {
     logMessageLabel: 'Log message:',
   },
   discoveryTasks: {
-    header: 'Discovery Tasks',
+    jobHeader: 'Job Discovery Tasks',
+    artistHeader: 'Artist Discovery Tasks',
+    albumHeader: 'Album Discovery Tasks',
+    startDiscoveryButton: 'Start Discovery',
     resultLabel: 'Result:',
     typeLabel: 'Type:',
     allResults: 'All',

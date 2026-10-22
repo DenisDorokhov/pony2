@@ -1,3 +1,14 @@
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+
+  .btn-close {
+    margin: 0;
+  }
+}
+
 .modal-body {
   overflow-x: auto;
 }

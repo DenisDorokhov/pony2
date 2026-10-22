@@ -2,7 +2,7 @@ import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angu
 import {Subscription} from 'rxjs';
 import {Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
 import {AlbumSortingOrder, LibraryService} from '../../service/library.service';
-import {LibraryDiscoveryService} from '../../service/library-discovery.service';
+import {ArtistDiscoveryTasksComponent} from './modal/artist-discovery-tasks.component';
 import {PlaybackMode, PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
 import {UserDto} from '../../domain/user.dto';
@@ -35,7 +35,6 @@ import countryFlags from 'flag-icons/country.json';
 export class AlbumListComponent implements OnInit, OnDestroy {
 
   private readonly libraryService = inject(LibraryService);
-  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly playbackService = inject(PlaybackService);
   private readonly playlistService = inject(PlaylistService);
   private readonly translateService = inject(TranslateService);
@@ -212,9 +211,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.playbackService.mode = mode;
   }
 
-  protected startArtistDiscovery() {
-    this.subscriptions.push(this.libraryDiscoveryService.startArtistDiscoveryJob(this.artistSongs.artist.id)
-      .subscribe());
+  protected openArtistDiscoveryTasks() {
+    const modalRef = this.modal.open(ArtistDiscoveryTasksComponent, {size: 'xl'});
+    (modalRef.componentInstance as ArtistDiscoveryTasksComponent).artistId = this.artistSongs.artist.id;
   }
 
   openArtistLikes() {

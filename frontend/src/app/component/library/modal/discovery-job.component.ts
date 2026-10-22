@@ -8,7 +8,7 @@ import {LibraryDiscoveryService} from '../../../service/library-discovery.servic
 import {LoadingState} from '../../../domain/common.model';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
-import {DiscoveryTasksComponent} from './discovery-tasks.component';
+import {JobDiscoveryTasksComponent} from './job-discovery-tasks.component';
 import {Album, Artist, Genre} from '../../../domain/library.model';
 import {LibraryService} from '../../../service/library.service';
 import {UnknownArtistPipe} from '../../../pipe/unknown-artist.pipe';
@@ -102,7 +102,7 @@ export class DiscoveryJobComponent implements OnInit, OnDestroy {
   }
 
   showTasks() {
-    const modalRef = this.modal.open(DiscoveryTasksComponent, {size: 'xl'});
-    (modalRef.componentInstance as DiscoveryTasksComponent).discoveryJobId = this.discoveryJobId;
+    const modalRef = this.modal.open(JobDiscoveryTasksComponent, {size: 'xl'});
+    (modalRef.componentInstance as JobDiscoveryTasksComponent).jobId = this.discoveryJobId;
   }
 }

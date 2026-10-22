@@ -61,6 +61,26 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             """)
     Page<DiscoveryTask> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
+    @Query("""
+            SELECT t FROM DiscoveryTask t LEFT JOIN t.album a
+            WHERE (t.artist.id = :artistId OR a.artist.id = :artistId)
+              AND (:type IS NULL OR t.type = :type)
+              AND (:failed = false OR t.status = FAILED)
+              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result = 'null'))
+            ORDER BY t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findByArtistId(String artistId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.album.id = :albumId
+              AND (:type IS NULL OR t.type = :type)
+              AND (:failed = false OR t.status = FAILED)
+              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result = 'null'))
+            ORDER BY t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findByAlbumId(String albumId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
+
     long countByJobIdAndStatus(String jobId, DiscoveryTask.Status status);
 
     @Query("""

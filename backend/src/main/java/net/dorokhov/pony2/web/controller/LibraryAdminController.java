@@ -134,6 +134,28 @@ public class LibraryAdminController implements ErrorHandlingController {
         return discoveryFacade.getDiscoveryTasks(discoveryJobId, new DiscoveryTaskFilter(result, type), pageIndex, pageSize);
     }
 
+    @GetMapping("/api/admin/library/artists/{artistId}/discoveryTasks")
+    public DiscoveryTaskPageDto getArtistDiscoveryTasks(
+            @PathVariable String artistId,
+            @RequestParam(required = false) DiscoveryTaskFilter.Result result,
+            @RequestParam(required = false) DiscoveryTaskType type,
+            @RequestParam(defaultValue = "0") int pageIndex,
+            @RequestParam(defaultValue = "30") int pageSize
+    ) throws ObjectNotFoundException {
+        return discoveryFacade.getArtistDiscoveryTasks(artistId, new DiscoveryTaskFilter(result, type), pageIndex, pageSize);
+    }
+
+    @GetMapping("/api/admin/library/albums/{albumId}/discoveryTasks")
+    public DiscoveryTaskPageDto getAlbumDiscoveryTasks(
+            @PathVariable String albumId,
+            @RequestParam(required = false) DiscoveryTaskFilter.Result result,
+            @RequestParam(required = false) DiscoveryTaskType type,
+            @RequestParam(defaultValue = "0") int pageIndex,
+            @RequestParam(defaultValue = "30") int pageSize
+    ) throws ObjectNotFoundException {
+        return discoveryFacade.getAlbumDiscoveryTasks(albumId, new DiscoveryTaskFilter(result, type), pageIndex, pageSize);
+    }
+
     @GetMapping("/api/admin/library/discoveryTasks/{discoveryTaskId}")
     public DiscoveryTaskDto getDiscoveryTask(@PathVariable String discoveryTaskId) throws ObjectNotFoundException {
         return discoveryFacade.getDiscoveryTask(discoveryTaskId);
