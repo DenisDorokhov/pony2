@@ -12,7 +12,6 @@ import {NgbDropdownModule, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {LibraryScanService} from '../../service/library-scan.service';
 import {Subscription} from 'rxjs';
 import {FastSearchComponent} from './fast-search.component';
-import {ErrorDto} from '../../domain/common.dto';
 import {QueueComponent} from './modal/queue.component';
 import {PlaybackMode, PlaybackService} from '../../service/playback.service';
 import {HistoryComponent} from './modal/history.component';
@@ -72,12 +71,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       this.openScanning();
     } else {
       this.libraryScanService.startScanJob().subscribe({
-        next: () => this.openScanning(),
-        error: (error: ErrorDto) => {
-          if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
-            this.openScanning();
-          }
-        }
+        next: () => this.openScanning()
       });
     }
   }

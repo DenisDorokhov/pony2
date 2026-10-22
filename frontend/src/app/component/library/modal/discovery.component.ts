@@ -4,10 +4,15 @@ import {TranslateModule} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LibraryDiscoveryService} from '../../../service/library-discovery.service';
-import {DiscoveryJobDto, DiscoveryJobProgressDto, DiscoveryProgressDto, DiscoveryType} from '../../../domain/library.dto';
+import {
+  DiscoveryJobDto,
+  DiscoveryJobProgressDto,
+  DiscoveryProgressDto,
+  DiscoveryType
+} from '../../../domain/library.dto';
 import {LoadingState} from '../../../domain/common.model';
 import {CommonModule} from '@angular/common';
-import {ErrorDto, PageDto} from '../../../domain/common.dto';
+import {PageDto} from '../../../domain/common.dto';
 import {Subscription} from 'rxjs';
 import {LibraryService} from '../../../service/library.service';
 import {DiscoveryJobComponent} from './discovery-job.component';
@@ -104,12 +109,8 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
       next: () => {
         this.discoveryJobProgressLoadingState = LoadingState.LOADED;
       },
-      error: (error: ErrorDto) => {
-        if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
-          this.discoveryJobProgressLoadingState = LoadingState.LOADED;
-        } else {
-          this.discoveryJobProgressLoadingState = LoadingState.ERROR;
-        }
+      error: () => {
+        this.discoveryJobProgressLoadingState = LoadingState.ERROR;
       }
     });
   }

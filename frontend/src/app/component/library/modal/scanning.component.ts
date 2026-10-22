@@ -7,7 +7,7 @@ import {LibraryScanService} from '../../../service/library-scan.service';
 import {ScanJobDto, ScanJobProgressDto, ScanProgressDto} from '../../../domain/library.dto';
 import {LoadingState} from '../../../domain/common.model';
 import {CommonModule} from '@angular/common';
-import {ErrorDto, PageDto} from '../../../domain/common.dto';
+import {PageDto} from '../../../domain/common.dto';
 import {Subscription} from 'rxjs';
 import {LibraryService} from '../../../service/library.service';
 import {ScanJobComponent} from './scan-job.component';
@@ -99,12 +99,8 @@ export class ScanningComponent implements OnInit, OnDestroy {
       next: () => {
         this.scanJobProgressLoadingState = LoadingState.LOADED;
       },
-      error: (error: ErrorDto) => {
-        if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
-          this.scanJobProgressLoadingState = LoadingState.LOADED;
-        } else {
-          this.scanJobProgressLoadingState = LoadingState.ERROR;
-        }
+      error: () => {
+        this.scanJobProgressLoadingState = LoadingState.ERROR;
       }
     });
   }

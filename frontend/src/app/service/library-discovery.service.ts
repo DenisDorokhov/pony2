@@ -169,11 +169,6 @@ export class LibraryDiscoveryService {
     return this.httpClient.get<DiscoveryTaskDto>('/api/admin/library/discoveryTasks/' + id);
   }
 
-  getDiscoveryJobProgress(id: string): Observable<DiscoveryJobProgressDto | null> {
-    return this.httpClient.get<OptionalResponseDto<DiscoveryJobProgressDto>>('/api/admin/library/discoveryJobProgress/' + id)
-      .pipe(map(optionalResponse => optionalResponse.present ? optionalResponse.value! : null));
-  }
-
   observeDiscoveryJobProgress(): Observable<DiscoveryJobProgressDto | undefined | null> {
     return this.discoveryJobProgressSubject.asObservable();
   }
@@ -210,11 +205,9 @@ export class LibraryDiscoveryService {
         catchError(httpError => {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
-            console.warn('Library job is already running.');
             this.updateAndScheduleDiscoveryJobProgressUpdate();
-          } else {
-            this.showDiscoveryJobFailedNotification();
           }
+          this.showDiscoveryJobFailedNotification();
           return throwError(() => error);
         })
       );

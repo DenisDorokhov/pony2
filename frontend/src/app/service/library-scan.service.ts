@@ -188,11 +188,9 @@ export class LibraryScanService {
         catchError(httpError => {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
-            console.warn('Library job is already running.');
             this.updateAndScheduleScanJobProgressUpdate();
-          } else {
-            this.showScanJobFailedNotification();
           }
+          this.showScanJobFailedNotification();
           return throwError(() => error);
         })
       );
