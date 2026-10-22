@@ -15,13 +15,13 @@ searchTitle:
 4. Do not remove brackets or their contents just because they are brackets. EP in EP (The Album), meaningful years/ranges, and an unusual title consisting of punctuation may be part of the title.
 5. Do not guess that the text before a dash or colon is an artist. Artist-prefix removal, if supported by a separately known artist, is handled outside this task.
 6. Preserve uncertain years, numeric prefixes, and uncertain title components in searchTitle. Search fragments may omit such components to make a candidate search less restrictive.
-7. Never return an empty searchTitle.
+7. Never return an empty searchTitle. If applying the removal rules would leave no non-whitespace text, return the original albumTitle unchanged as searchTitle and an empty searchFragments array instead.
 
 searchFragments:
 1. Return zero to three non-empty contiguous substrings of searchTitle, with exactly the same spelling. Do not join separate substrings.
 2. These are search anchors. The caller searches each anchor as an escaped quoted clause joined with AND. The original untrusted-title search has already returned no results, but the provided text may already have had technical suffixes removed by code. The caller detects duplicate queries. An unchanged result is allowed when the text provides no justified alternative: never invent a change merely to make a different query. The original title remains available for later matching.
 3. Prefer informative phrases, but a useful single title word is allowed. Do not reject all useful anchors merely because the title consists of common words. Select anchors that are useful together, especially within a separately applied artist constraint.
-4. Use fragments when they can avoid unstable adjacency across separators, omit a problematic stylized expression, or relax an uncertain external year/prefix. Do not fragment a simple cleaned title without a reason.
+4. Use fragments when they can avoid unstable adjacency across separators, omit a problematic stylized expression, or relax an uncertain external year/prefix. If a standalone parenthetical recording-version label such as (Live) is preserved by the searchTitle rules, omitting it from search anchors is also a valid reason to use fragments. In that case, use anchors from the remaining title when useful, even if the remaining title is a single common word. Do not treat Live as a detachable label when it is part of the main title, as in Live at Leeds. Do not fragment a simple cleaned title without a reason.
 5. MusicBrainz does NOT use a generic whitespace/standard analyzer. Standalone punctuation can be indexed as a token. Punctuation attached to a word can also change how the whole word is tokenized. A contiguous substring is not necessarily analyzed into the same tokens as that substring inside the full title.
 6. In particular, No. 4: and No. 4 can tokenize differently; I.II.III: and I.II.III can tokenize differently; removing the final ellipsis from L'Éternité… can change apostrophe handling. When a separate stable phrase is available, prefer it: Black & White or A Broken Circle in these examples. A context-changing fragment is not necessarily useless: it may match an alternative indexed spelling. The caller handles alternative queries; do not pretend you have verified Lucene compatibility.
 7. Do not create a multi-word fragment spanning a potentially variable separator merely to make the fragment longer. For Dead//Alive: Vol. 1, separate Dead, Alive, and Vol. 1 can be more robust than requiring the adjacent phrase Alive: Vol. 1. For Who? What! Why..., independent word anchors can tolerate spaced punctuation.
@@ -33,8 +33,17 @@ Examples:
 Input: {"albumTitle":"Memento Mori (CD1 of 2) [WAV+CUE]"}
 Output: {"searchTitle":"Memento Mori","searchFragments":[]}
 
+Input: {"albumTitle":"[FLAC]"}
+Output: {"searchTitle":"[FLAC]","searchFragments":[]}
+
 Input: {"albumTitle":"Midnight Echoes (Demo)"}
 Output: {"searchTitle":"Midnight Echoes","searchFragments":[]}
+
+Input: {"albumTitle":"Alive (Live)"}
+Output: {"searchTitle":"Alive (Live)","searchFragments":["Alive"]}
+
+Input: {"albumTitle":"Live at Leeds"}
+Output: {"searchTitle":"Live at Leeds","searchFragments":[]}
 
 Input: {"albumTitle":"No. 4: Black & White [FLAC]"}
 Output: {"searchTitle":"No. 4: Black & White","searchFragments":["Black & White"]}
