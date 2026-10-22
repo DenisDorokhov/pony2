@@ -189,8 +189,8 @@ public class MusicBrainzAlbumDataService {
                 Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
                 checkState(parsed instanceof Map<?, ?>, "The normalization response must be a JSON object.");
                 Map<?, ?> data = (Map<?, ?>) parsed;
-                checkState(data.keySet().equals(Set.of("searchTitle", "searchFragments")),
-                        "The normalization response must contain exactly searchTitle and searchFragments.");
+                checkState(data.keySet().equals(Set.of("searchTitle", "searchFragments", "alternativeTitles")),
+                        "The normalization response must contain exactly searchTitle, searchFragments and alternativeTitles.");
                 Object searchTitle = data.get("searchTitle");
                 checkState(searchTitle instanceof String && !((String) searchTitle).isBlank(),
                         "searchTitle must be a non-blank string.");
@@ -206,7 +206,19 @@ public class MusicBrainzAlbumDataService {
                             "Each searchFragments item must be a literal contiguous substring of searchTitle: %s", fragment);
                     validatedFragments.add((String) fragment);
                 }
-                return new NormalizationResponse((String) searchTitle, validatedFragments);
+                Object alternativeTitles = data.get("alternativeTitles");
+                checkState(alternativeTitles instanceof List<?>, "alternativeTitles must be an array.");
+                List<?> titles = (List<?>) alternativeTitles;
+                checkState(titles.size() <= 3, "alternativeTitles must contain at most three strings.");
+                List<String> validatedTitles = new ArrayList<>();
+                for (Object alternativeTitle : titles) {
+                    checkState(alternativeTitle instanceof String && !((String) alternativeTitle).isBlank(),
+                            "Each alternativeTitles item must be a non-blank string.");
+                    checkState(title.contains((String) alternativeTitle),
+                            "Each alternativeTitles item must be a literal contiguous substring of albumTitle: %s", alternativeTitle);
+                    validatedTitles.add((String) alternativeTitle);
+                }
+                return new NormalizationResponse((String) searchTitle, validatedFragments, validatedTitles);
             } catch (RuntimeException e) {
                 throw invalidResponse(task, NORMALIZATION_CACHE_PREFIX, e);
             }
@@ -226,6 +238,13 @@ public class MusicBrainzAlbumDataService {
             String full = "release:\"" + escapeQuery(title) + "\"";
             if (!title.isBlank() && !full.equals(original) && !branches.contains(full)) {
                 branches.add(full);
+            }
+            for (String alternativeTitle : normalization.alternativeTitles()) {
+                String normalizedTitle = normalizer.apply(alternativeTitle);
+                String alternative = "release:\"" + escapeQuery(normalizedTitle) + "\"";
+                if (!normalizedTitle.isBlank() && !alternative.equals(original) && !branches.contains(alternative)) {
+                    branches.add(alternative);
+                }
             }
             List<String> normalizedFragments = normalization.searchFragments().stream().map(normalizer).distinct().toList();
             if (!normalizedFragments.isEmpty() && normalizedFragments.stream().noneMatch(String::isBlank)) {
@@ -391,8 +410,8 @@ public class MusicBrainzAlbumDataService {
     private record IdResponse(@JsonProperty(required = true) @Nullable String id) {
     }
 
-    @JsonPropertyOrder({"searchTitle", "searchFragments"})
-    private record NormalizationResponse(String searchTitle, List<String> searchFragments) {
+    @JsonPropertyOrder({"searchTitle", "searchFragments", "alternativeTitles"})
+    private record NormalizationResponse(String searchTitle, List<String> searchFragments, List<String> alternativeTitles) {
     }
 
     @JsonPropertyOrder({"systemPrompt", "userPrompt", "model", "temperature", "toolChoice"})
