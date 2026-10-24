@@ -220,6 +220,7 @@ export class SettingsComponent implements OnInit{
     this.libraryService.cleanDiscoveryData().subscribe({
       next: () => {
         this.secondaryLoadingState = LoadingState.LOADED;
+        this.libraryService.requestRefresh();
         this.notificationService.success(
           this.translateService.instant('notification.settingsTitle'),
           this.translateService.instant('notification.cleanDiscoveryDataText')
