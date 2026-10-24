@@ -4,6 +4,11 @@
   background-color: var(--color-image-placeholder-background);
   border: 1px solid var(--color-image-placeholder-border);
 
+  &.is-rounded {
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
   .container {
     position: absolute;
     top: 0;
