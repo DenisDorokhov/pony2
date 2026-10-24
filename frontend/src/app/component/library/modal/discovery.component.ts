@@ -16,6 +16,7 @@ import {PageDto} from '../../../domain/common.dto';
 import {Subscription} from 'rxjs';
 import {LibraryService} from '../../../service/library.service';
 import {DiscoveryJobComponent} from './discovery-job.component';
+import {AllDiscoveryTasksComponent} from './all-discovery-tasks.component';
 
 @Component({
     imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
@@ -125,6 +126,10 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
     if (this.currentPage && this.currentPage.pageIndex < (this.currentPage.totalPages - 1)) {
       this.loadDiscoveryJobs(this.currentPage.pageIndex + 1);
     }
+  }
+
+  showAllTasks() {
+    this.modal.open(AllDiscoveryTasksComponent, {size: 'xl'});
   }
 
   showDetails(discoveryJob: DiscoveryJobDto) {

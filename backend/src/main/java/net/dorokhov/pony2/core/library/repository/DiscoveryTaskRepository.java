@@ -21,6 +21,47 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
 
     @Query("""
             SELECT t FROM DiscoveryTask t
+            ORDER BY t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findAllTasks(Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.type = :type
+            ORDER BY t.type, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findByType(DiscoveryTaskType type, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.status = FAILED
+            ORDER BY t.status DESC, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findFailed(Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.status = FAILED AND t.type = :type
+            ORDER BY t.status, t.type, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findFailedByType(DiscoveryTaskType type, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.status = COMPLETE AND t.result = 'null'
+            ORDER BY t.status, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findWithoutResult(Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
+            WHERE t.status = COMPLETE AND t.type = :type AND t.result = 'null'
+            ORDER BY t.status, t.type, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            """)
+    Page<DiscoveryTask> findWithoutResultByType(DiscoveryTaskType type, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM DiscoveryTask t
             WHERE t.job.id = :jobId
             ORDER BY t.job.id, t.updateDate DESC NULLS LAST, t.id DESC
             """)

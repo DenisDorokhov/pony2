@@ -156,6 +156,16 @@ public class LibraryAdminController implements ErrorHandlingController {
         return discoveryFacade.getAlbumDiscoveryTasks(albumId, new DiscoveryTaskFilter(result, type), pageIndex, pageSize);
     }
 
+    @GetMapping("/api/admin/library/discoveryTasks")
+    public DiscoveryTaskPageDto getAllDiscoveryTasks(
+            @RequestParam(required = false) DiscoveryTaskFilter.Result result,
+            @RequestParam(required = false) DiscoveryTaskType type,
+            @RequestParam(defaultValue = "0") int pageIndex,
+            @RequestParam(defaultValue = "30") int pageSize
+    ) {
+        return discoveryFacade.getAllDiscoveryTasks(new DiscoveryTaskFilter(result, type), pageIndex, pageSize);
+    }
+
     @GetMapping("/api/admin/library/discoveryTasks/{discoveryTaskId}")
     public DiscoveryTaskDto getDiscoveryTask(@PathVariable String discoveryTaskId) throws ObjectNotFoundException {
         return discoveryFacade.getDiscoveryTask(discoveryTaskId);

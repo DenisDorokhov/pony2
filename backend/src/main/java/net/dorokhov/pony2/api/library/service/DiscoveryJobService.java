@@ -41,6 +41,8 @@ public interface DiscoveryJobService {
 
     long getTaskCount(String discoveryJobId);
 
+    Page<DiscoveryTask> getAllTasks(DiscoveryTaskFilter filter, Pageable pageable);
+
     Page<DiscoveryTask> getJobTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable);
 
     Page<DiscoveryTask> getArtistTasks(String artistId, DiscoveryTaskFilter filter, Pageable pageable);

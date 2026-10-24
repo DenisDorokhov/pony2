@@ -10,6 +10,7 @@ import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +33,69 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
     private DiscoveryJobService discoveryJobService;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldPageAllTasksAcrossJobsWithStableOrderAndNullsLast(boolean filterType) {
+        DiscoveryJob job = saveJob();
+        DiscoveryJob otherJob = saveJob();
+        LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
+        DiscoveryTask older = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.minusHours(1));
+        DiscoveryTask firstArtist = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.FAILED, date);
+        DiscoveryTask secondArtist = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.INTERRUPTED, date);
+        DiscoveryTask started = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.STARTED, null);
+        DiscoveryTask album = saveTask(otherJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(1));
+        List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
+        List<String> expectedIds = filterType ? List.of(artistIds.getFirst(), artistIds.getLast(), older.getId(), started.getId())
+                : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast(), older.getId(), started.getId());
+        DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null);
+
+        for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
+            Page<DiscoveryTask> page = discoveryJobService.getAllTasks(filter, PageRequest.of(pageIndex, 1));
+
+            assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
+            assertThat(page.getTotalPages()).isEqualTo(expectedIds.size());
+            assertThat(page.getContent()).extracting(DiscoveryTask::getId).containsExactly(expectedIds.get(pageIndex));
+        }
+        assertThat(discoveryJobService.getAllTasks(new DiscoveryTaskFilter(null, DiscoveryTaskType.SPOTIFY_TOP_TRACKS), PageRequest.of(0, 30)))
+                .isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"FAILED, false", "FAILED, true", "NO_RESULT, false", "NO_RESULT, true"})
+    void shouldFilterAllTasksAcrossJobsBeforePagination(DiscoveryTaskFilter.Result result, boolean filterType) {
+        DiscoveryJob job = saveJob();
+        DiscoveryJob otherJob = saveJob();
+        LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
+        DiscoveryTask.Status matchingStatus = result == DiscoveryTaskFilter.Result.FAILED
+                ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE;
+        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? "null" : "{\"error\":\"failure\"}";
+        DiscoveryTask firstArtist = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date, matchingResult);
+        DiscoveryTask secondArtist = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date,
+                result == DiscoveryTaskFilter.Result.FAILED ? null : matchingResult);
+        DiscoveryTask album = saveTask(otherJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, matchingStatus, date.plusHours(1), matchingResult);
+        for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
+            saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, status, date.plusHours(2), "null");
+        }
+        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2));
+        saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2), "{}");
+        DiscoveryTask.Status otherStatus = result == DiscoveryTaskFilter.Result.FAILED
+                ? DiscoveryTask.Status.COMPLETE : DiscoveryTask.Status.FAILED;
+        saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), "null");
+        List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
+        List<String> expectedIds = filterType ? artistIds : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast());
+        DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null);
+
+        for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
+            Page<DiscoveryTask> page = discoveryJobService.getAllTasks(filter, PageRequest.of(pageIndex, 1));
+
+            assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
+            assertThat(page.getTotalPages()).isEqualTo(expectedIds.size());
+            assertThat(page.getContent()).extracting(DiscoveryTask::getId).containsExactly(expectedIds.get(pageIndex));
+        }
+        assertThat(discoveryJobService.getAllTasks(new DiscoveryTaskFilter(result, DiscoveryTaskType.SPOTIFY_TOP_TRACKS), PageRequest.of(0, 30)))
+                .isEmpty();
+    }
 
     @Test
     void shouldPageAllJobTasksByUpdateDateWithStableOrderAndNullsLast() {

@@ -88,6 +88,12 @@ public class DiscoveryFacade {
     }
 
     @Transactional(readOnly = true)
+    public DiscoveryTaskPageDto getAllDiscoveryTasks(DiscoveryTaskFilter filter, int pageIndex, int pageSize) {
+        return DiscoveryTaskPageDto.of(discoveryJobService.getAllTasks(filter,
+                PageRequest.of(pageIndex, Math.min(PAGE_SIZE, Math.abs(pageSize)))), this::toDiscoveryTaskSummary);
+    }
+
+    @Transactional(readOnly = true)
     public DiscoveryTaskPageDto getDiscoveryTasks(String discoveryJobId, DiscoveryTaskFilter filter, int pageIndex, int pageSize) throws ObjectNotFoundException {
         if (discoveryJobService.getById(discoveryJobId).isEmpty()) {
             throw new ObjectNotFoundException(DiscoveryJob.class, discoveryJobId);

@@ -224,6 +224,7 @@ export default {
     statusLabel: 'Status:',
     progressLabel: 'Progress:',
     startFullDiscoveryButton: 'Full Discovery',
+    allTasksButton: 'All Tasks',
     startDateColumn: 'Start Date',
     updateDateColumn: 'Update Date',
     typeColumn: 'Type',
@@ -252,6 +253,7 @@ export default {
     logMessageLabel: 'Log message:',
   },
   discoveryTasks: {
+    allHeader: 'All Discovery Tasks',
     jobHeader: 'Job Discovery Tasks',
     artistHeader: 'Artist Discovery Tasks',
     albumHeader: 'Album Discovery Tasks',

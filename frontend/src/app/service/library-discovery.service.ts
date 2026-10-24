@@ -154,6 +154,10 @@ export class LibraryDiscoveryService {
     return this.httpClient.get<DiscoveryJobDetailsDto>(`/api/admin/library/discoveryJobs/${id}/details`);
   }
 
+  getAllDiscoveryTasks(result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
+    return this.getDiscoveryTasksPage('/api/admin/library/discoveryTasks', result, type, pageIndex, pageSize);
+  }
+
   getDiscoveryTasks(jobId: string, result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
     return this.getDiscoveryTasksPage(`/api/admin/library/discoveryJobs/${jobId}/tasks`, result, type, pageIndex, pageSize);
   }

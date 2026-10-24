@@ -167,6 +167,23 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<DiscoveryTask> getAllTasks(DiscoveryTaskFilter filter, Pageable pageable) {
+        DiscoveryTaskFilter.Result result = filter.result();
+        DiscoveryTaskType type = filter.type();
+        if (result == DiscoveryTaskFilter.Result.FAILED) {
+            return type != null ? discoveryTaskRepository.findFailedByType(type, pageable)
+                    : discoveryTaskRepository.findFailed(pageable);
+        }
+        if (result == DiscoveryTaskFilter.Result.NO_RESULT) {
+            return type != null ? discoveryTaskRepository.findWithoutResultByType(type, pageable)
+                    : discoveryTaskRepository.findWithoutResult(pageable);
+        }
+        return type != null ? discoveryTaskRepository.findByType(type, pageable)
+                : discoveryTaskRepository.findAllTasks(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<DiscoveryTask> getJobTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable) {
         DiscoveryTaskFilter.Result result = filter.result();
         DiscoveryTaskType type = filter.type();
