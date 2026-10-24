@@ -75,7 +75,7 @@
   </div>
   @if (currentUser?.role === 'ADMIN') {
     <button title="{{ 'library.toolbar.refreshButton' | translate }}" (click)="startScanJob()" type="button" class="btn btn-sm btn-light refresh">
-      <i class="bi bi-arrow-clockwise" [class.spin]="scanRunning"></i>
+      <i class="bi bi-arrow-clockwise" [class.spin]="scanRunning || discoveryRunning"></i>
     </button>
   }
   @if (currentUser?.role === 'ADMIN') {

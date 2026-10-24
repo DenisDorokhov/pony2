@@ -10,6 +10,7 @@ import {AuthenticationService} from '../../service/authentication.service';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbDropdownModule, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {LibraryScanService} from '../../service/library-scan.service';
+import {LibraryDiscoveryService} from '../../service/library-discovery.service';
 import {Subscription} from 'rxjs';
 import {FastSearchComponent} from './fast-search.component';
 import {QueueComponent} from './modal/queue.component';
@@ -28,6 +29,7 @@ import Role = UserDto.Role;
 export class ToolbarComponent implements OnInit, OnDestroy {
 
   private readonly libraryScanService = inject(LibraryScanService);
+  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly authenticationService = inject(AuthenticationService);
   private readonly playbackService = inject(PlaybackService);
   private readonly themeService = inject(ThemeService);
@@ -38,6 +40,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   currentUser: UserDto | undefined;
 
   scanRunning = false;
+  discoveryRunning = false;
   playbackMode: PlaybackMode;
   currentTheme: Theme;
 
@@ -60,6 +63,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.themeService.observeTheme().subscribe(theme => this.currentTheme = theme));
     this.subscriptions.push(this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
       this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null));
+    this.subscriptions.push(this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe(discoveryJobProgress =>
+      this.discoveryRunning = discoveryJobProgress !== undefined && discoveryJobProgress !== null));
   }
 
   ngOnDestroy(): void {
@@ -69,6 +74,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   startScanJob() {
     if (this.scanRunning) {
       this.openScanning();
+    } else if (this.discoveryRunning) {
+      this.openDiscovery();
     } else {
       this.libraryScanService.startScanJob().subscribe({
         next: () => this.openScanning()
