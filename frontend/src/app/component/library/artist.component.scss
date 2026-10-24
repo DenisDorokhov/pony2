@@ -10,6 +10,13 @@
   }
 }
 
+:host:last-child,
+:host(:has(+ pony-artist .list-group-item.selected)) {
+  .list-group-item::after {
+    display: none;
+  }
+}
+
 .list-group-item:last-child {
   margin-bottom: -1px;
 }
@@ -17,10 +24,22 @@
 .list-group-item {
   border-left-width: 0;
   border-right-width: 0;
+  border-color: transparent;
   padding: 10px;
   cursor: pointer;
   clear: both;
   height: 70px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 68px;
+    right: 10px;
+    bottom: 0;
+    height: 1px;
+    background-color: var(--color-content-divider);
+    opacity: 0.75;
+  }
 
   pony-image-loader {
     float: left;
@@ -64,4 +83,8 @@
 .list-group-item.selected {
   background-color: var(--color-selection-background);
   color: var(--color-selection-text);
+
+  &::after {
+    display: none;
+  }
 }
