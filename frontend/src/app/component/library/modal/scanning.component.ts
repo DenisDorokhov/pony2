@@ -1,9 +1,10 @@
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LibraryScanService} from '../../../service/library-scan.service';
+import {LibraryDiscoveryService} from '../../../service/library-discovery.service';
 import {ScanJobDto, ScanJobProgressDto, ScanProgressDto} from '../../../domain/library.dto';
 import {LoadingState} from '../../../domain/common.model';
 import {CommonModule} from '@angular/common';
@@ -23,6 +24,8 @@ export class ScanningComponent implements OnInit, OnDestroy {
   readonly activeModal = inject(NgbActiveModal);
 
   private readonly libraryScanService = inject(LibraryScanService);
+  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
+  private readonly translateService = inject(TranslateService);
   private readonly libraryService = inject(LibraryService);
   private readonly modal = inject(NgbModal);
 
@@ -41,9 +44,13 @@ export class ScanningComponent implements OnInit, OnDestroy {
   scanProgressValue: number | null | undefined;
 
   private scanJobProgressSubscription: Subscription | undefined;
+  private discoveryJobProgressSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
+  private discoveryRunning = false;
 
   ngOnInit(): void {
+    this.discoveryJobProgressSubscription = this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe(
+      discoveryJobProgress => this.discoveryRunning = !!discoveryJobProgress);
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
@@ -70,6 +77,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.scanJobProgressSubscription?.unsubscribe();
+    this.discoveryJobProgressSubscription?.unsubscribe();
     this.refreshRequestSubscription?.unsubscribe();
   }
 
@@ -88,6 +96,9 @@ export class ScanningComponent implements OnInit, OnDestroy {
   }
 
   startScanJob() {
+    if (this.discoveryRunning && !window.confirm(this.translateService.instant('scanning.stopDiscoveryConfirmation'))) {
+      return;
+    }
     // We will load first page next time to show the scan job appeared.
     this.pageToLoad = {
       pageIndex: 0,

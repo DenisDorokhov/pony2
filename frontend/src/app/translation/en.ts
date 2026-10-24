@@ -160,6 +160,7 @@ export default {
     statusLabel: 'Status:',
     progressLabel: 'Progress:',
     startScanButton: 'Re-Scan',
+    stopDiscoveryConfirmation: 'Starting a scan will stop current discovery process. Do you want to continue?',
     startDateColumn: 'Start Date',
     updateDateColumn: 'Update Date',
     statusColumn: 'Status',
