@@ -94,8 +94,8 @@ $dropdown-min-width: 100px;
   --color-playback-progress-background: #{rgba($color-brand-accent, 0.75)};
   --color-button-background-transparent: transparent;
   --color-like-icon: #{$color-like-icon-light};
-  --color-top-track-icon: var(--color-text-default);
-  --color-top-track-icon-selected: var(--color-selection-text);
+  --color-top-track-icon: #f57c00;
+  --color-top-track-icon-selected: #f57c00;
   --color-new-badge-background: #{$color-new-badge-background-light};
   --color-new-badge-text: var(--bs-white);
   --color-new-badge-border: #{$color-new-badge-border-light};
@@ -158,8 +158,8 @@ $dropdown-min-width: 100px;
 
   --color-button-background-transparent: transparent;
   --color-like-icon: #{$color-like-icon-dark};
-  --color-top-track-icon: var(--color-text-default);
-  --color-top-track-icon-selected: var(--color-selection-text);
+  --color-top-track-icon: #ff8c33;
+  --color-top-track-icon-selected: #ff8c33;
   --color-new-badge-background: #{$color-new-badge-background-dark};
   --color-new-badge-text: var(--bs-white);
   --color-new-badge-border: #{$color-new-badge-border-dark};
@@ -221,6 +221,10 @@ $dropdown-min-width: 100px;
   --bs-pagination-active-color: var(--color-selection-text);
   --bs-pagination-active-bg: var(--color-selection-background);
   --bs-pagination-active-border-color: var(--color-selection-background);
+}
+
+.progress {
+  border: 1px solid var(--bs-border-color);
 }
 
 .pony-logo {
