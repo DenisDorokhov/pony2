@@ -110,12 +110,12 @@ public class DiscoveryTaskLlmExecutor {
                 return call(task, request, responseSchema, cacheSettings, responseHandler);
             } catch (LlmHallucinationException e) {
                 if (restarts >= restartsOnHallucination) {
-                    logService.error(logger, "Model hallucination detected, call chain restart limit exhausted. Discovery task '{}' of type {}.",
-                            task.getId(), task.getType());
+                    logService.error(logger, "Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}.",
+                            task.getType(), restarts, restartsOnHallucination, e);
                     throw e;
                 }
-                logService.warn(logger, "Model hallucination detected, restarting the call chain. Discovery task '{}' of type {}.",
-                        task.getId(), task.getType());
+                logService.warn(logger, "Model hallucination detected for discovery task {}. Restarting call chain: {}/{}.",
+                        task.getType(), restarts + 1, restartsOnHallucination, e);
                 restarts++;
             }
         }

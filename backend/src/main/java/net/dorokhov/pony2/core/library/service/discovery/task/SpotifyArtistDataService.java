@@ -111,7 +111,9 @@ public class SpotifyArtistDataService {
                 if (!(e instanceof IllegalStateException) && !(e instanceof JacksonException)) {
                     throw e;
                 }
-                logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}': {}", artistId, e.getMessage());
+                transactionTemplate.executeWithoutResult(status ->
+                        logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}'.",
+                                artistRepository.findById(artistId).orElseThrow().getName(), e));
                 throw new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
             }
         });
@@ -124,13 +126,13 @@ public class SpotifyArtistDataService {
         Artist artist = artistRepository.findById(artistId).orElseThrow();
         List<Album> albums = artist.getAlbums().stream().sorted().toList();
         if (albums.isEmpty() || (albums.size() == 1 && albums.getFirst().getName() == null)) {
-            logService.info(logger, "Skipping Spotify discovery for artist '{} -> {}': no album title is available to identify the artist.",
-                    artist.getId(), artist.getName());
+            logger.debug("Skipping Spotify discovery for artist '{}': no album title is available to identify the artist.",
+                    artist.getName());
             return null;
         }
         if (artist.getName() == null) {
-            logService.info(logger, "Skipping Spotify discovery for artist '{} -> {}': the artist name is unknown.",
-                    artist.getId(), artist.getName());
+            logger.debug("Skipping Spotify discovery for artist '{}': the artist name is unknown.",
+                    artist.getId());
             return null;
         }
         String albumList = albums.stream()

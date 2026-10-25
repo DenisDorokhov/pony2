@@ -14,15 +14,11 @@ import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzAlbumDa
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ALBUM_DISCOVERY;
-import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Service
 public class AlbumDiscoveryService {
@@ -33,22 +29,19 @@ public class AlbumDiscoveryService {
     private final MusicBrainzAlbumDataService musicBrainzAlbumDataService;
     private final DiscoveryTaskExecutor taskExecutor;
     private final LogService logService;
-    private final TransactionTemplate transactionTemplate;
 
     public AlbumDiscoveryService(
             LibraryJobSynchronizer jobSynchronizer,
             DiscoveryTaskRepository taskRepository,
             MusicBrainzAlbumDataService musicBrainzAlbumDataService,
             DiscoveryTaskExecutor taskExecutor,
-            LogService logService,
-            PlatformTransactionManager transactionManager
+            LogService logService
     ) {
         this.jobSynchronizer = jobSynchronizer;
         this.taskRepository = taskRepository;
         this.musicBrainzAlbumDataService = musicBrainzAlbumDataService;
         this.taskExecutor = taskExecutor;
         this.logService = logService;
-        transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
     public void discover(DiscoveryJob discoveryJob, Album album, @Nullable Consumer<DiscoveryProgress> observer) {
@@ -77,11 +70,11 @@ public class AlbumDiscoveryService {
 
         @Override
         public DiscoveryTask startTask() {
-            return requireNonNull(transactionTemplate.execute(status -> taskRepository.save(new DiscoveryTask()
+            return taskRepository.save(new DiscoveryTask()
                     .setJob(job)
                     .setAlbum(album)
                     .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
-                    .setStatus(DiscoveryTask.Status.STARTED))));
+                    .setStatus(DiscoveryTask.Status.STARTED));
         }
 
         @Nullable
@@ -92,7 +85,9 @@ public class AlbumDiscoveryService {
 
         @Override
         public void onError(DiscoveryTask task, Throwable error) {
-            logService.error(logger, "Could not discover MusicBrainz data for album '{} -> {}'.", album.getId(), album.getName(), error);
+            Album currentAlbum = requireNonNull(task.getAlbum());
+            logService.error(logger, "Could not discover MusicBrainz data for album '{}' -> '{}'.",
+                    currentAlbum.getArtist().getName(), currentAlbum.getName(), error);
         }
     }
 

@@ -6,7 +6,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 public interface DiscoveryTaskExecution<R> {
 
     /**
-     * Creates and commits the STARTED task and its associations before execution begins.
+     * Creates the STARTED task and its associations in a transaction committed by the executor before execution begins.
      */
     DiscoveryTask startTask();
 
@@ -26,7 +26,8 @@ public interface DiscoveryTaskExecution<R> {
     }
 
     /**
-     * Runs after FAILED is committed, except for discovery interruption or a failure to start the task.
+     * Runs in a new transaction with a managed task after FAILED is committed,
+     * except for discovery interruption or a failure to start the task.
      * Hook failures are logged without changing the task status.
      */
     default void onError(DiscoveryTask task, Throwable error) {

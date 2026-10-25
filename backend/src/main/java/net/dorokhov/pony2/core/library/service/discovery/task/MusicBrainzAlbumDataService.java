@@ -220,7 +220,7 @@ public class MusicBrainzAlbumDataService {
                 }
                 return new NormalizationResponse((String) searchTitle, validatedFragments, validatedTitles);
             } catch (RuntimeException e) {
-                throw invalidResponse(task, NORMALIZATION_CACHE_PREFIX, e);
+                throw invalidResponse(task, LlmStage.ALBUM_TITLE_NORMALIZATION, e);
             }
         });
     }
@@ -297,7 +297,8 @@ public class MusicBrainzAlbumDataService {
         Request request = new Request(releaseGroupPrompt, context(input, response, false) + trackContext,
                 context(input, response, true) + trackContext,
                 configService.get().llmModel());
-        String id = selectId(task, request, candidates.keySet(), "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP", cacheEnabled);
+        String id = selectId(task, request, candidates.keySet(), "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP",
+                LlmStage.RELEASE_GROUP_SELECTION, cacheEnabled);
         return id != null ? candidates.get(id) : null;
     }
 
@@ -323,11 +324,15 @@ public class MusicBrainzAlbumDataService {
         String selectedGroup = "\nSelected release group ID: " + JsonConverter.toJson(group.id());
         Request request = new Request(artistPrompt, context(input, response, false) + selectedGroup,
                 context(input, response, true) + selectedGroup, configService.get().llmModel());
-        return selectId(task, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST", cacheEnabled);
+        return selectId(task, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST",
+                LlmStage.ARTIST_SELECTION, cacheEnabled);
     }
 
     @Nullable
-    private String selectId(DiscoveryTask task, Request request, Set<String> candidates, String keyPrefix, boolean cacheEnabled) {
+    private String selectId(
+            DiscoveryTask task, Request request, Set<String> candidates,
+            String keyPrefix, LlmStage stage, boolean cacheEnabled
+    ) {
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, keyPrefix, CACHE_VERSION) : null;
         return llmExecutor.call(task, request, IdResponse.class, cacheSettings, response -> {
@@ -341,17 +346,25 @@ public class MusicBrainzAlbumDataService {
                         "The LLM must return one of the supplied candidate IDs or null in the id field.");
                 return (String) id;
             } catch (RuntimeException e) {
-                throw invalidResponse(task, keyPrefix, e);
+                throw invalidResponse(task, stage, e);
             }
         });
     }
 
-    private LlmFollowUpException invalidResponse(DiscoveryTask task, String selection, RuntimeException error) {
+    private LlmFollowUpException invalidResponse(DiscoveryTask task, LlmStage stage, RuntimeException error) {
         String albumId = requireNonNull(task.getAlbum(),
                 () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
-        logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' during '{}': {}",
-                albumId, selection, error.getMessage());
-        String prompt = NORMALIZATION_CACHE_PREFIX.equals(selection) ? normalizationVerificationPrompt : verificationPrompt;
+        String stageDescription = switch (stage) {
+            case ALBUM_TITLE_NORMALIZATION -> "album title normalization";
+            case RELEASE_GROUP_SELECTION -> "release group selection";
+            case ARTIST_SELECTION -> "artist selection";
+        };
+        transactionTemplate.executeWithoutResult(status -> {
+            Album album = albumRepository.findById(albumId).orElseThrow();
+            logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' -> '{}' during {}.",
+                    album.getArtist().getName(), album.getName(), stageDescription, error);
+        });
+        String prompt = stage == LlmStage.ALBUM_TITLE_NORMALIZATION ? normalizationVerificationPrompt : verificationPrompt;
         return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
@@ -389,6 +402,12 @@ public class MusicBrainzAlbumDataService {
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
         }
+    }
+
+    private enum LlmStage {
+        ALBUM_TITLE_NORMALIZATION,
+        RELEASE_GROUP_SELECTION,
+        ARTIST_SELECTION
     }
 
     @JsonPropertyOrder({"title", "year", "artistName"})

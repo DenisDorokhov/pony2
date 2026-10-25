@@ -17,6 +17,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -98,6 +100,7 @@ class DiscoveryTaskExecutorTest {
         IllegalStateException hookFailure = new IllegalStateException("Hook failed");
         when(execution.startTask()).thenReturn(task);
         when(execution.executeTask(task)).thenThrow(taskFailure);
+        when(taskRepository.findById(task.getId())).thenReturn(Optional.of(task));
         doThrow(hookFailure).when(execution).onError(task, taskFailure);
 
         DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
@@ -120,6 +123,7 @@ class DiscoveryTaskExecutorTest {
         Throwable failure = error ? new AssertionError("Task failed") : new IllegalArgumentException("Task failed");
         when(execution.startTask()).thenReturn(task);
         when(execution.executeTask(task)).thenThrow(failure);
+        when(taskRepository.findById(task.getId())).thenReturn(Optional.of(task));
 
         DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
 
@@ -175,6 +179,7 @@ class DiscoveryTaskExecutorTest {
 
     private DiscoveryTask task() {
         return new DiscoveryTask()
+                .setId("task")
                 .setJob(new DiscoveryJob().setId("job"))
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(DiscoveryTask.Status.STARTED);

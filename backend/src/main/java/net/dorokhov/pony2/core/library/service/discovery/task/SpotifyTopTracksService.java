@@ -206,7 +206,9 @@ public class SpotifyTopTracksService {
         if (!(error instanceof IllegalStateException) && !(error instanceof JacksonException)) {
             return error;
         }
-        logService.warn(logger, "Invalid Spotify top tracks response from the LLM for artist '{}': {}", artistId, error.getMessage());
+        transactionTemplate.executeWithoutResult(status ->
+                logService.warn(logger, "Invalid Spotify top tracks response from the LLM for artist '{}'.",
+                        artistRepository.findById(artistId).orElseThrow().getName(), error));
         return new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 

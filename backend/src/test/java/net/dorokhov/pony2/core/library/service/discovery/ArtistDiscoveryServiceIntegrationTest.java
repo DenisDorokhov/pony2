@@ -356,13 +356,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         verify(model).call(any(Prompt.class));
         assertThat(logRepository.findAll()).anySatisfy(log -> {
             assertThat(log.getLevel()).isEqualTo(LogMessage.Level.ERROR);
-            assertThat(log.getText()).contains("Could not discover Spotify data", artist.getName(), artist.getId());
+            assertThat(log.getText()).isEqualTo("Could not discover Spotify data for artist '" + artist.getName() + "'.");
         });
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldCompleteTaskAndLogSkipWithoutCallingLlmForSingleNullAlbum(boolean existingIndex) {
+    void shouldCompleteTaskWithoutCallingLlmForSingleNullAlbum(boolean existingIndex) {
         Artist artist = saveArtist(null);
         List<DiscoveryProgress> progress = new ArrayList<>();
         if (existingIndex) {
@@ -389,7 +389,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         } else {
             assertThat(artistDiscoveryIndexRepository.count()).isZero();
         }
-        assertThat(logRepository.findAll()).anySatisfy(log -> assertThat(log.getText()).contains("no album title"));
+        assertThat(logRepository.findAll()).isEmpty();
         verify(model, never()).call(any(Prompt.class));
     }
 

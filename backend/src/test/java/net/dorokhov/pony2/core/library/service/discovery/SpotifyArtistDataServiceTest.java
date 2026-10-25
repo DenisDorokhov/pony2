@@ -266,7 +266,8 @@ class SpotifyArtistDataServiceTest {
         assertThat(verificationPrompt).contains("Recheck the entire answer", "all URLs");
         assertThat(((ToolCallingChatOptions) verification.getOptions()).getToolCallbacks())
                 .extracting(callback -> callback.getToolDefinition().name()).containsExactly("browser_navigate");
-        verify(logService).warn(any(), contains("Invalid Spotify response"), eq(artist.getId()), anyString());
+        verify(logService).warn(any(), eq("Invalid Spotify response from the LLM for artist '{}'."),
+                eq(artist.getName()), any(RuntimeException.class));
         assertThat(cache).hasSize(1);
         Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
         assertThat(entry.get("response")).isEqualTo(response);
@@ -306,7 +307,8 @@ class SpotifyArtistDataServiceTest {
         assertThatThrownBy(() -> service.discover(task(artist), true)).isInstanceOf(RuntimeException.class);
         assertThat(cache).isEmpty();
         assertThat(modelCalls).isEqualTo(4);
-        verify(logService, times(2)).warn(any(), contains("Invalid Spotify response"), eq(artist.getId()), anyString());
+        verify(logService, times(2)).warn(any(), eq("Invalid Spotify response from the LLM for artist '{}'."),
+                eq(artist.getName()), any(RuntimeException.class));
     }
 
     @ParameterizedTest
@@ -508,7 +510,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist), true)).isEmpty();
 
-        verify(logService).info(any(), contains("no album title"), eq(artist.getId()), eq(artist.getName()));
+        verifyNoInteractions(logService);
         verify(model, never()).call(any(Prompt.class));
         verifyNoInteractions(cacheService);
     }
@@ -519,7 +521,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist), true)).isEmpty();
 
-        verify(logService).info(any(), contains("artist name is unknown"), eq(artist.getId()), eq(artist.getName()));
+        verifyNoInteractions(logService);
         verify(model, never()).call(any(Prompt.class));
         verifyNoInteractions(cacheService);
     }

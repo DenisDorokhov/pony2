@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
@@ -27,7 +26,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -279,8 +277,19 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             case GENRE, SONG ->
                     throw new UnsupportedOperationException("Discovery type " + discoveryType + " is not supported yet.");
         }
-        String jobDescription = discoveryJobDescription(startingJob);
-        Optional<LogMessage> logStarting = logService.info(logger, "Starting discovery job {}... Cache enabled: {}.", jobDescription, cacheEnabled);
+        String targetName = switch (startingJob.getType()) {
+            case FULL -> null;
+            case GENRE -> startingJob.getGenre() != null ? startingJob.getGenre().getName() : null;
+            case ARTIST -> startingJob.getArtist() != null ? startingJob.getArtist().getName() : null;
+            case ALBUM -> startingJob.getAlbum() != null ? startingJob.getAlbum().getName() : null;
+            case SONG -> startingJob.getSong() != null ? startingJob.getSong().getName() : null;
+        };
+        String targetDescription = startingJob.getType().name().toLowerCase(Locale.ROOT) +
+                (targetName != null ? " '" + targetName + "'" : "");
+        String cacheNote = cacheEnabled ? "" : " (cache disabled)";
+        Optional<LogMessage> logStarting = logService.info(logger, "{}{}.",
+                discoveryType == DiscoveryType.FULL ? "Starting full discovery job" : "Starting discovery job for " + targetDescription,
+                cacheNote);
         DiscoveryJob discoveryJob = discoveryJobRepository.save(startingJob.setLogMessage(logStarting.orElse(null)));
 
         registerSynchronization(new TransactionSynchronization() {
@@ -288,19 +297,19 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             public void afterCommit() {
                 onDiscoveryJobStatusChange(discoveryJob);
                 discoveryJobExecutor.execute(() -> {
-                    Stopwatch stopwatch = Stopwatch.createStarted();
                     DiscoveryJob currentDiscoveryJob = discoveryJob;
                     try {
                         jobSynchronizer.interruptDiscoveryIfCancelled();
                         currentDiscoveryJob = changeDiscoveryJobStatusInTransaction(() -> {
-                            Optional<LogMessage> logStarted = logService.info(logger, "Started discovery job '{}' ({}). Cache enabled: {}.",
-                                    discoveryJob.getId(), jobDescription, cacheEnabled);
+                            Optional<LogMessage> logStarted = logService.info(logger, "{}{}.",
+                                    discoveryType == DiscoveryType.FULL ? "Full discovery job started" : "Discovery job started for " + targetDescription,
+                                    cacheNote);
                             return discoveryJobRepository.save(discoveryJob
                                     .setStatus(STARTED)
                                     .setLogMessage(logStarted.orElse(null)));
                         });
                         doDiscoveryJob(currentDiscoveryJob, cacheEnabled);
-                        completeDiscoveryJob(currentDiscoveryJob, stopwatch);
+                        completeDiscoveryJob(currentDiscoveryJob);
                     } catch (Throwable t) {
                         try {
                             DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
@@ -320,7 +329,11 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                                                     .setLogMessage(logMessage.orElse(null)));
                                 } else {
                                     Optional<LogMessage> logMessage = logService.error(logger,
-                                            "Unexpected error occurred when performing discovery job {}.", jobDescription, t);
+                                            "{} due to an unexpected error.",
+                                            discoveryType == DiscoveryType.FULL
+                                                    ? "Full discovery job failed"
+                                                    : "Discovery job failed for " + targetDescription,
+                                            t);
                                     return discoveryJobRepository.save(
                                             discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
                                                     .setStatus(FAILED)
@@ -348,17 +361,6 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         return discoveryJob;
     }
 
-    private String discoveryJobDescription(DiscoveryJob job) {
-        String targetId = switch (job.getType()) {
-            case FULL -> null;
-            case GENRE -> job.getGenre() != null ? job.getGenre().getId() : null;
-            case ARTIST -> job.getArtist() != null ? job.getArtist().getId() : null;
-            case ALBUM -> job.getAlbum() != null ? job.getAlbum().getId() : null;
-            case SONG -> job.getSong() != null ? job.getSong().getId() : null;
-        };
-        return targetId != null ? job.getType() + " for " + targetId : job.getType().toString();
-    }
-
     private void doDiscoveryJob(DiscoveryJob discoveryJob, boolean cacheEnabled) {
         Consumer<DiscoveryProgress> progressObserver = discoveryProgress ->
                 onDiscoveryJobProgress(new DiscoveryJobProgress(discoveryJob, discoveryProgress));
@@ -382,7 +384,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         }
     }
 
-    private void completeDiscoveryJob(DiscoveryJob discoveryJob, Stopwatch stopwatch) {
+    private void completeDiscoveryJob(DiscoveryJob discoveryJob) {
 
         long totalTasks = discoveryTaskRepository.countByJobId(discoveryJob.getId());
         long completedTasks = discoveryTaskRepository.countByJobIdAndStatus(discoveryJob.getId(), DiscoveryTask.Status.COMPLETE);
@@ -404,33 +406,38 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             default -> throw new IllegalStateException("Unexpected discovery job status.");
         }
 
-        changeDiscoveryJobStatusInTransaction(() -> discoveryJobRepository.save(discoveryJob
-                .setStatus(status)
-                .setLogMessage(completionLogMessage(discoveryJob, status, completedTasks, failedTasks,
-                        stopwatch.elapsed()).orElse(null))));
-    }
+        changeDiscoveryJobStatusInTransaction(() -> {
+            DiscoveryJob completedJob = discoveryJobRepository.save(discoveryJob.setStatus(status));
 
-    private Optional<LogMessage> completionLogMessage(
-            DiscoveryJob discoveryJob,
-            DiscoveryJob.Status status,
-            long completedTasks,
-            long failedTasks,
-            Duration duration
-    ) {
-        String resultDescription = String.format(
-                "Job '%s' (%s). Completed tasks: %s, failed tasks: %s, duration: %s",
-                discoveryJob.getId(),
-                discoveryJobDescription(discoveryJob),
-                completedTasks,
-                failedTasks,
-                duration
-        );
-        return switch (status) {
-            case COMPLETE -> logService.info(logger, "Discovery job complete: {}.", resultDescription);
-            case MODERATE -> logService.warn(logger, "Discovery job complete with failed tasks: {}.", resultDescription);
-            case FAILED -> logService.error(logger, "Discovery job failed: {}.", resultDescription);
-            default -> throw new IllegalStateException("Unexpected discovery job status.");
-        };
+            String targetName = switch (completedJob.getType()) {
+                case FULL -> null;
+                case GENRE -> completedJob.getGenre() != null ? completedJob.getGenre().getName() : null;
+                case ARTIST -> completedJob.getArtist() != null ? completedJob.getArtist().getName() : null;
+                case ALBUM -> completedJob.getAlbum() != null ? completedJob.getAlbum().getName() : null;
+                case SONG -> completedJob.getSong() != null ? completedJob.getSong().getName() : null;
+            };
+            String jobDescription = completedJob.getType() == DiscoveryType.FULL
+                    ? "Full discovery job"
+                    : "Discovery job";
+            String targetDescription = completedJob.getType() == DiscoveryType.FULL
+                    ? ""
+                    : " for " + completedJob.getType().name().toLowerCase(Locale.ROOT) +
+                            (targetName != null ? " '" + targetName + "'" : "");
+
+            Optional<LogMessage> logMessage = switch (status) {
+                case COMPLETE -> logService.info(logger,
+                        "{} completed{}, completed tasks: {}, failed tasks: {}.",
+                        jobDescription, targetDescription, completedTasks, failedTasks);
+                case MODERATE -> logService.warn(logger,
+                        "{} completed with errors{}, completed tasks: {}, failed tasks: {}.",
+                        jobDescription, targetDescription, completedTasks, failedTasks);
+                case FAILED -> logService.error(logger,
+                        "{} failed{}, completed tasks: {}, failed tasks: {}.",
+                        jobDescription, targetDescription, completedTasks, failedTasks);
+                default -> throw new IllegalStateException("Unexpected discovery job status.");
+            };
+            return completedJob.setLogMessage(logMessage.orElse(null));
+        });
     }
 
     private DiscoveryJob onDiscoveryJobStatusChange(DiscoveryJob discoveryJob) {

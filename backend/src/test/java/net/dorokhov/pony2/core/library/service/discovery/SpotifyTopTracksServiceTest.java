@@ -237,6 +237,8 @@ class SpotifyTopTracksServiceTest {
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
         assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(invalidResponse, ALBUM_RESPONSE, TRACK_RESPONSE);
         assertThat(cache).hasSize(2);
+        verify(logService).warn(any(), eq("Invalid Spotify top tracks response from the LLM for artist '{}'."),
+                eq(artist.getName()), any(RuntimeException.class));
     }
 
     @Test

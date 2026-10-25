@@ -141,11 +141,11 @@ public class ArtistDiscoveryService {
     }
 
     private DiscoveryTask startTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type) {
-        return requireNonNull(transactionTemplate.execute(status -> discoveryTaskRepository.save(new DiscoveryTask()
+        return discoveryTaskRepository.save(new DiscoveryTask()
                 .setJob(job)
                 .setArtist(artist)
                 .setType(type)
-                .setStatus(DiscoveryTask.Status.STARTED))));
+                .setStatus(DiscoveryTask.Status.STARTED));
     }
 
     private void notifyProgressObserver(DiscoveryProgress discoveryProgress, @Nullable Consumer<DiscoveryProgress> handler) {
@@ -195,8 +195,8 @@ public class ArtistDiscoveryService {
 
         @Override
         public void onError(DiscoveryTask task, Throwable error) {
-            logService.error(logger, "Could not discover Spotify data for artist '{} -> {}'.",
-                    artist.getId(), artist.getName(), error);
+            logService.error(logger, "Could not discover Spotify data for artist '{}'.",
+                    artist.getName(), error);
         }
     }
 
@@ -224,8 +224,8 @@ public class ArtistDiscoveryService {
 
         @Override
         public void onError(DiscoveryTask task, Throwable error) {
-            logService.error(logger, "Could not match Spotify top tracks for artist '{} -> {}'.",
-                    artist.getId(), artist.getName(), error);
+            logService.error(logger, "Could not match Spotify top tracks for artist '{}'.",
+                    artist.getName(), error);
         }
     }
 }

@@ -158,6 +158,8 @@ public class DiscoveryJobServiceImplTest {
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
         verify(logService, times(3)).info(any(), any(), any(Object[].class));
+        verify(logService).info(any(), eq("{} completed{}, completed tasks: {}, failed tasks: {}."),
+                eq("Full discovery job"), eq(""), eq(0L), eq(0L));
         verify(fullDiscoveryService).discover(any(), eq(true), any());
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
@@ -236,6 +238,8 @@ public class DiscoveryJobServiceImplTest {
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
         verify(artistDiscoveryService).discover(any(), same(artist), eq(true), any());
+        verify(logService).info(any(), eq("{} completed{}, completed tasks: {}, failed tasks: {}."),
+                eq("Discovery job"), eq(" for artist 'someArtist'"), eq(0L), eq(0L));
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getType()).isSameAs(ARTIST);
@@ -297,11 +301,11 @@ public class DiscoveryJobServiceImplTest {
     @Test
     public void shouldModerateDiscoveryJobOnPartiallyFailedTasks() throws ConcurrentLibraryJobException {
 
-        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
+        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1").setName("Pink Floyd")));
         when(discoveryTaskRepository.countByJobId(any())).thenReturn(2L);
         when(discoveryTaskRepository.countByJobIdAndStatus(any(), any())).thenReturn(1L);
         when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
-        when(logService.warn(any(), any(), any())).thenReturn(logMessage());
+        when(logService.warn(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
 
         DiscoveryJobServiceObserver observer = new DiscoveryJobServiceObserver();
@@ -312,7 +316,8 @@ public class DiscoveryJobServiceImplTest {
 
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
-        verify(logService).warn(any(), any(), any());
+        verify(logService).warn(any(), eq("{} completed with errors{}, completed tasks: {}, failed tasks: {}."),
+                eq("Discovery job"), eq(" for artist 'Pink Floyd'"), eq(1L), eq(1L));
 
         DiscoveryJob discoveryJobModerate = savedDiscoveryJob.getValue();
         assertThat(discoveryJobModerate.getStatus()).isSameAs(MODERATE);
@@ -327,11 +332,11 @@ public class DiscoveryJobServiceImplTest {
     @Test
     public void shouldFailDiscoveryJobWhenAllTasksFailed() throws ConcurrentLibraryJobException {
 
-        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
+        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1").setName("Pink Floyd")));
         when(discoveryTaskRepository.countByJobId(any())).thenReturn(2L);
         when(discoveryTaskRepository.countByJobIdAndStatus(any(), any())).thenReturn(0L);
         when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
-        when(logService.error(any(), any(), any())).thenReturn(logMessage());
+        when(logService.error(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
 
         DiscoveryJobServiceObserver observer = new DiscoveryJobServiceObserver();
@@ -342,7 +347,8 @@ public class DiscoveryJobServiceImplTest {
 
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
-        verify(logService).error(any(), any(), any());
+        verify(logService).error(any(), eq("{} failed{}, completed tasks: {}, failed tasks: {}."),
+                eq("Discovery job"), eq(" for artist 'Pink Floyd'"), eq(0L), eq(2L));
 
         DiscoveryJob discoveryJobFailed = savedDiscoveryJob.getValue();
         assertThat(discoveryJobFailed.getStatus()).isSameAs(FAILED);
@@ -379,7 +385,7 @@ public class DiscoveryJobServiceImplTest {
     @Test
     public void shouldFailDiscoveryJobOnUnexpectedException() throws ConcurrentLibraryJobException {
 
-        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1")));
+        when(artistRepository.findById("artist1")).thenReturn(Optional.of(artist("artist1").setName("Pink Floyd")));
         doThrow(new RuntimeException()).when(artistDiscoveryService).discover(any(), any(), eq(true), any());
         when(logService.info(any(), any(), any(Object[].class))).thenReturn(logMessage());
         when(logService.error(any(), any(), any(), any())).thenReturn(logMessage());
@@ -395,7 +401,8 @@ public class DiscoveryJobServiceImplTest {
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
         verify(logService, times(2)).info(any(), any(), any(Object[].class));
-        verify(logService).error(any(), any(), any(), any());
+        verify(logService).error(any(), eq("{} due to an unexpected error."),
+                eq("Discovery job failed for artist 'Pink Floyd'"), any(RuntimeException.class));
 
         DiscoveryJob discoveryJobFailed = savedDiscoveryJob.getValue();
         assertThat(discoveryJobFailed.getType()).isSameAs(ARTIST);

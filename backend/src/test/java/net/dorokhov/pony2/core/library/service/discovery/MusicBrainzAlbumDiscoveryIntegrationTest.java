@@ -43,6 +43,7 @@ import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
 import net.dorokhov.pony2.core.user.repository.UserRepository;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,6 +102,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     private static final String EMPTY_SEARCH_RESPONSE = "{\"count\":0,\"offset\":0,\"release-groups\":[]}";
 
     @Autowired private AlbumDiscoveryService albumService;
+    @Autowired private DiscoveryTaskExecutor taskExecutor;
     @Autowired private MusicBrainzAlbumDataService musicBrainzAlbumDataService;
     @Autowired private ArtistDiscoveryService artistService;
     @Autowired private FullDiscoveryService fullDiscoveryService;
@@ -417,6 +419,70 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             client.onApplicationShutdown();
             server.stop(0);
         }
+    }
+
+    @Test
+    void shouldLogArtistAndAlbumNamesWhenDiscoveryFailsForDetachedAlbum() {
+        Album detachedAlbum = albumRepository.findById(album.getId()).orElseThrow();
+        assertThat(Hibernate.isInitialized(detachedAlbum.getArtist())).isFalse();
+        doThrow(new IllegalStateException("MusicBrainz unavailable")).when(session).searchReleaseGroups(anyString());
+
+        albumService.discover(job(DiscoveryType.ALBUM), detachedAlbum, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(logRepository.findAll())
+                .filteredOn(message -> message.getLevel() == LogMessage.Level.ERROR)
+                .extracting(LogMessage::getText)
+                .containsExactly("Could not discover MusicBrainz data for album 'Slayer' -> 'Reign in Blood'.");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldManageTaskLifecycleTransactionsAndPreserveFailedStatus(boolean errorHookFails) {
+        DiscoveryJob discoveryJob = job(DiscoveryType.ALBUM);
+        IllegalStateException taskFailure = new IllegalStateException("Discovery failed");
+        AtomicInteger errorHookCalls = new AtomicInteger();
+
+        DiscoveryTaskExecutor.TaskResult<String> result = taskExecutor.execute(new DiscoveryTaskExecution<String>() {
+            @Override
+            public DiscoveryTask startTask() {
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+                return taskRepository.save(new DiscoveryTask()
+                        .setJob(discoveryJob)
+                        .setAlbum(album)
+                        .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
+                        .setStatus(DiscoveryTask.Status.STARTED));
+            }
+
+            @Override
+            public String executeTask(DiscoveryTask task) {
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+                assertThat(taskRepository.findById(task.getId()).orElseThrow().getStatus())
+                        .isEqualTo(DiscoveryTask.Status.STARTED);
+                throw taskFailure;
+            }
+
+            @Override
+            public void onError(DiscoveryTask task, Throwable error) {
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+                assertThat(error).isSameAs(taskFailure);
+                Album taskAlbum = task.getAlbum();
+                assertThat(taskAlbum).isNotNull();
+                assertThat(taskAlbum.getArtist().getName()).isEqualTo("Slayer");
+                DiscoveryTask.Status committedStatus = getTransactionTemplate().execute(status ->
+                        taskRepository.findById(task.getId()).orElseThrow().getStatus());
+                assertThat(committedStatus).isEqualTo(DiscoveryTask.Status.FAILED);
+                errorHookCalls.incrementAndGet();
+                if (errorHookFails) {
+                    throw new IllegalStateException("Error hook failed");
+                }
+            }
+        });
+
+        assertThat(errorHookCalls).hasValue(1);
+        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
+        assertThat(onlyTask().getResult()).contains("Discovery failed").doesNotContain("Error hook failed");
     }
 
     @Test
@@ -756,8 +822,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(logRepository.findAll()).filteredOn(log -> log.getText().startsWith("Invalid MusicBrainz response from the LLM"))
                 .singleElement().satisfies(log -> {
                     assertThat(log.getLevel()).isEqualTo(LogMessage.Level.WARN);
-                    assertThat(log.getText()).contains(album.getId(), artistSelection ? "MUSICBRAINZ_ALBUM_DATA_ARTIST" : "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP");
-                    assertThat(log.getArguments().getLast()).isNotBlank();
+                    assertThat(log.getText()).contains(artist.getName(), album.getName(),
+                            artistSelection ? "artist selection" : "release group selection");
+                    assertThat(log.getArguments().getLast()).contains("Exception", "\tat ");
                 });
         verify(model, times(2)).call(any(Prompt.class));
     }
@@ -1069,8 +1136,10 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(captor.getAllValues().get(1).getInstructions()).anySatisfy(message ->
                 assertThat(message.getText()).contains("Your previous response was invalid", diagnostic, "searchTitle", "searchFragments", "alternativeTitles")
                         .doesNotContain("Always include id"));
-        assertThat(logRepository.findAll()).anySatisfy(log ->
-                assertThat(log.getText()).contains("MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION", diagnostic));
+        assertThat(logRepository.findAll()).anySatisfy(log -> {
+            assertThat(log.getText()).contains(artist.getName(), album.getName(), "album title normalization");
+            assertThat(log.getArguments().getLast()).contains(diagnostic, "\tat ");
+        });
 
         albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 

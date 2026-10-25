@@ -15,6 +15,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import static java.util.Objects.requireNonNull;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Service
@@ -44,7 +45,7 @@ public class DiscoveryTaskExecutor {
 
     private <R> TaskResult<R> executeRegisteredTask(DiscoveryTaskExecution<R> execution) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        DiscoveryTask task = execution.startTask();
+        DiscoveryTask task = requireNonNull(transactionTemplate.execute(status -> execution.startTask()));
         logger.debug("Started discovery task '{}' of type {} in job '{}'.",
                 task.getId(), task.getType(), task.getJob().getId());
         R result;
@@ -61,7 +62,8 @@ public class DiscoveryTaskExecutor {
                     task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed(), t);
             try {
                 saveResult(task, DiscoveryTask.Status.FAILED, JsonConverter.toJson(new DiscoveryTask.ErrorResult(Throwables.getStackTraceAsString(t))));
-                execution.onError(task, t);
+                transactionTemplate.executeWithoutResult(status ->
+                        execution.onError(discoveryTaskRepository.findById(task.getId()).orElseThrow(), t));
             } catch (Throwable failure) {
                 logger.error("Could not finalize failed discovery task '{}'.", task.getId(), failure);
             }

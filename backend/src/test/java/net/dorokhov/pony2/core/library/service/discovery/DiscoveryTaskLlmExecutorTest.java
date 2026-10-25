@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
@@ -317,8 +319,8 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(prompts.get(2).getInstructions()).noneMatch(ToolResponseMessage.class::isInstance);
         assertThat(prompts.getLast().getInstructions().getLast().getText()).isEqualTo("Collected artist data");
         assertThat(cache).hasSize(1);
-        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
-                eq(task.getId()), eq(task.getType()));
+        verify(logService).warn(any(), eq("Model hallucination detected for discovery task {}. Restarting call chain: {}/{}."),
+                eq(task.getType()), eq(1), eq(1), any(LlmHallucinationException.class));
         verifyNoMoreInteractions(logService);
     }
 
@@ -342,10 +344,10 @@ class DiscoveryTaskLlmExecutorTest {
 
         verify(model, times(afterFollowUp ? 6 : 2)).call(any(Prompt.class));
         assertThat(cache).isEmpty();
-        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
-                eq(task.getId()), eq(task.getType()));
-        verify(logService).error(any(), startsWith("Model hallucination detected, call chain restart limit exhausted."),
-                eq(task.getId()), eq(task.getType()));
+        verify(logService).warn(any(), eq("Model hallucination detected for discovery task {}. Restarting call chain: {}/{}."),
+                eq(task.getType()), eq(1), eq(1), any(LlmHallucinationException.class));
+        verify(logService).error(any(), eq("Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}."),
+                eq(task.getType()), eq(1), eq(1), any(LlmHallucinationException.class));
         verifyNoMoreInteractions(logService);
     }
 
@@ -376,10 +378,13 @@ class DiscoveryTaskLlmExecutorTest {
                     .hasMessage("Model tool call hallucination detected in the LLM data collection response.");
 
             verify(model, times(expectedRestarts + 1)).call(any(Prompt.class));
+            ArgumentCaptor<Integer> restartNumbers = ArgumentCaptor.forClass(Integer.class);
             verify(logService, times(expectedRestarts)).warn(any(),
-                    startsWith("Model hallucination detected, restarting the call chain."), eq(task.getId()), eq(task.getType()));
-            verify(logService).error(any(), startsWith("Model hallucination detected, call chain restart limit exhausted."),
-                    eq(task.getId()), eq(task.getType()));
+                    eq("Model hallucination detected for discovery task {}. Restarting call chain: {}/{}."),
+                    eq(task.getType()), restartNumbers.capture(), eq(expectedRestarts), any(LlmHallucinationException.class));
+            assertThat(restartNumbers.getAllValues()).containsExactlyElementsOf(IntStream.rangeClosed(1, expectedRestarts).boxed().toList());
+            verify(logService).error(any(), eq("Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}."),
+                    eq(task.getType()), eq(expectedRestarts), eq(expectedRestarts), any(LlmHallucinationException.class));
             assertThat(cache).isEmpty();
         });
     }
@@ -394,10 +399,10 @@ class DiscoveryTaskLlmExecutorTest {
         })).isSameAs(hallucination);
 
         verify(model, times(4)).call(any(Prompt.class));
-        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
-                eq(task.getId()), eq(task.getType()));
-        verify(logService).error(any(), startsWith("Model hallucination detected, call chain restart limit exhausted."),
-                eq(task.getId()), eq(task.getType()));
+        verify(logService).warn(any(), eq("Model hallucination detected for discovery task {}. Restarting call chain: {}/{}."),
+                eq(task.getType()), eq(1), eq(1), same(hallucination));
+        verify(logService).error(any(), eq("Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}."),
+                eq(task.getType()), eq(1), eq(1), same(hallucination));
         assertThat(cache).isEmpty();
     }
 
@@ -421,8 +426,8 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(prompts).hasSize(restartedPromptIndex + 2);
         assertThat(prompts.get(restartedPromptIndex).getInstructions()).extracting(Message::getText)
                 .containsExactlyElementsOf(prompts.getFirst().getInstructions().stream().map(Message::getText).toList());
-        verify(logService).warn(any(), startsWith("Model hallucination detected, restarting the call chain."),
-                eq(task.getId()), eq(task.getType()));
+        verify(logService).warn(any(), eq("Model hallucination detected for discovery task {}. Restarting call chain: {}/{}."),
+                eq(task.getType()), eq(1), eq(1), any(LlmHallucinationException.class));
         verifyNoMoreInteractions(logService);
         assertThat(cache).hasSize(1);
         assertThat(operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(result);
