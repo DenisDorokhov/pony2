@@ -346,6 +346,7 @@ export default {
     downloadLlmEvaluationButton: 'Download JSON',
     libraryFoldersLabel: 'Library Folders:',
     libraryFoldersPlaceholder: 'Enter full folder path',
+    discoveryEnabledLabel: 'Discovery Enabled',
     llmUrlLabel: 'LLM URL:',
     llmUrlPlaceholder: 'e.g. https://api.openai.com/v1',
     llmModelLabel: 'LLM Model:',

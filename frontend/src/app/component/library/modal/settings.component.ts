@@ -12,6 +12,7 @@ import {CommonModule} from '@angular/common';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {LibraryScanService} from '../../../service/library-scan.service';
+import {LibraryDiscoveryService} from '../../../service/library-discovery.service';
 import {NotificationService} from '../../../service/notification.service';
 import {PlaylistService} from '../../../service/playlist.service';
 import {LibraryService} from '../../../service/library.service';
@@ -31,6 +32,7 @@ export class SettingsComponent implements OnInit{
   private readonly formBuilder = inject(FormBuilder);
   private readonly translateService = inject(TranslateService);
   private readonly libraryScanService = inject(LibraryScanService);
+  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly notificationService = inject(NotificationService);
   private readonly playlistService = inject(PlaylistService);
   private readonly libraryService = inject(LibraryService);
@@ -57,6 +59,7 @@ export class SettingsComponent implements OnInit{
     ]);
     this.form = this.formBuilder.group({
       libraryFolders: this.formLibraryFolders,
+      discoveryEnabled: false,
       llmUrl: '',
       llmModel: '',
       llmApiKey: '',
@@ -71,10 +74,12 @@ export class SettingsComponent implements OnInit{
         this.config.libraryFolders.forEach(next =>
           this.formLibraryFolders.push(this.formBuilder.group({path: next.path})));
         this.form.patchValue({
+          discoveryEnabled: this.config.discoveryEnabled,
           llmUrl: this.config.llmUrl ?? '',
           llmModel: this.config.llmModel ?? '',
           llmApiKey: this.config.llmApiKey ?? '',
         });
+        this.updateLlmControls();
         this.primaryLoadingState = LoadingState.LOADED;
       },
       error: () => {
@@ -91,11 +96,23 @@ export class SettingsComponent implements OnInit{
     this.formLibraryFolders.removeAt(i);
   }
 
+  updateLlmControls() {
+    const discoveryEnabled = this.form.get('discoveryEnabled')!.value;
+    for (const field of ['llmUrl', 'llmModel', 'llmApiKey']) {
+      if (discoveryEnabled) {
+        this.form.get(field)!.enable();
+      } else {
+        this.form.get(field)!.disable();
+      }
+    }
+  }
+
   save() {
-    const formValue = this.form.value;
+    const formValue = this.form.getRawValue();
     const configToSave: ConfigDto = {
       updateDate: this.config?.updateDate,
       libraryFolders: formValue.libraryFolders,
+      discoveryEnabled: formValue.discoveryEnabled,
       llmUrl: formValue.llmUrl === '' ? undefined : formValue.llmUrl,
       llmModel: formValue.llmModel === '' ? undefined : formValue.llmModel,
       llmApiKey: formValue.llmApiKey === '' ? undefined : formValue.llmApiKey,
@@ -104,6 +121,10 @@ export class SettingsComponent implements OnInit{
     this.configService.saveConfig(configToSave).subscribe({
       next: config => {
         this.primaryLoadingState = LoadingState.LOADED;
+        this.libraryDiscoveryService.updateAndScheduleDiscoveryStatusUpdate();
+        if (this.config!.discoveryEnabled !== config.discoveryEnabled) {
+          this.libraryService.requestRefresh();
+        }
         if (JSON.stringify(this.config!.libraryFolders) !== JSON.stringify(config.libraryFolders)) {
           this.notificationService.success(
             this.translateService.instant('notification.settingsTitle'),

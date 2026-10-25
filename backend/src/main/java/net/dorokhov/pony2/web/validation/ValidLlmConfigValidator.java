@@ -11,20 +11,14 @@ public class ValidLlmConfigValidator implements ConstraintValidator<ValidLlmConf
 
     @Override
     public boolean isValid(ConfigDto config, ConstraintValidatorContext context) {
-        if (config == null) {
+        if (config == null || !config.isDiscoveryEnabled()) {
             return true;
         }
         if (!StringUtils.hasText(config.getLlmUrl())) {
-            if (StringUtils.hasText(config.getLlmModel())) {
-                addViolation(context, "llmUrl", "must be configured when LLM model is configured");
-                return false;
-            }
-            if (StringUtils.hasText(config.getLlmApiKey())) {
-                addViolation(context, "llmUrl", "must be configured when LLM API key is configured");
-                return false;
-            }
+            addViolation(context, "llmUrl", "must be configured when discovery is enabled");
+            return false;
         } else if (!StringUtils.hasText(config.getLlmModel())) {
-            addViolation(context, "llmModel", "must be configured when LLM URL is configured");
+            addViolation(context, "llmModel", "must be configured when discovery is enabled");
             return false;
         } else if (!isValidLlmUrl(config.getLlmUrl())) {
             addViolation(context, "llmUrl",
@@ -39,10 +33,10 @@ public class ValidLlmConfigValidator implements ConstraintValidator<ValidLlmConf
             URI uri = URI.create(value);
             String scheme = uri.getScheme();
             String path = uri.getPath();
-            return ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
-                    && StringUtils.hasText(uri.getHost())
-                    && StringUtils.hasText(path)
-                    && !"/".equals(path);
+            return ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) &&
+                    StringUtils.hasText(uri.getHost()) &&
+                    StringUtils.hasText(path) &&
+                    !"/".equals(path);
         } catch (IllegalArgumentException e) {
             return false;
         }

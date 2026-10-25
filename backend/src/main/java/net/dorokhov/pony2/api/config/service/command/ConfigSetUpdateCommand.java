@@ -7,6 +7,7 @@ import java.util.List;
 public final class ConfigSetUpdateCommand {
 
     private List<File> libraryFolders = new ArrayList<>();
+    private boolean discoveryEnabled;
     private String llmUrl;
     private String llmModel;
     private String llmApiKey;
@@ -20,6 +21,15 @@ public final class ConfigSetUpdateCommand {
 
     public ConfigSetUpdateCommand setLibraryFolders(List<File> libraryFolders) {
         this.libraryFolders = libraryFolders;
+        return this;
+    }
+
+    public boolean isDiscoveryEnabled() {
+        return discoveryEnabled;
+    }
+
+    public ConfigSetUpdateCommand setDiscoveryEnabled(boolean discoveryEnabled) {
+        this.discoveryEnabled = discoveryEnabled;
         return this;
     }
 

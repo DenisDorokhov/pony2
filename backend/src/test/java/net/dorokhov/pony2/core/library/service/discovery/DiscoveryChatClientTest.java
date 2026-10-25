@@ -66,6 +66,40 @@ class DiscoveryChatClientTest {
     private LibraryJobSynchronizer.LibraryJobRegistration discovery;
     private HttpServer server;
 
+    @Test
+    void shouldRejectCallWhenThreadIsAlreadyInterrupted() throws IOException {
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        beforeClientCreation = () -> fail("A client must not be created on an interrupted thread.");
+        Thread.currentThread().interrupt();
+        try {
+            assertThatThrownBy(() -> call(client)).isInstanceOf(DiscoveryInterruptedException.class);
+            assertThat(requests).hasValue(0);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+            assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldPropagateInterruptionDuringRequest(boolean failure) throws IOException {
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        try {
+            assertThatThrownBy(() -> client.call(request -> {
+                Thread.currentThread().interrupt();
+                if (failure) {
+                    throw new IllegalStateException("Request failed.");
+                }
+                return "OK";
+            })).isInstanceOf(DiscoveryInterruptedException.class);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+            assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
     @BeforeEach
     void setUp() throws Exception {
         discovery = synchronizer.registerDiscoveryJob();
@@ -314,7 +348,7 @@ class DiscoveryChatClientTest {
         });
         server.start();
         ConfigService configService = mock(ConfigService.class);
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(),
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true,
                 "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "test", null));
         ChatModelImpl model = new ChatModelImpl(configService, ObservationRegistry.NOOP, Duration.ofMinutes(10));
         return new DiscoveryChatClient((customizer, toolsEnabled) -> {

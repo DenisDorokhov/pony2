@@ -49,7 +49,7 @@ public class DiscoveryScanJobObserverTest {
     @Test
     public void shouldStartFullDiscoveryJobOnFullScanJobCompleted() throws ConcurrentLibraryJobException {
 
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.FULL));
 
         verify(discoveryJobService).startFullJob();
@@ -58,7 +58,7 @@ public class DiscoveryScanJobObserverTest {
     @Test
     public void shouldStartFullDiscoveryJobOnEditJobCompleted() throws ConcurrentLibraryJobException {
 
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.EDIT));
 
         verify(discoveryJobService).startFullJob();
@@ -66,8 +66,8 @@ public class DiscoveryScanJobObserverTest {
 
     @ParameterizedTest
     @EnumSource(ScanType.class)
-    public void shouldSkipDiscoveryWhenLlmIsDisabled(ScanType scanType) {
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
+    public void shouldSkipDiscoveryWhenDiscoveryIsDisabled(ScanType scanType) {
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), false, "http://localhost/v1", "model", null));
 
         discoveryScanJobObserver.onScanJobCompleted(scanJob(scanType));
 
@@ -77,7 +77,7 @@ public class DiscoveryScanJobObserverTest {
     @Test
     public void shouldLogConcurrentLibraryJobException() throws ConcurrentLibraryJobException {
 
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
         when(discoveryJobService.startFullJob()).thenThrow(new ConcurrentLibraryJobException());
 
         discoveryScanJobObserver.onScanJobCompleted(scanJob(ScanType.FULL));

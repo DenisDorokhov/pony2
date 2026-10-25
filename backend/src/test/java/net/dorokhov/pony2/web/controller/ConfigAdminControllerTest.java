@@ -39,6 +39,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto -> 
                     assertThat(libraryFolderDto.getPath()).isEqualTo(libraryFolder.getAbsolutePath()));
             assertThat(config.getLlmUrl()).isNull();
+            assertThat(config.isDiscoveryEnabled()).isFalse();
             assertThat(config.getLlmModel()).isNull();
             assertThat(config.getLlmApiKey()).isNull();
         });
@@ -49,6 +50,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         File newLibraryFolder = Files.createDirectory(tempFolder.resolve("newLibraryFolder")).toFile();
         ConfigDto newConfig = new ConfigDto()
+                .setDiscoveryEnabled(true)
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(newLibraryFolder)))
                 .setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("qwen3.5-35b-a3b")
@@ -65,8 +67,58 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
             assertThat(config.getLibraryFolders()).first().satisfies(libraryFolderDto ->
                     assertThat(libraryFolderDto.getPath()).isEqualTo(newLibraryFolder.getAbsolutePath()));
             assertThat(config.getLlmUrl()).isEqualTo("http://localhost:11434/v1");
+            assertThat(config.isDiscoveryEnabled()).isTrue();
             assertThat(config.getLlmModel()).isEqualTo("qwen3.5-35b-a3b");
             assertThat(config.getLlmApiKey()).isEqualTo("secret");
+        });
+    }
+
+    @Test
+    public void shouldPreserveLlmSettingsWhenDisablingDiscovery() {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ConfigDto config = new ConfigDto()
+                .setDiscoveryEnabled(true)
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setLlmUrl("http://localhost:11434/v1")
+                .setLlmModel("model")
+                .setLlmApiKey("secret");
+        ResponseEntity<ConfigDto> enabledResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ConfigDto.class);
+        assertThat(enabledResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        config.setDiscoveryEnabled(false);
+
+        ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ConfigDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(saved -> {
+            assertThat(saved.isDiscoveryEnabled()).isFalse();
+            assertThat(saved.getLlmUrl()).isEqualTo(config.getLlmUrl());
+            assertThat(saved.getLlmModel()).isEqualTo(config.getLlmModel());
+            assertThat(saved.getLlmApiKey()).isEqualTo(config.getLlmApiKey());
+        });
+    }
+
+    @Test
+    public void shouldSaveIncompleteLlmSettingsWhenDiscoveryIsDisabled() {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ConfigDto config = new ConfigDto()
+                .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setLlmUrl("unfinished URL")
+                .setLlmApiKey("secret");
+
+        ResponseEntity<ConfigDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/admin/config", HttpMethod.PUT,
+                apiTemplate.createHeaderRequest(config, authentication.getAccessToken()), ConfigDto.class);
+
+        assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).satisfies(saved -> {
+            assertThat(saved.isDiscoveryEnabled()).isFalse();
+            assertThat(saved.getLlmUrl()).isEqualTo(config.getLlmUrl());
+            assertThat(saved.getLlmModel()).isNull();
+            assertThat(saved.getLlmApiKey()).isEqualTo(config.getLlmApiKey());
         });
     }
 
@@ -95,6 +147,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ConfigDto config = new ConfigDto()
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setDiscoveryEnabled(true)
                 .setLlmUrl("http://localhost:11434/v1");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -116,6 +169,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ConfigDto config = new ConfigDto()
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setDiscoveryEnabled(true)
                 .setLlmModel("qwen3.5-35b-a3b");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -137,6 +191,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ConfigDto config = new ConfigDto()
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setDiscoveryEnabled(true)
                 .setLlmUrl("http://localhost:11434")
                 .setLlmModel("qwen3.5-35b-a3b");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
@@ -159,6 +214,7 @@ public class ConfigAdminControllerTest extends InstallingIntegrationTest {
 
         ConfigDto config = new ConfigDto()
                 .setLibraryFolders(ImmutableList.of(LibraryFolderDto.of(libraryFolder)))
+                .setDiscoveryEnabled(true)
                 .setLlmApiKey("secret");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 

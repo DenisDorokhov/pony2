@@ -132,6 +132,12 @@
       }
     </div>
 
+    <div class="mb-3 form-check">
+      <input id="discoveryEnabled" formControlName="discoveryEnabled" type="checkbox" class="form-check-input"
+             (change)="updateLlmControls()">
+      <label for="discoveryEnabled" class="form-check-label">{{ 'settings.discoveryEnabledLabel' | translate }}</label>
+    </div>
+
     <div class="mb-3">
       <pony-error-container #llmUrlContainer class="form-group" [error]="error" [field]="'llmUrl'">
         <label for="llmUrl" class="form-label">{{ 'settings.llmUrlLabel' | translate }}</label>

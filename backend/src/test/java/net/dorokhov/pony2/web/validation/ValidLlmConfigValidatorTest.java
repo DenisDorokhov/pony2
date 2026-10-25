@@ -5,6 +5,9 @@ import net.dorokhov.pony2.web.dto.ConfigDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -49,6 +52,7 @@ public class ValidLlmConfigValidatorTest {
     @Test
     public void shouldPassValidationWhenUrlAndModelAreConfigured() {
         ConfigDto config = new ConfigDto()
+                .setDiscoveryEnabled(true)
                 .setLlmUrl("https://api.openai.com/v1")
                 .setLlmModel("gpt-5")
                 .setLlmApiKey("some-api-key");
@@ -56,10 +60,12 @@ public class ValidLlmConfigValidatorTest {
         assertThat(validator.isValid(config, constraintValidatorContext)).isTrue();
     }
 
-    @Test
-    public void shouldFailValidationWhenUrlDoesNotIncludeApiPath() {
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid", "https://api.openai.com", "https://api.openai.com/", "ftp://localhost/v1", "http:///v1"})
+    public void shouldFailValidationWhenUrlIsInvalid(String url) {
         ConfigDto config = new ConfigDto()
-                .setLlmUrl("https://api.openai.com")
+                .setDiscoveryEnabled(true)
+                .setLlmUrl(url)
                 .setLlmModel("gpt-5");
 
         assertThat(validator.isValid(config, constraintValidatorContext)).isFalse();
@@ -70,39 +76,68 @@ public class ValidLlmConfigValidatorTest {
         verify(nodeBuilderCustomizableContext).addConstraintViolation();
     }
 
-    @Test
-    public void shouldFailValidationWhenModelIsConfiguredWithoutUrl() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" "})
+    public void shouldFailValidationWhenDiscoveryIsEnabledWithoutUrl(String url) {
         ConfigDto config = new ConfigDto()
+                .setDiscoveryEnabled(true)
+                .setLlmUrl(url)
                 .setLlmModel("gpt-5");
 
         assertThat(validator.isValid(config, constraintValidatorContext)).isFalse();
         verify(constraintValidatorContext).disableDefaultConstraintViolation();
-        verify(constraintValidatorContext).buildConstraintViolationWithTemplate("must be configured when LLM model is configured");
+        verify(constraintValidatorContext).buildConstraintViolationWithTemplate("must be configured when discovery is enabled");
         verify(constraintViolationBuilder).addPropertyNode("llmUrl");
         verify(nodeBuilderCustomizableContext).addConstraintViolation();
     }
 
     @Test
-    public void shouldFailValidationWhenApiKeyIsConfiguredWithoutUrl() {
+    public void shouldFailValidationWhenDiscoveryIsEnabledWithoutLlmConfig() {
         ConfigDto config = new ConfigDto()
-                .setLlmApiKey("some-api-key");
+                .setDiscoveryEnabled(true);
 
         assertThat(validator.isValid(config, constraintValidatorContext)).isFalse();
         verify(constraintValidatorContext).disableDefaultConstraintViolation();
-        verify(constraintValidatorContext).buildConstraintViolationWithTemplate("must be configured when LLM API key is configured");
+        verify(constraintValidatorContext).buildConstraintViolationWithTemplate("must be configured when discovery is enabled");
         verify(constraintViolationBuilder).addPropertyNode("llmUrl");
         verify(nodeBuilderCustomizableContext).addConstraintViolation();
     }
 
-    @Test
-    public void shouldFailValidationWhenUrlIsConfiguredWithoutModel() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" "})
+    public void shouldFailValidationWhenDiscoveryIsEnabledWithoutModel(String model) {
         ConfigDto config = new ConfigDto()
-                .setLlmUrl("https://api.openai.com");
+                .setDiscoveryEnabled(true)
+                .setLlmUrl("https://api.openai.com/v1")
+                .setLlmModel(model);
 
         assertThat(validator.isValid(config, constraintValidatorContext)).isFalse();
         verify(constraintValidatorContext).disableDefaultConstraintViolation();
-        verify(constraintValidatorContext).buildConstraintViolationWithTemplate("must be configured when LLM URL is configured");
+        verify(constraintValidatorContext).buildConstraintViolationWithTemplate("must be configured when discovery is enabled");
         verify(constraintViolationBuilder).addPropertyNode("llmModel");
         verify(nodeBuilderCustomizableContext).addConstraintViolation();
+    }
+
+    @Test
+    public void shouldPassValidationWithoutApiKey() {
+        ConfigDto config = new ConfigDto()
+                .setDiscoveryEnabled(true)
+                .setLlmUrl("http://localhost:11434/v1")
+                .setLlmModel("model");
+
+        assertThat(validator.isValid(config, constraintValidatorContext)).isTrue();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"unfinished URL", "http://localhost/v1"})
+    public void shouldSkipLlmValidationWhenDiscoveryIsDisabled(String url) {
+        ConfigDto config = new ConfigDto()
+                .setLlmUrl(url)
+                .setLlmApiKey("secret");
+
+        assertThat(validator.isValid(config, constraintValidatorContext)).isTrue();
     }
 }

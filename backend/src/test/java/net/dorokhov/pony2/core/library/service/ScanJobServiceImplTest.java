@@ -85,7 +85,7 @@ public class ScanJobServiceImplTest {
     @BeforeEach
     public void setUp() {
         initSynchronization();
-        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), false, null, null, null));
     }
 
     @AfterEach
@@ -123,7 +123,7 @@ public class ScanJobServiceImplTest {
     @Test
     public void shouldExecuteScanJob() throws IOException, ConcurrentLibraryJobException {
 
-        when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), null, null, null));
+        when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), false, null, null, null));
         when(logService.info(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         ScanResult scanResult = scanResult(FULL);
@@ -329,7 +329,7 @@ public class ScanJobServiceImplTest {
 
     private void doTestFailScanJobOnException(Exception e) throws IOException, ConcurrentLibraryJobException {
 
-        when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), null, null, null));
+        when(configService.get()).thenReturn(new ConfigSet(null, ImmutableList.of(new File("someFolder")), false, null, null, null));
         when(logService.error(any(), any(), any())).thenReturn(logMessage());
         when(scanJobRepository.save(any())).then(returnsFirstArg());
         lenient().when(scanJobRepository.findById(any())).thenReturn(Optional.of(scanJobFull()));

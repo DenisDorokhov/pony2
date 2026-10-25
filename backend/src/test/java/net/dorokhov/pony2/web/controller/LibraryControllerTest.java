@@ -300,7 +300,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     private void enableLlm() {
         configService.update(new ConfigSetUpdateCommand()
                 .setLibraryFolders(configService.get().libraryFolders())
-                .setLlmUrl("http://localhost")
+                .setDiscoveryEnabled(true).setLlmUrl("http://localhost/v1")
                 .setLlmModel("model"));
     }
 

@@ -172,6 +172,40 @@ public class LibraryJobSynchronizer {
     }
 
     /**
+     * Cancels the current discovery and waits for its job and all task registrations to close.
+     * Scan and maintenance jobs are left running. This method does not reserve the next job slot.
+     */
+    public void cancelDiscoveryAndWait(Duration timeout) {
+        if (timeout.isNegative()) {
+            throw new IllegalArgumentException("Cancellation timeout must not be negative.");
+        }
+        long timeoutNanos = timeout.toNanos();
+        long started = System.nanoTime();
+        LibraryJobRegistration job;
+        List<CancellationSubscription> subscriptions;
+        synchronized (lock) {
+            job = activeJob;
+            subscriptions = cancelDiscoveryLocked();
+        }
+        notifyCancellation(subscriptions);
+        try {
+            synchronized (lock) {
+                while (job != null && job.discovery && activeJob == job) {
+                    long remaining = timeoutNanos - (System.nanoTime() - started);
+                    if (remaining <= 0) {
+                        throw new IllegalStateException("Timed out waiting for discovery to finish.",
+                                new TimeoutException("Discovery did not finish cancellation within " + timeout + "."));
+                    }
+                    TimeUnit.NANOSECONDS.timedWait(lock, remaining);
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting for discovery cancellation.", e);
+        }
+    }
+
+    /**
      * Subscribes to the current discovery's cancellation. An already cancelled discovery invokes the callback immediately.
      * Callbacks run outside the internal lock and must return promptly. Closing the subscription unregisters it;
      * a callback already selected for notification may still run after closing.

@@ -62,7 +62,7 @@ public class ScanJobServiceImplProgressTest {
     @BeforeEach
     public void setUp() {
         initSynchronization();
-        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), false, null, null, null));
     }
 
     @AfterEach

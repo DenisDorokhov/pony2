@@ -100,7 +100,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId) {
-        if (!configService.get().llmEnabled()) {
+        if (!configService.get().discoveryEnabled()) {
             return Optional.empty();
         }
         List<String> topSongIds = discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
@@ -122,7 +122,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional(readOnly = true)
     public Optional<AlbumDiscoveryData> getAlbumDiscoveryData(String albumId) {
-        if (!configService.get().llmEnabled()) {
+        if (!configService.get().discoveryEnabled()) {
             return Optional.empty();
         }
         MusicBrainzAlbumData data = discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))

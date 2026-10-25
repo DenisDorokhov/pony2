@@ -63,7 +63,7 @@ public class DiscoveryScanJobObserver implements ScanJobService.Observer {
 
     @Override
     public void onScanJobCompleted(ScanJob scanJob) {
-        if (configService.get().llmEnabled()) {
+        if (configService.get().discoveryEnabled()) {
             try {
                 discoveryJobService.startFullJob();
             } catch (ConcurrentLibraryJobException e) {

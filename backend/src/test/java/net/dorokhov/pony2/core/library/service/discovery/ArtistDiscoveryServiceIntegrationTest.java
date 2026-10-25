@@ -90,7 +90,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         jobRegistration = jobSynchronizer.registerDiscoveryJob();
         userRepository.save(user().setEmail("admin@example.com").setRoles(Set.of(User.Role.ADMIN)));
         configService.update(new ConfigSetUpdateCommand()
-                .setLlmUrl("http://localhost:11434/v1")
+                .setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("test"));
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         MusicBrainzClient.Session session = mock(MusicBrainzClient.Session.class);
@@ -169,25 +169,6 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                     });
         });
         assertEmptyTopTracks();
-    }
-
-    @Test
-    void shouldDiscoverAlbumsWhenLlmIsDisabled() {
-        configService.update(new ConfigSetUpdateCommand());
-        List<DiscoveryProgress> progress = new ArrayList<>();
-
-        service.discover(saveJob(), saveArtist("Album"), true, progress::add);
-
-        assertThat(progress).allSatisfy(value -> {
-            assertThat(value.getStep()).isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY);
-        });
-        assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 1), DiscoveryProgress.Value.of(1, 1));
-        assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
-            assertThat(task.getType()).isEqualTo(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
-            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        });
-        verify(model, never()).call(any(Prompt.class));
     }
 
     @Test

@@ -25,6 +25,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
@@ -36,11 +41,14 @@ import tools.jackson.databind.json.JsonMapper;
 
 import jakarta.annotation.Nullable;
 import java.io.IOException;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
@@ -210,6 +218,14 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
     @ParameterizedTest
     @EnumSource(value = DiscoveryType.class, names = {"FULL", "ARTIST", "ALBUM"})
     public void shouldPerformDiscoveryFlow(DiscoveryType type) {
+        configService.update(new ConfigSetUpdateCommand()
+                .setLibraryFolders(configService.get().libraryFolders())
+                .setDiscoveryEnabled(true)
+                .setLlmUrl("http://localhost/v1")
+                .setLlmModel("model"));
+        when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(
+                new Generation(new AssistantMessage("{\"status\":\"NOT_FOUND\"}")))));
         String targetId = switch (type) {
             case FULL -> null;
             case ARTIST -> artistRepository.save(new Artist().setName("Artist")).getId();
@@ -224,7 +240,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         };
         long tasksTotal = switch (type) {
             case FULL -> 0;
-            case ARTIST -> configService.get().llmEnabled() ? 2 : 0;
+            case ARTIST -> 2;
             case ALBUM -> 1;
             case GENRE, SONG -> throw new UnsupportedOperationException();
         };
@@ -263,7 +279,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
         assertThat(discoveryStatusResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(discoveryStatusResponse.getBody()).satisfies(discoveryStatus -> {
-            assertThat(discoveryStatus.isDiscoveryEnabled()).isEqualTo(configService.get().llmEnabled());
+            assertThat(discoveryStatus.isDiscoveryEnabled()).isEqualTo(configService.get().discoveryEnabled());
             assertThat(discoveryStatus.getProgress()).satisfies(discoveryJobProgress -> {
                 assertThat(discoveryJobProgress.getDiscoveryJob()).isNotNull();
                 assertThat(discoveryJobProgress.getDiscoveryProgress()).isNotNull();

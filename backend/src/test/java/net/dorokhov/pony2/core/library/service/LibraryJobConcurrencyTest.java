@@ -72,7 +72,7 @@ class LibraryJobConcurrencyTest {
                 artistRepository, albumRepository, fullDiscoveryService, jobSynchronizer,
                 artistDiscoveryService, albumDiscoveryService, logService, executor, transactionManager());
 
-        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), false, null, null, null));
         AtomicInteger ids = new AtomicInteger();
         lenient().when(scanJobRepository.save(any())).thenAnswer(invocation -> {
             ScanJob job = invocation.getArgument(0);
@@ -183,7 +183,7 @@ class LibraryJobConcurrencyTest {
     @ParameterizedTest
     @EnumSource(value = JobKind.class, names = {"SCAN", "EDIT"})
     void shouldStartDiscoveryAfterScanReleasesLock(JobKind kind) throws Exception {
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
         scanService.addObserver(new DiscoveryScanJobObserver(scanService, discoveryService, logService, configService));
         start(kind);
         commit();

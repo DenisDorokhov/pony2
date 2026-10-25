@@ -149,7 +149,7 @@ public class MusicBrainzAlbumDataService {
             String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(input.artistName()) + "\"";
             MusicBrainzClient.ReleaseGroupSearchResult searchResult = session.searchReleaseGroups(query);
             interruptIfNeeded();
-            if (searchResult.groups().isEmpty() && configService.get().llmEnabled()) {
+            if (searchResult.groups().isEmpty()) {
                 NormalizationResponse normalization = normalizeTitle(task, input.title(), cacheEnabled);
                 String normalizedQuery = normalizationQuery(input, normalization);
                 interruptIfNeeded();
@@ -278,7 +278,7 @@ public class MusicBrainzAlbumDataService {
         if (exact.size() == 1) {
             return exact.getFirst();
         }
-        if (candidates.isEmpty() || !configService.get().llmEnabled()) {
+        if (candidates.isEmpty()) {
             return null;
         }
         String albumId = requireNonNull(task.getAlbum(),
@@ -318,7 +318,7 @@ public class MusicBrainzAlbumDataService {
         if (exact.size() == 1) {
             return exact.getFirst();
         }
-        if (ids.isEmpty() || !configService.get().llmEnabled()) {
+        if (ids.isEmpty()) {
             return null;
         }
         String selectedGroup = "\nSelected release group ID: " + JsonConverter.toJson(group.id());

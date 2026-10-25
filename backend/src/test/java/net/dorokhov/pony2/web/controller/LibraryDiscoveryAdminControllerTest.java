@@ -282,16 +282,16 @@ public class LibraryDiscoveryAdminControllerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    public void shouldGetDiscoveryStatusWithAndWithoutJob(boolean llmEnabled) throws Exception {
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(),
-                llmEnabled ? "http://localhost" : null, llmEnabled ? "model" : null, null));
+    public void shouldGetDiscoveryStatusWithAndWithoutJob(boolean discoveryEnabled) throws Exception {
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), discoveryEnabled,
+                "http://localhost", "model", null));
 
         String inactiveResponse = mockMvc.perform(get("/api/admin/library/discoveryJobProgress"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         DiscoveryStatusDto inactiveStatus = objectMapper.readValue(inactiveResponse, DiscoveryStatusDto.class);
 
-        assertThat(inactiveStatus.isDiscoveryEnabled()).isEqualTo(llmEnabled);
+        assertThat(inactiveStatus.isDiscoveryEnabled()).isEqualTo(discoveryEnabled);
         assertThat(inactiveStatus.getProgress()).isNull();
         assertThat(objectMapper.readTree(inactiveResponse).has("progress")).isFalse();
 
@@ -303,7 +303,7 @@ public class LibraryDiscoveryAdminControllerTest {
                 .andReturn().getResponse().getContentAsString();
         DiscoveryStatusDto activeStatus = objectMapper.readValue(activeResponse, DiscoveryStatusDto.class);
 
-        assertThat(activeStatus.isDiscoveryEnabled()).isEqualTo(llmEnabled);
+        assertThat(activeStatus.isDiscoveryEnabled()).isEqualTo(discoveryEnabled);
         assertThat(activeStatus.getProgress()).satisfies(progress -> {
             assertThat(progress.getDiscoveryJob().getId()).isEqualTo("job1");
             assertThat(progress.getDiscoveryProgress().getValue().getItemsComplete()).isEqualTo(3);
@@ -313,7 +313,7 @@ public class LibraryDiscoveryAdminControllerTest {
 
     @Test
     public void shouldGetDiscoveryJobProgressBeforeFirstStep() throws Exception {
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
         mockProgress("", new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"), null));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress"))

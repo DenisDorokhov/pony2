@@ -148,6 +148,7 @@ public class BatchLibraryImporter {
         try {
             latch.await();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             logger.warn("Batch audio data reading has been interrupted.", e);
             throw new RuntimeException("Batch audio data reading has been interrupted.", e);
         }
@@ -203,6 +204,7 @@ public class BatchLibraryImporter {
         try {
             latch.await();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             logger.warn("Batch audio data writing has been interrupted.", e);
             throw new RuntimeException("Batch audio data writing has been interrupted.", e);
         }

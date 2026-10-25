@@ -13,6 +13,8 @@ import net.dorokhov.pony2.core.library.service.scan.BatchLibraryImporter.ImportR
 import net.dorokhov.pony2.core.library.service.scan.BatchLibraryImporter.WriteAndImportCommand;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -30,6 +32,7 @@ import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures
 import static net.dorokhov.pony2.test.ReadableAudioDataFixtures.readableAudioData;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -61,6 +64,29 @@ public class BatchLibraryImporterTest {
     @Spy
     @SuppressWarnings("unused")
     private final PlatformTransactionManager transactionManager = transactionManager();
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void shouldRestoreInterruptFlagWhenWaitingIsInterrupted(boolean write) {
+        if (!write) {
+            when(batchLibraryImportPlanner.plan(emptyList())).thenReturn(new Plan(emptyList(), emptyList()));
+        }
+        Thread.currentThread().interrupt();
+        try {
+            assertThatThrownBy(() -> {
+                if (write) {
+                    batchLibraryImporter.writeAndImport(emptyList(), new ProgressObserverFixture());
+                } else {
+                    batchLibraryImporter.readAndImport(emptyList(), new ProgressObserverFixture());
+                }
+            }).isInstanceOf(RuntimeException.class).hasCauseInstanceOf(InterruptedException.class);
+
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+            verifyNoInteractions(libraryImporter);
+        } finally {
+            Thread.interrupted();
+        }
+    }
 
     @Test
     public void shouldReadAndImport() throws IOException {

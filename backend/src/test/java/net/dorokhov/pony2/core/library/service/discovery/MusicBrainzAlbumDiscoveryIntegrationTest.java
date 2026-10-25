@@ -159,6 +159,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             return JsonConverter.fromJson(rawArtistResponse, MusicBrainzDto.Artist.class);
         });
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
+        notFoundResponses();
     }
 
     @AfterEach
@@ -284,7 +285,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldNotAcceptMatchingGroupTitleOrAmbiguousReleaseTitlesWithoutLlm() {
+    void shouldAskLlmWhenOnlyGroupTitleMatchesOrReleaseTitlesAreAmbiguous() {
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":null}"));
         search(List.of(group("group", "Reign in Blood", "Different release", List.of(credit("artist", "Slayer", null)))));
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
         assertThat(onlyTask().getResult()).isEqualTo("null");
@@ -296,10 +298,10 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("null");
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(1);
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2);
         });
         verify(session, never()).getArtist(anyString());
-        verify(model, never()).call(any(Prompt.class));
+        verify(model, times(2)).call(any(Prompt.class));
     }
 
     @ParameterizedTest
@@ -498,7 +500,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldReturnNullForUnmatchedArtistWithoutLlm() {
+    void shouldReturnNullWhenLlmCannotSelectUnmatchedArtist() {
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":null}"));
         search(List.of(group("group", "Other", album.getName(), List.of(credit("one", "A", null), credit("two", "B", null)))));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
@@ -506,6 +509,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(onlyTask().getResult()).isEqualTo("null");
         verify(session, never()).getArtist(anyString());
+        verify(model).call(any(Prompt.class));
     }
 
     @ParameterizedTest
@@ -626,7 +630,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         server.start();
         try {
             configService.update(new ConfigSetUpdateCommand()
-                    .setLlmUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1")
+                    .setDiscoveryEnabled(true).setLlmUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1")
                     .setLlmModel(configuredModel));
             ChatModelImpl httpModel = new ChatModelImpl(configService, ObservationRegistry.NOOP, llmTimeout);
             when(model.createChatModel(any())).thenAnswer(invocation -> httpModel.createChatModel(invocation.getArgument(0)));
@@ -915,7 +919,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldCompleteEmptySearchWithNull() {
+    void shouldCompleteEmptySearchWithNullAfterNormalization() {
+        notFoundResponses();
         search(List.of());
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
@@ -923,7 +928,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("null");
         });
-        verify(model, never()).call(any(Prompt.class));
+        verify(model).call(any(Prompt.class));
         verify(session, times(1)).searchReleaseGroups(anyString());
     }
 
@@ -1208,7 +1213,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             String originalKey = cacheRepository.findAll().getFirst().getKey();
             switch (change) {
                 case "model" -> configService.update(new ConfigSetUpdateCommand()
-                        .setLlmUrl("http://localhost:11434/v1").setLlmModel("different-model"));
+                        .setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("different-model"));
                 case "prompt" -> ReflectionTestUtils.setField(musicBrainzAlbumDataService, "normalizationPrompt", originalPrompt + "\n");
                 case "title" -> albumRepository.save(album.setName("Different title"));
                 default -> throw new IllegalArgumentException(change);
@@ -1366,6 +1371,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @Test
     void shouldSkipMissingNamesAndEscapeLuceneSpecialCharacters() {
+        notFoundResponses();
         albumRepository.save(album.setName(null));
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
         assertThat(onlyTask().getResult()).isEqualTo("null");
@@ -1405,10 +1411,10 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldDiscoverEveryAlbumAfterSpotifyAndKeepArtistProgress(boolean llmEnabled) {
-        if (llmEnabled) {
+    void shouldDiscoverEveryAlbumAfterSpotifyAndKeepArtistProgress(boolean discoveryEnabled) {
+        notFoundResponses();
+        if (discoveryEnabled) {
             enableLlm();
-            notFoundResponses();
         }
         Album second = albumRepository.save(new Album().setArtist(artist).setName("Second album"));
         search(List.of());
@@ -1417,7 +1423,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discover(job, artist, false, progress::add);
 
-        int total = llmEnabled ? 4 : 2;
+        int total = 4;
         assertThat(progress).hasSize(total + 1);
         for (int index = 0; index <= total; index++) {
             assertThat(progress.get(index).getStep()).isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY);
@@ -1425,12 +1431,10 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         }
         List<DiscoveryTask> tasks = taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)).toList();
         assertThat(tasks).hasSize(total).allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
-        if (llmEnabled) {
-            assertThat(tasks).extracting(DiscoveryTask::getType).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                    DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
-        }
+        assertThat(tasks).extracting(DiscoveryTask::getType).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
+                DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
         getTransactionTemplate().executeWithoutResult(status -> {
-            assertThat(artistTasks()).hasSize(llmEnabled ? 2 : 0);
+            assertThat(artistTasks()).hasSize(2);
             assertThat(taskRepository.findAll().stream().filter(value -> value.getAlbum() != null))
                     .extracting(value -> value.getAlbum().getId()).containsExactlyInAnyOrder(album.getId(), second.getId());
         });
@@ -1438,15 +1442,15 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldReportFullDiscoveryProgressInTaskCounts(boolean llmEnabled) {
-        if (llmEnabled) {
+    void shouldReportFullDiscoveryProgressInTaskCounts(boolean discoveryEnabled) {
+        notFoundResponses();
+        if (discoveryEnabled) {
             enableLlm();
-            notFoundResponses();
         }
         albumRepository.save(new Album().setArtist(artist).setName("Second album"));
         search(List.of());
         DiscoveryJob job = job(DiscoveryType.FULL);
-        int total = llmEnabled ? 4 : 2;
+        int total = 4;
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
         fullDiscoveryService.discover(job, false, progress -> {
@@ -1678,7 +1682,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThatThrownBy(() -> artistService.discover(interruptedJob, artist, false, null))
                 .isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(taskRepository.findAll()).extracting(DiscoveryTask::getStatus)
+        assertThat(taskRepository.findAll()).filteredOn(task -> task.getAlbum() != null).extracting(DiscoveryTask::getStatus)
                 .containsExactlyInAnyOrder(DiscoveryTask.Status.COMPLETE, DiscoveryTask.Status.INTERRUPTED);
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
@@ -1686,6 +1690,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         jobRepository.save(interruptedJob.setStatus(DiscoveryJob.Status.INTERRUPTED));
         doReturn(new MusicBrainzClient.ReleaseGroupSearchResult(List.of(), EMPTY_SEARCH_RESPONSE)).when(session).searchReleaseGroups(anyString());
+        notFoundResponses();
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
 
         fullDiscoveryService.discover(nextJob, false, null);
@@ -1707,12 +1712,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, progress -> {
             long complete = progress.getValue().getItemsComplete();
-            if (complete > 0) {
+            if (complete > 2) {
                 assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
                     assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
                     assertThat(index.getCountryCode()).isEqualTo("US");
                 });
-                completedAlbums.add(complete);
+                completedAlbums.add(complete - 2);
             }
         });
 
@@ -1771,9 +1776,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("first-artist");
             assertThat(index.getCountryCode()).isEqualTo("DE");
             assertThat(index.getSpotifyArtistId()).isNull();
-            assertThat(index.getUpdateDate()).isNull();
+            assertThat(index.getUpdateDate()).isNotNull();
         });
-        assertThat(taskRepository.findAll()).hasSize(2)
+        assertThat(taskRepository.findAll()).hasSize(4)
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
@@ -1787,7 +1792,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         rawArtistResponse = JsonConverter.toJson(new MusicBrainzDto.Artist(artistId, "Slayer",
                 new MusicBrainzDto.Area(List.of(countryCode))));
 
-        artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
+        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> true, null);
 
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
@@ -1811,7 +1816,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> false, null);
 
-        assertThat(taskRepository.findAll()).hasSize(2);
+        assertThat(taskRepository.findAll()).hasSize(4);
         assertThat(taskRepository.findLatestCompletedByAlbumIdAndType(album.getId(),
                 DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, org.springframework.data.domain.Limit.of(1))).get()
                 .extracting(task -> task.getJob().getId()).isEqualTo(otherJob.getId());
@@ -1857,6 +1862,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @ParameterizedTest
     @CsvSource({"true,true", "true,false", "false,true", "false,false"})
     void shouldUseNextAlbumWhenFirstAlbumHasNoResult(boolean failed, boolean existingIndex) {
+        notFoundResponses();
         if (existingIndex) {
             artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
                     .setArtist(artist).setMusicBrainzArtistId("previous-artist").setCountryCode("DE"));
@@ -1882,13 +1888,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
-            if (existingIndex) {
-                assertThat(index.getUpdateDate()).isNotNull();
-            } else {
-                assertThat(index.getUpdateDate()).isNull();
-            }
+            assertThat(index.getUpdateDate()).isNotNull();
         });
-        assertThat(taskRepository.findAll()).hasSize(2);
+        assertThat(taskRepository.findAll()).hasSize(4);
         verify(session).getArtist("artist");
     }
 
@@ -1905,7 +1907,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getCountryCode()).isEqualTo("DE");
             assertThat(index.getUpdateDate()).isNull();
         });
-        assertThat(taskRepository.findAll()).isEmpty();
+        assertThat(taskRepository.findAll()).hasSize(2)
+                .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
     private void search(List<MusicBrainzDto.ReleaseGroup> candidates) {
@@ -2001,7 +2004,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private void enableLlm() {
-        configService.update(new ConfigSetUpdateCommand().setLlmUrl("http://localhost:11434/v1").setLlmModel("test"));
+        configService.update(new ConfigSetUpdateCommand().setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("test"));
     }
 
     private void notFoundResponses() {
@@ -2010,6 +2013,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             if (prompt.getInstructions().getFirst().getText().startsWith("You normalize untrusted album-title text")) {
                 String title = (String) JsonConverter.fromJson(prompt.getInstructions().get(1).getText(), Map.class).get("albumTitle");
                 return response(JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", List.of(), "alternativeTitles", List.of())));
+            }
+            if (prompt.getInstructions().getFirst().getText().startsWith("Choose the MusicBrainz")) {
+                return response("{\"id\":null}");
             }
             return response("{\"status\":\"NOT_FOUND\"}");
         });

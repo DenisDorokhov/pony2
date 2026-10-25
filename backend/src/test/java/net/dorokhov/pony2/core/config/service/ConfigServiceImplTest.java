@@ -7,19 +7,23 @@ import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.config.repository.ConfigRepository;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -44,6 +50,43 @@ public class ConfigServiceImplTest {
     private ConfigRepository configRepository;
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
+    @Mock
+    private LibraryJobSynchronizer jobSynchronizer;
+
+    @ParameterizedTest
+    @CsvSource({"true,false,true", "true,true,false", "false,false,false", "false,true,false"})
+    public void shouldStopDiscoveryBeforeSavingDisabledConfig(boolean wasEnabled, boolean enabled, boolean cancel) {
+        when(configRepository.findAll()).thenReturn(List.of(
+                Config.of(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED, Boolean.toString(wasEnabled))));
+
+        configService.update(new ConfigSetUpdateCommand()
+                .setDiscoveryEnabled(enabled)
+                .setLlmUrl("http://localhost/v1")
+                .setLlmModel("model"));
+
+        if (cancel) {
+            InOrder order = inOrder(jobSynchronizer, configRepository);
+            order.verify(jobSynchronizer).cancelDiscoveryAndWait(Duration.ofSeconds(30));
+            order.verify(configRepository, times(5)).save(any());
+        } else {
+            verifyNoInteractions(jobSynchronizer);
+        }
+    }
+
+    @Test
+    public void shouldNotSaveConfigWhenDiscoveryCannotStop() {
+        when(configRepository.findAll()).thenReturn(List.of(
+                Config.of(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED, "true")));
+        doThrow(new IllegalStateException("Cancellation timed out"))
+                .when(jobSynchronizer).cancelDiscoveryAndWait(Duration.ofSeconds(30));
+
+        assertThatThrownBy(() -> configService.update(new ConfigSetUpdateCommand()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Cancellation timed out");
+
+        verify(configRepository, never()).save(any());
+        verifyNoInteractions(applicationEventPublisher);
+    }
 
     @Test
     public void shouldPublishOldAndNewConfigSnapshots() {
@@ -71,6 +114,8 @@ public class ConfigServiceImplTest {
         when(configRepository.findAll()).thenReturn(List.of(
                 Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]")
                         .setCreationDate(creationDate),
+                Config.of(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED, "true")
+                        .setCreationDate(creationDate),
                 Config.of(ConfigServiceImpl.CONFIG_LLM_URL, "http://localhost:11434/v1")
                         .setCreationDate(creationDate),
                 Config.of(ConfigServiceImpl.CONFIG_LLM_MODEL, "qwen3.5-35b-a3b")
@@ -87,7 +132,7 @@ public class ConfigServiceImplTest {
         assertThat(configSet.llmUrl()).isEqualTo("http://localhost:11434/v1");
         assertThat(configSet.llmModel()).isEqualTo("qwen3.5-35b-a3b");
         assertThat(configSet.llmApiKey()).isEqualTo("secret");
-        assertThat(configSet.llmEnabled()).isTrue();
+        assertThat(configSet.discoveryEnabled()).isTrue();
     }
 
     @ParameterizedTest
@@ -166,7 +211,7 @@ public class ConfigServiceImplTest {
         assertThat(configSet.llmUrl()).isNull();
         assertThat(configSet.llmModel()).isNull();
         assertThat(configSet.llmApiKey()).isNull();
-        assertThat(configSet.llmEnabled()).isFalse();
+        assertThat(configSet.discoveryEnabled()).isFalse();
     }
 
     @Test
@@ -181,12 +226,14 @@ public class ConfigServiceImplTest {
         assertThat(configSet.llmUrl()).isNull();
         assertThat(configSet.llmModel()).isNull();
         assertThat(configSet.llmApiKey()).isNull();
-        assertThat(configSet.llmEnabled()).isFalse();
+        assertThat(configSet.discoveryEnabled()).isFalse();
     }
 
     @Test
     public void shouldUpdateConfig() {
 
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED))
+                .thenReturn(Optional.empty());
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(Optional.of(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]")));
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LLM_URL))
@@ -198,17 +245,22 @@ public class ConfigServiceImplTest {
 
         configService.update(new ConfigSetUpdateCommand()
                 .setLibraryFolders(ImmutableList.of(new File("foobar")))
+                .setDiscoveryEnabled(true)
                 .setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("qwen3.5-35b-a3b")
                 .setLlmApiKey("secret"));
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
-        verify(configRepository, times(4)).save(savedConfig.capture());
+        verify(configRepository, times(5)).save(savedConfig.capture());
         assertThat(savedConfig.getAllValues()).satisfiesExactly(
                 libraryFolders -> {
                     assertThat(libraryFolders.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS);
                     assertThat(JsonConverter.listFromJson(libraryFolders.getValue(), String.class))
                             .containsExactly(new File("foobar").getAbsolutePath());
+                },
+                discoveryEnabled -> {
+                    assertThat(discoveryEnabled.getId()).isEqualTo(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED);
+                    assertThat(discoveryEnabled.getValue()).isEqualTo("true");
                 },
                 llmUrl -> {
                     assertThat(llmUrl.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LLM_URL);
@@ -227,6 +279,8 @@ public class ConfigServiceImplTest {
     @Test
     public void shouldUpdateEmptyConfigValues() {
 
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED))
+                .thenReturn(Optional.empty());
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(Optional.of(Config.of(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS, "[\"foo\",\"bar\"]")));
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LLM_URL))
@@ -243,11 +297,15 @@ public class ConfigServiceImplTest {
                 .setLlmApiKey(null));
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
-        verify(configRepository, times(4)).save(savedConfig.capture());
+        verify(configRepository, times(5)).save(savedConfig.capture());
         assertThat(savedConfig.getAllValues()).satisfiesExactly(
                 libraryFolders -> {
                     assertThat(libraryFolders.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS);
                     assertThat(libraryFolders.getValue()).isEqualTo("[]");
+                },
+                discoveryEnabled -> {
+                    assertThat(discoveryEnabled.getId()).isEqualTo(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED);
+                    assertThat(discoveryEnabled.getValue()).isEqualTo("false");
                 },
                 llmUrl -> {
                     assertThat(llmUrl.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LLM_URL);
@@ -266,6 +324,8 @@ public class ConfigServiceImplTest {
     @Test
     public void shouldUpdateConfigWhichDidNotExist() {
 
+        when(configRepository.findById(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED))
+                .thenReturn(Optional.empty());
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS))
                 .thenReturn(Optional.empty());
         when(configRepository.findById(ConfigServiceImpl.CONFIG_LLM_URL))
@@ -279,12 +339,16 @@ public class ConfigServiceImplTest {
                 .setLibraryFolders(ImmutableList.of(new File("foobar"))));
 
         ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
-        verify(configRepository, times(4)).save(savedConfig.capture());
+        verify(configRepository, times(5)).save(savedConfig.capture());
         assertThat(savedConfig.getAllValues()).satisfiesExactly(
                 libraryFolders -> {
                     assertThat(libraryFolders.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LIBRARY_FOLDERS);
                     assertThat(JsonConverter.listFromJson(libraryFolders.getValue(), String.class))
                             .containsExactly(new File("foobar").getAbsolutePath());
+                },
+                discoveryEnabled -> {
+                    assertThat(discoveryEnabled.getId()).isEqualTo(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED);
+                    assertThat(discoveryEnabled.getValue()).isEqualTo("false");
                 },
                 llmUrl -> {
                     assertThat(llmUrl.getId()).isEqualTo(ConfigServiceImpl.CONFIG_LLM_URL);
@@ -304,10 +368,11 @@ public class ConfigServiceImplTest {
     public void shouldRejectLlmUrlWithoutLlmModel() {
 
         assertThatThrownBy(() -> configService.update(new ConfigSetUpdateCommand()
+                .setDiscoveryEnabled(true)
                 .setLibraryFolders(emptyList())
                 .setLlmUrl("http://localhost:11434/v1")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("LLM model must be configured when LLM URL is configured.");
+                .hasMessage("LLM model must be configured when discovery is enabled.");
 
         verify(configRepository, never()).save(any());
         verifyNoInteractions(applicationEventPublisher);
@@ -317,10 +382,11 @@ public class ConfigServiceImplTest {
     public void shouldRejectLlmModelWithoutLlmUrl() {
 
         assertThatThrownBy(() -> configService.update(new ConfigSetUpdateCommand()
+                .setDiscoveryEnabled(true)
                 .setLibraryFolders(emptyList())
                 .setLlmModel("qwen3.5-35b-a3b")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("LLM URL must be configured when LLM model is configured.");
+                .hasMessage("LLM URL must be configured when discovery is enabled.");
 
         verify(configRepository, never()).save(any());
         verifyNoInteractions(applicationEventPublisher);
@@ -330,12 +396,52 @@ public class ConfigServiceImplTest {
     public void shouldRejectLlmApiKeyWithoutLlmUrl() {
 
         assertThatThrownBy(() -> configService.update(new ConfigSetUpdateCommand()
+                .setDiscoveryEnabled(true)
                 .setLibraryFolders(emptyList())
                 .setLlmApiKey("secret")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("LLM URL must be configured when LLM API key is configured.");
+                .hasMessage("LLM URL must be configured when discovery is enabled.");
 
         verify(configRepository, never()).save(any());
         verifyNoInteractions(applicationEventPublisher);
+    }
+
+    @Test
+    public void shouldLeaveDiscoveryDisabledWhenFlagIsMissing() {
+        when(configRepository.findAll()).thenReturn(List.of(
+                Config.of(ConfigServiceImpl.CONFIG_LLM_URL, "http://localhost:11434/v1"),
+                Config.of(ConfigServiceImpl.CONFIG_LLM_MODEL, "model")
+        ));
+
+        assertThat(configService.get().discoveryEnabled()).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid", "http://localhost", "https://localhost/", "ftp://localhost/v1", "http:///v1"})
+    public void shouldRejectInvalidUrlWhenDiscoveryIsEnabled(String url) {
+        assertThatThrownBy(() -> configService.update(new ConfigSetUpdateCommand()
+                .setDiscoveryEnabled(true)
+                .setLlmUrl(url)
+                .setLlmModel("model")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("LLM URL must be an absolute HTTP(S) URL including an API path.");
+
+        verifyNoInteractions(configRepository, applicationEventPublisher);
+    }
+
+    @Test
+    public void shouldSaveIncompleteLlmConfigWhenDiscoveryIsDisabled() {
+        configService.update(new ConfigSetUpdateCommand()
+                .setLlmUrl("unfinished URL")
+                .setLlmApiKey("secret"));
+
+        ArgumentCaptor<Config> savedConfig = ArgumentCaptor.forClass(Config.class);
+        verify(configRepository, times(5)).save(savedConfig.capture());
+        assertThat(savedConfig.getAllValues()).filteredOn(config -> config.getId().equals(ConfigServiceImpl.CONFIG_DISCOVERY_ENABLED))
+                .singleElement().satisfies(config -> assertThat(config.getValue()).isEqualTo("false"));
+        assertThat(savedConfig.getAllValues()).filteredOn(config -> config.getId().equals(ConfigServiceImpl.CONFIG_LLM_URL))
+                .singleElement().satisfies(config -> assertThat(config.getValue()).isEqualTo("unfinished URL"));
+        assertThat(savedConfig.getAllValues()).filteredOn(config -> config.getId().equals(ConfigServiceImpl.CONFIG_LLM_API_KEY))
+                .singleElement().satisfies(config -> assertThat(config.getValue()).isEqualTo("secret"));
     }
 }

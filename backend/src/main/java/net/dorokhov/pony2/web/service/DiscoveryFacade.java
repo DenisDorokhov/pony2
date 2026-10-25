@@ -39,7 +39,7 @@ public class DiscoveryFacade {
         DiscoveryJobProgress discoveryJobProgress = discoveryJobService.getCurrentDiscoveryJobProgress().orElse(null);
         DiscoveryJobProgressDto progress = discoveryJobProgress != null
                 ? toDiscoveryJobProgress(discoveryJobProgress).getValue() : null;
-        return DiscoveryStatusDto.of(configService.get().llmEnabled(), progress);
+        return DiscoveryStatusDto.of(configService.get().discoveryEnabled(), progress);
     }
 
     private OptionalResponseDto<DiscoveryJobProgressDto> toDiscoveryJobProgress(DiscoveryJobProgress progress) {

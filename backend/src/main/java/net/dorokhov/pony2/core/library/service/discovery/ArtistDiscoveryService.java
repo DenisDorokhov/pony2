@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.Nullable;
-import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
@@ -48,7 +47,6 @@ public class ArtistDiscoveryService {
     private final AlbumDiscoveryService albumDiscoveryService;
     private final LogService logService;
     private final DiscoveryTaskExecutor taskExecutor;
-    private final ConfigService configService;
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
@@ -60,7 +58,6 @@ public class ArtistDiscoveryService {
             AlbumDiscoveryService albumDiscoveryService,
             LogService logService,
             DiscoveryTaskExecutor taskExecutor,
-            ConfigService configService,
             PlatformTransactionManager transactionManager
     ) {
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
@@ -71,7 +68,6 @@ public class ArtistDiscoveryService {
         this.albumDiscoveryService = albumDiscoveryService;
         this.logService = logService;
         this.taskExecutor = taskExecutor;
-        this.configService = configService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
@@ -88,11 +84,10 @@ public class ArtistDiscoveryService {
 
     private void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
                           boolean discoverArtist, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
-        boolean llmEnabled = configService.get().llmEnabled();
-        long tasksComplete = !discoverArtist && llmEnabled ? 2 : 0;
-        long tasksTotal = (llmEnabled ? 2 : 0) + albums.size();
+        long tasksComplete = discoverArtist ? 0 : 2;
+        long tasksTotal = 2 + albums.size();
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
-        if (llmEnabled && discoverArtist) {
+        if (discoverArtist) {
             SpotifyArtistDataTaskExecution artistDataExecution = new SpotifyArtistDataTaskExecution(discoveryJob, artist, cacheEnabled);
             taskExecutor.execute(artistDataExecution);
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);

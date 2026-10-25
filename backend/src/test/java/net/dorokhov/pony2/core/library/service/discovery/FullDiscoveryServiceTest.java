@@ -1,7 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
-import net.dorokhov.pony2.api.config.domain.ConfigSet;
-import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -11,7 +9,6 @@ import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,15 +53,6 @@ public class FullDiscoveryServiceTest {
     private ArtistDiscoveryService artistDiscoveryService;
     @Mock
     private LibraryJobSynchronizer.DiscoveryTaskRegistration taskRegistration;
-    @Mock
-    private ConfigService configService;
-
-    @BeforeEach
-    public void setUp() {
-        lenient().when(configService.get())
-                .thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
-    }
-
     @Test
     public void shouldDiscoverArtistWhenDiscoveryIsMissing() {
         DiscoveryJob job = discoveryJob();
@@ -281,18 +269,18 @@ public class FullDiscoveryServiceTest {
     }
 
     @Test
-    public void shouldKeepZeroProgressForArtistWithoutTasks() {
+    public void shouldCountArtistTasksWithoutAlbums() {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1");
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
         fullDiscoveryService.discover(job, progressCalls::add);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsOnly(DiscoveryProgress.Value.of(0, 0));
+        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(2, 2));
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of()), eq(false), any(), any());
+                eq(List.of()), eq(true), any(), any());
     }
 
     private void artistTasks(String artistId, long count, LocalDateTime date) {

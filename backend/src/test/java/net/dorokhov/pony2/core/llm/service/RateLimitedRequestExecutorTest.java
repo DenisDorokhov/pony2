@@ -20,6 +20,67 @@ public class RateLimitedRequestExecutorTest {
     private final List<Duration> sleepDurations = new ArrayList<>();
 
     @Test
+    public void shouldRejectRequestWhenThreadIsAlreadyInterrupted() {
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(settings(Duration.ZERO, Duration.ZERO, 2));
+        AtomicInteger calls = new AtomicInteger();
+        Thread.currentThread().interrupt();
+        try {
+            assertThatThrownBy(() -> requestExecutor.execute(calls::incrementAndGet))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Request execution was interrupted.");
+
+            assertThat(calls).hasValue(0);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
+    public void shouldNotRetryWhenRequestInterruptsThread() {
+        RateLimitedRequestExecutor requestExecutor = requestExecutor(
+                new Settings(Duration.ZERO, Duration.ZERO, Duration.ofSeconds(10), 2, 1));
+        AtomicInteger calls = new AtomicInteger();
+        RuntimeException failure = new IllegalStateException("Request failed.");
+        try {
+            assertThatThrownBy(() -> requestExecutor.execute(() -> {
+                calls.incrementAndGet();
+                Thread.currentThread().interrupt();
+                throw failure;
+            })).isSameAs(failure);
+
+            assertThat(calls).hasValue(1);
+            assertThat(sleepDurations).isEmpty();
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
+    public void shouldNotRetryInterruptedRateLimitWaiting() {
+        AtomicInteger sleeps = new AtomicInteger();
+        AtomicInteger calls = new AtomicInteger();
+        RateLimitedRequestExecutor requestExecutor = new RateLimitedRequestExecutor(
+                "test", settings(Duration.ofSeconds(1), Duration.ZERO, 2), clock, duration -> {
+                    sleeps.incrementAndGet();
+                    throw new InterruptedException();
+                }, bound -> 0);
+        requestExecutor.execute(calls::incrementAndGet);
+        try {
+            assertThatThrownBy(() -> requestExecutor.execute(calls::incrementAndGet))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasCauseInstanceOf(InterruptedException.class);
+
+            assertThat(calls).hasValue(1);
+            assertThat(sleeps).hasValue(1);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     public void shouldStopWaitingWhenRequestIsCancelled() {
         RateLimitedRequestExecutor requestExecutor = requestExecutor(settings(Duration.ofSeconds(3), Duration.ZERO, 0));
         requestExecutor.execute("test", () -> "first");

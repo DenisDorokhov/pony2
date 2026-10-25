@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.Nullable;
-import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -33,22 +32,19 @@ public class FullDiscoveryService {
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final ArtistDiscoveryService artistDiscoveryService;
     private final LibraryJobSynchronizer jobSynchronizer;
-    private final ConfigService configService;
 
     public FullDiscoveryService(
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             ArtistDiscoveryService artistDiscoveryService,
-            LibraryJobSynchronizer jobSynchronizer,
-            ConfigService configService
+            LibraryJobSynchronizer jobSynchronizer
     ) {
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.artistDiscoveryService = artistDiscoveryService;
         this.jobSynchronizer = jobSynchronizer;
-        this.configService = configService;
     }
 
     public void discover(DiscoveryJob discoveryJob, @Nullable Consumer<DiscoveryProgress> observer) {
@@ -64,7 +60,7 @@ public class FullDiscoveryService {
     private void discoverArtists(DiscoveryJob discoveryJob, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
 
         List<Artist> artists = artistRepository.findAll(Sort.by("id")).stream().sorted().toList();
-        long tasksPerArtist = configService.get().llmEnabled() ? 2 : 0;
+        long tasksPerArtist = 2;
         long tasksComplete = 0;
         long tasksTotal = artists.size() * tasksPerArtist + albumRepository.count();
 
@@ -74,7 +70,7 @@ public class FullDiscoveryService {
         for (Artist artist : artists) {
             jobSynchronizer.interruptDiscoveryIfCancelled();
             List<Album> albums = albumRepository.findByArtistId(artist.getId()).stream().sorted().toList();
-            boolean discoverArtist = shouldDiscoverArtist(artist, tasksPerArtist);
+            boolean discoverArtist = shouldDiscoverArtist(artist);
             long artistProgressOffset = tasksComplete;
             artistDiscoveryService.discoverForFullJob(discoveryJob, artist, cacheEnabled, albums, discoverArtist, album -> {
                 jobSynchronizer.interruptDiscoveryIfCancelled();
@@ -105,10 +101,7 @@ public class FullDiscoveryService {
         }
     }
 
-    private boolean shouldDiscoverArtist(Artist artist, long tasksTotal) {
-        if (tasksTotal == 0) {
-            return false;
-        }
+    private boolean shouldDiscoverArtist(Artist artist) {
         LocalDateTime entityDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
         return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                         artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))

@@ -53,7 +53,7 @@ public class ChatModelImpl implements ChatModel {
     }
 
     private OpenAiChatOptions createOptions(ConfigSet configSet) {
-        if (!configSet.llmEnabled()) {
+        if (!configSet.discoveryEnabled()) {
             throw new IllegalStateException("LLM is not configured");
         }
         OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder()

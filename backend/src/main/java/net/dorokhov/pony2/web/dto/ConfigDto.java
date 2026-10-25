@@ -16,6 +16,7 @@ public final class ConfigDto {
 
     private List<@Valid LibraryFolderDto> libraryFolders;
 
+    private boolean discoveryEnabled;
     private String llmUrl;
     private String llmModel;
     private String llmApiKey;
@@ -35,6 +36,15 @@ public final class ConfigDto {
 
     public ConfigDto setLibraryFolders(List<@Valid LibraryFolderDto> libraryFolders) {
         this.libraryFolders = libraryFolders;
+        return this;
+    }
+
+    public boolean isDiscoveryEnabled() {
+        return discoveryEnabled;
+    }
+
+    public ConfigDto setDiscoveryEnabled(boolean discoveryEnabled) {
+        this.discoveryEnabled = discoveryEnabled;
         return this;
     }
 
@@ -70,6 +80,7 @@ public final class ConfigDto {
                 .setLibraryFolders(libraryFolders != null ? libraryFolders.stream()
                         .map(folder -> new File(folder.getPath()))
                         .toList() : List.of())
+                .setDiscoveryEnabled(discoveryEnabled)
                 .setLlmUrl(llmUrl)
                 .setLlmModel(llmModel)
                 .setLlmApiKey(llmApiKey);
@@ -81,6 +92,7 @@ public final class ConfigDto {
                 .setLibraryFolders(configSet.libraryFolders().stream()
                         .map(LibraryFolderDto::of)
                         .toList())
+                .setDiscoveryEnabled(configSet.discoveryEnabled())
                 .setLlmUrl(configSet.llmUrl())
                 .setLlmModel(configSet.llmModel())
                 .setLlmApiKey(configSet.llmApiKey());

@@ -160,6 +160,7 @@ public class LibrarySearchServiceImpl implements LibrarySearchService {
                         Search.session(entityManager).massIndexer().startAndWait();
                         logger.info("Re-building library search index done.");
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         logger.error("Re-building library search index has been interrupted.", e);
                         throw new RuntimeException(e);
                     }

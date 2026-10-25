@@ -72,7 +72,7 @@ public class RateLimitedRequestExecutor {
                         retryIndex + 1, settings.retriesOnException() + 1);
                 return executeOnce(context, supplier, cancellationCheck);
             } catch (RuntimeException e) {
-                if (retryIndex >= settings.retriesOnException()) {
+                if (Thread.currentThread().isInterrupted() || retryIndex >= settings.retriesOnException()) {
                     logger.debug("Rate-limited request '{}' in context '{}' failed after {} attempt(s).", name,
                             context, retryIndex + 1, e);
                     throw e;
@@ -96,6 +96,9 @@ public class RateLimitedRequestExecutor {
                 waitIfNeeded(context, contextState, cancellationCheck);
                 if (cancellationCheck != null) {
                     cancellationCheck.run();
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new IllegalStateException("Request execution was interrupted.");
                 }
                 contextState.lastRequestDate = clock.instant();
                 return supplier.get();

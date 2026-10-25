@@ -20,6 +20,45 @@ class LibraryJobSynchronizerTest {
     private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer();
 
     @Test
+    void shouldWaitForCancelledDiscoveryJobAndAllTasks() throws Exception {
+        LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
+        LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
+            Future<?> cancellation = worker.submit(() -> synchronizer.cancelDiscoveryAndWait(Duration.ofSeconds(3)));
+            await().until(synchronizer::isDiscoveryCancelled);
+            assertThat(cancellation.isDone()).isFalse();
+            discovery.close();
+            assertThat(cancellation.isDone()).isFalse();
+            task.close();
+
+            cancellation.get(2, TimeUnit.SECONDS);
+            assertThat(synchronizer.hasRunningTasks()).isFalse();
+        } finally {
+            task.close();
+            discovery.close();
+        }
+    }
+
+    @Test
+    void shouldFailWhenCancelledDiscoveryDoesNotStop() throws Exception {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = synchronizer.registerDiscoveryJob()) {
+            assertThatThrownBy(() -> synchronizer.cancelDiscoveryAndWait(Duration.ZERO))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasCauseInstanceOf(TimeoutException.class);
+            assertThat(synchronizer.isDiscoveryCancelled()).isTrue();
+        }
+    }
+
+    @Test
+    void shouldLeaveScanRunningWhenCancellingDiscovery() throws Exception {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignored = synchronizer.registerScanJob(Duration.ZERO)) {
+            synchronizer.cancelDiscoveryAndWait(Duration.ZERO);
+
+            assertBusy();
+        }
+    }
+
+    @Test
     void shouldNotifyOutsideLockWhenStartingScan() throws Exception {
         LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
         LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();

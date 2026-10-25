@@ -75,12 +75,12 @@ public class LibraryServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
     }
 
     @Test
-    void shouldOmitDiscoveryDataWhenLlmIsDisabled() {
-        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
+    void shouldOmitDiscoveryDataWhenDiscoveryIsDisabled() {
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), false, "http://localhost/v1", "model", null));
 
         assertThat(libraryService.getArtistDiscoveryData("artist")).isEmpty();
         assertThat(libraryService.getAlbumDiscoveryData("album")).isEmpty();

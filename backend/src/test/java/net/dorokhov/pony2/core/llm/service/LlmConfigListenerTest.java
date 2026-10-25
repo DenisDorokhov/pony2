@@ -51,13 +51,15 @@ class LlmConfigListenerTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"unchanged", "folders", "emptyValues"})
+    @ValueSource(strings = {"unchanged", "folders", "emptyValues", "disableDiscovery", "enableDiscovery"})
     void shouldKeepCacheWhenLlmSettingsDoNotChange(String change) {
-        configService.update(change.equals("emptyValues") ? new ConfigSetUpdateCommand() : config());
+        configService.update(change.equals("emptyValues") ? new ConfigSetUpdateCommand() :
+                config().setDiscoveryEnabled(!change.equals("enableDiscovery")));
         populateCache();
         ConfigSetUpdateCommand updated = switch (change) {
             case "folders" -> config().setLibraryFolders(List.of(new File("new-library")));
             case "emptyValues" -> new ConfigSetUpdateCommand().setLlmUrl("").setLlmModel(" ").setLlmApiKey("\t");
+            case "disableDiscovery" -> config().setDiscoveryEnabled(false);
             default -> config();
         };
 
@@ -106,6 +108,7 @@ class LlmConfigListenerTest extends IntegrationTest {
 
     private ConfigSetUpdateCommand config() {
         return new ConfigSetUpdateCommand()
+                .setDiscoveryEnabled(true)
                 .setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("old-model")
                 .setLlmApiKey("old-key");

@@ -7,12 +7,15 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.config.repository.ConfigRepository;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.net.URI;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -25,20 +28,26 @@ import static java.util.Objects.requireNonNull;
 @Service
 public class ConfigServiceImpl implements ConfigService {
 
+    private static final Duration DISCOVERY_CANCELLATION_TIMEOUT = Duration.ofSeconds(30);
+
     static final String CONFIG_LIBRARY_FOLDERS = "libraryFolders";
+    static final String CONFIG_DISCOVERY_ENABLED = "discoveryEnabled";
     static final String CONFIG_LLM_URL = "llmUrl";
     static final String CONFIG_LLM_MODEL = "llmModel";
     static final String CONFIG_LLM_API_KEY = "llmApiKey";
 
     private final ConfigRepository configRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final LibraryJobSynchronizer jobSynchronizer;
 
     public ConfigServiceImpl(
             ConfigRepository configRepository,
-            ApplicationEventPublisher applicationEventPublisher
+            ApplicationEventPublisher applicationEventPublisher,
+            LibraryJobSynchronizer jobSynchronizer
     ) {
         this.configRepository = configRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.jobSynchronizer = jobSynchronizer;
     }
 
     @Override
@@ -57,6 +66,7 @@ public class ConfigServiceImpl implements ConfigService {
         return new ConfigSet(
                 updateDate,
                 readLibraryFolders(values.get(CONFIG_LIBRARY_FOLDERS)),
+                Boolean.parseBoolean(values.get(CONFIG_DISCOVERY_ENABLED)),
                 values.get(CONFIG_LLM_URL),
                 values.get(CONFIG_LLM_MODEL),
                 values.get(CONFIG_LLM_API_KEY)
@@ -83,7 +93,11 @@ public class ConfigServiceImpl implements ConfigService {
     public void update(ConfigSetUpdateCommand command) {
         validate(command);
         ConfigSet oldConfig = get();
+        if (oldConfig.discoveryEnabled() && !command.isDiscoveryEnabled()) {
+            jobSynchronizer.cancelDiscoveryAndWait(DISCOVERY_CANCELLATION_TIMEOUT);
+        }
         saveLibraryFolders(command.getLibraryFolders());
+        saveStringConfig(CONFIG_DISCOVERY_ENABLED, Boolean.toString(command.isDiscoveryEnabled()));
         saveStringConfig(CONFIG_LLM_URL, command.getLlmUrl());
         saveStringConfig(CONFIG_LLM_MODEL, command.getLlmModel());
         saveStringConfig(CONFIG_LLM_API_KEY, command.getLlmApiKey());
@@ -93,14 +107,31 @@ public class ConfigServiceImpl implements ConfigService {
 
     private void validate(ConfigSetUpdateCommand command) {
         requireNonNull(command, "command");
-        if (!StringUtils.hasText(command.getLlmUrl()) && StringUtils.hasText(command.getLlmModel())) {
-            throw new IllegalArgumentException("LLM URL must be configured when LLM model is configured.");
+        if (!command.isDiscoveryEnabled()) {
+            return;
         }
-        if (!StringUtils.hasText(command.getLlmUrl()) && StringUtils.hasText(command.getLlmApiKey())) {
-            throw new IllegalArgumentException("LLM URL must be configured when LLM API key is configured.");
+        if (!StringUtils.hasText(command.getLlmUrl())) {
+            throw new IllegalArgumentException("LLM URL must be configured when discovery is enabled.");
         }
-        if (StringUtils.hasText(command.getLlmUrl()) && !StringUtils.hasText(command.getLlmModel())) {
-            throw new IllegalArgumentException("LLM model must be configured when LLM URL is configured.");
+        if (!StringUtils.hasText(command.getLlmModel())) {
+            throw new IllegalArgumentException("LLM model must be configured when discovery is enabled.");
+        }
+        if (!isValidLlmUrl(command.getLlmUrl())) {
+            throw new IllegalArgumentException("LLM URL must be an absolute HTTP(S) URL including an API path.");
+        }
+    }
+
+    private boolean isValidLlmUrl(String value) {
+        try {
+            URI uri = URI.create(value);
+            String scheme = uri.getScheme();
+            String path = uri.getPath();
+            return ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) &&
+                    StringUtils.hasText(uri.getHost()) &&
+                    StringUtils.hasText(path) &&
+                    !"/".equals(path);
+        } catch (IllegalArgumentException e) {
+            return false;
         }
     }
 

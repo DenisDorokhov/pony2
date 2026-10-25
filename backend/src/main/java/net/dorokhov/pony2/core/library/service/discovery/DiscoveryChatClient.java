@@ -116,7 +116,7 @@ public class DiscoveryChatClient {
         }
 
         private void check() {
-            if (cancelled.get()) {
+            if (cancelled.get() || Thread.currentThread().isInterrupted()) {
                 throw new DiscoveryInterruptedException();
             }
         }
