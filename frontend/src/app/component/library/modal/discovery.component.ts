@@ -6,7 +6,7 @@ import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LibraryDiscoveryService} from '../../../service/library-discovery.service';
 import {
   DiscoveryJobDto,
-  DiscoveryJobProgressDto,
+  DiscoveryStatusDto,
   DiscoveryProgressDto,
   DiscoveryType
 } from '../../../domain/library.dto';
@@ -37,47 +37,48 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
   DiscoveryJobStatus = DiscoveryJobDto.Status;
   DiscoveryType = DiscoveryType;
 
-  discoveryJobProgressLoadingState = LoadingState.LOADING;
+  discoveryStatusLoadingState = LoadingState.LOADING;
   discoveryJobsLoadingState = LoadingState.LOADING;
 
-  discoveryJobProgress: DiscoveryJobProgressDto | undefined | null;
+  discoveryStatus: DiscoveryStatusDto | undefined;
   discoveryJobs: DiscoveryJobDto[] = [];
   currentPage: PageDto | undefined;
   pageToLoad: PageDto | undefined;
   emptyDiscoveryJobRowCount = 5;
   discoveryProgressValue: number | null | undefined;
 
-  private discoveryJobProgressSubscription: Subscription | undefined;
+  private discoveryStatusSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
   private discoveryJobsSubscription: Subscription | undefined;
 
   ngOnInit(): void {
-    this.discoveryJobProgressSubscription = this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe({
-      next: discoveryJobProgress => {
-        this.discoveryJobProgress = discoveryJobProgress;
-        if (discoveryJobProgress) {
-          if (discoveryJobProgress.discoveryProgress?.value && discoveryJobProgress.discoveryProgress.value.itemsTotal > 0) {
-            this.discoveryProgressValue = discoveryJobProgress.discoveryProgress.value.itemsComplete * 100 / discoveryJobProgress.discoveryProgress.value.itemsTotal;
+    this.discoveryStatusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe({
+      next: discoveryStatus => {
+        this.discoveryStatus = discoveryStatus;
+        const value = discoveryStatus?.progress?.discoveryProgress?.value;
+        if (discoveryStatus?.progress) {
+          if (value && value.itemsTotal > 0) {
+            this.discoveryProgressValue = value.itemsComplete * 100 / value.itemsTotal;
           } else {
             this.discoveryProgressValue = null;
           }
         } else {
           this.discoveryProgressValue = undefined;
         }
-        this.discoveryJobProgressLoadingState = LoadingState.LOADED;
+        this.discoveryStatusLoadingState = LoadingState.LOADED;
       },
-      error: () => this.discoveryJobProgressLoadingState = LoadingState.ERROR
+      error: () => this.discoveryStatusLoadingState = LoadingState.ERROR
     });
     this.refreshRequestSubscription = this.libraryService.observeRefreshRequest().subscribe(() => {
       this.loadDiscoveryJobs(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 5);
     });
-    this.libraryDiscoveryService.updateAndScheduleDiscoveryJobProgressUpdate();
+    this.libraryDiscoveryService.updateAndScheduleDiscoveryStatusUpdate();
     this.discoveryJobsLoadingState = LoadingState.LOADING;
     this.loadDiscoveryJobs();
   }
 
   ngOnDestroy(): void {
-    this.discoveryJobProgressSubscription?.unsubscribe();
+    this.discoveryStatusSubscription?.unsubscribe();
     this.refreshRequestSubscription?.unsubscribe();
     this.discoveryJobsSubscription?.unsubscribe();
   }
@@ -105,13 +106,13 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
       pageSize: this.pageToLoad?.pageSize ?? 5,
       totalPages: this.pageToLoad?.totalPages ?? 0
     };
-    this.discoveryJobProgressLoadingState = LoadingState.LOADING;
+    this.discoveryStatusLoadingState = LoadingState.LOADING;
     this.libraryDiscoveryService.startFullDiscoveryJob().subscribe({
       next: () => {
-        this.discoveryJobProgressLoadingState = LoadingState.LOADED;
+        this.discoveryStatusLoadingState = LoadingState.LOADED;
       },
       error: () => {
-        this.discoveryJobProgressLoadingState = LoadingState.ERROR;
+        this.discoveryStatusLoadingState = LoadingState.ERROR;
       }
     });
   }

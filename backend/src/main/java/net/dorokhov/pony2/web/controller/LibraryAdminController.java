@@ -99,7 +99,7 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @GetMapping("/api/admin/library/discoveryJobProgress")
-    public OptionalResponseDto<DiscoveryJobProgressDto> getCurrentDiscoveryJobProgress() {
+    public DiscoveryStatusDto getCurrentDiscoveryJobProgress() {
         return discoveryFacade.getCurrentDiscoveryJobProgress();
     }
 

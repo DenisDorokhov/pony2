@@ -183,7 +183,8 @@ class LibraryJobConcurrencyTest {
     @ParameterizedTest
     @EnumSource(value = JobKind.class, names = {"SCAN", "EDIT"})
     void shouldStartDiscoveryAfterScanReleasesLock(JobKind kind) throws Exception {
-        scanService.addObserver(new DiscoveryScanJobObserver(scanService, discoveryService, logService));
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+        scanService.addObserver(new DiscoveryScanJobObserver(scanService, discoveryService, logService, configService));
         start(kind);
         commit();
         runNextTask();

@@ -52,16 +52,17 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
         return this;
     }
 
+    @Nullable
     public AlbumDiscoveryDataDto getDiscoveryData() {
         return discoveryData;
     }
 
-    public AlbumDto setDiscoveryData(AlbumDiscoveryDataDto discoveryData) {
+    public AlbumDto setDiscoveryData(@Nullable AlbumDiscoveryDataDto discoveryData) {
         this.discoveryData = discoveryData;
         return this;
     }
 
-    public static AlbumDto of(Album album, AlbumDiscoveryData discoveryData) {
+    public static AlbumDto of(Album album, @Nullable AlbumDiscoveryData discoveryData) {
         return new AlbumDto()
                 .setId(album.getId())
                 .setCreationDate(album.getCreationDate())
@@ -70,6 +71,6 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
                 .setYear(album.getYear())
                 .setArtworkId(album.getArtwork() != null ? album.getArtwork().getId() : null)
                 .setArtistId(album.getArtist().getId())
-                .setDiscoveryData(AlbumDiscoveryDataDto.of(discoveryData));
+                .setDiscoveryData(discoveryData != null ? AlbumDiscoveryDataDto.of(discoveryData) : null);
     }
 }

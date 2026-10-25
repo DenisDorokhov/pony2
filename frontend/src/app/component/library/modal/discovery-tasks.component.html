@@ -1,9 +1,11 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ titleKey | translate }}</h4>
   <div class="header-actions">
-    <button type="button" class="btn btn-primary" [disabled]="startDiscoveryDisabled" (click)="startDiscovery()">
-      {{ 'discoveryTasks.startDiscoveryButton' | translate }}
-    </button>
+    @if (discoveryEnabled) {
+      <button type="button" class="btn btn-primary" [disabled]="startDiscoveryDisabled" (click)="startDiscovery()">
+        {{ 'discoveryTasks.startDiscoveryButton' | translate }}
+      </button>
+    }
     <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
   </div>
 </div>

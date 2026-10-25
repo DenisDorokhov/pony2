@@ -49,8 +49,8 @@ public class PlaybackHistoryFacade {
 
     private AlbumDetailsDto toAlbumDetailsDto(Album album) {
         return AlbumDetailsDto.of(album,
-                libraryService.getArtistDiscoveryData(album.getArtist().getId()),
-                libraryService.getAlbumDiscoveryData(album.getId()));
+                libraryService.getArtistDiscoveryData(album.getArtist().getId()).orElse(null),
+                libraryService.getAlbumDiscoveryData(album.getId()).orElse(null));
     }
 
     private boolean isAdmin() {

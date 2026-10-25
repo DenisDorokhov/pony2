@@ -4,6 +4,7 @@
 </div>
 
 <div class="modal-body">
+  @let discoveryJobProgress = discoveryStatus?.progress;
   <table class="status-container">
     <tr>
       <td class="label">{{ 'discovery.statusLabel' | translate }}</td>
@@ -63,11 +64,13 @@
     <tr>
       <td colspan="2">
         <div class="d-flex justify-content-between">
-          <button type="button" class="btn btn-primary"
-                  [disabled]="discoveryJobProgressLoadingState === LoadingState.LOADING || discoveryJobProgress"
-                  (click)="startFullDiscoveryJob()">
-            {{ 'discovery.startFullDiscoveryButton' | translate }}
-          </button>
+          @if (discoveryStatus?.discoveryEnabled !== false) {
+            <button type="button" class="btn btn-primary"
+                    [disabled]="discoveryStatusLoadingState === LoadingState.LOADING || !!discoveryJobProgress"
+                    (click)="startFullDiscoveryJob()">
+              {{ 'discovery.startFullDiscoveryButton' | translate }}
+            </button>
+          }
           <button type="button" class="btn btn-outline-dark" (click)="showAllTasks()">
             {{ 'discovery.allTasksButton' | translate }}
           </button>

@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import jakarta.annotation.Nullable;
+import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData.ReleaseType;
 import net.dorokhov.pony2.api.library.service.LibraryService;
@@ -35,6 +36,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
     private final RandomFetcher randomFetcher;
+    private final ConfigService configService;
 
     public LibraryServiceImpl(
             GenreRepository genreRepository,
@@ -45,7 +47,8 @@ public class LibraryServiceImpl implements LibraryService {
             DiscoveryTaskRepository discoveryTaskRepository,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
-            RandomFetcher randomFetcher
+            RandomFetcher randomFetcher,
+            ConfigService configService
     ) {
         this.genreRepository = genreRepository;
         this.artistRepository = artistRepository;
@@ -56,6 +59,7 @@ public class LibraryServiceImpl implements LibraryService {
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
         this.randomFetcher = randomFetcher;
+        this.configService = configService;
     }
 
     @Override
@@ -95,7 +99,10 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
-    public ArtistDiscoveryData getArtistDiscoveryData(String artistId) {
+    public Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId) {
+        if (!configService.get().llmEnabled()) {
+            return Optional.empty();
+        }
         List<String> topSongIds = discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
                 .map(json -> JsonConverter.listFromJson(json, String.class)).orElse(emptyList()).stream()
                 .filter(Objects::nonNull)
@@ -107,18 +114,21 @@ public class LibraryServiceImpl implements LibraryService {
                     .filter(existingSongIds::contains)
                     .toList();
         }
-        return new ArtistDiscoveryData(artistDiscoveryIndexRepository.findByArtistId(artistId)
+        return Optional.of(new ArtistDiscoveryData(artistDiscoveryIndexRepository.findByArtistId(artistId)
                 .map(ArtistDiscoveryIndex::getCountryCode)
-                .orElse(null), topSongIds);
+                .orElse(null), topSongIds));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public AlbumDiscoveryData getAlbumDiscoveryData(String albumId) {
+    public Optional<AlbumDiscoveryData> getAlbumDiscoveryData(String albumId) {
+        if (!configService.get().llmEnabled()) {
+            return Optional.empty();
+        }
         MusicBrainzAlbumData data = discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
                 .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
         if (data == null) {
-            return new AlbumDiscoveryData(ReleaseType.UNKNOWN, null);
+            return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null));
         }
         ReleaseType releaseType;
         if (data.secondaryTypes().contains("Compilation")) {
@@ -133,7 +143,7 @@ public class LibraryServiceImpl implements LibraryService {
                 case null, default -> ReleaseType.UNKNOWN;
             };
         }
-        return new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate()));
+        return Optional.of(new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate())));
     }
 
     @Override

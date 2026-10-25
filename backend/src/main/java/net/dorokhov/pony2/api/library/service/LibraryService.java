@@ -17,9 +17,9 @@ public interface LibraryService {
 
     Optional<Artist> getArtistById(String artistId);
 
-    ArtistDiscoveryData getArtistDiscoveryData(String artistId);
+    Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId);
 
-    AlbumDiscoveryData getAlbumDiscoveryData(String albumId);
+    Optional<AlbumDiscoveryData> getAlbumDiscoveryData(String albumId);
 
     List<Album> getAlbums(int size, int offset);
 

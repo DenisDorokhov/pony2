@@ -256,15 +256,15 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
             return discoveryJobProgress != null && discoveryJobProgress.getDiscoveryProgress() != null;
         });
 
-        ResponseEntity<OptionalResponseDto<DiscoveryJobProgressDto>> optionalDiscoveryJobProgressResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<DiscoveryStatusDto> discoveryStatusResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/admin/library/discoveryJobProgress", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()),
-                new ParameterizedTypeReference<>() {});
+                DiscoveryStatusDto.class);
 
-        assertThat(optionalDiscoveryJobProgressResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(optionalDiscoveryJobProgressResponse.getBody()).satisfies(optionalResponse -> {
-            assertThat(optionalResponse.isPresent()).isTrue();
-            assertThat(optionalResponse.getValue()).satisfies(discoveryJobProgress -> {
+        assertThat(discoveryStatusResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(discoveryStatusResponse.getBody()).satisfies(discoveryStatus -> {
+            assertThat(discoveryStatus.isDiscoveryEnabled()).isEqualTo(configService.get().llmEnabled());
+            assertThat(discoveryStatus.getProgress()).satisfies(discoveryJobProgress -> {
                 assertThat(discoveryJobProgress.getDiscoveryJob()).isNotNull();
                 assertThat(discoveryJobProgress.getDiscoveryProgress()).isNotNull();
                 assertThat(discoveryJobProgress.getDiscoveryJob().getId()).isEqualTo(discoveryJob.getId());

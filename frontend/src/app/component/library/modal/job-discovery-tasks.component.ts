@@ -1,7 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {EMPTY, Observable} from 'rxjs';
 import {mergeMap, tap} from 'rxjs/operators';
-import {DiscoveryJobDto, DiscoveryJobProgressDto, DiscoveryTaskPageDto, DiscoveryType} from '../../../domain/library.dto';
+import {DiscoveryJobDto, DiscoveryStatusDto, DiscoveryTaskPageDto, DiscoveryType} from '../../../domain/library.dto';
 import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstract-discovery-tasks.component';
 
 @Component({
@@ -50,7 +50,7 @@ export class JobDiscoveryTasksComponent extends AbstractDiscoveryTasksComponent 
     }
   }
 
-  protected override startDiscoveryJob(): Observable<DiscoveryJobProgressDto | null> {
+  protected override startDiscoveryJob(): Observable<DiscoveryStatusDto> {
     switch (this.discoveryJob?.discoveryType) {
       case DiscoveryType.FULL:
         return this.libraryDiscoveryService.startFullDiscoveryJob();

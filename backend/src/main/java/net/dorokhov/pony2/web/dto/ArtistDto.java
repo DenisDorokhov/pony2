@@ -43,16 +43,17 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
         return this;
     }
 
+    @Nullable
     public ArtistDiscoveryDataDto getDiscoveryData() {
         return discoveryData;
     }
 
-    public ArtistDto setDiscoveryData(ArtistDiscoveryDataDto discoveryData) {
+    public ArtistDto setDiscoveryData(@Nullable ArtistDiscoveryDataDto discoveryData) {
         this.discoveryData = discoveryData;
         return this;
     }
 
-    public static ArtistDto of(Artist artist, ArtistDiscoveryData discoveryData) {
+    public static ArtistDto of(Artist artist, @Nullable ArtistDiscoveryData discoveryData) {
         return new ArtistDto()
                 .setId(artist.getId())
                 .setCreationDate(artist.getCreationDate())
@@ -64,6 +65,6 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
                         .map(ArtistGenre::getGenre)
                         .map(GenreDto::of)
                         .toList())
-                .setDiscoveryData(ArtistDiscoveryDataDto.of(discoveryData));
+                .setDiscoveryData(discoveryData != null ? ArtistDiscoveryDataDto.of(discoveryData) : null);
     }
 }

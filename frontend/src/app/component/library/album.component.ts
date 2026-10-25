@@ -17,6 +17,7 @@ import {SongListComponent} from './song-list.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ImageLoaderComponent} from '../common/image-loader.component';
 import {LibraryService} from '../../service/library.service';
+import {LibraryDiscoveryService} from '../../service/library-discovery.service';
 import {AlbumDiscoveryTasksComponent} from './modal/album-discovery-tasks.component';
 import {fromEvent, Subscription} from 'rxjs';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
@@ -77,6 +78,7 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
 
   private readonly libraryService = inject(LibraryService);
+  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly translateService = inject(TranslateService);
   private readonly installationService = inject(InstallationService);
   private readonly playlistService = inject(PlaylistService);
@@ -95,6 +97,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   discs: Disc[] = [];
   duration: string | undefined;
   showNewIndicator = false;
+  discoveryEnabled = true;
   topPlaylists: Playlist[] = [];
 
   @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
@@ -106,6 +109,8 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   }
 
   ngOnInit(): void {
+    this.subscriptions.push(this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus =>
+      this.discoveryEnabled = discoveryStatus?.discoveryEnabled !== false));
     this.subscriptions.push(this.libraryService.observeScrollToAlbumRequest()
       .subscribe(album => {
         if (album.id === this.albumSongs.album.id) {

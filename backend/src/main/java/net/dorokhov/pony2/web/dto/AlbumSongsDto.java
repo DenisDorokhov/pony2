@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.web.dto;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
 
@@ -28,7 +29,7 @@ public final class AlbumSongsDto {
         return this;
     }
 
-    public static AlbumSongsDto of(Album album, AlbumDiscoveryData albumDiscoveryData, boolean isAdmin) {
+    public static AlbumSongsDto of(Album album, @Nullable AlbumDiscoveryData albumDiscoveryData, boolean isAdmin) {
         return new AlbumSongsDto()
                 .setAlbum(AlbumDto.of(album, albumDiscoveryData))
                 .setSongs(album.getSongs().stream()

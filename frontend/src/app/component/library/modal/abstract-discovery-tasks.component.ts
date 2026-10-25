@@ -4,7 +4,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {defer, interval, Observable, Subscription} from 'rxjs';
 import {finalize, mergeMap} from 'rxjs/operators';
-import {AlbumDto, ArtistDto, DiscoveryJobProgressDto, DiscoveryTaskDto, DiscoveryTaskPageDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
+import {AlbumDto, ArtistDto, DiscoveryStatusDto, DiscoveryTaskDto, DiscoveryTaskPageDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
 import {PageDto} from '../../../domain/common.dto';
 import {LoadingState} from '../../../domain/common.model';
@@ -95,19 +95,21 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   discoveryTasks: DiscoveryTaskWithTarget[] = [];
   page: PageDto | undefined;
   startingDiscovery = false;
+  discoveryEnabled = true;
   discoveryRunning = false;
 
   private pageToLoad: PageDto | undefined;
   private resetScrollOnLoad = false;
   private tasksSubscription: Subscription | undefined;
   private refreshSubscription: Subscription | undefined;
-  private progressSubscription: Subscription | undefined;
+  private statusSubscription: Subscription | undefined;
   private startSubscription: Subscription | undefined;
 
   ngOnInit(): void {
-    this.progressSubscription = this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe(progress => {
+    this.statusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
       const wasRunning = this.discoveryRunning;
-      this.discoveryRunning = !!progress;
+      this.discoveryEnabled = discoveryStatus?.discoveryEnabled !== false;
+      this.discoveryRunning = !!discoveryStatus?.progress;
       if (wasRunning && !this.discoveryRunning && this.refreshOnDiscoveryEnd) {
         this.loadPage(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 30, false);
       }
@@ -127,7 +129,7 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   ngOnDestroy(): void {
     this.tasksSubscription?.unsubscribe();
     this.refreshSubscription?.unsubscribe();
-    this.progressSubscription?.unsubscribe();
+    this.statusSubscription?.unsubscribe();
     this.startSubscription?.unsubscribe();
   }
 
@@ -178,7 +180,7 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
     });
   }
 
-  protected abstract startDiscoveryJob(): Observable<DiscoveryJobProgressDto | null>;
+  protected abstract startDiscoveryJob(): Observable<DiscoveryStatusDto>;
 
   applyResultFilter(result?: DiscoveryTaskResultFilter) {
     this.taskResult = result;

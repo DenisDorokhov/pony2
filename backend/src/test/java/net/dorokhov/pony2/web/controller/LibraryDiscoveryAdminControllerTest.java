@@ -1,5 +1,7 @@
 package net.dorokhov.pony2.web.controller;
 
+import net.dorokhov.pony2.api.config.domain.ConfigSet;
+import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
@@ -56,13 +58,15 @@ public class LibraryDiscoveryAdminControllerTest {
     private ScanFacade scanFacade;
     @Mock
     private LibraryFacade libraryFacade;
+    @Mock
+    private ConfigService configService;
 
     private MockMvc mockMvc;
     private JsonMapper objectMapper;
 
     @BeforeEach
     public void setUp() {
-        DiscoveryFacade discoveryFacade = new DiscoveryFacade(discoveryJobService, libraryService);
+        DiscoveryFacade discoveryFacade = new DiscoveryFacade(discoveryJobService, libraryService, configService);
         JsonMapper.Builder mapperBuilder = JsonMapper.builder();
         new JacksonConfig().jsonMapperBuilderCustomizer().customize(mapperBuilder);
         objectMapper = mapperBuilder.build();
@@ -89,11 +93,11 @@ public class LibraryDiscoveryAdminControllerTest {
                 .setLogMessage(new LogMessage().setId("log1").setText("Starting discovery."));
         when(startJob(type, cacheEnabled)).thenReturn(job);
         if (type != DiscoveryType.FULL) {
-            when(libraryService.getArtistDiscoveryData("artistId")).thenReturn(new ArtistDiscoveryData(null, List.of()));
+            when(libraryService.getArtistDiscoveryData("artistId")).thenReturn(Optional.of(new ArtistDiscoveryData(null, List.of())));
         }
         if (type == DiscoveryType.ALBUM) {
             when(libraryService.getAlbumDiscoveryData("albumId"))
-                    .thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+                    .thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null)));
         }
 
         MockHttpServletRequestBuilder request = post(startJobPath(type));
@@ -232,14 +236,13 @@ public class LibraryDiscoveryAdminControllerTest {
         verify(discoveryJobService).getAll(pageRequest);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"", "/job1"})
-    public void shouldGetDiscoveryJobProgress(String suffix) throws Exception {
+    @Test
+    public void shouldGetDiscoveryJobProgress() throws Exception {
         DiscoveryJobProgress progress = new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
                 new DiscoveryProgress(DiscoveryProgress.Step.FULL_DISCOVERY, DiscoveryProgress.Value.of(3, 10)));
-        mockProgress(suffix, progress);
+        mockProgress("/job1", progress);
 
-        String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress" + suffix))
+        String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress/job1"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         OptionalResponseDto<DiscoveryJobProgressDto> dto = objectMapper.readValue(response, new TypeReference<>() {});
@@ -264,10 +267,9 @@ public class LibraryDiscoveryAdminControllerTest {
         });
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"", "/missing"})
-    public void shouldReturnEmptyDiscoveryJobProgress(String suffix) throws Exception {
-        String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress" + suffix))
+    @Test
+    public void shouldReturnEmptyDiscoveryJobProgress() throws Exception {
+        String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress/missing"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         OptionalResponseDto<DiscoveryJobProgressDto> dto = objectMapper.readValue(response, new TypeReference<>() {});
@@ -278,18 +280,50 @@ public class LibraryDiscoveryAdminControllerTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void shouldGetDiscoveryStatusWithAndWithoutJob(boolean llmEnabled) throws Exception {
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(),
+                llmEnabled ? "http://localhost" : null, llmEnabled ? "model" : null, null));
+
+        String inactiveResponse = mockMvc.perform(get("/api/admin/library/discoveryJobProgress"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        DiscoveryStatusDto inactiveStatus = objectMapper.readValue(inactiveResponse, DiscoveryStatusDto.class);
+
+        assertThat(inactiveStatus.isDiscoveryEnabled()).isEqualTo(llmEnabled);
+        assertThat(inactiveStatus.getProgress()).isNull();
+        assertThat(objectMapper.readTree(inactiveResponse).has("progress")).isFalse();
+
+        mockProgress("", new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
+                new DiscoveryProgress(DiscoveryProgress.Step.FULL_DISCOVERY, DiscoveryProgress.Value.of(3, 10))));
+
+        String activeResponse = mockMvc.perform(get("/api/admin/library/discoveryJobProgress"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        DiscoveryStatusDto activeStatus = objectMapper.readValue(activeResponse, DiscoveryStatusDto.class);
+
+        assertThat(activeStatus.isDiscoveryEnabled()).isEqualTo(llmEnabled);
+        assertThat(activeStatus.getProgress()).satisfies(progress -> {
+            assertThat(progress.getDiscoveryJob().getId()).isEqualTo("job1");
+            assertThat(progress.getDiscoveryProgress().getValue().getItemsComplete()).isEqualTo(3);
+            assertThat(progress.getDiscoveryProgress().getValue().getItemsTotal()).isEqualTo(10);
+        });
+    }
+
     @Test
     public void shouldGetDiscoveryJobProgressBeforeFirstStep() throws Exception {
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
         mockProgress("", new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"), null));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        OptionalResponseDto<DiscoveryJobProgressDto> dto = objectMapper.readValue(response, new TypeReference<>() {});
+        DiscoveryStatusDto dto = objectMapper.readValue(response, DiscoveryStatusDto.class);
 
-        assertThat(dto).satisfies(optionalResponse -> {
-            assertThat(optionalResponse.isPresent()).isTrue();
-            assertThat(optionalResponse.getValue()).satisfies(discoveryJobProgress -> {
+        assertThat(dto).satisfies(discoveryStatus -> {
+            assertThat(discoveryStatus.isDiscoveryEnabled()).isTrue();
+            assertThat(discoveryStatus.getProgress()).satisfies(discoveryJobProgress -> {
                 assertThat(discoveryJobProgress.getDiscoveryJob().getId()).isEqualTo("job1");
                 assertThat(discoveryJobProgress.getDiscoveryProgress()).isNull();
             });
@@ -341,11 +375,11 @@ public class LibraryDiscoveryAdminControllerTest {
                 ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE;
         DiscoveryTaskType taskType = type != null ? type : DiscoveryTaskType.SPOTIFY_ARTIST_DATA;
         DiscoveryTask task = task(taskType, taskStatus);
-        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(new ArtistDiscoveryData(null, List.of()));
+        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(Optional.of(new ArtistDiscoveryData(null, List.of())));
         if (taskType == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             task.setAlbum(album);
             when(libraryService.getAlbumDiscoveryData("album1"))
-                    .thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+                    .thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null)));
         } else {
             task.setArtist(artist);
         }
@@ -420,10 +454,10 @@ public class LibraryDiscoveryAdminControllerTest {
         Artist artist = new Artist().setId("artist1").setName("Artist");
         Album album = new Album().setId("album1").setName("Album").setYear(2001).setArtist(artist);
         when(libraryService.getArtistDiscoveryData("artist1"))
-                .thenReturn(new ArtistDiscoveryData("DE", List.of("song1")));
+                .thenReturn(Optional.of(new ArtistDiscoveryData("DE", List.of("song1"))));
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             when(libraryService.getAlbumDiscoveryData("album1"))
-                    .thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.EP, LocalDateTime.of(2001, 1, 1, 0, 0)));
+                    .thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.EP, LocalDateTime.of(2001, 1, 1, 0, 0))));
         }
         DiscoveryTask task = task(type, DiscoveryTask.Status.COMPLETE);
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
@@ -511,8 +545,8 @@ public class LibraryDiscoveryAdminControllerTest {
         Artist artist = new Artist().setId("artist1").setName("Artist");
         Album album = new Album().setId("album1").setName("Album").setArtist(artist);
         DiscoveryTask task = task(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE).setAlbum(album);
-        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(new ArtistDiscoveryData(null, List.of()));
-        when(libraryService.getAlbumDiscoveryData("album1")).thenReturn(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(Optional.of(new ArtistDiscoveryData(null, List.of())));
+        when(libraryService.getAlbumDiscoveryData("album1")).thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null)));
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, type);
         PageRequest pageRequest = PageRequest.of(1, 2);
         String path;

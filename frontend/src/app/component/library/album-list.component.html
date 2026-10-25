@@ -27,7 +27,7 @@
               <button ngbDropdownItem [disabled]="songCount === 0" (click)="startArtistRadio()">
                 <i class="bi bi-broadcast"></i>{{ 'library.artist.radio' | translate }}
               </button>
-              @if (isAdmin) {
+              @if (isAdmin && discoveryEnabled) {
                 <button ngbDropdownItem (click)="openArtistDiscoveryTasks()">
                   <i class="bi bi-stars"></i>{{ 'library.artist.discover' | translate }}
                 </button>

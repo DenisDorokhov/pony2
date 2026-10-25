@@ -9,7 +9,7 @@ export interface AlbumDto {
   year: number | undefined;
   artworkId: string | undefined;
   artistId: string;
-  discoveryData: AlbumDiscoveryDataDto;
+  discoveryData: AlbumDiscoveryDataDto | undefined;
 }
 
 export interface AlbumSongsDto {
@@ -40,7 +40,7 @@ export interface ArtistDto {
   name: string | undefined;
   artworkId: string | undefined;
   genres: GenreDto[],
-  discoveryData: ArtistDiscoveryDataDto;
+  discoveryData: ArtistDiscoveryDataDto | undefined;
 }
 
 export interface ArtistSongsDto {
@@ -278,6 +278,11 @@ export namespace DiscoveryProgressDto {
 export interface DiscoveryJobProgressDto {
   discoveryJob: DiscoveryJobDto;
   discoveryProgress: DiscoveryProgressDto | undefined;
+}
+
+export interface DiscoveryStatusDto {
+  discoveryEnabled: boolean;
+  progress: DiscoveryJobProgressDto | undefined;
 }
 
 export interface DiscoveryJobPageDto extends PageDto {

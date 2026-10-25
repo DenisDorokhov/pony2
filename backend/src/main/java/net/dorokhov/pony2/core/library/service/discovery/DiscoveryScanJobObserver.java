@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.ScanJob;
 import net.dorokhov.pony2.api.library.domain.ScanJobProgress;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
@@ -20,15 +21,18 @@ public class DiscoveryScanJobObserver implements ScanJobService.Observer {
     private final ScanJobService scanJobService;
     private final DiscoveryJobService discoveryJobService;
     private final LogService logService;
+    private final ConfigService configService;
 
     public DiscoveryScanJobObserver(
             ScanJobService scanJobService,
             DiscoveryJobService discoveryJobService,
-            LogService logService
+            LogService logService,
+            ConfigService configService
     ) {
         this.scanJobService = scanJobService;
         this.discoveryJobService = discoveryJobService;
         this.logService = logService;
+        this.configService = configService;
     }
 
     @PostConstruct
@@ -59,10 +63,12 @@ public class DiscoveryScanJobObserver implements ScanJobService.Observer {
 
     @Override
     public void onScanJobCompleted(ScanJob scanJob) {
-        try {
-            discoveryJobService.startFullJob();
-        } catch (ConcurrentLibraryJobException e) {
-            logService.warn(logger, "Could not start full discovery job after scan job.", e);
+        if (configService.get().llmEnabled()) {
+            try {
+                discoveryJobService.startFullJob();
+            } catch (ConcurrentLibraryJobException e) {
+                logService.warn(logger, "Could not start full discovery job after scan job.", e);
+            }
         }
     }
 

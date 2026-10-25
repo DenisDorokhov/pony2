@@ -40,6 +40,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   currentUser: UserDto | undefined;
 
   scanRunning = false;
+  discoveryEnabled = true;
   discoveryRunning = false;
   playbackMode: PlaybackMode;
   currentTheme: Theme;
@@ -63,8 +64,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.themeService.observeTheme().subscribe(theme => this.currentTheme = theme));
     this.subscriptions.push(this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress =>
       this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null));
-    this.subscriptions.push(this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe(discoveryJobProgress =>
-      this.discoveryRunning = discoveryJobProgress !== undefined && discoveryJobProgress !== null));
+    this.subscriptions.push(this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
+      this.discoveryEnabled = discoveryStatus?.discoveryEnabled !== false;
+      this.discoveryRunning = !!discoveryStatus?.progress;
+    }));
   }
 
   ngOnDestroy(): void {

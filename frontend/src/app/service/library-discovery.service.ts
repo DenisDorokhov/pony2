@@ -13,19 +13,19 @@ import {
   throwError,
   timer
 } from 'rxjs';
-import {catchError, map, tap} from 'rxjs/operators';
+import {catchError, tap} from 'rxjs/operators';
 import {
   DiscoveryJobDetailsDto,
   DiscoveryJobDto,
   DiscoveryJobPageDto,
-  DiscoveryJobProgressDto,
+  DiscoveryStatusDto,
   DiscoveryTaskDto,
   DiscoveryTaskPageDto,
   DiscoveryTaskResultFilter,
   DiscoveryTaskType
 } from '../domain/library.dto';
 import {AuthenticationService} from './authentication.service';
-import {ErrorDto, OptionalResponseDto} from '../domain/common.dto';
+import {ErrorDto} from '../domain/common.dto';
 import {LibraryService} from './library.service';
 import {NotificationService} from './notification.service';
 import {TranslateService} from '@ngx-translate/core';
@@ -44,50 +44,52 @@ export class LibraryDiscoveryService {
   private readonly notificationService = inject(NotificationService);
   private readonly translateService = inject(TranslateService);
 
-  private discoveryJobProgressSubject = new BehaviorSubject<DiscoveryJobProgressDto | undefined | null>(undefined);
+  private discoveryStatusSubject = new BehaviorSubject<DiscoveryStatusDto | undefined>(undefined);
 
-  private discoveryJobProgressUpdateSubscription: Subscription | undefined;
+  private discoveryStatusUpdateSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
 
   constructor() {
     this.authenticationService.observeAuthentication().subscribe(user => {
       if (user?.role === Role.ADMIN) {
-        this.updateAndScheduleDiscoveryJobProgressUpdate();
+        this.updateAndScheduleDiscoveryStatusUpdate();
       } else {
-        this.discoveryJobProgressUpdateSubscription?.unsubscribe();
-        this.discoveryJobProgressUpdateSubscription = undefined;
-        this.discoveryJobProgressSubject.next(undefined);
+        this.discoveryStatusUpdateSubscription?.unsubscribe();
+        this.discoveryStatusUpdateSubscription = undefined;
+        this.discoveryStatusSubject.next(undefined);
         this.refreshRequestSubscription?.unsubscribe();
         this.refreshRequestSubscription = undefined;
       }
     });
   }
 
-  updateAndScheduleDiscoveryJobProgressUpdate() {
-    this.discoveryJobProgressUpdateSubscription?.unsubscribe();
-    this.discoveryJobProgressUpdateSubscription = defer(() => {
+  updateAndScheduleDiscoveryStatusUpdate() {
+    this.discoveryStatusUpdateSubscription?.unsubscribe();
+    this.discoveryStatusUpdateSubscription = defer(() => {
       if (this.authenticationService.currentUser?.role === Role.ADMIN) {
-        return this.updateDiscoveryJobProgress();
+        return this.updateDiscoveryStatus();
       } else {
         return of(undefined);
       }
     })
       .pipe(
         catchError(error => {
-          console.error(`Could not update discovery job progress: ${JSON.stringify(error)}`);
+          console.error(`Could not update discovery status: ${JSON.stringify(error)}`);
           return of(undefined);
         }),
-        delayWhen(() => this.discoveryJobProgressSubject.value ? interval(1000) : interval(30000)),
+        delayWhen(() => this.discoveryStatusSubject.value?.progress ? interval(1000) : interval(30000)),
         repeat()
       )
       .subscribe();
   }
 
-  private updateDiscoveryJobProgress(): Observable<DiscoveryJobProgressDto | null> {
-    return this.httpClient.get<OptionalResponseDto<DiscoveryJobProgressDto>>('/api/admin/library/discoveryJobProgress')
+  private updateDiscoveryStatus(): Observable<DiscoveryStatusDto> {
+    return this.httpClient.get<DiscoveryStatusDto>('/api/admin/library/discoveryJobProgress')
       .pipe(
-        map(optionalResponse => {
-          if (optionalResponse.present) {
+        tap(discoveryStatus => {
+          const previousStatus = this.discoveryStatusSubject.value;
+          this.discoveryStatusSubject.next(discoveryStatus);
+          if (discoveryStatus.progress) {
             if (!this.refreshRequestSubscription) {
               console.info('Scheduling auto-refresh during discovery job running.');
               this.refreshRequestSubscription = timer(0, 10000).pipe(
@@ -96,13 +98,9 @@ export class LibraryDiscoveryService {
                 })
               ).subscribe();
             }
-            this.discoveryJobProgressSubject.next(optionalResponse.value!);
-            return optionalResponse.value!;
           } else {
-            if (this.discoveryJobProgressSubject.value) {
-              const oldDiscoveryJob = this.discoveryJobProgressSubject.value!.discoveryJob;
-              this.discoveryJobProgressSubject.next(null);
-              this.showDiscoveryJobEndedNotification(oldDiscoveryJob!.id!);
+            if (previousStatus?.progress) {
+              this.showDiscoveryJobEndedNotification(previousStatus.progress.discoveryJob.id);
             }
             if (this.refreshRequestSubscription) {
               console.info('Discovery job finished, cancelling auto-refresh.');
@@ -110,7 +108,6 @@ export class LibraryDiscoveryService {
               this.refreshRequestSubscription.unsubscribe();
               this.refreshRequestSubscription = undefined;
             }
-            return null;
           }
         })
       );
@@ -185,43 +182,43 @@ export class LibraryDiscoveryService {
     return this.httpClient.get<DiscoveryTaskDto>('/api/admin/library/discoveryTasks/' + id);
   }
 
-  observeDiscoveryJobProgress(): Observable<DiscoveryJobProgressDto | undefined | null> {
-    return this.discoveryJobProgressSubject.asObservable();
+  observeDiscoveryStatus(): Observable<DiscoveryStatusDto | undefined> {
+    return this.discoveryStatusSubject.asObservable();
   }
 
   getDiscoveryJobs(pageIndex = 0, pageSize = 30): Observable<DiscoveryJobPageDto> {
     return this.httpClient.get<DiscoveryJobPageDto>('/api/admin/library/discoveryJobs', { params: {pageIndex, pageSize} });
   }
 
-  startFullDiscoveryJob(cacheEnabled = true): Observable<DiscoveryJobProgressDto | null> {
+  startFullDiscoveryJob(cacheEnabled = true): Observable<DiscoveryStatusDto> {
     return this.startDiscoveryJob('/api/admin/library/discoveryJobs/full', cacheEnabled);
   }
 
-  startArtistDiscoveryJob(artistId: string, cacheEnabled = true): Observable<DiscoveryJobProgressDto | null> {
+  startArtistDiscoveryJob(artistId: string, cacheEnabled = true): Observable<DiscoveryStatusDto> {
     return this.startDiscoveryJob(`/api/admin/library/discoveryJobs/artist/${artistId}`, cacheEnabled);
   }
 
-  startAlbumDiscoveryJob(albumId: string, cacheEnabled = true): Observable<DiscoveryJobProgressDto | null> {
+  startAlbumDiscoveryJob(albumId: string, cacheEnabled = true): Observable<DiscoveryStatusDto> {
     return this.startDiscoveryJob(`/api/admin/library/discoveryJobs/album/${albumId}`, cacheEnabled);
   }
 
-  private startDiscoveryJob(url: string, cacheEnabled: boolean): Observable<DiscoveryJobProgressDto | null> {
+  private startDiscoveryJob(url: string, cacheEnabled: boolean): Observable<DiscoveryStatusDto> {
     return this.httpClient.post<DiscoveryJobDto>(url, null, {params: {cacheEnabled}})
       .pipe(
-        mergeMap(discoveryJob => this.updateDiscoveryJobProgress().pipe(
-          tap(discoveryJobProgress => {
+        mergeMap(discoveryJob => this.updateDiscoveryStatus().pipe(
+          tap(discoveryStatus => {
             // If discovery job finished too fast.
-            if (!discoveryJobProgress) {
+            if (!discoveryStatus.progress) {
               this.showDiscoveryJobEndedNotification(discoveryJob.id);
               this.libraryService.requestRefresh();
             }
           })
         )),
-        tap(() => this.updateAndScheduleDiscoveryJobProgressUpdate()),
+        tap(() => this.updateAndScheduleDiscoveryStatusUpdate()),
         catchError(httpError => {
           const error = ErrorDto.fromHttpErrorResponse(httpError);
           if (error.code === ErrorDto.Code.CONCURRENT_LIBRARY_JOB) {
-            this.updateAndScheduleDiscoveryJobProgressUpdate();
+            this.updateAndScheduleDiscoveryStatusUpdate();
           }
           this.showDiscoveryJobFailedNotification();
           return throwError(() => error);

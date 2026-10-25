@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {Observable} from 'rxjs';
-import {DiscoveryJobProgressDto, DiscoveryTaskPageDto} from '../../../domain/library.dto';
+import {DiscoveryStatusDto, DiscoveryTaskPageDto} from '../../../domain/library.dto';
 import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstract-discovery-tasks.component';
 
 @Component({
@@ -24,7 +24,7 @@ export class ArtistDiscoveryTasksComponent extends AbstractDiscoveryTasksCompone
     return this.libraryDiscoveryService.getArtistDiscoveryTasks(this.artistId, this.taskResult, this.taskType, pageIndex, pageSize);
   }
 
-  protected override startDiscoveryJob(): Observable<DiscoveryJobProgressDto | null> {
+  protected override startDiscoveryJob(): Observable<DiscoveryStatusDto> {
     return this.libraryDiscoveryService.startArtistDiscoveryJob(this.artistId);
   }
 }

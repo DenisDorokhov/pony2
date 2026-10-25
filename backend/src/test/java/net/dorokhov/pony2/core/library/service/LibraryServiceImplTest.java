@@ -1,6 +1,8 @@
 package net.dorokhov.pony2.core.library.service;
 
 import com.google.common.collect.ImmutableList;
+import net.dorokhov.pony2.api.config.domain.ConfigSet;
+import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
@@ -16,6 +18,7 @@ import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +70,22 @@ public class LibraryServiceImplTest {
     private ArtworkStorage artworkStorage;
     @Mock
     private RandomFetcher randomFetcher;
+    @Mock
+    private ConfigService configService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), "http://localhost", "model", null));
+    }
+
+    @Test
+    void shouldOmitDiscoveryDataWhenLlmIsDisabled() {
+        when(configService.get()).thenReturn(new ConfigSet(null, List.of(), null, null, null));
+
+        assertThat(libraryService.getArtistDiscoveryData("artist")).isEmpty();
+        assertThat(libraryService.getAlbumDiscoveryData("album")).isEmpty();
+        verifyNoInteractions(discoveryTaskRepository, artistDiscoveryIndexRepository, songRepository);
+    }
 
     @Test
     public void shouldGetGenres() {
@@ -117,7 +137,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .isEqualTo(new AlbumDiscoveryData(expected, LocalDateTime.of(1986, 10, 7, 0, 0)));
+                .contains(new AlbumDiscoveryData(expected, LocalDateTime.of(1986, 10, 7, 0, 0)));
     }
 
     @ParameterizedTest
@@ -132,7 +152,7 @@ public class LibraryServiceImplTest {
         when(discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(eq("album"), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
-        assertThat(libraryService.getAlbumDiscoveryData("album").releaseDate()).isEqualTo(LocalDateTime.parse(expected));
+        assertThat(libraryService.getAlbumDiscoveryData("album").orElseThrow().releaseDate()).isEqualTo(LocalDateTime.parse(expected));
     }
 
     @ParameterizedTest
@@ -144,7 +164,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .isEqualTo(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
+                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
     }
 
     @Test
@@ -156,7 +176,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .isEqualTo(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
+                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
     }
 
     @ParameterizedTest
@@ -167,7 +187,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.ofNullable(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .isEqualTo(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
     }
 
     @ParameterizedTest
@@ -182,7 +202,7 @@ public class LibraryServiceImplTest {
         }
 
         assertThat(libraryService.getArtistDiscoveryData("artist"))
-                .isEqualTo(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first")));
+                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first")));
     }
 
     @Test
@@ -191,7 +211,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\",\"second\",\"first\"]"));
         when(songRepository.findExistingIds(any())).thenReturn(List.of("first", "second"));
 
-        assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).containsExactly("second", "first");
+        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().topSongIds()).containsExactly("second", "first");
     }
 
     @ParameterizedTest
@@ -201,7 +221,7 @@ public class LibraryServiceImplTest {
         when(discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(eq("artist"), any(Limit.class)))
                 .thenReturn(Optional.ofNullable(result));
 
-        assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).isEmpty();
+        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().topSongIds()).isEmpty();
         verifyNoInteractions(songRepository);
     }
 
@@ -211,7 +231,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of("[\"deleted\"]"));
         when(songRepository.findExistingIds(List.of("deleted"))).thenReturn(List.of());
 
-        assertThat(libraryService.getArtistDiscoveryData("artist").topSongIds()).isEmpty();
+        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().topSongIds()).isEmpty();
     }
 
     @Test

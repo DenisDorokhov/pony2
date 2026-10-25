@@ -2,6 +2,8 @@ package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.ApiTemplate;
 import net.dorokhov.pony2.InstallingIntegrationTest;
+import net.dorokhov.pony2.api.config.service.ConfigService;
+import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
@@ -48,6 +50,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
     @Autowired
     private ApiTemplate apiTemplate;
+    @Autowired
+    private ConfigService configService;
 
     @Autowired
     private GenreRepository genreRepository;
@@ -244,10 +248,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
             checkArtistDto(artistSongs.getArtist(), artist1);
-            assertThat(artistSongs.getArtist().getDiscoveryData()).isNotNull();
-            assertThat(artistSongs.getArtist().getDiscoveryData().getCountryCode()).isNull();
+            assertThat(artistSongs.getArtist().getDiscoveryData()).isNull();
             assertThat(artistSongs.getAlbumSongs()).allSatisfy(album ->
-                    assertThat(album.getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN));
+                    assertThat(album.getAlbum().getDiscoveryData()).isNull());
             assertThat(artistSongs.getAlbumSongs()).satisfies(albums -> {
                 assertThat(albums).hasSize(2);
                 assertThat(albums.get(0)).satisfies(album -> {
@@ -271,6 +274,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
     @Test
     public void shouldIncludeUnknownDiscoveryDataInArtistSongsResponse() {
+        enableLlm();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
         ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange(
@@ -293,8 +297,16 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(albumDiscoveryData.has("topSongIds")).isFalse();
     }
 
+    private void enableLlm() {
+        configService.update(new ConfigSetUpdateCommand()
+                .setLibraryFolders(configService.get().libraryFolders())
+                .setLlmUrl("http://localhost")
+                .setLlmModel("model"));
+    }
+
     @Test
     public void shouldGetArtistSongsWithLatestCompletedDiscoveryData() {
+        enableLlm();
         artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex().setArtist(artist1).setCountryCode("DE"));
         artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex().setArtist(artist2).setCountryCode("GB"));
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.FAILED));
@@ -354,12 +366,35 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             assertThat(song.getAlbumDetails().getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.COMPILATION);
             assertThat(song.getAlbumDetails().getAlbum().getDiscoveryData().getReleaseDate()).isEqualTo(LocalDateTime.of(1986, 10, 1, 0, 0));
         });
+
+        configService.update(new ConfigSetUpdateCommand().setLibraryFolders(configService.get().libraryFolders()));
+
+        ResponseEntity<String> disabledResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class, artist1.getId());
+        assertThat(disabledResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        JsonNode disabledArtistSongs = JsonConverter.fromJson(requireNonNull(disabledResponse.getBody()), JsonNode.class);
+        assertThat(disabledArtistSongs.path("artist").has("discoveryData")).isFalse();
+        for (JsonNode albumSongs : disabledArtistSongs.path("albumSongs")) {
+            assertThat(albumSongs.path("album").has("discoveryData")).isFalse();
+        }
+
+        enableLlm();
+        ResponseEntity<ArtistSongsDto> enabledResponse = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+        assertThat(enabledResponse.getStatusCode()).isSameAs(HttpStatus.OK);
+        assertThat(requireNonNull(enabledResponse.getBody()).getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
+        assertThat(requireNonNull(enabledResponse.getBody()).getAlbumSongs())
+                .extracting(albumSongs -> albumSongs.getAlbum().getDiscoveryData().getReleaseType())
+                .containsExactly(AlbumDiscoveryData.ReleaseType.COMPILATION, AlbumDiscoveryData.ReleaseType.EP);
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = "null")
     public void shouldReturnUnknownWhenLatestCompletedDiscoveryResultIsEmpty(String result) {
+        enableLlm();
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM).setStatus(DiscoveryJob.Status.COMPLETE));
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
         String album = JsonConverter.toJson(new MusicBrainzAlbumData("album", "Album", List.of(), null, "artist", List.of()));
@@ -608,9 +643,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(artist.getName());
         assertThat(dto.getArtworkId()).isEqualTo(requireNonNull(artist.getArtwork()).getId());
-        assertThat(dto.getDiscoveryData()).isNotNull();
-        assertThat(dto.getDiscoveryData().getCountryCode()).isNull();
-        assertThat(dto.getDiscoveryData().getTopSongIds()).isEmpty();
+        assertThat(dto.getDiscoveryData()).isNull();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -622,9 +655,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getYear()).isEqualTo(album.getYear());
         assertThat(dto.getArtworkId()).isEqualTo(album.getArtwork().getId());
         assertThat(dto.getArtistId()).isEqualTo(album.getArtist().getId());
-        assertThat(dto.getDiscoveryData()).isNotNull();
-        assertThat(dto.getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN);
-        assertThat(dto.getDiscoveryData().getReleaseDate()).isNull();
+        assertThat(dto.getDiscoveryData()).isNull();
     }
 
     private void checkSongDto(SongDto dto, Song song) {

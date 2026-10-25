@@ -45,8 +45,8 @@ public class LibraryFacade {
 
     private AlbumDetailsDto toAlbumDetailsDto(Album album) {
         return AlbumDetailsDto.of(album,
-                libraryService.getArtistDiscoveryData(album.getArtist().getId()),
-                libraryService.getAlbumDiscoveryData(album.getId()));
+                libraryService.getArtistDiscoveryData(album.getArtist().getId()).orElse(null),
+                libraryService.getAlbumDiscoveryData(album.getId()).orElse(null));
     }
 
     private boolean isAdmin() {
@@ -62,7 +62,7 @@ public class LibraryFacade {
     }
 
     private ArtistDto toArtistDto(Artist artist) {
-        return ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()));
+        return ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null));
     }
 
     @Transactional(readOnly = true)
@@ -88,10 +88,10 @@ public class LibraryFacade {
         boolean admin = isAdmin();
         return ArtistSongsDto.of(
                 artist,
-                libraryService.getArtistDiscoveryData(artistId),
+                libraryService.getArtistDiscoveryData(artistId).orElse(null),
                 album -> AlbumSongsDto.of(
                         album,
-                        libraryService.getAlbumDiscoveryData(album.getId()),
+                        libraryService.getAlbumDiscoveryData(album.getId()).orElse(null),
                         admin));
     }
 

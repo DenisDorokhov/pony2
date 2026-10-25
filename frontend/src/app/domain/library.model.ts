@@ -191,9 +191,9 @@ export class AlbumDiscoveryData {
   releaseType: AlbumDiscoveryDataDto.ReleaseType;
   releaseDate: Date | undefined;
 
-  constructor(dto: AlbumDiscoveryDataDto) {
-    this.releaseType = dto.releaseType;
-    this.releaseDate = dto.releaseDate ? new Date(dto.releaseDate) : undefined;
+  constructor(dto: AlbumDiscoveryDataDto | undefined) {
+    this.releaseType = dto?.releaseType ?? AlbumDiscoveryDataDto.ReleaseType.UNKNOWN;
+    this.releaseDate = dto?.releaseDate ? new Date(dto.releaseDate) : undefined;
   }
 }
 
@@ -298,9 +298,9 @@ export class ArtistDiscoveryData {
   countryCode: string | undefined;
   topSongIds: string[];
 
-  constructor(dto: ArtistDiscoveryDataDto) {
-    this.countryCode = dto.countryCode;
-    this.topSongIds = dto.topSongIds;
+  constructor(dto: ArtistDiscoveryDataDto | undefined) {
+    this.countryCode = dto?.countryCode;
+    this.topSongIds = dto?.topSongIds ?? [];
   }
 }
 

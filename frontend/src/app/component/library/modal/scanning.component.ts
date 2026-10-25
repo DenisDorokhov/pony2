@@ -44,13 +44,13 @@ export class ScanningComponent implements OnInit, OnDestroy {
   scanProgressValue: number | null | undefined;
 
   private scanJobProgressSubscription: Subscription | undefined;
-  private discoveryJobProgressSubscription: Subscription | undefined;
+  private discoveryStatusSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
   private discoveryRunning = false;
 
   ngOnInit(): void {
-    this.discoveryJobProgressSubscription = this.libraryDiscoveryService.observeDiscoveryJobProgress().subscribe(
-      discoveryJobProgress => this.discoveryRunning = !!discoveryJobProgress);
+    this.discoveryStatusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(
+      discoveryStatus => this.discoveryRunning = !!discoveryStatus?.progress);
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
         this.scanJobProgress = scanJobProgress;
@@ -77,7 +77,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.scanJobProgressSubscription?.unsubscribe();
-    this.discoveryJobProgressSubscription?.unsubscribe();
+    this.discoveryStatusSubscription?.unsubscribe();
     this.refreshRequestSubscription?.unsubscribe();
   }
 

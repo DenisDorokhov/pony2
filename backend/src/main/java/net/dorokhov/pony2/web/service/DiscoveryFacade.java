@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.web.service;
 
+import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -25,19 +26,20 @@ public class DiscoveryFacade {
 
     private final DiscoveryJobService discoveryJobService;
     private final LibraryService libraryService;
+    private final ConfigService configService;
 
-    public DiscoveryFacade(DiscoveryJobService discoveryJobService, LibraryService libraryService) {
+    public DiscoveryFacade(DiscoveryJobService discoveryJobService, LibraryService libraryService, ConfigService configService) {
         this.discoveryJobService = discoveryJobService;
         this.libraryService = libraryService;
+        this.configService = configService;
     }
 
     @Transactional(readOnly = true)
-    public OptionalResponseDto<DiscoveryJobProgressDto> getCurrentDiscoveryJobProgress() {
+    public DiscoveryStatusDto getCurrentDiscoveryJobProgress() {
         DiscoveryJobProgress discoveryJobProgress = discoveryJobService.getCurrentDiscoveryJobProgress().orElse(null);
-        if (discoveryJobProgress == null) {
-            return OptionalResponseDto.empty();
-        }
-        return toDiscoveryJobProgress(discoveryJobProgress);
+        DiscoveryJobProgressDto progress = discoveryJobProgress != null
+                ? toDiscoveryJobProgress(discoveryJobProgress).getValue() : null;
+        return DiscoveryStatusDto.of(configService.get().llmEnabled(), progress);
     }
 
     private OptionalResponseDto<DiscoveryJobProgressDto> toDiscoveryJobProgress(DiscoveryJobProgress progress) {
@@ -51,8 +53,8 @@ public class DiscoveryFacade {
         Artist artist = album != null ? album.getArtist() : job.getArtist();
         return DiscoveryJobDto.of(job,
                 job.getGenre() != null ? GenreDto.of(job.getGenre()) : null,
-                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId())) : null,
-                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId())) : null,
+                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null)) : null,
+                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId()).orElse(null)) : null,
                 job.getSong() != null ? SongDto.of(job.getSong(), true) : null);
     }
 
@@ -134,8 +136,8 @@ public class DiscoveryFacade {
         Artist artist = album != null ? album.getArtist() : task.getArtist();
         return DiscoveryTaskSummaryDto.of(task,
                 task.getGenre() != null ? GenreDto.of(task.getGenre()) : null,
-                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId())) : null,
-                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId())) : null,
+                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null)) : null,
+                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId()).orElse(null)) : null,
                 task.getSong() != null ? SongDto.of(task.getSong(), true) : null);
     }
 
