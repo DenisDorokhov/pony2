@@ -17,9 +17,11 @@
     }}">
       <span class="album-name">{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
       @if (albumSongs.album.discoveryData.releaseType !== ReleaseType.UNKNOWN) {
-        <span class="release-type" [attr.data-release-type]="albumSongs.album.discoveryData.releaseType">{{
-          albumSongs.album.discoveryData.releaseType === ReleaseType.COMPILATION ? 'COMP' : albumSongs.album.discoveryData.releaseType
-        }}</span>
+        <span class="release-type" [class]="albumSongs.album.discoveryData.releaseType.toLowerCase()">
+          <span class="release-type-badge"><span>{{
+            albumSongs.album.discoveryData.releaseType === ReleaseType.COMPILATION ? 'COMP' : albumSongs.album.discoveryData.releaseType
+          }}</span></span>
+        </span>
       }
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
       <div ngbDropdown class="options" container="body">
