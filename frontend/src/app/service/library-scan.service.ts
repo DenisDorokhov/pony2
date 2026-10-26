@@ -18,6 +18,7 @@ import {ScanJobDto, ScanJobPageDto, ScanJobProgressDto, ScanStatisticsDto} from 
 import {AuthenticationService} from './authentication.service';
 import {ErrorDto, OptionalResponseDto} from '../domain/common.dto';
 import {LibraryService} from './library.service';
+import {LibraryDiscoveryService} from './library-discovery.service';
 import {NotificationService} from './notification.service';
 import {TranslateService} from '@ngx-translate/core';
 import {UserDto} from '../domain/user.dto';
@@ -30,6 +31,7 @@ import Role = UserDto.Role;
 export class LibraryScanService {
 
   private readonly libraryService = inject(LibraryService);
+  private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
   private readonly httpClient = inject(HttpClient);
   private readonly authenticationService = inject(AuthenticationService);
   private readonly notificationService = inject(NotificationService);
@@ -38,10 +40,15 @@ export class LibraryScanService {
   private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined | null>(undefined);
   private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined | null>(undefined);
 
+  private discoveryEnabled = false;
+
   private scanJobProgressUpdateSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
 
   constructor() {
+    this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
+      this.discoveryEnabled = discoveryStatus?.discoveryEnabled ?? false;
+    });
     this.libraryService.observeRefreshRequest().pipe(
       mergeMap(() => {
         if (this.authenticationService.isAuthenticated) {
@@ -101,6 +108,9 @@ export class LibraryScanService {
               const oldScanJob = this.scanJobProgressSubject.value!.scanJob;
               this.scanJobProgressSubject.next(null);
               this.showScanJobEndedNotification(oldScanJob!.id!);
+              if (this.discoveryEnabled) {
+                this.libraryDiscoveryService.updateAndScheduleDiscoveryStatusUpdate();
+              }
             }
             if (this.refreshRequestSubscription) {
               console.info('Scan job finished, cancelling auto-refresh.');
@@ -180,6 +190,9 @@ export class LibraryScanService {
             // If scan job finished too fast.
             if (!scanJobProgress) {
               this.showScanJobEndedNotification(scanJob.id);
+              if (this.discoveryEnabled) {
+                this.libraryDiscoveryService.updateAndScheduleDiscoveryStatusUpdate();
+              }
               this.libraryService.requestRefresh();
             }
           })
