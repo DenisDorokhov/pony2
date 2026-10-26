@@ -8,6 +8,18 @@ Remastered when they refer to the same album. Do not match unrelated releases
 merely because their names are similar. If there is no confident match, use null.
 Multiple Spotify album IDs may refer to the same database album.
 
+Treat every ID as an opaque string. First select the matching database album
+by its title, then copy the entire ID exactly from that same database entry.
+Never reconstruct an ID, combine parts of different IDs, or copy an ID
+from memory or a previous answer.
+
+Before returning the JSON, verify that each non-null databaseAlbumId:
+- exactly equals a complete ID in the supplied database list;
+- belongs to the album you selected by title.
+
+Use null only when no database album can be confidently matched.
+Difficulty copying an ID is not evidence that the album is unmatched.
+
 Return only a JSON object matching the supplied schema. In albumMatches, include
 exactly one object for each supplied Spotify album ID, with spotifyAlbumId and
 databaseAlbumId. Use only supplied IDs. Set databaseAlbumId to null when there is
