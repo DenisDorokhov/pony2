@@ -15,4 +15,5 @@ RUN mkdir -p /data/profile \
 
 USER node
 
-ENTRYPOINT ["xvfb-run", "-a", "-s", "-screen 0 1920x1080x24", "node", "/app/cli.js"]
+# Remove stale Chromium profile locks before starting Playwright.
+ENTRYPOINT ["/bin/sh", "-c", "rm -f /data/profile/SingletonLock /data/profile/SingletonSocket /data/profile/SingletonCookie && exec xvfb-run -a -s '-screen 0 1920x1080x24' node /app/cli.js \"$@\"", "--"]

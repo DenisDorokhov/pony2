@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.execution.ToolExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -123,11 +124,36 @@ public class PlaywrightMcpClient {
         String toolName = toolCallback.getToolDefinition().name();
         logger.debug("Calling proxied Playwright MCP tool '{}': {}.", toolName, input);
         waitBeforeCallIfNeeded(toolName);
-        String result = toolContext == null ? toolCallback.call(input) : toolCallback.call(input, toolContext);
+        String result;
+        try {
+            result = toolContext == null ? toolCallback.call(input) : toolCallback.call(input, toolContext);
+        } catch (ToolExecutionException e) {
+            checkBrowserAvailability(toolName, toolContext, e);
+            throw e;
+        }
         waitAfterCallIfNeeded(toolName);
         logger.debug("Finished proxied Playwright MCP tool '{}': {}", toolName,
                 result.length() > 500 ? result.substring(0, 500) + "..." : result + ".");
         return result;
+    }
+
+    private void checkBrowserAvailability(String toolName, ToolContext toolContext, ToolExecutionException toolFailure) {
+        logger.debug("Checking browser availability after failed Playwright MCP tool '{}'.", toolName);
+        try {
+            ToolCallback browserTabs = findPlaywrightTool("browser_tabs");
+            // List tabs without executing the model's script or depending on the current page's DOM.
+            if (toolContext == null) {
+                browserTabs.call("{\"action\":\"list\"}");
+            } else {
+                browserTabs.call("{\"action\":\"list\"}", toolContext);
+            }
+        } catch (RuntimeException probeFailure) {
+            // Prevent Spring AI from converting an unavailable browser into model feedback.
+            IllegalStateException failure = new IllegalStateException(
+                    "Playwright MCP browser is unavailable after tool '" + toolName + "' failed.", toolFailure);
+            failure.addSuppressed(probeFailure);
+            throw failure;
+        }
     }
 
     private void waitBeforeCallIfNeeded(String toolName) {
