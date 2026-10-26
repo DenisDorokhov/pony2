@@ -67,7 +67,7 @@ public class PlaybackHistoryFacade {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BackupDto backupHistory() {
         return BackupDto.of(playbackHistoryService.backupHistory());
     }

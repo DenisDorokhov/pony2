@@ -124,7 +124,7 @@ public class PlaylistFacade {
         return result;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public PlaylistSongsDto getLikePlaylist() {
         return PlaylistSongsDto.of(getAndValidateLikePlaylist(), this::toAlbumDetailsDto, isAdmin());
     }
@@ -162,7 +162,7 @@ public class PlaylistFacade {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BackupDto backupPlaylists() {
         return BackupDto.of(playlistService.backupPlaylists());
     }

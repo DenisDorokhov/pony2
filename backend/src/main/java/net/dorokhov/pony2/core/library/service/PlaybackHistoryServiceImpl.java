@@ -75,7 +75,7 @@ public class PlaybackHistoryServiceImpl implements PlaybackHistoryService {
                         .orElseThrow(() -> new IllegalArgumentException("User '" + userId + "' not found."))));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public String backupHistory() {
         Map<String, List<PlaybackHistorySongBackup>> userEmailToBackup = new HashMap<>();

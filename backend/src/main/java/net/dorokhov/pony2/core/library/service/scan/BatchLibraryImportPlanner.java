@@ -51,7 +51,7 @@ public class BatchLibraryImportPlanner {
         this.songRepository = songRepository;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Plan plan(List<AudioNode> audioNodes) {
         List<String> filePaths = audioNodes.stream()
                 .map(node -> node.getFile().getAbsolutePath())
