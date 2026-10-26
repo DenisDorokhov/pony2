@@ -8,7 +8,7 @@ import java.util.function.Function;
 public final class SongDetailsDto {
 
     private SongDto song;
-    private AlbumDetailsDto albumDetails;
+    private ArtistAlbumDto albumDetails;
     private GenreDto genre;
 
     public SongDto getSong() {
@@ -20,11 +20,11 @@ public final class SongDetailsDto {
         return this;
     }
 
-    public AlbumDetailsDto getAlbumDetails() {
+    public ArtistAlbumDto getAlbumDetails() {
         return albumDetails;
     }
 
-    public SongDetailsDto setAlbumDetails(AlbumDetailsDto albumDetails) {
+    public SongDetailsDto setAlbumDetails(ArtistAlbumDto albumDetails) {
         this.albumDetails = albumDetails;
         return this;
     }
@@ -38,7 +38,7 @@ public final class SongDetailsDto {
         return this;
     }
 
-    public static SongDetailsDto of(Song song, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
+    public static SongDetailsDto of(Song song, Function<Album, ArtistAlbumDto> albumMapper, boolean isAdmin) {
         return new SongDetailsDto()
                 .setSong(SongDto.of(song, isAdmin))
                 .setAlbumDetails(albumMapper.apply(song.getAlbum()))

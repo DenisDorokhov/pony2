@@ -9,11 +9,15 @@ export interface AlbumDto {
   year: number | undefined;
   artworkId: string | undefined;
   artistId: string;
+}
+
+export interface AlbumDetailsDto {
+  album: AlbumDto;
   discoveryData: AlbumDiscoveryDataDto | undefined;
 }
 
 export interface AlbumSongsDto {
-  album: AlbumDto;
+  album: AlbumDetailsDto;
   songs: SongDto[];
 }
 
@@ -40,11 +44,15 @@ export interface ArtistDto {
   name: string | undefined;
   artworkId: string | undefined;
   genres: GenreDto[],
+}
+
+export interface ArtistDetailsDto {
+  artist: ArtistDto;
   discoveryData: ArtistDiscoveryDataDto | undefined;
 }
 
 export interface ArtistSongsDto {
-  artist: ArtistDto;
+  artist: ArtistDetailsDto;
   albumSongs: AlbumSongsDto[];
 }
 
@@ -354,21 +362,21 @@ export interface GenreDto {
   artworkId: string | undefined;
 }
 
-export interface AlbumDetailsDto {
-  album: AlbumDto;
+export interface ArtistAlbumDto {
   artist: ArtistDto;
+  album: AlbumDto;
 }
 
 export interface SongDetailsDto {
   song: SongDto;
-  albumDetails: AlbumDetailsDto;
+  albumDetails: ArtistAlbumDto;
   genre: GenreDto;
 }
 
 export interface SearchResultDto {
   genres: GenreDto[];
   artists: ArtistDto[];
-  albumDetails: AlbumDetailsDto[];
+  albumDetails: ArtistAlbumDto[];
   songDetails: SongDetailsDto[];
 }
 

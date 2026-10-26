@@ -224,15 +224,15 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ArtistDto[]> response = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<ArtistDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDto[].class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artists -> {
             assertThat(artists).hasSize(2);
-            checkArtistDto(artists[0], artist1);
-            checkArtistDto(artists[1], artist2);
+            checkArtistDto(artists[0].getArtist(), artist1);
+            checkArtistDto(artists[1].getArtist(), artist2);
         });
     }
 
@@ -247,14 +247,14 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
-            checkArtistDto(artistSongs.getArtist(), artist1);
+            checkArtistDto(artistSongs.getArtist().getArtist(), artist1);
             assertThat(artistSongs.getArtist().getDiscoveryData()).isNull();
             assertThat(artistSongs.getAlbumSongs()).allSatisfy(album ->
                     assertThat(album.getAlbum().getDiscoveryData()).isNull());
             assertThat(artistSongs.getAlbumSongs()).satisfies(albums -> {
                 assertThat(albums).hasSize(2);
                 assertThat(albums.get(0)).satisfies(album -> {
-                    checkAlbumDto(album.getAlbum(), album1_1);
+                    checkAlbumDto(album.getAlbum().getAlbum(), album1_1);
                     assertThat(album.getSongs()).satisfies(songs -> {
                         assertThat(songs).hasSize(2);
                         checkSongDto(songs.get(0), song1_1_1);
@@ -262,7 +262,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                     });
                 });
                 assertThat(albums.get(1)).satisfies(album -> {
-                    checkAlbumDto(album.getAlbum(), album1_2);
+                    checkAlbumDto(album.getAlbum().getAlbum(), album1_2);
                     assertThat(album.getSongs()).satisfies(songs -> {
                         assertThat(songs).hasSize(1);
                         checkSongDto(songs.getFirst(), song1_2_1);
@@ -284,6 +284,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         JsonNode artistSongs = JsonConverter.fromJson(requireNonNull(response.getBody()), JsonNode.class);
         assertThat(artistSongs.has("artistDiscoveryData")).isFalse();
+        assertThat(artistSongs.path("artist").path("artist").path("id").asString()).isEqualTo(artist1.getId());
+        assertThat(artistSongs.path("artist").path("artist").has("discoveryData")).isFalse();
         JsonNode artistDiscoveryData = artistSongs.path("artist").path("discoveryData");
         assertThat(artistDiscoveryData.has("countryCode")).isTrue();
         assertThat(artistDiscoveryData.path("countryCode").isNull()).isTrue();
@@ -291,6 +293,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(artistDiscoveryData.path("topSongIds").size()).isZero();
         JsonNode albumSongs = artistSongs.path("albumSongs").get(0);
         assertThat(albumSongs.has("albumDiscoveryData")).isFalse();
+        assertThat(albumSongs.path("album").path("album").path("id").asString()).isEqualTo(album1_1.getId());
+        assertThat(albumSongs.path("album").path("album").has("discoveryData")).isFalse();
         JsonNode albumDiscoveryData = albumSongs.path("album").path("discoveryData");
         assertThat(albumDiscoveryData.path("releaseType").asString()).isEqualTo("UNKNOWN");
         assertThat(albumDiscoveryData.has("releaseDate")).isFalse();
@@ -344,11 +348,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(artistSongs.getAlbumSongs()).extracting(album -> album.getAlbum().getDiscoveryData().getReleaseDate())
                 .containsExactly(LocalDateTime.of(1986, 10, 1, 0, 0), LocalDateTime.of(1987, 1, 1, 0, 0));
 
-        ResponseEntity<ArtistDto[]> artistsResponse = apiTemplate.getRestTemplate().exchange(
+        ResponseEntity<ArtistDetailsDto[]> artistsResponse = apiTemplate.getRestTemplate().exchange(
                 "/api/library/artists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDto[].class);
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDetailsDto[].class);
         assertThat(artistsResponse.getStatusCode()).isSameAs(HttpStatus.OK);
-        assertThat(requireNonNull(artistsResponse.getBody())).filteredOn(artist -> artist.getId().equals(artist1.getId()))
+        assertThat(requireNonNull(artistsResponse.getBody())).filteredOn(artist -> artist.getArtist().getId().equals(artist1.getId()))
                 .singleElement().satisfies(artist -> {
                     assertThat(artist.getDiscoveryData().getCountryCode()).isEqualTo("DE");
                     assertThat(artist.getDiscoveryData().getTopSongIds())
@@ -360,11 +364,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 apiTemplate.createHeaderRequest(List.of(song1_1_1.getId()), authentication.getAccessToken()), SongDetailsDto[].class);
         assertThat(songsResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(requireNonNull(songsResponse.getBody())).singleElement().satisfies(song -> {
-            assertThat(song.getAlbumDetails().getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
-            assertThat(song.getAlbumDetails().getArtist().getDiscoveryData().getTopSongIds())
-                    .containsExactly(song1_1_2.getId(), song1_2_1.getId(), song1_1_1.getId());
-            assertThat(song.getAlbumDetails().getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.COMPILATION);
-            assertThat(song.getAlbumDetails().getAlbum().getDiscoveryData().getReleaseDate()).isEqualTo(LocalDateTime.of(1986, 10, 1, 0, 0));
+            checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
+            checkAlbumDto(song.getAlbumDetails().getAlbum(), album1_1);
+            JsonNode songJson = JsonConverter.fromJson(JsonConverter.toJson(song), JsonNode.class);
+            assertThat(songJson.path("albumDetails").path("artist").has("discoveryData")).isFalse();
+            assertThat(songJson.path("albumDetails").path("album").has("discoveryData")).isFalse();
         });
 
         configService.update(new ConfigSetUpdateCommand().setLibraryFolders(configService.get().libraryFolders()));
@@ -643,7 +647,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getUpdateDate()).isEqualTo(artist.getUpdateDate());
         assertThat(dto.getName()).isEqualTo(artist.getName());
         assertThat(dto.getArtworkId()).isEqualTo(requireNonNull(artist.getArtwork()).getId());
-        assertThat(dto.getDiscoveryData()).isNull();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -655,7 +658,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(dto.getYear()).isEqualTo(album.getYear());
         assertThat(dto.getArtworkId()).isEqualTo(album.getArtwork().getId());
         assertThat(dto.getArtistId()).isEqualTo(album.getArtist().getId());
-        assertThat(dto.getDiscoveryData()).isNull();
     }
 
     private void checkSongDto(SongDto dto, Song song) {

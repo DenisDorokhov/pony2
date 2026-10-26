@@ -60,6 +60,10 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   topPlaylists: Playlist[] = [];
   isLikedSong = false;
 
+  get isTopTrack(): boolean {
+    return this.libraryService.isTopTrack(this.song);
+  }
+
   get song(): Song {
     return this._song;
   }

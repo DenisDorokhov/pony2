@@ -66,6 +66,10 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   @Input()
   removable = true;
 
+  get isTopTrack(): boolean {
+    return this.libraryService.isTopTrack(this.song);
+  }
+
   get song(): Song {
     return this._song;
   }

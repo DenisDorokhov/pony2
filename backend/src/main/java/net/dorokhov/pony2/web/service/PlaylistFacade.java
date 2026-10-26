@@ -1,10 +1,8 @@
 package net.dorokhov.pony2.web.service;
 
-import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Playlist;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.service.PlaylistService;
-import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.core.library.service.exception.PlaylistNotFoundException;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
@@ -28,16 +26,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class PlaylistFacade {
 
     private final PlaylistService playlistService;
-    private final LibraryService libraryService;
     private final UserContext userContext;
 
     public PlaylistFacade(
             PlaylistService playlistService,
-            LibraryService libraryService,
             UserContext userContext
     ) {
         this.playlistService = playlistService;
-        this.libraryService = libraryService;
         this.userContext = userContext;
     }
 
@@ -51,13 +46,7 @@ public class PlaylistFacade {
     @Transactional(readOnly = true)
     public PlaylistSongsDto getPlaylistById(String id) throws ObjectNotFoundException {
         Playlist playlist = getAndValidatePlaylist(id);
-        return PlaylistSongsDto.of(playlist, this::toAlbumDetailsDto, isAdmin());
-    }
-
-    private AlbumDetailsDto toAlbumDetailsDto(Album album) {
-        return AlbumDetailsDto.of(album,
-                libraryService.getArtistDiscoveryData(album.getArtist().getId()).orElse(null),
-                libraryService.getAlbumDiscoveryData(album.getId()).orElse(null));
+        return PlaylistSongsDto.of(playlist, ArtistAlbumDto::of, isAdmin());
     }
 
     private Playlist getAndValidatePlaylist(String id) throws ObjectNotFoundException {
@@ -76,14 +65,14 @@ public class PlaylistFacade {
     @Transactional
     public PlaylistSongsDto createNormalPlaylist(PlaylistCreationCommandDto command) {
         Playlist playlist = playlistService.createNormalPlaylist(command.convert(userContext.getAuthenticatedUser().getId()));
-        return PlaylistSongsDto.of(playlist, this::toAlbumDetailsDto, isAdmin());
+        return PlaylistSongsDto.of(playlist, ArtistAlbumDto::of, isAdmin());
     }
 
     @Transactional
     public PlaylistSongsDto updatePlaylist(PlaylistUpdateCommandDto command) throws ObjectNotFoundException {
         getAndValidatePlaylist(command.getId());
         try {
-            return PlaylistSongsDto.of(playlistService.updatePlaylist(command.convert()), this::toAlbumDetailsDto, isAdmin());
+            return PlaylistSongsDto.of(playlistService.updatePlaylist(command.convert()), ArtistAlbumDto::of, isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, command.getId());
         }
@@ -93,7 +82,7 @@ public class PlaylistFacade {
     public PlaylistSongsDto addSongToPlaylist(String playlistId, String songId) throws ObjectNotFoundException {
         getAndValidatePlaylist(playlistId);
         try {
-            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlistId, songId, false), this::toAlbumDetailsDto, isAdmin());
+            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlistId, songId, false), ArtistAlbumDto::of, isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlistId);
         } catch (SongNotFoundException e) {
@@ -119,14 +108,14 @@ public class PlaylistFacade {
         if (playlist.getType() != Playlist.Type.NORMAL) {
             throw new ObjectNotFoundException(Playlist.class, playlistId);
         }
-        PlaylistSongsDto result = PlaylistSongsDto.of(playlist, this::toAlbumDetailsDto, isAdmin());
+        PlaylistSongsDto result = PlaylistSongsDto.of(playlist, ArtistAlbumDto::of, isAdmin());
         playlistService.delete(playlistId);
         return result;
     }
 
     @Transactional(readOnly = true)
     public PlaylistSongsDto getLikePlaylist() {
-        return PlaylistSongsDto.of(getAndValidateLikePlaylist(), this::toAlbumDetailsDto, isAdmin());
+        return PlaylistSongsDto.of(getAndValidateLikePlaylist(), ArtistAlbumDto::of, isAdmin());
     }
 
     private Playlist getAndValidateLikePlaylist() {
@@ -144,7 +133,7 @@ public class PlaylistFacade {
     public PlaylistSongsDto likeSong(String songId) throws ObjectNotFoundException {
         Playlist playlist = getAndValidateLikePlaylist();
         try {
-            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlist.getId(), songId, true), this::toAlbumDetailsDto, isAdmin());
+            return PlaylistSongsDto.of(playlistService.addSongToPlaylist(playlist.getId(), songId, true), ArtistAlbumDto::of, isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlist.getId());
         } catch (SongNotFoundException e) {
@@ -156,7 +145,7 @@ public class PlaylistFacade {
     public PlaylistSongsDto unlikeSong(String songId) throws ObjectNotFoundException {
         Playlist playlist = getAndValidateLikePlaylist();
         try {
-            return PlaylistSongsDto.of(playlistService.removeSongFromPlaylist(playlist.getId(), songId), this::toAlbumDetailsDto, isAdmin());
+            return PlaylistSongsDto.of(playlistService.removeSongFromPlaylist(playlist.getId(), songId), ArtistAlbumDto::of, isAdmin());
         } catch (PlaylistNotFoundException e) {
             throw new ObjectNotFoundException(Playlist.class, playlist.getId());
         }

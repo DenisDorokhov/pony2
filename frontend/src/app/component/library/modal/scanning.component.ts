@@ -12,6 +12,7 @@ import {PageDto} from '../../../domain/common.dto';
 import {Subscription} from 'rxjs';
 import {LibraryService} from '../../../service/library.service';
 import {ScanJobComponent} from './scan-job.component';
+import {DiscoveryComponent} from './discovery.component';
 
 @Component({
     imports: [TranslateModule, CommonModule, LoadingIndicatorComponent, ErrorIndicatorComponent],
@@ -47,12 +48,19 @@ export class ScanningComponent implements OnInit, OnDestroy {
   private discoveryStatusSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
   private discoveryRunning = false;
+  private discoveryEnabled = false;
 
   ngOnInit(): void {
-    this.discoveryStatusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(
-      discoveryStatus => this.discoveryRunning = !!discoveryStatus?.progress);
+    this.discoveryStatusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
+      this.discoveryRunning = !!discoveryStatus?.progress;
+      this.discoveryEnabled = discoveryStatus?.discoveryEnabled ?? false;
+    });
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
+        if (this.scanJobProgress && scanJobProgress === null && this.discoveryEnabled) {
+          this.activeModal.close();
+          this.modal.open(DiscoveryComponent, {size: 'xl'});
+        }
         this.scanJobProgress = scanJobProgress;
         if (scanJobProgress) {
           if (scanJobProgress.scanProgress?.value) {

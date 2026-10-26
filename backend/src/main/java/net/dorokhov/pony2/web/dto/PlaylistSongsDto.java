@@ -29,7 +29,7 @@ public class PlaylistSongsDto {
         return this;
     }
 
-    public static PlaylistSongsDto of(Playlist playlist, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
+    public static PlaylistSongsDto of(Playlist playlist, Function<Album, ArtistAlbumDto> albumMapper, boolean isAdmin) {
         return new PlaylistSongsDto()
                 .setPlaylist(PlaylistDto.of(playlist))
                 .setSongs(playlist.getSongs().stream()

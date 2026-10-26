@@ -92,14 +92,6 @@ public class LibraryDiscoveryAdminControllerTest {
                 .setAlbum(type == DiscoveryType.ALBUM ? album : null)
                 .setLogMessage(new LogMessage().setId("log1").setText("Starting discovery."));
         when(startJob(type, cacheEnabled)).thenReturn(job);
-        if (type != DiscoveryType.FULL) {
-            when(libraryService.getArtistDiscoveryData("artistId")).thenReturn(Optional.of(new ArtistDiscoveryData(null, List.of())));
-        }
-        if (type == DiscoveryType.ALBUM) {
-            when(libraryService.getAlbumDiscoveryData("albumId"))
-                    .thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null)));
-        }
-
         MockHttpServletRequestBuilder request = post(startJobPath(type));
         if (cacheEnabledParameter != null) {
             request.param("cacheEnabled", cacheEnabledParameter);
@@ -375,11 +367,8 @@ public class LibraryDiscoveryAdminControllerTest {
                 ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE;
         DiscoveryTaskType taskType = type != null ? type : DiscoveryTaskType.SPOTIFY_ARTIST_DATA;
         DiscoveryTask task = task(taskType, taskStatus);
-        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(Optional.of(new ArtistDiscoveryData(null, List.of())));
         if (taskType == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             task.setAlbum(album);
-            when(libraryService.getAlbumDiscoveryData("album1"))
-                    .thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null)));
         } else {
             task.setArtist(artist);
         }
@@ -453,12 +442,6 @@ public class LibraryDiscoveryAdminControllerTest {
     public void shouldGetDiscoveryTasksWithTargets(DiscoveryTaskType type) throws Exception {
         Artist artist = new Artist().setId("artist1").setName("Artist");
         Album album = new Album().setId("album1").setName("Album").setYear(2001).setArtist(artist);
-        when(libraryService.getArtistDiscoveryData("artist1"))
-                .thenReturn(Optional.of(new ArtistDiscoveryData("DE", List.of("song1"))));
-        if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
-            when(libraryService.getAlbumDiscoveryData("album1"))
-                    .thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.EP, LocalDateTime.of(2001, 1, 1, 0, 0))));
-        }
         DiscoveryTask task = task(type, DiscoveryTask.Status.COMPLETE);
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             task.setAlbum(album);
@@ -487,13 +470,9 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(summary.getStatus()).isSameAs(DiscoveryTask.Status.COMPLETE);
             assertThat(summary.getDuration()).isEqualTo(900L);
             assertThat(summary.getArtist().getName()).isEqualTo("Artist");
-            assertThat(summary.getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
-            assertThat(summary.getArtist().getDiscoveryData().getTopSongIds()).containsExactly("song1");
             if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
                 assertThat(summary.getAlbum().getName()).isEqualTo("Album");
                 assertThat(summary.getAlbum().getYear()).isEqualTo(2001);
-                assertThat(summary.getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.EP);
-                assertThat(summary.getAlbum().getDiscoveryData().getReleaseDate()).isEqualTo(LocalDateTime.of(2001, 1, 1, 0, 0));
             } else {
                 assertThat(summary.getAlbum()).isNull();
             }
@@ -501,6 +480,10 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("rawRequest")).isFalse();
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("parameter")).isFalse();
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("targetId")).isFalse();
+        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).path("artist").has("discoveryData")).isFalse();
+        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).path("album").has("discoveryData")).isFalse();
+        verify(libraryService, never()).getArtistDiscoveryData(anyString());
+        verify(libraryService, never()).getAlbumDiscoveryData(anyString());
     }
 
     @ParameterizedTest
@@ -545,8 +528,6 @@ public class LibraryDiscoveryAdminControllerTest {
         Artist artist = new Artist().setId("artist1").setName("Artist");
         Album album = new Album().setId("album1").setName("Album").setArtist(artist);
         DiscoveryTask task = task(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE).setAlbum(album);
-        when(libraryService.getArtistDiscoveryData("artist1")).thenReturn(Optional.of(new ArtistDiscoveryData(null, List.of())));
-        when(libraryService.getAlbumDiscoveryData("album1")).thenReturn(Optional.of(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null)));
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, type);
         PageRequest pageRequest = PageRequest.of(1, 2);
         String path;

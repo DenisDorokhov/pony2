@@ -91,6 +91,7 @@ public class OpenSubsonicApiController implements OpenSubsonicController {
     public OpenSubsonicResponse<OpenSubsonicArtistsResponse> getArtists() {
         return openSubsonicResponseService.createSuccessful(new OpenSubsonicArtistsResponse()
                 .setArtists(toArtistsID3(libraryFacade.getArtists().stream()
+                        .map(ArtistDetailsDto::getArtist)
                         .map(this::toArtistID3)
                         .toList()
                 )));

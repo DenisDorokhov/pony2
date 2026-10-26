@@ -138,7 +138,7 @@ export class Album {
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
 
-  constructor(albumDto: AlbumDto, artist: Artist) {
+  constructor(albumDto: AlbumDto, artist: Artist, discoveryData?: AlbumDiscoveryDataDto) {
     this.id = albumDto.id;
     this.creationDate = new Date(albumDto.creationDate);
     this.updateDate = albumDto.updateDate ? new Date(albumDto.updateDate) : undefined;
@@ -148,7 +148,7 @@ export class Album {
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.artist = artist;
-    this.discoveryData = new AlbumDiscoveryData(albumDto.discoveryData);
+    this.discoveryData = new AlbumDiscoveryData(discoveryData);
   }
 
   static compareByName(album1: Album, album2: Album): number {
@@ -203,7 +203,7 @@ export class AlbumSongs {
   songs: Song[];
 
   constructor(albumSongsDto: AlbumSongsDto, artist: Artist) {
-    this.album = new Album(albumSongsDto.album, artist);
+    this.album = new Album(albumSongsDto.album.album, artist, albumSongsDto.album.discoveryData);
     this.songs = albumSongsDto.songs
       .map(songDto => new Song(songDto, this.album));
   }
@@ -254,7 +254,7 @@ export class Artist {
   genres: Genre[];
   discoveryData: ArtistDiscoveryData;
 
-  constructor(artistDto: ArtistDto) {
+  constructor(artistDto: ArtistDto, discoveryData?: ArtistDiscoveryDataDto) {
     this.id = artistDto.id;
     this.creationDate = new Date(artistDto.creationDate);
     this.updateDate = artistDto.updateDate ? new Date(artistDto.updateDate) : undefined;
@@ -263,7 +263,7 @@ export class Artist {
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.genres = artistDto.genres.map(genreDto => new Genre(genreDto));
-    this.discoveryData = new ArtistDiscoveryData(artistDto.discoveryData);
+    this.discoveryData = new ArtistDiscoveryData(discoveryData);
   }
 
   static equals(artist1: Artist | undefined, artist2: Artist | undefined) {
@@ -310,7 +310,7 @@ export class ArtistSongs {
   albumSongs: AlbumSongs[];
 
   constructor(artistSongsDto: ArtistSongsDto) {
-    this.artist = new Artist(artistSongsDto.artist);
+    this.artist = new Artist(artistSongsDto.artist.artist, artistSongsDto.artist.discoveryData);
     this.albumSongs = artistSongsDto.albumSongs
       .map(albumSongsDto => new AlbumSongs(albumSongsDto, this.artist));
   }

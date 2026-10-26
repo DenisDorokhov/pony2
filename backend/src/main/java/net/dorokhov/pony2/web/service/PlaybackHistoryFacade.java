@@ -1,8 +1,6 @@
 package net.dorokhov.pony2.web.service;
 
-import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Song;
-import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.PlaybackHistoryService;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.core.library.service.exception.SongNotFoundException;
@@ -24,16 +22,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class PlaybackHistoryFacade {
 
     private final PlaybackHistoryService playbackHistoryService;
-    private final LibraryService libraryService;
     private final UserContext userContext;
 
     public PlaybackHistoryFacade(
             PlaybackHistoryService playbackHistoryService,
-            LibraryService libraryService,
             UserContext userContext
     ) {
         this.playbackHistoryService = playbackHistoryService;
-        this.libraryService = libraryService;
         this.userContext = userContext;
     }
 
@@ -43,14 +38,8 @@ public class PlaybackHistoryFacade {
         return new PlaybackHistoryDto()
                 .setStatistics(PlaybackHistoryDto.Statistics.of(playbackHistoryService.getStatistics(userId)))
                 .setSongs(playbackHistoryService.getHistory(userId).stream()
-                        .map(playbackHistorySong -> PlaybackHistorySongDto.of(playbackHistorySong, this::toAlbumDetailsDto, isAdmin()))
+                        .map(playbackHistorySong -> PlaybackHistorySongDto.of(playbackHistorySong, ArtistAlbumDto::of, isAdmin()))
                         .toList());
-    }
-
-    private AlbumDetailsDto toAlbumDetailsDto(Album album) {
-        return AlbumDetailsDto.of(album,
-                libraryService.getArtistDiscoveryData(album.getArtist().getId()).orElse(null),
-                libraryService.getAlbumDiscoveryData(album.getId()).orElse(null));
     }
 
     private boolean isAdmin() {
@@ -61,7 +50,7 @@ public class PlaybackHistoryFacade {
     public PlaybackHistorySongDto addSongToHistory(String songId) throws ObjectNotFoundException {
         try {
             return PlaybackHistorySongDto.of(playbackHistoryService.addSongToHistory(userContext.getAuthenticatedUser().getId(), songId),
-                    this::toAlbumDetailsDto, isAdmin());
+                    ArtistAlbumDto::of, isAdmin());
         } catch (SongNotFoundException e) {
             throw new ObjectNotFoundException(Song.class, songId);
         }

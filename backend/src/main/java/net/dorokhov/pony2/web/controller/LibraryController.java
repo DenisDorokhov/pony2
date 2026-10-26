@@ -29,7 +29,7 @@ public class LibraryController implements ErrorHandlingController {
     }
 
     @GetMapping("/api/library/artists")
-    public List<ArtistDto> getArtists() {
+    public List<ArtistDetailsDto> getArtists() {
         return libraryFacade.getArtists();
     }
 

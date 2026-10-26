@@ -39,7 +39,7 @@ public class PlaylistSongDto {
         return this;
     }
 
-    public static PlaylistSongDto of(PlaylistSong playlistSong, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
+    public static PlaylistSongDto of(PlaylistSong playlistSong, Function<Album, ArtistAlbumDto> albumMapper, boolean isAdmin) {
         return new PlaylistSongDto()
                 .setId(playlistSong.getId())
                 .setCreationDate(playlistSong.getCreationDate())

@@ -13,7 +13,7 @@ public final class SearchResultDto {
 
     private List<GenreDto> genres = new ArrayList<>();
     private List<ArtistDto> artists = new ArrayList<>();
-    private List<AlbumDetailsDto> albumDetails = new ArrayList<>();
+    private List<ArtistAlbumDto> albumDetails = new ArrayList<>();
     private List<SongDetailsDto> songDetails = new ArrayList<>();
 
     public List<GenreDto> getGenres() {
@@ -40,14 +40,14 @@ public final class SearchResultDto {
         return this;
     }
 
-    public List<AlbumDetailsDto> getAlbumDetails() {
+    public List<ArtistAlbumDto> getAlbumDetails() {
         if (albumDetails == null) {
             albumDetails = new ArrayList<>();
         }
         return albumDetails;
     }
 
-    public SearchResultDto setAlbumDetails(List<AlbumDetailsDto> albumDetails) {
+    public SearchResultDto setAlbumDetails(List<ArtistAlbumDto> albumDetails) {
         this.albumDetails = albumDetails;
         return this;
     }
@@ -66,7 +66,7 @@ public final class SearchResultDto {
 
     public static SearchResultDto of(
             List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs,
-            Function<Artist, ArtistDto> artistMapper, Function<Album, AlbumDetailsDto> albumMapper,
+            Function<Artist, ArtistDto> artistMapper, Function<Album, ArtistAlbumDto> albumMapper,
             boolean isAdmin
     ) {
         return new SearchResultDto()

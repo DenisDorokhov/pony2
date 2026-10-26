@@ -5,7 +5,7 @@ import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
 import {Album, AlbumSongs, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
 import {
-  ArtistDto,
+  ArtistDetailsDto,
   ArtistSongsDto,
   GenreDto,
   RandomSongsRequestDto,
@@ -197,10 +197,15 @@ export class LibraryService {
     return this.artistsSubject.asObservable();
   }
 
+  isTopTrack(song: Song): boolean {
+    const artist = this.artistsSubject.value.find(artist => artist.id === song.album.artist.id);
+    return artist?.discoveryData.topSongIds.includes(song.id) ?? song.isTopTrack;
+  }
+
   requestArtists(): Observable<Artist[]> {
-    return this.httpClient.get<ArtistDto[]>('/api/library/artists')
+    return this.httpClient.get<ArtistDetailsDto[]>('/api/library/artists')
       .pipe(
-        map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto))),
+        map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto.artist, artistDto.discoveryData))),
         tap(artists => {
           this.sortArtists(artists);
           this.artistsSubject.next(artists);

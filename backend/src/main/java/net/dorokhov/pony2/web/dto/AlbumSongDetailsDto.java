@@ -7,14 +7,14 @@ import java.util.function.Function;
 
 public final class AlbumSongDetailsDto {
 
-    private AlbumDetailsDto details;
+    private ArtistAlbumDto details;
     private List<SongDetailsDto> songs;
 
-    public AlbumDetailsDto getDetails() {
+    public ArtistAlbumDto getDetails() {
         return details;
     }
 
-    public AlbumSongDetailsDto setDetails(AlbumDetailsDto details) {
+    public AlbumSongDetailsDto setDetails(ArtistAlbumDto details) {
         this.details = details;
         return this;
     }
@@ -28,7 +28,7 @@ public final class AlbumSongDetailsDto {
         return this;
     }
 
-    public static AlbumSongDetailsDto of(Album album, Function<Album, AlbumDetailsDto> albumMapper, boolean isAdmin) {
+    public static AlbumSongDetailsDto of(Album album, Function<Album, ArtistAlbumDto> albumMapper, boolean isAdmin) {
         return new AlbumSongDetailsDto()
                 .setDetails(albumMapper.apply(album))
                 .setSongs(album.getSongs().stream()

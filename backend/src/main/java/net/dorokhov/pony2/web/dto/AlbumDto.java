@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.web.dto;
 
 import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
 
 import jakarta.annotation.Nullable;
 
@@ -11,7 +10,6 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
     private Integer year;
     private String artworkId;
     private String artistId;
-    private AlbumDiscoveryDataDto discoveryData;
 
     @Nullable
     public String getName() {
@@ -52,17 +50,7 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
         return this;
     }
 
-    @Nullable
-    public AlbumDiscoveryDataDto getDiscoveryData() {
-        return discoveryData;
-    }
-
-    public AlbumDto setDiscoveryData(@Nullable AlbumDiscoveryDataDto discoveryData) {
-        this.discoveryData = discoveryData;
-        return this;
-    }
-
-    public static AlbumDto of(Album album, @Nullable AlbumDiscoveryData discoveryData) {
+    public static AlbumDto of(Album album) {
         return new AlbumDto()
                 .setId(album.getId())
                 .setCreationDate(album.getCreationDate())
@@ -70,7 +58,6 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
                 .setName(album.getName())
                 .setYear(album.getYear())
                 .setArtworkId(album.getArtwork() != null ? album.getArtwork().getId() : null)
-                .setArtistId(album.getArtist().getId())
-                .setDiscoveryData(discoveryData != null ? AlbumDiscoveryDataDto.of(discoveryData) : null);
+                .setArtistId(album.getArtist().getId());
     }
 }

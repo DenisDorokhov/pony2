@@ -39,14 +39,8 @@ public class LibraryFacade {
     @Transactional(readOnly = true)
     public List<SongDetailsDto> getSongs(List<String> songIds) {
         return libraryService.getSongsByIds(songIds).stream()
-                .map(songs -> SongDetailsDto.of(songs, this::toAlbumDetailsDto, isAdmin()))
+                .map(songs -> SongDetailsDto.of(songs, ArtistAlbumDto::of, isAdmin()))
                 .collect(toList());
-    }
-
-    private AlbumDetailsDto toAlbumDetailsDto(Album album) {
-        return AlbumDetailsDto.of(album,
-                libraryService.getArtistDiscoveryData(album.getArtist().getId()).orElse(null),
-                libraryService.getAlbumDiscoveryData(album.getId()).orElse(null));
     }
 
     private boolean isAdmin() {
@@ -54,28 +48,28 @@ public class LibraryFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<ArtistDto> getArtists() {
+    public List<ArtistDetailsDto> getArtists() {
         return libraryService.getArtists().stream()
                 .sorted()
-                .map(this::toArtistDto)
+                .map(this::toArtistDetailsDto)
                 .toList();
     }
 
-    private ArtistDto toArtistDto(Artist artist) {
-        return ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null));
+    private ArtistDetailsDto toArtistDetailsDto(Artist artist) {
+        return ArtistDetailsDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null));
     }
 
     @Transactional(readOnly = true)
     public List<ArtistDto> getArtists(int size, int offset) {
         return libraryService.getArtists(size, offset).stream()
-                .map(this::toArtistDto)
+                .map(ArtistDto::of)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<AlbumSongDetailsDto> getAlbums(int size, int offset) {
         return libraryService.getAlbums(size, offset).stream()
-                .map(album -> AlbumSongDetailsDto.of(album, this::toAlbumDetailsDto, isAdmin()))
+                .map(album -> AlbumSongDetailsDto.of(album, ArtistAlbumDto::of, isAdmin()))
                 .toList();
     }
 
@@ -109,13 +103,13 @@ public class LibraryFacade {
         List<Artist> artists = librarySearchService.searchArtists(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         List<Album> albums = librarySearchService.searchAlbums(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         List<Song> songs = librarySearchService.searchSongs(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
-        return SearchResultDto.of(genres, artists, albums, songs, this::toArtistDto, this::toAlbumDetailsDto, isAdmin());
+        return SearchResultDto.of(genres, artists, albums, songs, ArtistDto::of, ArtistAlbumDto::of, isAdmin());
     }
 
     @Transactional(readOnly = true)
     public List<SongDetailsDto> getRandomSongs(RandomSongsRequestDto request) {
         return libraryService.getRandomSongs(request.convert()).stream()
-                .map(songs -> SongDetailsDto.of(songs, this::toAlbumDetailsDto, isAdmin()))
+                .map(songs -> SongDetailsDto.of(songs, ArtistAlbumDto::of, isAdmin()))
                 .collect(toList());
     }
 
@@ -129,26 +123,26 @@ public class LibraryFacade {
 
     @Transactional(readOnly = true)
     public AlbumSongDetailsDto getAlbumSongDetails(String id) throws ObjectNotFoundException {
-        return libraryService.getAlbumById(id).map(album -> AlbumSongDetailsDto.of(album, this::toAlbumDetailsDto, isAdmin()))
+        return libraryService.getAlbumById(id).map(album -> AlbumSongDetailsDto.of(album, ArtistAlbumDto::of, isAdmin()))
                 .orElseThrow(() -> new ObjectNotFoundException(Album.class, id));
     }
 
     @Transactional(readOnly = true)
     public ArtistDto getArtist(String id) throws ObjectNotFoundException {
-        return libraryService.getArtistById(id).map(this::toArtistDto)
+        return libraryService.getArtistById(id).map(ArtistDto::of)
                 .orElseThrow(() -> new ObjectNotFoundException(Artist.class, id));
     }
 
     @Transactional(readOnly = true)
     public SongDetailsDto getSong(String id) throws ObjectNotFoundException {
-        return libraryService.getSongById(id).map(song -> SongDetailsDto.of(song, this::toAlbumDetailsDto, isAdmin()))
+        return libraryService.getSongById(id).map(song -> SongDetailsDto.of(song, ArtistAlbumDto::of, isAdmin()))
                 .orElseThrow(() -> new ObjectNotFoundException(Artist.class, id));
     }
 
     @Transactional(readOnly = true)
     public List<SongDetailsDto> getSongs(int size, int offset) {
         return libraryService.getSongs(size, offset).stream()
-                .map(song -> SongDetailsDto.of(song, this::toAlbumDetailsDto, isAdmin()))
+                .map(song -> SongDetailsDto.of(song, ArtistAlbumDto::of, isAdmin()))
                 .toList();
     }
 }

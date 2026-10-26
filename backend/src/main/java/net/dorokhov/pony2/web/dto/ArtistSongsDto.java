@@ -10,14 +10,14 @@ import java.util.function.Function;
 
 public final class ArtistSongsDto {
 
-    private ArtistDto artist;
+    private ArtistDetailsDto artist;
     private List<AlbumSongsDto> albumSongs;
 
-    public ArtistDto getArtist() {
+    public ArtistDetailsDto getArtist() {
         return artist;
     }
 
-    public ArtistSongsDto setArtist(ArtistDto artist) {
+    public ArtistSongsDto setArtist(ArtistDetailsDto artist) {
         this.artist = artist;
         return this;
     }
@@ -33,7 +33,7 @@ public final class ArtistSongsDto {
 
     public static ArtistSongsDto of(Artist artist, @Nullable ArtistDiscoveryData artistDiscoveryData, Function<Album, AlbumSongsDto> albumMapper) {
         return new ArtistSongsDto()
-                .setArtist(ArtistDto.of(artist, artistDiscoveryData))
+                .setArtist(ArtistDetailsDto.of(artist, artistDiscoveryData))
                 .setAlbumSongs(artist.getAlbums().stream()
                         .sorted()
                         .map(albumMapper)

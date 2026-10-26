@@ -52,7 +52,7 @@ public class PlaybackHistoryDto {
     public static PlaybackHistoryDto of(
             List<PlaybackHistorySong> songs,
             PlaybackHistoryStatistics statistics,
-            Function<Album, AlbumDetailsDto> albumMapper,
+            Function<Album, ArtistAlbumDto> albumMapper,
             boolean isAdmin
     ) {
         return new PlaybackHistoryDto()

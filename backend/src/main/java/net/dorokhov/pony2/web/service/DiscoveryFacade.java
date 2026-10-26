@@ -53,8 +53,8 @@ public class DiscoveryFacade {
         Artist artist = album != null ? album.getArtist() : job.getArtist();
         return DiscoveryJobDto.of(job,
                 job.getGenre() != null ? GenreDto.of(job.getGenre()) : null,
-                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null)) : null,
-                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId()).orElse(null)) : null,
+                artist != null ? ArtistDto.of(artist) : null,
+                album != null ? AlbumDto.of(album) : null,
                 job.getSong() != null ? SongDto.of(job.getSong(), true) : null);
     }
 
@@ -136,8 +136,8 @@ public class DiscoveryFacade {
         Artist artist = album != null ? album.getArtist() : task.getArtist();
         return DiscoveryTaskSummaryDto.of(task,
                 task.getGenre() != null ? GenreDto.of(task.getGenre()) : null,
-                artist != null ? ArtistDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null)) : null,
-                album != null ? AlbumDto.of(album, libraryService.getAlbumDiscoveryData(album.getId()).orElse(null)) : null,
+                artist != null ? ArtistDto.of(artist) : null,
+                album != null ? AlbumDto.of(album) : null,
                 task.getSong() != null ? SongDto.of(task.getSong(), true) : null);
     }
 
