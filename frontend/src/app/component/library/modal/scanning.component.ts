@@ -45,6 +45,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
   scanProgressValue: number | null | undefined;
 
   private scanJobProgressSubscription: Subscription | undefined;
+  private scanJobEndedSubscription: Subscription | undefined;
   private discoveryStatusSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
   private discoveryRunning = false;
@@ -55,12 +56,13 @@ export class ScanningComponent implements OnInit, OnDestroy {
       this.discoveryRunning = !!discoveryStatus?.progress;
       this.discoveryEnabled = discoveryStatus?.discoveryEnabled ?? false;
     });
+    this.scanJobEndedSubscription = this.libraryScanService.observeScanJobEnded().subscribe(scanJob => {
+      if (scanJob.status === ScanJobDto.Status.COMPLETE && this.discoveryEnabled) {
+        this.modal.open(DiscoveryComponent, {size: 'xl'});
+      }
+    });
     this.scanJobProgressSubscription = this.libraryScanService.observeScanJobProgress().subscribe({
       next: scanJobProgress => {
-        if (this.scanJobProgress && scanJobProgress === null && this.discoveryEnabled) {
-          this.activeModal.close();
-          this.modal.open(DiscoveryComponent, {size: 'xl'});
-        }
         this.scanJobProgress = scanJobProgress;
         if (scanJobProgress) {
           if (scanJobProgress.scanProgress?.value) {
@@ -85,6 +87,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.scanJobProgressSubscription?.unsubscribe();
+    this.scanJobEndedSubscription?.unsubscribe();
     this.discoveryStatusSubscription?.unsubscribe();
     this.refreshRequestSubscription?.unsubscribe();
   }

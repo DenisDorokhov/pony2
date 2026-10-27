@@ -74,6 +74,28 @@ public class DiscoveryScanJobObserverTest {
         verifyNoInteractions(discoveryJobService, logService);
     }
 
+    @ParameterizedTest
+    @EnumSource(ScanType.class)
+    public void shouldSkipDiscoveryWhenScanJobFails(ScanType scanType) {
+        ScanJob scanJob = scanJob(scanType).setStatus(ScanJob.Status.FAILED);
+
+        discoveryScanJobObserver.onScanJobFailing(scanJob);
+        discoveryScanJobObserver.onScanJobFailed(scanJob);
+
+        verifyNoInteractions(discoveryJobService);
+    }
+
+    @ParameterizedTest
+    @EnumSource(ScanType.class)
+    public void shouldSkipDiscoveryWhenScanJobIsInterrupted(ScanType scanType) {
+        ScanJob scanJob = scanJob(scanType).setStatus(ScanJob.Status.INTERRUPTED);
+
+        discoveryScanJobObserver.onScanJobInterrupting(scanJob);
+        discoveryScanJobObserver.onScanJobInterrupted(scanJob);
+
+        verifyNoInteractions(discoveryJobService);
+    }
+
     @Test
     public void shouldLogConcurrentLibraryJobException() throws ConcurrentLibraryJobException {
 

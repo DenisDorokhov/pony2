@@ -9,6 +9,7 @@ import {
   Observable,
   of,
   repeat,
+  Subject,
   Subscription,
   throwError,
   timer
@@ -39,6 +40,7 @@ export class LibraryScanService {
 
   private scanStatisticsSubject = new BehaviorSubject<ScanStatisticsDto | undefined | null>(undefined);
   private scanJobProgressSubject = new BehaviorSubject<ScanJobProgressDto | undefined | null>(undefined);
+  private scanJobEndedSubject = new Subject<ScanJobDto>();
 
   private discoveryEnabled = false;
 
@@ -156,6 +158,7 @@ export class LibraryScanService {
           this.translateService.instant('notification.scanJobFinishedText')
         );
       }
+      this.scanJobEndedSubject.next(scanJob);
     });
   }
 
@@ -176,6 +179,10 @@ export class LibraryScanService {
 
   observeScanJobProgress(): Observable<ScanJobProgressDto | undefined | null> {
     return this.scanJobProgressSubject.asObservable();
+  }
+
+  observeScanJobEnded(): Observable<ScanJobDto> {
+    return this.scanJobEndedSubject.asObservable();
   }
 
   getScanJobs(pageIndex = 0, pageSize = 30): Observable<ScanJobPageDto> {
