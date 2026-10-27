@@ -95,7 +95,9 @@
         width: 20px;
         height: 15px;
         margin-right: 6px;
-        vertical-align: -1px;
+        vertical-align: top;
+        top: 50%;
+        transform: translateY(-50%);
       }
 
       a {
