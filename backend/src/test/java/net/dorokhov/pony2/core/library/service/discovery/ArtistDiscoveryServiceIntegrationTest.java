@@ -522,7 +522,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(task.getResult()).isEqualTo("[null]");
+            assertThat(task.getResult()).isEqualTo("null");
         });
         verify(model, times(6)).call(any(Prompt.class));
     }

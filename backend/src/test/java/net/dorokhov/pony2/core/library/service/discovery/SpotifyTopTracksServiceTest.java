@@ -167,8 +167,9 @@ class SpotifyTopTracksServiceTest {
         }
     }
 
-    @Test
-    void shouldAcceptAllUnmatchedTracks() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReturnNullWhenAllTracksAreUnmatched(boolean cacheEnabled) {
         responses.clear();
         responses.addAll(List.of("""
                 {"albumMatches":[
@@ -178,10 +179,18 @@ class SpotifyTopTracksServiceTest {
                 ]}
                 """, "{\"trackMatches\":[{\"databaseTrackId\":null},{\"databaseTrackId\":null},{\"databaseTrackId\":null}]}"));
 
-        assertThat(service.discover(task(), true)).containsExactly(null, null, null);
+        DiscoveryTask task = task();
 
+        assertThat(service.discover(task, cacheEnabled)).isNull();
+
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2);
+        if (cacheEnabled) {
+            assertThat(service.discover(task(), true)).isNull();
+        } else {
+            verifyNoInteractions(cacheService);
+        }
         assertThat(prompts).hasSize(4);
-        assertThat(cache).hasSize(2);
+        assertThat(cache).hasSize(cacheEnabled ? 2 : 0);
     }
 
     @Test

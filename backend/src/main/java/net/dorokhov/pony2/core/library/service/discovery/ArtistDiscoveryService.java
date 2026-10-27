@@ -213,7 +213,7 @@ public class ArtistDiscoveryService {
         }
 
         @Override
-        public List<String> executeTask(DiscoveryTask task) {
+        public @Nullable List<String> executeTask(DiscoveryTask task) {
             return spotifyTopTracksService.discover(task, cacheEnabled);
         }
 

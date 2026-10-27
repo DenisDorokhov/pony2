@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -86,7 +87,7 @@ public class SpotifyTopTracksService {
         verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
     }
 
-    public List<String> discover(DiscoveryTask task, boolean cacheEnabled) {
+    public @Nullable List<String> discover(DiscoveryTask task, boolean cacheEnabled) {
         try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
             jobSynchronizer.interruptDiscoveryIfCancelled();
             if (shutdownService.isShutdown()) {
@@ -142,8 +143,7 @@ public class SpotifyTopTracksService {
         }
     }
 
-    @Nullable
-    private SpotifyArtistData readArtistData(String artistId) {
+    private @Nullable SpotifyArtistData readArtistData(String artistId) {
         DiscoveryTask task = taskRepository.findLatestCompletedByArtistIdAndType(
                         artistId, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))
                 .orElseThrow(() -> new IllegalStateException("No completed SPOTIFY_ARTIST_DATA task for artist '" + artistId + "'."));
@@ -177,7 +177,7 @@ public class SpotifyTopTracksService {
         return result;
     }
 
-    private List<String> parseTrackMatches(@Nullable String response, List<SpotifyArtistData.TopTrack> topTracks,
+    private @Nullable List<String> parseTrackMatches(@Nullable String response, List<SpotifyArtistData.TopTrack> topTracks,
                                           Map<String, String> albumMatches, List<AlbumTracks> albums) {
         Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
         checkState(parsed instanceof Map<?, ?> && ((Map<?, ?>) parsed).keySet().equals(Set.of("trackMatches")),
@@ -199,7 +199,7 @@ public class SpotifyTopTracksService {
                     "The LLM returned track ID '%s' outside the matched album '%s' at position %s.", trackId, albumId, i);
             result.add((String) trackId);
         }
-        return result;
+        return result.stream().allMatch(Objects::isNull) ? null : result;
     }
 
     private RuntimeException invalidResponse(String artistId, RuntimeException error) {
