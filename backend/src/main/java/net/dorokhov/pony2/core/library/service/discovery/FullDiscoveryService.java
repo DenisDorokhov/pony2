@@ -105,16 +105,33 @@ public class FullDiscoveryService {
         LocalDateTime entityDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
         return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                         artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))
-                .map(entityDate::isAfter).orElse(true) ||
+                .map(taskDate -> shouldDiscoverTask(artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, entityDate, taskDate))
+                .orElse(true) ||
                 discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                                 artist.getId(), DiscoveryTaskType.SPOTIFY_TOP_TRACKS, Limit.of(1))
-                        .map(entityDate::isAfter).orElse(true);
+                        .map(taskDate -> shouldDiscoverTask(artist.getId(), DiscoveryTaskType.SPOTIFY_TOP_TRACKS, entityDate, taskDate))
+                        .orElse(true);
+    }
+
+    private boolean shouldDiscoverTask(String entityId, DiscoveryTaskType type, LocalDateTime entityDate, LocalDateTime taskDate) {
+        if (entityDate.isAfter(taskDate)) {
+            return true;
+        }
+        return type.getImplementedAt()
+                .filter(implementedAt -> implementedAt.isAfter(taskDate))
+                .map(implementedAt -> {
+                    logger.debug("Re-running discovery task {} for entity '{}': implementation update date {} is after the last completed task creation date {}.",
+                            type, entityId, implementedAt, taskDate);
+                    return true;
+                })
+                .orElse(false);
     }
 
     private boolean shouldDiscoverAlbum(Album album) {
         LocalDateTime entityDate = album.getUpdateDate() != null ? album.getUpdateDate() : album.getCreationDate();
         return discoveryTaskRepository.findLatestCompletedCreationDateByAlbumIdAndType(
                         album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, Limit.of(1))
-                .map(entityDate::isAfter).orElse(true);
+                .map(taskDate -> shouldDiscoverTask(album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, entityDate, taskDate))
+                .orElse(true);
     }
 }

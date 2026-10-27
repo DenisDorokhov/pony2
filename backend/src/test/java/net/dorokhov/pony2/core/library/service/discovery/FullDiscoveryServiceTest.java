@@ -1,5 +1,9 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -16,6 +20,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Limit;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
@@ -86,15 +91,55 @@ public class FullDiscoveryServiceTest {
     public void shouldDiscoverOutdatedArtistEvenWhenTasksAreComplete() {
         LocalDateTime now = LocalDateTime.now();
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1").setUpdateDate(now);
+        Artist artist = artist("artist1").setUpdateDate(now.plusMinutes(1));
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
         when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(eq("artist1"), any(), any()))
-                .thenReturn(Optional.of(now.minusMinutes(1)));
+                .thenReturn(Optional.of(now));
 
         fullDiscoveryService.discover(job, null);
 
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
                 eq(List.of()), eq(true), any(), isNull());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "SPOTIFY_ARTIST_DATA,-1,false", "SPOTIFY_ARTIST_DATA,0,false", "SPOTIFY_ARTIST_DATA,1,false",
+            "SPOTIFY_TOP_TRACKS,-1,true", "SPOTIFY_TOP_TRACKS,0,false", "SPOTIFY_TOP_TRACKS,1,false"
+    })
+    public void shouldRediscoverArtistOnlyWhenTaskImplementationIsNewer(DiscoveryTaskType type, int minutesAfterUpdate,
+                                                                       boolean required) {
+        LocalDateTime implementedAt = DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow();
+        LocalDateTime taskDate = implementedAt.plusMinutes(minutesAfterUpdate);
+        DiscoveryJob job = discoveryJob();
+        Artist artist = artist("artist1").setCreationDate(implementedAt.minusDays(1));
+        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
+        artistTasks(artist.getId(), 2, implementedAt.plusMinutes(1));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(artist.getId(), type, Limit.of(1)))
+                .thenReturn(Optional.of(taskDate));
+        Logger logger = (Logger) LoggerFactory.getLogger(FullDiscoveryService.class);
+        Level previousLevel = logger.getLevel();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        logger.setLevel(Level.DEBUG);
+        try {
+            fullDiscoveryService.discover(job, null);
+
+            verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
+                    eq(List.of()), eq(required), any(), isNull());
+            assertThat(appender.list).hasSize(required ? 1 : 0);
+            if (required) {
+                assertThat(appender.list).singleElement().satisfies(event -> {
+                    assertThat(event.getLevel()).isEqualTo(Level.DEBUG);
+                    assertThat(event.getArgumentArray()).containsExactly(type, artist.getId(), implementedAt, taskDate);
+                });
+            }
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(previousLevel);
+            appender.stop();
+        }
     }
 
     @ParameterizedTest
@@ -106,7 +151,7 @@ public class FullDiscoveryServiceTest {
         Artist artist = artist("artist1");
         Album album = album("album1", artist);
         if (outdated) {
-            album.setUpdateDate(now);
+            album.setUpdateDate(now.plusMinutes(1));
         }
         List<Album> albums = List.of(album);
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
@@ -114,7 +159,7 @@ public class FullDiscoveryServiceTest {
         when(albumRepository.findByArtistId("artist1")).thenReturn(albums);
         artistTasks("artist1", 2L, now);
         if (exists) {
-            albumTasks("album1", completedTasks, now.minusMinutes(1));
+            albumTasks("album1", completedTasks, now);
         }
         doAnswer(invocation -> {
             Predicate<Album> predicate = invocation.getArgument(5);
@@ -126,6 +171,30 @@ public class FullDiscoveryServiceTest {
         fullDiscoveryService.discover(job, null);
 
         verify(jobSynchronizer, times(3)).interruptDiscoveryIfCancelled();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"-1,true", "0,false", "1,false"})
+    public void shouldRediscoverAlbumOnlyWhenTaskImplementationIsNewer(int minutesAfterUpdate, boolean required) {
+        LocalDateTime implementedAt = DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow();
+        DiscoveryJob job = discoveryJob();
+        Artist artist = artist("artist1").setCreationDate(implementedAt.minusDays(1));
+        Album album = album("album1", artist);
+        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
+        when(albumRepository.findByArtistId(artist.getId())).thenReturn(List.of(album));
+        artistTasks(artist.getId(), 2, LocalDateTime.now());
+        albumTasks(album.getId(), 1, implementedAt.plusMinutes(minutesAfterUpdate));
+        doAnswer(invocation -> {
+            Predicate<Album> predicate = invocation.getArgument(5);
+            assertThat(predicate.test(album)).isEqualTo(required);
+            return null;
+        }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
+                eq(List.of(album)), eq(false), any(), isNull());
+
+        fullDiscoveryService.discover(job, null);
+
+        verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
+                eq(List.of(album)), eq(false), any(), isNull());
     }
 
     @Test

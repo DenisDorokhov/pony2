@@ -1677,14 +1677,14 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         saveDiscoveryHistory(previousJob, 2, 1);
         LocalDateTime now = LocalDateTime.now();
         jdbcTemplate.update("UPDATE discovery_task SET creation_date = ?, update_date = NULL WHERE discovery_job_id = ?",
-                now.minusHours(1), previousJob.getId());
+                now, previousJob.getId());
         jdbcTemplate.update("UPDATE artist SET creation_date = ?, update_date = NULL WHERE id = ?", now.minusDays(1), artist.getId());
         jdbcTemplate.update("UPDATE album SET creation_date = ?, update_date = NULL WHERE id = ?", now.minusDays(1), album.getId());
         if (artistUpdated) {
-            jdbcTemplate.update("UPDATE artist SET update_date = ? WHERE id = ?", now, artist.getId());
+            jdbcTemplate.update("UPDATE artist SET update_date = ? WHERE id = ?", now.plusMinutes(1), artist.getId());
         }
         if (albumUpdated) {
-            jdbcTemplate.update("UPDATE album SET update_date = ? WHERE id = ?", now, album.getId());
+            jdbcTemplate.update("UPDATE album SET update_date = ? WHERE id = ?", now.plusMinutes(1), album.getId());
         }
         search(List.of());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
@@ -1692,6 +1692,32 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, null);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(expectedNewTasks);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DiscoveryTaskType.class, names = {"SPOTIFY_TOP_TRACKS", "MUSICBRAINZ_ALBUM_DATA"})
+    void shouldRerunUpdatedTaskImplementationOnceDespiteCompletedResults(DiscoveryTaskType type) {
+        DiscoveryJob previousJob = job(DiscoveryType.ARTIST);
+        artistService.discover(previousJob, artist, false, null);
+        jobRepository.save(previousJob.setStatus(DiscoveryJob.Status.COMPLETE));
+        LocalDateTime implementedAt = type.getImplementedAt().orElseThrow();
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE discovery_job_id = ? AND type = ?",
+                implementedAt.minusMinutes(1), previousJob.getId(), type.name());
+        jdbcTemplate.update("UPDATE artist SET creation_date = ?, update_date = NULL WHERE id = ?",
+                implementedAt.minusDays(1), artist.getId());
+        jdbcTemplate.update("UPDATE album SET creation_date = ?, update_date = NULL WHERE id = ?",
+                implementedAt.minusDays(1), album.getId());
+        DiscoveryJob nextJob = job(DiscoveryType.FULL);
+
+        fullDiscoveryService.discover(nextJob, false, null);
+
+        long expectedNewTasks = type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA ? 1 : 2;
+        assertThat(taskRepository.countByJobIdAndStatus(nextJob.getId(), DiscoveryTask.Status.COMPLETE)).isEqualTo(expectedNewTasks);
+        DiscoveryJob followingJob = job(DiscoveryType.FULL);
+
+        fullDiscoveryService.discover(followingJob, false, null);
+
+        assertThat(taskRepository.countByJobId(followingJob.getId())).isZero();
     }
 
     @ParameterizedTest
