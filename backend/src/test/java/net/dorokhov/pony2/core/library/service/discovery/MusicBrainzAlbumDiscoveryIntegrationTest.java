@@ -1857,7 +1857,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         taskRepository.save(incompleteTask.setResult(JsonConverter.toJson(
                 new MusicBrainzAlbumData("incomplete", "Album", List.of(), null, "incomplete-artist", List.of("DE")))));
 
-        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, false, ignored -> false, null);
+        saveDiscoveryHistory(job(DiscoveryType.FULL), 2, -1);
+        artistService.discoverIfUpdated(job(DiscoveryType.FULL), artist, List.of(album), false, null);
 
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
@@ -1914,7 +1915,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         rawArtistResponse = JsonConverter.toJson(new MusicBrainzDto.Artist(artistId, "Slayer",
                 new MusicBrainzDto.Area(List.of(countryCode)), null));
 
-        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, false, ignored -> true, null);
+        saveDiscoveryHistory(job(DiscoveryType.FULL), 2, -1);
+        artistService.discoverIfUpdated(job(DiscoveryType.FULL), artist, List.of(album), false, null);
 
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
@@ -1936,7 +1938,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         rawArtistResponse = "{\"id\":\"other-job-artist\",\"area\":{\"iso-3166-1-codes\":[\"DE\"]}}";
         albumService.discover(otherJob, album, false, null);
 
-        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, false, ignored -> false, null);
+        artistService.discoverIfUpdated(job(DiscoveryType.FULL), artist, List.of(album), false, null);
 
         assertThat(taskRepository.findAll()).hasSize(4);
         assertThat(taskRepository.findLatestCompletedByAlbumIdAndType(album.getId(),

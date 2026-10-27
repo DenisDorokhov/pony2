@@ -15,6 +15,7 @@ import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.discovery.task.SpotifyTopTracksService;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -47,6 +49,7 @@ public class ArtistDiscoveryService {
     private final AlbumDiscoveryService albumDiscoveryService;
     private final LogService logService;
     private final DiscoveryTaskExecutor taskExecutor;
+    private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
@@ -58,6 +61,7 @@ public class ArtistDiscoveryService {
             AlbumDiscoveryService albumDiscoveryService,
             LogService logService,
             DiscoveryTaskExecutor taskExecutor,
+            LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager
     ) {
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
@@ -68,19 +72,59 @@ public class ArtistDiscoveryService {
         this.albumDiscoveryService = albumDiscoveryService;
         this.logService = logService;
         this.taskExecutor = taskExecutor;
+        this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
-    public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
+    public void discover(
+            DiscoveryJob discoveryJob, Artist artist,
+            boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer
+    ) {
         List<Album> albums = requireNonNull(transactionTemplate.execute(status ->
                 albumRepository.findByArtistId(artist.getId()).stream().sorted().toList()));
         discover(discoveryJob, artist, cacheEnabled, albums, true, true, album -> true, observer);
     }
 
-    void discoverForFullJob(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
-                            boolean discoverArtist, boolean discoverTopTracks, Predicate<Album> shouldDiscoverAlbum,
-                            @Nullable Consumer<DiscoveryProgress> observer) {
-        discover(discoveryJob, artist, cacheEnabled, albums, discoverArtist, discoverTopTracks, shouldDiscoverAlbum, observer);
+    public void discoverIfUpdated(
+            DiscoveryJob discoveryJob, Artist artist, List<Album> albums,
+            boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer
+    ) {
+        boolean discoverArtist = shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
+        boolean discoverTopTracks = discoverArtist || shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
+        discover(discoveryJob, artist, cacheEnabled, albums, discoverArtist, discoverTopTracks, album -> {
+            jobSynchronizer.interruptDiscoveryIfCancelled();
+            return shouldDiscoverAlbum(album);
+        }, observer);
+    }
+
+    private boolean shouldDiscoverArtistTask(Artist artist, DiscoveryTaskType type) {
+        LocalDateTime entityDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
+        return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                        artist.getId(), type, Limit.of(1))
+                .map(taskDate -> shouldDiscoverTask(artist.getId(), type, entityDate, taskDate))
+                .orElse(true);
+    }
+
+    private boolean shouldDiscoverTask(String entityId, DiscoveryTaskType type, LocalDateTime entityDate, LocalDateTime taskDate) {
+        if (entityDate.isAfter(taskDate)) {
+            return true;
+        }
+        return type.getImplementedAt()
+                .filter(implementedAt -> implementedAt.isAfter(taskDate))
+                .map(implementedAt -> {
+                    logger.debug("Re-running discovery task {} for entity '{}': implementation update date {} is after the last completed task creation date {}.",
+                            type, entityId, implementedAt, taskDate);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    private boolean shouldDiscoverAlbum(Album album) {
+        LocalDateTime entityDate = album.getUpdateDate() != null ? album.getUpdateDate() : album.getCreationDate();
+        return discoveryTaskRepository.findLatestCompletedCreationDateByAlbumIdAndType(
+                        album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, Limit.of(1))
+                .map(taskDate -> shouldDiscoverTask(album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, entityDate, taskDate))
+                .orElse(true);
     }
 
     private void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,

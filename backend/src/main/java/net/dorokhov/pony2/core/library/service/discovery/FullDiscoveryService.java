@@ -4,8 +4,6 @@ import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
-import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
-import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
@@ -13,10 +11,8 @@ import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -29,20 +25,17 @@ public class FullDiscoveryService {
 
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
-    private final DiscoveryTaskRepository discoveryTaskRepository;
     private final ArtistDiscoveryService artistDiscoveryService;
     private final LibraryJobSynchronizer jobSynchronizer;
 
     public FullDiscoveryService(
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
-            DiscoveryTaskRepository discoveryTaskRepository,
             ArtistDiscoveryService artistDiscoveryService,
             LibraryJobSynchronizer jobSynchronizer
     ) {
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
-        this.discoveryTaskRepository = discoveryTaskRepository;
         this.artistDiscoveryService = artistDiscoveryService;
         this.jobSynchronizer = jobSynchronizer;
     }
@@ -70,13 +63,8 @@ public class FullDiscoveryService {
         for (Artist artist : artists) {
             jobSynchronizer.interruptDiscoveryIfCancelled();
             List<Album> albums = albumRepository.findByArtistId(artist.getId()).stream().sorted().toList();
-            boolean discoverArtist = shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
-            boolean discoverTopTracks = discoverArtist || shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
             long artistProgressOffset = tasksComplete;
-            artistDiscoveryService.discoverForFullJob(discoveryJob, artist, cacheEnabled, albums, discoverArtist, discoverTopTracks, album -> {
-                jobSynchronizer.interruptDiscoveryIfCancelled();
-                return shouldDiscoverAlbum(album);
-            }, observer == null ? null : progress -> {
+            artistDiscoveryService.discoverIfUpdated(discoveryJob, artist, albums, cacheEnabled, observer == null ? null : progress -> {
                 DiscoveryProgress.Value value = progress.getValue();
                 if (value != null && value.getItemsTotal() > 0) {
                     notifyProgressObserver(new DiscoveryProgress(FULL_DISCOVERY,
@@ -100,35 +88,5 @@ public class FullDiscoveryService {
                 logger.error("Could not call discovery progress observer.", t);
             }
         }
-    }
-
-    private boolean shouldDiscoverArtistTask(Artist artist, DiscoveryTaskType type) {
-        LocalDateTime entityDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
-        return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
-                        artist.getId(), type, Limit.of(1))
-                .map(taskDate -> shouldDiscoverTask(artist.getId(), type, entityDate, taskDate))
-                .orElse(true);
-    }
-
-    private boolean shouldDiscoverTask(String entityId, DiscoveryTaskType type, LocalDateTime entityDate, LocalDateTime taskDate) {
-        if (entityDate.isAfter(taskDate)) {
-            return true;
-        }
-        return type.getImplementedAt()
-                .filter(implementedAt -> implementedAt.isAfter(taskDate))
-                .map(implementedAt -> {
-                    logger.debug("Re-running discovery task {} for entity '{}': implementation update date {} is after the last completed task creation date {}.",
-                            type, entityId, implementedAt, taskDate);
-                    return true;
-                })
-                .orElse(false);
-    }
-
-    private boolean shouldDiscoverAlbum(Album album) {
-        LocalDateTime entityDate = album.getUpdateDate() != null ? album.getUpdateDate() : album.getCreationDate();
-        return discoveryTaskRepository.findLatestCompletedCreationDateByAlbumIdAndType(
-                        album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, Limit.of(1))
-                .map(taskDate -> shouldDiscoverTask(album.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, entityDate, taskDate))
-                .orElse(true);
     }
 }
