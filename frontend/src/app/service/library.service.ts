@@ -59,6 +59,7 @@ export class LibraryService {
 
   private genresSubject = new BehaviorSubject<Genre[]>([]);
   private artistsSubject = new BehaviorSubject<Artist[]>([]);
+  private artistsById = new Map<string, Artist>();
 
   private selectedArtistSubject = new BehaviorSubject<Artist | undefined>(undefined);
   private selectedSongSubject = new BehaviorSubject<SongSelection | undefined>(undefined);
@@ -79,6 +80,7 @@ export class LibraryService {
 
   constructor() {
     this.authenticationService.observeLogout().subscribe(user => {
+      this.artistsById.clear();
       this.artistsSubject.next([]);
       this.genresSubject.next([]);
       this.selectedArtistSubject.next(undefined);
@@ -199,7 +201,7 @@ export class LibraryService {
   }
 
   isTopTrack(song: Song): boolean {
-    const artist = this.artistsSubject.value.find(artist => artist.id === song.album.artist.id);
+    const artist = this.artistsById.get(song.album.artist.id);
     return artist?.discoveryData.topSongIds.includes(song.id) ?? song.isTopTrack;
   }
 
@@ -209,6 +211,7 @@ export class LibraryService {
         map(artistDtos => artistDtos.map(artistDto => new Artist(artistDto.artist, artistDto.discoveryData))),
         tap(artists => {
           this.sortArtists(artists);
+          this.artistsById = new Map(artists.map(artist => [artist.id, artist]));
           this.artistsSubject.next(artists);
         }),
       );
