@@ -1583,9 +1583,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
-            "INTERRUPTED,-1,1,2", "INTERRUPTED,0,0,3", "INTERRUPTED,1,0,3",
+            "INTERRUPTED,-1,1,2", "INTERRUPTED,0,0,3", "INTERRUPTED,1,0,2",
             "INTERRUPTED,2,-1,1", "INTERRUPTED,2,0,1", "INTERRUPTED,2,1,0",
-            "MODERATE,1,1,2", "MODERATE,2,0,1", "COMPLETE,2,1,0"
+            "MODERATE,1,1,1", "MODERATE,2,0,1", "COMPLETE,2,1,0"
     })
     void shouldResumeFullDiscoveryByCompletedTaskCounts(DiscoveryJob.Status previousStatus, int artistTasks,
                                                        int albumTasks, int expectedNewTasks) {
@@ -1600,7 +1600,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, progressCalls::add);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(expectedNewTasks);
-        assertThat(artistTasks()).hasSize(Math.max(artistTasks, 0) + (artistTasks < 2 ? 2 : 0));
+        assertThat(artistTasks()).hasSize(2);
         assertThat(albumTasks(album)).hasSize(Math.max(albumTasks, 0) + (albumTasks < 1 ? 1 : 0));
         assertThat(progressCalls.getFirst().getValue()).isEqualTo(DiscoveryProgress.Value.of(0, 3));
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(3, 3));
@@ -1625,7 +1625,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         fullDiscoveryService.discover(nextJob, false, null);
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(3);
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(2);
     }
 
     @Test
@@ -1708,11 +1708,18 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         jdbcTemplate.update("UPDATE album SET creation_date = ?, update_date = NULL WHERE id = ?",
                 implementedAt.minusDays(1), album.getId());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
+        List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
-        fullDiscoveryService.discover(nextJob, false, null);
+        fullDiscoveryService.discover(nextJob, false, progressCalls::add);
 
-        long expectedNewTasks = type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA ? 1 : 2;
-        assertThat(taskRepository.countByJobIdAndStatus(nextJob.getId(), DiscoveryTask.Status.COMPLETE)).isEqualTo(expectedNewTasks);
+        assertThat(taskRepository.findAll()).filteredOn(task -> task.getJob().getId().equals(nextJob.getId()))
+                .singleElement().satisfies(task -> {
+                    assertThat(task.getType()).isEqualTo(type);
+                    assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                });
+        assertThat(progressCalls.get(1).getValue()).isEqualTo(DiscoveryProgress.Value.of(
+                type == DiscoveryTaskType.SPOTIFY_TOP_TRACKS ? 1 : 2, 3));
+        assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(3, 3));
         DiscoveryJob followingJob = job(DiscoveryType.FULL);
 
         fullDiscoveryService.discover(followingJob, false, null);
@@ -1810,7 +1817,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         fullDiscoveryService.discover(nextJob, false, null);
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(3);
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(2);
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
@@ -1850,7 +1857,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         taskRepository.save(incompleteTask.setResult(JsonConverter.toJson(
                 new MusicBrainzAlbumData("incomplete", "Album", List.of(), null, "incomplete-artist", List.of("DE")))));
 
-        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> false, null);
+        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, false, ignored -> false, null);
 
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
@@ -1907,7 +1914,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         rawArtistResponse = JsonConverter.toJson(new MusicBrainzDto.Artist(artistId, "Slayer",
                 new MusicBrainzDto.Area(List.of(countryCode)), null));
 
-        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> true, null);
+        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, false, ignored -> true, null);
 
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
@@ -1929,7 +1936,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         rawArtistResponse = "{\"id\":\"other-job-artist\",\"area\":{\"iso-3166-1-codes\":[\"DE\"]}}";
         albumService.discover(otherJob, album, false, null);
 
-        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> false, null);
+        artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, false, ignored -> false, null);
 
         assertThat(taskRepository.findAll()).hasSize(4);
         assertThat(taskRepository.findLatestCompletedByAlbumIdAndType(album.getId(),

@@ -70,9 +70,10 @@ public class FullDiscoveryService {
         for (Artist artist : artists) {
             jobSynchronizer.interruptDiscoveryIfCancelled();
             List<Album> albums = albumRepository.findByArtistId(artist.getId()).stream().sorted().toList();
-            boolean discoverArtist = shouldDiscoverArtist(artist);
+            boolean discoverArtist = shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
+            boolean discoverTopTracks = discoverArtist || shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
             long artistProgressOffset = tasksComplete;
-            artistDiscoveryService.discoverForFullJob(discoveryJob, artist, cacheEnabled, albums, discoverArtist, album -> {
+            artistDiscoveryService.discoverForFullJob(discoveryJob, artist, cacheEnabled, albums, discoverArtist, discoverTopTracks, album -> {
                 jobSynchronizer.interruptDiscoveryIfCancelled();
                 return shouldDiscoverAlbum(album);
             }, observer == null ? null : progress -> {
@@ -101,16 +102,12 @@ public class FullDiscoveryService {
         }
     }
 
-    private boolean shouldDiscoverArtist(Artist artist) {
+    private boolean shouldDiscoverArtistTask(Artist artist, DiscoveryTaskType type) {
         LocalDateTime entityDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
         return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
-                        artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))
-                .map(taskDate -> shouldDiscoverTask(artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, entityDate, taskDate))
-                .orElse(true) ||
-                discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
-                                artist.getId(), DiscoveryTaskType.SPOTIFY_TOP_TRACKS, Limit.of(1))
-                        .map(taskDate -> shouldDiscoverTask(artist.getId(), DiscoveryTaskType.SPOTIFY_TOP_TRACKS, entityDate, taskDate))
-                        .orElse(true);
+                        artist.getId(), type, Limit.of(1))
+                .map(taskDate -> shouldDiscoverTask(artist.getId(), type, entityDate, taskDate))
+                .orElse(true);
     }
 
     private boolean shouldDiscoverTask(String entityId, DiscoveryTaskType type, LocalDateTime entityDate, LocalDateTime taskDate) {

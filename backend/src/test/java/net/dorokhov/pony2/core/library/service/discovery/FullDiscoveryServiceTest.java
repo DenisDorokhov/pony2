@@ -68,13 +68,13 @@ public class FullDiscoveryServiceTest {
 
         verify(artistRepository).findAll(Sort.by("id"));
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(false),
-                eq(List.of()), eq(true), any(), isNull());
+                eq(List.of()), eq(true), eq(true), any(), isNull());
         verify(jobSynchronizer, times(2)).interruptDiscoveryIfCancelled();
     }
 
     @ParameterizedTest
-    @CsvSource({"0,true", "1,true", "2,false"})
-    public void shouldRetryArtistWhenCompletedTasksAreMissing(long completedTasks, boolean required) {
+    @CsvSource({"0,true,true", "1,false,true", "2,false,false"})
+    public void shouldRetryOnlyMissingArtistTasks(long completedTasks, boolean artistRequired, boolean topTracksRequired) {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1");
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
@@ -83,7 +83,7 @@ public class FullDiscoveryServiceTest {
         fullDiscoveryService.discover(job, null);
 
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of()), eq(required), any(), isNull());
+                eq(List.of()), eq(artistRequired), eq(topTracksRequired), any(), isNull());
         verify(jobSynchronizer, times(2)).interruptDiscoveryIfCancelled();
     }
 
@@ -93,13 +93,15 @@ public class FullDiscoveryServiceTest {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1").setUpdateDate(now.plusMinutes(1));
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
-        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(eq("artist1"), any(), any()))
+        artistTasks("artist1", 2, now.plusMinutes(2));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                "artist1", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.of(now));
 
         fullDiscoveryService.discover(job, null);
 
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of()), eq(true), any(), isNull());
+                eq(List.of()), eq(true), eq(true), any(), isNull());
     }
 
     @ParameterizedTest
@@ -107,8 +109,8 @@ public class FullDiscoveryServiceTest {
             "SPOTIFY_ARTIST_DATA,-1,false", "SPOTIFY_ARTIST_DATA,0,false", "SPOTIFY_ARTIST_DATA,1,false",
             "SPOTIFY_TOP_TRACKS,-1,true", "SPOTIFY_TOP_TRACKS,0,false", "SPOTIFY_TOP_TRACKS,1,false"
     })
-    public void shouldRediscoverArtistOnlyWhenTaskImplementationIsNewer(DiscoveryTaskType type, int minutesAfterUpdate,
-                                                                       boolean required) {
+    public void shouldRediscoverOnlyTaskWhoseImplementationIsNewer(DiscoveryTaskType type, int minutesAfterUpdate,
+                                                                  boolean required) {
         LocalDateTime implementedAt = DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow();
         LocalDateTime taskDate = implementedAt.plusMinutes(minutesAfterUpdate);
         DiscoveryJob job = discoveryJob();
@@ -127,7 +129,7 @@ public class FullDiscoveryServiceTest {
             fullDiscoveryService.discover(job, null);
 
             verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                    eq(List.of()), eq(required), any(), isNull());
+                    eq(List.of()), eq(false), eq(required), any(), isNull());
             assertThat(appender.list).hasSize(required ? 1 : 0);
             if (required) {
                 assertThat(appender.list).singleElement().satisfies(event -> {
@@ -162,11 +164,11 @@ public class FullDiscoveryServiceTest {
             albumTasks("album1", completedTasks, now);
         }
         doAnswer(invocation -> {
-            Predicate<Album> predicate = invocation.getArgument(5);
+            Predicate<Album> predicate = invocation.getArgument(6);
             assertThat(predicate.test(album)).isEqualTo(required);
             return null;
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(albums), eq(false), any(), isNull());
+                eq(albums), eq(false), eq(false), any(), isNull());
 
         fullDiscoveryService.discover(job, null);
 
@@ -185,16 +187,16 @@ public class FullDiscoveryServiceTest {
         artistTasks(artist.getId(), 2, LocalDateTime.now());
         albumTasks(album.getId(), 1, implementedAt.plusMinutes(minutesAfterUpdate));
         doAnswer(invocation -> {
-            Predicate<Album> predicate = invocation.getArgument(5);
+            Predicate<Album> predicate = invocation.getArgument(6);
             assertThat(predicate.test(album)).isEqualTo(required);
             return null;
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of(album)), eq(false), any(), isNull());
+                eq(List.of(album)), eq(false), eq(false), any(), isNull());
 
         fullDiscoveryService.discover(job, null);
 
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of(album)), eq(false), any(), isNull());
+                eq(List.of(album)), eq(false), eq(false), any(), isNull());
     }
 
     @Test
@@ -223,20 +225,20 @@ public class FullDiscoveryServiceTest {
         artistTasks("artist1", 0, LocalDateTime.now());
         artistTasks("artist2", 2L, LocalDateTime.now());
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(6);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(7);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 4)));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 4)));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(4, 4)));
             return null;
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(first), eq(true),
-                eq(firstAlbums), eq(true), any(), any());
+                eq(firstAlbums), eq(true), eq(true), any(), any());
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(6);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(7);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(2, 3)));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(3, 3)));
             return null;
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(second), eq(true),
-                eq(secondAlbums), eq(false), any(), any());
+                eq(secondAlbums), eq(false), eq(false), any(), any());
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
         fullDiscoveryService.discover(job, progressCalls::add);
@@ -277,11 +279,11 @@ public class FullDiscoveryServiceTest {
         artistTasks("artist1", 2L, LocalDateTime.now());
         doNothing().doThrow(new DiscoveryInterruptedException()).when(jobSynchronizer).interruptDiscoveryIfCancelled();
         doAnswer(invocation -> {
-            Predicate<Album> predicate = invocation.getArgument(5);
+            Predicate<Album> predicate = invocation.getArgument(6);
             predicate.test(album);
             return null;
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of(album)), eq(false), any(), isNull());
+                eq(List.of(album)), eq(false), eq(false), any(), isNull());
 
         assertThatThrownBy(() -> fullDiscoveryService.discover(job, null))
                 .isInstanceOf(DiscoveryInterruptedException.class);
@@ -298,11 +300,11 @@ public class FullDiscoveryServiceTest {
         when(jobSynchronizer.registerDiscoveryTask()).thenReturn(taskRegistration);
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(first, second));
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(6);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(7);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 2)));
             throw new DiscoveryInterruptedException();
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(first), eq(true),
-                eq(List.of()), eq(true), any(), any());
+                eq(List.of()), eq(true), eq(true), any(), any());
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
         assertThatThrownBy(() -> fullDiscoveryService.discover(job, progressCalls::add))
@@ -320,14 +322,14 @@ public class FullDiscoveryServiceTest {
         Artist artist = artist("artist1");
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(artist));
         doAnswer(invocation -> {
-            Consumer<DiscoveryProgress> observer = invocation.getArgument(6);
+            Consumer<DiscoveryProgress> observer = invocation.getArgument(7);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, null));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 0)));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 2)));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(2, 2)));
             return null;
         }).when(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of()), eq(true), any(), any());
+                eq(List.of()), eq(true), eq(true), any(), any());
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
         fullDiscoveryService.discover(job, progressCalls::add);
@@ -349,7 +351,7 @@ public class FullDiscoveryServiceTest {
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(2, 2));
         verify(artistDiscoveryService).discoverForFullJob(eq(job), eq(artist), eq(true),
-                eq(List.of()), eq(true), any(), any());
+                eq(List.of()), eq(true), eq(true), any(), any());
     }
 
     private void artistTasks(String artistId, long count, LocalDateTime date) {

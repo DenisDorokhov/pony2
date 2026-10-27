@@ -74,17 +74,19 @@ public class ArtistDiscoveryService {
     public void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         List<Album> albums = requireNonNull(transactionTemplate.execute(status ->
                 albumRepository.findByArtistId(artist.getId()).stream().sorted().toList()));
-        discover(discoveryJob, artist, cacheEnabled, albums, true, album -> true, observer);
+        discover(discoveryJob, artist, cacheEnabled, albums, true, true, album -> true, observer);
     }
 
     void discoverForFullJob(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
-                            boolean discoverArtist, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
-        discover(discoveryJob, artist, cacheEnabled, albums, discoverArtist, shouldDiscoverAlbum, observer);
+                            boolean discoverArtist, boolean discoverTopTracks, Predicate<Album> shouldDiscoverAlbum,
+                            @Nullable Consumer<DiscoveryProgress> observer) {
+        discover(discoveryJob, artist, cacheEnabled, albums, discoverArtist, discoverTopTracks, shouldDiscoverAlbum, observer);
     }
 
     private void discover(DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
-                          boolean discoverArtist, Predicate<Album> shouldDiscoverAlbum, @Nullable Consumer<DiscoveryProgress> observer) {
-        long tasksComplete = discoverArtist ? 0 : 2;
+                          boolean discoverArtist, boolean discoverTopTracks, Predicate<Album> shouldDiscoverAlbum,
+                          @Nullable Consumer<DiscoveryProgress> observer) {
+        long tasksComplete = (discoverArtist ? 0 : 1) + (discoverTopTracks ? 0 : 1);
         long tasksTotal = 2 + albums.size();
         notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
         if (discoverArtist) {
@@ -99,7 +101,7 @@ public class ArtistDiscoveryService {
             updateArtistIndex(album.getArtist());
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
-        if (discoverArtist) {
+        if (discoverTopTracks) {
             taskExecutor.execute(new SpotifyTopTracksTaskExecution(discoveryJob, artist, cacheEnabled));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
