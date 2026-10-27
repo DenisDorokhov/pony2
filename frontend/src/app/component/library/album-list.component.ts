@@ -59,7 +59,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   albumCount = 0;
   songCount = 0;
   likeCount = 0;
-  topTrackCount = 0;
+  likedAndTopTrackCount = 0;
 
   @ViewChild('scrollerElement') scrollerElement!: ElementRef;
 
@@ -127,10 +127,12 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   private countLikes() {
-    this.likeCount = this.likePlaylist?.songs
+    const likedSongs = this.likePlaylist?.songs
       .map(next => next.song)
-      .filter(song => song.album.artist.id === this.artistSongs?.artist.id)
-      .length ?? 0;
+      .filter(song => song.album.artist.id === this.artistSongs?.artist.id) ?? [];
+    const topSongs = this.artistSongs ? this.collectArtistSongs().filter(song => song.isTopTrack) : [];
+    this.likeCount = likedSongs.length;
+    this.likedAndTopTrackCount = new Set([...likedSongs, ...topSongs].map(song => song.id)).size;
   }
 
   ngOnDestroy(): void {
@@ -170,7 +172,6 @@ export class AlbumListComponent implements OnInit, OnDestroy {
             album.songs.forEach(() => this.songCount++);
           });
           this.countLikes();
-          this.topTrackCount = this.collectArtistSongs().filter(song => song.isTopTrack).length;
           if (
             !refreshing &&
             this.playbackService.currentSong?.album.artist.id === artistSongs.artist.id &&

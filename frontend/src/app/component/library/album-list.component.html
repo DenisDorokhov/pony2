@@ -34,9 +34,9 @@
               }
             </ul>
           </div>
-          @if (likeCount > 0 || topTrackCount > 0) {
+          @if (likedAndTopTrackCount > 0) {
             <button class="btn btn-sm btn-light artist-likes" (click)="openArtistLikes()">
-              <i class="bi" [class.bi-star-fill]="likeCount > 0" [class.bi-fire]="likeCount === 0"></i>{{ likeCount > 0 ? likeCount : topTrackCount }}
+              <i class="bi" [class.bi-star-fill]="likeCount > 0" [class.bi-fire]="likeCount === 0"></i>{{ likedAndTopTrackCount }}
             </button>
           }
         </div>
