@@ -13,7 +13,6 @@ import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstra
 export class JobDiscoveryTasksComponent extends AbstractDiscoveryTasksComponent {
 
   override readonly titleKey = 'discoveryTasks.jobHeader';
-  protected override readonly refreshOnDiscoveryEnd = false;
 
   @Input()
   jobId!: string;
@@ -21,7 +20,10 @@ export class JobDiscoveryTasksComponent extends AbstractDiscoveryTasksComponent 
   private discoveryJob: DiscoveryJobDto | undefined;
 
   override get startDiscoveryDisabled(): boolean {
-    return super.startDiscoveryDisabled || this.shouldRefreshTasks;
+    return super.startDiscoveryDisabled ||
+      !this.discoveryJob ||
+      this.discoveryJob.status === DiscoveryJobDto.Status.STARTING ||
+      this.discoveryJob.status === DiscoveryJobDto.Status.STARTED;
   }
 
   protected override loadTasks(pageIndex: number, pageSize: number): Observable<DiscoveryTaskPageDto> {
@@ -30,11 +32,6 @@ export class JobDiscoveryTasksComponent extends AbstractDiscoveryTasksComponent 
         tap(() => this.discoveryJob = job)
       ))
     );
-  }
-
-  protected override get shouldRefreshTasks(): boolean {
-    return !this.discoveryJob || this.discoveryJob.status === DiscoveryJobDto.Status.STARTING ||
-      this.discoveryJob.status === DiscoveryJobDto.Status.STARTED;
   }
 
   protected override get hasDiscoveryTarget(): boolean {

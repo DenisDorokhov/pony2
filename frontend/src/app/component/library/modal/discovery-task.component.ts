@@ -2,7 +2,7 @@ import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {interval, Subscription} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {Highlight} from 'ngx-highlightjs';
 import {AlbumDto, ArtistDto, DiscoveryTaskDto, DiscoveryTaskSummaryDto, DiscoveryTaskType} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
@@ -47,7 +47,8 @@ export class DiscoveryTaskComponent implements OnInit, OnDestroy {
   private refreshSubscription: Subscription | undefined;
 
   ngOnInit(): void {
-    this.refreshSubscription = interval(15000).subscribe(() => this.loadTask());
+    this.refreshSubscription = this.libraryService.observeRefreshRequest()
+      .subscribe(() => this.loadTask());
     this.loadTask();
   }
 

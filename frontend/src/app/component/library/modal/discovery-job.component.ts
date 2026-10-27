@@ -3,7 +3,7 @@ import {TranslateModule} from '@ngx-translate/core';
 import {CommonModule} from '@angular/common';
 import {AlbumDto, ArtistDto, DiscoveryJobDetailsDto, DiscoveryJobDto, DiscoveryType, GenreDto, LogMessageDto, SongDto} from '../../../domain/library.dto';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {interval, Subscription} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {LibraryDiscoveryService} from '../../../service/library-discovery.service';
 import {LoadingState} from '../../../domain/common.model';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
@@ -47,7 +47,8 @@ export class DiscoveryJobComponent implements OnInit, OnDestroy {
   private refreshSubscription: Subscription | undefined;
 
   ngOnInit(): void {
-    this.refreshSubscription = interval(15000).subscribe(() => this.loadDiscoveryJob());
+    this.refreshSubscription = this.libraryService.observeRefreshRequest()
+      .subscribe(() => this.loadDiscoveryJob());
     this.loadDiscoveryJob();
   }
 
