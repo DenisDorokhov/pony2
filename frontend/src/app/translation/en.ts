@@ -2,6 +2,9 @@ export default {
   noSongTitle: 'Pony | Music Streamer',
   songTitlePrefix: 'Pony | ',
   songTitleBody: '{artistName} - {songName} | ',
+  country: {
+    us: 'USA'
+  },
   installation: {
     mainHeader: 'Installation',
     libraryFoldersLabel: 'Library Folders:',

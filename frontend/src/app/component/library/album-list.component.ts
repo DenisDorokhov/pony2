@@ -3,6 +3,7 @@ import {Subscription} from 'rxjs';
 import {Artist, ArtistSongs, Genre, PlaylistSongs, Song} from '../../domain/library.model';
 import {AlbumSortingOrder, LibraryService} from '../../service/library.service';
 import {LibraryDiscoveryService} from '../../service/library-discovery.service';
+import {CountryService} from '../../service/country.service';
 import {ArtistDiscoveryTasksComponent} from './modal/artist-discovery-tasks.component';
 import {PlaybackMode, PlaybackService} from '../../service/playback.service';
 import {LoadingState} from '../../domain/common.model';
@@ -37,6 +38,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
 
   private readonly libraryService = inject(LibraryService);
   private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
+  private readonly countryService = inject(CountryService);
   private readonly playbackService = inject(PlaybackService);
   private readonly playlistService = inject(PlaylistService);
   private readonly translateService = inject(TranslateService);
@@ -52,6 +54,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   genreNames: string[] = [];
   genreNamesAsString = '';
   countryFlagCode: string | undefined;
+  countryName: string | undefined;
   sortingOrder: AlbumSortingOrder | undefined = undefined;
 
   albumCount = 0;
@@ -154,7 +157,9 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.songCount = 0;
           this.artistSongs = artistSongs;
           const countryCode = artistSongs.artist.discoveryData.countryCode?.trim().toLowerCase();
-          this.countryFlagCode = countryFlags.some(country => country.code !== 'xx' && country.code === countryCode) ? countryCode : undefined;
+          const country = countryFlags.find(country => country.code !== 'xx' && country.code === countryCode);
+          this.countryFlagCode = country?.code;
+          this.countryName = this.countryService.getName(this.countryFlagCode);
           this.genreNames = this.artistSongs.artist.genres.map(genre => {
             if (genre.name) {
               return genre.name;

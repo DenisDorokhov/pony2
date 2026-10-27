@@ -40,7 +40,7 @@
             </button>
           }
         </div>
-        <div class="counts" title="{{
+        <div class="counts" title="{{ countryName ? countryName + ', ' : '' }}{{
           'library.album.counterTitle' | translate:{
             genres: genreNamesAsString,
             albumCount,
