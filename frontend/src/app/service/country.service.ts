@@ -10,12 +10,17 @@ export class CountryService {
   private readonly translateService = inject(TranslateService);
 
   getName(countryCode: string | undefined): string | undefined {
-    const normalizedCode = countryCode?.trim().toLowerCase();
-    if (!normalizedCode) {
+    const code = countryCode?.toLowerCase();
+    if (!code) {
       return undefined;
     }
-    const key = 'country.' + normalizedCode;
+    const key = 'country.' + code;
     const translation = this.translateService.instant(key);
-    return translation !== key ? translation : countries.find(country => country.code === normalizedCode)?.name;
+    return translation !== key ? translation : countries.find(country => country.code === code)?.name;
+  }
+
+  getFlagCode(countryCode: string | undefined): string | undefined {
+    const code = countryCode?.toLowerCase();
+    return countries.find(country => country.code === code)?.code;
   }
 }

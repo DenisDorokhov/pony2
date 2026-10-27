@@ -73,6 +73,7 @@ export class LibraryService {
   private refreshRequestSubject = new Subject<void>();
   private songPlaybackRequestSubject = new Subject<Song | undefined>();
   private filterByGenreRequestSubject = new Subject<Genre | undefined>();
+  private filterByCountryRequestSubject = new Subject<string>();
 
   private appInForeground = true;
 
@@ -382,6 +383,14 @@ export class LibraryService {
 
   requestFilterByGenre(genre: Genre) {
     this.filterByGenreRequestSubject.next(genre);
+  }
+
+  observeFilterByCountryRequest(): Observable<string> {
+    return this.filterByCountryRequestSubject.asObservable();
+  }
+
+  requestFilterByCountry(countryCode: string) {
+    this.filterByCountryRequestSubject.next(countryCode);
   }
 
   observeScrollToArtistRequest(): Observable<Artist> {

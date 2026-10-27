@@ -26,7 +26,6 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import {ArtistLikesComponent} from './modal/artist-likes.component';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
-import countryFlags from 'flag-icons/country.json';
 
 @Component({
   imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
@@ -156,9 +155,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.albumCount = 0;
           this.songCount = 0;
           this.artistSongs = artistSongs;
-          const countryCode = artistSongs.artist.discoveryData.countryCode?.trim().toLowerCase();
-          const country = countryFlags.find(country => country.code !== 'xx' && country.code === countryCode);
-          this.countryFlagCode = country?.code;
+          this.countryFlagCode = this.countryService.getFlagCode(artistSongs.artist.discoveryData.countryCode);
           this.countryName = this.countryService.getName(this.countryFlagCode);
           this.genreNames = this.artistSongs.artist.genres.map(genre => {
             if (genre.name) {
@@ -230,6 +227,10 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     const modalRef = this.modal.open(ArtistLikesComponent, {size: 'lg'});
     const userComponent: ArtistLikesComponent = modalRef.componentInstance;
     userComponent.artistSongs = this.artistSongs;
+  }
+
+  protected onCountryClick(countryCode: string) {
+    this.libraryService.requestFilterByCountry(countryCode);
   }
 
   protected onGenreClick(genre: Genre) {

@@ -16,6 +16,9 @@
       </div>
       <div class="genre-scroller">
         @for (navigationItem of navigationItems; track navigationItem; let i = $index) {
+          @if (navigationItem.separatorBefore) {
+            <div class="dropdown-divider" role="separator"></div>
+          }
           <button ngbDropdownItem #navigationItemElement
                   [class.selected]="selectedNavigationItem.id === navigationItem.id"
                   [class.active]="navigationItem.active"

@@ -12,6 +12,7 @@ import {
 import {fromEvent, Subscription} from 'rxjs';
 import {Artist, Genre} from '../../domain/library.model';
 import {ArtistSortingOrder, LibraryService} from '../../service/library.service';
+import {CountryService} from '../../service/country.service';
 import {LoadingState} from '../../domain/common.model';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
@@ -38,12 +39,15 @@ export class NavigationItem {
   id: string;
   title: string;
   menuEntry: string;
+  countryCode: string | undefined;
+  separatorBefore = false;
   active = false;
 
-  constructor(id: string, menuEntry: string, title: string) {
+  constructor(id: string, menuEntry: string, title: string, countryCode?: string) {
     this.id = id;
     this.menuEntry = menuEntry;
     this.title = title;
+    this.countryCode = countryCode;
   }
 }
 
@@ -56,6 +60,7 @@ export class NavigationItem {
 export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private readonly libraryService = inject(LibraryService);
+  private readonly countryService = inject(CountryService);
   private readonly translateService = inject(TranslateService);
   private readonly installationService = inject(InstallationService);
 
@@ -69,6 +74,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   filteredArtists: Artist[] = [];
   genres: Genre[] = [];
   genreCounter: Record<string, number> = {};
+  countryCounter: Record<string, number> = {};
   filterGenre = '';
   sortingOrder: ArtistSortingOrder | undefined = undefined;
 
@@ -97,6 +103,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subscriptions.push(this.libraryService.observeArtists().subscribe(artists => {
       this.artists = artists;
       this.reloadGenreCounter();
+      this.reloadCountryCounter();
       this.reloadNavigationItems();
       this.filterArtists();
       if (artists.length > 0) {
@@ -128,6 +135,14 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
       const navigationItems = this.navigationItems.filter(navigationItem => navigationItem.id === genre!.id);
       if (navigationItems.length > 0) {
         this.executeNavigationItem(navigationItems[0]);
+      }
+    }));
+    this.subscriptions.push(this.libraryService.observeFilterByCountryRequest().subscribe(countryCode => {
+      this.filterGenre = '';
+      this.reloadNavigationItems();
+      const navigationItem = this.navigationItems.find(item => item.countryCode === countryCode);
+      if (navigationItem) {
+        this.executeNavigationItem(navigationItem);
       }
     }));
     this.subscriptions.push(this.libraryService.observeScrollToArtistRequest().subscribe(artist => {
@@ -177,6 +192,16 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private reloadCountryCounter() {
+    this.countryCounter = {};
+    for (const artist of this.artists) {
+      const countryCode = this.countryService.getFlagCode(artist.discoveryData.countryCode);
+      if (countryCode) {
+        this.countryCounter[countryCode] = (this.countryCounter[countryCode] ?? 0) + 1;
+      }
+    }
+  }
+
   private reloadNavigationItems() {
     const oldActiveNavigationItemId = this.navigationItems.filter(item => item.active)[0]?.id;
     this.navigationItems = [];
@@ -185,6 +210,20 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     const idToNavigationItem: Record<string, NavigationItem> = {};
     this.navigationItems.forEach(navigationItem =>
       idToNavigationItem[navigationItem.id] = navigationItem);
+    const countryNavigationItems = Object.keys(this.countryCounter)
+      .map(countryCode => {
+        const countryName = this.countryService.getName(countryCode)!;
+        return new NavigationItem(
+          'country:' + countryCode,
+          this.translateService.instant('library.artist.countryNavigationLabel', {
+            countryName,
+            'artistCount': this.countryCounter[countryCode]
+          }),
+          countryName,
+          countryCode
+        );
+      })
+      .sort((left, right) => left.title.localeCompare(right.title));
     this.genres.forEach(genre => {
       const genreName = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
       const navigationItem = new NavigationItem(
@@ -200,8 +239,18 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.genres.filter(genre => {
       const genreNameNormalized = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
       return keyboardLayoutInsensitiveMatch(this.filterGenre, genreNameNormalized);
-    }).forEach(genre => {
-      this.navigationItems.push(idToNavigationItem[genre.id]);
+    }).forEach((genre, index) => {
+      const navigationItem = idToNavigationItem[genre.id];
+      navigationItem.separatorBefore = index === 0;
+      this.navigationItems.push(navigationItem);
+    });
+    countryNavigationItems.forEach(navigationItem =>
+      idToNavigationItem[navigationItem.id] = navigationItem);
+    countryNavigationItems.filter(navigationItem =>
+      keyboardLayoutInsensitiveMatch(this.filterGenre, navigationItem.title)
+    ).forEach((navigationItem, index) => {
+      navigationItem.separatorBefore = index === 0;
+      this.navigationItems.push(navigationItem);
     });
     const oldSelectedNavigationItemId = this.selectedNavigationItem.id;
     this.selectedNavigationItem = idToNavigationItem[oldSelectedNavigationItemId] ?? this.navigationItems[0];
@@ -236,6 +285,9 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.filteredArtists = this.artists.filter(artist =>
         shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
         shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus));
+    } else if (this.selectedNavigationItem.countryCode) {
+      this.filteredArtists = this.artists.filter(artist =>
+        this.countryService.getFlagCode(artist.discoveryData.countryCode) === this.selectedNavigationItem.countryCode);
     } else {
       this.filteredArtists = this.artists.filter(artist =>
         artist.genres.findIndex(artistGenre =>

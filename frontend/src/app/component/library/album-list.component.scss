@@ -94,6 +94,10 @@
       .country-flag {
         width: 20px;
         height: 15px;
+        padding: 0;
+        border: 0;
+        background-color: transparent;
+        cursor: pointer;
         margin-right: 6px;
         vertical-align: top;
         top: 50%;
