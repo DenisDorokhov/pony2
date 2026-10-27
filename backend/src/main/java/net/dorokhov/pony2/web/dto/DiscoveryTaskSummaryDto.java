@@ -35,8 +35,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    @Nullable
-    public Long getDuration() {
+    public @Nullable Long getDuration() {
         return duration;
     }
 
@@ -45,8 +44,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    @Nullable
-    public GenreDto getGenre() {
+    public @Nullable GenreDto getGenre() {
         return genre;
     }
 
@@ -55,8 +53,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    @Nullable
-    public ArtistDto getArtist() {
+    public @Nullable ArtistDto getArtist() {
         return artist;
     }
 
@@ -65,8 +62,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    @Nullable
-    public AlbumDto getAlbum() {
+    public @Nullable AlbumDto getAlbum() {
         return album;
     }
 
@@ -75,8 +71,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    @Nullable
-    public SongDto getSong() {
+    public @Nullable SongDto getSong() {
         return song;
     }
 

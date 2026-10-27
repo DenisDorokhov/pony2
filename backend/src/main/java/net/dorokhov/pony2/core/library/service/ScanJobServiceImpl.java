@@ -94,15 +94,13 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
-    @Nullable
-    public Optional<ScanJobProgress> getCurrentScanJobProgress() {
+    public @Nullable Optional<ScanJobProgress> getCurrentScanJobProgress() {
         return Optional.ofNullable(scanJobProgressReference.get());
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Nullable
-    public Optional<ScanJobProgress> getScanJobProgress(String id) {
+    public @Nullable Optional<ScanJobProgress> getScanJobProgress(String id) {
         ScanJobProgress scanJobProgress = scanJobProgressReference.get();
         if (scanJobProgress != null && id.equals(scanJobProgress.getScanJob().getId())) {
             return Optional.of(scanJobProgress);
@@ -130,8 +128,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional(readOnly = true)
-    @Nullable
-    public Optional<ScanJob> getLastSuccessfulJob() {
+    public @Nullable Optional<ScanJob> getLastSuccessfulJob() {
         return scanJobRepository.findFirstByStatusOrderByUpdateDateDesc(Status.COMPLETE);
     }
 

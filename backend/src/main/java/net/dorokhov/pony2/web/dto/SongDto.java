@@ -88,8 +88,7 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
-    @Nullable
-    public Integer getDiscNumber() {
+    public @Nullable Integer getDiscNumber() {
         return discNumber;
     }
 
@@ -98,8 +97,7 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
-    @Nullable
-    public Integer getTrackNumber() {
+    public @Nullable Integer getTrackNumber() {
         return trackNumber;
     }
 
@@ -108,8 +106,7 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -118,8 +115,7 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
-    @Nullable
-    public String getArtistName() {
+    public @Nullable String getArtistName() {
         return artistName;
     }
 
@@ -128,8 +124,7 @@ public final class SongDto extends BaseDto<SongDto> {
         return this;
     }
 
-    @Nullable
-    public String getGenreName() {
+    public @Nullable String getGenreName() {
         return genreName;
     }
 

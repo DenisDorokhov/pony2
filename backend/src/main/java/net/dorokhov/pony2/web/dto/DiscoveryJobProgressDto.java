@@ -17,8 +17,7 @@ public final class DiscoveryJobProgressDto {
         return this;
     }
 
-    @Nullable
-    public DiscoveryProgressDto getDiscoveryProgress() {
+    public @Nullable DiscoveryProgressDto getDiscoveryProgress() {
         return discoveryProgress;
     }
 

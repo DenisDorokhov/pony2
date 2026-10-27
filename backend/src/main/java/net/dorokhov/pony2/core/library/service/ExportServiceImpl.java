@@ -46,8 +46,7 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     @Transactional(readOnly = true)
-    @Nullable
-    public ExportBundle exportSong(String id) {
+    public @Nullable ExportBundle exportSong(String id) {
 
         Song song = songRepository.findById(id).orElse(null);
         if (song == null) {
@@ -75,8 +74,7 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     @Transactional(readOnly = true)
-    @Nullable
-    public ExportBundle exportAlbum(String id) {
+    public @Nullable ExportBundle exportAlbum(String id) {
 
         List<Song> songList = songRepository.findByAlbumId(id,
                 Sort.by("discNumber", "trackNumber", "name"));
@@ -93,8 +91,7 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     @Transactional(readOnly = true)
-    @Nullable
-    public ExportBundle exportArtist(String id) {
+    public @Nullable ExportBundle exportArtist(String id) {
 
         List<Song> songList = songRepository.findByArtistId(id,
                 Sort.by("album.year", "album.name", "discNumber", "trackNumber", "name"));

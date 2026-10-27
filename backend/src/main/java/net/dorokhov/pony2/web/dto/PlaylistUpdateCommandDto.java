@@ -67,8 +67,7 @@ public class PlaylistUpdateCommandDto {
         return this;
     }
 
-    @Nullable
-    public List<SongId> getOverriddenSongIds() {
+    public @Nullable List<SongId> getOverriddenSongIds() {
         return overriddenSongIds;
     }
 

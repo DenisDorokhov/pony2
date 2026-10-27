@@ -38,14 +38,12 @@ public class ArtworkFileFinder {
         this.artworkFolderNames = ImmutableSet.copyOf(artworkFolderNames);
     }
 
-    @Nullable
-    public ImageNode findArtwork(AudioNode audioNode) {
+    public @Nullable ImageNode findArtwork(AudioNode audioNode) {
         return Optional.ofNullable(fetchArtworkFromParentFolder(audioNode, true))
                 .orElseGet(() -> fetchArtworkFromParentFolder(audioNode.getParentFolder(), false));
     }
 
-    @Nullable
-    private ImageNode fetchArtworkFromParentFolder(@Nullable Node node, boolean fallbackToAnyChildFolder) {
+    private @Nullable ImageNode fetchArtworkFromParentFolder(@Nullable Node node, boolean fallbackToAnyChildFolder) {
         if (node != null) {
             FolderNode folderNode = node.getParentFolder();
             if (folderNode != null) {
@@ -55,8 +53,7 @@ public class ArtworkFileFinder {
         return null;
     }
 
-    @Nullable
-    private ImageNode fetchArtworkFromFolderTree(FolderNode folderNode, boolean fallbackToAnyChildFolder) {
+    private @Nullable ImageNode fetchArtworkFromFolderTree(FolderNode folderNode, boolean fallbackToAnyChildFolder) {
         ImageNode artwork = fetchArtworkFromFolder(folderNode);
         if (artwork != null) {
             return artwork;
@@ -81,8 +78,7 @@ public class ArtworkFileFinder {
         }
     }
 
-    @Nullable
-    private ImageNode fetchArtworkFromFolder(FolderNode folderNode) {
+    private @Nullable ImageNode fetchArtworkFromFolder(FolderNode folderNode) {
         List<ImageNode> candidatesBySize = new ArrayList<>();
         return folderNode.getChildImages().stream()
                 .filter(this::isImageArtworkBySize)

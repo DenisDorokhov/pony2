@@ -33,8 +33,7 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return this;
     }
 
-    @Nullable
-    public String getSpotifyArtistId() {
+    public @Nullable String getSpotifyArtistId() {
         return spotifyArtistId;
     }
 
@@ -43,8 +42,7 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return this;
     }
 
-    @Nullable
-    public String getMusicBrainzArtistId() {
+    public @Nullable String getMusicBrainzArtistId() {
         return musicBrainzArtistId;
     }
 
@@ -53,8 +51,7 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return this;
     }
 
-    @Nullable
-    public String getCountryCode() {
+    public @Nullable String getCountryCode() {
         return countryCode;
     }
 

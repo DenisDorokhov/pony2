@@ -116,8 +116,7 @@ public final class DiscoveryProgress {
         return step;
     }
 
-    @Nullable
-    public Value getValue() {
+    public @Nullable Value getValue() {
         return value;
     }
 

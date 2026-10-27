@@ -17,8 +17,7 @@ public final class DiscoveryJobProgress {
         return discoveryJob;
     }
 
-    @Nullable
-    public DiscoveryProgress getDiscoveryProgress() {
+    public @Nullable DiscoveryProgress getDiscoveryProgress() {
         return discoveryProgress;
     }
 

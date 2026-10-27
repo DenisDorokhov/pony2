@@ -69,8 +69,7 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
         return this;
     }
 
-    @Nullable
-    public Genre getGenre() {
+    public @Nullable Genre getGenre() {
         return genre;
     }
 
@@ -79,8 +78,7 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
         return this;
     }
 
-    @Nullable
-    public Artist getArtist() {
+    public @Nullable Artist getArtist() {
         return artist;
     }
 
@@ -89,8 +87,7 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
         return this;
     }
 
-    @Nullable
-    public Album getAlbum() {
+    public @Nullable Album getAlbum() {
         return album;
     }
 
@@ -99,8 +96,7 @@ public class DiscoveryJob extends BaseEntity<DiscoveryJob> {
         return this;
     }
 
-    @Nullable
-    public Song getSong() {
+    public @Nullable Song getSong() {
         return song;
     }
 

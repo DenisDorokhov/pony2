@@ -77,9 +77,8 @@ public class AlbumDiscoveryService {
                     .setStatus(DiscoveryTask.Status.STARTED));
         }
 
-        @Nullable
         @Override
-        public MusicBrainzAlbumData executeTask(DiscoveryTask task) {
+        public @Nullable MusicBrainzAlbumData executeTask(DiscoveryTask task) {
             return musicBrainzAlbumDataService.discover(task, cacheEnabled);
         }
 

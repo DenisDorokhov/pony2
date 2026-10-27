@@ -195,8 +195,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
     }
 
-    @Nullable
-    private LocalDateTime parseReleaseDate(@Nullable String releaseDate) {
+    private @Nullable LocalDateTime parseReleaseDate(@Nullable String releaseDate) {
         if (releaseDate == null || releaseDate.isBlank()) {
             return null;
         }

@@ -25,8 +25,7 @@ public class UserContext {
         return user;
     }
     
-    @Nullable
-    private User doGetAuthenticatedUser() {
+    private @Nullable User doGetAuthenticatedUser() {
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
                 .filter(authentication -> authentication.getPrincipal() instanceof UserDetailsImpl)

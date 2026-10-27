@@ -16,8 +16,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
     protected Integer year;
     protected String genre;
 
-    @Nullable
-    public Integer getDiscNumber() {
+    public @Nullable Integer getDiscNumber() {
         return discNumber;
     }
 
@@ -26,8 +25,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public Integer getDiscCount() {
+    public @Nullable Integer getDiscCount() {
         return discCount;
     }
 
@@ -36,8 +34,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public Integer getTrackNumber() {
+    public @Nullable Integer getTrackNumber() {
         return trackNumber;
     }
 
@@ -46,8 +43,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public Integer getTrackCount() {
+    public @Nullable Integer getTrackCount() {
         return trackCount;
     }
 
@@ -56,8 +52,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public String getTitle() {
+    public @Nullable String getTitle() {
         return title;
     }
 
@@ -66,8 +61,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public String getArtist() {
+    public @Nullable String getArtist() {
         return artist;
     }
 
@@ -76,8 +70,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public String getAlbumArtist() {
+    public @Nullable String getAlbumArtist() {
         return albumArtist;
     }
 
@@ -86,8 +79,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public String getAlbum() {
+    public @Nullable String getAlbum() {
         return album;
     }
 
@@ -96,8 +88,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public Integer getYear() {
+    public @Nullable Integer getYear() {
         return year;
     }
 
@@ -106,8 +97,7 @@ abstract class AbstractAudioData<T extends AbstractAudioData<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public String getGenre() {
+    public @Nullable String getGenre() {
         return genre;
     }
 

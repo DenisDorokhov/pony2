@@ -46,8 +46,7 @@ public class Config implements Serializable {
         return this;
     }
 
-    @Nullable
-    public LocalDateTime getUpdateDate() {
+    public @Nullable LocalDateTime getUpdateDate() {
         return updateDate;
     }
 
@@ -56,8 +55,7 @@ public class Config implements Serializable {
         return this;
     }
 
-    @Nullable
-    public String getValue() {
+    public @Nullable String getValue() {
         return value;
     }
 
@@ -77,26 +75,22 @@ public class Config implements Serializable {
     }
 
     @Transient
-    @Nullable
-    public Integer getInteger() {
+    public @Nullable Integer getInteger() {
         return value != null ? Integer.valueOf(value) : null;
     }
 
     @Transient
-    @Nullable
-    public Long getLong() {
+    public @Nullable Long getLong() {
         return value != null ? Long.valueOf(value) : null;
     }
 
     @Transient
-    @Nullable
-    public Double getDouble() {
+    public @Nullable Double getDouble() {
         return value != null ? Double.valueOf(value) : null;
     }
 
     @Transient
-    @Nullable
-    public Boolean getBoolean() {
+    public @Nullable Boolean getBoolean() {
         return value != null ? Boolean.valueOf(value) : null;
     }
 

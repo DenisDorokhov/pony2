@@ -20,8 +20,7 @@ public final class InstallationDto {
         return this;
     }
 
-    @Nullable
-    public LocalDateTime getUpdateDate() {
+    public @Nullable LocalDateTime getUpdateDate() {
         return updateDate;
     }
 

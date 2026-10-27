@@ -86,58 +86,47 @@ public final class ScanTestPlan {
             return path;
         }
 
-        @Nullable
-        public Integer getDiscNumber() {
+        public @Nullable Integer getDiscNumber() {
             return discNumber;
         }
 
-        @Nullable
-        public Integer getDiscCount() {
+        public @Nullable Integer getDiscCount() {
             return discCount;
         }
 
-        @Nullable
-        public Integer getTrackNumber() {
+        public @Nullable Integer getTrackNumber() {
             return trackNumber;
         }
 
-        @Nullable
-        public Integer getTrackCount() {
+        public @Nullable Integer getTrackCount() {
             return trackCount;
         }
 
-        @Nullable
-        public String getTitle() {
+        public @Nullable String getTitle() {
             return title;
         }
 
-        @Nullable
-        public String getArtist() {
+        public @Nullable String getArtist() {
             return artist;
         }
 
-        @Nullable
-        public String getAlbumArtist() {
+        public @Nullable String getAlbumArtist() {
             return albumArtist;
         }
 
-        @Nullable
-        public String getAlbum() {
+        public @Nullable String getAlbum() {
             return album;
         }
 
-        @Nullable
-        public Integer getYear() {
+        public @Nullable Integer getYear() {
             return year;
         }
 
-        @Nullable
-        public String getGenre() {
+        public @Nullable String getGenre() {
             return genre;
         }
 
-        @Nullable
-        public EmbeddedArtwork getEmbeddedArtwork() {
+        public @Nullable EmbeddedArtwork getEmbeddedArtwork() {
             return embeddedArtwork;
         }
     }
@@ -291,13 +280,11 @@ public final class ScanTestPlan {
                 this.songPaths = unmodifiableList(songPaths);
             }
 
-            @Nullable
-            public String getName() {
+            public @Nullable String getName() {
                 return name;
             }
 
-            @Nullable
-            public String getArtworkPath() {
+            public @Nullable String getArtworkPath() {
                 return artworkPath;
             }
 
@@ -325,18 +312,15 @@ public final class ScanTestPlan {
                     this.songPaths = unmodifiableList(songPaths);
                 }
 
-                @Nullable
-                public String getName() {
+                public @Nullable String getName() {
                     return name;
                 }
 
-                @Nullable
-                public Integer getYear() {
+                public @Nullable Integer getYear() {
                     return year;
                 }
 
-                @Nullable
-                public String getArtworkPath() {
+                public @Nullable String getArtworkPath() {
                     return artworkPath;
                 }
 
@@ -357,13 +341,11 @@ public final class ScanTestPlan {
                 this.genres = unmodifiableList(genres);
             }
 
-            @Nullable
-            public String getName() {
+            public @Nullable String getName() {
                 return name;
             }
 
-            @Nullable
-            public String getArtworkPath() {
+            public @Nullable String getArtworkPath() {
                 return artworkPath;
             }
 
@@ -429,58 +411,47 @@ public final class ScanTestPlan {
                 return fileExtension;
             }
 
-            @Nullable
-            public Integer getDiscNumber() {
+            public @Nullable Integer getDiscNumber() {
                 return discNumber;
             }
 
-            @Nullable
-            public Integer getDiscCount() {
+            public @Nullable Integer getDiscCount() {
                 return discCount;
             }
 
-            @Nullable
-            public Integer getTrackNumber() {
+            public @Nullable Integer getTrackNumber() {
                 return trackNumber;
             }
 
-            @Nullable
-            public Integer getTrackCount() {
+            public @Nullable Integer getTrackCount() {
                 return trackCount;
             }
 
-            @Nullable
-            public String getTitle() {
+            public @Nullable String getTitle() {
                 return title;
             }
 
-            @Nullable
-            public String getArtist() {
+            public @Nullable String getArtist() {
                 return artist;
             }
 
-            @Nullable
-            public String getAlbumArtist() {
+            public @Nullable String getAlbumArtist() {
                 return albumArtist;
             }
 
-            @Nullable
-            public String getAlbum() {
+            public @Nullable String getAlbum() {
                 return album;
             }
 
-            @Nullable
-            public Integer getYear() {
+            public @Nullable Integer getYear() {
                 return year;
             }
 
-            @Nullable
-            public String getGenre() {
+            public @Nullable String getGenre() {
                 return genre;
             }
 
-            @Nullable
-            public String getArtworkPath() {
+            public @Nullable String getArtworkPath() {
                 return artworkPath;
             }
         }

@@ -520,8 +520,7 @@ public class DiscoveryJobServiceImplTest {
                 return type;
             }
 
-            @Nullable
-            public DiscoveryJobProgress getDiscoveryJobProgress() {
+            public @Nullable DiscoveryJobProgress getDiscoveryJobProgress() {
                 return discoveryJobProgress;
             }
         }

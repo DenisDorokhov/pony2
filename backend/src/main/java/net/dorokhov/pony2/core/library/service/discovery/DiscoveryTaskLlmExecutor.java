@@ -193,8 +193,7 @@ public class DiscoveryTaskLlmExecutor {
         return result;
     }
 
-    @Nullable
-    private String callModel(DiscoveryTask task, Prompt prompt, String responseSchema) {
+    private @Nullable String callModel(DiscoveryTask task, Prompt prompt, String responseSchema) {
         boolean toolsEnabled = task.getType().isToolsEnabled();
         OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder();
         if (prompt.getOptions() != null) {

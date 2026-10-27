@@ -16,8 +16,7 @@ import static java.util.Collections.emptyList;
 public class LazyFolderNode implements FolderNode {
     
     public interface FileNodeResolver {
-        @Nullable
-        FileNode resolveFileNode(File file, FolderNode parentFolder) throws IOException;
+        @Nullable FileNode resolveFileNode(File file, FolderNode parentFolder) throws IOException;
     }
 
     private final File file;
@@ -41,8 +40,7 @@ public class LazyFolderNode implements FolderNode {
         this.parentFolder = parentFolder;
     }
 
-    @Nullable
-    public FileNode findFileNode(File file) {
+    public @Nullable FileNode findFileNode(File file) {
         return getChildNodes().stream()
                 .filter(node -> node instanceof FileNode)
                 .map(node -> (FileNode) node)
@@ -56,9 +54,8 @@ public class LazyFolderNode implements FolderNode {
         return file;
     }
 
-    @Nullable
     @Override
-    public FolderNode getParentFolder() {
+    public @Nullable FolderNode getParentFolder() {
         if (rootFolder.equals(file)) {
             return null;
         }

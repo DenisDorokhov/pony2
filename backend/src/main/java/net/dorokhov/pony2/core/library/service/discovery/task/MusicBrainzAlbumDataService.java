@@ -116,8 +116,7 @@ public class MusicBrainzAlbumDataService {
         this.normalizationVerificationPrompt = normalizationVerificationPrompt.getContentAsString(UTF_8);
     }
 
-    @Nullable
-    public MusicBrainzAlbumData discover(DiscoveryTask task, boolean cacheEnabled) {
+    public @Nullable MusicBrainzAlbumData discover(DiscoveryTask task, boolean cacheEnabled) {
         interruptIfNeeded();
         String albumId = requireNonNull(task.getAlbum(),
                 () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
@@ -229,8 +228,7 @@ public class MusicBrainzAlbumDataService {
         });
     }
 
-    @Nullable
-    private String normalizationQuery(AlbumInput input, NormalizationResponse normalization) {
+    private @Nullable String normalizationQuery(AlbumInput input, NormalizationResponse normalization) {
         String original = "release:\"" + escapeQuery(input.title()) + "\"";
         List<UnaryOperator<String>> normalizers = List.of(
                 UnaryOperator.identity(),
@@ -268,8 +266,7 @@ public class MusicBrainzAlbumDataService {
         return "artistname:\"" + escapeQuery(input.artistName()) + "\" AND " + conditions;
     }
 
-    @Nullable
-    private MusicBrainzDto.ReleaseGroup selectReleaseGroup(
+    private @Nullable MusicBrainzDto.ReleaseGroup selectReleaseGroup(
             DiscoveryTask task, AlbumInput input,
             List<MusicBrainzDto.ReleaseGroup> groups, String response,
             boolean cacheEnabled
@@ -306,8 +303,7 @@ public class MusicBrainzAlbumDataService {
         return id != null ? candidates.get(id) : null;
     }
 
-    @Nullable
-    private String selectArtist(
+    private @Nullable String selectArtist(
             DiscoveryTask task, AlbumInput input, MusicBrainzDto.ReleaseGroup group,
             String response, boolean cacheEnabled
     ) {
@@ -332,8 +328,7 @@ public class MusicBrainzAlbumDataService {
                 LlmStage.ARTIST_SELECTION, cacheEnabled);
     }
 
-    @Nullable
-    private String selectId(
+    private @Nullable String selectId(
             DiscoveryTask task, Request request, Set<String> candidates,
             String keyPrefix, LlmStage stage, boolean cacheEnabled
     ) {

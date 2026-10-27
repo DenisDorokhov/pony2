@@ -141,8 +141,7 @@ public class Artwork implements Serializable {
         return setSourceUriScheme(sourceUri.getScheme());
     }
 
-    @Nullable
-    public String getSourceUriScheme() {
+    public @Nullable String getSourceUriScheme() {
         return sourceUriScheme;
     }
 

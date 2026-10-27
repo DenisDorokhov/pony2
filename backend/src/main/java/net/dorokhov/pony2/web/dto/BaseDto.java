@@ -29,8 +29,7 @@ public class BaseDto<T extends BaseDto<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public final LocalDateTime getUpdateDate() {
+    public final @Nullable LocalDateTime getUpdateDate() {
         return updateDate;
     }
 

@@ -132,8 +132,7 @@ public final class ScanProgress {
         return files;
     }
 
-    @Nullable
-    public Value getValue() {
+    public @Nullable Value getValue() {
         return value;
     }
 

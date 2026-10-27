@@ -128,15 +128,13 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     }
 
     @Override
-    @Nullable
-    public Optional<DiscoveryJobProgress> getCurrentDiscoveryJobProgress() {
+    public @Nullable Optional<DiscoveryJobProgress> getCurrentDiscoveryJobProgress() {
         return Optional.ofNullable(discoveryJobProgressReference.get());
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Nullable
-    public Optional<DiscoveryJobProgress> getDiscoveryJobProgress(String id) {
+    public @Nullable Optional<DiscoveryJobProgress> getDiscoveryJobProgress(String id) {
         DiscoveryJobProgress discoveryJobProgress = discoveryJobProgressReference.get();
         if (discoveryJobProgress != null && id.equals(discoveryJobProgress.getDiscoveryJob().getId())) {
             return Optional.of(discoveryJobProgress);

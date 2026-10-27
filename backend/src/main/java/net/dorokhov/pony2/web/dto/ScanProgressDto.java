@@ -117,8 +117,7 @@ public final class ScanProgressDto {
         return this;
     }
 
-    @Nullable
-    public Value getValue() {
+    public @Nullable Value getValue() {
         return value;
     }
 

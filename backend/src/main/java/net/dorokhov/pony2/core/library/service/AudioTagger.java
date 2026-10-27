@@ -258,8 +258,7 @@ public class AudioTagger {
         return Strings.emptyToNull(getFirstFromTagByKey(audioFile, key));
     }
     
-    @Nullable
-    private String getFirstFromTagByKey(AudioFile audioFile, FieldKey key) {
+    private @Nullable String getFirstFromTagByKey(AudioFile audioFile, FieldKey key) {
         Tag tag = audioFile.getTag();
         if (tag != null) {
             try {

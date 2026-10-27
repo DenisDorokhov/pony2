@@ -121,8 +121,7 @@ public class SpotifyArtistDataService {
         return Optional.of(result);
     }
 
-    @Nullable
-    private Request prepareRequest(String artistId) {
+    private @Nullable Request prepareRequest(String artistId) {
         Artist artist = artistRepository.findById(artistId).orElseThrow();
         List<Album> albums = artist.getAlbums().stream().sorted().toList();
         if (albums.isEmpty() || (albums.size() == 1 && albums.getFirst().getName() == null)) {

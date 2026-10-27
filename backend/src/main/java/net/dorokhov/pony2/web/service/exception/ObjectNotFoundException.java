@@ -25,8 +25,7 @@ public final class ObjectNotFoundException extends Exception {
         return objectType;
     }
 
-    @Nullable
-    public String getObjectId() {
+    public @Nullable String getObjectId() {
         return objectId;
     }
 }

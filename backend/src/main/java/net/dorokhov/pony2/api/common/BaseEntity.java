@@ -43,8 +43,7 @@ abstract public class BaseEntity<T extends BaseEntity<?>> {
         return (T) this;
     }
 
-    @Nullable
-    public LocalDateTime getUpdateDate() {
+    public @Nullable LocalDateTime getUpdateDate() {
         return updateDate;
     }
 

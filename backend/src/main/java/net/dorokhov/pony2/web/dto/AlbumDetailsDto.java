@@ -18,8 +18,7 @@ public final class AlbumDetailsDto {
         return this;
     }
 
-    @Nullable
-    public AlbumDiscoveryDataDto getDiscoveryData() {
+    public @Nullable AlbumDiscoveryDataDto getDiscoveryData() {
         return discoveryData;
     }
 

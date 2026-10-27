@@ -18,8 +18,7 @@ public final class ArtistDetailsDto {
         return this;
     }
 
-    @Nullable
-    public ArtistDiscoveryDataDto getDiscoveryData() {
+    public @Nullable ArtistDiscoveryDataDto getDiscoveryData() {
         return discoveryData;
     }
 

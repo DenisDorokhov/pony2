@@ -8,8 +8,7 @@ public final class GenreDto extends BaseDto<GenreDto> {
     private String name;
     private String artworkId;
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -18,8 +17,7 @@ public final class GenreDto extends BaseDto<GenreDto> {
         return this;
     }
 
-    @Nullable
-    public String getArtworkId() {
+    public @Nullable String getArtworkId() {
         return artworkId;
     }
 

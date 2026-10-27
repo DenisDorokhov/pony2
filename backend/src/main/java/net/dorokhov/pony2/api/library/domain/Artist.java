@@ -41,8 +41,7 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
     )
     private List<ArtistGenre> genres = new ArrayList<>();
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -51,8 +50,7 @@ public class Artist extends BaseEntity<Artist> implements Comparable<Artist>, Se
         return this;
     }
 
-    @Nullable
-    public Artwork getArtwork() {
+    public @Nullable Artwork getArtwork() {
         return artwork;
     }
 

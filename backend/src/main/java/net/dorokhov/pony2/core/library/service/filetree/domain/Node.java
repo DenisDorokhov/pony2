@@ -7,6 +7,5 @@ public interface Node {
 
     File getFile();
 
-    @Nullable
-    FolderNode getParentFolder();
+    @Nullable FolderNode getParentFolder();
 }

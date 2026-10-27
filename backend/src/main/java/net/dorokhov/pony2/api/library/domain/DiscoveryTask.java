@@ -56,8 +56,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @JoinColumn(name = "song_id")
     private Song song;
 
-    @Nullable
-    public Genre getGenre() {
+    public @Nullable Genre getGenre() {
         return genre;
     }
 
@@ -66,8 +65,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    @Nullable
-    public Artist getArtist() {
+    public @Nullable Artist getArtist() {
         return artist;
     }
 
@@ -76,8 +74,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    @Nullable
-    public Album getAlbum() {
+    public @Nullable Album getAlbum() {
         return album;
     }
 
@@ -86,8 +83,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    @Nullable
-    public Song getSong() {
+    public @Nullable Song getSong() {
         return song;
     }
 
@@ -114,8 +110,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    @Nullable
-    public String getResult() {
+    public @Nullable String getResult() {
         return result;
     }
 
@@ -124,8 +119,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    @Nullable
-    public String getRawRequest() {
+    public @Nullable String getRawRequest() {
         return rawRequest;
     }
 
@@ -134,8 +128,7 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    @Nullable
-    public String getRawResult() {
+    public @Nullable String getRawResult() {
         return rawResult;
     }
 

@@ -32,8 +32,7 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    @Nullable
-    public GenreDto getGenre() {
+    public @Nullable GenreDto getGenre() {
         return genre;
     }
 
@@ -42,8 +41,7 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    @Nullable
-    public ArtistDto getArtist() {
+    public @Nullable ArtistDto getArtist() {
         return artist;
     }
 
@@ -52,8 +50,7 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    @Nullable
-    public AlbumDto getAlbum() {
+    public @Nullable AlbumDto getAlbum() {
         return album;
     }
 
@@ -62,8 +59,7 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    @Nullable
-    public SongDto getSong() {
+    public @Nullable SongDto getSong() {
         return song;
     }
 
@@ -72,8 +68,7 @@ public final class DiscoveryJobDto extends BaseDto<DiscoveryJobDto> {
         return this;
     }
 
-    @Nullable
-    public LogMessageDto getLogMessage() {
+    public @Nullable LogMessageDto getLogMessage() {
         return logMessage;
     }
 

@@ -76,8 +76,7 @@ public class FileTreeScanner {
         return visitor.getRoot();
     }
 
-    @Nullable
-    private FileNode resolveFileNode(File file, FolderNode parentFolderNode) {
+    private @Nullable FileNode resolveFileNode(File file, FolderNode parentFolderNode) {
         FileType fileType = fileTypeResolver.resolve(file);
         if (fileType.isImage()) {
             return new CachingImageNode(file, parentFolderNode, fileTypeResolver, checksumCalculator, imageSizeReader);

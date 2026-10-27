@@ -11,9 +11,8 @@ public final class ArtistDiscoveryDataDto {
     private String countryCode;
     private List<String> topSongIds;
 
-    @Nullable
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    public String getCountryCode() {
+    public @Nullable String getCountryCode() {
         return countryCode;
     }
 

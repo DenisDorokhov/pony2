@@ -39,8 +39,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
     @NotNull
     private Artist artist;
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -49,8 +48,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
         return this;
     }
 
-    @Nullable
-    public Integer getYear() {
+    public @Nullable Integer getYear() {
         return year;
     }
 
@@ -59,8 +57,7 @@ public class Album extends BaseEntity<Album> implements Comparable<Album>, Seria
         return this;
     }
 
-    @Nullable
-    public Artwork getArtwork() {
+    public @Nullable Artwork getArtwork() {
         return artwork;
     }
 

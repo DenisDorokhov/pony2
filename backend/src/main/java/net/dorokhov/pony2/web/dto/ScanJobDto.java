@@ -45,8 +45,7 @@ public final class ScanJobDto extends BaseDto<ScanJobDto> {
         return this;
     }
 
-    @Nullable
-    public LogMessageDto getLogMessage() {
+    public @Nullable LogMessageDto getLogMessage() {
         return logMessage;
     }
 
@@ -55,8 +54,7 @@ public final class ScanJobDto extends BaseDto<ScanJobDto> {
         return this;
     }
 
-    @Nullable
-    public ScanResultDto getScanResult() {
+    public @Nullable ScanResultDto getScanResult() {
         return scanResult;
     }
 

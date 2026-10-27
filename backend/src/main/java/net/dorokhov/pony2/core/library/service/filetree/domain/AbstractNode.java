@@ -23,8 +23,7 @@ public abstract class AbstractNode implements Node {
     }
 
     @Override
-    @Nullable
-    public FolderNode getParentFolder() {
+    public @Nullable FolderNode getParentFolder() {
         return parentFolder;
     }
 

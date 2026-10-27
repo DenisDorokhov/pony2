@@ -20,8 +20,7 @@ public final class AlbumDiscoveryDataDto {
         return this;
     }
 
-    @Nullable
-    public LocalDateTime getReleaseDate() {
+    public @Nullable LocalDateTime getReleaseDate() {
         return releaseDate;
     }
 

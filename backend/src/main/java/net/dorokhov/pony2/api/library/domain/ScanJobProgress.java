@@ -17,8 +17,7 @@ public final class ScanJobProgress {
         return scanJob;
     }
 
-    @Nullable
-    public ScanProgress getScanProgress() {
+    public @Nullable ScanProgress getScanProgress() {
         return scanProgress;
     }
 

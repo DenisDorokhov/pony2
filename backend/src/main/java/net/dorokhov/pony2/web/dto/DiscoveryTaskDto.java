@@ -30,8 +30,7 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
         return this;
     }
 
-    @Nullable
-    public String getResult() {
+    public @Nullable String getResult() {
         return result;
     }
 
@@ -40,8 +39,7 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
         return this;
     }
 
-    @Nullable
-    public String getRawRequest() {
+    public @Nullable String getRawRequest() {
         return rawRequest;
     }
 
@@ -50,8 +48,7 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
         return this;
     }
 
-    @Nullable
-    public String getRawResult() {
+    public @Nullable String getRawResult() {
         return rawResult;
     }
 

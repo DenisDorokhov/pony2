@@ -32,8 +32,7 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "genre")
     private List<ArtistGenre> artists = new ArrayList<>();
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -42,8 +41,7 @@ public class Genre extends BaseEntity<Genre> implements Comparable<Genre>, Seria
         return this;
     }
 
-    @Nullable
-    public Artwork getArtwork() {
+    public @Nullable Artwork getArtwork() {
         return artwork;
     }
 

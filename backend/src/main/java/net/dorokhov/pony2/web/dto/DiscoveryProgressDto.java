@@ -100,8 +100,7 @@ public final class DiscoveryProgressDto {
         return this;
     }
 
-    @Nullable
-    public Value getValue() {
+    public @Nullable Value getValue() {
         return value;
     }
 

@@ -61,8 +61,7 @@ public final class CurrentUserUpdateCommandDto {
         return this;
     }
 
-    @Nullable
-    public String getNewPassword() {
+    public @Nullable String getNewPassword() {
         return newPassword;
     }
 

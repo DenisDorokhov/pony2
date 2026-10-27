@@ -11,8 +11,7 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
     private String artworkId;
     private String artistId;
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -21,8 +20,7 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
         return this;
     }
 
-    @Nullable
-    public Integer getYear() {
+    public @Nullable Integer getYear() {
         return year;
     }
 
@@ -31,8 +29,7 @@ public final class AlbumDto extends BaseDto<AlbumDto> {
         return this;
     }
 
-    @Nullable
-    public String getArtworkId() {
+    public @Nullable String getArtworkId() {
         return artworkId;
     }
 

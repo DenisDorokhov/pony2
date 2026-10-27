@@ -24,8 +24,7 @@ public class RandomSongsRequestDto {
         return this;
     }
 
-    @Nullable
-    public String getLastArtistId() {
+    public @Nullable String getLastArtistId() {
         return lastArtistId;
     }
 

@@ -72,8 +72,7 @@ public class ScanJob extends BaseEntity<ScanJob> {
         return this;
     }
 
-    @Nullable
-    public LogMessage getLogMessage() {
+    public @Nullable LogMessage getLogMessage() {
         return logMessage;
     }
 
@@ -82,8 +81,7 @@ public class ScanJob extends BaseEntity<ScanJob> {
         return this;
     }
 
-    @Nullable
-    public ScanResult getScanResult() {
+    public @Nullable ScanResult getScanResult() {
         return scanResult;
     }
 

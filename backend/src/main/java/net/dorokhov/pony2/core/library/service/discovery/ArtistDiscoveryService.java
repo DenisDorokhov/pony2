@@ -170,9 +170,8 @@ public class ArtistDiscoveryService {
             return ArtistDiscoveryService.this.startTask(job, artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
         }
 
-        @Nullable
         @Override
-        public SpotifyArtistData executeTask(DiscoveryTask task) {
+        public @Nullable SpotifyArtistData executeTask(DiscoveryTask task) {
             return spotifyArtistDataService.discover(task, cacheEnabled).orElse(null);
         }
 

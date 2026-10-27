@@ -5,12 +5,9 @@ import net.dorokhov.pony2.api.library.domain.ExportBundle;
 
 public interface ExportService {
     
-    @Nullable
-    ExportBundle exportSong(String id);
+    @Nullable ExportBundle exportSong(String id);
     
-    @Nullable
-    ExportBundle exportAlbum(String id);
+    @Nullable ExportBundle exportAlbum(String id);
     
-    @Nullable
-    ExportBundle exportArtist(String id);
+    @Nullable ExportBundle exportArtist(String id);
 }

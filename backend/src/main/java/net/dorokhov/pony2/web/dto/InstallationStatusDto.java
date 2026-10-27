@@ -18,8 +18,7 @@ public final class InstallationStatusDto {
         return this;
     }
 
-    @Nullable
-    public LocalDateTime getInitialScanDate() {
+    public @Nullable LocalDateTime getInitialScanDate() {
         return initialScanDate;
     }
 

@@ -424,8 +424,7 @@ public class ScanJobServiceImplTest {
                 return type;
             }
 
-            @Nullable
-            public ScanJobProgress getScanJobProgress() {
+            public @Nullable ScanJobProgress getScanJobProgress() {
                 return scanJobProgress;
             }
         }

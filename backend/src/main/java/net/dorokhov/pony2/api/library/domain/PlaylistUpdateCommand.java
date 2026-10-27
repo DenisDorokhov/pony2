@@ -43,8 +43,7 @@ public class PlaylistUpdateCommand {
         return this;
     }
 
-    @Nullable
-    public String getOverrideName() {
+    public @Nullable String getOverrideName() {
         return overrideName;
     }
 
@@ -53,8 +52,7 @@ public class PlaylistUpdateCommand {
         return this;
     }
 
-    @Nullable
-    public List<SongId> getOverriddenSongIds() {
+    public @Nullable List<SongId> getOverriddenSongIds() {
         return overriddenSongIds;
     }
 

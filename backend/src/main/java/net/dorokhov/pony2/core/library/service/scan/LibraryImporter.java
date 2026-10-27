@@ -360,8 +360,7 @@ public class LibraryImporter {
         albumRepository.save(album.setArtwork(artwork));
     }
 
-    @Nullable
-    private ArtworkFiles findAndSaveArtwork(AudioNode audioNode, ReadableAudioData audioData) {
+    private @Nullable ArtworkFiles findAndSaveArtwork(AudioNode audioNode, ReadableAudioData audioData) {
         ArtworkFiles artworkFiles = findAndSaveEmbeddedArtwork(audioData);
         if (artworkFiles == null) {
             artworkFiles = findAndSaveFileArtwork(audioNode);
@@ -369,8 +368,7 @@ public class LibraryImporter {
         return artworkFiles;
     }
 
-    @Nullable
-    private ArtworkFiles findAndSaveEmbeddedArtwork(ReadableAudioData audioData) {
+    private @Nullable ArtworkFiles findAndSaveEmbeddedArtwork(ReadableAudioData audioData) {
         try {
             return libraryArtworkFinder.findAndSaveEmbeddedArtwork(audioData);
         } catch (IOException e) {
@@ -380,8 +378,7 @@ public class LibraryImporter {
         return null;
     }
 
-    @Nullable
-    private ArtworkFiles findAndSaveFileArtwork(AudioNode audioNode) {
+    private @Nullable ArtworkFiles findAndSaveFileArtwork(AudioNode audioNode) {
         try {
             return libraryArtworkFinder.findAndSaveFileArtwork(audioNode);
         } catch (IOException e) {
@@ -391,8 +388,7 @@ public class LibraryImporter {
         return null;
     }
 
-    @Nullable
-    private String normalizeTitle(@Nullable String title) {
+    private @Nullable String normalizeTitle(@Nullable String title) {
         if (title != null) {
             return Strings.emptyToNull(title.trim().replaceAll("\\s+", " "));
         } else {

@@ -10,8 +10,7 @@ public interface DiscoveryTaskExecution<R> {
      */
     DiscoveryTask startTask();
 
-    @Nullable
-    R executeTask(DiscoveryTask task);
+    @Nullable R executeTask(DiscoveryTask task);
 
     /**
      * Runs in the transaction saving COMPLETE and its result. Hook failures roll back that transaction.

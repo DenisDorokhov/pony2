@@ -12,8 +12,7 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
     private String artworkId;
     private List<GenreDto> genres;
 
-    @Nullable
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -22,8 +21,7 @@ public final class ArtistDto extends BaseDto<ArtistDto> {
         return this;
     }
 
-    @Nullable
-    public String getArtworkId() {
+    public @Nullable String getArtworkId() {
         return artworkId;
     }
 
