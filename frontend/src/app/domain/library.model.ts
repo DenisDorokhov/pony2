@@ -277,7 +277,9 @@ export class Artist {
   }
 
   static compareByName(artist1: Artist, artist2: Artist): number {
-    return NAME_COLLATOR.compare(artist1.name ?? '', artist2.name ?? '');
+    const name1 = (artist1.name ?? '').replace(/^the\s+/i, '');
+    const name2 = (artist2.name ?? '').replace(/^the\s+/i, '');
+    return NAME_COLLATOR.compare(name1, name2);
   }
 
   static compareByModificationDate(artist1: Artist, artist2: Artist): number {
