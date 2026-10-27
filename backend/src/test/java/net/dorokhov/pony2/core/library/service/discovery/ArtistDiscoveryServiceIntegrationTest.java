@@ -473,7 +473,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
             assertThat(progress.getLast().getValue()).isEqualTo(
-                    DiscoveryProgress.Value.of(prompts.size() <= 2 ? 0 : 1, 4));
+                    DiscoveryProgress.Value.of(prompts.size() <= 2 ? 0 : 3, 4));
             if (prompts.size() > 2) {
                 assertThat(artistDataTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
@@ -542,7 +542,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThatThrownBy(() -> service.discover(saveJob(), artist, true, progress::add)).isInstanceOf(DiscoveryInterruptedException.class);
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3));
+                DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3));
         assertThat(artistDataTasks()).singleElement()
                 .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {

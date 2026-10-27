@@ -2,6 +2,7 @@ package net.dorokhov.pony2.web.controller;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.web.controller.exception.BadRequestException;
 import net.dorokhov.pony2.web.dto.ErrorDto;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.util.DisconnectedClientHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +106,11 @@ public interface ErrorHandlingController {
 
         @ExceptionHandler(Throwable.class)
         @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-        public Object onUnexpectedError(Throwable t) {
+        public @Nullable Object onUnexpectedError(Throwable t) {
+            if (DisconnectedClientHelper.isClientDisconnectedException(t)) {
+                logger.trace("Client disconnected while writing response.", t);
+                return null;
+            }
             logger.error("Unexpected error occurred.", t);
             return ErrorDto.unexpected();
         }

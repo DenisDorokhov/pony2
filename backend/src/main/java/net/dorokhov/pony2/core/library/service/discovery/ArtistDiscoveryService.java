@@ -91,14 +91,16 @@ public class ArtistDiscoveryService {
             SpotifyArtistDataTaskExecution artistDataExecution = new SpotifyArtistDataTaskExecution(discoveryJob, artist, cacheEnabled);
             taskExecutor.execute(artistDataExecution);
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
-            taskExecutor.execute(new SpotifyTopTracksTaskExecution(discoveryJob, artist, cacheEnabled));
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
         for (Album album : albums) {
             if (shouldDiscoverAlbum.test(album)) {
                 albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
             }
             updateArtistIndex(album.getArtist());
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+        }
+        if (discoverArtist) {
+            taskExecutor.execute(new SpotifyTopTracksTaskExecution(discoveryJob, artist, cacheEnabled));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
     }

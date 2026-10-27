@@ -8,6 +8,8 @@ The library tracks include artistName and albumArtistName from file tags. Use th
 Different track artists and a Various Artists album artist may support Compilation, but do not prove it; collaborations and featured artists are also possible. Identical track artists do not rule out Compilation.
 The supplied MusicBrainz search response does not contain candidate tracklists or durations. Do not assume candidate track counts, track titles, durations, or track artists, and do not interpret MusicBrainz count fields as track counts.
 Null or blank library artist tags mean unavailable information. Do not invent missing credits.
-Choose only when the evidence identifies one corresponding release group. Do not choose arbitrarily between plausible candidates.
-Return only a JSON object matching the supplied schema. Set id to its release group ID, or null if there is no reliable match. Always include id.
+Choose a release group that confidently matches the supplied library album and artist.
+If multiple candidates equally match the album title, artist, and library year when provided, have the same primary and secondary release group types, and the supplied evidence cannot distinguish them, choose the first matching candidate in the supplied release-groups array. Differences limited to country, label, regional edition, or release date within the matching year do not require a null result.
+Apply this tie-break only after evaluating all candidates. Do not select the first search result merely because it appears first, override conflicting evidence, or treat unrelated same-title releases as equivalent.
+Return only a JSON object matching the supplied schema. Set id to the selected release group ID, including when the tie-break applies, or null if no candidate can be confidently matched. Always include id.
 Use only the supplied data. Do not call tools, browse, invent IDs, or return explanations.

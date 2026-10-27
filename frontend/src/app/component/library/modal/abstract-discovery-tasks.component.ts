@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {defer, interval, Observable, Subscription} from 'rxjs';
-import {finalize, mergeMap} from 'rxjs/operators';
+import {finalize} from 'rxjs/operators';
 import {AlbumDto, ArtistDto, DiscoveryStatusDto, DiscoveryTaskDto, DiscoveryTaskPageDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
 import {PageDto} from '../../../domain/common.dto';
@@ -100,12 +100,21 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
 
   private pageToLoad: PageDto | undefined;
   private resetScrollOnLoad = false;
+  private appInForeground = true;
+  private readonly windowBlurListener = () => {
+    this.appInForeground = false;
+  };
+  private readonly windowFocusListener = () => {
+    this.appInForeground = true;
+  };
   private tasksSubscription: Subscription | undefined;
   private refreshSubscription: Subscription | undefined;
   private statusSubscription: Subscription | undefined;
   private startSubscription: Subscription | undefined;
 
   ngOnInit(): void {
+    window.addEventListener('blur', this.windowBlurListener);
+    window.addEventListener('focus', this.windowFocusListener);
     this.statusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
       const wasRunning = this.discoveryRunning;
       this.discoveryEnabled = discoveryStatus?.discoveryEnabled !== false;
@@ -115,7 +124,9 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
       }
     });
     this.refreshSubscription = interval(15000).subscribe(() => {
-      if (this.shouldRefreshTasks) {
+      const element = this.containerElement.nativeElement as HTMLElement;
+      const inForeground = this.appInForeground && element.closest('[aria-hidden="true"]') === null;
+      if (this.shouldRefreshTasks && inForeground) {
         this.loadPage(this.pageToLoad?.pageIndex ?? 0, this.pageToLoad?.pageSize ?? 30, false);
       }
     });
@@ -127,6 +138,8 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('blur', this.windowBlurListener);
+    window.removeEventListener('focus', this.windowFocusListener);
     this.tasksSubscription?.unsubscribe();
     this.refreshSubscription?.unsubscribe();
     this.statusSubscription?.unsubscribe();
@@ -168,14 +181,8 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
     }
     this.startingDiscovery = true;
     this.startSubscription = defer(() => this.startDiscoveryJob()).pipe(
-      // Load lazily to avoid a cycle through the discovery job's tasks component.
-      mergeMap(() => import('./discovery.component')),
       finalize(() => this.startingDiscovery = false)
     ).subscribe({
-      next: ({DiscoveryComponent}) => {
-        this.modal.dismissAll();
-        this.modal.open(DiscoveryComponent, {size: 'xl'});
-      },
       error: () => undefined
     });
   }

@@ -1,11 +1,15 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData.ReleaseType;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
+import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
@@ -22,6 +26,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -37,6 +43,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Limit;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,11 +73,15 @@ class SpotifyTopTracksServiceTest {
                 {"databaseTrackId":null}
             ]}
             """;
+    private static final String NO_TRACK_MATCHES = """
+            {"trackMatches":[{"databaseTrackId":null},{"databaseTrackId":null},{"databaseTrackId":null}]}
+            """;
 
     @Mock private ChatModel model;
     @Mock private DiscoveryCacheService cacheService;
     @Mock private ArtistRepository artistRepository;
     @Mock private DiscoveryTaskRepository taskRepository;
+    @Mock private LibraryService libraryService;
     @Mock private LogService logService;
 
     private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
@@ -101,6 +112,7 @@ class SpotifyTopTracksServiceTest {
         lenient().when(taskRepository.findLatestCompletedByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.of(previousTask));
         lenient().when(artistRepository.findById("artist")).thenReturn(Optional.of(artist));
+        lenient().when(libraryService.getAlbumDiscoveryData(anyString())).thenReturn(Optional.empty());
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         lenient().when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
@@ -121,11 +133,13 @@ class SpotifyTopTracksServiceTest {
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1, Duration.ofMinutes(10));
-        service = new SpotifyTopTracksService(executor, artistRepository, taskRepository, logService,
+        service = new SpotifyTopTracksService(executor, artistRepository, taskRepository, libraryService, logService,
                 shutdownService, jobSynchronizer, transactionManager(),
                 new ClassPathResource("prompts/spotify-top-tracks-albums.txt"),
                 new ClassPathResource("prompts/spotify-top-tracks.txt"),
-                new ClassPathResource("prompts/spotify-top-tracks-verification.txt"));
+                new ClassPathResource("prompts/spotify-top-tracks-verification.txt"),
+                new ClassPathResource("prompts/spotify-top-tracks-fallback.txt"),
+                new ClassPathResource("prompts/spotify-top-tracks-fallback-verification.txt"));
         responses.addAll(List.of(ALBUM_RESPONSE, TRACK_RESPONSE));
     }
 
@@ -204,6 +218,172 @@ class SpotifyTopTracksServiceTest {
         assertThat(prompts).hasSize(4);
         assertThat(cached.getRawRequest()).isEqualTo(original.getRawRequest());
         assertThat(cached.getRawResult()).isEqualTo(original.getRawResult());
+    }
+
+    @Test
+    void shouldSkipFallbackWhenAllTracksMatchTheirAlbums() {
+        responses.set(0, ALBUM_RESPONSE.replace("\"databaseAlbumId\":null", "\"databaseAlbumId\":\"album-a\""));
+        responses.set(1, TRACK_RESPONSE.replace("\"databaseTrackId\":null", "\"databaseTrackId\":\"song-a\""));
+
+        assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", "song-a");
+
+        assertThat(prompts).hasSize(4);
+        verifyNoInteractions(libraryService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true,true", "true,false", "false,true", "false,false"})
+    void shouldMatchOnlyUnmatchedTracksAndCacheFallback(boolean cacheEnabled, boolean albumMatched) {
+        fallbackAlbum("fallback", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), 2020);
+        if (albumMatched) {
+            responses.set(0, ALBUM_RESPONSE.replace("\"databaseAlbumId\":null", "\"databaseAlbumId\":\"album-a\""));
+        }
+        String albumResponse = responses.getFirst();
+        String fallbackResponse = "{\"trackMatches\":[{\"databaseTrackId\":\"fallback-song\"}]}";
+        responses.add(fallbackResponse);
+        DiscoveryTask original = task();
+
+        assertThat(service.discover(original, cacheEnabled)).containsExactly("song-a", "song-b", "fallback-song");
+
+        assertThat(prompts).hasSize(6);
+        assertThat(prompts.get(4).getInstructions().get(1).getText())
+                .contains("\"id\":\"missing\"", "fallback-song")
+                .doesNotContain("\"id\":\"first\"", "\"id\":\"second\"", "\"id\":\"song-a\"", "\"id\":\"song-b\"");
+        assertThat(JsonConverter.fromJson(original.getRawResult(), String[].class))
+                .containsExactly(albumResponse, TRACK_RESPONSE, fallbackResponse);
+        assertThat(cache).hasSize(cacheEnabled ? 3 : 0);
+        if (cacheEnabled) {
+            assertThat(cache.keySet()).anyMatch(key -> key.startsWith("SPOTIFY_TOP_TRACKS_FALLBACK:"));
+            DiscoveryTask cached = task();
+            assertThat(service.discover(cached, true)).containsExactly("song-a", "song-b", "fallback-song");
+            assertThat(cached.getRawRequest()).isEqualTo(original.getRawRequest());
+            assertThat(cached.getRawResult()).isEqualTo(original.getRawResult());
+            assertThat(prompts).hasSize(6);
+        } else {
+            verifyNoInteractions(cacheService);
+        }
+    }
+
+    private void fallbackAlbum(String id, ReleaseType type, @Nullable LocalDateTime releaseDate, @Nullable Integer year) {
+        Album album = new Album().setId(id).setName(id).setYear(year).setArtist(artist);
+        album.setSongs(List.of(new Song().setId(id + "-song").setName("Shared title").setAlbum(album)));
+        List<Album> albums = new ArrayList<>(artist.getAlbums());
+        albums.add(album);
+        artist.setAlbums(albums);
+        when(libraryService.getAlbumDiscoveryData(id)).thenReturn(Optional.of(new AlbumDiscoveryData(type, releaseDate)));
+    }
+
+    @Test
+    void shouldTryAllLpsChronologicallyBeforeEpsAndPreserveUnmatchedPositions() {
+        fallbackAlbum("ep-new", ReleaseType.EP, LocalDateTime.of(1970, 1, 1, 0, 0), 1970);
+        fallbackAlbum("lp-z", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), 1900);
+        fallbackAlbum("lp-undated", ReleaseType.LP, null, null);
+        fallbackAlbum("ep-old", ReleaseType.EP, LocalDateTime.of(1960, 1, 1, 0, 0), 1960);
+        fallbackAlbum("lp-old", ReleaseType.LP, LocalDateTime.of(1980, 1, 1, 0, 0), 2020);
+        fallbackAlbum("lp-year", ReleaseType.LP, null, 1985);
+        fallbackAlbum("lp-a", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), 1900);
+        List<String> expectedOrder = List.of("lp-old", "lp-year", "lp-a", "lp-z", "lp-undated", "ep-old", "ep-new");
+        for (String ignored : expectedOrder) {
+            responses.add("{\"trackMatches\":[{\"databaseTrackId\":null}]}");
+        }
+
+        assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
+
+        assertThat(prompts).hasSize(4 + 2 * expectedOrder.size());
+        for (int i = 0; i < expectedOrder.size(); i++) {
+            String request = prompts.get(4 + 2 * i).getInstructions().get(1).getText();
+            assertThat(request).contains("Database album with tracks: {\"id\":\"" + expectedOrder.get(i) + "\"");
+        }
+    }
+
+    @Test
+    void shouldFindTracksAcrossFallbackAlbumsAndStopAfterAllAreMatched() {
+        fallbackAlbum("first-lp", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), null);
+        fallbackAlbum("second-lp", ReleaseType.LP, LocalDateTime.of(2000, 1, 1, 0, 0), null);
+        fallbackAlbum("unused-ep", ReleaseType.EP, LocalDateTime.of(1980, 1, 1, 0, 0), null);
+        responses.set(0, ALBUM_RESPONSE.replace("\"databaseAlbumId\":\"album-a\"", "\"databaseAlbumId\":null")
+                .replace("\"databaseAlbumId\":\"album-b\"", "\"databaseAlbumId\":null"));
+        responses.set(1, NO_TRACK_MATCHES);
+        responses.add("{\"trackMatches\":[{\"databaseTrackId\":null},{\"databaseTrackId\":\"first-lp-song\"},{\"databaseTrackId\":null}]}");
+        responses.add("{\"trackMatches\":[{\"databaseTrackId\":\"second-lp-song\"},{\"databaseTrackId\":\"second-lp-song\"}]}");
+
+        assertThat(service.discover(task(), true)).containsExactly("second-lp-song", "first-lp-song", "second-lp-song");
+
+        assertThat(prompts).hasSize(8);
+        assertThat(prompts.get(6).getInstructions().get(1).getText())
+                .contains("\"id\":\"first\"", "\"id\":\"missing\"").doesNotContain("\"id\":\"second\"");
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ReleaseType.class, names = {"LP", "EP"}, mode = EnumSource.Mode.EXCLUDE)
+    void shouldExcludeOtherReleaseTypesFromFallback(ReleaseType type) {
+        fallbackAlbum("excluded", type, LocalDateTime.of(1990, 1, 1, 0, 0), 1990);
+
+        assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
+
+        assertThat(prompts).hasSize(4);
+    }
+
+    @Test
+    void shouldReturnNullWhenNoTracksMatchAnyFallbackAlbum() {
+        fallbackAlbum("fallback", ReleaseType.EP, null, 1990);
+        responses.set(1, NO_TRACK_MATCHES);
+        responses.add(NO_TRACK_MATCHES);
+
+        assertThat(service.discover(task(), true)).isNull();
+
+        assertThat(prompts).hasSize(6);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"not JSON", "null", "{}", "{\"trackMatches\":[]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"unknown\"}]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":123}]}",
+            "{\"trackMatches\":[{}]}", "{\"trackMatches\":[null]}"})
+    void shouldVerifyInvalidFallbackResponseAgainstSuppliedAlbum(String invalidResponse) {
+        fallbackAlbum("fallback", ReleaseType.LP, null, 1990);
+        responses.add(invalidResponse);
+        responses.add("{\"trackMatches\":[{\"databaseTrackId\":\"fallback-song\"}]}");
+        DiscoveryTask task = task();
+
+        assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", "fallback-song");
+
+        assertThat(prompts).hasSize(8);
+        assertThat(prompts.get(6).getInstructions()).extracting(Message::getText)
+                .anySatisfy(text -> assertThat(text).contains("single supplied database album's track list"));
+        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(4);
+        assertThat(cache).hasSize(3);
+    }
+
+    @Test
+    void shouldFailAfterInvalidFallbackRetriesWithoutCachingResponse() {
+        fallbackAlbum("fallback", ReleaseType.LP, null, 1990);
+        responses.addAll(List.of("{\"trackMatches\":[]}", "{\"trackMatches\":[]}"));
+
+        assertThatThrownBy(() -> service.discover(task(), true)).hasMessageContaining("expected 1");
+
+        assertThat(prompts).hasSize(8);
+        assertThat(cache).hasSize(2);
+    }
+
+    @Test
+    void shouldInterruptDuringFallbackWithoutCallingNextAlbum() {
+        fallbackAlbum("first-lp", ReleaseType.LP, null, 1990);
+        fallbackAlbum("second-lp", ReleaseType.LP, null, 2000);
+        responses.add("{\"trackMatches\":[{\"databaseTrackId\":null}]}");
+        doAnswer(invocation -> {
+            String key = invocation.getArgument(1);
+            cache.put(key, invocation.getArgument(3));
+            if (key.startsWith("SPOTIFY_TOP_TRACKS_FALLBACK:")) {
+                jobSynchronizer.cancelDiscovery();
+            }
+            return null;
+        }).when(cacheService).put(eq(SPOTIFY), anyString(), eq(1), anyString());
+
+        assertThatThrownBy(() -> service.discover(task(), true)).isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(prompts).hasSize(6);
     }
 
     @ParameterizedTest

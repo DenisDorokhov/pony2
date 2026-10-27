@@ -21,6 +21,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
+import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.llm.domain.DiscoveryCache;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
@@ -1443,7 +1444,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldDiscoverEveryAlbumAfterSpotifyAndKeepArtistProgress(boolean discoveryEnabled) {
+    void shouldDiscoverEveryAlbumBeforeSpotifyTopTracksAndKeepArtistProgress(boolean discoveryEnabled) {
         notFoundResponses();
         if (discoveryEnabled) {
             enableLlm();
@@ -1464,12 +1465,67 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         List<DiscoveryTask> tasks = taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)).toList();
         assertThat(tasks).hasSize(total).allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         assertThat(tasks).extracting(DiscoveryTask::getType).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
+                DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
         getTransactionTemplate().executeWithoutResult(status -> {
             assertThat(artistTasks()).hasSize(2);
             assertThat(taskRepository.findAll().stream().filter(value -> value.getAlbum() != null))
                     .extracting(value -> value.getAlbum().getId()).containsExactlyInAnyOrder(album.getId(), second.getId());
         });
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ARTIST,Album,,true", "FULL,EP,,true", "ARTIST,Album,Live,false", "ARTIST,EP,Compilation,false"})
+    void shouldUseCompletedMusicBrainzDataForTopTracksFallback(DiscoveryType type, String primaryType,
+                                                               String secondaryType, boolean eligible) {
+        enableLlm();
+        MusicBrainzDto.ReleaseGroup original = groups.getFirst();
+        search(List.of(new MusicBrainzDto.ReleaseGroup(original.id(), original.title(), primaryType,
+                secondaryType != null ? List.of(secondaryType) : List.of(), original.firstReleaseDate(),
+                original.artistCredit(), original.releases())));
+        Genre genre = genreRepository.save(new Genre().setName("Metal"));
+        Song track = songRepository.save(song().setPath("fallback-track").setName("Raining Blood").setAlbum(album).setGenre(genre));
+        SpotifyArtistData spotifyData = new SpotifyArtistData(SpotifyArtistData.Status.FOUND,
+                new SpotifyArtistData.SpotifyArtist("spotify-artist", "Slayer", "https://open.spotify.com/artist/spotify-artist"),
+                new SpotifyArtistData.MatchedAlbum("Reign in Blood", "Reign in Blood", "spotify-lp", "https://open.spotify.com/album/spotify-lp"),
+                List.of(new SpotifyArtistData.TopTrack("spotify-track", "Raining Blood", "https://open.spotify.com/track/spotify-track",
+                        "Compilation", "spotify-compilation", "https://open.spotify.com/album/spotify-compilation")),
+                null, null, null, null, null);
+        List<String> responses = new ArrayList<>(List.of(JsonConverter.toJson(spotifyData),
+                "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-compilation\",\"databaseAlbumId\":null}]}",
+                "{\"trackMatches\":[{\"databaseTrackId\":null}]}",
+                "{\"trackMatches\":[{\"databaseTrackId\":\"" + track.getId() + "\"}]}"));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            Prompt prompt = invocation.getArgument(0);
+            if (prompt.getInstructions().getFirst().getText().startsWith("Match the supplied")) {
+                assertThat(albumTasks(album)).singleElement().satisfies(task -> {
+                    assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                    assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).primaryType()).isEqualTo(primaryType);
+                });
+            }
+            String result = ((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.TEXT
+                    ? responses.getFirst() : responses.removeFirst();
+            return response(result);
+        });
+        DiscoveryJob discoveryJob = job(type);
+
+        if (type == DiscoveryType.FULL) {
+            fullDiscoveryService.discover(discoveryJob, false, null);
+        } else {
+            artistService.discover(discoveryJob, artist, false, null);
+        }
+
+        assertThat(taskRepository.findAll().stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS))
+                .singleElement().satisfies(task -> {
+                    assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+                    if (eligible) {
+                        assertThat(JsonConverter.listFromJson(task.getResult(), String.class)).containsExactly(track.getId());
+                    } else {
+                        assertThat(task.getResult()).isEqualTo("null");
+                    }
+                    assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(eligible ? 3 : 2);
+                });
+        verify(model, times(eligible ? 8 : 6)).call(any(Prompt.class));
     }
 
     @ParameterizedTest
@@ -1716,6 +1772,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.findAll()).filteredOn(task -> task.getAlbum() != null).extracting(DiscoveryTask::getStatus)
                 .containsExactlyInAnyOrder(DiscoveryTask.Status.COMPLETE, DiscoveryTask.Status.INTERRUPTED);
+        assertThat(taskRepository.findAll()).noneMatch(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
@@ -1727,7 +1784,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         fullDiscoveryService.discover(nextJob, false, null);
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isOne();
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(3);
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
@@ -1744,12 +1801,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, progress -> {
             long complete = progress.getValue().getItemsComplete();
-            if (complete > 2) {
+            if (complete > 1 && complete <= 3) {
                 assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
                     assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
                     assertThat(index.getCountryCode()).isEqualTo("US");
                 });
-                completedAlbums.add(complete - 2);
+                completedAlbums.add(complete - 1);
             }
         });
 
