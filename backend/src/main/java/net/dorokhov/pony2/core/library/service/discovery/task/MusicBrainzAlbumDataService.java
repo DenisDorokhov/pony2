@@ -170,8 +170,12 @@ public class MusicBrainzAlbumDataService {
             }
             MusicBrainzDto.Artist artist = session.getArtist(artistId);
             interruptIfNeeded();
+            List<String> country = artist.area() != null ? artist.area().country() : List.of();
+            if (country.isEmpty() && artist.country() != null && !artist.country().isBlank()) {
+                country = List.of(artist.country());
+            }
             MusicBrainzAlbumData result = new MusicBrainzAlbumData(group.id(), group.primaryType(), group.secondaryTypes(), group.firstReleaseDate(),
-                    artist.id(), artist.area() != null ? artist.area().country() : List.of());
+                    artist.id(), country);
             logger.debug("MusicBrainz discovery result for album '{}': {}.", albumId, result);
             return result;
         } catch (MusicBrainzClient.CancelledException e) {

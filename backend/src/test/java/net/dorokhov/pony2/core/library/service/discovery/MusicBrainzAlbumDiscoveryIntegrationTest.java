@@ -1361,9 +1361,41 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"id\":\"artist\",\"country\":\"DE\"}",
+            "{\"id\":\"artist\",\"country\":\"DE\",\"area\":null}",
+            "{\"id\":\"artist\",\"country\":\"DE\",\"area\":{\"name\":\"Würzburg\"}}",
+            "{\"id\":\"artist\",\"country\":\"DE\",\"area\":{\"iso-3166-1-codes\":[]}}"
+    })
+    void shouldFallBackToArtistCountryWhenAreaHasNoCountryCodes(String response) {
+        rawArtistResponse = response;
+        artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
+
+        assertThat(JsonConverter.fromJson(albumTasks(album).getFirst().getResult(), MusicBrainzAlbumData.class).country())
+                .containsExactly("DE");
+        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscoveryIndex::getCountryCode).isEqualTo("DE");
+    }
+
     @Test
-    void shouldUseEmptyCountryArrayForMissingArea() {
-        rawArtistResponse = "{\"id\":\"artist\"}";
+    void shouldPreferAreaCountryCodesOverArtistCountry() {
+        rawArtistResponse = "{\"id\":\"artist\",\"country\":\"DE\",\"area\":{\"iso-3166-1-codes\":[\"US\",\"GB\"]}}";
+        albumService.discover(job(DiscoveryType.ALBUM), album, null);
+
+        assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).country()).containsExactly("US", "GB");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"id\":\"artist\"}",
+            "{\"id\":\"artist\",\"country\":null}",
+            "{\"id\":\"artist\",\"country\":\"\"}",
+            "{\"id\":\"artist\",\"country\":\" \"}",
+            "{\"id\":\"artist\",\"area\":{\"name\":\"Würzburg\"}}"
+    })
+    void shouldUseEmptyCountryArrayWhenCountryIsUnavailable(String response) {
+        rawArtistResponse = response;
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).country()).isEmpty();
@@ -1749,8 +1781,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         search(List.of(
                 group("first-group", "First group", "Reign in Blood", List.of(credit("first-artist", "Slayer", "Slayer"))),
                 group("second-group", "Second group", "Second album", List.of(credit("second-artist", "Slayer", "Slayer")))));
-        doReturn(new MusicBrainzDto.Artist("first-artist", "Slayer", null)).when(session).getArtist("first-artist");
-        doReturn(new MusicBrainzDto.Artist("second-artist", "Slayer", new MusicBrainzDto.Area(List.of("BE"))))
+        doReturn(new MusicBrainzDto.Artist("first-artist", "Slayer", null, null)).when(session).getArtist("first-artist");
+        doReturn(new MusicBrainzDto.Artist("second-artist", "Slayer", new MusicBrainzDto.Area(List.of("BE")), null))
                 .when(session).getArtist("second-artist");
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
@@ -1768,7 +1800,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 group("later-group", "Later group", "Reign in Blood", List.of(credit("artist", "Slayer", "Slayer"))),
                 group("first-group", "First group", "Earlier album", List.of(credit("first-artist", "Slayer", "Slayer")))));
         doReturn(new MusicBrainzDto.Artist("first-artist", "Slayer",
-                new MusicBrainzDto.Area(List.of("DE", "US")))).when(session).getArtist("first-artist");
+                new MusicBrainzDto.Area(List.of("DE", "US")), null)).when(session).getArtist("first-artist");
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
@@ -1790,7 +1822,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 .setMusicBrainzArtistId("artist").setCountryCode("US"));
         search(List.of(group("group", "Group", "Reign in Blood", List.of(credit(artistId, "Slayer", "Slayer")))));
         rawArtistResponse = JsonConverter.toJson(new MusicBrainzDto.Artist(artistId, "Slayer",
-                new MusicBrainzDto.Area(List.of(countryCode))));
+                new MusicBrainzDto.Area(List.of(countryCode)), null));
 
         artistService.discoverForFullJob(job(DiscoveryType.FULL), artist, false, List.of(album), false, ignored -> true, null);
 
@@ -1957,7 +1989,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private MusicBrainzDto.ArtistCredit credit(String id, String name, String creditedName) {
-        return new MusicBrainzDto.ArtistCredit(creditedName, " / ", new MusicBrainzDto.Artist(id, name, null));
+        return new MusicBrainzDto.ArtistCredit(creditedName, " / ", new MusicBrainzDto.Artist(id, name, null, null));
     }
 
     private void saveDiscoveryHistory(DiscoveryJob job, int artistTasks, int albumTasks) {

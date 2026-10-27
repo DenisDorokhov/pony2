@@ -52,7 +52,7 @@ public final class MusicBrainzDto {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Artist(String id, @Nullable String name, @Nullable Area area) {
+    public record Artist(String id, @Nullable String name, @Nullable Area area, @Nullable String country) {
         public Artist {
             requireNonNull(id);
         }

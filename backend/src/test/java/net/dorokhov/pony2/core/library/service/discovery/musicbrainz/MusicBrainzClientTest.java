@@ -330,7 +330,7 @@ class MusicBrainzClientTest {
 
     @Test
     void shouldReadCountryCodesAndPreserveRawErrorResponses() {
-        String artist = "{\"id\":\"artist\",\"name\":\"Artist\",\"area\":{\"name\":\"Country\",\"iso-3166-1-codes\":[\"US\",\"GB\"]}}";
+        String artist = "{\"id\":\"artist\",\"name\":\"Artist\",\"country\":\"DE\",\"area\":{\"name\":\"Country\",\"iso-3166-1-codes\":[\"US\",\"GB\"]}}";
         server.createContext("/ws/2/artist/artist", exchange -> {
             assertThat(exchange.getRequestHeaders().getFirst("User-Agent")).isEqualTo("pony2/test (admin@example.com)");
             respond(exchange, 200, artist);
@@ -338,7 +338,9 @@ class MusicBrainzClientTest {
         server.createContext("/ws/2/artist/error", exchange -> respond(exchange, 503, "service unavailable"));
 
         try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer, false)) {
-            assertThat(session.getArtist("artist").area().country()).containsExactly("US", "GB");
+            MusicBrainzDto.Artist artistData = session.getArtist("artist");
+            assertThat(artistData.country()).isEqualTo("DE");
+            assertThat(artistData.area().country()).containsExactly("US", "GB");
             assertThatThrownBy(() -> session.getArtist("error")).isInstanceOf(IllegalStateException.class).hasMessageContaining("HTTP 503");
         }
 
