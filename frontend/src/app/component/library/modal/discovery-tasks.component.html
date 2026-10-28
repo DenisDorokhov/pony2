@@ -6,6 +6,11 @@
         {{ 'discoveryTasks.startDiscoveryButton' | translate }}
       </button>
     }
+    @if (allTasksComponent) {
+      <button type="button" class="btn btn-outline-dark" (click)="showAllTasks()">
+        {{ 'discovery.allTasksButton' | translate }}
+      </button>
+    }
     <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
   </div>
 </div>

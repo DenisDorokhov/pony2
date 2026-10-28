@@ -1,4 +1,4 @@
-import {Directive, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Directive, ElementRef, inject, OnDestroy, OnInit, Type, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -84,6 +84,7 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   readonly taskTypes = Object.values(DiscoveryTaskType);
 
   abstract readonly titleKey: string;
+  readonly allTasksComponent: Type<AbstractDiscoveryTasksComponent> | undefined = undefined;
 
   @ViewChild('scroller')
   containerElement!: ElementRef;
@@ -222,6 +223,12 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);
     this.modal.dismissAll();
+  }
+
+  showAllTasks() {
+    if (this.allTasksComponent) {
+      this.modal.open(this.allTasksComponent, {size: 'xl'});
+    }
   }
 
   showDetails(task: DiscoveryTaskSummaryDto) {

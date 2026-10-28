@@ -2,6 +2,7 @@ import {Component, Input} from '@angular/core';
 import {Observable} from 'rxjs';
 import {DiscoveryStatusDto, DiscoveryTaskPageDto} from '../../../domain/library.dto';
 import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstract-discovery-tasks.component';
+import {AllDiscoveryTasksComponent} from './all-discovery-tasks.component';
 
 @Component({
   imports: DISCOVERY_TASKS_IMPORTS,
@@ -12,6 +13,7 @@ import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstra
 export class AlbumDiscoveryTasksComponent extends AbstractDiscoveryTasksComponent {
 
   override readonly titleKey = 'discoveryTasks.albumHeader';
+  override readonly allTasksComponent = AllDiscoveryTasksComponent;
 
   @Input()
   albumId!: string;

@@ -3,6 +3,7 @@ import {EMPTY, Observable} from 'rxjs';
 import {mergeMap, tap} from 'rxjs/operators';
 import {DiscoveryJobDto, DiscoveryStatusDto, DiscoveryTaskPageDto, DiscoveryType} from '../../../domain/library.dto';
 import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstract-discovery-tasks.component';
+import {AllDiscoveryTasksComponent} from './all-discovery-tasks.component';
 
 @Component({
   imports: DISCOVERY_TASKS_IMPORTS,
@@ -13,6 +14,7 @@ import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstra
 export class JobDiscoveryTasksComponent extends AbstractDiscoveryTasksComponent {
 
   override readonly titleKey = 'discoveryTasks.jobHeader';
+  override readonly allTasksComponent = AllDiscoveryTasksComponent;
 
   @Input()
   jobId!: string;
