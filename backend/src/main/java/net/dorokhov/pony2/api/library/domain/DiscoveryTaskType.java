@@ -8,7 +8,7 @@ import java.util.Optional;
 public enum DiscoveryTaskType {
     SPOTIFY_ARTIST_DATA(true),
     SPOTIFY_TOP_TRACKS(true, LocalDateTime.of(2026, 10, 27, 14, 36, 25)),
-    MUSICBRAINZ_ALBUM_DATA(false, LocalDateTime.of(2026, 10, 27, 14, 36, 25));
+    MUSICBRAINZ_ALBUM_DATA(false, LocalDateTime.of(2026, 10, 28, 16, 46, 56));
 
     private final boolean toolsEnabled;
     private final LocalDateTime implementedAt;

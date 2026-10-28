@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static com.fasterxml.jackson.annotation.JsonFormat.Feature.WRITE_SORTED_MAP_ENTRIES;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
@@ -60,6 +61,7 @@ public class MusicBrainzAlbumDataService {
 
     private static final int NORMALIZATION_CACHE_VERSION = 1;
     private static final String NORMALIZATION_CACHE_PREFIX = "MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION";
+    private static final String VARIOUS_ARTISTS = "Various Artists";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final MusicBrainzClient client;
@@ -73,12 +75,16 @@ public class MusicBrainzAlbumDataService {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ShutdownService shutdownService;
     private final TransactionTemplate transactionTemplate;
+    private final int maxSearchResponseBytes;
 
     private final String releaseGroupPrompt;
     private final String artistPrompt;
     private final String verificationPrompt;
     private final String normalizationPrompt;
     private final String normalizationVerificationPrompt;
+    private final String artistSearchPrompt;
+    private final String artistSearchVerificationPrompt;
+    private final String alternativeArtistInstructions;
 
     public MusicBrainzAlbumDataService(
             MusicBrainzClient client,
@@ -96,8 +102,13 @@ public class MusicBrainzAlbumDataService {
             @Value("classpath:prompts/musicbrainz-artist.txt") Resource artistPrompt,
             @Value("classpath:prompts/musicbrainz-verification.txt") Resource verificationPrompt,
             @Value("classpath:prompts/musicbrainz-album-normalization.txt") Resource normalizationPrompt,
-            @Value("classpath:prompts/musicbrainz-album-normalization-verification.txt") Resource normalizationVerificationPrompt
+            @Value("classpath:prompts/musicbrainz-album-normalization-verification.txt") Resource normalizationVerificationPrompt,
+            @Value("classpath:prompts/musicbrainz-artist-search.txt") Resource artistSearchPrompt,
+            @Value("classpath:prompts/musicbrainz-artist-search-verification.txt") Resource artistSearchVerificationPrompt,
+            @Value("classpath:prompts/musicbrainz-alternative-artist-instructions.txt") Resource alternativeArtistInstructions,
+            @Value("${pony.discovery.musicbrainz.maxSearchResponseBytes:409600}") int maxSearchResponseBytes
     ) throws IOException {
+        checkArgument(maxSearchResponseBytes > 0, "Maximum MusicBrainz search response size must be positive.");
         this.client = client;
         this.albumRepository = albumRepository;
         this.taskRepository = taskRepository;
@@ -114,6 +125,10 @@ public class MusicBrainzAlbumDataService {
         this.verificationPrompt = verificationPrompt.getContentAsString(UTF_8);
         this.normalizationPrompt = normalizationPrompt.getContentAsString(UTF_8);
         this.normalizationVerificationPrompt = normalizationVerificationPrompt.getContentAsString(UTF_8);
+        this.artistSearchPrompt = artistSearchPrompt.getContentAsString(UTF_8);
+        this.artistSearchVerificationPrompt = artistSearchVerificationPrompt.getContentAsString(UTF_8);
+        this.alternativeArtistInstructions = "\n" + alternativeArtistInstructions.getContentAsString(UTF_8).strip();
+        this.maxSearchResponseBytes = maxSearchResponseBytes;
     }
 
     public @Nullable MusicBrainzAlbumData discover(DiscoveryTask task, boolean cacheEnabled) {
@@ -148,21 +163,50 @@ public class MusicBrainzAlbumDataService {
             String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\"";
             MusicBrainzClient.ReleaseGroupSearchResult searchResult = session.searchReleaseGroups(query);
             interruptIfNeeded();
+            if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+                return null;
+            }
+            NormalizationResponse normalization = null;
             if (searchResult.groups().isEmpty()) {
-                NormalizationResponse normalization = normalizeTitle(task, input.title(), cacheEnabled);
+                normalization = normalizeTitle(task, input.title(), cacheEnabled);
                 String normalizedQuery = normalizationQuery(input, normalization);
                 interruptIfNeeded();
                 if (normalizedQuery != null) {
                     searchResult = session.searchReleaseGroups(normalizedQuery);
                     interruptIfNeeded();
+                    if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+                        return null;
+                    }
                 }
             }
-            MusicBrainzDto.ReleaseGroup group = selectReleaseGroup(task, input, searchResult.groups(), searchResult.rawResponse(), cacheEnabled);
+            List<String> searchArtistNames = List.of();
+            MusicBrainzDto.ReleaseGroup group = selectReleaseGroup(task, input, searchResult.groups(), searchResult.rawResponse(), cacheEnabled,
+                    searchArtistNames);
+            if (group == null) {
+                searchArtistNames = selectSearchArtists(task, input, loadTracks(task), cacheEnabled);
+                if (!searchArtistNames.isEmpty()) {
+                    searchResult = searchAlternativeArtists(session, input, searchArtistNames, null);
+                    if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+                        return null;
+                    }
+                    group = selectReleaseGroup(task, input, searchResult.groups(), searchResult.rawResponse(), cacheEnabled, searchArtistNames);
+                    if (group == null) {
+                        if (normalization == null) {
+                            normalization = normalizeTitle(task, input.title(), cacheEnabled);
+                        }
+                        searchResult = searchAlternativeArtists(session, input, searchArtistNames, normalization);
+                        if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+                            return null;
+                        }
+                        group = selectReleaseGroup(task, input, searchResult.groups(), searchResult.rawResponse(), cacheEnabled, searchArtistNames);
+                    }
+                }
+            }
             if (group == null) {
                 logger.debug("No unambiguous MusicBrainz release group was selected for album '{}'.", albumId);
                 return null;
             }
-            String artistId = selectArtist(task, input, group, searchResult.rawResponse(), cacheEnabled);
+            String artistId = selectArtist(task, input, group, searchResult.rawResponse(), cacheEnabled, searchArtistNames);
             if (artistId == null) {
                 logger.debug("No corresponding MusicBrainz artist was selected for album '{}' in release group '{}'.", albumId, group.id());
                 return null;
@@ -187,8 +231,104 @@ public class MusicBrainzAlbumDataService {
         return normalized.isBlank() ? artistName : normalized;
     }
 
+    private boolean isSearchResponseTooLarge(AlbumInput input, String response) {
+        int responseBytes = response.getBytes(UTF_8).length;
+        if (responseBytes <= maxSearchResponseBytes) {
+            return false;
+        }
+        logService.warn(logger, "Skipping MusicBrainz discovery for album '{}' -> '{}': search response size {} bytes exceeds the limit of {} bytes.",
+                input.artistName(), input.title(), responseBytes, maxSearchResponseBytes);
+        return true;
+    }
+
+    private List<TrackInput> loadTracks(DiscoveryTask task) {
+        String albumId = requireNonNull(task.getAlbum(),
+                () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
+        return requireNonNull(transactionTemplate.execute(status ->
+                albumRepository.findById(albumId).orElseThrow().getSongs().stream()
+                        .map(song -> new TrackInput(song.getName(), song.getDiscNumber(), song.getTrackNumber(), song.getDuration(),
+                                song.getArtistName(), song.getAlbumArtistName()))
+                        .sorted(Comparator.comparingInt((TrackInput track) ->
+                                        track.discNumber() != null && track.discNumber() > 0 ? track.discNumber() : 1)
+                                .thenComparing(TrackInput::trackNumber, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(TrackInput::title, Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList()));
+    }
+
+    private List<String> selectSearchArtists(DiscoveryTask task, AlbumInput input, List<TrackInput> tracks, boolean cacheEnabled) {
+        List<String> alternatives = new ArrayList<>();
+        for (TrackInput track : tracks) {
+            String name = track.artistName() != null ? track.artistName().strip() : "";
+            if (!name.isBlank() && !name.equalsIgnoreCase(input.artistName().strip()) &&
+                    alternatives.stream().noneMatch(existing -> existing.equalsIgnoreCase(name))) {
+                alternatives.add(name);
+            }
+        }
+        if (alternatives.isEmpty()) {
+            return List.of();
+        }
+        PreparationRequest request = new PreparationRequest(artistSearchPrompt,
+                JsonConverter.toJson(Map.of("album", input, "tracks", tracks, "alternativeArtistNames", alternatives)),
+                configService.get().llmModel(), 0.0, "none");
+        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
+                ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ALBUM_ARTIST_SEARCH", CACHE_VERSION) : null;
+        return llmExecutor.call(task, request, ArtistNamesResponse.class, cacheSettings, response -> {
+            try {
+                Object parsed = response != null ? LlmJsonConverter.fromJson(response) : null;
+                checkState(parsed instanceof Map<?, ?>, "The artist search response must be a JSON object.");
+                Map<?, ?> data = (Map<?, ?>) parsed;
+                checkState(data.keySet().equals(Set.of("artistNames")), "The artist search response must contain only artistNames.");
+                checkState(data.get("artistNames") instanceof List<?>, "artistNames must be an array.");
+                List<String> names = new ArrayList<>();
+                for (Object value : (List<?>) data.get("artistNames")) {
+                    checkState(value instanceof String && !((String) value).isBlank(), "Each artistNames item must be a non-blank string.");
+                    String name = ((String) value).strip();
+                    checkState(!name.equalsIgnoreCase(input.artistName().strip()), "Do not repeat the original library artist.");
+                    String allowed = name.equalsIgnoreCase(VARIOUS_ARTISTS) ? VARIOUS_ARTISTS
+                            : alternatives.stream().filter(candidate -> candidate.equalsIgnoreCase(name)).findFirst().orElse(null);
+                    checkState(allowed != null, "Choose an artist name from alternativeArtistNames or Various Artists: %s", name);
+                    if (names.stream().noneMatch(existing -> existing.equalsIgnoreCase(allowed))) {
+                        names.add(allowed);
+                    }
+                }
+                return List.copyOf(names);
+            } catch (RuntimeException e) {
+                throw invalidResponse(task, LlmStage.ARTIST_SEARCH, e);
+            }
+        });
+    }
+
+    private MusicBrainzClient.ReleaseGroupSearchResult searchAlternativeArtists(
+            MusicBrainzClient.Session session, AlbumInput input, List<String> artistNames, @Nullable NormalizationResponse normalization
+    ) {
+        Map<String, MusicBrainzDto.ReleaseGroup> groups = new LinkedHashMap<>();
+        Map<String, Object> rawGroups = new LinkedHashMap<>();
+        for (String name : artistNames) {
+            interruptIfNeeded();
+            String condition = "artistname:\"" + escapeQuery(normalizeArtistName(name)) + "\"";
+            if (!name.equals(VARIOUS_ARTISTS)) {
+                condition = "(" + condition + " OR artist:\"" + escapeQuery(normalizeArtistName(name)) + "\")";
+            }
+            String query = normalization == null ? "release:\"" + escapeQuery(input.title()) + "\" AND " + condition
+                    : normalizationQuery(input, normalization, condition);
+            if (query == null) {
+                continue;
+            }
+            MusicBrainzClient.ReleaseGroupSearchResult result = session.searchReleaseGroups(query);
+            interruptIfNeeded();
+            result.groups().forEach(group -> groups.putIfAbsent(group.id(), group));
+            Map<String, Object> data = JsonConverter.mapFromJson(result.rawResponse(), String.class, Object.class);
+            for (Object value : (List<?>) data.get("release-groups")) {
+                Map<?, ?> group = (Map<?, ?>) value;
+                rawGroups.putIfAbsent((String) group.get("id"), value);
+            }
+        }
+        return new MusicBrainzClient.ReleaseGroupSearchResult(List.copyOf(groups.values()),
+                JsonConverter.toJson(Map.of("release-groups", List.copyOf(rawGroups.values()))));
+    }
+
     private NormalizationResponse normalizeTitle(DiscoveryTask task, String title, boolean cacheEnabled) {
-        NormalizationRequest request = new NormalizationRequest(normalizationPrompt,
+        PreparationRequest request = new PreparationRequest(normalizationPrompt,
                 JsonConverter.toJson(Map.of("albumTitle", title)), configService.get().llmModel(), 0.0, "none");
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, NORMALIZATION_CACHE_PREFIX, NORMALIZATION_CACHE_VERSION) : null;
@@ -234,6 +374,10 @@ public class MusicBrainzAlbumDataService {
     }
 
     private @Nullable String normalizationQuery(AlbumInput input, NormalizationResponse normalization) {
+        return normalizationQuery(input, normalization, "artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\"");
+    }
+
+    private @Nullable String normalizationQuery(AlbumInput input, NormalizationResponse normalization, String artistCondition) {
         String original = "release:\"" + escapeQuery(input.title()) + "\"";
         List<UnaryOperator<String>> normalizers = List.of(
                 UnaryOperator.identity(),
@@ -268,39 +412,32 @@ public class MusicBrainzAlbumDataService {
             return null;
         }
         String conditions = branches.size() > 1 ? "(" + String.join(" OR ", branches) + ")" : branches.getFirst();
-        return "artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\" AND " + conditions;
+        return artistCondition + " AND " + conditions;
     }
 
     private @Nullable MusicBrainzDto.ReleaseGroup selectReleaseGroup(
             DiscoveryTask task, AlbumInput input,
             List<MusicBrainzDto.ReleaseGroup> groups, String response,
-            boolean cacheEnabled
+            boolean cacheEnabled, List<String> searchArtistNames
     ) {
         Map<String, MusicBrainzDto.ReleaseGroup> candidates = new LinkedHashMap<>();
         groups.forEach(group -> candidates.putIfAbsent(group.id(), group));
         List<MusicBrainzDto.ReleaseGroup> exact = candidates.values().stream()
                 .filter(group -> group.releases().stream().anyMatch(release -> input.title().equalsIgnoreCase(release.title())))
                 .toList();
-        if (exact.size() == 1) {
+        if (exact.size() == 1 && searchArtistNames.isEmpty()) {
             return exact.getFirst();
         }
         if (candidates.isEmpty()) {
             return null;
         }
-        String albumId = requireNonNull(task.getAlbum(),
-                () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
-        List<TrackInput> tracks = requireNonNull(transactionTemplate.execute(status ->
-                albumRepository.findById(albumId).orElseThrow().getSongs().stream()
-                        .map(song -> new TrackInput(song.getName(), song.getDiscNumber(), song.getTrackNumber(), song.getDuration(),
-                                song.getArtistName(), song.getAlbumArtistName()))
-                        .sorted(Comparator.comparingInt((TrackInput track) ->
-                                        track.discNumber() != null && track.discNumber() > 0 ? track.discNumber() : 1)
-                                .thenComparing(TrackInput::trackNumber, Comparator.nullsLast(Comparator.naturalOrder()))
-                                .thenComparing(TrackInput::title, Comparator.nullsLast(Comparator.naturalOrder())))
-                        .toList()));
-        String trackContext = "\nLibrary album track count: " + tracks.size()
-                + "\nLibrary album tracks: " + JsonConverter.toJson(tracks);
-        Request request = new Request(releaseGroupPrompt, context(input, response, false) + trackContext,
+        String trackContext = trackContext(loadTracks(task));
+        String prompt = releaseGroupPrompt;
+        if (!searchArtistNames.isEmpty()) {
+            prompt += alternativeArtistInstructions;
+            trackContext += "\nAlternative artist search names: " + JsonConverter.toJson(searchArtistNames);
+        }
+        Request request = new Request(prompt, context(input, response, false) + trackContext,
                 context(input, response, true) + trackContext,
                 configService.get().llmModel());
         String id = selectId(task, request, candidates.keySet(), "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP",
@@ -308,17 +445,23 @@ public class MusicBrainzAlbumDataService {
         return id != null ? candidates.get(id) : null;
     }
 
+    private String trackContext(List<TrackInput> tracks) {
+        return "\nLibrary album track count: " + tracks.size() + "\nLibrary album tracks: " + JsonConverter.toJson(tracks);
+    }
+
     private @Nullable String selectArtist(
             DiscoveryTask task, AlbumInput input, MusicBrainzDto.ReleaseGroup group,
-            String response, boolean cacheEnabled
+            String response, boolean cacheEnabled, List<String> searchArtistNames
     ) {
         List<String> ids = group.artistCredit().stream().map(credit -> credit.artist().id()).distinct().toList();
         if (ids.size() == 1) {
             return ids.getFirst();
         }
         List<String> exact = group.artistCredit().stream()
-                .filter(credit -> input.artistName().equalsIgnoreCase(credit.artist().name())
-                        || input.artistName().equalsIgnoreCase(credit.name()))
+                .filter(credit -> input.artistName().equalsIgnoreCase(credit.artist().name()) ||
+                        input.artistName().equalsIgnoreCase(credit.name()) ||
+                        searchArtistNames.stream().anyMatch(name -> name.equalsIgnoreCase(credit.artist().name()) ||
+                                name.equalsIgnoreCase(credit.name())))
                 .map(credit -> credit.artist().id()).distinct().toList();
         if (exact.size() == 1) {
             return exact.getFirst();
@@ -327,7 +470,12 @@ public class MusicBrainzAlbumDataService {
             return null;
         }
         String selectedGroup = "\nSelected release group ID: " + JsonConverter.toJson(group.id());
-        Request request = new Request(artistPrompt, context(input, response, false) + selectedGroup,
+        String prompt = artistPrompt;
+        if (!searchArtistNames.isEmpty()) {
+            prompt += alternativeArtistInstructions;
+            selectedGroup += "\nAlternative artist search names: " + JsonConverter.toJson(searchArtistNames) + trackContext(loadTracks(task));
+        }
+        Request request = new Request(prompt, context(input, response, false) + selectedGroup,
                 context(input, response, true) + selectedGroup, configService.get().llmModel());
         return selectId(task, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST",
                 LlmStage.ARTIST_SELECTION, cacheEnabled);
@@ -360,6 +508,7 @@ public class MusicBrainzAlbumDataService {
                 () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
         String stageDescription = switch (stage) {
             case ALBUM_TITLE_NORMALIZATION -> "album title normalization";
+            case ARTIST_SEARCH -> "alternative artist search";
             case RELEASE_GROUP_SELECTION -> "release group selection";
             case ARTIST_SELECTION -> "artist selection";
         };
@@ -368,7 +517,11 @@ public class MusicBrainzAlbumDataService {
             logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' -> '{}' during {}.",
                     album.getArtist().getName(), album.getName(), stageDescription, error);
         });
-        String prompt = stage == LlmStage.ALBUM_TITLE_NORMALIZATION ? normalizationVerificationPrompt : verificationPrompt;
+        String prompt = switch (stage) {
+            case ALBUM_TITLE_NORMALIZATION -> normalizationVerificationPrompt;
+            case ARTIST_SEARCH -> artistSearchVerificationPrompt;
+            default -> verificationPrompt;
+        };
         return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
@@ -410,6 +563,7 @@ public class MusicBrainzAlbumDataService {
 
     private enum LlmStage {
         ALBUM_TITLE_NORMALIZATION,
+        ARTIST_SEARCH,
         RELEASE_GROUP_SELECTION,
         ARTIST_SELECTION
     }
@@ -433,12 +587,15 @@ public class MusicBrainzAlbumDataService {
     private record IdResponse(@JsonProperty(required = true) @Nullable String id) {
     }
 
+    private record ArtistNamesResponse(List<String> artistNames) {
+    }
+
     @JsonPropertyOrder({"searchTitle", "searchFragments", "alternativeTitles"})
     private record NormalizationResponse(String searchTitle, List<String> searchFragments, List<String> alternativeTitles) {
     }
 
     @JsonPropertyOrder({"systemPrompt", "userPrompt", "model", "temperature", "toolChoice"})
-    private record NormalizationRequest(
+    private record PreparationRequest(
             String systemPrompt, String userPrompt, String model, double temperature, String toolChoice
     ) implements DiscoveryTaskLlmExecutor.Request {
         @Override

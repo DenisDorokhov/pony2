@@ -72,6 +72,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -2068,6 +2069,456 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldFindBillyNovikOnlyAfterExistingAttemptsAndCacheAlternativeSearch(boolean cacheEnabled) {
+        enableLlm();
+        artistRepository.save(artist.setName("Billy’s Band"));
+        albumRepository.save(album.setName("Песни Егора Летова").setYear(2018));
+        Song track = alternativeTrack("Билли Новик");
+        String originalQuery = "release:\"Песни Егора Летова\" AND artistname:\"Billy’s Band\"";
+        String normalizedQuery = "artistname:\"Billy’s Band\" AND release:\"Песни Егора\"";
+        String alternativeQuery = "release:\"Песни Егора Летова\" AND (artistname:\"Билли Новик\" OR artist:\"Билли Новик\")";
+        alternativeSearches(Map.of(alternativeQuery, List.of(group("group", album.getName(), album.getName(),
+                List.of(credit("novik", "Билли Новик", null))))));
+        rawArtistResponse = "{\"id\":\"novik\",\"country\":\"RU\"}";
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            String system = prompt.getInstructions().getFirst().getText();
+            if (system.startsWith("You normalize untrusted album-title text")) {
+                return response("{\"searchTitle\":\"Песни Егора Летова\",\"searchFragments\":[\"Песни Егора\"],\"alternativeTitles\":[]}");
+            }
+            if (system.startsWith("Choose alternative album artist names")) {
+                verify(session, atLeastOnce()).searchReleaseGroups(normalizedQuery);
+                assertThat(prompt.getInstructions().get(1).getText()).contains("Billy’s Band", "Билли Новик", track.getName());
+                return response("{\"artistNames\":[\"Билли Новик\"]}");
+            }
+            assertThat(system).contains("organizational grouping");
+            assertThat(prompt.getInstructions().get(1).getText()).contains("Alternative artist search names", "Billy’s Band", "Билли Новик");
+            return response("{\"id\":\"group\"}");
+        });
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+        albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+
+        verify(model, times(cacheEnabled ? 3 : 6)).call(any(Prompt.class));
+        songRepository.save(track.setAlbumArtistName("Updated album artist tag"));
+        albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+
+        verify(model, times(cacheEnabled ? 5 : 9)).call(any(Prompt.class));
+        ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
+        verify(session, times(9)).searchReleaseGroups(queries.capture());
+        assertThat(queries.getAllValues()).containsExactly(originalQuery, normalizedQuery, alternativeQuery,
+                originalQuery, normalizedQuery, alternativeQuery, originalQuery, normalizedQuery, alternativeQuery);
+        verify(session, times(3)).getArtist("novik");
+        assertThat(artistRepository.findById(artist.getId()).orElseThrow().getName()).isEqualTo("Billy’s Band");
+        assertThat(taskRepository.findAll()).hasSize(3).allSatisfy(task -> {
+            assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            MusicBrainzAlbumData result = JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class);
+            assertThat(result.releaseGroupId()).isEqualTo("group");
+            assertThat(result.artistId()).isEqualTo("novik");
+            assertThat(result.country()).containsExactly("RU");
+            assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).hasSize(7);
+            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(7);
+        });
+        assertThat(cacheRepository.findAll()).filteredOn(entry -> entry.getKey().startsWith("MUSICBRAINZ_ALBUM_ARTIST_SEARCH:"))
+                .hasSize(cacheEnabled ? 2 : 0);
+    }
+
+    private Song alternativeTrack(String name) {
+        Genre genre = genreRepository.save(new Genre().setName("Genre"));
+        return songRepository.save(song().setPath("alternative-" + songRepository.count()).setArtistName(name)
+                .setAlbumArtistName(artist.getName()).setAlbum(album).setGenre(genre));
+    }
+
+    private void alternativeSearches(Map<String, List<MusicBrainzDto.ReleaseGroup>> results) {
+        doAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            String query = invocation.getArgument(0);
+            List<MusicBrainzDto.ReleaseGroup> candidates = results.getOrDefault(query, List.of());
+            String raw = JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(candidates.size(), 0, candidates));
+            String url = "https://musicbrainz.org/ws/2/release-group?query=" + URLEncoder.encode(query, UTF_8);
+            exchangeObserver.onRequest(url);
+            exchangeObserver.onResponse(url, raw);
+            return new MusicBrainzClient.ReleaseGroupSearchResult(candidates, raw);
+        }).when(session).searchReleaseGroups(anyString());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"Mortal Kombat,Mortal Kombat,1995", "Mortician,Tribute to Mortician,2007"})
+    void shouldFindVariousArtistsAlbumsWithExistingSelectionPrompt(String libraryArtist, String title, int year) {
+        enableLlm();
+        artistRepository.save(artist.setName(libraryArtist));
+        albumRepository.save(album.setName(title).setYear(year));
+        alternativeTrack("First Performer");
+        alternativeTrack("Second Performer");
+        String alternativeQuery = "release:\"" + title + "\" AND artistname:\"Various Artists\"";
+        MusicBrainzDto.ReleaseGroup correct = new MusicBrainzDto.ReleaseGroup("group", title, "Album", List.of(),
+                Integer.toString(year), List.of(credit("various", "Various Artists", null)),
+                List.of(new MusicBrainzDto.Release("release", title)));
+        alternativeSearches(Map.of(alternativeQuery, List.of(correct)));
+        rawArtistResponse = "{\"id\":\"various\"}";
+        alternativeArtistResponses(List.of("Various Artists"), "group");
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        MusicBrainzAlbumData result = JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class);
+        assertThat(result.releaseGroupId()).isEqualTo("group");
+        assertThat(result.artistId()).isEqualTo("various");
+        assertThat(result.secondaryTypes()).isEmpty();
+        assertThat(result.country()).isEmpty();
+        verify(session).searchReleaseGroups(alternativeQuery);
+        ArgumentCaptor<Prompt> prompts = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(3)).call(prompts.capture());
+        assertThat(prompts.getAllValues().getLast().getInstructions().getFirst().getText())
+                .startsWith("Choose the MusicBrainz release group")
+                .contains("does not require the Compilation secondary type");
+    }
+
+    private void alternativeArtistResponses(List<String> names, String groupId) {
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            String system = prompt.getInstructions().getFirst().getText();
+            if (system.startsWith("You normalize untrusted album-title text")) {
+                String title = (String) JsonConverter.fromJson(prompt.getInstructions().get(1).getText(), Map.class).get("albumTitle");
+                return response(JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", List.of(), "alternativeTitles", List.of())));
+            }
+            if (system.startsWith("Choose alternative album artist names")) {
+                return response(JsonConverter.toJson(Map.of("artistNames", names)));
+            }
+            return response(prompt.getInstructions().get(1).getText().contains("Alternative artist search names:")
+                    ? JsonConverter.toJson(Map.of("id", groupId)) : "{\"id\":null}");
+        });
+    }
+
+    @Test
+    void shouldSearchAllAlternativeNamesAndMergeCandidatesBeforeSelection() {
+        enableLlm();
+        alternativeTrack("First Artist");
+        alternativeTrack("Second Artist");
+        MusicBrainzDto.ReleaseGroup misleading = group("wrong", album.getName(), album.getName(), List.of(credit("wrong-artist", "First Artist", null)));
+        MusicBrainzDto.ReleaseGroup correct = group("group", album.getName(), "Reign in Blood (expanded)", List.of(credit("artist", "Second Artist", null)));
+        String firstQuery = "release:\"Reign in Blood\" AND (artistname:\"First Artist\" OR artist:\"First Artist\")";
+        String secondQuery = "release:\"Reign in Blood\" AND (artistname:\"Second Artist\" OR artist:\"Second Artist\")";
+        alternativeSearches(Map.of(firstQuery, List.of(misleading, correct), secondQuery, List.of(correct)));
+        alternativeArtistResponses(List.of("First Artist", "first artist", "Second Artist"), "group");
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
+        ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
+        verify(session, times(3)).searchReleaseGroups(queries.capture());
+        assertThat(queries.getAllValues()).containsExactly("release:\"Reign in Blood\" AND artistname:\"Slayer\"", firstQuery, secondQuery);
+        ArgumentCaptor<Prompt> prompts = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(3)).call(prompts.capture());
+        String context = prompts.getAllValues().getLast().getInstructions().get(1).getText();
+        String responseJson = context.split("\nMusicBrainz search response: ", 2)[1].split("\n", 2)[0];
+        Map<String, Object> data = JsonConverter.mapFromJson(responseJson, String.class, Object.class);
+        assertThat((List<?>) data.get("release-groups")).hasSize(2);
+        assertThat(context).contains("First Artist", "Second Artist");
+    }
+
+    @ParameterizedTest
+    @MethodSource("missingOrMatchingTrackArtists")
+    void shouldSkipAlternativeAnalysisWithoutDifferentNonBlankTrackArtist(String trackArtist) {
+        enableLlm();
+        alternativeTrack(trackArtist);
+        alternativeSearches(Map.of());
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(onlyTask().getResult()).isEqualTo("null");
+        verify(model, times(1)).call(any(Prompt.class));
+        verify(session, times(1)).searchReleaseGroups(anyString());
+    }
+
+    private static Stream<String> missingOrMatchingTrackArtists() {
+        return Stream.of(null, "", "  ", "Slayer", " slAyEr ");
+    }
+
+    @Test
+    void shouldSupplyAlternativeNamesAndTracksWhenChoosingAmongCreditedArtists() {
+        enableLlm();
+        alternativeTrack("First Artist");
+        alternativeTrack("Second Artist");
+        MusicBrainzDto.ReleaseGroup candidate = group("group", album.getName(), album.getName(),
+                List.of(credit("first", "First Artist", null), credit("second", "Second Artist", null)));
+        alternativeSearches(Map.of(
+                "release:\"Reign in Blood\" AND (artistname:\"First Artist\" OR artist:\"First Artist\")", List.of(candidate),
+                "release:\"Reign in Blood\" AND (artistname:\"Second Artist\" OR artist:\"Second Artist\")", List.of(candidate)));
+        rawArtistResponse = "{\"id\":\"second\",\"country\":\"CA\"}";
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            String system = prompt.getInstructions().getFirst().getText();
+            if (system.startsWith("You normalize untrusted album-title text")) {
+                return response("{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[],\"alternativeTitles\":[]}");
+            }
+            if (system.startsWith("Choose alternative album artist names")) {
+                return response("{\"artistNames\":[\"First Artist\",\"Second Artist\"]}");
+            }
+            if (system.startsWith("Choose the MusicBrainz artist")) {
+                assertThat(system).contains("organizational grouping");
+                assertThat(prompt.getInstructions().get(1).getText()).contains("Alternative artist search names:",
+                        "First Artist", "Second Artist", "Library album track count: 2", "Library album tracks:", "Slayer");
+                return response("{\"id\":\"second\"}");
+            }
+            return response("{\"id\":\"group\"}");
+        });
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        MusicBrainzAlbumData result = JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class);
+        assertThat(result.releaseGroupId()).isEqualTo("group");
+        assertThat(result.artistId()).isEqualTo("second");
+        assertThat(result.country()).containsExactly("CA");
+        verify(model, times(4)).call(any(Prompt.class));
+        verify(session, times(3)).searchReleaseGroups(anyString());
+        verify(session).getArtist("second");
+    }
+
+    @Test
+    void shouldPreserveSuccessfulSearchEvenWhenTrackArtistsDiffer() {
+        alternativeTrack("Alternative Artist");
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getResult()).isNotEqualTo("null");
+        verify(model, never()).call(any(Prompt.class));
+        verify(session, times(1)).searchReleaseGroups(anyString());
+    }
+
+    @Test
+    void shouldPreserveSuccessfulTitleNormalizationWhenTrackArtistsDiffer() {
+        enableLlm();
+        alternativeTrack("Alternative Artist");
+        searchAfterEmpty(groups);
+        when(model.call(any(Prompt.class))).thenReturn(response(
+                "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[\"Reign\"],\"alternativeTitles\":[]}"));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getResult()).isNotEqualTo("null");
+        verify(model, times(1)).call(any(Prompt.class));
+        verify(session, times(2)).searchReleaseGroups(anyString());
+    }
+
+    @Test
+    void shouldNotSearchAgainWhenAlbumWasFoundButArtistSelectionFailed() {
+        enableLlm();
+        alternativeTrack("Alternative Artist");
+        search(List.of(group("group", album.getName(), album.getName(),
+                List.of(credit("first", "First", null), credit("second", "Second", null)))));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(onlyTask().getResult()).isEqualTo("null");
+        verify(model, times(1)).call(any(Prompt.class));
+        verify(session, times(1)).searchReleaseGroups(anyString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReuseOrLazilyPerformNormalizationForAlternativeArtist(boolean normalizedBeforeFallback) {
+        enableLlm();
+        albumRepository.save(album.setName("Reign in Blood (Deluxe)"));
+        alternativeTrack("Alternative Artist");
+        String original = "release:\"Reign in Blood \\(Deluxe\\)\" AND artistname:\"Slayer\"";
+        String normalized = "artistname:\"Slayer\" AND release:\"Reign in Blood\"";
+        String alternative = "release:\"Reign in Blood \\(Deluxe\\)\" AND (artistname:\"Alternative Artist\" OR artist:\"Alternative Artist\")";
+        String normalizedAlternative = "(artistname:\"Alternative Artist\" OR artist:\"Alternative Artist\") AND release:\"Reign in Blood\"";
+        Map<String, List<MusicBrainzDto.ReleaseGroup>> results = new LinkedHashMap<>();
+        if (!normalizedBeforeFallback) {
+            results.put(original, List.of(group("rejected", "Unrelated", "Unrelated", List.of(credit("wrong", "Slayer", null)))));
+        }
+        results.put(normalizedAlternative, List.of(group("group", "Reign in Blood", "Reign in Blood", List.of(credit("artist", "Alternative Artist", null)))));
+        alternativeSearches(results);
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            String system = prompt.getInstructions().getFirst().getText();
+            if (system.startsWith("You normalize untrusted album-title text")) {
+                return response("{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[],\"alternativeTitles\":[]}");
+            }
+            if (system.startsWith("Choose alternative album artist names")) {
+                return response("{\"artistNames\":[\"Alternative Artist\"]}");
+            }
+            return response(prompt.getInstructions().get(1).getText().contains("Alternative artist search names:")
+                    ? "{\"id\":\"group\"}" : "{\"id\":null}");
+        });
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
+        ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
+        verify(session, times(normalizedBeforeFallback ? 4 : 3)).searchReleaseGroups(queries.capture());
+        assertThat(queries.getAllValues()).containsExactlyElementsOf(normalizedBeforeFallback
+                ? List.of(original, normalized, alternative, normalizedAlternative) : List.of(original, alternative, normalizedAlternative));
+        ArgumentCaptor<Prompt> prompts = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(normalizedBeforeFallback ? 3 : 4)).call(prompts.capture());
+        assertThat(prompts.getAllValues()).filteredOn(prompt -> prompt.getInstructions().getFirst().getText()
+                .startsWith("You normalize untrusted album-title text")).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"not JSON", "{}", "{\"artistNames\":null}", "{\"artistNames\":[12]}",
+            "{\"artistNames\":[\"Invented Artist\"]}", "{\"artistNames\":[\"Slayer\"]}", "{\"artistNames\":[\" \"]}"})
+    void shouldValidateAlternativeArtistNamesAndCacheOnlyAcceptedResponse(String rejected) {
+        enableLlm();
+        alternativeTrack("Alternative Artist");
+        alternativeSearches(Map.of());
+        when(model.call(any(Prompt.class))).thenReturn(response(
+                        "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[],\"alternativeTitles\":[]}"),
+                response(rejected), response("{\"artistNames\":[]}"));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(onlyTask().getResult()).isEqualTo("null");
+        verify(session, times(1)).searchReleaseGroups(anyString());
+        ArgumentCaptor<Prompt> prompts = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(3)).call(prompts.capture());
+        assertThat(prompts.getAllValues().getLast().getInstructions()).anySatisfy(message ->
+                assertThat(message.getText()).contains("Your previous response was invalid", "exactly artistNames"));
+        assertThat(cacheRepository.findAll()).filteredOn(entry -> entry.getKey().startsWith("MUSICBRAINZ_ALBUM_ARTIST_SEARCH:"))
+                .singleElement().satisfies(entry -> assertThat(entry.getValue()).contains("artistNames"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"analysis", "search"})
+    void shouldCancelAlternativeArtistAnalysisAndSearch(String phase) {
+        enableLlm();
+        alternativeTrack("Alternative Artist");
+        alternativeSearches(Map.of());
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            if (prompt.getInstructions().getFirst().getText().startsWith("You normalize untrusted album-title text")) {
+                return response("{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[],\"alternativeTitles\":[]}");
+            }
+            if (phase.equals("analysis")) {
+                jobSynchronizer.cancelDiscovery();
+            }
+            return response("{\"artistNames\":[\"Alternative Artist\"]}");
+        });
+        if (phase.equals("search")) {
+            doAnswer(invocation -> {
+                jobSynchronizer.cancelDiscovery();
+                throw new MusicBrainzClient.CancelledException();
+            }).when(session).searchReleaseGroups("release:\"Reign in Blood\" AND (artistname:\"Alternative Artist\" OR artist:\"Alternative Artist\")");
+        }
+
+        assertThatThrownBy(() -> albumService.discover(job(DiscoveryType.ALBUM), album, true, null))
+                .isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
+        verify(model, times(2)).call(any(Prompt.class));
+        verify(session, times(phase.equals("search") ? 2 : 1)).searchReleaseGroups(anyString());
+        verify(session, never()).getArtist(anyString());
+        verify(session).cancel();
+        verify(session).close();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"initial", "normalized", "alternative", "normalized-alternative"})
+    void shouldStopOversizedMusicBrainzResponsesWithoutFurtherLlmCalls(String phase) {
+        enableLlm();
+        alternativeTrack("Alternative Artist");
+        MusicBrainzDto.ReleaseGroup candidate = group("group", album.getName(), album.getName(), List.of(credit("artist", "Slayer", null)));
+        String originalQuery = "release:\"Reign in Blood\" AND artistname:\"Slayer\"";
+        String normalizedQuery = "artistname:\"Slayer\" AND release:\"Reign\"";
+        String alternativeQuery = "release:\"Reign in Blood\" AND (artistname:\"Alternative Artist\" OR artist:\"Alternative Artist\")";
+        String normalizedAlternativeQuery = "(artistname:\"Alternative Artist\" OR artist:\"Alternative Artist\") AND release:\"Reign\"";
+        String targetQuery = switch (phase) {
+            case "initial" -> originalQuery;
+            case "normalized" -> normalizedQuery;
+            case "alternative" -> alternativeQuery;
+            case "normalized-alternative" -> normalizedAlternativeQuery;
+            default -> throw new IllegalArgumentException(phase);
+        };
+        alternativeSearches(Map.of(targetQuery, List.of(candidate)));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Prompt prompt = invocation.getArgument(0);
+            if (prompt.getInstructions().getFirst().getText().startsWith("You normalize untrusted album-title text")) {
+                return response(JsonConverter.toJson(Map.of("searchTitle", "Reign in Blood", "searchFragments",
+                        phase.equals("normalized") || phase.equals("normalized-alternative") ? List.of("Reign") : List.of(),
+                        "alternativeTitles", List.of())));
+            }
+            return response("{\"artistNames\":[\"Alternative Artist\"]}");
+        });
+        int originalLimit = (int) ReflectionTestUtils.getField(musicBrainzAlbumDataService, "maxSearchResponseBytes");
+        int limit = JsonConverter.toJson(Map.of("release-groups", List.of(candidate))).getBytes(UTF_8).length - 1;
+        ReflectionTestUtils.setField(musicBrainzAlbumDataService, "maxSearchResponseBytes", limit);
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+            assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(onlyTask().getResult()).isEqualTo("null");
+            verify(model, times(phase.equals("initial") ? 0 : phase.equals("normalized") ? 1 : 2)).call(any(Prompt.class));
+            verify(session, times(phase.equals("initial") ? 1 : phase.equals("normalized-alternative") ? 4 : 2))
+                    .searchReleaseGroups(anyString());
+            verify(session, never()).getArtist(anyString());
+            assertThat(logRepository.findAll()).filteredOn(log -> log.getText().startsWith("Skipping MusicBrainz discovery"))
+                    .singleElement().satisfies(log -> {
+                        assertThat(log.getLevel()).isEqualTo(LogMessage.Level.WARN);
+                        assertThat(log.getText()).contains("Slayer", "Reign in Blood", "exceeds the limit", Integer.toString(limit));
+                    });
+        } finally {
+            ReflectionTestUtils.setField(musicBrainzAlbumDataService, "maxSearchResponseBytes", originalLimit);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldMeasureResponseLimitInUtf8BytesAndAllowExactBoundary(boolean exactByteLimit) {
+        search(List.of(group("group", "Русское название", album.getName(), List.of(credit("artist", "Slayer", null)))));
+        int bytes = rawSearchResponse.getBytes(UTF_8).length;
+        assertThat(bytes).isGreaterThan(rawSearchResponse.length());
+        int originalLimit = (int) ReflectionTestUtils.getField(musicBrainzAlbumDataService, "maxSearchResponseBytes");
+        ReflectionTestUtils.setField(musicBrainzAlbumDataService, "maxSearchResponseBytes", exactByteLimit ? bytes : rawSearchResponse.length());
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+            assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(onlyTask().getResult().equals("null")).isEqualTo(!exactByteLimit);
+            verify(model, never()).call(any(Prompt.class));
+            verify(session, times(exactByteLimit ? 1 : 0)).getArtist(anyString());
+        } finally {
+            ReflectionTestUtils.setField(musicBrainzAlbumDataService, "maxSearchResponseBytes", originalLimit);
+        }
+    }
+
+    @Test
+    void shouldApplyResponseLimitToMergedAlternativeResults() {
+        enableLlm();
+        alternativeTrack("First Artist");
+        alternativeTrack("Second Artist");
+        MusicBrainzDto.ReleaseGroup first = group("first", album.getName(), album.getName(), List.of(credit("first-artist", "First Artist", null)));
+        MusicBrainzDto.ReleaseGroup second = group("second", album.getName(), album.getName(), List.of(credit("second-artist", "Second Artist", null)));
+        alternativeSearches(Map.of(
+                "release:\"Reign in Blood\" AND (artistname:\"First Artist\" OR artist:\"First Artist\")", List.of(first),
+                "release:\"Reign in Blood\" AND (artistname:\"Second Artist\" OR artist:\"Second Artist\")", List.of(second)));
+        alternativeArtistResponses(List.of("First Artist", "Second Artist"), "first");
+        int limit = Math.max(JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(1, 0, List.of(first))).getBytes(UTF_8).length,
+                JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(1, 0, List.of(second))).getBytes(UTF_8).length);
+        int originalLimit = (int) ReflectionTestUtils.getField(musicBrainzAlbumDataService, "maxSearchResponseBytes");
+        ReflectionTestUtils.setField(musicBrainzAlbumDataService, "maxSearchResponseBytes", limit);
+        try {
+            albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+            assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+            assertThat(onlyTask().getResult()).isEqualTo("null");
+            verify(model, times(2)).call(any(Prompt.class));
+            verify(session, times(3)).searchReleaseGroups(anyString());
+            verify(session, never()).getArtist(anyString());
+        } finally {
+            ReflectionTestUtils.setField(musicBrainzAlbumDataService, "maxSearchResponseBytes", originalLimit);
+        }
+    }
+
     private void search(List<MusicBrainzDto.ReleaseGroup> candidates) {
         groups = candidates;
         String json = JsonConverter.toJson(new MusicBrainzDto.ReleaseGroupSearch(groups.size(), 0, groups));
@@ -2173,6 +2624,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             }
             if (prompt.getInstructions().getFirst().getText().startsWith("Choose the MusicBrainz")) {
                 return response("{\"id\":null}");
+            }
+            if (prompt.getInstructions().getFirst().getText().startsWith("Choose alternative album artist names")) {
+                return response("{\"artistNames\":[]}");
             }
             return response("{\"status\":\"NOT_FOUND\"}");
         });

@@ -1,0 +1,2 @@
+Your previous response was invalid: %s
+Review the supplied album, tracks, and alternativeArtistNames. Return only a JSON object containing exactly artistNames, an array of justified complete names from alternativeArtistNames or Various Artists. Do not repeat the original library artist, invent names, return explanations, or call tools. Return an empty array when no justified alternative exists.
