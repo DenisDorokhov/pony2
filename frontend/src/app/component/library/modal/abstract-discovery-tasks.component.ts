@@ -2,7 +2,7 @@ import {Directive, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angu
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {defer, Observable, Subscription} from 'rxjs';
+import {defer, interval, Observable, Subscription} from 'rxjs';
 import {finalize} from 'rxjs/operators';
 import {AlbumDto, ArtistDto, DiscoveryStatusDto, DiscoveryTaskDto, DiscoveryTaskPageDto, DiscoveryTaskResultFilter, DiscoveryTaskSummaryDto, DiscoveryTaskType, GenreDto, SongDto} from '../../../domain/library.dto';
 import {Album, Artist} from '../../../domain/library.model';
@@ -17,7 +17,7 @@ import {DiscoveryTaskComponent} from './discovery-task.component';
 import {UnknownArtistPipe} from '../../../pipe/unknown-artist.pipe';
 import {UnknownAlbumPipe} from '../../../pipe/unknown-album.pipe';
 
-class DiscoveryTaskWithTarget implements DiscoveryTaskSummaryDto {
+class DiscoveryTaskRow implements DiscoveryTaskSummaryDto {
 
   id!: string;
   creationDate!: string;
@@ -91,7 +91,7 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   loadingState = LoadingState.LOADING;
   taskResult: DiscoveryTaskResultFilter | undefined;
   taskType: DiscoveryTaskType | undefined;
-  discoveryTasks: DiscoveryTaskWithTarget[] = [];
+  discoveryTasks: DiscoveryTaskRow[] = [];
   page: PageDto | undefined;
   startingDiscovery = false;
   discoveryEnabled = true;
@@ -103,6 +103,7 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   private refreshSubscription: Subscription | undefined;
   private statusSubscription: Subscription | undefined;
   private startSubscription: Subscription | undefined;
+  private durationSubscription: Subscription | undefined;
 
   ngOnInit(): void {
     this.statusSubscription = this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
@@ -120,6 +121,7 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
     this.refreshSubscription?.unsubscribe();
     this.statusSubscription?.unsubscribe();
     this.startSubscription?.unsubscribe();
+    this.durationSubscription?.unsubscribe();
   }
 
   protected abstract loadTasks(pageIndex: number, pageSize: number): Observable<DiscoveryTaskPageDto>;
@@ -133,7 +135,8 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
     this.tasksSubscription?.unsubscribe();
     this.tasksSubscription = this.loadTasks(pageIndex, pageSize).subscribe({
       next: page => {
-        this.discoveryTasks = page.discoveryTasks.map(task => new DiscoveryTaskWithTarget(task, this.translateService));
+        this.discoveryTasks = page.discoveryTasks.map(task => new DiscoveryTaskRow(task, this.translateService));
+        this.scheduleDurationUpdate();
         this.page = this.pageToLoad = page;
         if (this.resetScrollOnLoad) {
           this.containerElement.nativeElement.scrollTop = 0;
@@ -143,6 +146,26 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
       },
       error: () => this.loadingState = LoadingState.ERROR
     });
+  }
+
+  private scheduleDurationUpdate(): void {
+    this.durationSubscription?.unsubscribe();
+    this.durationSubscription = undefined;
+    const startedTasks = this.discoveryTasks
+      .filter(task => task.status === DiscoveryTaskDto.Status.STARTED)
+      .map(task => ({task, initialDuration: task.duration}));
+    if (startedTasks.length > 0) {
+      const receivedAt = performance.now();
+      this.durationSubscription = interval(1000).subscribe(() => {
+        const elapsedSeconds = Math.floor((performance.now() - receivedAt) / 1000);
+        for (const {task, initialDuration} of startedTasks) {
+          if (initialDuration !== undefined) {
+            task.duration = initialDuration + elapsedSeconds;
+            task.durationText = formatCompactDuration(task.duration, this.translateService);
+          }
+        }
+      });
+    }
   }
 
   get startDiscoveryDisabled(): boolean {
