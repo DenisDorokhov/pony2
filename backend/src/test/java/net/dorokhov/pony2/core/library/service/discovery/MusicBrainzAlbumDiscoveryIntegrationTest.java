@@ -1474,7 +1474,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"ARTIST,Album,,true", "FULL,EP,,true", "ARTIST,Album,Live,false", "ARTIST,EP,Compilation,false"})
+    @CsvSource({"ARTIST,Album,,true", "FULL,EP,,true", "ARTIST,Album,Live,false", "ARTIST,EP,Compilation,true"})
     void shouldUseCompletedMusicBrainzDataForTopTracksFallback(DiscoveryType type, String primaryType,
                                                                String secondaryType, boolean eligible) {
         enableLlm();
