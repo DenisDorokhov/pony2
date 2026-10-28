@@ -1402,6 +1402,39 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).country()).isEmpty();
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "The Bridge City Sinners, Bridge City Sinners",
+            "the Bridge City Sinners, Bridge City Sinners",
+            "THE Bridge City Sinners, Bridge City Sinners",
+            "The Bridge City The Sinners, Bridge City The Sinners",
+            "Bridge City Sinners, Bridge City Sinners",
+            "Rage Against the Machine, Rage Against the Machine",
+            "Theocracy, Theocracy",
+            "The The, The",
+            "the the, the",
+            "The, The",
+            "'The ', 'The '"
+    })
+    void shouldNormalizeArtistNameOnlyForInitialAndFallbackSearch(String artistName, String searchName) {
+        enableLlm();
+        artistRepository.save(artist.setName(artistName));
+        searchAfterEmpty(groups);
+        String normalization = "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[\"Reign\"],\"alternativeTitles\":[]}";
+        when(model.call(any(Prompt.class))).thenReturn(response(normalization));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
+        ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
+        verify(session, times(2)).searchReleaseGroups(queries.capture());
+        assertThat(queries.getAllValues()).containsExactly(
+                "release:\"Reign in Blood\" AND artistname:\"" + searchName + "\"",
+                "artistname:\"" + searchName + "\" AND release:\"Reign\"");
+        assertThat(artistRepository.findById(artist.getId()).orElseThrow().getName()).isEqualTo(artistName);
+    }
+
     @Test
     void shouldSkipMissingNamesAndEscapeLuceneSpecialCharacters() {
         notFoundResponses();

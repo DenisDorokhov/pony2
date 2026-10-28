@@ -145,7 +145,7 @@ public class MusicBrainzAlbumDataService {
                 MusicBrainzClient.Session session = client.openSession(userAgent, observer, cacheEnabled);
                 LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(session::cancel)
         ) {
-            String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(input.artistName()) + "\"";
+            String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\"";
             MusicBrainzClient.ReleaseGroupSearchResult searchResult = session.searchReleaseGroups(query);
             interruptIfNeeded();
             if (searchResult.groups().isEmpty()) {
@@ -180,6 +180,11 @@ public class MusicBrainzAlbumDataService {
         } catch (MusicBrainzClient.CancelledException e) {
             throw new DiscoveryInterruptedException();
         }
+    }
+
+    private String normalizeArtistName(String artistName) {
+        String normalized = artistName.replaceFirst("(?i)^the ", "");
+        return normalized.isBlank() ? artistName : normalized;
     }
 
     private NormalizationResponse normalizeTitle(DiscoveryTask task, String title, boolean cacheEnabled) {
@@ -263,7 +268,7 @@ public class MusicBrainzAlbumDataService {
             return null;
         }
         String conditions = branches.size() > 1 ? "(" + String.join(" OR ", branches) + ")" : branches.getFirst();
-        return "artistname:\"" + escapeQuery(input.artistName()) + "\" AND " + conditions;
+        return "artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\" AND " + conditions;
     }
 
     private @Nullable MusicBrainzDto.ReleaseGroup selectReleaseGroup(
