@@ -26,7 +26,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -109,11 +111,12 @@ public class ArtistDiscoveryService {
         if (entityDate.isAfter(taskDate)) {
             return true;
         }
+        Instant taskInstant = taskDate.atZone(ZoneId.systemDefault()).toInstant();
         return type.getImplementedAt()
-                .filter(implementedAt -> implementedAt.isAfter(taskDate))
+                .filter(implementedAt -> implementedAt.isAfter(taskInstant))
                 .map(implementedAt -> {
                     logger.debug("Re-running discovery task {} for entity '{}': implementation update date {} is after the last completed task creation date {}.",
-                            type, entityId, implementedAt, taskDate);
+                            type, entityId, implementedAt, taskInstant);
                     return true;
                 })
                 .orElse(false);

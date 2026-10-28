@@ -75,6 +75,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -1734,7 +1735,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         DiscoveryJob previousJob = job(DiscoveryType.ARTIST);
         artistService.discover(previousJob, artist, false, null);
         jobRepository.save(previousJob.setStatus(DiscoveryJob.Status.COMPLETE));
-        LocalDateTime implementedAt = type.getImplementedAt().orElseThrow();
+        LocalDateTime implementedAt = LocalDateTime.ofInstant(type.getImplementedAt().orElseThrow(), ZoneId.systemDefault());
         jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE discovery_job_id = ? AND type = ?",
                 implementedAt.minusMinutes(1), previousJob.getId(), type.name());
         jdbcTemplate.update("UPDATE artist SET creation_date = ?, update_date = NULL WHERE id = ?",

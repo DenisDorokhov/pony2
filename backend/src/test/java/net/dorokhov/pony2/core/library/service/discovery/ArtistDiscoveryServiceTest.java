@@ -17,6 +17,7 @@ import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedExc
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
@@ -26,10 +27,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Limit;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -104,7 +108,8 @@ class ArtistDiscoveryServiceTest {
     })
     public void shouldRediscoverOnlyTaskWhoseImplementationIsNewer(DiscoveryTaskType type, int minutesAfterUpdate,
                                                                  boolean required) {
-        LocalDateTime implementedAt = DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow();
+        LocalDateTime implementedAt = LocalDateTime.ofInstant(DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow(),
+                ZoneId.systemDefault());
         LocalDateTime taskDate = implementedAt.plusMinutes(minutesAfterUpdate);
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1").setCreationDate(implementedAt.minusDays(1));
@@ -125,7 +130,8 @@ class ArtistDiscoveryServiceTest {
             if (required) {
                 assertThat(appender.list).singleElement().satisfies(event -> {
                     assertThat(event.getLevel()).isEqualTo(Level.DEBUG);
-                    assertThat(event.getArgumentArray()).containsExactly(type, artist.getId(), implementedAt, taskDate);
+                    assertThat(event.getArgumentArray()).containsExactly(type, artist.getId(),
+                            DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow(), taskDate.atZone(ZoneId.systemDefault()).toInstant());
                 });
             }
         } finally {
@@ -160,7 +166,8 @@ class ArtistDiscoveryServiceTest {
     @ParameterizedTest
     @CsvSource({"-1,true", "0,false", "1,false"})
     public void shouldRediscoverAlbumOnlyWhenTaskImplementationIsNewer(int minutesAfterUpdate, boolean required) {
-        LocalDateTime implementedAt = DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow();
+        LocalDateTime implementedAt = LocalDateTime.ofInstant(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow(),
+                ZoneId.systemDefault());
         DiscoveryJob job = discoveryJob();
         Artist artist = artist("artist1").setCreationDate(implementedAt.minusDays(1));
         Album album = album("album1", artist);
@@ -171,6 +178,34 @@ class ArtistDiscoveryServiceTest {
 
         verify(albumDiscoveryService, times(required ? 1 : 0)).discover(job, album, true, null);
         assertThat(executedTasks).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "UTC,-1,true", "UTC,0,false", "UTC,1,false",
+            "Europe/Berlin,-1,true", "Europe/Berlin,0,false", "Europe/Berlin,1,false",
+            "Pacific/Kiritimati,-1,true", "Pacific/Kiritimati,0,false", "Pacific/Kiritimati,1,false",
+            "Etc/GMT+12,-1,true", "Etc/GMT+12,0,false", "Etc/GMT+12,1,false"
+    })
+    @ResourceLock("java.util.TimeZone.default")
+    void shouldCompareImplementationInstantsInAnyTimeZone(String timeZoneId, int secondsAfterUpdate, boolean required) {
+        TimeZone previousTimeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone(timeZoneId));
+        try {
+            Instant implementedAt = DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow();
+            LocalDateTime taskDate = LocalDateTime.ofInstant(implementedAt.plusSeconds(secondsAfterUpdate), ZoneId.systemDefault());
+            Artist artist = artist("artist1").setCreationDate(taskDate.minusDays(1));
+            Album album = album("album1", artist);
+            artistTasks(artist.getId(), 2, taskDate.plusDays(1));
+            albumTasks(album.getId(), 1, taskDate);
+
+            artistDiscoveryService.discoverIfUpdated(discoveryJob(), artist, List.of(album), true, null);
+
+            verify(albumDiscoveryService, times(required ? 1 : 0)).discover(any(), eq(album), eq(true), isNull());
+            assertThat(executedTasks).isEmpty();
+        } finally {
+            TimeZone.setDefault(previousTimeZone);
+        }
     }
 
     @Test
