@@ -87,11 +87,11 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        jobRegistration = jobSynchronizer.registerDiscoveryJob();
         userRepository.save(user().setEmail("admin@example.com").setRoles(Set.of(User.Role.ADMIN)));
         configService.update(new ConfigSetUpdateCommand()
                 .setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1")
                 .setLlmModel("test"));
+        jobRegistration = jobSynchronizer.registerDiscoveryJob();
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         MusicBrainzClient.Session session = mock(MusicBrainzClient.Session.class);
         lenient().when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenReturn(session);
