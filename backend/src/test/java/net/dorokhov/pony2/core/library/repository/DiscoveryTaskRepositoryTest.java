@@ -36,7 +36,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void shouldPageAllTasksAcrossJobsWithStableOrderAndNullsLast(boolean filterType) {
+    void shouldPageAllTasksAcrossJobsWithStableOrderByLastActivity(boolean filterType) {
         DiscoveryJob job = saveJob();
         DiscoveryJob otherJob = saveJob();
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
@@ -46,8 +46,8 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         DiscoveryTask started = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.STARTED, null);
         DiscoveryTask album = saveTask(otherJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(1));
         List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
-        List<String> expectedIds = filterType ? List.of(artistIds.getFirst(), artistIds.getLast(), older.getId(), started.getId())
-                : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast(), older.getId(), started.getId());
+        List<String> expectedIds = filterType ? List.of(started.getId(), artistIds.getFirst(), artistIds.getLast(), older.getId())
+                : List.of(started.getId(), album.getId(), artistIds.getFirst(), artistIds.getLast(), older.getId());
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null);
 
         for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
@@ -98,7 +98,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
     }
 
     @Test
-    void shouldPageAllJobTasksByUpdateDateWithStableOrderAndNullsLast() {
+    void shouldPageAllJobTasksWithStableOrderByLastActivity() {
         DiscoveryJob job = saveJob();
         DiscoveryJob otherJob = saveJob();
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
@@ -115,8 +115,8 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
 
         assertThat(first.getTotalElements()).isEqualTo(4);
         assertThat(first.getTotalPages()).isEqualTo(2);
-        assertThat(first.getContent()).extracting(DiscoveryTask::getId).containsExactlyElementsOf(newestIds);
-        assertThat(second.getContent()).extracting(DiscoveryTask::getId).containsExactly(older.getId(), started.getId());
+        assertThat(first.getContent()).extracting(DiscoveryTask::getId).containsExactly(started.getId(), newestIds.getFirst());
+        assertThat(second.getContent()).extracting(DiscoveryTask::getId).containsExactly(newestIds.getLast(), older.getId());
         assertThat(taskRepository.countByJobId(job.getId())).isEqualTo(4);
     }
 

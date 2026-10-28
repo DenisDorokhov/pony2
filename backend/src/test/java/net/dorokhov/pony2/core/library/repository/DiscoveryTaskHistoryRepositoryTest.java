@@ -30,7 +30,7 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
     @Autowired private JdbcTemplate jdbcTemplate;
 
     @Test
-    void shouldIncludeArtistAndAllAlbumsAcrossJobsWithStableOrderAndNullsLast() {
+    void shouldIncludeArtistAndAllAlbumsAcrossJobsWithStableOrderByLastActivity() {
         Artist artist = artistRepository.save(new Artist().setName("Artist"));
         Artist otherArtist = artistRepository.save(new Artist().setName("Other artist"));
         Album firstAlbum = albumRepository.save(new Album().setArtist(artist).setName("First album"));
@@ -56,8 +56,8 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
 
         assertThat(first.getTotalElements()).isEqualTo(4);
         assertThat(first.getTotalPages()).isEqualTo(2);
-        assertThat(first.getContent()).extracting(DiscoveryTask::getId).containsExactlyElementsOf(tiedIds);
-        assertThat(second.getContent()).extracting(DiscoveryTask::getId).containsExactly(ownTask.getId(), runningTask.getId());
+        assertThat(first.getContent()).extracting(DiscoveryTask::getId).containsExactly(runningTask.getId(), tiedIds.getFirst());
+        assertThat(second.getContent()).extracting(DiscoveryTask::getId).containsExactly(tiedIds.getLast(), ownTask.getId());
         assertThat(discoveryJobService.getArtistTasks("missing", filter, PageRequest.of(0, 30))).isEmpty();
         assertThat(discoveryJobService.getAlbumTasks("missing", filter, PageRequest.of(0, 30))).isEmpty();
     }
@@ -72,6 +72,47 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?",
                 updateDate != null ? Timestamp.valueOf(updateDate) : null, saved.getId());
         return saved;
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ALL,false", "ALL,true", "JOB,false", "JOB,true", "ARTIST,false", "ARTIST,true", "ALBUM,false", "ALBUM,true"})
+    void shouldKeepNewTasksAheadOfHistoryBeforeAndAfterFirstUpdate(String scope, boolean filterType) {
+        Artist artist = artistRepository.save(new Artist().setName("Artist"));
+        Album album = albumRepository.save(new Album().setArtist(artist).setName("Album"));
+        DiscoveryJob job = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.ARTIST)
+                .setArtist(artist).setStatus(DiscoveryJob.Status.STARTED));
+        LocalDateTime date = LocalDateTime.of(2026, 10, 22, 8, 0);
+        DiscoveryTask olderRunningTask = saveTask(task(job).setAlbum(album).setStatus(DiscoveryTask.Status.STARTED), null);
+        DiscoveryTask completedTask = saveTask(task(job).setAlbum(album), date);
+        DiscoveryTask newTask = saveTask(task(job).setAlbum(album).setStatus(DiscoveryTask.Status.STARTED), null);
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?",
+                Timestamp.valueOf(date.minusMinutes(1)), olderRunningTask.getId());
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?",
+                Timestamp.valueOf(date.plusMinutes(1)), newTask.getId());
+        DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, filterType ? DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA : null);
+        List<String> expectedIds = List.of(newTask.getId(), completedTask.getId(), olderRunningTask.getId());
+
+        assertThat(taskRepository.findById(newTask.getId()).orElseThrow().getUpdateDate()).isNull();
+        for (boolean complete : List.of(false, true)) {
+            if (complete) {
+                taskRepository.save(newTask.setStatus(DiscoveryTask.Status.COMPLETE));
+                assertThat(taskRepository.findById(newTask.getId()).orElseThrow().getUpdateDate()).isNotNull();
+            }
+            for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
+                PageRequest pageRequest = PageRequest.of(pageIndex, 1);
+                Page<DiscoveryTask> page = switch (scope) {
+                    case "ALL" -> discoveryJobService.getAllTasks(filter, pageRequest);
+                    case "JOB" -> discoveryJobService.getJobTasks(job.getId(), filter, pageRequest);
+                    case "ARTIST" -> discoveryJobService.getArtistTasks(artist.getId(), filter, pageRequest);
+                    case "ALBUM" -> discoveryJobService.getAlbumTasks(album.getId(), filter, pageRequest);
+                    default -> throw new IllegalArgumentException("Unknown task scope: " + scope);
+                };
+
+                assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
+                assertThat(page.getTotalPages()).isEqualTo(expectedIds.size());
+                assertThat(page.getContent()).extracting(DiscoveryTask::getId).containsExactly(expectedIds.get(pageIndex));
+            }
+        }
     }
 
     @ParameterizedTest
