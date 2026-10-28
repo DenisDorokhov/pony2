@@ -232,9 +232,10 @@ class SpotifyTopTracksServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"true,true", "true,false", "false,true", "false,false"})
-    void shouldMatchOnlyUnmatchedTracksAndCacheFallback(boolean cacheEnabled, boolean albumMatched) {
-        fallbackAlbum("fallback", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), 2020);
+    @CsvSource({"true,true,LP", "true,false,LP", "false,true,LP", "false,false,LP",
+            "true,true,COMPILATION", "true,false,COMPILATION", "false,true,COMPILATION", "false,false,COMPILATION"})
+    void shouldMatchOnlyUnmatchedTracksAndCacheFallback(boolean cacheEnabled, boolean albumMatched, ReleaseType type) {
+        fallbackAlbum("fallback", type, LocalDateTime.of(1990, 1, 1, 0, 0), 2020);
         if (albumMatched) {
             responses.set(0, ALBUM_RESPONSE.replace("\"databaseAlbumId\":null", "\"databaseAlbumId\":\"album-a\""));
         }
@@ -274,7 +275,8 @@ class SpotifyTopTracksServiceTest {
     }
 
     @Test
-    void shouldTryAllLpsChronologicallyBeforeEpsAndPreserveUnmatchedPositions() {
+    void shouldTryLpsThenEpsThenCompilationsChronologicallyAndPreserveUnmatchedPositions() {
+        fallbackAlbum("compilation-new", ReleaseType.COMPILATION, LocalDateTime.of(1950, 1, 1, 0, 0), 1950);
         fallbackAlbum("ep-new", ReleaseType.EP, LocalDateTime.of(1970, 1, 1, 0, 0), 1970);
         fallbackAlbum("lp-z", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), 1900);
         fallbackAlbum("lp-undated", ReleaseType.LP, null, null);
@@ -282,7 +284,9 @@ class SpotifyTopTracksServiceTest {
         fallbackAlbum("lp-old", ReleaseType.LP, LocalDateTime.of(1980, 1, 1, 0, 0), 2020);
         fallbackAlbum("lp-year", ReleaseType.LP, null, 1985);
         fallbackAlbum("lp-a", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), 1900);
-        List<String> expectedOrder = List.of("lp-old", "lp-year", "lp-a", "lp-z", "lp-undated", "ep-old", "ep-new");
+        fallbackAlbum("compilation-old", ReleaseType.COMPILATION, LocalDateTime.of(1940, 1, 1, 0, 0), 1940);
+        List<String> expectedOrder = List.of("lp-old", "lp-year", "lp-a", "lp-z", "lp-undated", "ep-old", "ep-new",
+                "compilation-old", "compilation-new");
         for (String ignored : expectedOrder) {
             responses.add("{\"trackMatches\":[{\"databaseTrackId\":null}]}");
         }
@@ -315,7 +319,7 @@ class SpotifyTopTracksServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = ReleaseType.class, names = {"LP", "EP"}, mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = ReleaseType.class, names = {"LP", "EP", "COMPILATION"}, mode = EnumSource.Mode.EXCLUDE)
     void shouldExcludeOtherReleaseTypesFromFallback(ReleaseType type) {
         fallbackAlbum("excluded", type, LocalDateTime.of(1990, 1, 1, 0, 0), 1990);
 

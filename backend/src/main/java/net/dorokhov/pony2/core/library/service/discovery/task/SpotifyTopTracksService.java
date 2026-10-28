@@ -202,7 +202,11 @@ public class SpotifyTopTracksService {
         List<FallbackAlbum> albums = new ArrayList<>();
         for (Album album : artist.getAlbums()) {
             AlbumDiscoveryData data = libraryService.getAlbumDiscoveryData(album.getId()).orElse(null);
-            if (data == null || (data.releaseType() != ReleaseType.LP && data.releaseType() != ReleaseType.EP)) {
+            if (data == null || (
+                    data.releaseType() != ReleaseType.LP &&
+                            data.releaseType() != ReleaseType.EP &&
+                            data.releaseType() != ReleaseType.COMPILATION
+            )) {
                 continue;
             }
             LocalDateTime releaseDate = data.releaseDate();
@@ -214,10 +218,18 @@ public class SpotifyTopTracksService {
                     .toList());
             albums.add(new FallbackAlbum(tracks, data.releaseType(), releaseDate));
         }
-        return albums.stream().sorted(Comparator.comparingInt((FallbackAlbum album) -> album.releaseType() == ReleaseType.LP ? 0 : 1)
-                        .thenComparing(FallbackAlbum::releaseDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(album -> album.album().title(), Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(album -> album.album().id()))
+        return albums.stream()
+                .sorted(
+                        Comparator.comparingInt((FallbackAlbum album) ->
+                                        switch (album.releaseType()) {
+                                            case LP -> 0;
+                                            case EP -> 1;
+                                            default -> 2;
+                                        })
+                                .thenComparing(FallbackAlbum::releaseDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(album -> album.album().title(), Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(album -> album.album().id())
+                )
                 .map(FallbackAlbum::album)
                 .toList();
     }
