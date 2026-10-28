@@ -5,7 +5,8 @@ import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
-import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -25,11 +26,11 @@ class LlmConfigListenerTest extends IntegrationTest {
     @Autowired
     private DiscoveryCacheService discoveryCacheService;
     @Autowired
-    private DiscoveryCacheRepository discoveryCacheRepository;
+    private LibraryJobSynchronizer jobSynchronizer;
 
     @ParameterizedTest
     @ValueSource(strings = {"url", "model", "key", "removeKey", "disable", "enable"})
-    void shouldClearCacheWhenLlmSettingsChange(String change) {
+    void shouldCancelDiscoveryAndKeepCacheWhenLlmSettingsChange(String change) throws Exception {
         configService.update(change.equals("enable") ? new ConfigSetUpdateCommand() : config());
         populateCache();
         ConfigSetUpdateCommand updated = switch (change) {
@@ -41,9 +42,16 @@ class LlmConfigListenerTest extends IntegrationTest {
             default -> config();
         };
 
-        configService.update(updated);
+        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = jobSynchronizer.registerDiscoveryJob();
+             LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(discovery::close)) {
+            configService.update(updated);
 
-        assertThat(discoveryCacheRepository.count()).isZero();
+            assertThat(jobSynchronizer.isDiscoveryCancelled()).isTrue();
+            assertThatThrownBy(jobSynchronizer::interruptDiscoveryIfCancelled)
+                    .isInstanceOf(DiscoveryInterruptedException.class);
+        }
+
+        assertCachePresent();
         ConfigSet saved = configService.get();
         assertThat(saved.llmUrl()).isEqualTo(updated.getLlmUrl());
         assertThat(saved.llmModel()).isEqualTo(updated.getLlmModel());
@@ -52,7 +60,7 @@ class LlmConfigListenerTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"unchanged", "folders", "emptyValues", "disableDiscovery", "enableDiscovery"})
-    void shouldKeepCacheWhenLlmSettingsDoNotChange(String change) {
+    void shouldKeepCacheWhenLlmSettingsDoNotChange(String change) throws Exception {
         configService.update(change.equals("emptyValues") ? new ConfigSetUpdateCommand() :
                 config().setDiscoveryEnabled(!change.equals("enableDiscovery")));
         populateCache();
@@ -63,20 +71,25 @@ class LlmConfigListenerTest extends IntegrationTest {
             default -> config();
         };
 
-        configService.update(updated);
+        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = jobSynchronizer.registerDiscoveryJob();
+             LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(discovery::close)) {
+            configService.update(updated);
+
+            assertThat(jobSynchronizer.isDiscoveryCancelled()).isEqualTo(change.equals("disableDiscovery"));
+        }
 
         assertCachePresent();
     }
 
     @Test
-    void shouldRollBackCacheClearWithConfigChange() {
+    void shouldKeepCacheWhenConfigChangeIsRolledBack() {
         configService.update(config());
         populateCache();
 
         getTransactionTemplate().executeWithoutResult(status -> {
             configService.update(config().setLlmModel("new-model"));
             assertThat(configService.get().llmModel()).isEqualTo("new-model");
-            assertThat(discoveryCacheRepository.count()).isZero();
+            assertCachePresent();
             status.setRollbackOnly();
         });
 
