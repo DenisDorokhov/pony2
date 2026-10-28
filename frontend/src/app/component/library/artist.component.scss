@@ -9,7 +9,7 @@
   position: absolute;
   right: 9px;
   bottom: 0;
-  left: 69px;
+  left: 71px;
   height: 0;
   border-bottom: 1px solid var(--color-content-divider);
   content: '';
@@ -26,13 +26,13 @@
 .list-group-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   height: 69px;
   padding: 9px;
   border: 0;
   border-radius: 8px;
   background-color: transparent;
-  font-size: 13px;
+  font-size: 16px;
   cursor: pointer;
 
   pony-image-loader {

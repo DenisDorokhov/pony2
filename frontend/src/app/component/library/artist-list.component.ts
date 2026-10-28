@@ -68,6 +68,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly ArtistSortingOrder = ArtistSortingOrder;
 
   readonly rowHeight = ArtistComponent.HEIGHT;
+  readonly viewPortPadding = 8;
 
   loadingState = LoadingState.LOADING;
   artists: Artist[] = [];
@@ -312,7 +313,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       const index = this.filteredArtists.findIndex(next => next.id === artist.id);
       if (index >= 0) {
-        const offset = index * this.rowHeight - (this.viewPort.getViewportSize() / 2) + (this.rowHeight / 2);
+        const offset = this.viewPortPadding + index * this.rowHeight - (this.viewPort.getViewportSize() / 2) + (this.rowHeight / 2);
         this.viewPort.scrollToOffset(Math.max(0, offset));
       }
     }, 10);

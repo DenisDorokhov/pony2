@@ -124,9 +124,17 @@
     /* Scrolling performance optimization */
     transform: translateZ(0);
 
+    // Include the content padding in the virtual scroll's total scrollable height.
+    &::after {
+      content: '';
+      display: block;
+      height: 16px;
+    }
+
     .list-group {
       height: 100%;
       margin: 0;
+      padding: 8px 0;
       // Prevent long names from widening the virtual scroll wrapper.
       contain: inline-size;
 
