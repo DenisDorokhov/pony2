@@ -92,6 +92,7 @@ import static net.dorokhov.pony2.test.SongFixtures.song;
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -139,8 +140,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        registration = jobSynchronizer.registerDiscoveryJob();
-        configService.update(new ConfigSetUpdateCommand());
+        updateConfig(new ConfigSetUpdateCommand());
         userRepository.save(user().setEmail("ordinary@example.com").setRoles(Set.of(User.Role.USER)));
         User firstAdmin = userRepository.save(user().setEmail("first@example.com").setRoles(Set.of(User.Role.ADMIN)));
         User laterAdmin = userRepository.save(user().setEmail("later@example.com").setRoles(Set.of(User.Role.ADMIN)));
@@ -163,6 +163,14 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         lenient().when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         notFoundResponses();
+    }
+
+    private void updateConfig(ConfigSetUpdateCommand command) {
+        if (registration != null) {
+            registration.close();
+        }
+        configService.update(command);
+        registration = assertDoesNotThrow(jobSynchronizer::registerDiscoveryJob);
     }
 
     @AfterEach
@@ -632,7 +640,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         server.start();
         try {
-            configService.update(new ConfigSetUpdateCommand()
+            updateConfig(new ConfigSetUpdateCommand()
                     .setDiscoveryEnabled(true).setLlmUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1")
                     .setLlmModel(configuredModel));
             ChatModelImpl httpModel = new ChatModelImpl(configService, ObservationRegistry.NOOP, llmTimeout);
@@ -1215,7 +1223,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             verify(model, times(1)).call(any(Prompt.class));
             String originalKey = cacheRepository.findAll().getFirst().getKey();
             switch (change) {
-                case "model" -> configService.update(new ConfigSetUpdateCommand()
+                case "model" -> updateConfig(new ConfigSetUpdateCommand()
                         .setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("different-model"));
                 case "prompt" -> ReflectionTestUtils.setField(musicBrainzAlbumDataService, "normalizationPrompt", originalPrompt + "\n");
                 case "title" -> albumRepository.save(album.setName("Different title"));
@@ -1225,7 +1233,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
             verify(model, times(2)).call(any(Prompt.class));
-            assertThat(cacheRepository.findAll()).hasSize(change.equals("model") ? 1 : 2)
+            assertThat(cacheRepository.findAll()).hasSize(2)
                     .extracting(DiscoveryCache::getKey).doesNotHaveDuplicates();
             assertThat(cacheRepository.findAll()).anySatisfy(entry -> assertThat(entry.getKey()).isNotEqualTo(originalKey));
             assertThat(taskRepository.findAll()).hasSize(3)
@@ -2613,7 +2621,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private void enableLlm() {
-        configService.update(new ConfigSetUpdateCommand().setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("test"));
+        updateConfig(new ConfigSetUpdateCommand().setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("test"));
     }
 
     private void notFoundResponses() {
