@@ -14,7 +14,11 @@ import {InstallationService} from '../../service/installation.service';
   imports: [TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
   selector: 'pony-artist',
   templateUrl: './artist.component.html',
-  styleUrls: ['./artist.component.scss']
+  styleUrls: ['./artist.component.scss'],
+  host: {
+    '[class.selected]': 'selected',
+    '[class.current]': 'playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED'
+  }
 })
 export class ArtistComponent implements OnInit, OnDestroy {
 

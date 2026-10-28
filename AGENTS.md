@@ -9,6 +9,12 @@
 
 - Write all code comments, including JavaDoc, in English only.
 
+# Styles
+
+- Prefer local component styles over changes in global stylesheets.
+- Use global styles only for framework styles already customized in the global stylesheet, or when no local solution is available.
+- Before adding a global rule, check whether the change can be implemented locally without bypassing style encapsulation.
+
 # Strict scope control
 
 - Implement exactly what the user explicitly requests.

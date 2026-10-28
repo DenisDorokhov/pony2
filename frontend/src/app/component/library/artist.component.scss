@@ -1,40 +1,57 @@
-:host:last-child {
-  .list-group-item {
-    border-bottom-width: 0;
-  }
+:host {
+  display: block;
+  flex-shrink: 0;
+  position: relative;
+  margin: 0 8px;
+}
+
+:host::after {
+  position: absolute;
+  right: 9px;
+  bottom: 0;
+  left: 69px;
+  height: 0;
+  border-bottom: 1px solid var(--color-content-divider);
+  content: '';
+  pointer-events: none;
+}
+
+:host(:last-child)::after,
+:host(:hover)::after,
+:host(.selected)::after,
+:host(.current)::after {
+  opacity: 0;
 }
 
 .list-group-item {
-  border-width: 0 0 1px;
-  border-color: var(--color-content-divider);
-  padding: 10px;
-  cursor: pointer;
-  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   height: 69px;
+  padding: 9px;
+  border: 0;
+  border-radius: 8px;
+  background-color: transparent;
+  font-size: 13px;
+  cursor: pointer;
 
   pony-image-loader {
-    float: left;
+    flex: 0 0 50px;
     width: 50px;
     height: 50px;
   }
 
   .artist-name {
-    line-height: 50px;
+    flex: 1;
+    min-width: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    position: absolute;
-    left: 68px;
-    right: 10px;
-
-    &.playing {
-      right: 33px;
-    }
   }
 
   .playback-indicator {
-    line-height: 50px;
-    float: right;
+    display: none;
+    flex-shrink: 0;
     width: 20px;
   }
 
@@ -43,15 +60,19 @@
   }
 }
 
-.list-group-item.current {
+:host(.current) .list-group-item {
   background-color: var(--color-current-item-background);
 }
 
-.list-group-item:hover {
+:host(.current) .playback-indicator {
+  display: block;
+}
+
+:host(:hover) .list-group-item {
   background-color: var(--color-list-hover-background);
 }
 
-.list-group-item.selected {
+:host(.selected) .list-group-item {
   background-color: var(--color-selection-background);
   color: var(--color-selection-text);
 }

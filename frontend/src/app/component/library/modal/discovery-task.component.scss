@@ -1,3 +1,36 @@
+:host {
+  --color-json-key: #0057ff;
+  --color-json-string: #00832b;
+  --color-json-number: #bd4b00;
+  --color-json-literal: #b000d4;
+}
+
+:host-context([data-bs-theme="dark"]) {
+  --color-json-key: #40bfff;
+  --color-json-string: #64f58d;
+  --color-json-number: #ffad33;
+  --color-json-literal: #f078ff;
+}
+
+// Highlight.js inserts token elements without Angular's encapsulation attributes.
+:host ::ng-deep {
+  .hljs-attr {
+    color: var(--color-json-key);
+  }
+
+  .hljs-string {
+    color: var(--color-json-string);
+  }
+
+  .hljs-number {
+    color: var(--color-json-number);
+  }
+
+  .hljs-literal {
+    color: var(--color-json-literal);
+  }
+}
+
 .modal-body {
   max-height: 480px;
   overflow-y: auto;
