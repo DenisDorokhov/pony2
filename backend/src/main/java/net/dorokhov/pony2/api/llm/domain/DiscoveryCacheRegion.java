@@ -5,8 +5,8 @@ import java.time.temporal.ChronoUnit;
 
 public enum DiscoveryCacheRegion {
 
-    SPOTIFY(Duration.of(30, ChronoUnit.DAYS).getSeconds()),
-    MUSICBRAINZ(Duration.of(30, ChronoUnit.DAYS).getSeconds()),
+    SPOTIFY(Duration.of(180, ChronoUnit.DAYS).getSeconds()),
+    MUSICBRAINZ(Duration.of(180, ChronoUnit.DAYS).getSeconds()),
     ;
 
     private final long expirationInSeconds;
