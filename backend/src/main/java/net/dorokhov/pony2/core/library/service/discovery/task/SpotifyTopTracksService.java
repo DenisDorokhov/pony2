@@ -48,7 +48,6 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.library.domain.SpotifyArtistData.Status.FOUND;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
@@ -112,7 +111,7 @@ public class SpotifyTopTracksService {
             String artistId = requireNonNull(task.getArtist(),
                     () -> "Discovery task '" + task.getId() + "' has no associated artist.").getId();
             SpotifyArtistData data = transactionTemplate.execute(status -> readArtistData(artistId));
-            if (data == null || data.status() != FOUND || data.topTracks() == null || data.topTracks().isEmpty()) {
+            if (data == null || data.topTracks() == null || data.topTracks().isEmpty()) {
                 return List.of();
             }
             List<AlbumData> albums = requireNonNull(transactionTemplate.execute(status -> {

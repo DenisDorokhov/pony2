@@ -76,7 +76,7 @@ public class DiscoveryTaskExecutor {
     }
 
     private <R> void saveCompletedResult(DiscoveryTask task, @Nullable R result, DiscoveryTaskExecution<R> execution) {
-        String serializedResult = JsonConverter.toJson(result);
+        String serializedResult = result != null ? JsonConverter.toJson(result) : null;
         transactionTemplate.executeWithoutResult(transactionStatus -> {
             discoveryTaskRepository.save(task
                     .setStatus(DiscoveryTask.Status.COMPLETE)

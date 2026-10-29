@@ -131,7 +131,7 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
                 .setArtist(artist).setStatus(DiscoveryJob.Status.FAILED));
         DiscoveryTask.Status matchingStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE;
-        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? "null" : "{}";
+        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? null : "{}";
         LocalDateTime date = LocalDateTime.of(2026, 10, 22, 8, 0);
         DiscoveryTask artistTask = saveTask(task(firstJob).setArtist(artist).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .setStatus(matchingStatus).setResult(matchingResult), date);
@@ -143,12 +143,12 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         saveTask(task(firstJob).setAlbum(otherAlbum).setStatus(matchingStatus).setResult(matchingResult), date.plusHours(1));
         if (result != null) {
             for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
-                saveTask(task(firstJob).setAlbum(album).setStatus(status).setResult("null"), date.plusHours(1));
+                saveTask(task(firstJob).setAlbum(album).setStatus(status).setResult(null), date.plusHours(1));
             }
             saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}"), date.plusHours(1));
-            saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE), date.plusHours(1));
+            saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("[]"), date.plusHours(1));
             if (result == DiscoveryTaskFilter.Result.NO_RESULT) {
-                saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.FAILED).setResult("null"), date.plusHours(1));
+                saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.FAILED).setResult(null), date.plusHours(1));
             }
         }
         List<String> expectedIds = new ArrayList<>(List.of(newerAlbumTask.getId(), olderAlbumTask.getId()));

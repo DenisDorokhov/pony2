@@ -144,7 +144,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         insertArtist(2, "Only failed tasks");
         insertJob(1);
         insertTask(Kind.ARTIST, 10, 1, 1, "SPOTIFY_ARTIST_DATA", "COMPLETE", CREATED, "{}");
-        insertTask(Kind.ARTIST, 11, 1, 1, "SPOTIFY_ARTIST_DATA", "COMPLETE", CREATED, "null");
+        insertTask(Kind.ARTIST, 11, 1, 1, "SPOTIFY_ARTIST_DATA", "COMPLETE", CREATED, null);
         insertTask(Kind.ARTIST, 12, 1, 1, "SPOTIFY_ARTIST_DATA", "COMPLETE", CREATED.minusDays(1), "{}");
         insertTask(Kind.ARTIST, 13, 1, 1, "SPOTIFY_ARTIST_DATA", "INTERRUPTED", CREATED.plusDays(1), "{}");
         insertTask(Kind.ARTIST, 14, 2, 1, "SPOTIFY_ARTIST_DATA", "FAILED", CREATED, "{}");
@@ -156,7 +156,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         assertThat(document.get("artists").size()).isEqualTo(1);
         JsonNode task = document.get("artists").get(0).get("tasks").get(0);
         assertThat(task.get("id").asString()).isEqualTo(id(11));
-        assertThat(task.get("result").isNull()).isTrue();
+        assertThat(task.has("result")).isFalse();
         assertThat(document.get("albums").isEmpty()).isTrue();
     }
 

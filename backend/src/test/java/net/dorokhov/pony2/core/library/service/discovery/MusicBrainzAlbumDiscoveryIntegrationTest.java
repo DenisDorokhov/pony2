@@ -89,6 +89,7 @@ import java.util.stream.Stream;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static net.dorokhov.pony2.test.SongFixtures.song;
+import static net.dorokhov.pony2.test.SpotifyArtistDataFixtures.spotifyArtistResponse;
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -223,7 +224,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
-        assertThat(onlyTask().getResult()).isNotEqualTo("null");
+        assertThat(onlyTask().getResult()).isNotNull();
         verify(model, never()).call(any(Prompt.class));
     }
 
@@ -300,7 +301,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":null}"));
         search(List.of(group("group", "Reign in Blood", "Different release", List.of(credit("artist", "Slayer", null)))));
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
 
         search(List.of(groups.getFirst(), group("second", "Other", "REIGN IN BLOOD", List.of(credit("artist", "Slayer", null))),
                 group("third", "Other", "Reign in Blood", List.of(credit("artist", "Slayer", null)))));
@@ -308,7 +309,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(task.getResult()).isEqualTo("null");
+            assertThat(task.getResult()).isNull();
             assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2);
         });
         verify(session, never()).getArtist(anyString());
@@ -505,7 +506,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
-        assertThat(onlyTask().getResult()).isNotEqualTo("null");
+        assertThat(onlyTask().getResult()).isNotNull();
         verify(session).getArtist("artist");
         verify(model, never()).call(any(Prompt.class));
     }
@@ -518,7 +519,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         verify(session, never()).getArtist(anyString());
         verify(model).call(any(Prompt.class));
     }
@@ -544,7 +545,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(task.getResult()).isNotEqualTo("null");
+            assertThat(task.getResult()).isNotNull();
             Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
             assertThat(requests).hasSize(3);
             assertThat(requests[0]).isEqualTo(SEARCH_URL);
@@ -897,7 +898,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         verify(session, never()).getArtist(anyString());
     }
 
@@ -937,7 +938,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(task.getResult()).isEqualTo("null");
+            assertThat(task.getResult()).isNull();
         });
         verify(model).call(any(Prompt.class));
         verify(session, times(1)).searchReleaseGroups(anyString());
@@ -1022,7 +1023,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
         verify(session, times(expected == null ? 1 : 2)).searchReleaseGroups(queries.capture());
         if (expected != null) {
@@ -1097,7 +1098,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         ArgumentCaptor<String> queries = ArgumentCaptor.forClass(String.class);
         verify(session, times(expected == null ? 1 : 2)).searchReleaseGroups(queries.capture());
         if (expected != null) {
@@ -1450,7 +1451,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         notFoundResponses();
         albumRepository.save(album.setName(null));
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         verifyNoInteractions(musicBrainzClient);
         albumRepository.save(album.setName("A \"B\" \\ C/D"));
         search(List.of());
@@ -1527,13 +1528,13 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 original.artistCredit(), original.releases())));
         Genre genre = genreRepository.save(new Genre().setName("Metal"));
         Song track = songRepository.save(song().setPath("fallback-track").setName("Raining Blood").setAlbum(album).setGenre(genre));
-        SpotifyArtistData spotifyData = new SpotifyArtistData(SpotifyArtistData.Status.FOUND,
+        SpotifyArtistData spotifyData = new SpotifyArtistData(
                 new SpotifyArtistData.SpotifyArtist("spotify-artist", "Slayer", "https://open.spotify.com/artist/spotify-artist"),
                 new SpotifyArtistData.MatchedAlbum("Reign in Blood", "Reign in Blood", "spotify-lp", "https://open.spotify.com/album/spotify-lp"),
                 List.of(new SpotifyArtistData.TopTrack("spotify-track", "Raining Blood", "https://open.spotify.com/track/spotify-track",
                         "Compilation", "spotify-compilation", "https://open.spotify.com/album/spotify-compilation")),
                 null, null, null, null, null);
-        List<String> responses = new ArrayList<>(List.of(JsonConverter.toJson(spotifyData),
+        List<String> responses = new ArrayList<>(List.of(spotifyArtistResponse(spotifyData),
                 "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-compilation\",\"databaseAlbumId\":null}]}",
                 "{\"trackMatches\":[{\"databaseTrackId\":null}]}",
                 "{\"trackMatches\":[{\"databaseTrackId\":\"" + track.getId() + "\"}]}"));
@@ -1564,7 +1565,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     if (eligible) {
                         assertThat(JsonConverter.listFromJson(task.getResult(), String.class)).containsExactly(track.getId());
                     } else {
-                        assertThat(task.getResult()).isEqualTo("null");
+                        assertThat(task.getResult()).isNull();
                     }
                     assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(eligible ? 3 : 2);
                 });
@@ -2239,7 +2240,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         verify(model, times(1)).call(any(Prompt.class));
         verify(session, times(1)).searchReleaseGroups(anyString());
     }
@@ -2295,7 +2296,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
-        assertThat(onlyTask().getResult()).isNotEqualTo("null");
+        assertThat(onlyTask().getResult()).isNotNull();
         verify(model, never()).call(any(Prompt.class));
         verify(session, times(1)).searchReleaseGroups(anyString());
     }
@@ -2310,7 +2311,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
-        assertThat(onlyTask().getResult()).isNotEqualTo("null");
+        assertThat(onlyTask().getResult()).isNotNull();
         verify(model, times(1)).call(any(Prompt.class));
         verify(session, times(2)).searchReleaseGroups(anyString());
     }
@@ -2325,7 +2326,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         verify(model, times(1)).call(any(Prompt.class));
         verify(session, times(1)).searchReleaseGroups(anyString());
     }
@@ -2387,7 +2388,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(onlyTask().getResult()).isEqualTo("null");
+        assertThat(onlyTask().getResult()).isNull();
         verify(session, times(1)).searchReleaseGroups(anyString());
         ArgumentCaptor<Prompt> prompts = ArgumentCaptor.forClass(Prompt.class);
         verify(model, times(3)).call(prompts.capture());
@@ -2465,7 +2466,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
             assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(onlyTask().getResult()).isEqualTo("null");
+            assertThat(onlyTask().getResult()).isNull();
             verify(model, times(phase.equals("initial") ? 0 : phase.equals("normalized") ? 1 : 2)).call(any(Prompt.class));
             verify(session, times(phase.equals("initial") ? 1 : phase.equals("normalized-alternative") ? 4 : 2))
                     .searchReleaseGroups(anyString());
@@ -2492,7 +2493,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
             assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(onlyTask().getResult().equals("null")).isEqualTo(!exactByteLimit);
+            assertThat(onlyTask().getResult() == null).isEqualTo(!exactByteLimit);
             verify(model, never()).call(any(Prompt.class));
             verify(session, times(exactByteLimit ? 1 : 0)).getArtist(anyString());
         } finally {
@@ -2519,7 +2520,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
             assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(onlyTask().getResult()).isEqualTo("null");
+            assertThat(onlyTask().getResult()).isNull();
             verify(model, times(2)).call(any(Prompt.class));
             verify(session, times(3)).searchReleaseGroups(anyString());
             verify(session, never()).getArtist(anyString());

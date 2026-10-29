@@ -69,19 +69,19 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
         DiscoveryTask.Status matchingStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE;
-        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? "null" : "{\"error\":\"failure\"}";
+        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? null : "{\"error\":\"failure\"}";
         DiscoveryTask firstArtist = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date, matchingResult);
         DiscoveryTask secondArtist = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date,
                 result == DiscoveryTaskFilter.Result.FAILED ? null : matchingResult);
         DiscoveryTask album = saveTask(otherJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, matchingStatus, date.plusHours(1), matchingResult);
         for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
-            saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, status, date.plusHours(2), "null");
+            saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, status, date.plusHours(2), null);
         }
-        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2));
+        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2), "[]");
         saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2), "{}");
         DiscoveryTask.Status otherStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.COMPLETE : DiscoveryTask.Status.FAILED;
-        saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), "null");
+        saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), null);
         List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
         List<String> expectedIds = filterType ? artistIds : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast());
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null);
@@ -149,20 +149,20 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
         DiscoveryTask.Status matchingStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.FAILED : DiscoveryTask.Status.COMPLETE;
-        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? "null" : "{\"error\":\"failure\"}";
+        String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? null : "{\"error\":\"failure\"}";
         DiscoveryTask firstArtist = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date, matchingResult);
         DiscoveryTask secondArtist = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date,
                 result == DiscoveryTaskFilter.Result.FAILED ? null : matchingResult);
         DiscoveryTask album = saveTask(job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, matchingStatus, date.plusHours(1), matchingResult);
         saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, matchingStatus, date.plusHours(2), matchingResult);
         for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
-            saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, status, date.plusHours(2), "null");
+            saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, status, date.plusHours(2), null);
         }
-        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2));
+        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2), "[]");
         saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(2), "{}");
         DiscoveryTask.Status otherStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.COMPLETE : DiscoveryTask.Status.FAILED;
-        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), "null");
+        saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), null);
         List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
         List<String> expectedIds = filterType ? artistIds : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast());
         DiscoveryTaskType type = filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null;

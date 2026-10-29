@@ -10,11 +10,9 @@ import java.util.List;
 
 public record SpotifyArtistData(
         @NotNull
-        Status status,
-        @Nullable
         @Valid
         SpotifyArtist artist,
-        @Nullable
+        @NotNull
         @Valid
         MatchedAlbum matchedAlbum,
         @Nullable
@@ -34,7 +32,6 @@ public record SpotifyArtistData(
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("status", status)
                 .add("artist", artist)
                 .add("matchedAlbum", matchedAlbum)
                 .add("topTracks", topTracks)
@@ -44,10 +41,6 @@ public record SpotifyArtistData(
                 .add("imageUrl", imageUrl)
                 .add("avatarUrl", avatarUrl)
                 .toString();
-    }
-
-    public enum Status {
-        FOUND, NOT_FOUND, AMBIGUOUS
     }
 
     public record SpotifyArtist(

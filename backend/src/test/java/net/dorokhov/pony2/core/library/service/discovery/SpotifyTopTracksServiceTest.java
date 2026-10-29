@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
@@ -103,7 +102,7 @@ class SpotifyTopTracksServiceTest {
         first.setSongs(List.of(new Song().setId("song-a").setName("Shared title").setAlbum(first)));
         second.setSongs(List.of(new Song().setId("song-b").setName("Shared title").setAlbum(second)));
         artist.setAlbums(List.of(second, first));
-        SpotifyArtistData data = new SpotifyArtistData(SpotifyArtistData.Status.FOUND,
+        SpotifyArtistData data = new SpotifyArtistData(
                 new SpotifyArtistData.SpotifyArtist("spotify-artist", "Artist", "artist-url"),
                 new SpotifyArtistData.MatchedAlbum("First album", "First album", "spotify-a", "album-url"),
                 List.of(topTrack("first", "spotify-a"), topTrack("second", "spotify-b"), topTrack("missing", "spotify-missing")),
@@ -485,20 +484,8 @@ class SpotifyTopTracksServiceTest {
     }
 
     @Test
-    void shouldReturnNoTracksWhenArtistWasNotFound() {
-        previousTask.setResult(JsonConverter.toJson(new SpotifyArtistData(SpotifyArtistData.Status.NOT_FOUND,
-                null, null, null, null, null, null, null, null)));
-
-        assertThat(service.discover(task(), true)).isEmpty();
-
-        verifyNoInteractions(model, cacheService, artistRepository);
-    }
-
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"null"})
-    void shouldReturnNoTracksWhenCompletedArtistDataIsEmpty(String result) {
-        previousTask.setResult(result);
+    void shouldReturnNoTracksWhenCompletedArtistDataIsEmpty() {
+        previousTask.setResult(null);
 
         assertThat(service.discover(task(), true)).isEmpty();
 

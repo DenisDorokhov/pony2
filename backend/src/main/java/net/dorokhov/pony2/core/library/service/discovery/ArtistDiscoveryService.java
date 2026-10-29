@@ -223,18 +223,14 @@ public class ArtistDiscoveryService {
 
         @Override
         public @Nullable SpotifyArtistData executeTask(DiscoveryTask task) {
-            return spotifyArtistDataService.discover(task, cacheEnabled).orElse(null);
+            return spotifyArtistDataService.discover(task, cacheEnabled);
         }
 
         @Override
         public void onResult(DiscoveryTask task, @Nullable SpotifyArtistData result) {
-            if (result == null) {
-                return;
-            }
             ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
                     .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
-            String spotifyArtistId = result.status() == SpotifyArtistData.Status.FOUND
-                    ? requireNonNull(result.artist()).id() : null;
+            String spotifyArtistId = result != null ? result.artist().id() : null;
             artistDiscoveryIndexRepository.save(index.setSpotifyArtistId(spotifyArtistId));
         }
 

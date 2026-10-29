@@ -48,14 +48,14 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
 
     @Query("""
             SELECT t FROM DiscoveryTask t
-            WHERE t.status = COMPLETE AND t.result = 'null'
+            WHERE t.status = COMPLETE AND t.result IS NULL
             ORDER BY t.status, t.result, t.updateDate DESC NULLS LAST, t.id DESC
             """)
     Page<DiscoveryTask> findWithoutResult(Pageable pageable);
 
     @Query("""
             SELECT t FROM DiscoveryTask t
-            WHERE t.status = COMPLETE AND t.type = :type AND t.result = 'null'
+            WHERE t.status = COMPLETE AND t.type = :type AND t.result IS NULL
             ORDER BY t.status, t.type, t.result, t.updateDate DESC NULLS LAST, t.id DESC
             """)
     Page<DiscoveryTask> findWithoutResultByType(DiscoveryTaskType type, Pageable pageable);
@@ -90,14 +90,14 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
 
     @Query("""
             SELECT t FROM DiscoveryTask t
-            WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.result = 'null'
+            WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.result IS NULL
             ORDER BY t.job.id, t.status, t.result, t.updateDate DESC NULLS LAST, t.id DESC
             """)
     Page<DiscoveryTask> findWithoutResultByJobId(String jobId, Pageable pageable);
 
     @Query("""
             SELECT t FROM DiscoveryTask t
-            WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.type = :type AND t.result = 'null'
+            WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.type = :type AND t.result IS NULL
             ORDER BY t.job.id, t.status, t.type, t.result, t.updateDate DESC NULLS LAST, t.id DESC
             """)
     Page<DiscoveryTask> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
@@ -107,7 +107,7 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             WHERE (t.artist.id = :artistId OR a.artist.id = :artistId)
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
-              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result = 'null'))
+              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
             ORDER BY COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
             """)
     Page<DiscoveryTask> findByArtistId(String artistId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
@@ -117,7 +117,7 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             WHERE t.album.id = :albumId
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
-              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result = 'null'))
+              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
             ORDER BY COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
             """)
     Page<DiscoveryTask> findByAlbumId(String albumId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);

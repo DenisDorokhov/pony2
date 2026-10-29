@@ -3,11 +3,17 @@ package net.dorokhov.pony2.core.library.service.discovery.task;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
 import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
+import net.dorokhov.pony2.api.library.domain.SpotifyArtistData.ExternalLink;
+import net.dorokhov.pony2.api.library.domain.SpotifyArtistData.MatchedAlbum;
+import net.dorokhov.pony2.api.library.domain.SpotifyArtistData.SpotifyArtist;
+import net.dorokhov.pony2.api.library.domain.SpotifyArtistData.TopTrack;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
@@ -32,14 +38,12 @@ import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.library.domain.SpotifyArtistData.Status.FOUND;
 import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
@@ -83,13 +87,13 @@ public class SpotifyArtistDataService {
         verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
     }
 
-    public Optional<SpotifyArtistData> discover(DiscoveryTask task, boolean cacheEnabled) {
+    public @Nullable SpotifyArtistData discover(DiscoveryTask task, boolean cacheEnabled) {
         try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
             return doDiscover(task, cacheEnabled);
         }
     }
 
-    private Optional<SpotifyArtistData> doDiscover(DiscoveryTask task, boolean cacheEnabled) {
+    private @Nullable SpotifyArtistData doDiscover(DiscoveryTask task, boolean cacheEnabled) {
         jobSynchronizer.interruptDiscoveryIfCancelled();
         if (shutdownService.isShutdown()) {
             throw new DiscoveryInterruptedException();
@@ -98,13 +102,13 @@ public class SpotifyArtistDataService {
                 () -> "Discovery task '" + task.getId() + "' has no associated artist.").getId();
         Request request = transactionTemplate.execute(status -> prepareRequest(artistId));
         if (request == null) {
-            return Optional.empty();
+            return null;
         }
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(
                 SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
-        SpotifyArtistData result = llmOperation.call(task, request, SpotifyArtistData.class, cacheSettings, response -> {
+        Response result = llmOperation.call(task, request, Response.class, cacheSettings, response -> {
             try {
-                SpotifyArtistData data = response != null ? LlmJsonConverter.fromJson(response, SpotifyArtistData.class) : null;
+                Response data = response != null ? LlmJsonConverter.fromJson(response, Response.class) : null;
                 validateResponse(data, request);
                 return data;
             } catch (RuntimeException e) {
@@ -118,7 +122,9 @@ public class SpotifyArtistDataService {
             }
         });
         logger.debug("Spotify discovery result for artist '{}': {}.", artistId, result);
-        return Optional.of(result);
+        return result.status() == Status.FOUND ? new SpotifyArtistData(
+                requireNonNull(result.artist()), requireNonNull(result.matchedAlbum()), result.topTracks(),
+                result.similarArtists(), result.biography(), result.links(), result.imageUrl(), result.avatarUrl()) : null;
     }
 
     private @Nullable Request prepareRequest(String artistId) {
@@ -142,9 +148,9 @@ public class SpotifyArtistDataService {
         return new Request(systemPrompt, userPrompt, albums.stream().map(Album::getName).toList());
     }
 
-    private void validateResponse(@Nullable SpotifyArtistData response, Request request) {
+    private void validateResponse(@Nullable Response response, Request request) {
         checkState(response != null, "The LLM returned an invalid Spotify response: the response is null.");
-        Set<ConstraintViolation<SpotifyArtistData>> violations = validator.validate(response);
+        Set<ConstraintViolation<Response>> violations = validator.validate(response);
         if (!violations.isEmpty()) {
             throw new IllegalStateException("The LLM returned an invalid Spotify response: validation failed: "
                     + violations.stream()
@@ -152,7 +158,7 @@ public class SpotifyArtistDataService {
                             .sorted()
                             .collect(Collectors.joining("; ")) + ".");
         }
-        if (response.status() != FOUND) {
+        if (response.status() != Status.FOUND) {
             return;
         }
         checkState(response.artist() != null && response.matchedAlbum() != null,
@@ -161,6 +167,22 @@ public class SpotifyArtistDataService {
         checkState(request.albumTitles().contains(response.matchedAlbum().inputTitle()),
                 "The LLM returned an invalid Spotify response: matched input album '%s' was not supplied. Album titles: %s.",
                 response.matchedAlbum().inputTitle(), request.albumTitles());
+    }
+
+    private record Response(
+            @NotNull Status status,
+            @Nullable @Valid SpotifyArtist artist,
+            @Nullable @Valid MatchedAlbum matchedAlbum,
+            @Nullable List<@NotNull @Valid TopTrack> topTracks,
+            @Nullable List<@NotNull @Valid SpotifyArtist> similarArtists,
+            @Nullable String biography,
+            @Nullable List<@NotNull @Valid ExternalLink> links,
+            @Nullable String imageUrl,
+            @Nullable String avatarUrl
+    ) {}
+
+    private enum Status {
+        FOUND, NOT_FOUND, AMBIGUOUS
     }
 
     @JsonPropertyOrder({"systemPrompt", "userPrompt", "albumTitles"})

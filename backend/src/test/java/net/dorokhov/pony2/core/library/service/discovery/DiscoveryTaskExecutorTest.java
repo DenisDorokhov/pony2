@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -61,7 +62,7 @@ class DiscoveryTaskExecutorTest {
         doAnswer(invocation -> {
             verify(taskRepository).save(task);
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(task.getResult()).isEqualTo(JsonConverter.toJson(value));
+            assertThat(task.getResult()).isEqualTo(value != null ? JsonConverter.toJson(value) : null);
             assertThat(jobSynchronizer.hasRunningTasks()).isTrue();
             return null;
         }).when(execution).onCompletion(task, value);
@@ -74,6 +75,22 @@ class DiscoveryTaskExecutorTest {
         verify(execution).onCompletion(task, value);
         verify(execution, never()).onError(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(DiscoveryTaskType.class)
+    void shouldPersistSqlNullForEveryTaskType(DiscoveryTaskType type) {
+        DiscoveryTask task = task().setType(type);
+        when(execution.startTask()).thenReturn(task);
+        when(execution.executeTask(task)).thenReturn(null);
+
+        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+
+        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(result.value()).isNull();
+        verify(taskRepository).save(task);
+        assertThat(task.getResult()).isNull();
+        verify(execution).onResult(task, null);
     }
 
     @Test
