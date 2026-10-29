@@ -1,16 +1,22 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
+  computed,
+  DestroyRef,
   ElementRef,
   EventEmitter,
   inject,
-  Input,
-  OnDestroy,
+  input,
+  linkedSignal,
   OnInit,
   Output,
+  signal,
   ViewChild
 } from '@angular/core';
-import {fromEvent, Subscription} from 'rxjs';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {fromEvent} from 'rxjs';
+import {map} from 'rxjs/operators';
 import {Playlist, Song} from '../../domain/library.model';
 import {PlaybackService} from '../../service/playback.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -38,9 +44,12 @@ import {PlaylistDto} from '../../domain/library.dto';
     imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
     selector: 'pony-song',
     templateUrl: './song.component.html',
-    styleUrls: ['./song.component.scss']
+    styleUrls: ['./song.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
+export class SongComponent implements OnInit, AfterViewInit {
+
+  PlaybackState = PlaybackState;
 
   private readonly libraryService = inject(LibraryService);
   private readonly playbackService = inject(PlaybackService);
@@ -48,57 +57,53 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly notificationService = inject(NotificationService);
   private readonly translateService = inject(TranslateService);
   private readonly modal = inject(NgbModal);
+  private readonly destroyRef = inject(DestroyRef);
 
-  PlaybackState = PlaybackState;
-
-  @ViewChild('menuDropdown') menuDropdown!: NgbDropdown;
-  @ViewChild('menuContainer') menuContainerElement!: ElementRef;
-
-  private _song!: Song;
-
-  isMouseOver = false;
-  topPlaylists: Playlist[] = [];
-  isLikedSong = false;
-
-  get isTopTrack(): boolean {
-    return this.libraryService.isTopTrack(this.song);
-  }
-
-  get song(): Song {
-    return this._song;
-  }
-
-  @Input()
-  set song(song: Song) {
-    this._song = song;
-    this.selected = this.libraryService.selectedSong?.id === this.song.id;
-    this.refreshLikeState();
-    if (this.playbackService.lastPlaybackEvent.song?.id === this.song.id) {
-      this.lastPlaybackEvent = this.playbackService.lastPlaybackEvent;
-    } else {
-      this.lastPlaybackEvent = undefined;
-    }
-  }
-
-  @Input() showArtist = false;
+  readonly song = input.required<Song>();
+  readonly showArtist = input(false);
 
   @Output() switchQueueRequested = new EventEmitter<Song>();
 
   @ViewChild('container') containerElement!: ElementRef;
-  selected = false;
+  @ViewChild('menuDropdown') menuDropdown!: NgbDropdown;
+  @ViewChild('menuContainer') menuContainerElement!: ElementRef;
 
-  lastPlaybackEvent: PlaybackEvent | undefined;
+  private readonly selectedSong = signal(this.libraryService.selectedSong);
+  private readonly playbackEvent = toSignal(this.playbackService.observePlaybackEvent(), {requireSync: true});
+  private readonly likePlaylist = toSignal(this.playlistService.observeLikePlaylist(), {
+    requireSync: true,
+    // Every playlist notification must reset the optimistic like state.
+    equal: () => false,
+  });
+  private readonly artists = toSignal(this.libraryService.observeArtists(), {requireSync: true});
 
-  private subscriptions: Subscription[] = [];
+  readonly isMouseOver = signal(false);
+  readonly topPlaylists = toSignal(this.playlistService.observePlaylists().pipe(
+    map(() => this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)),
+  ), {requireSync: true});
+  readonly isLikedSong = linkedSignal({
+    source: () => ({song: this.song(), likePlaylist: this.likePlaylist()}),
+    computation: ({song}) => this.playlistService.isLikedSong(song.id),
+  });
+  readonly isTopTrack = computed(() => {
+    this.artists();
+    return this.libraryService.isTopTrack(this.song());
+  });
+  readonly selected = computed(() => this.selectedSong()?.id === this.song().id);
+  readonly lastPlaybackEvent = computed<PlaybackEvent | undefined>(() => {
+    const playbackEvent = this.playbackEvent();
+    return playbackEvent.song?.id === this.song().id ? playbackEvent : undefined;
+  });
 
   ngOnInit(): void {
-    this.subscriptions.push(this.libraryService.observeSelectedSong()
+    this.libraryService.observeSelectedSong()
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(songSelection => {
-        this.selected = songSelection != null && songSelection.song.id === this.song.id;
-        if (this.selected) {
+        this.selectedSong.set(songSelection?.song);
+        if (this.selected()) {
           if (songSelection?.play) {
-            if (this.song.id !== this.playbackService.currentSong?.id) {
-              this.libraryService.requestSongPlayback(this.song);
+            if (this.song().id !== this.playbackService.currentSong?.id) {
+              this.libraryService.requestSongPlayback(this.song());
             } else if (this.playbackService.currentPlaybackState !== PlaybackState.PLAYING) {
               this.playbackService.playOrPause();
             }
@@ -108,60 +113,47 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
           }
           this.libraryService.finishSongSelection();
         }
-      }));
-    this.subscriptions.push(this.playbackService.observePlaybackEvent()
-      .subscribe(playbackEvent => {
-        if (playbackEvent.song && playbackEvent.song.id === this.song.id) {
-          this.lastPlaybackEvent = playbackEvent;
-        } else {
-          this.lastPlaybackEvent = undefined;
-        }
-      }));
-    this.subscriptions.push(this.playlistService.observePlaylists()
-      .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
-    this.subscriptions.push(this.playlistService.observeLikePlaylist()
-      .subscribe(() => this.refreshLikeState()));
-  }
-
-  private refreshLikeState() {
-    this.isLikedSong = !this.song || this.playlistService.isLikedSong(this.song.id);
+      });
   }
 
   ngAfterViewInit(): void {
-    if (this.selected) {
+    if (this.selected()) {
       this.containerElement.nativeElement.focus();
     }
-    this.subscriptions.push(this.libraryService.observeScrollToSongRequest()
+    this.libraryService.observeScrollToSongRequest()
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(request => {
-        if (request.song.id === this.song.id) {
+        if (request.song.id === this.song().id) {
           ScrollingUtils.scrollIntoElement(this.containerElement.nativeElement);
           this.libraryService.finishScrollToSong();
         }
-      }));
-    this.subscriptions.push(fromEvent<KeyboardEvent>(this.containerElement.nativeElement, 'keydown').subscribe(event => {
-      if (event.code === 'Enter') {
-        this.select();
-        this.libraryService.requestSongPlayback(this.song);
-        event.preventDefault();
-      }
-    }));
-    this.subscriptions.push(fromEvent(window.document.body, 'touchstart').subscribe(event => {
-      if (!this.menuContainerElement.nativeElement.contains(event.target as Node)) {
-        this.menuDropdown.close();
-      }
-    }));
-    this.subscriptions.push(fromEvent(window.document.body, 'wheel').subscribe(() =>
-      this.menuDropdown.close()));
-    this.subscriptions.push(fromEvent(window, 'resize').subscribe(() =>
-      this.menuDropdown.close()));
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach(next => next.unsubscribe());
+      });
+    fromEvent<KeyboardEvent>(this.containerElement.nativeElement, 'keydown')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => {
+        if (event.code === 'Enter') {
+          this.select();
+          this.libraryService.requestSongPlayback(this.song());
+          event.preventDefault();
+        }
+      });
+    fromEvent(window.document.body, 'touchstart')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => {
+        if (!this.menuContainerElement.nativeElement.contains(event.target as Node)) {
+          this.menuDropdown.close();
+        }
+      });
+    fromEvent(window.document.body, 'wheel')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.menuDropdown.close());
+    fromEvent(window, 'resize')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.menuDropdown.close());
   }
 
   select() {
-    this.libraryService.selectSong(this.song);
+    this.libraryService.selectSong(this.song());
   }
 
   onDoubleClick(event: MouseEvent) {
@@ -172,7 +164,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       checkElement = checkElement.parentNode as Element;
     } while (!buttonClick && checkElement);
     if (!buttonClick) {
-      this.libraryService.requestSongPlayback(this.song);
+      this.libraryService.requestSongPlayback(this.song());
     }
   }
 
@@ -184,51 +176,51 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onMouseMove() {
-    this.isMouseOver = true;
+    this.isMouseOver.set(true);
   }
 
   onMouseLeave() {
-    this.isMouseOver = false;
+    this.isMouseOver.set(false);
   }
 
   playNext() {
-    this.playbackService.playNext(this.song);
+    this.playbackService.playNext(this.song());
   }
 
   addToQueue() {
-    this.playbackService.addToQueue(this.song);
+    this.playbackService.addToQueue(this.song());
   }
 
   createQueue() {
-    this.playbackService.createQueue(this.song);
+    this.playbackService.createQueue(this.song());
   }
 
   switchQueue() {
-    this.switchQueueRequested.emit(this.song);
+    this.switchQueueRequested.emit(this.song());
   }
 
   onPlaybackClick() {
-    if (this.lastPlaybackEvent?.song?.id === this.song.id) {
+    if (this.lastPlaybackEvent()?.song?.id === this.song().id) {
       this.playbackService.playOrPause();
     } else {
-      this.libraryService.requestSongPlayback(this.song);
+      this.libraryService.requestSongPlayback(this.song());
     }
   }
 
   selectOrCreatePlaylist() {
-    if (this.topPlaylists.length > 0) {
+    if (this.topPlaylists().length > 0) {
       const modalRef = this.modal.open(PlaylistAddSongComponent);
       const playlistAddSongComponent: PlaylistAddSongComponent = modalRef.componentInstance;
-      playlistAddSongComponent.songs = [this.song];
+      playlistAddSongComponent.songs = [this.song()];
     } else {
       const modalRef = this.modal.open(PlaylistEditComponent);
       const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
-      playlistEditComponent.songs = [this.song];
+      playlistEditComponent.songs = [this.song()];
     }
   }
 
   addToPlaylist(playlist: Playlist) {
-    this.playlistService.addSongToPlaylist(playlist.id, this.song.id).subscribe({
+    this.playlistService.addSongToPlaylist(playlist.id, this.song().id).subscribe({
       error: () => this.notificationService.error(
         this.translateService.instant('library.song.addToPlaylistNotificationTitle'),
         this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
@@ -237,11 +229,11 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onLikeClick() {
-    if (this.isLikedSong) {
-      this.isLikedSong = false;
-      this.playlistService.unlikeSong(this.song!.id).subscribe({
+    if (this.isLikedSong()) {
+      this.isLikedSong.set(false);
+      this.playlistService.unlikeSong(this.song().id).subscribe({
         error: () => {
-          this.isLikedSong = true;
+          this.isLikedSong.set(true);
           this.notificationService.error(
             this.translateService.instant('library.song.unlikeNotificationTitle'),
             this.translateService.instant('library.song.unlikeNotificationTextFailure')
@@ -249,10 +241,10 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     } else {
-      this.isLikedSong = true;
-      this.playlistService.likeSong(this.song!.id).subscribe({
+      this.isLikedSong.set(true);
+      this.playlistService.likeSong(this.song().id).subscribe({
         error: () => {
-          this.isLikedSong = false;
+          this.isLikedSong.set(false);
           this.notificationService.error(
             this.translateService.instant('library.song.likeNotificationTitle'),
             this.translateService.instant('library.song.likeNotificationTextFailure')
@@ -263,6 +255,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   download() {
-    this.libraryService.downloadSong(this.song!.id);
+    this.libraryService.downloadSong(this.song().id);
   }
 }
