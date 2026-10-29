@@ -64,9 +64,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.playbackService.observeMode().subscribe(mode => this.playbackMode = mode));
     this.subscriptions.push(this.themeService.observeTheme().subscribe(theme => this.currentTheme = theme));
     this.subscriptions.push(this.libraryScanService.observeScanJobProgress().subscribe(scanJobProgress => {
-      if (scanJobProgress === null && this.scanRunning && this.discoveryEnabled) {
-        this.scanToDiscoveryTransition = true;
-      }
+      this.scanToDiscoveryTransition = scanJobProgress === null && this.scanRunning && this.discoveryEnabled;
       this.scanRunning = scanJobProgress !== undefined && scanJobProgress !== null;
     }));
     this.subscriptions.push(this.libraryDiscoveryService.observeDiscoveryStatus().subscribe(discoveryStatus => {
