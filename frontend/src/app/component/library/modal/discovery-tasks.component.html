@@ -14,29 +14,33 @@
     <div class="filter">
       <label for="discovery-task-result-filter" class="form-label">{{ 'discoveryTasks.resultLabel' | translate }}</label>
       <div ngbDropdown class="btn-group">
-        <button id="discovery-task-result-filter" ngbDropdownToggle type="button" class="btn btn-light">
+        <button id="discovery-task-result-filter" ngbDropdownToggle type="button" class="btn btn-light"
+                [class.failed]="taskResult === TaskResultFilter.FAILED"
+                [class.no-result]="taskResult === TaskResultFilter.NO_RESULT">
           {{ (taskResult === TaskResultFilter.FAILED ? 'discoveryTasks.failed' :
               taskResult === TaskResultFilter.NO_RESULT ? 'discoveryTasks.noResult' : 'discoveryTasks.allResults') | translate }}
           <span class="caret"></span>
         </button>
         <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
           <button ngbDropdownItem [class.selected]="!taskResult" (click)="applyResultFilter()">{{ 'discoveryTasks.allResults' | translate }}</button>
-          <button ngbDropdownItem [class.selected]="taskResult === TaskResultFilter.FAILED" (click)="applyResultFilter(TaskResultFilter.FAILED)">{{ 'discoveryTasks.failed' | translate }}</button>
-          <button ngbDropdownItem [class.selected]="taskResult === TaskResultFilter.NO_RESULT" (click)="applyResultFilter(TaskResultFilter.NO_RESULT)">{{ 'discoveryTasks.noResult' | translate }}</button>
+          <button ngbDropdownItem class="failed" [class.selected]="taskResult === TaskResultFilter.FAILED" (click)="applyResultFilter(TaskResultFilter.FAILED)">{{ 'discoveryTasks.failed' | translate }}</button>
+          <button ngbDropdownItem class="no-result" [class.selected]="taskResult === TaskResultFilter.NO_RESULT" (click)="applyResultFilter(TaskResultFilter.NO_RESULT)">{{ 'discoveryTasks.noResult' | translate }}</button>
         </ul>
       </div>
     </div>
     <div class="filter">
       <label for="discovery-task-type-filter" class="form-label">{{ 'discoveryTasks.typeLabel' | translate }}</label>
       <div ngbDropdown class="btn-group">
-        <button id="discovery-task-type-filter" ngbDropdownToggle type="button" class="btn btn-light">
+        <button id="discovery-task-type-filter" ngbDropdownToggle type="button" class="btn btn-light discovery-task-type"
+                [attr.data-task-type]="taskType">
           {{ taskType ?? ('discoveryTasks.allTypes' | translate) }}
           <span class="caret"></span>
         </button>
         <ul ngbDropdownMenu class="dropdown-menu dropdown-menu-end" role="menu">
           <button ngbDropdownItem [class.selected]="!taskType" (click)="applyTypeFilter()">{{ 'discoveryTasks.allTypes' | translate }}</button>
           @for (type of taskTypes; track type) {
-            <button ngbDropdownItem [class.selected]="taskType === type" (click)="applyTypeFilter(type)">{{ type }}</button>
+            <button ngbDropdownItem class="discovery-task-type" [attr.data-task-type]="type"
+                    [class.selected]="taskType === type" (click)="applyTypeFilter(type)">{{ type }}</button>
           }
         </ul>
       </div>
@@ -86,7 +90,7 @@
                       [class.failed]="task.status === TaskStatus.FAILED"
                       [class.interrupted]="task.status === TaskStatus.INTERRUPTED"
             >{{ task.status }}</span></td>
-            <td>{{ task.type }}</td>
+            <td><span class="discovery-task-type" [attr.data-task-type]="task.type">{{ task.type }}</span></td>
             <td class="details-button">
               <button type="button" class="btn btn-outline-dark" (click)="showDetails(task)">{{ 'discoveryTasks.detailsButton' | translate }}</button>
             </td>

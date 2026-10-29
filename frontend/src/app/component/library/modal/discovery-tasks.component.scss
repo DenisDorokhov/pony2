@@ -1,3 +1,31 @@
+:host {
+  --color-task-spotify-artist-data: #7041ac;
+  --color-task-spotify-top-tracks: #285cb3;
+  --color-task-musicbrainz-album-data: #08716f;
+}
+
+:host-context([data-bs-theme="dark"]) {
+  --color-task-spotify-artist-data: #c5a3f5;
+  --color-task-spotify-top-tracks: #8db9ff;
+  --color-task-musicbrainz-album-data: #62d5ce;
+}
+
+.discovery-task-type[data-task-type="SPOTIFY_ARTIST_DATA"] {
+  color: var(--color-task-spotify-artist-data);
+}
+
+.discovery-task-type[data-task-type="SPOTIFY_TOP_TRACKS"] {
+  color: var(--color-task-spotify-top-tracks);
+}
+
+.discovery-task-type[data-task-type="MUSICBRAINZ_ALBUM_DATA"] {
+  color: var(--color-task-musicbrainz-album-data);
+}
+
+.dropdown-item.discovery-task-type {
+  --bs-dropdown-link-active-bg: var(--bs-dropdown-link-hover-bg);
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -30,6 +58,14 @@
 
   .selected {
     font-weight: bold;
+  }
+
+  .failed {
+    color: var(--color-status-danger);
+  }
+
+  .no-result {
+    color: var(--color-status-warning);
   }
 
   .all-tasks-button {

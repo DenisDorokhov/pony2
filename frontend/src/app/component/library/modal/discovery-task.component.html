@@ -29,7 +29,7 @@
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.typeLabel' | translate }}</label>
-      <div>{{ task.type }}</div>
+      <div class="discovery-task-type" [attr.data-task-type]="task.type">{{ task.type }}</div>
     </div>
     @if (taskSummary; as summary) {
       <div class="mb-3">
