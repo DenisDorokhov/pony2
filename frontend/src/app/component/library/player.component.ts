@@ -58,6 +58,10 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
+  get isTopTrack(): boolean {
+    return !!this.song && this.libraryService.isTopTrack(this.song);
+  }
+
   ngOnInit(): void {
     this.subscriptions.push(this.playbackService.observeCurrentSong()
       .subscribe(song => this.handleSongSwitch(song)));

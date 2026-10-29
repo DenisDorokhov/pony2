@@ -168,11 +168,23 @@
     right: 84px;
     text-align: center;
 
+    .top-track-icon {
+      color: var(--color-top-track-icon);
+    }
+
     button {
       background: var(--color-button-background-transparent);
       color: var(--color-like-icon);
       font-size: 14px;
       border: 0;
+
+      &.top-track:not(:hover) .bi-star {
+        display: none;
+      }
+
+      &:hover .top-track-icon {
+        display: none;
+      }
 
       &:active:hover {
         .bi-star::before {
