@@ -91,7 +91,7 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
+    this.subscriptions.push(fromEvent(window.document.body, 'wheel').subscribe(() =>
       this.closeOptionsDropDowns()));
     this.subscriptions.push(fromEvent(window.document.body, 'touchstart').subscribe(() =>
       this.closeOptionsDropDowns()));

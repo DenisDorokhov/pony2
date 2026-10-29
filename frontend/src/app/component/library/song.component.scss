@@ -63,6 +63,10 @@
       padding: 0;
       width: 30px;
     }
+
+    .dropdown-toggle::after {
+      display: none;
+    }
   }
 
   .title {
@@ -159,18 +163,13 @@
 .song-container.duration-10 {
 }
 
-div.menu {
-  position: absolute;
+.dropdown-menu button {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 250px;
 
-  .dropdown-menu button {
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    max-width: 250px;
-
-    i {
-      margin-right: 12px;
-    }
+  i {
+    margin-right: 12px;
   }
 }

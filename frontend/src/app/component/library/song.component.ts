@@ -1,16 +1,13 @@
 import {
   AfterViewInit,
-  ApplicationRef,
   Component,
   ElementRef,
-  EmbeddedViewRef,
   EventEmitter,
   inject,
   Input,
   OnDestroy,
   OnInit,
   Output,
-  TemplateRef,
   ViewChild
 } from '@angular/core';
 import {fromEvent, Subscription} from 'rxjs';
@@ -21,18 +18,24 @@ import {LibraryService} from '../../service/library.service';
 import {ScrollingUtils} from '../../utils/scrolling.utils';
 import {UnknownSongPipe} from '../../pipe/unknown-song.pipe';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
-import {resolveAppViewContainerRef} from '../../utils/view.utils';
 import {PlaybackEvent, PlaybackState} from '../../service/audio-player.service';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 import {PlaylistService} from '../../service/playlist.service';
 import {NotificationService} from '../../service/notification.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDropdown,
+  NgbDropdownButtonItem,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle,
+  NgbModal
+} from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistDto} from '../../domain/library.dto';
 
 @Component({
-    imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe],
+    imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
     selector: 'pony-song',
     templateUrl: './song.component.html',
     styleUrls: ['./song.component.scss']
@@ -41,7 +44,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private readonly libraryService = inject(LibraryService);
   private readonly playbackService = inject(PlaybackService);
-  private readonly applicationRef = inject(ApplicationRef);
   private readonly playlistService = inject(PlaylistService);
   private readonly notificationService = inject(NotificationService);
   private readonly translateService = inject(TranslateService);
@@ -49,14 +51,12 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   PlaybackState = PlaybackState;
 
-  @ViewChild('menuButton') menuButtonElement!: ElementRef;
+  @ViewChild('menuDropdown') menuDropdown!: NgbDropdown;
   @ViewChild('menuContainer') menuContainerElement!: ElementRef;
-  @ViewChild('menu', {read: TemplateRef}) menuTemplate!: TemplateRef<unknown>;
 
   private _song!: Song;
 
   isMouseOver = false;
-  showMenu = false;
   topPlaylists: Playlist[] = [];
   isLikedSong = false;
 
@@ -89,7 +89,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
 
   lastPlaybackEvent: PlaybackEvent | undefined;
 
-  private menuEmbeddedViewRef: EmbeddedViewRef<any> | undefined;
   private subscriptions: Subscription[] = [];
 
   ngOnInit(): void {
@@ -104,7 +103,7 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
               this.playbackService.playOrPause();
             }
           }
-          if (this.containerElement) {
+          if (this.containerElement && !this.menuDropdown?.isOpen()) {
             this.containerElement.nativeElement.focus();
           }
           this.libraryService.finishSongSelection();
@@ -146,34 +145,15 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         event.preventDefault();
       }
     }));
-    this.subscriptions.push(fromEvent(window.document.body, 'mousedown').subscribe(event =>
-      this.checkIfClickWithinContainer(event)));
-    this.subscriptions.push(fromEvent(window.document.body, 'touchstart').subscribe(event =>
-      this.checkIfClickWithinContainer(event)));
-    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
-      this.hideMenu()));
-    this.subscriptions.push(fromEvent(window, 'resize').subscribe(() =>
-      this.hideMenu()));
-  }
-
-  private checkIfClickWithinContainer(event: Event) {
-    if (this.menuContainerElement?.nativeElement) {
-      let checkElement: Node | null = event.target as Node;
-      let clickWithinContainer = false;
-      do {
-        clickWithinContainer = this.menuContainerElement.nativeElement === checkElement;
-        checkElement = (checkElement as Node).parentNode;
-      } while (!clickWithinContainer && checkElement);
-      if (!clickWithinContainer) {
-        this.hideMenu();
+    this.subscriptions.push(fromEvent(window.document.body, 'touchstart').subscribe(event => {
+      if (!this.menuContainerElement.nativeElement.contains(event.target as Node)) {
+        this.menuDropdown.close();
       }
-    }
-  }
-
-  private hideMenu(): void {
-    this.menuEmbeddedViewRef?.destroy();
-    this.menuEmbeddedViewRef = undefined;
-    this.showMenu = false;
+    }));
+    this.subscriptions.push(fromEvent(window.document.body, 'wheel').subscribe(() =>
+      this.menuDropdown.close()));
+    this.subscriptions.push(fromEvent(window, 'resize').subscribe(() =>
+      this.menuDropdown.close()));
   }
 
   ngOnDestroy(): void {
@@ -211,52 +191,20 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isMouseOver = false;
   }
 
-  onMenuClick() {
-    // Here we improvise instead of using standard Bootstrap dropdown functionality, as it will be affected by column layout.
-    this.showMenu = true;
-    const viewContainerRef = resolveAppViewContainerRef(this.applicationRef);
-    this.menuEmbeddedViewRef = viewContainerRef.createEmbeddedView(this.menuTemplate);
-    const menu = this.menuEmbeddedViewRef.rootNodes[0] as HTMLElement;
-    menu.style.visibility = 'hidden';
-    setTimeout(() => this.adjustMenuPosition());
-  }
-
-  private adjustMenuPosition() {
-    const menuContainer = this.menuContainerElement.nativeElement as HTMLElement;
-    const menuContainerRect = menuContainer.getBoundingClientRect();
-    const menuButton = this.menuButtonElement.nativeElement as HTMLElement;
-    const menuButtonRect = menuButton.getBoundingClientRect();
-    const menu = this.menuEmbeddedViewRef!.rootNodes[0] as HTMLElement;
-    if (menuButtonRect.bottom + menuButtonRect.height + menuContainerRect.height > window.innerHeight) {
-      const menuTop = Math.max(0, menuButtonRect.top - menuContainerRect.height);
-      menu.style.top = menuTop + 'px';
-    } else {
-      const menuTop = menuButtonRect.top + menuButtonRect.height;
-      menu.style.top = menuTop + 'px';
-    }
-    const menuLeft = menuButtonRect.left - menuContainerRect.width + menuButtonRect.width;
-    menu.style.left = menuLeft + 'px';
-    menu.style.visibility = 'visible';
-  }
-
   playNext() {
     this.playbackService.playNext(this.song);
-    this.hideMenu();
   }
 
   addToQueue() {
     this.playbackService.addToQueue(this.song);
-    this.hideMenu();
   }
 
   createQueue() {
     this.playbackService.createQueue(this.song);
-    this.hideMenu();
   }
 
   switchQueue() {
     this.switchQueueRequested.emit(this.song);
-    this.hideMenu();
   }
 
   onPlaybackClick() {
@@ -277,7 +225,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
       const playlistEditComponent: PlaylistEditComponent = modalRef.componentInstance;
       playlistEditComponent.songs = [this.song];
     }
-    this.hideMenu();
   }
 
   addToPlaylist(playlist: Playlist) {
@@ -287,7 +234,6 @@ export class SongComponent implements OnInit, OnDestroy, AfterViewInit {
         this.translateService.instant('library.song.addToPlaylistNotificationTextFailure'),
       ),
     });
-    this.hideMenu();
   }
 
   onLikeClick() {

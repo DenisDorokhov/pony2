@@ -125,7 +125,7 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   }
 
   ngAfterViewInit(): void {
-    this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'scroll').subscribe(() =>
+    this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'wheel').subscribe(() =>
       this.closeOptionsDropDowns()));
     this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'touchstart').subscribe(() =>
       this.closeOptionsDropDowns()));

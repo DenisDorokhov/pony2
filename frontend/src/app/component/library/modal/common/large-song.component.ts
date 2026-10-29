@@ -109,7 +109,7 @@ export class LargeSongComponent implements OnInit, OnDestroy {
       .subscribe(() => this.refreshLikeState()));
     this.subscriptions.push(this.playlistService.observePlaylists()
       .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
-    this.subscriptions.push(fromEvent(window.document.body, 'mousewheel').subscribe(() =>
+    this.subscriptions.push(fromEvent(window.document.body, 'wheel').subscribe(() =>
       this.menuDropdown.close()));
   }
 
