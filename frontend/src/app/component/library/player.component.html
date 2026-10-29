@@ -76,7 +76,6 @@
          [style.left]="((mouseProgress || 0) * 100) + '%'"></div>
   </div>
 
-  <div class="time">{{ formattedProgress }}</div>
   <div class="loading-indicator-container">
     <span [hidden]="!isLoading" class="spinner-border text-body-secondary loading-indicator" role="status" aria-label="loading"></span>
     <img [hidden]="!isError" class="error-indicator" alt="error"
@@ -92,6 +91,7 @@
       }
     </button>
   </div>
+  <div class="time">{{ formattedProgress }}</div>
   <div class="duration">{{ formattedDuration }}</div>
 
   <pony-image-loader [class.pointer]="artworkUrl" [url]="artworkUrl" (click)="openArtwork()"></pony-image-loader>
