@@ -228,7 +228,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
       this.mouseProgress = this.resolveMouseProgress(event);
-      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress, 1);
+      this.formattedMousePosition = song.getRelativeDurationInMinutes(this.mouseProgress);
     } else {
       this.mouseProgress = undefined;
       this.formattedMousePosition = undefined;
