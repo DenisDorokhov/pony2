@@ -193,6 +193,9 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
         event.preventDefault();
         break;
       case 'Enter': {
+        if (event.target instanceof HTMLAnchorElement) {
+          return;
+        }
         const selectedIndex = this.indexOfSelectedNavigationItem();
         if (selectedIndex !== undefined) {
           this.navigationItems[selectedIndex].activate();
@@ -245,11 +248,18 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  selectSong(song: Song) {
+  selectSong(song: Song, event?: MouseEvent) {
+    if (event?.altKey) {
+      return;
+    }
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
   }
 
-  goToSong(song: Song) {
+  goToSong(song: Song, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
     this.libraryService.requestScrollToSong(song);
@@ -257,22 +267,36 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     this.close();
   }
 
-  selectAlbum(album: Album) {
+  selectAlbum(album: Album, event?: MouseEvent) {
+    if (event?.altKey) {
+      return;
+    }
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
   }
 
-  goToAlbum(album: Album) {
+  goToAlbum(album: Album, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
     this.close();
   }
 
-  selectArtist(artist: Artist) {
+  selectArtist(artist: Artist, event?: MouseEvent) {
+    if (event?.altKey) {
+      return;
+    }
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
   }
 
-  goToArtist(artist: Artist) {
+  goToArtist(artist: Artist, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.requestScrollToArtist(artist);
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));

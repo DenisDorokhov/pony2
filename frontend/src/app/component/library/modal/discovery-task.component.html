@@ -36,9 +36,9 @@
         <label class="form-label">{{ 'discoveryTask.targetLabel' | translate }}</label>
         <div>
           @if (summary.artist; as artist) {
-            <a href="javascript:void(0);" (click)="goToArtist(artist)">{{ artist.name | ponyUnknownArtist }}</a>
+            <a href="javascript:void(0);" (click)="goToArtist(artist, $event)">{{ artist.name | ponyUnknownArtist }}</a>
             @if (summary.album; as album) {
-              - <a href="javascript:void(0);" (click)="goToAlbum(album, artist)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
+              - <a href="javascript:void(0);" (click)="goToAlbum(album, artist, $event)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
             }
           } @else {
             {{ (summary.type === TaskType.MUSICBRAINZ_ALBUM_DATA ? 'discoveryTasks.deletedAlbum' : 'discoveryTasks.deletedArtist') | translate }}

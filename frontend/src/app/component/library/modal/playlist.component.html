@@ -86,6 +86,7 @@
         (cdkDragStarted)="onDragStarted($event)"
         (doubleClick)="playSongOnDoubleClick(i)"
         (mousedown)="selectIndex(i)"
+        (selectionRequested)="selectIndex($event)"
         (playOrPauseRequested)="onPlaybackClick(i)"
         (goToSongRequested)="goToSong(playlistSong.song)"
         (removalRequested)="removeSong(i)"

@@ -60,7 +60,7 @@
           }
           @case (DiscoveryType.ARTIST) {
             @if (details.discoveryJob.artist; as artist) {
-              <a href="javascript:void(0);" (click)="goToArtist(artist)">{{ artist.name | ponyUnknownArtist }}</a>
+              <a href="javascript:void(0);" (click)="goToArtist(artist, $event)">{{ artist.name | ponyUnknownArtist }}</a>
             } @else {
               {{ 'discoveryTasks.deletedArtist' | translate }}
             }
@@ -68,8 +68,8 @@
           @case (DiscoveryType.ALBUM) {
             @if (details.discoveryJob.album; as album) {
               @if (details.discoveryJob.artist; as artist) {
-                <a href="javascript:void(0);" (click)="goToArtist(artist)">{{ artist.name | ponyUnknownArtist }}</a>
-                - <a href="javascript:void(0);" (click)="goToAlbum(album, artist)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
+                <a href="javascript:void(0);" (click)="goToArtist(artist, $event)">{{ artist.name | ponyUnknownArtist }}</a>
+                - <a href="javascript:void(0);" (click)="goToAlbum(album, artist, $event)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
               }
             } @else {
               {{ 'discoveryTasks.deletedAlbum' | translate }}
@@ -77,14 +77,14 @@
           }
           @case (DiscoveryType.GENRE) {
             @if (details.discoveryJob.genre; as genre) {
-              <a href="javascript:void(0);" (click)="goToGenre(genre)">{{ genre.name | ponyUnknownGenre }}</a>
+              <a href="javascript:void(0);" (click)="goToGenre(genre, $event)">{{ genre.name | ponyUnknownGenre }}</a>
             } @else {
               {{ 'discoveryJob.deletedGenre' | translate }}
             }
           }
           @case (DiscoveryType.SONG) {
             @if (details.discoveryJob.song; as song) {
-              <a href="javascript:void(0);" (click)="goToSong(song)">{{ song.name | ponyUnknownSong }}</a>
+              <a href="javascript:void(0);" (click)="goToSong(song, $event)">{{ song.name | ponyUnknownSong }}</a>
             } @else {
               {{ 'discoveryJob.deletedSong' | translate }}
             }

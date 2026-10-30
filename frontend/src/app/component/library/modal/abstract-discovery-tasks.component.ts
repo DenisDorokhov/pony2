@@ -211,14 +211,22 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
     }
   }
 
-  goToArtist(artistDto: ArtistDto) {
+  goToArtist(artistDto: ArtistDto, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const artist = new Artist(artistDto);
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.requestScrollToArtist(artist);
     this.modal.dismissAll();
   }
 
-  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto) {
+  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const album = new Album(albumDto, new Artist(artistDto));
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);

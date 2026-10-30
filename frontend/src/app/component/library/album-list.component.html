@@ -52,7 +52,7 @@
                     [attr.aria-label]="countryName" (click)="onCountryClick(countryFlagCode)"></button>
           }
           @for (genre of artistSongs.artist.genres; track genre) {
-            <a (click)="onGenreClick(genre)">{{ genre.name | ponyUnknownGenre }}</a>,
+            <a href="javascript:void(0);" (click)="onGenreClick(genre, $event)">{{ genre.name | ponyUnknownGenre }}</a>,
           }
           {{
             'library.album.counterHeader' | translate:{

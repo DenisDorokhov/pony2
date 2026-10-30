@@ -150,7 +150,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectCurrentSong() {
+  selectCurrentSong(event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const song = this.playbackService.lastPlaybackEvent.song;
     if (song) {
       this.libraryService.selectArtistAndMakeDefault(song.album.artist);
@@ -269,7 +273,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
   }
 
-  openArtwork() {
+  openArtwork(event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     if (this.artworkUrl) {
       const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
       const userComponent: ArtworkComponent = modalRef.componentInstance;

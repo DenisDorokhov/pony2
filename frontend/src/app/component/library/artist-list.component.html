@@ -31,7 +31,7 @@
         }
       </div>
       <div class="reset-container" [hidden]="selectedNavigationItem.id === navigationItems[0].id">
-        <a (click)="resetNavigation()" class="link-secondary">
+        <a href="javascript:void(0);" (click)="resetNavigation($event)" class="link-secondary">
           {{ 'library.artist.resetButton' | translate }}
         </a>
       </div>

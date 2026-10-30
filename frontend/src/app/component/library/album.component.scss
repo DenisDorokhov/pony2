@@ -1,6 +1,10 @@
 .album-container {
   clear: both;
 
+  .artwork-link {
+    float: left;
+  }
+
   pony-image-loader {
     float: left;
     width: 140px;

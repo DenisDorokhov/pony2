@@ -444,7 +444,11 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  resetNavigation() {
+  resetNavigation(event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.executeNavigationItem(this.navigationItems[0]);
   }
 

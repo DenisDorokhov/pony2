@@ -70,9 +70,9 @@
             <td>
               <span class="target-text" [title]="task.target">
                 @if (task.artist; as artist) {
-                  <a href="javascript:void(0);" (click)="goToArtist(artist)">{{ artist.name | ponyUnknownArtist }}</a>
+                  <a href="javascript:void(0);" (click)="goToArtist(artist, $event)">{{ artist.name | ponyUnknownArtist }}</a>
                   @if (task.album; as album) {
-                    - <a href="javascript:void(0);" (click)="goToAlbum(album, artist)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
+                    - <a href="javascript:void(0);" (click)="goToAlbum(album, artist, $event)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
                   }
                 } @else {
                   {{ task.target }}

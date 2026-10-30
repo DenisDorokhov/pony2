@@ -20,6 +20,7 @@
         *cdkVirtualFor="let playbackHistorySong of playbackHistory!.songs; let i = index;"
         (doubleClick)="onSongDoubleClick(i)"
         (mousedown)="selectIndex(i)"
+        (selectionRequested)="selectIndex($event)"
         (playOrPauseRequested)="onPlaybackClick(i)"
         (goToSongRequested)="goToSong(playbackHistorySong.song)"
         (switchQueueRequested)="switchQueueTail($event)"

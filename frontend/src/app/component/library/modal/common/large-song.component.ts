@@ -83,6 +83,9 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   }
 
   @Output()
+  selectionRequested = new EventEmitter<number>();
+
+  @Output()
   doubleClick = new EventEmitter<number>();
   @Output()
   playOrPauseRequested = new EventEmitter<number>();
@@ -138,6 +141,14 @@ export class LargeSongComponent implements OnInit, OnDestroy {
     this.removalRequested.emit(this.index);
   }
 
+  onClick(event: MouseEvent) {
+    if (event.altKey) {
+      event.preventDefault();
+      return;
+    }
+    this.selectionRequested.emit(this.index);
+  }
+
   onDoubleClick(event: MouseEvent) {
     let checkElement: Node | null = event.target as Node;
     let isButtonClick = false;
@@ -145,12 +156,16 @@ export class LargeSongComponent implements OnInit, OnDestroy {
       isButtonClick = checkElement.nodeName === 'BUTTON';
       checkElement = (checkElement as Node).parentNode;
     } while (!isButtonClick && checkElement);
-    if (!isButtonClick) {
+    if (!isButtonClick && !event.altKey) {
       this.doubleClick.emit(this.index);
     }
   }
 
   preventDoubleClickDefault(event: MouseEvent) {
+    if (event.altKey) {
+      event.stopPropagation();
+      return;
+    }
     // Disable text selection on double click.
     if (event.detail > 1) {
       event.preventDefault();

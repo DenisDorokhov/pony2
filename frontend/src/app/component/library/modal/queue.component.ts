@@ -139,6 +139,16 @@ export class QueueComponent implements OnInit, OnDestroy, AfterViewInit {
     this.playbackService.play(index);
   }
 
+  onSongKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key !== 'Enter' || event.altKey ||
+      (event.target instanceof Element && event.target.closest('button'))) {
+      return;
+    }
+    event.preventDefault();
+    this.selectIndex(index);
+    this.playbackService.play(index);
+  }
+
   goToSong(song: Song) {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);

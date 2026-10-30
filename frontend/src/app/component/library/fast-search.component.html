@@ -13,14 +13,12 @@
          [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
       @for (artist of searchResult?.artists; track $index) {
-        <div #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
-             title="{{ artist.name | ponyUnknownArtist }}"
-             (mousedown)="selectArtist(artist)" (click)="goToArtist(artist)">
+        <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
+           title="{{ artist.name | ponyUnknownArtist }}"
+           (mousedown)="selectArtist(artist, $event)" (click)="goToArtist(artist, $event)">
           <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
-          <div class="text no-description">
-            {{ artist.name | ponyUnknownArtist }}
-          </div>
-        </div>
+          <div class="text no-description">{{ artist.name | ponyUnknownArtist }}</div>
+        </a>
       }
     </div>
 
@@ -30,18 +28,15 @@
          [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
       @for (song of searchResult?.songs; track $index) {
-        <div #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
-             title="{{ song.name | ponyUnknownSong }}
+        <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
+           title="{{ song.name | ponyUnknownSong }}
 {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
-             (mousedown)="selectSong(song)" (click)="goToSong(song)">
+           (mousedown)="selectSong(song, $event)" (click)="goToSong(song, $event)">
           <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
           <div class="text" [class.liked]="idToNavigationItem[song.id].liked">
             <div>{{ song.name | ponyUnknownSong }}</div>
             <div>
-              <small>
-                {{ song.album.artist.name | ponyUnknownArtist }}
-                - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}
-              </small>
+              <small>{{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }}{{ song.album.year ? ' (' + song.album.year + ')' : '' }}</small>
             </div>
           </div>
           @if (idToNavigationItem[song.id].liked) {
@@ -49,7 +44,7 @@
               <i class="bi bi-star-fill"></i>
             </div>
           }
-        </div>
+        </a>
       }
     </div>
 
@@ -59,16 +54,16 @@
          [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
       @for (album of searchResult?.albums; track $index) {
-        <div #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
-             title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
+        <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
+           title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
 {{ album.artist.name | ponyUnknownArtist }}"
-             (mousedown)="selectAlbum(album)" (click)="goToAlbum(album)">
+           (mousedown)="selectAlbum(album, $event)" (click)="goToAlbum(album, $event)">
           <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
           <div class="text">
-            <div>{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}</div>
+            <div>{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</div>
             <div><small>{{ album.artist.name | ponyUnknownArtist }}</small></div>
           </div>
-        </div>
+        </a>
       }
     </div>
 

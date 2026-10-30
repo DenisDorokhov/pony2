@@ -91,7 +91,11 @@ export class ArtistComponent implements OnInit, OnDestroy {
     this.playbackEventSubscription?.unsubscribe();
   }
 
-  select() {
+  select(event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.selectArtistAndMakeDefault(this.artist);
   }
 }

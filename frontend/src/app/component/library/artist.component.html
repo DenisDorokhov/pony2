@@ -1,5 +1,5 @@
-<a class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
-   (click)="select()">
+<a href="javascript:void(0);" class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
+   (click)="select($event)">
   <pony-image-loader [url]="artist.smallArtworkUrl" [showNewIndicator]="showNewIndicator"></pony-image-loader>
   <div class="artist-name"
        [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">

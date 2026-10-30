@@ -173,7 +173,11 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
     this.discs.sort(compareDiscs);
   }
 
-  openArtwork() {
+  openArtwork(event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     if (this.albumSongs.album.largeArtworkUrl) {
       const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
       const userComponent: ArtworkComponent = modalRef.componentInstance;

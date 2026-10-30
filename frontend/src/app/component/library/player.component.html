@@ -14,7 +14,7 @@
   </button>
 
   <div class="title-container">
-    <a class="title" href="javascript:void(0);" [title]="songTitle" (click)="selectCurrentSong()">{{ songTitle }}</a>
+    <a class="title" href="javascript:void(0);" [title]="songTitle" (click)="selectCurrentSong($event)">{{ songTitle }}</a>
     @if (this.song) {
       <div ngbDropdown class="options">
         <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
@@ -94,6 +94,8 @@
   <div class="time">{{ formattedProgress }}</div>
   <div class="duration">{{ formattedDuration }}</div>
 
-  <pony-image-loader [class.pointer]="artworkUrl" [url]="artworkUrl" (click)="openArtwork()"></pony-image-loader>
+  <a class="artwork-link" [attr.href]="artworkUrl ? 'javascript:void(0);' : null" (click)="openArtwork($event)">
+    <pony-image-loader [class.pointer]="artworkUrl" [url]="artworkUrl"></pony-image-loader>
+  </a>
 
 </div>

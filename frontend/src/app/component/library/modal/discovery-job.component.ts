@@ -74,26 +74,42 @@ export class DiscoveryJobComponent implements OnInit, OnDestroy {
     });
   }
 
-  goToArtist(artistDto: ArtistDto) {
+  goToArtist(artistDto: ArtistDto, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const artist = new Artist(artistDto);
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.requestScrollToArtist(artist);
     this.modal.dismissAll();
   }
 
-  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto) {
+  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const album = new Album(albumDto, new Artist(artistDto));
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);
     this.modal.dismissAll();
   }
 
-  goToGenre(genreDto: GenreDto) {
+  goToGenre(genreDto: GenreDto, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.requestFilterByGenre(new Genre(genreDto));
     this.modal.dismissAll();
   }
 
-  goToSong(songDto: SongDto) {
+  goToSong(songDto: SongDto, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.getSongs([songDto.id]).subscribe(songs => {
       if (songs.length > 0) {
         this.libraryService.requestScrollToSong(songs[0]);

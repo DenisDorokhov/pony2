@@ -139,7 +139,11 @@ export class SongComponent implements OnInit, AfterViewInit {
       });
   }
 
-  select() {
+  select(event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.selectSong(this.song());
   }
 
@@ -150,14 +154,14 @@ export class SongComponent implements OnInit, AfterViewInit {
       buttonClick = checkElement?.tagName === 'BUTTON';
       checkElement = checkElement.parentNode as Element;
     } while (!buttonClick && checkElement);
-    if (!buttonClick) {
+    if (!buttonClick && !event.altKey) {
       this.libraryService.requestSongPlayback(this.song());
     }
   }
 
   onMouseDown(event: MouseEvent) {
     // Disable text selection on double click.
-    if (event.detail > 1) {
+    if (event.detail > 1 && !event.altKey) {
       event.preventDefault();
     }
   }

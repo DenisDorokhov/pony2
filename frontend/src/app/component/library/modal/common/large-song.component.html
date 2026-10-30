@@ -24,15 +24,18 @@
       }}
     </div>
   </div>
-  <div class="artwork">
-    <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-  </div>
-  <div class="song">
-    <div>{{ song.name | ponyUnknownSong }}</div>
-    <div>
-      <small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small>
+  <a href="javascript:void(0);" class="song-link"
+     (click)="onClick($event)">
+    <div class="artwork">
+      <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
     </div>
-  </div>
+    <div class="song">
+      <div>{{ song.name | ponyUnknownSong }}</div>
+      <div>
+        <small><b>{{ song.album.artist.name | ponyUnknownArtist }}</b> {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}</small>
+      </div>
+    </div>
+  </a>
   <div class="like-container" [class.liked]="isLikedSong" [class.top-track]="isTopTrack">
     <button
       [title]="isLikedSong ? ('library.song.likedSongButtonTooltip' | translate) : ('library.song.notLikedSongButtonTooltip' | translate)"

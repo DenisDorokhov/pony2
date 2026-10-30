@@ -6,7 +6,7 @@
      [class.duration-10]="song().duration >= 600"
      [class.track-10]="(song().trackNumber ?? 0) >= 10"
      [class.track-100]="(song().trackNumber ?? 0) >= 100"
-     (click)="select()" (mousedown)="onMouseDown($event)" (dblclick)="onDoubleClick($event)"
+     (click)="select($event)" (mousedown)="onMouseDown($event)" (dblclick)="onDoubleClick($event)"
      (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()">
   <div class="track-number">
     <span class="value" [hidden]="isMouseOver() || lastPlaybackEvent()?.state === PlaybackState.LOADING || lastPlaybackEvent()?.state === PlaybackState.PLAYING || lastPlaybackEvent()?.state === PlaybackState.PAUSED">
@@ -54,6 +54,8 @@
       <i class="bi bi-fire top-track-icon" aria-hidden="true"></i>
     }
   </div>
-  <div class="title" [class.like-shown]="isMouseOver() || isLikedSong() || isTopTrack()">{{ song().name | ponyUnknownSong }}</div>
-  <div class="artist">{{ song().artistName }}</div>
+  <a href="javascript:void(0);" class="song-link" tabindex="-1">
+    <div class="title" [class.like-shown]="isMouseOver() || isLikedSong() || isTopTrack()">{{ song().name | ponyUnknownSong }}</div>
+    <div class="artist">{{ song().artistName }}</div>
+  </a>
 </div>

@@ -234,7 +234,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
     this.libraryService.requestFilterByCountry(countryCode);
   }
 
-  protected onGenreClick(genre: Genre) {
+  protected onGenreClick(genre: Genre, event?: MouseEvent) {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     this.libraryService.requestFilterByGenre(genre);
   }
 

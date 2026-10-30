@@ -100,14 +100,22 @@ export class DiscoveryTaskComponent implements OnInit, OnDestroy {
     return formatFileSize(new Blob([value ?? '']).size);
   }
 
-  goToArtist(artistDto: ArtistDto): void {
+  goToArtist(artistDto: ArtistDto, event?: MouseEvent): void {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const artist = new Artist(artistDto);
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.requestScrollToArtist(artist);
     this.modal.dismissAll();
   }
 
-  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto): void {
+  goToAlbum(albumDto: AlbumDto, artistDto: ArtistDto, event?: MouseEvent): void {
+    if (event?.altKey) {
+      event.preventDefault();
+      return;
+    }
     const album = new Album(albumDto, new Artist(artistDto));
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);
