@@ -12,6 +12,10 @@ It indexes your personal MP3 collection, builds a searchable library, and stream
 - 🖼️ **Automatic artwork** extraction from tags and folders, with on-the-fly thumbnailing (JPEG / PNG / WebP).
 - 🏷️ **Smart tag reading** via JAudioTagger (ID3v1 / ID3v2 / etc.).
 - 🔁 **Incremental library scans** which means only changed files are re-processed.
+- ✨ **AI-assisted discovery** — enrich your library with Spotify and MusicBrainz data using a configurable LLM endpoint and model.
+- 🔥 **Spotify top tracks** — match popular tracks to songs in your collection, highlight them in the library and player, and show them alongside an artist's favorites.
+- 🌍 **Artist countries** — country flags and filtering by country of origin.
+- 💿 **Album release metadata** — LP, EP, single, live, and compilation badges, with original release dates used to order albums within the same year.
 - 👥 **Multi-user app** with role-based access and JWT authentication.
 - 📱 **OpenSubsonic support** that works flawlessly with Symfonium app.
 - 🐳 **Docker-ready** for easy deployment.
@@ -20,7 +24,8 @@ It indexes your personal MP3 collection, builds a searchable library, and stream
 
 ### Backend
 - **Java**
-- **Spring Boot** (Web, Data JPA, Security, Validation)
+- **Spring Boot 4** (Web MVC, Data JPA, Security, Validation)
+- **Spring AI** for LLM integration through OpenAI-compatible APIs and MCP tools
 - **Hibernate ORM** + **Hibernate Search** with **Lucene** backend
 - **H2** database
 - **Flyway** migrations
@@ -32,5 +37,7 @@ It indexes your personal MP3 collection, builds a searchable library, and stream
 - **Bootstrap**
 
 ### Infrastructure
-- **Docker** containerized deployment
+- **Docker Compose** containerized deployment
+- **Playwright MCP** with **Chromium** for browser-based discovery
+- **Squid** security proxy to block discovery browser access to private and local networks and allow only HTTP/HTTPS traffic
 - **Gradle** multi-module build into a single executable JAR
