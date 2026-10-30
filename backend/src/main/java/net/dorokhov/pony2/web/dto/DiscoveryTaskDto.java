@@ -11,7 +11,7 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
     private DiscoveryTaskType type;
     private String result;
     private String rawRequests;
-    private String rawResults;
+    private String rawResponses;
 
     public DiscoveryTask.Status getStatus() {
         return status;
@@ -49,12 +49,12 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
         return this;
     }
 
-    public @Nullable String getRawResults() {
-        return rawResults;
+    public @Nullable String getRawResponses() {
+        return rawResponses;
     }
 
-    public DiscoveryTaskDto setRawResults(@Nullable String rawResults) {
-        this.rawResults = rawResults;
+    public DiscoveryTaskDto setRawResponses(@Nullable String rawResponses) {
+        this.rawResponses = rawResponses;
         return this;
     }
 
@@ -67,6 +67,6 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
                 .setType(task.getType())
                 .setResult(task.getResult())
                 .setRawRequests(task.getRawRequests() != null ? JsonConverter.toJson(task.getRawRequests()) : null)
-                .setRawResults(task.getRawResults() != null ? JsonConverter.toJson(task.getRawResults()) : null);
+                .setRawResponses(task.getRawResponses() != null ? JsonConverter.toJson(task.getRawResponses()) : null);
     }
 }

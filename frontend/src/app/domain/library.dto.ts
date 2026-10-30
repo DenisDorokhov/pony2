@@ -321,7 +321,7 @@ export interface DiscoveryTaskDto {
   type: DiscoveryTaskType;
   result: string | undefined;
   rawRequests: string | undefined;
-  rawResults: string | undefined;
+  rawResponses: string | undefined;
 }
 
 export namespace DiscoveryTaskDto {

@@ -52,8 +52,8 @@ export class DiscoveryTaskComponent implements OnInit, OnDestroy {
   resultSize = '';
   rawRequestsPreview = '—';
   rawRequestsSize = '';
-  rawResultsPreview = '—';
-  rawResultsSize = '';
+  rawResponsesPreview = '—';
+  rawResponsesSize = '';
 
   private taskSubscription: Subscription | undefined;
   private refreshSubscription: Subscription | undefined;
@@ -78,8 +78,8 @@ export class DiscoveryTaskComponent implements OnInit, OnDestroy {
         this.resultSize = this.formatJsonSize(task.result);
         this.rawRequestsPreview = this.createJsonPreview(task.rawRequests);
         this.rawRequestsSize = this.formatJsonSize(task.rawRequests);
-        this.rawResultsPreview = this.createJsonPreview(task.rawResults);
-        this.rawResultsSize = this.formatJsonSize(task.rawResults);
+        this.rawResponsesPreview = this.createJsonPreview(task.rawResponses);
+        this.rawResponsesSize = this.formatJsonSize(task.rawResponses);
         this.loadingState = LoadingState.LOADED;
         if (task.status !== DiscoveryTaskDto.Status.STARTED) {
           this.refreshSubscription?.unsubscribe();

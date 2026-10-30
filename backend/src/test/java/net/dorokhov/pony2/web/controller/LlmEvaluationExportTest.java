@@ -37,7 +37,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
     private static final String PATH = "/api/admin/llm/evaluation";
     private static final LocalDateTime CREATED = LocalDateTime.of(2020, 1, 1, 0, 0);
     private static final String RAW_REQUESTS = JsonConverter.toJson(List.of("{\"prompt\":\"BjГ¶rk \\n \\\"quoted\\\"\"}"));
-    private static final String RAW_RESULTS = "[\"An unstructured response: ж—Ґжњ¬иЄћ\",null]";
+    private static final String RAW_RESPONSES = "[\"An unstructured response: ж—Ґжњ¬иЄћ\",null]";
 
     @Autowired
     private ApiTemplate apiTemplate;
@@ -123,7 +123,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
             for (JsonNode task : tasks) {
                 assertThat(task.get("status").asString()).isEqualTo("COMPLETE");
                 assertThat(task.get("rawRequests").asString()).isEqualTo(RAW_REQUESTS);
-                assertThat(task.get("rawResults").asString()).isEqualTo(RAW_RESULTS);
+                assertThat(task.get("rawResponses").asString()).isEqualTo(RAW_RESPONSES);
             }
         }
         JsonNode artist = document.get("artists").get(0);
@@ -170,7 +170,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         insertTask(Kind.ALBUM, 1, 1, 1, "MUSICBRAINZ_ALBUM_DATA", "COMPLETE", CREATED, "{}");
         String rawRequest = JsonConverter.toJson(List.of("Full prompt ".repeat(8192)));
         String rawResult = JsonConverter.toJson(List.of("Full response ".repeat(8192)));
-        jdbcTemplate.update("UPDATE discovery_task SET raw_requests = ?, raw_results = ? WHERE id = ?", rawRequest, rawResult, id(1));
+        jdbcTemplate.update("UPDATE discovery_task SET raw_requests = ?, raw_responses = ? WHERE id = ?", rawRequest, rawResult, id(1));
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         JsonNode document = jsonMapper.readTree(download(apiTemplate.createHeaderRequest(authentication.getAccessToken())).getBody());
@@ -181,7 +181,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         assertThat(album.get("year").isNull()).isTrue();
         assertThat(album.get("artist").get("name").isNull()).isTrue();
         assertThat(album.get("tasks").get(0).get("rawRequests").asString()).isEqualTo(rawRequest);
-        assertThat(album.get("tasks").get(0).get("rawResults").asString()).isEqualTo(rawResult);
+        assertThat(album.get("tasks").get(0).get("rawResponses").asString()).isEqualTo(rawResult);
     }
 
     @Test
@@ -253,10 +253,10 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
     private void insertTask(Kind kind, int number, int entity, int job, String type, String status, LocalDateTime date, String result) {
         jdbcTemplate.update("""
                 INSERT INTO discovery_task (id, creation_date, update_date, discovery_job_id, type, status,
-                                            result, raw_requests, raw_results, %s_id)
+                                            result, raw_requests, raw_responses, %s_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """.formatted(kind.entityName()), id(number), date, date.plusMinutes(1), id(job), type, status,
-                result, RAW_REQUESTS, RAW_RESULTS, id(entity));
+                result, RAW_REQUESTS, RAW_RESPONSES, id(entity));
     }
 
     private static String id(int number) {

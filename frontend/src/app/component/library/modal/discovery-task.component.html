@@ -69,13 +69,13 @@
       </div>
     </div>
     <div class="mb-3">
-      <label class="form-label">{{ 'discoveryTask.rawResultsLabel' | translate }}</label>
+      <label class="form-label">{{ 'discoveryTask.rawResponsesLabel' | translate }}</label>
       <div class="json-value">
-        <pre><code [highlight]="rawResultsPreview" language="json"></code></pre>
-        @if (task.rawResults) {
-          <span class="json-size text-body-secondary">{{ rawResultsSize }}</span>
+        <pre><code [highlight]="rawResponsesPreview" language="json"></code></pre>
+        @if (task.rawResponses) {
+          <span class="json-size text-body-secondary">{{ rawResponsesSize }}</span>
           <button type="button" class="btn btn-outline-dark btn-sm details-button"
-                  (click)="showDetails(task.rawResults, 'discoveryTask.rawResultsDetailsHeader', 'raw-results')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+                  (click)="showDetails(task.rawResponses, 'discoveryTask.rawResponsesDetailsHeader', 'raw-responses')">{{ 'discoveryTask.detailsButton' | translate }}</button>
         }
       </div>
     </div>

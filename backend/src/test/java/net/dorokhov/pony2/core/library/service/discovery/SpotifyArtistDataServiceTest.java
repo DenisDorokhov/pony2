@@ -232,7 +232,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
 
         assertThat(modelCalls).isEqualTo(2);
-        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(response));
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(response));
         verifyNoInteractions(logService);
         Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
         assertThat(entry.get("response")).isEqualTo(response);
@@ -253,7 +253,7 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task, true)).isEqualTo(found());
 
         assertThat(modelCalls).isEqualTo(4);
-        assertThat(task.getRawResults()).hasSize(2).endsWith(JsonConverter.fromJsonOrString(response));
+        assertThat(task.getRawResponses()).hasSize(2).endsWith(JsonConverter.fromJsonOrString(response));
         Prompt verification = prompts.get(2);
         assertThat(verification.getInstructions().subList(0, 2)).isEqualTo(prompts.getFirst().getInstructions().subList(0, 2));
         if (invalidResponse != null && !invalidResponse.isBlank()) {

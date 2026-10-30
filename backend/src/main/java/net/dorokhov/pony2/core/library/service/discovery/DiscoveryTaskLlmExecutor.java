@@ -129,7 +129,7 @@ public class DiscoveryTaskLlmExecutor {
         interruptIfNeeded();
 
         List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
-        List<Object> responses = task.getRawResults() != null ? new ArrayList<>(task.getRawResults()) : new ArrayList<>();
+        List<Object> responses = task.getRawResponses() != null ? new ArrayList<>(task.getRawResponses()) : new ArrayList<>();
         requests.add(requestSnapshot(JsonConverter.toJson(request), responseSchema));
         responses.add(null);
         saveExchange(task, requests, responses);
@@ -269,7 +269,7 @@ public class DiscoveryTaskLlmExecutor {
     private void saveExchange(DiscoveryTask task, List<Object> requests, List<Object> responses) {
         transactionTemplate.executeWithoutResult(status -> taskRepository.save(task
                 .setRawRequests(requests)
-                .setRawResults(responses)));
+                .setRawResponses(responses)));
     }
 
     private void interruptIfNeeded() {

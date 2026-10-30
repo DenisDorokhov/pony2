@@ -131,7 +131,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                             assertThat(prompt.getInstructions().getLast().getText()).isEqualTo(rawResponse);
                         }
                         assertThat(rawRequest.albumTitles()).isEqualTo(List.of("Album"));
-                        assertThat(task.getRawResults()).containsExactly((Object) null);
+                        assertThat(task.getRawResponses()).containsExactly((Object) null);
                     });
             getTransactionTemplate().executeWithoutResult(status -> {
                 List<DiscoveryTask> tasks = taskRepository.findAll().stream()
@@ -167,7 +167,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                         assertThat(JsonConverter.fromJson(task.getResult(), SpotifyArtistData.class)).isEqualTo(result);
                         assertThat(JsonConverter.mapFromJson(task.getResult(), String.class, Object.class)).doesNotContainKey("status");
                         assertThat(task.getRawRequests()).isNotEmpty();
-                        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawResponse));
+                        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawResponse));
                     });
         });
         assertEmptyTopTracks();
@@ -260,7 +260,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(artistDataTasks()).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getRawRequests()).isEqualTo(originalTask.getRawRequests());
-            assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawResponse));
+            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawResponse));
         });
         verify(model, never()).call(any(Prompt.class));
     }
@@ -278,7 +278,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getRawRequests()).isNotEmpty();
-            assertThat(task.getRawResults())
+            assertThat(task.getRawResponses())
                     .containsExactly(JsonConverter.fromJsonOrString(rawResponse), JsonConverter.fromJsonOrString(rawResponse), JsonConverter.fromJsonOrString(rawResponse), JsonConverter.fromJsonOrString(rawResponse));
             assertThat(task.getResult()).isNotBlank();
         });
@@ -330,7 +330,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("Browser unavailable");
             assertThat(task.getRawRequests()).isNotEmpty();
-            assertThat(task.getRawResults()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).containsExactly((Object) null);
         });
         assertFailedTopTracks();
         assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
@@ -359,7 +359,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNull();
             assertThat(task.getRawRequests()).isNull();
-            assertThat(task.getRawResults()).isNull();
+            assertThat(task.getRawResponses()).isNull();
         });
         assertEmptyTopTracks();
         assertThat(artistDataTasks()).singleElement().satisfies(task ->
@@ -410,7 +410,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNull();
-            assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(result));
+            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(result));
         });
         ArtistDiscoveryIndex original = artistDiscoveryIndexRepository.findByArtistId(artist.getId()).orElseThrow();
         assertThat(original.getSpotifyArtistId()).isNull();
@@ -497,7 +497,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), String[].class)).containsExactly(second.getId(), null, first.getId());
-            assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(albumResponse), JsonConverter.fromJsonOrString(trackResponse));
+            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(albumResponse), JsonConverter.fromJsonOrString(trackResponse));
             assertThat(task.getRawRequests()).hasSize(2);
             assertThat(task.getArtist().getId()).isEqualTo(artist.getId());
         });
@@ -551,7 +551,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();
-            assertThat(task.getRawResults()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).containsExactly((Object) null);
         });
         assertThat(cacheRepository.count()).isEqualTo(1);
         verify(model, times(3)).call(any(Prompt.class));
@@ -572,7 +572,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
         assertThat(interruptedTask.getResult()).isNull();
         assertThat(interruptedTask.getRawRequests()).isNotEmpty();
-        assertThat(interruptedTask.getRawResults()).containsExactly((Object) null);
+        assertThat(interruptedTask.getRawResponses()).containsExactly((Object) null);
         DiscoveryTask unfinishedTask = saveTask(job, DiscoveryTask.Status.STARTED, null);
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);
@@ -589,7 +589,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();
             assertThat(task.getRawRequests()).isEqualTo(unfinishedTask.getRawRequests());
-            assertThat(task.getRawResults()).isNull();
+            assertThat(task.getRawResponses()).isNull();
         });
         assertThat(taskRepository.findById(completedTask.getId())).get().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
@@ -621,7 +621,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();
-            assertThat(task.getRawResults()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).containsExactly((Object) null);
         });
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);
@@ -642,7 +642,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isEqualTo("[]");
             assertThat(task.getRawRequests()).isNull();
-            assertThat(task.getRawResults()).isNull();
+            assertThat(task.getRawResponses()).isNull();
         });
     }
 
@@ -651,7 +651,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("No completed SPOTIFY_ARTIST_DATA task");
             assertThat(task.getRawRequests()).isNull();
-            assertThat(task.getRawResults()).isNull();
+            assertThat(task.getRawResponses()).isNull();
         });
     }
 

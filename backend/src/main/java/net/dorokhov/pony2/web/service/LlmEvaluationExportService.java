@@ -321,7 +321,7 @@ public class LlmEvaluationExportService {
                 task.getJob().getId(), task.getType().name(), task.getStatus().name(),
                 task.getResult() != null ? jsonMapper.readTree(task.getResult()) : null,
                 task.getRawRequests() != null ? JsonConverter.toJson(task.getRawRequests()) : null,
-                task.getRawResults() != null ? JsonConverter.toJson(task.getRawResults()) : null);
+                task.getRawResponses() != null ? JsonConverter.toJson(task.getRawResponses()) : null);
     }
 
     private record ArtistExportDto(
@@ -373,6 +373,6 @@ public class LlmEvaluationExportService {
             String status,
             @Nullable JsonNode result,
             @Nullable String rawRequests,
-            @Nullable String rawResults
+            @Nullable String rawResponses
     ) {}
 }

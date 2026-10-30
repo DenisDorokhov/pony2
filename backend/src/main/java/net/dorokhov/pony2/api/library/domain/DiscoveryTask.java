@@ -36,9 +36,9 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @Convert(converter = ListOfObjectsJsonAttributeConverter.class)
     private List<Object> rawRequests;
 
-    @Column(name = "raw_results")
+    @Column(name = "raw_responses")
     @Convert(converter = ListOfObjectsJsonAttributeConverter.class)
-    private List<Object> rawResults;
+    private List<Object> rawResponses;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "discovery_job_id", nullable = false)
@@ -133,12 +133,12 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    public @Nullable List<Object> getRawResults() {
-        return rawResults;
+    public @Nullable List<Object> getRawResponses() {
+        return rawResponses;
     }
 
-    public DiscoveryTask setRawResults(@Nullable List<Object> rawResults) {
-        this.rawResults = rawResults;
+    public DiscoveryTask setRawResponses(@Nullable List<Object> rawResponses) {
+        this.rawResponses = rawResponses;
         return this;
     }
 

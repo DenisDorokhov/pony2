@@ -45,38 +45,38 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         List<Object> responses = new ArrayList<>(Arrays.asList(Map.of("artist", "Artist"), null));
         DiscoveryTask task = taskRepository.save(new DiscoveryTask().setJob(saveJob())
                 .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA).setStatus(DiscoveryTask.Status.STARTED)
-                .setRawRequests(requests).setRawResults(responses));
+                .setRawRequests(requests).setRawResponses(responses));
 
         assertThat(jdbcTemplate.queryForObject("SELECT raw_requests FROM discovery_task WHERE id = ?", String.class, task.getId()))
                 .isEqualTo(JsonConverter.toJson(requests));
-        assertThat(jdbcTemplate.queryForObject("SELECT raw_results FROM discovery_task WHERE id = ?", String.class, task.getId()))
+        assertThat(jdbcTemplate.queryForObject("SELECT raw_responses FROM discovery_task WHERE id = ?", String.class, task.getId()))
                 .isEqualTo(JsonConverter.toJson(responses));
         getTransactionTemplate().executeWithoutResult(status -> {
             DiscoveryTask loaded = taskRepository.findById(task.getId()).orElseThrow();
             assertThat(loaded.getRawRequests()).isEqualTo(requests);
-            assertThat(loaded.getRawResults()).isEqualTo(responses);
+            assertThat(loaded.getRawResponses()).isEqualTo(responses);
             loaded.getRawRequests().add("https://musicbrainz.org/artist");
-            loaded.getRawResults().set(1, "LLM response\nline two");
-            loaded.getRawResults().add(null);
+            loaded.getRawResponses().set(1, "LLM response\nline two");
+            loaded.getRawResponses().add(null);
         });
 
         DiscoveryTask updated = taskRepository.findById(task.getId()).orElseThrow();
         assertThat(updated.getRawRequests()).containsExactly(requests.getFirst(), requests.getLast(), "https://musicbrainz.org/artist");
-        assertThat(updated.getRawResults()).containsExactly(responses.getFirst(), "LLM response\nline two", null);
+        assertThat(updated.getRawResponses()).containsExactly(responses.getFirst(), "LLM response\nline two", null);
     }
 
     @Test
     void shouldReadExistingRawJsonArrays() {
         DiscoveryTask task = taskRepository.save(new DiscoveryTask().setJob(saveJob())
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE));
-        jdbcTemplate.update("UPDATE discovery_task SET raw_requests = ?, raw_results = ? WHERE id = ?",
+        jdbcTemplate.update("UPDATE discovery_task SET raw_requests = ?, raw_responses = ? WHERE id = ?",
                 "[{\"userPrompt\":\"Artist\"},\"https://musicbrainz.org/artist\"]",
                 "[\"{\\\"artist\\\":\\\"Artist\\\"}\",null]", task.getId());
 
         DiscoveryTask loaded = taskRepository.findById(task.getId()).orElseThrow();
 
         assertThat(loaded.getRawRequests()).containsExactly(Map.of("userPrompt", "Artist"), "https://musicbrainz.org/artist");
-        assertThat(loaded.getRawResults()).containsExactly("{\"artist\":\"Artist\"}", null);
+        assertThat(loaded.getRawResponses()).containsExactly("{\"artist\":\"Artist\"}", null);
     }
 
     @ParameterizedTest
@@ -84,15 +84,15 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
     void shouldPreserveAbsentAndEmptyRawExchanges(boolean empty) {
         DiscoveryTask task = taskRepository.save(new DiscoveryTask().setJob(saveJob())
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.STARTED)
-                .setRawRequests(empty ? List.of() : null).setRawResults(empty ? List.of() : null));
+                .setRawRequests(empty ? List.of() : null).setRawResponses(empty ? List.of() : null));
 
         DiscoveryTask loaded = taskRepository.findById(task.getId()).orElseThrow();
 
         assertThat(loaded.getRawRequests()).isEqualTo(empty ? List.of() : null);
-        assertThat(loaded.getRawResults()).isEqualTo(empty ? List.of() : null);
+        assertThat(loaded.getRawResponses()).isEqualTo(empty ? List.of() : null);
         assertThat(jdbcTemplate.queryForObject("SELECT raw_requests FROM discovery_task WHERE id = ?", String.class, task.getId()))
                 .isEqualTo(empty ? "[]" : null);
-        assertThat(jdbcTemplate.queryForObject("SELECT raw_results FROM discovery_task WHERE id = ?", String.class, task.getId()))
+        assertThat(jdbcTemplate.queryForObject("SELECT raw_responses FROM discovery_task WHERE id = ?", String.class, task.getId()))
                 .isEqualTo(empty ? "[]" : null);
     }
 

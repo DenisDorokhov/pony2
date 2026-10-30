@@ -719,7 +719,7 @@ public class LibraryDiscoveryAdminControllerTest {
         DiscoveryTask task = task(DiscoveryTaskType.SPOTIFY_TOP_TRACKS, taskStatus)
                 .setResult("{\"tracks\":[]}")
                 .setRawRequests(List.of(Map.of("userPrompt", "request\nline two"), "https://musicbrainz.org/artist"))
-                .setRawResults(List.of(Map.of("answer", List.of("track")), "response\nline two"));
+                .setRawResponses(List.of(Map.of("answer", List.of("track")), "response\nline two"));
         when(discoveryJobService.getTaskById("task1")).thenReturn(Optional.of(task));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryTasks/task1"))
@@ -735,9 +735,9 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(objectMapper.readTree(response).has("parameter")).isFalse();
         assertThat(dto.getResult()).isEqualTo(task.getResult());
         assertThat(dto.getRawRequests()).isEqualTo(JsonConverter.toJson(task.getRawRequests()));
-        assertThat(dto.getRawResults()).isEqualTo(JsonConverter.toJson(task.getRawResults()));
+        assertThat(dto.getRawResponses()).isEqualTo(JsonConverter.toJson(task.getRawResponses()));
         assertThat(objectMapper.readTree(dto.getRawRequests()).get(0).isObject()).isTrue();
-        assertThat(objectMapper.readTree(dto.getRawResults()).get(0).isObject()).isTrue();
+        assertThat(objectMapper.readTree(dto.getRawResponses()).get(0).isObject()).isTrue();
         verifyNoInteractions(libraryService);
     }
 
@@ -754,7 +754,7 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(dto.getUpdateDate()).isNull();
         assertThat(dto.getResult()).isNull();
         assertThat(dto.getRawRequests()).isNull();
-        assertThat(dto.getRawResults()).isNull();
+        assertThat(dto.getRawResponses()).isNull();
     }
 
     @ParameterizedTest

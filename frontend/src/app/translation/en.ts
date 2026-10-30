@@ -284,11 +284,11 @@ export default {
     typeLabel: 'Type:',
     resultLabel: 'Result:',
     rawRequestsLabel: 'Raw Requests:',
-    rawResultsLabel: 'Raw Results:',
+    rawResponsesLabel: 'Raw Responses:',
     detailsButton: 'More',
     resultDetailsHeader: 'Result',
     rawRequestsDetailsHeader: 'Raw Requests',
-    rawResultsDetailsHeader: 'Raw Results',
+    rawResponsesDetailsHeader: 'Raw Responses',
   },
   userList: {
     header: 'Users',

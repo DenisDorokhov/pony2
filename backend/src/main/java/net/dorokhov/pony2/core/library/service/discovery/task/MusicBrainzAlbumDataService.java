@@ -540,7 +540,7 @@ public class MusicBrainzAlbumDataService {
 
     private void saveExchange(DiscoveryTask task, String url, @Nullable String response) {
         List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
-        List<Object> responses = task.getRawResults() != null ? new ArrayList<>(task.getRawResults()) : new ArrayList<>();
+        List<Object> responses = task.getRawResponses() != null ? new ArrayList<>(task.getRawResponses()) : new ArrayList<>();
         if (response == null) {
             requests.add(url);
             responses.add(null);
@@ -551,7 +551,7 @@ public class MusicBrainzAlbumDataService {
         transactionTemplate.executeWithoutResult(status ->
                 taskRepository.save(task
                         .setRawRequests(requests)
-                        .setRawResults(responses)));
+                        .setRawResponses(responses)));
     }
 
     private void interruptIfNeeded() {
