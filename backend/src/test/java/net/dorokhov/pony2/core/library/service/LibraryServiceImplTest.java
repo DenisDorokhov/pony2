@@ -12,12 +12,14 @@ import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskResultReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +28,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Limit;
@@ -51,7 +52,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class LibraryServiceImplTest {
 
-    @InjectMocks
     private LibraryServiceImpl libraryService;
 
     @Mock
@@ -60,6 +60,8 @@ public class LibraryServiceImplTest {
     private GenreRepository genreRepository;
     @Mock
     private ArtistRepository artistRepository;
+    @Mock
+    private AlbumRepository albumRepository;
     @Mock
     private ArtistGenreRepository artistGenreRepository;
     @Mock
@@ -75,6 +77,9 @@ public class LibraryServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        libraryService = new LibraryServiceImpl(genreRepository, artistRepository, albumRepository, artistGenreRepository,
+                artistDiscoveryIndexRepository, new DiscoveryTaskResultReader(discoveryTaskRepository), songRepository,
+                artworkStorage, randomFetcher, configService);
         lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
     }
 

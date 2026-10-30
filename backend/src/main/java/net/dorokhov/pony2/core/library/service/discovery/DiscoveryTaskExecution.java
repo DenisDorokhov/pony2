@@ -19,12 +19,6 @@ public interface DiscoveryTaskExecution<R> {
     }
 
     /**
-     * Runs after COMPLETE is committed. Hook exceptions propagate without changing the task status.
-     */
-    default void onCompletion(DiscoveryTask task, @Nullable R result) {
-    }
-
-    /**
      * Runs in a new transaction with a managed task after FAILED is committed,
      * except for discovery interruption or a failure to start the task.
      * Hook failures are logged without changing the task status.

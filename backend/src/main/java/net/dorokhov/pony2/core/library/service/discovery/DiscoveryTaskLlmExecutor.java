@@ -16,7 +16,6 @@ import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
-import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
@@ -32,9 +31,6 @@ import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -45,7 +41,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Component
 public class DiscoveryTaskLlmExecutor {
@@ -54,11 +49,10 @@ public class DiscoveryTaskLlmExecutor {
 
     private final DiscoveryChatClient chatClient;
     private final DiscoveryCacheService cacheService;
-    private final DiscoveryTaskRepository taskRepository;
+    private final DiscoveryTaskExchangeRecorder exchangeRecorder;
     private final LogService logService;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final ShutdownService shutdownService;
-    private final TransactionTemplate transactionTemplate;
     private final int retriesOnFollowUpException;
     private final int restartsOnHallucination;
     private final Duration timeout;
@@ -66,22 +60,20 @@ public class DiscoveryTaskLlmExecutor {
     public DiscoveryTaskLlmExecutor(
             DiscoveryChatClient chatClient,
             DiscoveryCacheService cacheService,
-            DiscoveryTaskRepository taskRepository,
+            DiscoveryTaskExchangeRecorder exchangeRecorder,
             LogService logService,
             LibraryJobSynchronizer jobSynchronizer,
             ShutdownService shutdownService,
-            PlatformTransactionManager transactionManager,
             @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException,
             @Value("${pony.discovery.llm.restartsOnHallucination:3}") int restartsOnHallucination,
             @Value("${pony.llm.timeout:10m}") Duration timeout
     ) {
         this.chatClient = chatClient;
         this.cacheService = cacheService;
-        this.taskRepository = taskRepository;
+        this.exchangeRecorder = exchangeRecorder;
         this.logService = logService;
         this.jobSynchronizer = jobSynchronizer;
         this.shutdownService = shutdownService;
-        transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         this.retriesOnFollowUpException = retriesOnFollowUpException;
         this.restartsOnHallucination = restartsOnHallucination;
         this.timeout = timeout;
@@ -107,7 +99,7 @@ public class DiscoveryTaskLlmExecutor {
         int restarts = 0;
         while (true) {
             try {
-                return call(task, request, responseSchema, cacheSettings, responseHandler);
+                return callWithFollowUps(task, request, responseSchema, cacheSettings, responseHandler);
             } catch (LlmHallucinationException e) {
                 if (restarts >= restartsOnHallucination) {
                     logService.error(logger, "Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}.",
@@ -121,47 +113,12 @@ public class DiscoveryTaskLlmExecutor {
         }
     }
 
-    private <R> R call(
+    private <R> R callWithFollowUps(
             DiscoveryTask task, Request request, String responseSchema,
             @Nullable CacheSettings cacheSettings, Function<String, R> responseHandler
     ) {
-
-        interruptIfNeeded();
-
-        List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
-        List<Object> responses = task.getRawResponses() != null ? new ArrayList<>(task.getRawResponses()) : new ArrayList<>();
-        requests.add(requestSnapshot(JsonConverter.toJson(request), responseSchema));
-        responses.add(null);
-        saveExchange(task, requests, responses);
-
-        String key = cacheSettings != null ? cacheSettings.keyPrefix() + ":" + Hashing.sha256().hashString(
-                JsonConverter.toJson(requestSnapshot(request.toCacheJson(), responseSchema)), UTF_8) : null;
-        Optional<String> cached = cacheSettings != null ? cacheService.get(cacheSettings.region(), key, cacheSettings.version()) : Optional.empty();
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        String response;
-        if (cached.isPresent()) {
-            logger.debug("Discovery cache hit for discovery task '{}' of type {}. Region: {}, key: '{}', version: {}.",
-                    task.getId(), task.getType(), cacheSettings.region(), key, cacheSettings.version());
-            CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
-            requests.set(requests.size() - 1, entry.request());
-            response = entry.response();
-        } else {
-            Prompt prompt = request.toPrompt();
-            if (logger.isDebugEnabled()) {
-                logger.debug("Requesting LLM response for discovery task '{}' of type {}.\n\nRequest:\n\n{}",
-                        task.getId(), task.getType(), JsonConverter.toPrettyJson(requests.getLast()));
-            }
-            response = callModel(task, prompt, responseSchema);
-        }
-        interruptIfNeeded();
-
-        responses.set(responses.size() - 1, JsonConverter.fromJsonOrString(response));
-        saveExchange(task, requests, responses);
-        if (logger.isDebugEnabled()) {
-            logger.debug("LLM exchange for discovery task '{}' of type {} completed in {}. Source: {}.\n\nRequest:\n\n{}\n\nResponse:\n\n{}",
-                    task.getId(), task.getType(), stopwatch.elapsed(), cached.isPresent() ? "cache" : "llm",
-                    JsonConverter.toPrettyJson(requests.getLast()), formatResponseForLog(response));
-        }
+        Exchange exchange = performExchange(task, request, responseSchema, cacheSettings);
+        String response = exchange.response();
         R result;
         Request acceptedRequest = request;
         int retries = 0;
@@ -179,16 +136,56 @@ public class DiscoveryTaskLlmExecutor {
                         task.getId(), task.getType(), retries + 2, retriesOnFollowUpException + 1,
                         retriesOnFollowUpException - retries - 1);
                 acceptedRequest = new FollowUpRequest(acceptedRequest, response, e.getPrompt());
-                response = call(task, acceptedRequest, responseSchema, null, Function.identity());
+                response = performExchange(task, acceptedRequest, responseSchema, null).response();
+                interruptIfNeeded();
                 retries++;
             }
         }
         interruptIfNeeded();
-        if (cacheSettings != null && (cached.isEmpty() || retries > 0)) {
-            cacheService.put(cacheSettings.region(), key, cacheSettings.version(),
+        if (cacheSettings != null && (!exchange.cacheHit() || retries > 0)) {
+            cacheService.put(cacheSettings.region(), exchange.cacheKey(), cacheSettings.version(),
                     JsonConverter.toJson(new CacheEntry(requestSnapshot(JsonConverter.toJson(acceptedRequest), responseSchema), response)));
         }
         return result;
+    }
+
+    private Exchange performExchange(
+            DiscoveryTask task, Request request, String responseSchema, @Nullable CacheSettings cacheSettings
+    ) {
+        interruptIfNeeded();
+
+        Object rawRequest = requestSnapshot(JsonConverter.toJson(request), responseSchema);
+        exchangeRecorder.startExchange(task, rawRequest);
+
+        String key = cacheSettings != null ? cacheSettings.keyPrefix() + ":" + Hashing.sha256().hashString(
+                JsonConverter.toJson(requestSnapshot(request.toCacheJson(), responseSchema)), UTF_8) : null;
+        Optional<String> cached = cacheSettings != null ? cacheService.get(cacheSettings.region(), key, cacheSettings.version()) : Optional.empty();
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        String response;
+        if (cached.isPresent()) {
+            logger.debug("Discovery cache hit for discovery task '{}' of type {}. Region: {}, key: '{}', version: {}.",
+                    task.getId(), task.getType(), cacheSettings.region(), key, cacheSettings.version());
+            CacheEntry entry = JsonConverter.fromJson(cached.get(), CacheEntry.class);
+            rawRequest = entry.request();
+            exchangeRecorder.replaceLastRequest(task, rawRequest);
+            response = entry.response();
+        } else {
+            Prompt prompt = request.toPrompt();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Requesting LLM response for discovery task '{}' of type {}.\n\nRequest:\n\n{}",
+                        task.getId(), task.getType(), JsonConverter.toPrettyJson(rawRequest));
+            }
+            response = callModel(task, prompt, responseSchema);
+        }
+        interruptIfNeeded();
+
+        exchangeRecorder.completeExchange(task, response);
+        if (logger.isDebugEnabled()) {
+            logger.debug("LLM exchange for discovery task '{}' of type {} completed in {}. Source: {}.\n\nRequest:\n\n{}\n\nResponse:\n\n{}",
+                    task.getId(), task.getType(), stopwatch.elapsed(), cached.isPresent() ? "cache" : "llm",
+                    JsonConverter.toPrettyJson(rawRequest), formatResponseForLog(response));
+        }
+        return new Exchange(response, key, cached.isPresent());
     }
 
     private @Nullable String callModel(DiscoveryTask task, Prompt prompt, String responseSchema) {
@@ -266,12 +263,6 @@ public class DiscoveryTaskLlmExecutor {
         }
     }
 
-    private void saveExchange(DiscoveryTask task, List<Object> requests, List<Object> responses) {
-        transactionTemplate.executeWithoutResult(status -> taskRepository.save(task
-                .setRawRequests(requests)
-                .setRawResponses(responses)));
-    }
-
     private void interruptIfNeeded() {
         jobSynchronizer.interruptDiscoveryIfCancelled();
         if (shutdownService.isShutdown()) {
@@ -295,6 +286,8 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     public record CacheSettings(DiscoveryCacheRegion region, String keyPrefix, int version) {}
+
+    private record Exchange(@Nullable String response, @Nullable String cacheKey, boolean cacheHit) {}
 
     private record CacheEntry(Object request, @Nullable String response) {}
 

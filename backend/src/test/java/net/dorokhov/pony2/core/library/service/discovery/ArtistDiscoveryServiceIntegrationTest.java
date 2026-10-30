@@ -696,7 +696,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
     private <R> void executeTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type,
                                   Function<DiscoveryTask, R> action) {
-        DiscoveryTaskExecutor.TaskResult<R> taskResult = taskExecutor.execute(new DiscoveryTaskExecution<R>() {
+        taskExecutor.execute(new DiscoveryTaskExecution<R>() {
             @Override
             public DiscoveryTask startTask() {
                 return ReflectionTestUtils.invokeMethod(service, "startTask", job, artist, type);
@@ -706,16 +706,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             public R executeTask(DiscoveryTask task) {
                 return action.apply(task);
             }
-
-            @Override
-            public void onCompletion(DiscoveryTask task, R result) {
-                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
-                DiscoveryTask persistedTask = taskRepository.findById(task.getId()).orElseThrow();
-                assertThat(persistedTask.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-                assertThat(persistedTask.getResult()).isEqualTo(result != null ? JsonConverter.toJson(result) : null);
-            }
         });
-        assertThat(taskResult.status()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
     }
 
     private SpotifyArtistData spotifyArtistData(String spotifyArtistId) {

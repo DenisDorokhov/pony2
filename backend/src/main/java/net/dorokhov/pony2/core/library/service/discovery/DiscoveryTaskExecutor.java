@@ -37,20 +37,19 @@ public class DiscoveryTaskExecutor {
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
     }
 
-    public <R> TaskResult<R> execute(DiscoveryTaskExecution<R> execution) {
+    public <R> void execute(DiscoveryTaskExecution<R> execution) {
         try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
-            return executeRegisteredTask(execution);
+            executeRegisteredTask(execution);
         }
     }
 
-    private <R> TaskResult<R> executeRegisteredTask(DiscoveryTaskExecution<R> execution) {
+    private <R> void executeRegisteredTask(DiscoveryTaskExecution<R> execution) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         DiscoveryTask task = requireNonNull(transactionTemplate.execute(status -> execution.startTask()));
         logger.debug("Started discovery task '{}' of type {} in job '{}'.",
                 task.getId(), task.getType(), task.getJob().getId());
-        R result;
         try {
-            result = execution.executeTask(task);
+            R result = execution.executeTask(task);
             saveCompletedResult(task, result, execution);
         } catch (DiscoveryInterruptedException e) {
             saveResult(task, DiscoveryTask.Status.INTERRUPTED, null);
@@ -67,12 +66,10 @@ public class DiscoveryTaskExecutor {
             } catch (Throwable failure) {
                 logger.error("Could not finalize failed discovery task '{}'.", task.getId(), failure);
             }
-            return new TaskResult<>(DiscoveryTask.Status.FAILED, null);
+            return;
         }
         logger.debug("Completed discovery task '{}' of type {} in job '{}' after {}.",
                 task.getId(), task.getType(), task.getJob().getId(), stopwatch.elapsed());
-        execution.onCompletion(task, result);
-        return new TaskResult<>(DiscoveryTask.Status.COMPLETE, result);
     }
 
     private <R> void saveCompletedResult(DiscoveryTask task, @Nullable R result, DiscoveryTaskExecution<R> execution) {
@@ -91,6 +88,4 @@ public class DiscoveryTaskExecutor {
                         .setStatus(status)
                         .setResult(result)));
     }
-
-    public record TaskResult<R>(DiscoveryTask.Status status, @Nullable R value) {}
 }

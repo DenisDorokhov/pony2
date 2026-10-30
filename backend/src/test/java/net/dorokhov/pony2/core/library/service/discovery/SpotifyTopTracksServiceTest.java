@@ -131,8 +131,9 @@ class SpotifyTopTracksServiceTest {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
-                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1, Duration.ofMinutes(10));
-        service = new SpotifyTopTracksService(executor, artistRepository, taskRepository, libraryService, logService,
+                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
+                logService, jobSynchronizer, shutdownService, 1, 1, Duration.ofMinutes(10));
+        service = new SpotifyTopTracksService(executor, artistRepository, new DiscoveryTaskResultReader(taskRepository), libraryService, logService,
                 shutdownService, jobSynchronizer, transactionManager(),
                 new ClassPathResource("prompts/spotify-top-tracks-albums.txt"),
                 new ClassPathResource("prompts/spotify-top-tracks.txt"),
@@ -417,6 +418,12 @@ class SpotifyTopTracksServiceTest {
             "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":\"foreign-album\"}]}",
             "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":123}]}",
             "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":null},{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":null}]}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":\"album-a\"},"
+                    + "{\"spotifyAlbumId\":\"spotify-b\",\"databaseAlbumId\":\"album-b\"},"
+                    + "{\"spotifyAlbumId\":\"spotify-missing\",\"databaseAlbumId\":null}],\"extra\":true}",
+            "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-a\",\"databaseAlbumId\":\"album-a\",\"extra\":true},"
+                    + "{\"spotifyAlbumId\":\"spotify-b\",\"databaseAlbumId\":\"album-b\"},"
+                    + "{\"spotifyAlbumId\":\"spotify-missing\",\"databaseAlbumId\":null}]}",
             "Result: {albumMatches: []}", "Result: {\"albumMatches\":[]}"})
     void shouldVerifyInvalidAlbumResponse(String invalidResponse) {
         responses.addFirst(invalidResponse);
@@ -431,6 +438,27 @@ class SpotifyTopTracksServiceTest {
         assertThat(cache).hasSize(2);
         verify(logService).warn(any(), eq("Invalid Spotify top tracks response from the LLM for artist '{}'."),
                 eq(artist.getName()), any(RuntimeException.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"123", "true", "1.5"})
+    void shouldRejectNonStringAlbumIdEvenWhenItsTextMatchesAnAlbum(String albumId) {
+        Album album = artist.getAlbums().stream().filter(candidate -> candidate.getId().equals("album-a")).findFirst().orElseThrow();
+        album.setId(albumId);
+        String acceptedResponse = ALBUM_RESPONSE.replace("\"album-a\"", JsonConverter.toJson(albumId));
+        String invalidResponse = ALBUM_RESPONSE.replace("\"databaseAlbumId\":\"album-a\"", "\"databaseAlbumId\":" + albumId);
+        responses.set(0, acceptedResponse);
+        responses.addFirst(invalidResponse);
+        DiscoveryTask task = task();
+
+        assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
+
+        assertThat(prompts).hasSize(6);
+        assertThat(prompts.get(2).getInstructions().get(1).getText()).startsWith("Spotify albums (ID to title):");
+        assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
+                .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(invalidResponse),
+                JsonConverter.fromJsonOrString(acceptedResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
     }
 
     @Test
@@ -457,6 +485,8 @@ class SpotifyTopTracksServiceTest {
             "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":123},{\"databaseTrackId\":null}]}",
             "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":\"song-b\"},{}]}",
             "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":\"song-b\"},null]}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\"},{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":null}],\"extra\":true}",
+            "{\"trackMatches\":[{\"databaseTrackId\":\"song-a\",\"extra\":true},{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":null}]}",
             "Result: {trackMatches: []}",
             "Result: {\"trackMatches\":[{\"databaseTrackId\":\"unknown\"},{\"databaseTrackId\":\"song-b\"},{\"databaseTrackId\":null}]}"})
     void shouldVerifyInvalidTrackResponse(String invalidResponse) {
@@ -470,6 +500,26 @@ class SpotifyTopTracksServiceTest {
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"123", "true", "1.5"})
+    void shouldRejectNonStringTrackIdEvenWhenItsTextMatchesATrack(String trackId) {
+        Album album = artist.getAlbums().stream().filter(candidate -> candidate.getId().equals("album-a")).findFirst().orElseThrow();
+        album.getSongs().getFirst().setId(trackId);
+        String acceptedResponse = TRACK_RESPONSE.replace("\"song-a\"", JsonConverter.toJson(trackId));
+        String invalidResponse = TRACK_RESPONSE.replace("\"databaseTrackId\":\"song-a\"", "\"databaseTrackId\":" + trackId);
+        responses.set(1, acceptedResponse);
+        responses.add(1, invalidResponse);
+        DiscoveryTask task = task();
+
+        assertThat(service.discover(task, true)).containsExactly(trackId, "song-b", null);
+
+        assertThat(prompts).hasSize(6);
+        assertThat(prompts.get(4).getInstructions()).extracting(Message::getText)
+                .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE),
+                JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(acceptedResponse));
     }
 
     @Test

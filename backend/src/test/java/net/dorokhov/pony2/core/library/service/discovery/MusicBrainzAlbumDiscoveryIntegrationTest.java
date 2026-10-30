@@ -39,6 +39,7 @@ import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
 import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzAlbumDataService;
+import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzLlmService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
@@ -109,6 +110,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private AlbumDiscoveryService albumService;
     @Autowired private DiscoveryTaskExecutor taskExecutor;
     @Autowired private MusicBrainzAlbumDataService musicBrainzAlbumDataService;
+    @Autowired private MusicBrainzLlmService musicBrainzLlmService;
     @Autowired private ArtistDiscoveryService artistService;
     @Autowired private FullDiscoveryService fullDiscoveryService;
     @Autowired private LibraryJobSynchronizer jobSynchronizer;
@@ -458,7 +460,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         IllegalStateException taskFailure = new IllegalStateException("Discovery failed");
         AtomicInteger errorHookCalls = new AtomicInteger();
 
-        DiscoveryTaskExecutor.TaskResult<String> result = taskExecutor.execute(new DiscoveryTaskExecution<String>() {
+        taskExecutor.execute(new DiscoveryTaskExecution<String>() {
             @Override
             public DiscoveryTask startTask() {
                 assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
@@ -495,7 +497,6 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
 
         assertThat(errorHookCalls).hasValue(1);
-        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(onlyTask().getResult()).contains("Discovery failed").doesNotContain("Error hook failed");
     }
@@ -846,6 +847,29 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         verify(model, times(2)).call(any(Prompt.class));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"123", "true", "1.5"})
+    void shouldRejectNonStringReleaseGroupIdEvenWhenItsTextMatchesACandidate(String groupId) {
+        enableLlm();
+        search(List.of(group(groupId, "Other", "Deluxe title", List.of(credit("artist", "Slayer", null)))));
+        String rejected = "{\"id\":" + groupId + "}";
+        String accepted = "{\"id\":" + JsonConverter.toJson(groupId) + "}";
+        when(model.call(any(Prompt.class))).thenReturn(response(rejected), response(accepted));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
+
+        assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(onlyTask().getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo(groupId);
+        assertThat(onlyTask().getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse),
+                JsonConverter.fromJsonOrString(rejected), JsonConverter.fromJsonOrString(accepted), JsonConverter.fromJsonOrString(rawArtistResponse));
+        ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(2)).call(captor.capture());
+        assertThat(captor.getAllValues().getLast().getInstructions())
+                .anySatisfy(message -> assertThat(message.getText()).contains("Set id"));
+        assertThat(cacheRepository.findAll()).singleElement().satisfies(entry ->
+                assertThat(JsonConverter.mapFromJson(entry.getValue(), String.class, Object.class).get("response")).isEqualTo(accepted));
+    }
+
     @Test
     void shouldLogCompletedMusicBrainzResultAtDebugLevel() {
         Logger logger = (Logger) LoggerFactory.getLogger(MusicBrainzAlbumDataService.class);
@@ -1168,37 +1192,34 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         return Stream.of(
                 Arguments.of("not JSON", "Unrecognized token"),
                 Arguments.of("null", "must be a JSON object"),
-                Arguments.of("[]", "must be a JSON object"),
-                Arguments.of("{}", "exactly searchTitle, searchFragments and alternativeTitles"),
-                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[]}",
-                        "exactly searchTitle, searchFragments and alternativeTitles"),
-                Arguments.of("{\"searchTitle\":\"Title\",\"alternativeTitles\":[]}", "exactly searchTitle, searchFragments and alternativeTitles"),
-                Arguments.of("{\"searchFragments\":[],\"alternativeTitles\":[]}", "exactly searchTitle, searchFragments and alternativeTitles"),
-                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"extra\":true,\"alternativeTitles\":[]}", "exactly searchTitle, searchFragments and alternativeTitles"),
+                Arguments.of("[]", "NormalizationResponse"),
+                Arguments.of("{}", "searchTitle"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[]}", "alternativeTitles"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"alternativeTitles\":[]}", "searchFragments"),
+                Arguments.of("{\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"extra\":true,\"alternativeTitles\":[]}", "extra"),
                 Arguments.of("{\"searchTitle\":null,\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle must be a non-blank string"),
-                Arguments.of("{\"searchTitle\":123,\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle must be a non-blank string"),
-                Arguments.of("{\"searchTitle\":false,\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":123,\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle"),
+                Arguments.of("{\"searchTitle\":false,\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle"),
                 Arguments.of("{\"searchTitle\":\"\",\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle must be a non-blank string"),
                 Arguments.of("{\"searchTitle\":\" \\t\",\"searchFragments\":[],\"alternativeTitles\":[]}", "searchTitle must be a non-blank string"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":null,\"alternativeTitles\":[]}", "searchFragments must be an array"),
-                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":\"Title\",\"alternativeTitles\":[]}", "searchFragments must be an array"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":\"Title\",\"alternativeTitles\":[]}", "searchFragments"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\"T\",\"i\",\"t\",\"l\"],\"alternativeTitles\":[]}", "at most three"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[null],\"alternativeTitles\":[]}", "item must be a non-blank string"),
-                Arguments.of("{\"searchTitle\":\"123\",\"searchFragments\":[123],\"alternativeTitles\":[]}", "item must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"123\",\"searchFragments\":[123],\"alternativeTitles\":[]}", "searchFragments"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\"\"],\"alternativeTitles\":[]}", "item must be a non-blank string"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\" \"],\"alternativeTitles\":[]}", "item must be a non-blank string"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[\"title\"],\"alternativeTitles\":[]}", "literal contiguous substring"),
                 Arguments.of("{\"searchTitle\":\"Title: Subtitle\",\"searchFragments\":[\"Title Subtitle\"],\"alternativeTitles\":[]}", "literal contiguous substring"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":null}",
                         "alternativeTitles must be an array"),
-                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":\"Title\"}",
-                        "alternativeTitles must be an array"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":\"Title\"}", "alternativeTitles"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":[\"a\",\"b\",\"c\",\"d\"]}",
                         "alternativeTitles must contain at most three"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":[null]}",
                         "Each alternativeTitles item must be a non-blank string"),
-                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":[123]}",
-                        "Each alternativeTitles item must be a non-blank string"),
+                Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":[123]}", "alternativeTitles"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":[\"\"]}",
                         "Each alternativeTitles item must be a non-blank string"),
                 Arguments.of("{\"searchTitle\":\"Title\",\"searchFragments\":[],\"alternativeTitles\":[\" \"]}",
@@ -1226,7 +1247,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             switch (change) {
                 case "model" -> updateConfig(new ConfigSetUpdateCommand()
                         .setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("different-model"));
-                case "prompt" -> ReflectionTestUtils.setField(musicBrainzAlbumDataService, "normalizationPrompt", originalPrompt + "\n");
+                case "prompt" -> ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationPrompt", originalPrompt + "\n");
                 case "title" -> albumRepository.save(album.setName("Different title"));
                 default -> throw new IllegalArgumentException(change);
             }
@@ -1240,7 +1261,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(taskRepository.findAll()).hasSize(3)
                     .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         } finally {
-            ReflectionTestUtils.setField(musicBrainzAlbumDataService, "normalizationPrompt", originalPrompt);
+            ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationPrompt", originalPrompt);
         }
     }
 
@@ -1258,7 +1279,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(onlyTask().getResult()).contains(invalidResponse ? "searchTitle must be a non-blank string" : "Normalization unavailable");
+        assertThat(onlyTask().getResult()).contains(invalidResponse ? "searchTitle" : "Normalization unavailable");
         assertThat(onlyTask().getRawResponses()).hasSize(invalidResponse ? 5 : 2);
         assertThat(cacheRepository.count()).isZero();
         verify(session, times(1)).searchReleaseGroups(anyString());
@@ -2374,10 +2395,11 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"not JSON", "{}", "{\"artistNames\":null}", "{\"artistNames\":[12]}",
+            "{\"artistNames\":[],\"extra\":true}",
             "{\"artistNames\":[\"Invented Artist\"]}", "{\"artistNames\":[\"Slayer\"]}", "{\"artistNames\":[\" \"]}"})
     void shouldValidateAlternativeArtistNamesAndCacheOnlyAcceptedResponse(String rejected) {
         enableLlm();
-        alternativeTrack("Alternative Artist");
+        alternativeTrack("12");
         alternativeSearches(Map.of());
         when(model.call(any(Prompt.class))).thenReturn(response(
                         "{\"searchTitle\":\"Reign in Blood\",\"searchFragments\":[],\"alternativeTitles\":[]}"),

@@ -5,11 +5,10 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData.ReleaseType;
 import net.dorokhov.pony2.api.library.service.LibraryService;
-import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.OffsetBasedPageRequest;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
-import org.springframework.data.domain.Limit;
+import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskResultReader;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
-    private final DiscoveryTaskRepository discoveryTaskRepository;
+    private final DiscoveryTaskResultReader resultReader;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
     private final RandomFetcher randomFetcher;
@@ -44,7 +43,7 @@ public class LibraryServiceImpl implements LibraryService {
             AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
-            DiscoveryTaskRepository discoveryTaskRepository,
+            DiscoveryTaskResultReader resultReader,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
             RandomFetcher randomFetcher,
@@ -55,7 +54,7 @@ public class LibraryServiceImpl implements LibraryService {
         this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
-        this.discoveryTaskRepository = discoveryTaskRepository;
+        this.resultReader = resultReader;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
         this.randomFetcher = randomFetcher;
@@ -103,8 +102,7 @@ public class LibraryServiceImpl implements LibraryService {
         if (!configService.get().discoveryEnabled()) {
             return Optional.empty();
         }
-        List<String> topSongIds = discoveryTaskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
-                .map(json -> JsonConverter.listFromJson(json, String.class)).orElse(emptyList()).stream()
+        List<String> topSongIds = resultReader.readSpotifyTopTracks(artistId).stream()
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -125,8 +123,7 @@ public class LibraryServiceImpl implements LibraryService {
         if (!configService.get().discoveryEnabled()) {
             return Optional.empty();
         }
-        MusicBrainzAlbumData data = discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
-                .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
+        MusicBrainzAlbumData data = resultReader.readMusicBrainzAlbumData(albumId);
         if (data == null) {
             return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null));
         }

@@ -11,7 +11,6 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
-import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -46,6 +45,7 @@ public class ArtistDiscoveryService {
     private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
     private final AlbumRepository albumRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
+    private final DiscoveryTaskResultReader resultReader;
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final SpotifyTopTracksService spotifyTopTracksService;
     private final AlbumDiscoveryService albumDiscoveryService;
@@ -58,6 +58,7 @@ public class ArtistDiscoveryService {
             ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
             AlbumRepository albumRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
+            DiscoveryTaskResultReader resultReader,
             SpotifyArtistDataService spotifyArtistDataService,
             SpotifyTopTracksService spotifyTopTracksService,
             AlbumDiscoveryService albumDiscoveryService,
@@ -69,6 +70,7 @@ public class ArtistDiscoveryService {
         this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
         this.albumRepository = albumRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
+        this.resultReader = resultReader;
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.spotifyTopTracksService = spotifyTopTracksService;
         this.albumDiscoveryService = albumDiscoveryService;
@@ -160,8 +162,7 @@ public class ArtistDiscoveryService {
             String musicBrainzArtistId = null;
             String countryCode = null;
             for (Album album : albums) {
-                MusicBrainzAlbumData data = discoveryTaskRepository.findLatestCompletedMusicBrainzResultByAlbumId(album.getId(), Limit.of(1))
-                        .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
+                MusicBrainzAlbumData data = resultReader.readMusicBrainzAlbumData(album.getId());
                 if (data == null) {
                     continue;
                 }

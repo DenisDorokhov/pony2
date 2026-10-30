@@ -294,58 +294,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             @Override
             public void afterCommit() {
                 onDiscoveryJobStatusChange(discoveryJob);
-                discoveryJobExecutor.execute(() -> {
-                    DiscoveryJob currentDiscoveryJob = discoveryJob;
-                    try {
-                        jobSynchronizer.interruptDiscoveryIfCancelled();
-                        currentDiscoveryJob = changeDiscoveryJobStatusInTransaction(() -> {
-                            Optional<LogMessage> logStarted = logService.info(logger, "{}{}.",
-                                    discoveryType == DiscoveryType.FULL ? "Full discovery job started" : "Discovery job started for " + targetDescription,
-                                    cacheNote);
-                            return discoveryJobRepository.save(discoveryJob
-                                    .setStatus(STARTED)
-                                    .setLogMessage(logStarted.orElse(null)));
-                        });
-                        doDiscoveryJob(currentDiscoveryJob, cacheEnabled);
-                        completeDiscoveryJob(currentDiscoveryJob);
-                    } catch (Throwable t) {
-                        try {
-                            DiscoveryJob failedDiscoveryJob = currentDiscoveryJob;
-                            boolean interrupted = Throwables.getCausalChain(t).stream()
-                                    .anyMatch(cause -> cause instanceof DiscoveryInterruptedException);
-                            if (interrupted) {
-                                notifyObservers(observer -> observer.onDiscoveryJobInterrupting(failedDiscoveryJob));
-                            } else {
-                                notifyObservers(observer -> observer.onDiscoveryJobFailing(failedDiscoveryJob));
-                            }
-                            changeDiscoveryJobStatusInTransaction(() -> {
-                                if (interrupted) {
-                                    Optional<LogMessage> logMessage = logService.warn(logger, "Discovery job has been interrupted.", t);
-                                    return discoveryJobRepository.save(
-                                            discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
-                                                    .setStatus(INTERRUPTED)
-                                                    .setLogMessage(logMessage.orElse(null)));
-                                } else {
-                                    Optional<LogMessage> logMessage = logService.error(logger,
-                                            "{} due to an unexpected error.",
-                                            discoveryType == DiscoveryType.FULL
-                                                    ? "Full discovery job failed"
-                                                    : "Discovery job failed for " + targetDescription,
-                                            t);
-                                    return discoveryJobRepository.save(
-                                            discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
-                                                    .setStatus(FAILED)
-                                                    .setLogMessage(logMessage.orElse(null)));
-                                }
-                            });
-                        } catch (Throwable failure) {
-                            logger.error("Could not finalize failed discovery job '{}'.", discoveryJob.getId(), failure);
-                        }
-                    } finally {
-                        discoveryJobProgressReference.set(null);
-                        jobRegistration.close();
-                    }
-                });
+                discoveryJobExecutor.execute(() ->
+                        runDiscoveryJob(discoveryJob, discoveryType, cacheEnabled, targetDescription, jobRegistration));
             }
 
             @Override
@@ -357,6 +307,69 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         });
 
         return discoveryJob;
+    }
+
+    private void runDiscoveryJob(
+            DiscoveryJob discoveryJob, DiscoveryType discoveryType, boolean cacheEnabled, String targetDescription,
+            LibraryJobSynchronizer.LibraryJobRegistration jobRegistration
+    ) {
+        DiscoveryJob currentDiscoveryJob = discoveryJob;
+        try {
+            jobSynchronizer.interruptDiscoveryIfCancelled();
+            currentDiscoveryJob = changeDiscoveryJobStatusInTransaction(() -> {
+                String cacheNote = cacheEnabled ? "" : " (cache disabled)";
+                Optional<LogMessage> logStarted = logService.info(logger, "{}{}.",
+                        discoveryType == DiscoveryType.FULL ? "Full discovery job started" : "Discovery job started for " + targetDescription,
+                        cacheNote);
+                return discoveryJobRepository.save(discoveryJob
+                        .setStatus(STARTED)
+                        .setLogMessage(logStarted.orElse(null)));
+            });
+            doDiscoveryJob(currentDiscoveryJob, cacheEnabled);
+            completeDiscoveryJob(currentDiscoveryJob);
+        } catch (Throwable t) {
+            failDiscoveryJob(discoveryJob, currentDiscoveryJob, discoveryType, targetDescription, t);
+        } finally {
+            discoveryJobProgressReference.set(null);
+            jobRegistration.close();
+        }
+    }
+
+    private void failDiscoveryJob(
+            DiscoveryJob discoveryJob, DiscoveryJob currentDiscoveryJob, DiscoveryType discoveryType,
+            String targetDescription, Throwable error
+    ) {
+        try {
+            boolean interrupted = Throwables.getCausalChain(error).stream()
+                    .anyMatch(cause -> cause instanceof DiscoveryInterruptedException);
+            if (interrupted) {
+                notifyObservers(observer -> observer.onDiscoveryJobInterrupting(currentDiscoveryJob));
+            } else {
+                notifyObservers(observer -> observer.onDiscoveryJobFailing(currentDiscoveryJob));
+            }
+            changeDiscoveryJobStatusInTransaction(() -> {
+                if (interrupted) {
+                    Optional<LogMessage> logMessage = logService.warn(logger, "Discovery job has been interrupted.", error);
+                    return discoveryJobRepository.save(
+                            discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
+                                    .setStatus(INTERRUPTED)
+                                    .setLogMessage(logMessage.orElse(null)));
+                } else {
+                    Optional<LogMessage> logMessage = logService.error(logger,
+                            "{} due to an unexpected error.",
+                            discoveryType == DiscoveryType.FULL
+                                    ? "Full discovery job failed"
+                                    : "Discovery job failed for " + targetDescription,
+                            error);
+                    return discoveryJobRepository.save(
+                            discoveryJobRepository.findById(discoveryJob.getId()).orElseThrow()
+                                    .setStatus(FAILED)
+                                    .setLogMessage(logMessage.orElse(null)));
+                }
+            });
+        } catch (Throwable failure) {
+            logger.error("Could not finalize failed discovery job '{}'.", discoveryJob.getId(), failure);
+        }
     }
 
     private void doDiscoveryJob(DiscoveryJob discoveryJob, boolean cacheEnabled) {

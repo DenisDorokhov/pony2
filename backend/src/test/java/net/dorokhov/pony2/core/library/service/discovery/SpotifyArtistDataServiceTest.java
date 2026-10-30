@@ -537,7 +537,8 @@ class SpotifyArtistDataServiceTest {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
         DiscoveryTaskLlmExecutor operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
-                discoveryTaskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 1, 1, Duration.ofMinutes(10));
+                new DiscoveryTaskExchangeRecorder(discoveryTaskRepository, transactionManager()),
+                logService, jobSynchronizer, shutdownService, 1, 1, Duration.ofMinutes(10));
         return new SpotifyArtistDataService(operation,
                 validator, artistRepository, logService, shutdownService,
                 jobSynchronizer, transactionManager(), promptResource,

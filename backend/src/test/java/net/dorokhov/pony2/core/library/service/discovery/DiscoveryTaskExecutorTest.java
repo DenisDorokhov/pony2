@@ -52,7 +52,7 @@ class DiscoveryTaskExecutorTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = "result")
-    void shouldKeepTaskRegisteredThroughCompletionHook(String value) {
+    void shouldKeepTaskRegisteredThroughResultSave(String value) {
         DiscoveryTask task = task();
         when(execution.startTask()).thenAnswer(invocation -> {
             assertThat(jobSynchronizer.hasRunningTasks()).isTrue();
@@ -65,14 +65,11 @@ class DiscoveryTaskExecutorTest {
             assertThat(task.getResult()).isEqualTo(value != null ? JsonConverter.toJson(value) : null);
             assertThat(jobSynchronizer.hasRunningTasks()).isTrue();
             return null;
-        }).when(execution).onCompletion(task, value);
+        }).when(execution).onResult(task, value);
 
-        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+        executor.execute(execution);
 
-        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(result.value()).isEqualTo(value);
         verify(execution).onResult(task, value);
-        verify(execution).onCompletion(task, value);
         verify(execution, never()).onError(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }
@@ -84,30 +81,12 @@ class DiscoveryTaskExecutorTest {
         when(execution.startTask()).thenReturn(task);
         when(execution.executeTask(task)).thenReturn(null);
 
-        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+        executor.execute(execution);
 
-        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(result.value()).isNull();
+        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         verify(taskRepository).save(task);
         assertThat(task.getResult()).isNull();
         verify(execution).onResult(task, null);
-    }
-
-    @Test
-    void shouldPreserveCompletedTaskWhenCompletionHookFails() {
-        DiscoveryTask task = task();
-        IllegalStateException hookFailure = new IllegalStateException("Hook failed");
-        when(execution.startTask()).thenReturn(task);
-        when(execution.executeTask(task)).thenReturn("result");
-        doThrow(hookFailure).when(execution).onCompletion(task, "result");
-
-        assertThatThrownBy(() -> executor.execute(execution)).isSameAs(hookFailure);
-
-        verify(taskRepository).save(task);
-        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(task.getResult()).isEqualTo(JsonConverter.toJson("result"));
-        verify(execution, never()).onError(any(), any());
-        assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }
 
     @Test
@@ -120,42 +99,36 @@ class DiscoveryTaskExecutorTest {
         when(taskRepository.findById(task.getId())).thenReturn(Optional.of(task));
         doThrow(hookFailure).when(execution).onError(task, taskFailure);
 
-        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
-
-        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(result.value()).isNull();
+        executor.execute(execution);
 
         verify(taskRepository).save(task);
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(task.getResult()).contains("Task failed").doesNotContain("Hook failed");
-        verify(execution, never()).onCompletion(any(), any());
         verify(execution, never()).onResult(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void shouldReturnFailedResultOnTaskFailure(boolean error) {
+    void shouldPersistFailedTaskOnTaskFailure(boolean error) {
         DiscoveryTask task = task();
         Throwable failure = error ? new AssertionError("Task failed") : new IllegalArgumentException("Task failed");
         when(execution.startTask()).thenReturn(task);
         when(execution.executeTask(task)).thenThrow(failure);
         when(taskRepository.findById(task.getId())).thenReturn(Optional.of(task));
 
-        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+        executor.execute(execution);
 
-        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(result.value()).isNull();
+        verify(taskRepository).save(task);
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(task.getResult()).contains("Task failed");
         verify(execution).onError(task, failure);
-        verify(execution, never()).onCompletion(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void shouldReturnFailedResultWhenSavingFailureFails(boolean error) {
+    void shouldReleaseRegistrationWhenSavingFailureFails(boolean error) {
         DiscoveryTask task = task();
         Throwable taskFailure = error ? new AssertionError("Task failed") : new IllegalArgumentException("Task failed");
         IllegalStateException persistenceFailure = new IllegalStateException("Database unavailable");
@@ -163,10 +136,9 @@ class DiscoveryTaskExecutorTest {
         when(execution.executeTask(task)).thenThrow(taskFailure);
         when(taskRepository.save(task)).thenThrow(persistenceFailure);
 
-        DiscoveryTaskExecutor.TaskResult<String> result = executor.execute(execution);
+        executor.execute(execution);
 
-        assertThat(result.status()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(result.value()).isNull();
+        verify(taskRepository).save(task);
         verify(execution, never()).onError(any(), any());
         assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
     }

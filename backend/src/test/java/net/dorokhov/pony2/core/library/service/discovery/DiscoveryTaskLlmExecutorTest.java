@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -99,8 +100,9 @@ class DiscoveryTaskLlmExecutorTest {
         ChatClient client = ChatClient.builder(model).build();
         discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
-        operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService, taskRepository,
-                logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
+        operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
+                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
+                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
     }
 
     @AfterEach
@@ -165,8 +167,9 @@ class DiscoveryTaskLlmExecutorTest {
             toolsEnabledValues.add(toolsEnabled);
             return client;
         }, jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
-        DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService, taskRepository,
-                logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
+        DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
+                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
+                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
         List<ChatResponse> responses = new ArrayList<>(type.isToolsEnabled()
                 ? List.of(response("<tool_call>"), response("Collected data"), response("Rejected answer"),
                         response("Rechecked data"), response("Accepted answer"))
@@ -231,7 +234,8 @@ class DiscoveryTaskLlmExecutorTest {
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
-                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
+                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
+                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -294,7 +298,8 @@ class DiscoveryTaskLlmExecutorTest {
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
-                taskRepository, logService, jobSynchronizer, shutdownService, transactionManager(), 3, 1, Duration.ofMinutes(10));
+                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
+                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -357,7 +362,7 @@ class DiscoveryTaskLlmExecutorTest {
         when(model.call(any(Prompt.class))).thenReturn(response("<tool_call>"));
         ApplicationContextRunner runner = new ApplicationContextRunner()
                 .withInitializer(context -> context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance()))
-                .withUserConfiguration(DiscoveryTaskLlmExecutor.class)
+                .withUserConfiguration(DiscoveryTaskLlmExecutor.class, DiscoveryTaskExchangeRecorder.class)
                 .withBean(DiscoveryChatClient.class, () -> discoveryClient)
                 .withBean(DiscoveryCacheService.class, () -> cacheService)
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
@@ -758,7 +763,7 @@ class DiscoveryTaskLlmExecutorTest {
     void shouldUseDefaultOrConfiguredFollowUpRetryLimit(String configuredRetries, int expectedRetries) {
         ApplicationContextRunner runner = new ApplicationContextRunner()
                 .withInitializer(context -> context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance()))
-                .withUserConfiguration(DiscoveryTaskLlmExecutor.class)
+                .withUserConfiguration(DiscoveryTaskLlmExecutor.class, DiscoveryTaskExchangeRecorder.class)
                 .withBean(DiscoveryChatClient.class, () -> discoveryClient)
                 .withBean(DiscoveryCacheService.class, () -> cacheService)
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
@@ -800,6 +805,61 @@ class DiscoveryTaskLlmExecutorTest {
 
         assertThat(cancelledTask.getRawResponses()).containsExactly((Object) null);
         verify(model, times(2)).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldPreserveEffectiveCachedRequestWhenCancelledBeforeSavingResponse() {
+        DiscoveryTask originalTask = task();
+        DialogueRequest request = searchRequest();
+        operation.call(originalTask, request, AnswerResponse.class, CACHE_SETTINGS, response -> {
+            if (response.equals("answer 1")) {
+                throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            }
+            return response;
+        });
+        Object effectiveRequest = originalTask.getRawRequests().getLast();
+        assertThat(effectiveRequest).isNotEqualTo(originalTask.getRawRequests().getFirst());
+        Map<String, String> cacheBeforeCancellation = new HashMap<>(cache);
+        String cached = cache.values().iterator().next();
+        when(cacheService.get(eq(SPOTIFY), anyString(), eq(1))).thenAnswer(invocation -> {
+            jobSynchronizer.cancelDiscovery();
+            return Optional.of(cached);
+        });
+        DiscoveryTask cancelledTask = task();
+
+        assertThatThrownBy(() -> operation.call(cancelledTask, request, AnswerResponse.class, CACHE_SETTINGS, response -> {
+            throw new AssertionError("A cancelled operation must not process the response");
+        })).isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(cancelledTask.getRawRequests()).containsExactly(effectiveRequest);
+        assertThat(cancelledTask.getRawResponses()).containsExactly((Object) null);
+        assertThat(cache).isEqualTo(cacheBeforeCancellation);
+        verify(model, times(4)).call(any(Prompt.class));
+    }
+
+    @Test
+    void shouldInterruptBeforeProcessingFollowUpWhenCancelledWhileSavingResponse() {
+        DiscoveryTask task = task();
+        AtomicInteger processedResponses = new AtomicInteger();
+        when(taskRepository.save(any(DiscoveryTask.class))).thenAnswer(invocation -> {
+            DiscoveryTask savedTask = invocation.getArgument(0);
+            List<Object> responses = savedTask.getRawResponses();
+            if (responses != null && responses.size() == 2 && responses.getLast() != null) {
+                jobSynchronizer.cancelDiscovery();
+            }
+            return savedTask;
+        });
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, response -> {
+            processedResponses.incrementAndGet();
+            throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+        })).isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(processedResponses.get()).isEqualTo(1);
+        assertThat(task.getRawRequests()).hasSize(2);
+        assertThat(task.getRawResponses()).containsExactly("answer 1", "answer 2");
+        assertThat(cache).isEmpty();
+        verify(model, times(4)).call(any(Prompt.class));
     }
 
     private DiscoveryTask task() {

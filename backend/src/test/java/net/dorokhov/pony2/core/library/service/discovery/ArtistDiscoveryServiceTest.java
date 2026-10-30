@@ -51,6 +51,8 @@ class ArtistDiscoveryServiceTest {
     @Mock
     private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock
+    private DiscoveryTaskResultReader discoveryTaskResultReader;
+    @Mock
     private AlbumDiscoveryService albumDiscoveryService;
     @Mock
     private DiscoveryTaskExecutor taskExecutor;
