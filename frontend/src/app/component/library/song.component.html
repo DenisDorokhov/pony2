@@ -29,19 +29,21 @@
     <button ngbDropdownToggle [hidden]="!isMouseOver() && !menuDropdown.isOpen()" class="menu"
             (keydown.enter)="$event.stopPropagation()"><i class="bi bi-three-dots-vertical"></i></button>
     <div ngbDropdownMenu class="dropdown-menu" role="menu">
-      <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
-      <button ngbDropdownItem (click)="switchQueue()"><i class="bi bi-sign-merge-right-fill"></i>{{ 'library.song.switchQueue' | translate }}</button>
-      <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.song.addToQueue' | translate }}</button>
-      <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.song.createQueue' | translate }}</button>
-      <button ngbDropdownItem (click)="download()"><i class="bi bi-download"></i>{{ 'library.song.download' | translate }}</button>
-      <li [hidden]="topPlaylists().length < 1"><hr class="dropdown-divider"></li>
-      @for (playlist of topPlaylists(); track playlist.id) {
-        <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.song.addToPlaylist' | translate:{
-          name: playlist.name,
-        } }}</button>
+      @if (menuDropdown.isOpen()) {
+        <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
+        <button ngbDropdownItem (click)="switchQueue()"><i class="bi bi-sign-merge-right-fill"></i>{{ 'library.song.switchQueue' | translate }}</button>
+        <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.song.addToQueue' | translate }}</button>
+        <button ngbDropdownItem (click)="createQueue()"><i class="bi bi-plus-lg"></i>{{ 'library.song.createQueue' | translate }}</button>
+        <button ngbDropdownItem (click)="download()"><i class="bi bi-download"></i>{{ 'library.song.download' | translate }}</button>
+        <li [hidden]="topPlaylists().length < 1"><hr class="dropdown-divider"></li>
+        @for (playlist of topPlaylists(); track playlist.id) {
+          <button ngbDropdownItem (click)="addToPlaylist(playlist)"><i class="bi bi-file-plus"></i>{{ 'library.song.addToPlaylist' | translate:{
+            name: playlist.name,
+          } }}</button>
+        }
+        <li><hr class="dropdown-divider"></li>
+        <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.song.selectOrCreatePlaylist' | translate }}</button>
       }
-      <li><hr class="dropdown-divider"></li>
-      <button ngbDropdownItem (click)="selectOrCreatePlaylist()"><i class="bi bi-music-note-list"></i>{{ 'library.song.selectOrCreatePlaylist' | translate }}</button>
     </div>
   </div>
   <div class="like-container" [hidden]="!isMouseOver() && !isLikedSong() && !isTopTrack()">

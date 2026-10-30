@@ -120,9 +120,7 @@
     right: 0;
     bottom: 0;
     overflow-x: hidden;
-    overflow-y: auto;
-    /* Scrolling performance optimization */
-    transform: translateZ(0);
+    overflow-y: scroll;
 
     // Include the content padding in the virtual scroll's total scrollable height.
     &::after {
