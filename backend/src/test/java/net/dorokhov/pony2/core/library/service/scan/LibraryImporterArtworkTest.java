@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.net.URI;
 
 import static net.dorokhov.pony2.test.ArtworkFixtures.*;
 import static net.dorokhov.pony2.test.ReadableAudioDataFixtures.readableAudioData;
@@ -106,6 +107,136 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
     }
 
     @Test
+    public void shouldUpdateAlbumArtworkIfEmbeddedArtworkChangedAndStillInUse() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/otherAlbum/song.mp3"));
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setArtwork(existingArtwork),
+                album -> album.setArtwork(existingArtwork));
+        ArtworkFiles newArtworkFiles = artworkFiles(artwork().setId("2")
+                .setSourceUri(URI.create("embedded:/song.mp3")));
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
+        when(libraryCleaner.deleteArtworkIfUnused(existingArtwork)).thenReturn(false);
+
+        Song song = libraryImporter.importAudioData(audioNode(), audioData);
+
+        assertThat(song.getArtwork()).isSameAs(newArtworkFiles.getArtwork());
+        verify(libraryCleaner).deleteArtworkIfUnused(existingArtwork);
+        ArgumentCaptor<Album> albumCaptor = ArgumentCaptor.forClass(Album.class);
+        verify(albumRepository).save(albumCaptor.capture());
+        assertThat(albumCaptor.getValue().getArtwork()).isSameAs(newArtworkFiles.getArtwork());
+    }
+
+    @Test
+    public void shouldNotUpdateAlbumArtworkIfAlbumArtworkIsDifferent() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        Artwork albumArtwork = artwork().setId("3")
+                .setSourceUri(URI.create("embedded:/otherSong.mp3"));
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setArtwork(existingArtwork),
+                album -> album.setArtwork(albumArtwork));
+        ArtworkFiles newArtworkFiles = artworkFiles(artwork().setId("2")
+                .setSourceUri(URI.create("embedded:/song.mp3")));
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
+
+        libraryImporter.importAudioData(audioNode(), audioData);
+
+        verify(albumRepository, never()).save(any());
+    }
+
+    @Test
+    public void shouldNotUpdateAlbumArtworkIfItAlreadyMatchesNewArtwork() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        ArtworkFiles newArtworkFiles = artworkFiles(artwork().setId("2")
+                .setSourceUri(URI.create("embedded:/otherSong.mp3")));
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setArtwork(existingArtwork),
+                album -> album.setArtwork(newArtworkFiles.getArtwork()));
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
+
+        libraryImporter.importAudioData(audioNode(), audioData);
+
+        verify(albumRepository, never()).save(any());
+    }
+
+    @Test
+    public void shouldNotUpdateAlbumArtworkIfSongArtworkIsUnchanged() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        Artwork albumArtwork = artwork().setId("2")
+                .setSourceUri(URI.create("embedded:/otherSong.mp3"));
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setArtwork(existingArtwork),
+                album -> album.setArtwork(albumArtwork));
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(artworkFiles(existingArtwork));
+
+        libraryImporter.importAudioData(audioNode(), audioData.setTitle("someTitle"));
+
+        verify(albumRepository, never()).save(any());
+        verifyNoInteractions(libraryCleaner);
+    }
+
+    @Test
+    public void shouldNotUpdateAlbumArtworkIfSongAlbumChanged() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        Album existingAlbum = new Album().setId("5")
+                .setArtist(new Artist().setId("6"))
+                .setArtwork(existingArtwork);
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setAlbum(existingAlbum).setArtwork(existingArtwork),
+                album -> album.setArtwork(existingArtwork));
+        ArtworkFiles newArtworkFiles = artworkFiles(artwork().setId("2")
+                .setSourceUri(URI.create("embedded:/song.mp3")));
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(newArtworkFiles);
+
+        libraryImporter.importAudioData(audioNode(), audioData);
+
+        verify(albumRepository, never()).save(any());
+        verify(libraryCleaner).deleteAlbumIfUnused(existingAlbum);
+        assertThat(existingAlbum.getArtwork()).isSameAs(existingArtwork);
+    }
+
+    @Test
+    public void shouldNotReplaceEmbeddedAlbumArtworkWithFileArtwork() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setArtwork(existingArtwork),
+                album -> album.setArtwork(existingArtwork));
+        ArtworkFiles newArtworkFiles = artworkFiles(artwork().setId("2"));
+        when(libraryArtworkFinder.findAndSaveFileArtwork(any())).thenReturn(newArtworkFiles);
+
+        libraryImporter.importAudioData(audioNode(), audioData);
+
+        verify(albumRepository, never()).save(any());
+    }
+
+    @Test
+    public void shouldNotClearAlbumArtworkIfArtworkIsStillInUse() throws IOException {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        ReadableAudioData audioData = mockExistingSong(
+                song -> song.setArtwork(existingArtwork),
+                album -> album.setArtwork(existingArtwork));
+        when(libraryArtworkFinder.findAndSaveEmbeddedArtwork(any())).thenReturn(null);
+        when(libraryCleaner.deleteArtworkIfUnused(existingArtwork)).thenReturn(false);
+
+        libraryImporter.importAudioData(audioNode(), audioData);
+
+        verify(albumRepository, never()).save(any());
+    }
+
+    @Test
     public void shouldFindAndSaveSongAndAlbumArtwork() throws IOException {
         
         when(songRepository.findByPath(any())).thenReturn(song()
@@ -143,6 +274,27 @@ public class LibraryImporterArtworkTest extends AbstractLibraryImporterTest {
         assertThat(song).isNull();
         verify(songRepository, never()).save(any());
         verify(albumRepository, never()).save(any());
+    }
+
+    @Test
+    public void shouldNotUpdateAlbumArtworkIfUnchangedSongArtworkIsDifferent() {
+
+        Artwork existingArtwork = artwork().setId("1")
+                .setSourceUri(URI.create("embedded:/song.mp3"));
+        Artwork albumArtwork = artwork().setId("2")
+                .setSourceUri(URI.create("embedded:/otherSong.mp3"));
+        when(songRepository.findByPath(any())).thenReturn(song()
+                .setArtwork(existingArtwork)
+                .setAlbum(new Album()
+                        .setArtwork(albumArtwork)
+                        .setArtist(new Artist())));
+
+        Song song = libraryImporter.importArtwork(audioNode()).orElse(null);
+
+        assertThat(song).isNull();
+        verify(songRepository, never()).save(any());
+        verify(albumRepository, never()).save(any());
+        verifyNoInteractions(libraryArtworkFinder);
     }
 
     @Test

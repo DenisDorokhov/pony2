@@ -203,7 +203,8 @@ public class LibraryImporter {
                 albumRepository.save(album
                         .setArtwork(null));
             }
-            if (shouldImportAlbumArtwork(album, artwork)) {
+            if (shouldUpdateAlbumArtwork(album, artwork, overriddenAlbum, overriddenArtwork) ||
+                    shouldImportAlbumArtwork(album, artwork)) {
                 importAlbumArtwork(album, artwork);
             }
             return savedSong;
@@ -211,6 +212,13 @@ public class LibraryImporter {
             logger.debug("No changes found, storing new update date for song '{}'.", songToSave);
             return songRepository.save(songToSave.setUpdateDate(LocalDateTime.now()));
         }
+    }
+
+    private boolean shouldUpdateAlbumArtwork(Album album, Artwork artwork, Album overriddenAlbum, Artwork overriddenArtwork) {
+        // Album artwork follows embedded artwork changes even if the previous artwork is still in use.
+        return overriddenAlbum == null && artwork != null && overriddenArtwork != null &&
+                Objects.equals(album.getArtwork(), overriddenArtwork) &&
+                Objects.equals(artwork.getSourceUriScheme(), SOURCE_URI_SCHEME_EMBEDDED);
     }
 
     private boolean shouldImportAlbumArtwork(Album album, Artwork artwork) {
