@@ -14,6 +14,7 @@ import {
   SearchResultDto,
   SongDto
 } from './library.dto';
+import {formatFileSize} from '../utils/format.utils';
 
 const NAME_COLLATOR = new Intl.Collator(undefined, {sensitivity: 'accent'});
 
@@ -38,7 +39,7 @@ export class Song {
   genreId: string;
   album: Album;
   audioUrl: string;
-  sizeMb: number;
+  formattedSize: string;
 
   constructor(songDto: SongDto, album: Album) {
     this.id = songDto.id;
@@ -60,11 +61,7 @@ export class Song {
     this.genreId = songDto.genreId;
     this.album = album;
     this.audioUrl = '/api/file/audio/' + this.id;
-    this.sizeMb = Song.roundToTwoDecimals(songDto.size / 1_000_000);
-  }
-
-  private static roundToTwoDecimals(num: number) {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
+    this.formattedSize = formatFileSize(songDto.size);
   }
 
   get isTopTrack(): boolean {

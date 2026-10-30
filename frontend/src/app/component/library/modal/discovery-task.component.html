@@ -49,30 +49,33 @@
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.resultLabel' | translate }}</label>
       <div class="json-value">
-        <pre><code [highlight]="task.result ?? '—'" language="json"></code></pre>
+        <pre><code [highlight]="resultPreview" language="json"></code></pre>
         @if (task.result) {
+          <span class="json-size text-body-secondary">{{ resultSize }}</span>
           <button type="button" class="btn btn-outline-dark btn-sm details-button"
-                  (click)="showDetails(task.result, 'discoveryTask.resultDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+                  (click)="showDetails(task.result, 'discoveryTask.resultDetailsHeader', 'result')">{{ 'discoveryTask.detailsButton' | translate }}</button>
         }
       </div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.rawRequestsLabel' | translate }}</label>
       <div class="json-value">
-        <pre><code [highlight]="task.rawRequests ?? '—'" language="json"></code></pre>
+        <pre><code [highlight]="rawRequestsPreview" language="json"></code></pre>
         @if (task.rawRequests) {
+          <span class="json-size text-body-secondary">{{ rawRequestsSize }}</span>
           <button type="button" class="btn btn-outline-dark btn-sm details-button"
-                  (click)="showDetails(task.rawRequests, 'discoveryTask.rawRequestsDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+                  (click)="showDetails(task.rawRequests, 'discoveryTask.rawRequestsDetailsHeader', 'raw-requests')">{{ 'discoveryTask.detailsButton' | translate }}</button>
         }
       </div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.rawResultsLabel' | translate }}</label>
       <div class="json-value">
-        <pre><code [highlight]="task.rawResults ?? '—'" language="json"></code></pre>
+        <pre><code [highlight]="rawResultsPreview" language="json"></code></pre>
         @if (task.rawResults) {
+          <span class="json-size text-body-secondary">{{ rawResultsSize }}</span>
           <button type="button" class="btn btn-outline-dark btn-sm details-button"
-                  (click)="showDetails(task.rawResults, 'discoveryTask.rawResultsDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+                  (click)="showDetails(task.rawResults, 'discoveryTask.rawResultsDetailsHeader', 'raw-results')">{{ 'discoveryTask.detailsButton' | translate }}</button>
         }
       </div>
     </div>

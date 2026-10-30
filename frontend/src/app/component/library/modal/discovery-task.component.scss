@@ -88,7 +88,13 @@ label {
     white-space: nowrap;
   }
 
+  .json-size,
   .details-button {
     flex-shrink: 0;
+  }
+
+  .json-size {
+    white-space: nowrap;
+    font-size: 0.875rem;
   }
 }

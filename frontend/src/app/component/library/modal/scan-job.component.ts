@@ -32,7 +32,7 @@ export class ScanJobComponent implements OnInit {
     this.exception = LogMessageDto.extractException(this.scanJob.logMessage);
     if (this.scanJob.scanResult) {
       this.duration = formatDuration(this.scanJob.scanResult!.duration, this.translateService);
-      this.songSize = formatFileSize(this.scanJob.scanResult!.songSize, this.translateService);
+      this.songSize = formatFileSize(this.scanJob.scanResult!.songSize);
       const resultEntries: string[] = [];
       if (this.scanJob.scanResult.createdArtistCount) {
         resultEntries.push(this.translateService.instant('scanJob.scanResult.createdArtistCount', {value: this.scanJob.scanResult.createdArtistCount}));

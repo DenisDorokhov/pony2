@@ -1,17 +1,14 @@
 import {TranslateService} from '@ngx-translate/core';
 
-export function formatFileSize(bytes: number, translateService: TranslateService) {
-  const gigabytes = bytes / 1_000_000_000;
-  if (gigabytes >= 1) {
-    return translateService.instant('library.scanStatistics.sizeGigabytes', {
-      size: gigabytes.toFixed(2)
-    });
-  } else {
-    const megabytes = bytes / 1_000_000;
-    return translateService.instant('library.scanStatistics.sizeMegabytes', {
-      size: megabytes.toFixed(2)
-    });
+export function formatFileSize(bytes: number): string {
+  const units: string[] = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let size: number = bytes;
+  let unitIndex = 0;
+  while (Number(size.toFixed(1)) >= 1000 && unitIndex < units.length - 1) {
+    size /= 1000;
+    unitIndex++;
   }
+  return `${Number(size.toFixed(1))}${units[unitIndex]}`;
 }
 
 export function formatDuration(durationSeconds: number, translateService: TranslateService) {

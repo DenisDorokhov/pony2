@@ -56,7 +56,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
   }
 
   private calculateSize(): string | undefined {
-    return this.scanStatistics ? formatFileSize(this.scanStatistics.songSize, this.translateService) : undefined;
+    return this.scanStatistics ? formatFileSize(this.scanStatistics.songSize) : undefined;
   }
 
   private calculateDuration(): string | undefined {
