@@ -5,6 +5,9 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony2.api.common.BaseEntity;
+import net.dorokhov.pony2.common.ListOfObjectsJsonAttributeConverter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "discovery_task")
@@ -29,11 +32,13 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
     @Column(name = "result")
     private String result;
 
-    @Column(name = "raw_request")
-    private String rawRequest;
+    @Column(name = "raw_requests")
+    @Convert(converter = ListOfObjectsJsonAttributeConverter.class)
+    private List<Object> rawRequests;
 
-    @Column(name = "raw_result")
-    private String rawResult;
+    @Column(name = "raw_results")
+    @Convert(converter = ListOfObjectsJsonAttributeConverter.class)
+    private List<Object> rawResults;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "discovery_job_id", nullable = false)
@@ -119,21 +124,21 @@ public class DiscoveryTask extends BaseEntity<DiscoveryTask> {
         return this;
     }
 
-    public @Nullable String getRawRequest() {
-        return rawRequest;
+    public @Nullable List<Object> getRawRequests() {
+        return rawRequests;
     }
 
-    public DiscoveryTask setRawRequest(@Nullable String rawRequest) {
-        this.rawRequest = rawRequest;
+    public DiscoveryTask setRawRequests(@Nullable List<Object> rawRequests) {
+        this.rawRequests = rawRequests;
         return this;
     }
 
-    public @Nullable String getRawResult() {
-        return rawResult;
+    public @Nullable List<Object> getRawResults() {
+        return rawResults;
     }
 
-    public DiscoveryTask setRawResult(@Nullable String rawResult) {
-        this.rawResult = rawResult;
+    public DiscoveryTask setRawResults(@Nullable List<Object> rawResults) {
+        this.rawResults = rawResults;
         return this;
     }
 

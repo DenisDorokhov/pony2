@@ -151,7 +151,7 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(schema.get("required")).isEqualTo(List.of("answer"));
         assertThat(schema.get("additionalProperties")).isEqualTo(false);
         assertThat(prompt.getInstructions().subList(0, 2)).extracting(Message::getText).containsExactly("Find artist data", "Artist");
-        Map<?, ?> snapshot = JsonConverter.listFromJson(task.getRawRequest(), Map.class).getFirst();
+        Map<?, ?> snapshot = (Map<?, ?>) task.getRawRequests().getFirst();
         assertThat(snapshot.get("responseSchema")).isEqualTo(schema);
         assertThat(prompts).hasSize(2);
     }
@@ -214,7 +214,7 @@ class DiscoveryTaskLlmExecutorTest {
             assertThat(prompt.getInstructions().getFirst().getText()).isEqualTo("Artist");
             assertThat(prompt.getInstructions().getLast().getText()).endsWith(format.getJsonSchema());
         });
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(answer);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(answer));
         assertThat(operation.call(task().setType(MUSICBRAINZ_ALBUM_DATA), request, AnswerResponse.class,
                 CACHE_SETTINGS, Function.identity())).isEqualTo(answer);
         verify(model).call(any(Prompt.class));
@@ -273,8 +273,8 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(formatting.getInstructions().getLast()).isInstanceOf(UserMessage.class);
         assertThat(formatting.getInstructions().getLast().getText()).isEqualTo("Collected artist data");
         assertThat(formatting.getInstructions()).noneMatch(ToolResponseMessage.class::isInstance);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
-                .containsExactly("{\"answer\":\"Collected artist data\"}");
+        assertThat(task.getRawResults())
+                .containsExactly(Map.of("answer", "Collected artist data"));
 
         assertThat(operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
                 .isEqualTo("{\"answer\":\"Collected artist data\"}");
@@ -495,7 +495,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .contains("answer 1", "Recheck the artist");
         assertThat(prompts.getLast().getInstructions()).hasSize(2);
         assertThat(prompts.getLast().getInstructions().getLast().getText()).isEqualTo("answer 2");
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly("answer 1", "answer 2");
+        assertThat(task.getRawResults()).containsExactly("answer 1", "answer 2");
         assertThat(operation.call(task(), new ToolRequest(null), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
                 .isEqualTo("answer 2");
         verify(model, times(4)).call(any(Prompt.class));
@@ -547,7 +547,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .isSameAs(failure);
 
         verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
-        assertThat(task.getRawResult()).isEqualTo("[null]");
+        assertThat(task.getRawResults()).containsExactly((Object) null);
         assertThat(cache).isEmpty();
     }
 
@@ -598,8 +598,8 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(prompts).hasSize(4);
         assertThat(prompts.get(2).getInstructions().subList(0, 4)).extracting(Message::getText)
                 .containsExactly("Find artist data", "Artist", answer, "Verify this answer");
-        assertThat(JsonConverter.listFromJson(task.getRawRequest(), Object.class)).hasSize(2);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(answer, verified);
+        assertThat(task.getRawRequests()).hasSize(2);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(answer), JsonConverter.fromJsonOrString(verified));
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED);
         assertThat(task.getResult()).isNull();
         assertThat(cache).hasSize(2);
@@ -610,8 +610,8 @@ class DiscoveryTaskLlmExecutorTest {
 
         assertThat(cachedAnswer).isEqualTo(answer);
         assertThat(cachedVerification).isEqualTo(verified);
-        assertThat(cachedTask.getRawRequest()).isEqualTo(task.getRawRequest());
-        assertThat(cachedTask.getRawResult()).isEqualTo(task.getRawResult());
+        assertThat(cachedTask.getRawRequests()).isEqualTo(task.getRawRequests());
+        assertThat(cachedTask.getRawResults()).isEqualTo(task.getRawResults());
         verify(model, times(4)).call(any(Prompt.class));
 
         operation.call(task(), verificationRequest(search, "different answer"), AnswerResponse.class, CACHE_SETTINGS, Function.identity());
@@ -628,13 +628,13 @@ class DiscoveryTaskLlmExecutorTest {
         IllegalStateException rejected = new IllegalStateException("Verification failed");
 
         assertThatThrownBy(() -> operation.call(task, verificationRequest(search, answer), AnswerResponse.class, CACHE_SETTINGS, rawResponse -> {
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(answer, rawResponse);
+            assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(answer), JsonConverter.fromJsonOrString(rawResponse));
             throw rejected;
         })).isSameAs(rejected);
 
         assertThat(cache).hasSize(1);
-        assertThat(JsonConverter.listFromJson(task.getRawRequest(), Object.class)).hasSize(2);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(answer, "answer 2");
+        assertThat(task.getRawRequests()).hasSize(2);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(answer), "answer 2");
     }
 
     @Test
@@ -648,8 +648,8 @@ class DiscoveryTaskLlmExecutorTest {
         assertThatThrownBy(() -> operation.call(task, verificationRequest(search, answer), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
                 .isSameAs(failure);
 
-        assertThat(JsonConverter.listFromJson(task.getRawRequest(), Object.class)).hasSize(2);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(answer, null);
+        assertThat(task.getRawRequests()).hasSize(2);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(answer), null);
         assertThat(cache).hasSize(1);
     }
 
@@ -664,7 +664,7 @@ class DiscoveryTaskLlmExecutorTest {
             throw rejected;
         })).isSameAs(rejected);
 
-        assertThat(JsonConverter.fromJson(cachedTask.getRawResult(), String[].class)).containsExactly("answer 1");
+        assertThat(cachedTask.getRawResults()).containsExactly("answer 1");
         verify(model, times(2)).call(any(Prompt.class));
         verify(cacheService).put(eq(SPOTIFY), anyString(), eq(1), anyString());
     }
@@ -687,15 +687,15 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(result).isEqualTo("answer 2");
         assertThat(prompts.get(2).getInstructions().subList(0, 4)).extracting(Message::getText)
                 .containsExactly("Find artist data", "Artist", "answer 1", "Verify this answer");
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly("answer 1", "answer 2");
-        Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+        assertThat(task.getRawResults()).containsExactly("answer 1", "answer 2");
+        List<Object> requests = task.getRawRequests();
         assertThat(requests).hasSize(2);
         assertThat(cache).hasSize(1);
 
         DiscoveryTask cachedTask = task();
         assertThat(operation.call(cachedTask, search, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo("answer 2");
-        assertThat(JsonConverter.fromJson(cachedTask.getRawResult(), String[].class)).containsExactly("answer 2");
-        assertThat(JsonConverter.fromJson(cachedTask.getRawRequest(), Object[].class)).containsExactly(requests[1]);
+        assertThat(cachedTask.getRawResults()).containsExactly("answer 2");
+        assertThat(cachedTask.getRawRequests()).containsExactly(requests.get(1));
         verify(model, times(4)).call(any(Prompt.class));
     }
 
@@ -708,7 +708,7 @@ class DiscoveryTaskLlmExecutorTest {
             throw rejected;
         })).isSameAs(rejected);
 
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+        assertThat(task.getRawResults())
                 .containsExactly("answer 1", "answer 2", "answer 3", "answer 4");
         assertThat(cache).isEmpty();
         verify(model, times(8)).call(any(Prompt.class));
@@ -741,15 +741,15 @@ class DiscoveryTaskLlmExecutorTest {
             assertThat(format.getStrict()).isTrue();
             assertThat(JsonConverter.fromJson(format.getJsonSchema(), Map.class).get("required")).isEqualTo(List.of("answer"));
         });
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
+        assertThat(task.getRawResults())
                 .containsExactly("answer 1", "answer 2", "answer 3", "answer 4");
-        Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+        List<Object> requests = task.getRawRequests();
         assertThat(requests).hasSize(4);
         assertThat(cache).hasSize(1);
 
         DiscoveryTask cachedTask = task();
         assertThat(operation.call(cachedTask, request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo("answer 4");
-        assertThat(JsonConverter.fromJson(cachedTask.getRawRequest(), Object[].class)).containsExactly(requests[3]);
+        assertThat(cachedTask.getRawRequests()).containsExactly(requests.get(3));
         verify(model, times(8)).call(any(Prompt.class));
     }
 
@@ -798,7 +798,7 @@ class DiscoveryTaskLlmExecutorTest {
             throw new AssertionError("A cancelled operation must not process the response");
         })).isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(cancelledTask.getRawResult()).isEqualTo("[null]");
+        assertThat(cancelledTask.getRawResults()).containsExactly((Object) null);
         verify(model, times(2)).call(any(Prompt.class));
     }
 

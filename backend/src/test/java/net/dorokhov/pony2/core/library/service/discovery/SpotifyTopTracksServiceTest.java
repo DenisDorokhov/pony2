@@ -154,7 +154,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, cacheEnabled)).containsExactly("song-a", "song-b", null);
 
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(ALBUM_RESPONSE, TRACK_RESPONSE);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(prompts).hasSize(4);
         Map<?, ?> albumSchema = JsonConverter.fromJson(((OpenAiChatOptions) prompts.get(1).getOptions()).getResponseFormat().getJsonSchema(), Map.class);
         assertThat(albumSchema.get("type")).isEqualTo("object");
@@ -196,7 +196,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, cacheEnabled)).isNull();
 
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2);
+        assertThat(task.getRawResults()).hasSize(2);
         if (cacheEnabled) {
             assertThat(service.discover(task(), true)).isNull();
         } else {
@@ -215,8 +215,8 @@ class SpotifyTopTracksServiceTest {
         assertThat(service.discover(cached, true)).containsExactly("song-a", "song-b", null);
 
         assertThat(prompts).hasSize(4);
-        assertThat(cached.getRawRequest()).isEqualTo(original.getRawRequest());
-        assertThat(cached.getRawResult()).isEqualTo(original.getRawResult());
+        assertThat(cached.getRawRequests()).isEqualTo(original.getRawRequests());
+        assertThat(cached.getRawResults()).isEqualTo(original.getRawResults());
     }
 
     @Test
@@ -249,15 +249,15 @@ class SpotifyTopTracksServiceTest {
         assertThat(prompts.get(4).getInstructions().get(1).getText())
                 .contains("\"id\":\"missing\"", "fallback-song")
                 .doesNotContain("\"id\":\"first\"", "\"id\":\"second\"", "\"id\":\"song-a\"", "\"id\":\"song-b\"");
-        assertThat(JsonConverter.fromJson(original.getRawResult(), String[].class))
-                .containsExactly(albumResponse, TRACK_RESPONSE, fallbackResponse);
+        assertThat(original.getRawResults())
+                .containsExactly(JsonConverter.fromJsonOrString(albumResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE), JsonConverter.fromJsonOrString(fallbackResponse));
         assertThat(cache).hasSize(cacheEnabled ? 3 : 0);
         if (cacheEnabled) {
             assertThat(cache.keySet()).anyMatch(key -> key.startsWith("SPOTIFY_TOP_TRACKS_FALLBACK:"));
             DiscoveryTask cached = task();
             assertThat(service.discover(cached, true)).containsExactly("song-a", "song-b", "fallback-song");
-            assertThat(cached.getRawRequest()).isEqualTo(original.getRawRequest());
-            assertThat(cached.getRawResult()).isEqualTo(original.getRawResult());
+            assertThat(cached.getRawRequests()).isEqualTo(original.getRawRequests());
+            assertThat(cached.getRawResults()).isEqualTo(original.getRawResults());
             assertThat(prompts).hasSize(6);
         } else {
             verifyNoInteractions(cacheService);
@@ -355,7 +355,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(prompts).hasSize(8);
         assertThat(prompts.get(6).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("single supplied database album's track list"));
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(4);
+        assertThat(task.getRawResults()).hasSize(4);
         assertThat(cache).hasSize(3);
     }
 
@@ -403,7 +403,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
 
         assertThat(prompts).hasSize(4);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(albumResponse, trackResponse);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(albumResponse), JsonConverter.fromJsonOrString(trackResponse));
         assertThat(cache).hasSize(2);
         verifyNoInteractions(logService);
     }
@@ -427,7 +427,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(prompts).hasSize(6);
         assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(invalidResponse, ALBUM_RESPONSE, TRACK_RESPONSE);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
         verify(logService).warn(any(), eq("Invalid Spotify top tracks response from the LLM for artist '{}'."),
                 eq(artist.getName()), any(RuntimeException.class));
@@ -443,7 +443,7 @@ class SpotifyTopTracksServiceTest {
         assertThatThrownBy(() -> service.discover(task, true)).hasMessageContaining("must include every supplied Spotify album ID");
 
         assertThat(prompts).hasSize(4);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(incompleteResponse, incompleteResponse);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(incompleteResponse), JsonConverter.fromJsonOrString(incompleteResponse));
         assertThat(cache).isEmpty();
     }
 
@@ -468,7 +468,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(prompts).hasSize(6);
         assertThat(prompts.get(prompts.size() - 2).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(ALBUM_RESPONSE, invalidResponse, TRACK_RESPONSE);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
     }
 

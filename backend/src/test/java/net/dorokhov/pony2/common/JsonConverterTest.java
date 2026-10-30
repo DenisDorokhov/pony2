@@ -3,6 +3,9 @@ package net.dorokhov.pony2.common;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.Map;
@@ -59,6 +62,21 @@ public class JsonConverterTest {
         NamedValue result = JsonConverter.fromJson("{\"name\":\"Foobar\"}", NamedValue.class);
 
         assertThat(result).isEqualTo(new NamedValue("Foobar"));
+    }
+
+    @Test
+    void shouldParseJsonOrKeepOriginalString() {
+        assertThat(JsonConverter.fromJsonOrString("{\"answer\":42}")).isEqualTo(Map.of("answer", 42));
+        assertThat(JsonConverter.fromJsonOrString("[true,42]")).isEqualTo(List.of(true, 42));
+        assertThat(JsonConverter.fromJsonOrString("\"text\"")).isEqualTo("text");
+        assertThat(JsonConverter.fromJsonOrString("null")).isNull();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"Plain response\nline two", " ", "{\"answer\":", "{\"answer\":42} trailing text", "{} []"})
+    void shouldPreserveUnparseableResponses(String response) {
+        assertThat(JsonConverter.fromJsonOrString(response)).isEqualTo(response);
     }
 
     public record NamedValue(String name) {}

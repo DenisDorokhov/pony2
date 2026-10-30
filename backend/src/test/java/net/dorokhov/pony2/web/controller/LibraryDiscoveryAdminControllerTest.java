@@ -3,6 +3,7 @@ package net.dorokhov.pony2.web.controller;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
@@ -36,6 +37,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static net.dorokhov.pony2.test.DiscoveryJobFixtures.discoveryJob;
@@ -402,7 +404,7 @@ public class LibraryDiscoveryAdminControllerTest {
         }
         assertThat(page.getDiscoveryTasks().getLast().getArtist()).isNull();
         assertThat(page.getDiscoveryTasks().getLast().getAlbum()).isNull();
-        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("rawRequest")).isFalse();
+        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("rawRequests")).isFalse();
         verify(discoveryJobService).getAllTasks(new DiscoveryTaskFilter(result, type), pageRequest);
         verifyNoMoreInteractions(discoveryJobService);
     }
@@ -477,7 +479,7 @@ public class LibraryDiscoveryAdminControllerTest {
                 assertThat(summary.getAlbum()).isNull();
             }
         });
-        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("rawRequest")).isFalse();
+        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("rawRequests")).isFalse();
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("parameter")).isFalse();
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).has("targetId")).isFalse();
         assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).path("artist").has("discoveryData")).isFalse();
@@ -715,7 +717,9 @@ public class LibraryDiscoveryAdminControllerTest {
     @EnumSource(DiscoveryTask.Status.class)
     public void shouldGetFullDiscoveryTask(DiscoveryTask.Status taskStatus) throws Exception {
         DiscoveryTask task = task(DiscoveryTaskType.SPOTIFY_TOP_TRACKS, taskStatus)
-                .setResult("{\"tracks\":[]}").setRawRequest("request\nline two").setRawResult("response\nline two");
+                .setResult("{\"tracks\":[]}")
+                .setRawRequests(List.of(Map.of("userPrompt", "request\nline two"), "https://musicbrainz.org/artist"))
+                .setRawResults(List.of(Map.of("answer", List.of("track")), "response\nline two"));
         when(discoveryJobService.getTaskById("task1")).thenReturn(Optional.of(task));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryTasks/task1"))
@@ -730,8 +734,10 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(dto.getType()).isSameAs(task.getType());
         assertThat(objectMapper.readTree(response).has("parameter")).isFalse();
         assertThat(dto.getResult()).isEqualTo(task.getResult());
-        assertThat(dto.getRawRequest()).isEqualTo(task.getRawRequest());
-        assertThat(dto.getRawResult()).isEqualTo(task.getRawResult());
+        assertThat(dto.getRawRequests()).isEqualTo(JsonConverter.toJson(task.getRawRequests()));
+        assertThat(dto.getRawResults()).isEqualTo(JsonConverter.toJson(task.getRawResults()));
+        assertThat(objectMapper.readTree(dto.getRawRequests()).get(0).isObject()).isTrue();
+        assertThat(objectMapper.readTree(dto.getRawResults()).get(0).isObject()).isTrue();
         verifyNoInteractions(libraryService);
     }
 
@@ -747,8 +753,8 @@ public class LibraryDiscoveryAdminControllerTest {
 
         assertThat(dto.getUpdateDate()).isNull();
         assertThat(dto.getResult()).isNull();
-        assertThat(dto.getRawRequest()).isNull();
-        assertThat(dto.getRawResult()).isNull();
+        assertThat(dto.getRawRequests()).isNull();
+        assertThat(dto.getRawResults()).isNull();
     }
 
     @ParameterizedTest

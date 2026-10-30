@@ -2,6 +2,7 @@ package net.dorokhov.pony2.web.service;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.*;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.PageRequest;
@@ -319,7 +320,8 @@ public class LlmEvaluationExportService {
                 task.getUpdateDate() != null ? task.getUpdateDate().toString() : null,
                 task.getJob().getId(), task.getType().name(), task.getStatus().name(),
                 task.getResult() != null ? jsonMapper.readTree(task.getResult()) : null,
-                task.getRawRequest(), task.getRawResult());
+                task.getRawRequests() != null ? JsonConverter.toJson(task.getRawRequests()) : null,
+                task.getRawResults() != null ? JsonConverter.toJson(task.getRawResults()) : null);
     }
 
     private record ArtistExportDto(
@@ -370,7 +372,7 @@ public class LlmEvaluationExportService {
             String type,
             String status,
             @Nullable JsonNode result,
-            @Nullable String rawRequest,
-            @Nullable String rawResult
+            @Nullable String rawRequests,
+            @Nullable String rawResults
     ) {}
 }

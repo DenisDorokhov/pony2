@@ -103,7 +103,7 @@ class LlmEvaluationExportServiceTest {
         assertThatThrownBy(() -> service.write(output, exportedAt)).isInstanceOf(IllegalStateException.class);
 
         String partial = output.toString(StandardCharsets.UTF_8);
-        assertThat(partial).contains("rawResult");
+        assertThat(partial).contains("rawResults");
         assertThatThrownBy(() -> jsonMapper.readTree(partial)).isInstanceOf(JacksonException.class);
     }
 
@@ -122,7 +122,7 @@ class LlmEvaluationExportServiceTest {
     private DiscoveryTask task(String rawResult) {
         return new DiscoveryTask().setId("task").setCreationDate(exportedAt).setJob(new DiscoveryJob().setId("job"))
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
-                .setResult("{}").setRawRequest("[]").setRawResult(rawResult);
+                .setResult("{}").setRawRequests(List.of()).setRawResults(List.of(rawResult));
     }
 
     private OutputStream disconnected() {

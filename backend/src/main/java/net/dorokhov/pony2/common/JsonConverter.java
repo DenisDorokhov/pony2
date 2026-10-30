@@ -1,7 +1,9 @@
 package net.dorokhov.pony2.common;
 
+import jakarta.annotation.Nullable;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.cfg.EnumFeature;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -47,6 +49,17 @@ public final class JsonConverter {
             return MAPPER.readValue(json, clazz);
         } catch (JacksonException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static @Nullable Object fromJsonOrString(@Nullable String json) {
+        if (json == null) {
+            return null;
+        }
+        try {
+            return MAPPER.readerFor(Object.class).with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readValue(json);
+        } catch (JacksonException e) {
+            return json;
         }
     }
     

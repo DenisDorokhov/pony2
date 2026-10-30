@@ -320,8 +320,8 @@ export interface DiscoveryTaskDto {
   status: DiscoveryTaskDto.Status;
   type: DiscoveryTaskType;
   result: string | undefined;
-  rawRequest: string | undefined;
-  rawResult: string | undefined;
+  rawRequests: string | undefined;
+  rawResults: string | undefined;
 }
 
 export namespace DiscoveryTaskDto {

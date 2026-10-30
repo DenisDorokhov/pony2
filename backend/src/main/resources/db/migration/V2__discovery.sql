@@ -59,8 +59,8 @@ CREATE TABLE discovery_task (
   status VARCHAR (255) NOT NULL,
   type VARCHAR (255) NOT NULL,
   result LONGVARCHAR,
-  raw_request LONGVARCHAR,
-  raw_result LONGVARCHAR,
+  raw_requests LONGVARCHAR,
+  raw_results LONGVARCHAR,
 
   discovery_job_id CHAR(36) NOT NULL,
   genre_id CHAR(36),

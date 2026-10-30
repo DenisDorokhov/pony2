@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.api.user.service.command.UserCreationCommand;
 import net.dorokhov.pony2.api.user.service.exception.DuplicateEmailException;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import net.dorokhov.pony2.web.dto.ErrorDto;
@@ -35,8 +36,8 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
 
     private static final String PATH = "/api/admin/llm/evaluation";
     private static final LocalDateTime CREATED = LocalDateTime.of(2020, 1, 1, 0, 0);
-    private static final String RAW_REQUEST = "[{\"prompt\":\"BjГ¶rk \\n \\\"quoted\\\"\"}]";
-    private static final String RAW_RESULT = "[\"An unstructured response: ж—Ґжњ¬иЄћ\",null]";
+    private static final String RAW_REQUESTS = JsonConverter.toJson(List.of("{\"prompt\":\"BjГ¶rk \\n \\\"quoted\\\"\"}"));
+    private static final String RAW_RESULTS = "[\"An unstructured response: ж—Ґжњ¬иЄћ\",null]";
 
     @Autowired
     private ApiTemplate apiTemplate;
@@ -121,8 +122,8 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
             assertThat(tasks.get(2).get("result").isArray()).isTrue();
             for (JsonNode task : tasks) {
                 assertThat(task.get("status").asString()).isEqualTo("COMPLETE");
-                assertThat(task.get("rawRequest").asString()).isEqualTo(RAW_REQUEST);
-                assertThat(task.get("rawResult").asString()).isEqualTo(RAW_RESULT);
+                assertThat(task.get("rawRequests").asString()).isEqualTo(RAW_REQUESTS);
+                assertThat(task.get("rawResults").asString()).isEqualTo(RAW_RESULTS);
             }
         }
         JsonNode artist = document.get("artists").get(0);
@@ -167,9 +168,9 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         jdbcTemplate.update("UPDATE album SET name = NULL, album_year = NULL WHERE id = ?", id(1));
         insertJob(1);
         insertTask(Kind.ALBUM, 1, 1, 1, "MUSICBRAINZ_ALBUM_DATA", "COMPLETE", CREATED, "{}");
-        String rawRequest = "Full prompt ".repeat(8192);
-        String rawResult = "Full response ".repeat(8192);
-        jdbcTemplate.update("UPDATE discovery_task SET raw_request = ?, raw_result = ? WHERE id = ?", rawRequest, rawResult, id(1));
+        String rawRequest = JsonConverter.toJson(List.of("Full prompt ".repeat(8192)));
+        String rawResult = JsonConverter.toJson(List.of("Full response ".repeat(8192)));
+        jdbcTemplate.update("UPDATE discovery_task SET raw_requests = ?, raw_results = ? WHERE id = ?", rawRequest, rawResult, id(1));
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         JsonNode document = jsonMapper.readTree(download(apiTemplate.createHeaderRequest(authentication.getAccessToken())).getBody());
@@ -179,8 +180,8 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         assertThat(album.get("name").isNull()).isTrue();
         assertThat(album.get("year").isNull()).isTrue();
         assertThat(album.get("artist").get("name").isNull()).isTrue();
-        assertThat(album.get("tasks").get(0).get("rawRequest").asString()).isEqualTo(rawRequest);
-        assertThat(album.get("tasks").get(0).get("rawResult").asString()).isEqualTo(rawResult);
+        assertThat(album.get("tasks").get(0).get("rawRequests").asString()).isEqualTo(rawRequest);
+        assertThat(album.get("tasks").get(0).get("rawResults").asString()).isEqualTo(rawResult);
     }
 
     @Test
@@ -252,10 +253,10 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
     private void insertTask(Kind kind, int number, int entity, int job, String type, String status, LocalDateTime date, String result) {
         jdbcTemplate.update("""
                 INSERT INTO discovery_task (id, creation_date, update_date, discovery_job_id, type, status,
-                                            result, raw_request, raw_result, %s_id)
+                                            result, raw_requests, raw_results, %s_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """.formatted(kind.entityName()), id(number), date, date.plusMinutes(1), id(job), type, status,
-                result, RAW_REQUEST, RAW_RESULT, id(entity));
+                result, RAW_REQUESTS, RAW_RESULTS, id(entity));
     }
 
     private static String id(int number) {

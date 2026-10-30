@@ -539,19 +539,19 @@ public class MusicBrainzAlbumDataService {
     }
 
     private void saveExchange(DiscoveryTask task, String url, @Nullable String response) {
-        List<Object> requests = task.getRawRequest() != null
-                ? new ArrayList<>(JsonConverter.listFromJson(task.getRawRequest(), Object.class)) : new ArrayList<>();
-        List<String> responses = task.getRawResult() != null
-                ? new ArrayList<>(JsonConverter.listFromJson(task.getRawResult(), String.class)) : new ArrayList<>();
+        List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
+        List<Object> responses = task.getRawResults() != null ? new ArrayList<>(task.getRawResults()) : new ArrayList<>();
         if (response == null) {
             requests.add(url);
             responses.add(null);
         } else {
             checkState(!requests.isEmpty() && url.equals(requests.getLast()), "MusicBrainz exchanges must be sequential.");
-            responses.set(responses.size() - 1, response);
+            responses.set(responses.size() - 1, JsonConverter.fromJsonOrString(response));
         }
-        transactionTemplate.executeWithoutResult(status -> taskRepository.save(task
-                .setRawRequest(JsonConverter.toJson(requests)).setRawResult(JsonConverter.toJson(responses))));
+        transactionTemplate.executeWithoutResult(status ->
+                taskRepository.save(task
+                        .setRawRequests(requests)
+                        .setRawResults(responses)));
     }
 
     private void interruptIfNeeded() {

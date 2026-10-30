@@ -200,8 +200,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(task.getAlbum().getId()).isEqualTo(album.getId());
         assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class)).isEqualTo(
                 new MusicBrainzAlbumData("group", "Album", List.of("Live", "Compilation"), "1986-10", "artist", List.of("US", "GB")));
-        assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).containsExactly(SEARCH_URL, ARTIST_URL);
-        assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, rawArtistResponse);
+        assertThat(task.getRawRequests()).containsExactly(SEARCH_URL, ARTIST_URL);
+        assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString(rawArtistResponse));
         assertThat(artistTasks()).isEmpty();
         getTransactionTemplate().executeWithoutResult(status -> {
             assertThat(taskRepository.findById(task.getId())).get().satisfies(value -> {
@@ -263,12 +263,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(requests).hasValue(cacheEnabled ? 2 : 4);
             assertThat(taskRepository.findAll()).hasSize(2).allSatisfy(task -> {
                 assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-                Object[] rawRequests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+                List<Object> rawRequests = task.getRawRequests();
                 assertThat(rawRequests).hasSize(3);
-                assertThat(rawRequests[0]).asString().startsWith(baseUrl + "release-group?");
-                assertThat(rawRequests[2]).isEqualTo(baseUrl + "artist/artist?fmt=json");
-                assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
-                        .containsExactly(rawSearchResponse, "{\"id\":\"group\"}", rawArtistResponse);
+                assertThat(rawRequests.get(0)).asString().startsWith(baseUrl + "release-group?");
+                assertThat(rawRequests.get(2)).isEqualTo(baseUrl + "artist/artist?fmt=json");
+                assertThat(task.getRawResults())
+                        .containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString("{\"id\":\"group\"}"), JsonConverter.fromJsonOrString(rawArtistResponse));
             });
             List<DiscoveryCache> httpEntries = cacheRepository.findAll().stream()
                     .filter(entry -> entry.getKey().startsWith("MUSICBRAINZ_HTTP:")).toList();
@@ -310,7 +310,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNull();
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(2);
+            assertThat(task.getRawResults()).hasSize(2);
         });
         verify(session, never()).getArtist(anyString());
         verify(model, times(2)).call(any(Prompt.class));
@@ -377,7 +377,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(tasks).hasSize(2).allSatisfy(task -> {
                 assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
                 assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
-                assertThat(task.getRawRequest()).doesNotContain("server-busy-marker");
+                assertThat(task.getRawRequests()).allSatisfy(request ->
+                        assertThat(JsonConverter.toJson(request)).doesNotContain("server-busy-marker"));
             });
             List<String> expectedResponses = new ArrayList<>();
             if (normalizedSearch) {
@@ -385,14 +386,14 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 expectedResponses.add(normalization);
             }
             expectedResponses.addAll(List.of(busy, busy, rawSearchResponse, "{\"id\":\"group\"}", "{\"id\":\"artist\"}", rawArtistResponse));
-            assertThat(JsonConverter.listFromJson(tasks.getFirst().getRawResult(), String.class)).containsExactlyElementsOf(expectedResponses);
+            assertThat(tasks.getFirst().getRawResults()).containsExactlyElementsOf(expectedResponses.stream().map(JsonConverter::fromJsonOrString).toList());
             expectedResponses.removeAll(List.of(busy));
-            assertThat(JsonConverter.listFromJson(tasks.getLast().getRawResult(), String.class)).containsExactlyElementsOf(expectedResponses);
-            Object[] firstRequests = JsonConverter.fromJson(tasks.getFirst().getRawRequest(), Object[].class);
-            Object[] secondRequests = JsonConverter.fromJson(tasks.getLast().getRawRequest(), Object[].class);
+            assertThat(tasks.getLast().getRawResults()).containsExactlyElementsOf(expectedResponses.stream().map(JsonConverter::fromJsonOrString).toList());
+            List<Object> firstRequests = tasks.getFirst().getRawRequests();
+            List<Object> secondRequests = tasks.getLast().getRawRequests();
             int groupRequestIndex = normalizedSearch ? 5 : 3;
-            assertThat(firstRequests[groupRequestIndex]).isEqualTo(secondRequests[groupRequestIndex - 2]);
-            assertThat(firstRequests[groupRequestIndex + 1]).isEqualTo(secondRequests[groupRequestIndex - 1]);
+            assertThat(firstRequests.get(groupRequestIndex)).isEqualTo(secondRequests.get(groupRequestIndex - 2));
+            assertThat(firstRequests.get(groupRequestIndex + 1)).isEqualTo(secondRequests.get(groupRequestIndex - 1));
             int callsPerDiscovery = normalizedSearch ? 3 : 2;
             verify(model, times(cacheEnabled ? callsPerDiscovery : 2 * callsPerDiscovery)).call(any(Prompt.class));
             assertThat(requests).hasValue((normalizedSearch ? 5 : 4) + (cacheEnabled ? 0 : normalizedSearch ? 3 : 2));
@@ -426,7 +427,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
             assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-            assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(response);
+            assertThat(onlyTask().getRawResults()).containsExactly(JsonConverter.fromJsonOrString(response));
             assertThat(cacheRepository.count()).isZero();
             verify(model, never()).call(any(Prompt.class));
         } finally {
@@ -535,8 +536,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(prompt.getInstructions().get(1).getText()).contains("complete-response-marker", "Reign in Blood (deluxe)");
             assertThat(((OpenAiChatOptions) prompt.getOptions()).getToolChoice()).isEqualTo("none");
             DiscoveryTask task = taskRepository.findAll().stream().filter(value -> value.getStatus() == DiscoveryTask.Status.STARTED).findFirst().orElseThrow();
-            assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).hasSize(2);
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, null);
+            assertThat(task.getRawRequests()).hasSize(2);
+            assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), null);
             return response("{\"id\":\"group\"}");
         });
 
@@ -546,12 +547,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNotNull();
-            Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+            List<Object> requests = task.getRawRequests();
             assertThat(requests).hasSize(3);
-            assertThat(requests[0]).isEqualTo(SEARCH_URL);
-            assertThat(requests[1]).isInstanceOf(Map.class);
-            assertThat(requests[2]).isEqualTo(ARTIST_URL);
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).containsExactly(rawSearchResponse, "{\"id\":\"group\"}", rawArtistResponse);
+            assertThat(requests.get(0)).isEqualTo(SEARCH_URL);
+            assertThat(requests.get(1)).isInstanceOf(Map.class);
+            assertThat(requests.get(2)).isEqualTo(ARTIST_URL);
+            assertThat(task.getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString("{\"id\":\"group\"}"), JsonConverter.fromJsonOrString(rawArtistResponse));
         });
         verify(model, times(cacheEnabled ? 1 : 2)).call(any(Prompt.class));
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 1 : 0);
@@ -709,22 +710,22 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(tasks).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).artistId()).isEqualTo("artist");
-            Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+            List<Object> requests = task.getRawRequests();
             assertThat(requests).hasSize(4);
-            assertThat(JsonConverter.toJson(requests[1])).startsWith("{\"systemPrompt\":");
-            assertThat(((Map<?, ?>) requests[1]).get("userPrompt")).asString().contains(
+            assertThat(JsonConverter.toJson(requests.get(1))).startsWith("{\"systemPrompt\":");
+            assertThat(((Map<?, ?>) requests.get(1)).get("userPrompt")).asString().contains(
                     "Album from the library: {\"title\":\"Reign in Blood\",\"year\":1986,\"artistName\":\"Slayer\"}");
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(4);
+            assertThat(task.getRawResults()).hasSize(4);
         });
-        assertThat(tasks.stream().map(task -> JsonConverter.fromJson(task.getRawResult(), String[].class)[0]))
-                .containsExactlyInAnyOrder(originalResponse, rawSearchResponse);
+        assertThat(tasks.stream().map(task -> task.getRawResults().getFirst()))
+                .containsExactlyInAnyOrder(JsonConverter.fromJsonOrString(originalResponse), JsonConverter.fromJsonOrString(rawSearchResponse));
         verify(model, times(cacheEnabled ? 2 : 4)).call(any(Prompt.class));
         if (cacheEnabled) {
-            Object[] requests = JsonConverter.fromJson(tasks.getFirst().getRawRequest(), Object[].class);
+            List<Object> requests = tasks.getFirst().getRawRequests();
             assertThat(cacheRepository.findAll()).allSatisfy(cache -> assertThat(cache.getRegion()).isEqualTo(MUSICBRAINZ))
                     .extracting(DiscoveryCache::getKey).containsExactlyInAnyOrder(
-                            "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP:" + Hashing.sha256().hashString(JsonConverter.toJson(requests[1]), UTF_8),
-                            "MUSICBRAINZ_ALBUM_DATA_ARTIST:" + Hashing.sha256().hashString(JsonConverter.toJson(requests[2]), UTF_8));
+                            "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP:" + Hashing.sha256().hashString(JsonConverter.toJson(requests.get(1)), UTF_8),
+                            "MUSICBRAINZ_ALBUM_DATA_ARTIST:" + Hashing.sha256().hashString(JsonConverter.toJson(requests.get(2)), UTF_8));
         } else {
             assertThat(cacheRepository.count()).isZero();
         }
@@ -773,17 +774,17 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(tasks).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).artistId()).isEqualTo("artist");
-            Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+            List<Object> requests = task.getRawRequests();
             assertThat(requests).hasSize(4);
             for (int index : List.of(1, 2)) {
-                Map<?, ?> request = (Map<?, ?>) requests[index];
+                Map<?, ?> request = (Map<?, ?>) requests.get(index);
                 assertThat(request).hasSize(3);
                 assertThat(request.get("userPrompt")).asString().contains(
                         "\"created\":\"2026-10-11T", "\"metadata\":{\"created\":\"album-metadata\"}", "complete-response-marker");
             }
         });
-        assertThat(tasks.stream().map(task -> JsonConverter.fromJson(task.getRawResult(), String[].class)[0]))
-                .containsExactlyInAnyOrder(originalResponse, rawSearchResponse);
+        assertThat(tasks.stream().map(task -> task.getRawResults().getFirst()))
+                .containsExactlyInAnyOrder(JsonConverter.fromJsonOrString(originalResponse), JsonConverter.fromJsonOrString(rawSearchResponse));
         verify(model, times(cacheEnabled ? 2 : 4)).call(any(Prompt.class));
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 2 : 0);
     }
@@ -880,8 +881,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(
-                rawSearchResponse, "{\"id\":\"invented\"}", "{\"id\":\"group\"}", "{\"id\":\"artist\"}", rawArtistResponse);
+        assertThat(onlyTask().getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString("{\"id\":\"invented\"}"), JsonConverter.fromJsonOrString("{\"id\":\"group\"}"), JsonConverter.fromJsonOrString("{\"id\":\"artist\"}"), JsonConverter.fromJsonOrString(rawArtistResponse));
         verify(session).getArtist("artist");
         assertThat(cacheRepository.count()).isEqualTo(2);
     }
@@ -911,8 +911,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class))
-                .containsExactly(rawSearchResponse, "not JSON", "not JSON", "not JSON", "not JSON");
+        assertThat(onlyTask().getRawResults())
+                .containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), "not JSON", "not JSON", "not JSON", "not JSON");
         assertThat(cacheRepository.count()).isZero();
         verify(model, times(4)).call(any(Prompt.class));
     }
@@ -927,7 +927,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(onlyTask().getResult()).contains("LLM unavailable");
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(rawSearchResponse, null);
+        assertThat(onlyTask().getRawResults()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), null);
     }
 
     @Test
@@ -988,20 +988,20 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).releaseGroupId()).isEqualTo("group");
-            Object[] requests = JsonConverter.fromJson(task.getRawRequest(), Object[].class);
+            List<Object> requests = task.getRawRequests();
             assertThat(requests).hasSize(4);
-            assertThat(requests[0]).isEqualTo(SEARCH_URL);
-            assertThat(requests[1]).isInstanceOf(Map.class);
-            Map<?, ?> snapshot = (Map<?, ?>) requests[1];
+            assertThat(requests.get(0)).isEqualTo(SEARCH_URL);
+            assertThat(requests.get(1)).isInstanceOf(Map.class);
+            Map<?, ?> snapshot = ((Map<?, ?>) requests.get(1));
             assertThat(snapshot.get("systemPrompt")).isEqualTo(systemPrompt);
             assertThat(snapshot.get("model")).isEqualTo("test");
             assertThat(snapshot.get("temperature")).isEqualTo(0.0);
             assertThat(snapshot.get("toolChoice")).isEqualTo("none");
             assertThat(snapshot.get("responseSchema")).isInstanceOf(Map.class);
-            assertThat(requests[2]).isEqualTo(NORMALIZED_SEARCH_URL);
-            assertThat(requests[3]).isEqualTo(ARTIST_URL);
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class))
-                    .containsExactly(EMPTY_SEARCH_RESPONSE, normalization, rawSearchResponse, rawArtistResponse);
+            assertThat(requests.get(2)).isEqualTo(NORMALIZED_SEARCH_URL);
+            assertThat(requests.get(3)).isEqualTo(ARTIST_URL);
+            assertThat(task.getRawResults())
+                    .containsExactly(JsonConverter.fromJsonOrString(EMPTY_SEARCH_RESPONSE), JsonConverter.fromJsonOrString(normalization), JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString(rawArtistResponse));
         });
         verify(session, times(2)).searchReleaseGroups("artistname:\"Slayer\" AND release:\"Reign\"");
         verify(session, times(4)).searchReleaseGroups(anyString());
@@ -1144,8 +1144,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class))
-                .containsExactly(rawSearchResponse, rejected, accepted);
+        assertThat(onlyTask().getRawResults())
+                .containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString(rejected), JsonConverter.fromJsonOrString(accepted));
         assertThat(cacheRepository.findAll()).singleElement().satisfies(entry ->
                 assertThat(JsonConverter.mapFromJson(entry.getValue(), String.class, Object.class).get("response")).isEqualTo(accepted));
         ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
@@ -1259,7 +1259,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(onlyTask().getResult()).contains(invalidResponse ? "searchTitle must be a non-blank string" : "Normalization unavailable");
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).hasSize(invalidResponse ? 5 : 2);
+        assertThat(onlyTask().getRawResults()).hasSize(invalidResponse ? 5 : 2);
         assertThat(cacheRepository.count()).isZero();
         verify(session, times(1)).searchReleaseGroups(anyString());
         verify(model, times(invalidResponse ? 4 : 1)).call(any(Prompt.class));
@@ -1324,9 +1324,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(captor.getAllValues().get(3).getInstructions().get(1).getText())
                 .contains("Reign in Blood (CD1 of 2)", "Slayer", "normalized-group")
                 .doesNotContain(EMPTY_SEARCH_RESPONSE);
-        assertThat(JsonConverter.fromJson(onlyTask().getRawResult(), String[].class)).containsExactly(
-                EMPTY_SEARCH_RESPONSE, normalization, rawSearchResponse, "{\"id\":\"outside-new-candidates\"}",
-                "{\"id\":\"normalized-group\"}", "{\"id\":\"artist\"}", rawArtistResponse);
+        assertThat(onlyTask().getRawResults()).containsExactly(JsonConverter.fromJsonOrString(EMPTY_SEARCH_RESPONSE), JsonConverter.fromJsonOrString(normalization), JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString("{\"id\":\"outside-new-candidates\"}"), JsonConverter.fromJsonOrString("{\"id\":\"normalized-group\"}"), JsonConverter.fromJsonOrString("{\"id\":\"artist\"}"), JsonConverter.fromJsonOrString(rawArtistResponse));
         verify(session).getArtist("artist");
     }
 
@@ -1470,7 +1468,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         }).when(session).searchReleaseGroups(anyString());
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(onlyTask().getRawResult()).isEqualTo("[null]");
+        assertThat(onlyTask().getRawResults()).containsExactly((Object) null);
         doAnswer(invocation -> {
             jobSynchronizer.cancelDiscovery();
             throw new MusicBrainzClient.CancelledException();
@@ -1567,7 +1565,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     } else {
                         assertThat(task.getResult()).isNull();
                     }
-                    assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(eligible ? 3 : 2);
+                    assertThat(task.getRawResults()).hasSize(eligible ? 3 : 2);
                 });
         verify(model, times(eligible ? 8 : 6)).call(any(Prompt.class));
     }
@@ -2128,8 +2126,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(result.releaseGroupId()).isEqualTo("group");
             assertThat(result.artistId()).isEqualTo("novik");
             assertThat(result.country()).containsExactly("RU");
-            assertThat(JsonConverter.fromJson(task.getRawRequest(), Object[].class)).hasSize(7);
-            assertThat(JsonConverter.fromJson(task.getRawResult(), String[].class)).hasSize(7);
+            assertThat(task.getRawRequests()).hasSize(7);
+            assertThat(task.getRawResults()).hasSize(7);
         });
         assertThat(cacheRepository.findAll()).filteredOn(entry -> entry.getKey().startsWith("MUSICBRAINZ_ALBUM_ARTIST_SEARCH:"))
                 .hasSize(cacheEnabled ? 2 : 0);
@@ -2536,8 +2534,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         lenient().doAnswer(invocation -> {
             exchangeObserver.onRequest(SEARCH_URL);
             DiscoveryTask task = taskRepository.findAll().stream().filter(value -> value.getStatus() == DiscoveryTask.Status.STARTED).findFirst().orElseThrow();
-            assertThat(task.getRawRequest()).contains(SEARCH_URL);
-            assertThat(task.getRawResult()).isEqualTo("[null]");
+            assertThat(task.getRawRequests()).contains(SEARCH_URL);
+            assertThat(task.getRawResults()).containsExactly((Object) null);
             exchangeObserver.onResponse(SEARCH_URL, rawSearchResponse);
             return new MusicBrainzClient.ReleaseGroupSearchResult(groups, rawSearchResponse);
         }).when(session).searchReleaseGroups(anyString());

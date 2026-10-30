@@ -128,10 +128,8 @@ public class DiscoveryTaskLlmExecutor {
 
         interruptIfNeeded();
 
-        List<Object> requests = task.getRawRequest() != null
-                ? new ArrayList<>(JsonConverter.listFromJson(task.getRawRequest(), Object.class)) : new ArrayList<>();
-        List<String> responses = task.getRawResult() != null
-                ? new ArrayList<>(JsonConverter.listFromJson(task.getRawResult(), String.class)) : new ArrayList<>();
+        List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
+        List<Object> responses = task.getRawResults() != null ? new ArrayList<>(task.getRawResults()) : new ArrayList<>();
         requests.add(requestSnapshot(JsonConverter.toJson(request), responseSchema));
         responses.add(null);
         saveExchange(task, requests, responses);
@@ -157,7 +155,7 @@ public class DiscoveryTaskLlmExecutor {
         }
         interruptIfNeeded();
 
-        responses.set(responses.size() - 1, response);
+        responses.set(responses.size() - 1, JsonConverter.fromJsonOrString(response));
         saveExchange(task, requests, responses);
         if (logger.isDebugEnabled()) {
             logger.debug("LLM exchange for discovery task '{}' of type {} completed in {}. Source: {}.\n\nRequest:\n\n{}\n\nResponse:\n\n{}",
@@ -268,10 +266,10 @@ public class DiscoveryTaskLlmExecutor {
         }
     }
 
-    private void saveExchange(DiscoveryTask task, List<Object> requests, List<String> responses) {
+    private void saveExchange(DiscoveryTask task, List<Object> requests, List<Object> responses) {
         transactionTemplate.executeWithoutResult(status -> taskRepository.save(task
-                .setRawRequest(JsonConverter.toJson(requests))
-                .setRawResult(JsonConverter.toJson(responses))));
+                .setRawRequests(requests)
+                .setRawResults(responses)));
     }
 
     private void interruptIfNeeded() {

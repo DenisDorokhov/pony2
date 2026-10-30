@@ -57,22 +57,22 @@
       </div>
     </div>
     <div class="mb-3">
-      <label class="form-label">{{ 'discoveryTask.rawRequestLabel' | translate }}</label>
+      <label class="form-label">{{ 'discoveryTask.rawRequestsLabel' | translate }}</label>
       <div class="json-value">
-        <pre><code [highlight]="task.rawRequest ?? '—'" language="json"></code></pre>
-        @if (task.rawRequest) {
+        <pre><code [highlight]="task.rawRequests ?? '—'" language="json"></code></pre>
+        @if (task.rawRequests) {
           <button type="button" class="btn btn-outline-dark btn-sm details-button"
-                  (click)="showDetails(task.rawRequest, 'discoveryTask.rawRequestDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+                  (click)="showDetails(task.rawRequests, 'discoveryTask.rawRequestsDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
         }
       </div>
     </div>
     <div class="mb-3">
-      <label class="form-label">{{ 'discoveryTask.rawResultLabel' | translate }}</label>
+      <label class="form-label">{{ 'discoveryTask.rawResultsLabel' | translate }}</label>
       <div class="json-value">
-        <pre><code [highlight]="task.rawResult ?? '—'" language="json"></code></pre>
-        @if (task.rawResult) {
+        <pre><code [highlight]="task.rawResults ?? '—'" language="json"></code></pre>
+        @if (task.rawResults) {
           <button type="button" class="btn btn-outline-dark btn-sm details-button"
-                  (click)="showDetails(task.rawResult, 'discoveryTask.rawResultDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
+                  (click)="showDetails(task.rawResults, 'discoveryTask.rawResultsDetailsHeader')">{{ 'discoveryTask.detailsButton' | translate }}</button>
         }
       </div>
     </div>

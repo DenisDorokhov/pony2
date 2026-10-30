@@ -3,14 +3,15 @@ package net.dorokhov.pony2.web.dto;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
+import net.dorokhov.pony2.common.JsonConverter;
 
 public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
 
     private DiscoveryTask.Status status;
     private DiscoveryTaskType type;
     private String result;
-    private String rawRequest;
-    private String rawResult;
+    private String rawRequests;
+    private String rawResults;
 
     public DiscoveryTask.Status getStatus() {
         return status;
@@ -39,21 +40,21 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
         return this;
     }
 
-    public @Nullable String getRawRequest() {
-        return rawRequest;
+    public @Nullable String getRawRequests() {
+        return rawRequests;
     }
 
-    public DiscoveryTaskDto setRawRequest(@Nullable String rawRequest) {
-        this.rawRequest = rawRequest;
+    public DiscoveryTaskDto setRawRequests(@Nullable String rawRequests) {
+        this.rawRequests = rawRequests;
         return this;
     }
 
-    public @Nullable String getRawResult() {
-        return rawResult;
+    public @Nullable String getRawResults() {
+        return rawResults;
     }
 
-    public DiscoveryTaskDto setRawResult(@Nullable String rawResult) {
-        this.rawResult = rawResult;
+    public DiscoveryTaskDto setRawResults(@Nullable String rawResults) {
+        this.rawResults = rawResults;
         return this;
     }
 
@@ -65,7 +66,7 @@ public final class DiscoveryTaskDto extends BaseDto<DiscoveryTaskDto> {
                 .setStatus(task.getStatus())
                 .setType(task.getType())
                 .setResult(task.getResult())
-                .setRawRequest(task.getRawRequest())
-                .setRawResult(task.getRawResult());
+                .setRawRequests(task.getRawRequests() != null ? JsonConverter.toJson(task.getRawRequests()) : null)
+                .setRawResults(task.getRawResults() != null ? JsonConverter.toJson(task.getRawResults()) : null);
     }
 }
