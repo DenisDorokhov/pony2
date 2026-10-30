@@ -1,16 +1,12 @@
 import {
-  AfterViewInit,
   Component,
-  ElementRef,
   EventEmitter,
   inject,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
-  Output,
-  QueryList,
-  ViewChildren
+  Output
 } from '@angular/core';
 import {AlbumSongs, Playlist, Song} from '../../domain/library.model';
 import {SongListComponent} from './song-list.component';
@@ -19,7 +15,7 @@ import {ImageLoaderComponent} from '../common/image-loader.component';
 import {LibraryService} from '../../service/library.service';
 import {LibraryDiscoveryService} from '../../service/library-discovery.service';
 import {AlbumDiscoveryTasksComponent} from './modal/album-discovery-tasks.component';
-import {fromEvent, Subscription} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import {ArtworkComponent} from './modal/artwork.component';
 import {
@@ -42,6 +38,7 @@ import {PlaybackService} from '../../service/playback.service';
 import {NotificationService} from '../../service/notification.service';
 import {AuthenticationService} from '../../service/authentication.service';
 import {UserDto} from '../../domain/user.dto';
+import {DropdownCloseOnScrollDirective} from '../common/dropdown-close-on-scroll.directive';
 
 interface Disc {
   discNumber: number | undefined;
@@ -70,12 +67,12 @@ function nullSafeNormalizedEquals(value1: string | undefined, value2: string | u
 }
 
 @Component({
-  imports: [TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+  imports: [TranslateModule, ImageLoaderComponent, SongListComponent, UnknownAlbumPipe, UnknownArtistPipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, DropdownCloseOnScrollDirective],
   selector: 'pony-album',
   templateUrl: './album.component.html',
   styleUrls: ['./album.component.scss']
 })
-export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
+export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
 
   private readonly libraryService = inject(LibraryService);
   private readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
@@ -86,7 +83,6 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   private readonly notificationService = inject(NotificationService);
   private readonly authenticationService = inject(AuthenticationService);
   private readonly modal = inject(NgbModal);
-  private readonly rootElement = inject(ElementRef);
 
   @Input() albumSongs!: AlbumSongs;
 
@@ -99,8 +95,6 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
   showNewIndicator = false;
   discoveryEnabled = true;
   topPlaylists: Playlist[] = [];
-
-  @ViewChildren(NgbDropdown) optionsDropDowns!: QueryList<NgbDropdown>;
 
   private subscriptions: Subscription[] = [];
 
@@ -122,19 +116,6 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges, AfterViewIn
       }));
     this.subscriptions.push(this.playlistService.observePlaylists()
       .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
-  }
-
-  ngAfterViewInit(): void {
-    this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'wheel').subscribe(() =>
-      this.closeOptionsDropDowns()));
-    this.subscriptions.push(fromEvent((this.rootElement.nativeElement as HTMLElement).parentElement as any, 'touchstart').subscribe(() =>
-      this.closeOptionsDropDowns()));
-  }
-
-  private closeOptionsDropDowns() {
-    this.optionsDropDowns.toArray().forEach(dropDown => {
-      dropDown.close();
-    });
   }
 
   ngOnChanges() {

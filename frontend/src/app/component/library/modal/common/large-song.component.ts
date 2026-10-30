@@ -1,4 +1,4 @@
-import {Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {UnknownArtistPipe} from '../../../../pipe/unknown-artist.pipe';
 import {UnknownSongPipe} from '../../../../pipe/unknown-song.pipe';
@@ -16,13 +16,14 @@ import {
   NgbModal
 } from '@ng-bootstrap/ng-bootstrap';
 import {PlaylistService} from '../../../../service/playlist.service';
-import {fromEvent, Subscription} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {NotificationService} from '../../../../service/notification.service';
 import {PlaybackService} from '../../../../service/playback.service';
 import {PlaylistDto} from '../../../../domain/library.dto';
 import {PlaylistAddSongComponent} from '../playlist-add-song.component';
 import {PlaylistEditComponent} from '../playlist-edit.component';
 import {LibraryService} from '../../../../service/library.service';
+import {DropdownCloseOnScrollDirective} from '../../../common/dropdown-close-on-scroll.directive';
 
 @Component({
   imports: [
@@ -36,7 +37,8 @@ import {LibraryService} from '../../../../service/library.service';
     NgbDropdownButtonItem,
     NgbDropdownItem,
     NgbDropdownMenu,
-    NgbDropdownToggle
+    NgbDropdownToggle,
+    DropdownCloseOnScrollDirective
   ],
   selector: 'pony-large-song',
   templateUrl: './large-song.component.html',
@@ -91,9 +93,6 @@ export class LargeSongComponent implements OnInit, OnDestroy {
   @Output()
   switchQueueRequested = new EventEmitter<number>();
 
-  @ViewChild('menuDropdown')
-  menuDropdown!: NgbDropdown;
-
   playbackState: PlaybackState | undefined;
   isMouseOver = false;
   isLikedSong = false;
@@ -109,8 +108,6 @@ export class LargeSongComponent implements OnInit, OnDestroy {
       .subscribe(() => this.refreshLikeState()));
     this.subscriptions.push(this.playlistService.observePlaylists()
       .subscribe(() => this.topPlaylists = this.playlistService.getTopPlaylists(PlaylistDto.Type.NORMAL)));
-    this.subscriptions.push(fromEvent(window.document.body, 'wheel').subscribe(() =>
-      this.menuDropdown.close()));
   }
 
   ngOnDestroy(): void {

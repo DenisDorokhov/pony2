@@ -24,11 +24,11 @@
          class="bi"></i>
     </span>
   </div>
-  <div class="duration" ngbDropdown #menuDropdown="ngbDropdown" container="body" placement="bottom-end top-end">
+  <div class="duration" ngbDropdown ponyDropdownCloseOnScroll #menuDropdown="ngbDropdown" container="body" placement="bottom-end top-end">
     <span [hidden]="isMouseOver() || menuDropdown.isOpen()">{{ song().durationInMinutes }}</span>
     <button ngbDropdownToggle [hidden]="!isMouseOver() && !menuDropdown.isOpen()" class="menu"
             (keydown.enter)="$event.stopPropagation()"><i class="bi bi-three-dots-vertical"></i></button>
-    <div ngbDropdownMenu class="dropdown-menu" role="menu" #menuContainer>
+    <div ngbDropdownMenu class="dropdown-menu" role="menu">
       <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.song.playNext' | translate }}</button>
       <button ngbDropdownItem (click)="switchQueue()"><i class="bi bi-sign-merge-right-fill"></i>{{ 'library.song.switchQueue' | translate }}</button>
       <button ngbDropdownItem (click)="addToQueue()"><i class="bi bi-plus-circle-fill"></i>{{ 'library.song.addToQueue' | translate }}</button>

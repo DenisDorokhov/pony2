@@ -46,7 +46,7 @@
   <div class="duration">
     {{ song.durationInMinutes }}
   </div>
-  <div ngbDropdown class="options" #menuDropdown="ngbDropdown" container="body">
+  <div ngbDropdown ponyDropdownCloseOnScroll class="options" container="body">
     <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
     <div ngbDropdownMenu class="dropdown-menu" role="menu">
       <button ngbDropdownItem (click)="goToSong()">

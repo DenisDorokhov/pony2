@@ -24,7 +24,7 @@
         </span>
       }
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
-      <div ngbDropdown class="options" container="body">
+      <div ngbDropdown ponyDropdownCloseOnScroll class="options" container="body">
         <button ngbDropdownToggle class="menu"><i class="bi bi-three-dots-vertical"></i></button>
         <div ngbDropdownMenu class="dropdown-menu" role="menu">
           <button ngbDropdownItem (click)="playNext()"><i class="bi bi-play-circle-fill"></i>{{ 'library.album.playNext' | translate }}</button>

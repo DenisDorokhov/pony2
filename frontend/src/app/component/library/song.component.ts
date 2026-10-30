@@ -39,9 +39,10 @@ import {
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistDto} from '../../domain/library.dto';
+import {DropdownCloseOnScrollDirective} from '../common/dropdown-close-on-scroll.directive';
 
 @Component({
-    imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+    imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, DropdownCloseOnScrollDirective],
     selector: 'pony-song',
     templateUrl: './song.component.html',
     styleUrls: ['./song.component.scss'],
@@ -66,7 +67,6 @@ export class SongComponent implements OnInit, AfterViewInit {
 
   @ViewChild('container') containerElement!: ElementRef;
   @ViewChild('menuDropdown') menuDropdown!: NgbDropdown;
-  @ViewChild('menuContainer') menuContainerElement!: ElementRef;
 
   private readonly selectedSong = signal(this.libraryService.selectedSong);
   private readonly playbackEvent = toSignal(this.playbackService.observePlaybackEvent(), {requireSync: true});
@@ -137,19 +137,6 @@ export class SongComponent implements OnInit, AfterViewInit {
           event.preventDefault();
         }
       });
-    fromEvent(window.document.body, 'touchstart')
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(event => {
-        if (!this.menuContainerElement.nativeElement.contains(event.target as Node)) {
-          this.menuDropdown.close();
-        }
-      });
-    fromEvent(window.document.body, 'wheel')
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.menuDropdown.close());
-    fromEvent(window, 'resize')
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.menuDropdown.close());
   }
 
   select() {
