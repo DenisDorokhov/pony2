@@ -203,7 +203,7 @@ public class LibraryImporter {
                 albumRepository.save(album
                         .setArtwork(null));
             }
-            if (shouldUpdateAlbumArtwork(album, artwork, overriddenAlbum, overriddenArtwork) ||
+            if (shouldUpdateAlbumArtwork(album, artwork, overriddenArtwork) ||
                     shouldImportAlbumArtwork(album, artwork)) {
                 importAlbumArtwork(album, artwork);
             }
@@ -214,9 +214,9 @@ public class LibraryImporter {
         }
     }
 
-    private boolean shouldUpdateAlbumArtwork(Album album, Artwork artwork, Album overriddenAlbum, Artwork overriddenArtwork) {
+    private boolean shouldUpdateAlbumArtwork(Album album, Artwork artwork, Artwork overriddenArtwork) {
         // Album artwork follows embedded artwork changes even if the previous artwork is still in use.
-        return overriddenAlbum == null && artwork != null && overriddenArtwork != null &&
+        return artwork != null && overriddenArtwork != null &&
                 Objects.equals(album.getArtwork(), overriddenArtwork) &&
                 Objects.equals(artwork.getSourceUriScheme(), SOURCE_URI_SCHEME_EMBEDDED);
     }
