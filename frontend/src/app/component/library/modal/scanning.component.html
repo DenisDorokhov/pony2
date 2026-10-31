@@ -144,7 +144,7 @@
       <th scope="col" class="updateDate">{{ 'scanning.updateDateColumn' | translate }}</th>
       <th scope="col" class="status">{{ 'scanning.statusColumn' | translate }}</th>
       <th scope="col" class="lastMessage">{{ 'scanning.lastMessageColumn' | translate }}</th>
-      <th scope="col" class="lastMessage">{{ 'scanning.detailsColumn' | translate }}</th>
+      <th scope="col" class="details">{{ 'scanning.detailsColumn' | translate }}</th>
     </tr>
     </thead>
     <tbody>
@@ -161,9 +161,12 @@
           >{{ scanJob.status }}</span></td>
           <td><span class="log-message">{{ scanJob.logMessage?.text }}</span></td>
           <td class="details-button">
-            <button type="button" class="btn btn-outline-dark"
+            <button type="button" class="btn btn-light"
                     [disabled]="scanJob.status !== ScanJobStatus.COMPLETE && scanJob.status !== ScanJobStatus.FAILED"
-                    (click)="showDetails(scanJob)">{{ 'scanning.detailsButton' | translate }}
+                    [title]="'scanning.detailsButton' | translate"
+                    [attr.aria-label]="'scanning.detailsButton' | translate"
+                    (click)="showDetails(scanJob)">
+              <i class="bi bi-file-text" aria-hidden="true"></i>
             </button>
           </td>
         </tr>

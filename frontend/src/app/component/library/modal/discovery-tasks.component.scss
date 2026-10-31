@@ -107,7 +107,7 @@ table {
     }
 
     .details {
-      width: 100px;
+      width: 64px;
     }
   }
 
@@ -125,7 +125,17 @@ table {
   }
 
   .details-button {
-    text-align: right;
+    padding-inline: 16px;
+    text-align: center;
+
+    .btn {
+      --bs-btn-color: var(--bs-table-color);
+      --bs-btn-bg: transparent;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: 0;
+    }
   }
 }
 

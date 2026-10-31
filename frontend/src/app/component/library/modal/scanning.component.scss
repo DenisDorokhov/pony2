@@ -57,6 +57,10 @@ table.log-container {
     .status {
       width: 130px;
     }
+
+    .details {
+      width: 48px;
+    }
   }
 
   tbody {
@@ -98,6 +102,15 @@ table.log-container {
   }
   td.details-button {
     text-align: right;
+
+    .btn {
+      --bs-btn-color: var(--bs-table-color);
+      --bs-btn-bg: transparent;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: 0;
+    }
   }
 }
 

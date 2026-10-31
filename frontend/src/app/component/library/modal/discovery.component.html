@@ -87,7 +87,7 @@
       <th scope="col" class="type">{{ 'discovery.typeColumn' | translate }}</th>
       <th scope="col" class="status">{{ 'discovery.statusColumn' | translate }}</th>
       <th scope="col" class="lastMessage">{{ 'discovery.lastMessageColumn' | translate }}</th>
-      <th scope="col">{{ 'discovery.detailsColumn' | translate }}</th>
+      <th scope="col" class="details">{{ 'discovery.detailsColumn' | translate }}</th>
     </tr>
     </thead>
     <tbody>
@@ -110,8 +110,12 @@
           >{{ discoveryJob.status }}</span></td>
           <td><span class="log-message">{{ discoveryJob.logMessage?.text }}</span></td>
           <td class="details-button">
-            <button type="button" class="btn btn-outline-dark"
-                    (click)="showDetails(discoveryJob)">{{ 'discovery.detailsButton' | translate }}</button>
+            <button type="button" class="btn btn-light"
+                    [title]="'discovery.detailsButton' | translate"
+                    [attr.aria-label]="'discovery.detailsButton' | translate"
+                    (click)="showDetails(discoveryJob)">
+              <i class="bi bi-file-text" aria-hidden="true"></i>
+            </button>
           </td>
         </tr>
       }

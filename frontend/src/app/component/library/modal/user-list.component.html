@@ -29,12 +29,18 @@
           <td>{{ user.email }}</td>
           <td class="role" [class.admin]="user.role === UserRole.ADMIN">{{ user.role }}</td>
           <td class="actions">
-            <button type="button" class="btn btn-outline-dark" [disabled]="loadingState !== LoadingState.LOADED"
-                    (click)="editUser(user)">{{ 'userList.editButton' | translate }}
+            <button type="button" class="btn btn-light" [disabled]="loadingState !== LoadingState.LOADED"
+                    [title]="'userList.editButton' | translate"
+                    [attr.aria-label]="'userList.editButton' | translate"
+                    (click)="editUser(user)">
+              <i class="bi bi-pencil-square" aria-hidden="true"></i>
             </button>
-            <button type="button" class="btn btn-danger"
+            <button type="button" class="btn btn-light delete"
                     [disabled]="loadingState !== LoadingState.LOADED || authenticationService.currentUser?.id === user.id"
-                    (click)="deleteUser(user)">{{ 'userList.deleteButton' | translate }}
+                    [title]="'userList.deleteButton' | translate"
+                    [attr.aria-label]="'userList.deleteButton' | translate"
+                    (click)="deleteUser(user)">
+              <i class="bi bi-trash" aria-hidden="true"></i>
             </button>
           </td>
         </tr>

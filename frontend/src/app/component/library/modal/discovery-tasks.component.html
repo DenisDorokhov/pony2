@@ -98,7 +98,11 @@
             </td>
             <td><span class="discovery-task-type" [attr.data-task-type]="task.type">{{ task.type }}</span></td>
             <td class="details-button">
-              <button type="button" class="btn btn-outline-dark" (click)="showDetails(task)">{{ 'discoveryTasks.detailsButton' | translate }}</button>
+              <button type="button" class="btn btn-light" (click)="showDetails(task)"
+                      [title]="'discoveryTasks.detailsButton' | translate"
+                      [attr.aria-label]="'discoveryTasks.detailsButton' | translate">
+                <i class="bi bi-file-text" aria-hidden="true"></i>
+              </button>
             </td>
           </tr>
         }

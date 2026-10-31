@@ -32,7 +32,17 @@ table {
     white-space: nowrap;
 
     button {
+      --bs-btn-color: var(--bs-table-color);
+      --bs-btn-bg: transparent;
+      width: 32px;
+      height: 32px;
       margin-left: 10px;
+      padding: 0;
+      border: 0;
+
+      &.delete {
+        color: var(--color-status-danger);
+      }
     }
   }
   td.actions {
