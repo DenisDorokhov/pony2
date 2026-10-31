@@ -135,9 +135,12 @@
   <div class="row pagination-container">
     <div class="col prev-button-container">
       <button type="button" class="btn btn-outline-dark"
-              [innerHtml]="'shared.previousPageButton' | translate"
+              [title]="'shared.previousPageButton' | translate"
+              [attr.aria-label]="'shared.previousPageButton' | translate"
               [disabled]="(currentPage?.pageIndex ?? 0) === 0"
-              (click)="loadDiscoveryJobsPreviousPage()"></button>
+              (click)="loadDiscoveryJobsPreviousPage()">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
     </div>
     <div class="col">
       @if (discoveryJobsLoadingState === LoadingState.LOADING) {
@@ -155,9 +158,12 @@
     </div>
     <div class="col next-button-container">
       <button type="button" class="btn btn-outline-dark"
-              [innerHtml]="'shared.nextPageButton' | translate"
+              [title]="'shared.nextPageButton' | translate"
+              [attr.aria-label]="'shared.nextPageButton' | translate"
               [disabled]="(currentPage?.pageIndex ?? 0) >= ((currentPage?.totalPages ?? 0) - 1)"
-              (click)="loadDiscoveryJobsNextPage()"></button>
+              (click)="loadDiscoveryJobsNextPage()">
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 </div>

@@ -61,9 +61,12 @@
   <div class="row pagination-container">
     <div class="col prev-button-container">
       <button type="button" class="btn btn-outline-dark"
-              [innerHtml]="'shared.previousPageButton' | translate"
+              [title]="'shared.previousPageButton' | translate"
+              [attr.aria-label]="'shared.previousPageButton' | translate"
               [disabled]="(page?.pageIndex ?? 0) === 0"
-              (click)="loadPreviousPage()"></button>
+              (click)="loadPreviousPage()">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
     </div>
 
     <div class="col">
@@ -84,9 +87,12 @@
     </div>
     <div class="col next-button-container">
       <button type="button" class="btn btn-outline-dark"
-              [innerHtml]="'shared.nextPageButton' | translate"
+              [title]="'shared.nextPageButton' | translate"
+              [attr.aria-label]="'shared.nextPageButton' | translate"
               [disabled]="(page?.pageIndex ?? 0) >= ((page?.totalPages ?? 0) - 1)"
-              (click)="loadNextPage()"></button>
+              (click)="loadNextPage()">
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 

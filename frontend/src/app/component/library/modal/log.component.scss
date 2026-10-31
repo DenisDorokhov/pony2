@@ -60,6 +60,19 @@ table {
 }
 
 .pagination-container {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+
+    .bi {
+      display: flex;
+    }
+  }
+
 
   .page-label {
     text-align: center;

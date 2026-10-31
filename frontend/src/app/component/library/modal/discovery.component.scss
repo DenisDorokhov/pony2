@@ -130,6 +130,7 @@ table.log-container {
     .btn {
       --bs-btn-color: var(--bs-table-color);
       --bs-btn-bg: transparent;
+      --bs-btn-disabled-bg: transparent;
       width: 32px;
       height: 32px;
       padding: 0;
@@ -139,6 +140,19 @@ table.log-container {
 }
 
 .pagination-container {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+
+    .bi {
+      display: flex;
+    }
+  }
+
   .page-label {
     text-align: center;
     line-height: 37px;
