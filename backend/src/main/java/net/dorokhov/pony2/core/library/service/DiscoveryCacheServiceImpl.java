@@ -1,9 +1,9 @@
-package net.dorokhov.pony2.core.llm.service;
+package net.dorokhov.pony2.core.library.service;
 
-import net.dorokhov.pony2.api.llm.domain.DiscoveryCache;
-import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
-import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
-import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
+import net.dorokhov.pony2.api.library.domain.DiscoveryCache;
+import net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion;
+import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
+import net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

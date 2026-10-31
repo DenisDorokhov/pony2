@@ -10,7 +10,7 @@ import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
-import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzAlbumDataService;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzAlbumDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

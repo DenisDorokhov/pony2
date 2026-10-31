@@ -1,16 +1,16 @@
-package net.dorokhov.pony2.core.llm.service;
+package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.IntegrationTest;
-import net.dorokhov.pony2.api.llm.domain.DiscoveryCache;
-import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
-import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
+import net.dorokhov.pony2.api.library.domain.DiscoveryCache;
+import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
+import net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DiscoveryCacheServiceImplTest extends IntegrationTest {

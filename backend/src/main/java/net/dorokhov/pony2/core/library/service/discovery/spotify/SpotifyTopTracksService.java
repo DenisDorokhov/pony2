@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service.discovery.task;
+package net.dorokhov.pony2.core.library.service.discovery.spotify;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
@@ -48,7 +48,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Service

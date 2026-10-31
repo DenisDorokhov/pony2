@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.llm.service;
+package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.api.config.domain.ConfigChangeEvent;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;

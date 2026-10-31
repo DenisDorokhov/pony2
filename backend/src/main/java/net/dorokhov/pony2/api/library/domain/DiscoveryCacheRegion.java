@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.api.llm.domain;
+package net.dorokhov.pony2.api.library.domain;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;

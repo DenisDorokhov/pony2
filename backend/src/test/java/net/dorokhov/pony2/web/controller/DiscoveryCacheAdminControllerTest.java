@@ -2,8 +2,8 @@ package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.ApiTemplate;
 import net.dorokhov.pony2.InstallingIntegrationTest;
-import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
-import net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository;
+import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
+import net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.SPOTIFY;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DiscoveryCacheAdminControllerTest extends InstallingIntegrationTest {

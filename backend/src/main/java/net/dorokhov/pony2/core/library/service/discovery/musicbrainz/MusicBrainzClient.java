@@ -1,7 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
 import com.google.common.hash.Hashing;
-import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.llm.service.RateLimitedRequestExecutor;
 import okhttp3.Call;
@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion.MUSICBRAINZ;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 
 @Component
 public class MusicBrainzClient {

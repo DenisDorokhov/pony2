@@ -1,4 +1,4 @@
-package net.dorokhov.pony2.core.library.service.discovery.task;
+package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
@@ -11,12 +11,10 @@ import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskExchangeRecorder;
-import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
-import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
-import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzLlmService.AlbumInput;
-import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzLlmService.NormalizationResponse;
-import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzLlmService.ReleaseGroupSelection;
-import net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzLlmService.TrackInput;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzLlmService.AlbumInput;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzLlmService.NormalizationResponse;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzLlmService.ReleaseGroupSelection;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzLlmService.TrackInput;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +34,7 @@ import java.util.function.UnaryOperator;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.core.library.service.discovery.task.MusicBrainzLlmService.VARIOUS_ARTISTS;
+import static net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzLlmService.VARIOUS_ARTISTS;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @Service

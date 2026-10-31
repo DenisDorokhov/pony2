@@ -69,7 +69,7 @@ class LibraryJobConcurrencyTest {
                 logService, executor, transactionManager());
         discoveryService = new DiscoveryJobServiceImpl(discoveryJobRepository, discoveryTaskRepository,
                 mock(net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository.class),
-                mock(net.dorokhov.pony2.core.llm.repository.DiscoveryCacheRepository.class),
+                mock(net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository.class),
                 artistRepository, albumRepository, fullDiscoveryService, jobSynchronizer,
                 artistDiscoveryService, albumDiscoveryService, logService, executor, transactionManager());
 

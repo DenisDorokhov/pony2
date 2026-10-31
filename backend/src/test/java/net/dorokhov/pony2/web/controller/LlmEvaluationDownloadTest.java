@@ -1,6 +1,6 @@
 package net.dorokhov.pony2.web.controller;
 
-import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
+import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
