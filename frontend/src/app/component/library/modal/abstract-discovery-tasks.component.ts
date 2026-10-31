@@ -23,6 +23,7 @@ class DiscoveryTaskRow implements DiscoveryTaskSummaryDto {
   creationDate!: string;
   updateDate: string | undefined;
   status!: DiscoveryTaskDto.Status;
+  noResult!: boolean;
   type!: DiscoveryTaskType;
   duration: number | undefined;
   genre: GenreDto | undefined;
@@ -37,6 +38,7 @@ class DiscoveryTaskRow implements DiscoveryTaskSummaryDto {
     this.creationDate = task.creationDate;
     this.updateDate = task.updateDate;
     this.status = task.status;
+    this.noResult = task.noResult;
     this.type = task.type;
     this.duration = task.duration;
     this.genre = task.genre;

@@ -338,6 +338,7 @@ export interface DiscoveryTaskSummaryDto {
   creationDate: string;
   updateDate: string | undefined;
   status: DiscoveryTaskDto.Status;
+  noResult: boolean;
   type: DiscoveryTaskType;
   duration: number | undefined;
   genre: GenreDto | undefined;

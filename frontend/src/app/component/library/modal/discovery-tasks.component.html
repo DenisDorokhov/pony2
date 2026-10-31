@@ -89,7 +89,13 @@
                       [class.complete]="task.status === TaskStatus.COMPLETE"
                       [class.failed]="task.status === TaskStatus.FAILED"
                       [class.interrupted]="task.status === TaskStatus.INTERRUPTED"
-            >{{ task.status }}</span></td>
+            >{{ task.status }}</span>
+              @if (task.noResult) {
+                <i class="bi bi-exclamation-triangle-fill no-result-icon" role="img"
+                   [title]="'discoveryTasks.noResult' | translate"
+                   [attr.aria-label]="'discoveryTasks.noResult' | translate"></i>
+              }
+            </td>
             <td><span class="discovery-task-type" [attr.data-task-type]="task.type">{{ task.type }}</span></td>
             <td class="details-button">
               <button type="button" class="btn btn-outline-dark" (click)="showDetails(task)">{{ 'discoveryTasks.detailsButton' | translate }}</button>

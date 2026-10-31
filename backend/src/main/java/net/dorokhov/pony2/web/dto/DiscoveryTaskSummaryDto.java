@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryDto> {
 
     private DiscoveryTask.Status status;
+    private boolean noResult;
     private DiscoveryTaskType type;
     private Long duration;
     private GenreDto genre;
@@ -23,6 +24,15 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
 
     public DiscoveryTaskSummaryDto setStatus(DiscoveryTask.Status status) {
         this.status = status;
+        return this;
+    }
+
+    public boolean isNoResult() {
+        return noResult;
+    }
+
+    public DiscoveryTaskSummaryDto setNoResult(boolean noResult) {
+        this.noResult = noResult;
         return this;
     }
 
@@ -88,6 +98,7 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
                 .setCreationDate(task.getCreationDate())
                 .setUpdateDate(task.getUpdateDate())
                 .setStatus(task.getStatus())
+                .setNoResult(task.getStatus() == DiscoveryTask.Status.COMPLETE && task.getResult() == null)
                 .setType(task.getType())
                 .setDuration(endDate != null ? Duration.between(task.getCreationDate(), endDate).toSeconds() : null)
                 .setGenre(genre)

@@ -410,6 +410,31 @@ public class LibraryDiscoveryAdminControllerTest {
     }
 
     @ParameterizedTest
+    @CsvSource({
+            "COMPLETE, , true", "COMPLETE, {}, false", "COMPLETE, '', false", "COMPLETE, null, false",
+            "STARTED, , false", "STARTED, {}, false",
+            "FAILED, , false", "FAILED, {}, false",
+            "INTERRUPTED, , false", "INTERRUPTED, {}, false"
+    })
+    public void shouldIndicateDiscoveryTasksCompletedWithoutResult(DiscoveryTask.Status taskStatus, String result,
+                                                                  boolean noResult) throws Exception {
+        DiscoveryTask task = task(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, taskStatus).setResult(result);
+        PageRequest pageRequest = PageRequest.of(0, 30);
+        when(discoveryJobService.getAllTasks(new DiscoveryTaskFilter(null, null), pageRequest))
+                .thenReturn(new PageImpl<>(List.of(task), pageRequest, 1));
+
+        String response = mockMvc.perform(get("/api/admin/library/discoveryTasks"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(objectMapper.readTree(response).get("discoveryTasks").get(0).get("noResult").asBoolean())
+                .isEqualTo(noResult);
+        DiscoveryTaskSummaryDto summary = objectMapper.readValue(response, DiscoveryTaskPageDto.class)
+                .getDiscoveryTasks().getFirst();
+        assertThat(summary.isNoResult()).isEqualTo(noResult);
+    }
+
+    @ParameterizedTest
     @ValueSource(ints = {0, 100})
     public void shouldGetEmptyAllDiscoveryTasksAndLimitPageSize(int requestedSize) throws Exception {
         PageRequest pageRequest = PageRequest.of(0, 30);
