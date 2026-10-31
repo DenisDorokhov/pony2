@@ -117,6 +117,10 @@ table {
     vertical-align: middle;
   }
 
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
   .target-text {
     display: block;
     white-space: nowrap;
