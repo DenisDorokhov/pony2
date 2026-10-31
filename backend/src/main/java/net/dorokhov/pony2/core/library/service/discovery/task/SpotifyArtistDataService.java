@@ -111,10 +111,7 @@ public class SpotifyArtistDataService {
                 Response data = response != null ? LlmJsonConverter.fromJson(response, Response.class) : null;
                 validateResponse(data, request);
                 return data;
-            } catch (RuntimeException e) {
-                if (!(e instanceof IllegalStateException) && !(e instanceof JacksonException)) {
-                    throw e;
-                }
+            } catch (JacksonException | IllegalStateException e) {
                 transactionTemplate.executeWithoutResult(status ->
                         logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}'.",
                                 artistRepository.findById(artistId).orElseThrow().getName(), e));

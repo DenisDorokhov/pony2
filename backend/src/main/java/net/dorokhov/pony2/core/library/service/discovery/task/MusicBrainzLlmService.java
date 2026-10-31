@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.cfg.CoercionAction;
 import tools.jackson.databind.cfg.CoercionInputShape;
@@ -144,7 +145,7 @@ public class MusicBrainzLlmService {
                             "Each alternativeTitles item must be a literal contiguous substring of albumTitle: %s", alternativeTitle);
                 }
                 return data;
-            } catch (RuntimeException e) {
+            } catch (JacksonException | IllegalStateException e) {
                 throw invalidResponse(input, LlmStage.ALBUM_TITLE_NORMALIZATION, e);
             }
         });
@@ -204,7 +205,7 @@ public class MusicBrainzLlmService {
                     }
                 }
                 return List.copyOf(names);
-            } catch (RuntimeException e) {
+            } catch (JacksonException | IllegalStateException e) {
                 throw invalidResponse(input, LlmStage.ARTIST_SEARCH, e);
             }
         });
@@ -256,7 +257,7 @@ public class MusicBrainzLlmService {
                 checkState(id == null || candidates.contains(id),
                         "The LLM must return one of the supplied candidate IDs or null in the id field.");
                 return id;
-            } catch (RuntimeException e) {
+            } catch (JacksonException | IllegalStateException e) {
                 throw invalidResponse(input, stage, e);
             }
         });

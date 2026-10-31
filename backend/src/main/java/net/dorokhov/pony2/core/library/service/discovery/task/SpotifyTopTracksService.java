@@ -156,7 +156,7 @@ public class SpotifyTopTracksService {
                 response -> {
                     try {
                         return parseAlbumMatches(response, spotifyAlbums, albums);
-                    } catch (RuntimeException e) {
+                    } catch (JacksonException | IllegalStateException e) {
                         throw invalidResponse(artistId, e, verificationPrompt);
                     }
                 });
@@ -186,7 +186,7 @@ public class SpotifyTopTracksService {
                 response -> {
                     try {
                         return parseTrackMatches(response, matchedAlbumIds, albumTracks);
-                    } catch (RuntimeException e) {
+                    } catch (JacksonException | IllegalStateException e) {
                         throw invalidResponse(artistId, e, verificationPrompt);
                     }
                 });
@@ -225,7 +225,7 @@ public class SpotifyTopTracksService {
                     response -> {
                         try {
                             return parseTrackMatches(response, Collections.nCopies(unmatchedTracks.size(), album.id()), List.of(album));
-                        } catch (RuntimeException e) {
+                        } catch (JacksonException | IllegalStateException e) {
                             throw invalidResponse(artistId, e, fallbackVerificationPrompt);
                         }
                     });
@@ -324,10 +324,7 @@ public class SpotifyTopTracksService {
         return result;
     }
 
-    private RuntimeException invalidResponse(String artistId, RuntimeException error, String prompt) {
-        if (!(error instanceof IllegalStateException) && !(error instanceof JacksonException)) {
-            return error;
-        }
+    private LlmFollowUpException invalidResponse(String artistId, RuntimeException error, String prompt) {
         transactionTemplate.executeWithoutResult(status ->
                 logService.warn(logger, "Invalid Spotify top tracks response from the LLM for artist '{}'.",
                         artistRepository.findById(artistId).orElseThrow().getName(), error));
