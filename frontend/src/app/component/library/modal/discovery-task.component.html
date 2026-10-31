@@ -25,7 +25,13 @@
            [class.complete]="task.status === TaskStatus.COMPLETE"
            [class.failed]="task.status === TaskStatus.FAILED"
            [class.interrupted]="task.status === TaskStatus.INTERRUPTED"
-      >{{ task.status }}</div>
+      ><span>{{ task.status }}</span>
+        @if (task.status === TaskStatus.COMPLETE && (task.result === undefined || task.result === null)) {
+          <i class="bi bi-exclamation-triangle-fill no-result-icon" role="img"
+             [title]="'discoveryTasks.noResult' | translate"
+             [attr.aria-label]="'discoveryTasks.noResult' | translate"></i>
+        }
+      </div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'discoveryTask.typeLabel' | translate }}</label>
