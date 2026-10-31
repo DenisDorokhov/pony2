@@ -57,7 +57,7 @@ class DiscoveryChatClientTest {
              "choices":[{"index":0,"message":{"role":"assistant","content":"OK"},"finish_reason":"stop"}]}
             """.getBytes(UTF_8);
 
-    private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer();
+    private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer(new ShutdownService());
     private final AtomicInteger requests = new AtomicInteger();
     private final ExecutorService serverExecutor = Executors.newCachedThreadPool();
     private final CountDownLatch responseBodyRead = new CountDownLatch(1);
@@ -361,8 +361,7 @@ class DiscoveryChatClientTest {
                 clientBuilder.defaultTools(tools);
             }
             return clientBuilder.build();
-        },
-                synchronizer, new DiscoveryAdvisor(new ShutdownService(), synchronizer));
+        }, synchronizer, new DiscoveryAdvisor(synchronizer));
     }
 
     private Response observeResponseBody(Interceptor.Chain chain) throws IOException {

@@ -74,8 +74,8 @@ class DiscoveryTaskLlmExecutorTest {
     @Mock private DiscoveryTaskRepository taskRepository;
     @Mock private LogService logService;
 
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
     private final ShutdownService shutdownService = new ShutdownService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(shutdownService);
     private final Map<String, String> cache = new HashMap<>();
     private final List<Prompt> prompts = new ArrayList<>();
     private LibraryJobSynchronizer.LibraryJobRegistration jobRegistration;
@@ -99,10 +99,10 @@ class DiscoveryTaskLlmExecutorTest {
         });
         ChatClient client = ChatClient.builder(model).build();
         discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
     }
 
     @AfterEach
@@ -166,10 +166,10 @@ class DiscoveryTaskLlmExecutorTest {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> {
             toolsEnabledValues.add(toolsEnabled);
             return client;
-        }, jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
+        }, jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
         List<ChatResponse> responses = new ArrayList<>(type.isToolsEnabled()
                 ? List.of(response("<tool_call>"), response("Collected data"), response("Rejected answer"),
                         response("Rechecked data"), response("Accepted answer"))
@@ -233,9 +233,9 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.call(anyString(), any())).thenReturn("Large browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -297,9 +297,9 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer)), cacheService,
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, shutdownService, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -368,7 +368,6 @@ class DiscoveryTaskLlmExecutorTest {
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
                 .withBean(LogService.class, () -> logService)
                 .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
-                .withBean(ShutdownService.class, () -> shutdownService)
                 .withBean(PlatformTransactionManager.class, () -> transactionManager());
         if (!configuredRestarts.isEmpty()) {
             runner = runner.withPropertyValues("pony.discovery.llm.restartsOnHallucination=" + configuredRestarts);
@@ -769,7 +768,6 @@ class DiscoveryTaskLlmExecutorTest {
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
                 .withBean(LogService.class, () -> logService)
                 .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
-                .withBean(ShutdownService.class, () -> shutdownService)
                 .withBean(PlatformTransactionManager.class, () -> transactionManager());
         if (!configuredRetries.isEmpty()) {
             runner = runner.withPropertyValues("pony.discovery.llm.retriesOnFollowUpException=" + configuredRetries);

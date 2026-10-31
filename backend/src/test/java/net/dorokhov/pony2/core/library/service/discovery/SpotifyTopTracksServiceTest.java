@@ -83,8 +83,8 @@ class SpotifyTopTracksServiceTest {
     @Mock private LibraryService libraryService;
     @Mock private LogService logService;
 
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
     private final ShutdownService shutdownService = new ShutdownService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(shutdownService);
     private final List<String> responses = new ArrayList<>();
     private final List<Prompt> prompts = new ArrayList<>();
     private final Map<String, String> cache = new HashMap<>();
@@ -129,12 +129,12 @@ class SpotifyTopTracksServiceTest {
         });
         ChatClient client = ChatClient.builder(model).build();
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, shutdownService, 1, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 1, 1, Duration.ofMinutes(10));
         service = new SpotifyTopTracksService(executor, artistRepository, new DiscoveryTaskResultReader(taskRepository), libraryService, logService,
-                shutdownService, jobSynchronizer, transactionManager(),
+                jobSynchronizer, transactionManager(),
                 new ClassPathResource("prompts/spotify-top-tracks-albums.txt"),
                 new ClassPathResource("prompts/spotify-top-tracks.txt"),
                 new ClassPathResource("prompts/spotify-top-tracks-verification.txt"),

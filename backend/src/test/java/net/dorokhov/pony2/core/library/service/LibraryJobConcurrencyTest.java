@@ -7,6 +7,7 @@ import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
@@ -55,7 +56,7 @@ class LibraryJobConcurrencyTest {
     @Mock private AlbumDiscoveryService albumDiscoveryService;
     @Mock private LogService logService;
 
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(new ShutdownService());
     private final BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<>();
     private final Executor executor = tasks::add;
     private ScanJobServiceImpl scanService;

@@ -4,6 +4,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
@@ -34,7 +35,7 @@ class DiscoveryTaskExecutorTest {
     @Mock
     private DiscoveryTaskExecution<String> execution;
 
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(new ShutdownService());
     private LibraryJobSynchronizer.LibraryJobRegistration jobRegistration;
     private DiscoveryTaskExecutor executor;
 

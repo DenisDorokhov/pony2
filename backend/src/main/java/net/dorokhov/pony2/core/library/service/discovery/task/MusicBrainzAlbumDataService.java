@@ -7,7 +7,6 @@ import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.api.user.service.UserService;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
@@ -52,7 +51,6 @@ public class MusicBrainzAlbumDataService {
     private final MusicBrainzLlmService llmService;
     private final LogService logService;
     private final LibraryJobSynchronizer jobSynchronizer;
-    private final ShutdownService shutdownService;
     private final TransactionTemplate transactionTemplate;
     private final int maxSearchResponseBytes;
 
@@ -65,7 +63,6 @@ public class MusicBrainzAlbumDataService {
             MusicBrainzLlmService llmService,
             LogService logService,
             LibraryJobSynchronizer jobSynchronizer,
-            ShutdownService shutdownService,
             PlatformTransactionManager transactionManager,
             @Value("${pony.discovery.musicbrainz.maxSearchResponseBytes:409600}") int maxSearchResponseBytes
     ) {
@@ -78,13 +75,12 @@ public class MusicBrainzAlbumDataService {
         this.llmService = llmService;
         this.logService = logService;
         this.jobSynchronizer = jobSynchronizer;
-        this.shutdownService = shutdownService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         this.maxSearchResponseBytes = maxSearchResponseBytes;
     }
 
     public @Nullable MusicBrainzAlbumData discover(DiscoveryTask task, boolean cacheEnabled) {
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
         String albumId = requireNonNull(task.getAlbum(),
                 () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
         AlbumInput input = requireNonNull(transactionTemplate.execute(status -> {
@@ -99,7 +95,7 @@ public class MusicBrainzAlbumDataService {
         MusicBrainzClient.ExchangeObserver observer = new MusicBrainzClient.ExchangeObserver() {
             @Override
             public void onRequest(String url) {
-                interruptIfNeeded();
+                jobSynchronizer.interruptDiscoveryIfStopped();
                 exchangeRecorder.startExchange(task, url);
             }
 
@@ -123,7 +119,7 @@ public class MusicBrainzAlbumDataService {
                 return null;
             }
             MusicBrainzDto.Artist artist = session.getArtist(artistId);
-            interruptIfNeeded();
+            jobSynchronizer.interruptDiscoveryIfStopped();
             List<String> country = artist.area() != null ? artist.area().country() : List.of();
             if (country.isEmpty() && artist.country() != null && !artist.country().isBlank()) {
                 country = List.of(artist.country());
@@ -142,7 +138,7 @@ public class MusicBrainzAlbumDataService {
     ) {
         String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\"";
         MusicBrainzClient.ReleaseGroupSearchResult searchResult = session.searchReleaseGroups(query);
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
         if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
             return null;
         }
@@ -150,10 +146,10 @@ public class MusicBrainzAlbumDataService {
         if (searchResult.groups().isEmpty()) {
             normalization = llmService.normalizeTitle(task, input, cacheEnabled);
             String normalizedQuery = normalizationQuery(input, normalization);
-            interruptIfNeeded();
+            jobSynchronizer.interruptDiscoveryIfStopped();
             if (normalizedQuery != null) {
                 searchResult = session.searchReleaseGroups(normalizedQuery);
-                interruptIfNeeded();
+                jobSynchronizer.interruptDiscoveryIfStopped();
                 if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
                     return null;
                 }
@@ -224,7 +220,7 @@ public class MusicBrainzAlbumDataService {
         Map<String, MusicBrainzDto.ReleaseGroup> groups = new LinkedHashMap<>();
         Map<String, Object> rawGroups = new LinkedHashMap<>();
         for (String name : artistNames) {
-            interruptIfNeeded();
+            jobSynchronizer.interruptDiscoveryIfStopped();
             String condition = "artistname:\"" + escapeQuery(normalizeArtistName(name)) + "\"";
             if (!name.equals(VARIOUS_ARTISTS)) {
                 condition = "(" + condition + " OR artist:\"" + escapeQuery(normalizeArtistName(name)) + "\")";
@@ -235,7 +231,7 @@ public class MusicBrainzAlbumDataService {
                 continue;
             }
             MusicBrainzClient.ReleaseGroupSearchResult result = session.searchReleaseGroups(query);
-            interruptIfNeeded();
+            jobSynchronizer.interruptDiscoveryIfStopped();
             result.groups().forEach(group -> groups.putIfAbsent(group.id(), group));
             Map<String, Object> data = JsonConverter.mapFromJson(result.rawResponse(), String.class, Object.class);
             for (Object value : (List<?>) data.get("release-groups")) {
@@ -336,12 +332,5 @@ public class MusicBrainzAlbumDataService {
 
     private String escapeQuery(String value) {
         return value.replaceAll("([+\\-!(){}\\[\\]^\"~*?:\\\\/|&])", "\\\\$1");
-    }
-
-    private void interruptIfNeeded() {
-        jobSynchronizer.interruptDiscoveryIfCancelled();
-        if (shutdownService.isShutdown()) {
-            throw new DiscoveryInterruptedException();
-        }
     }
 }

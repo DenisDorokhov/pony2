@@ -18,10 +18,8 @@ import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
-import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
-import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +56,6 @@ public class SpotifyArtistDataService {
     private final Validator validator;
     private final ArtistRepository artistRepository;
     private final LogService logService;
-    private final ShutdownService shutdownService;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
 
@@ -70,7 +67,6 @@ public class SpotifyArtistDataService {
             Validator validator,
             ArtistRepository artistRepository,
             LogService logService,
-            ShutdownService shutdownService,
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
             @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource,
@@ -80,7 +76,6 @@ public class SpotifyArtistDataService {
         this.validator = validator;
         this.artistRepository = artistRepository;
         this.logService = logService;
-        this.shutdownService = shutdownService;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
         systemPrompt = promptResource.getContentAsString(UTF_8);
@@ -94,10 +89,7 @@ public class SpotifyArtistDataService {
     }
 
     private @Nullable SpotifyArtistData doDiscover(DiscoveryTask task, boolean cacheEnabled) {
-        jobSynchronizer.interruptDiscoveryIfCancelled();
-        if (shutdownService.isShutdown()) {
-            throw new DiscoveryInterruptedException();
-        }
+        jobSynchronizer.interruptDiscoveryIfStopped();
         String artistId = requireNonNull(task.getArtist(),
                 () -> "Discovery task '" + task.getId() + "' has no associated artist.").getId();
         Request request = transactionTemplate.execute(status -> prepareRequest(artistId));

@@ -15,9 +15,7 @@ import net.dorokhov.pony2.api.llm.domain.DiscoveryCacheRegion;
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
-import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
-import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
 import org.slf4j.Logger;
@@ -52,7 +50,6 @@ public class DiscoveryTaskLlmExecutor {
     private final DiscoveryTaskExchangeRecorder exchangeRecorder;
     private final LogService logService;
     private final LibraryJobSynchronizer jobSynchronizer;
-    private final ShutdownService shutdownService;
     private final int retriesOnFollowUpException;
     private final int restartsOnHallucination;
     private final Duration timeout;
@@ -63,7 +60,6 @@ public class DiscoveryTaskLlmExecutor {
             DiscoveryTaskExchangeRecorder exchangeRecorder,
             LogService logService,
             LibraryJobSynchronizer jobSynchronizer,
-            ShutdownService shutdownService,
             @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException,
             @Value("${pony.discovery.llm.restartsOnHallucination:3}") int restartsOnHallucination,
             @Value("${pony.llm.timeout:10m}") Duration timeout
@@ -73,7 +69,6 @@ public class DiscoveryTaskLlmExecutor {
         this.exchangeRecorder = exchangeRecorder;
         this.logService = logService;
         this.jobSynchronizer = jobSynchronizer;
-        this.shutdownService = shutdownService;
         this.retriesOnFollowUpException = retriesOnFollowUpException;
         this.restartsOnHallucination = restartsOnHallucination;
         this.timeout = timeout;
@@ -94,7 +89,7 @@ public class DiscoveryTaskLlmExecutor {
             DiscoveryTask task, Request request, Class<?> responseClass,
             @Nullable CacheSettings cacheSettings, Function<String, R> responseHandler
     ) {
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
         String responseSchema = responseSchema(responseClass);
         int restarts = 0;
         while (true) {
@@ -137,11 +132,11 @@ public class DiscoveryTaskLlmExecutor {
                         retriesOnFollowUpException - retries - 1);
                 acceptedRequest = new FollowUpRequest(acceptedRequest, response, e.getPrompt());
                 response = performExchange(task, acceptedRequest, responseSchema, null).response();
-                interruptIfNeeded();
+                jobSynchronizer.interruptDiscoveryIfStopped();
                 retries++;
             }
         }
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
         if (cacheSettings != null && (!exchange.cacheHit() || retries > 0)) {
             cacheService.put(cacheSettings.region(), exchange.cacheKey(), cacheSettings.version(),
                     JsonConverter.toJson(new CacheEntry(requestSnapshot(JsonConverter.toJson(acceptedRequest), responseSchema), response)));
@@ -152,7 +147,7 @@ public class DiscoveryTaskLlmExecutor {
     private Exchange performExchange(
             DiscoveryTask task, Request request, String responseSchema, @Nullable CacheSettings cacheSettings
     ) {
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
 
         Object rawRequest = requestSnapshot(JsonConverter.toJson(request), responseSchema);
         exchangeRecorder.startExchange(task, rawRequest);
@@ -177,7 +172,7 @@ public class DiscoveryTaskLlmExecutor {
             }
             response = callModel(task, prompt, responseSchema);
         }
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
 
         exchangeRecorder.completeExchange(task, response);
         if (logger.isDebugEnabled()) {
@@ -206,7 +201,7 @@ public class DiscoveryTaskLlmExecutor {
                 + "Include all collected values in your final answer.\n\n" + responseSchema));
         String collectedResponse = chatClient.call(toolsEnabled, spec -> spec.messages(collectionMessages)
                 .options(collectionOptions.clone()).call().content());
-        interruptIfNeeded();
+        jobSynchronizer.interruptDiscoveryIfStopped();
         if (collectedResponse == null || collectedResponse.isBlank()) {
             return collectedResponse;
         }
@@ -260,13 +255,6 @@ public class DiscoveryTaskLlmExecutor {
             return JsonConverter.toPrettyJson(JsonConverter.fromJson(response));
         } catch (Throwable t) {
             return response;
-        }
-    }
-
-    private void interruptIfNeeded() {
-        jobSynchronizer.interruptDiscoveryIfCancelled();
-        if (shutdownService.isShutdown()) {
-            throw new DiscoveryInterruptedException();
         }
     }
 

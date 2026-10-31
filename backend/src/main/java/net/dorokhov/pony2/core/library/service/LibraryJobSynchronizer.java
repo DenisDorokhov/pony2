@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +31,20 @@ import static java.util.Objects.requireNonNull;
 public class LibraryJobSynchronizer {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final ShutdownService shutdownService;
     private final Set<CancellationSubscription> cancellationSubscriptions = new LinkedHashSet<>();
     private final Object lock = new Object();
 
     private LibraryJobRegistration activeJob;
     private boolean scanPending;
     private boolean discoveryCancelled;
+    // Tasks are synchronous within a job today, but some are planned to become asynchronous.
+    // Keep this counter so queued or running tasks hold the library even after the job registration closes.
     private int runningTasks;
+
+    public LibraryJobSynchronizer(ShutdownService shutdownService) {
+        this.shutdownService = shutdownService;
+    }
 
     /**
      * Reserves the library for a new discovery job without waiting.
@@ -253,6 +261,19 @@ public class LibraryJobSynchronizer {
             if (discoveryCancelled) {
                 throw new DiscoveryInterruptedException();
             }
+        }
+    }
+
+    /**
+     * Checks for discovery cancellation or application shutdown at a cooperative stopping point.
+     * This check does not change the calling thread's interrupt flag or clear cancellation.
+     *
+     * @throws DiscoveryInterruptedException if discovery is cancelled or the application is shutting down
+     */
+    public void interruptDiscoveryIfStopped() {
+        interruptDiscoveryIfCancelled();
+        if (shutdownService.isShutdown()) {
+            throw new DiscoveryInterruptedException();
         }
     }
 

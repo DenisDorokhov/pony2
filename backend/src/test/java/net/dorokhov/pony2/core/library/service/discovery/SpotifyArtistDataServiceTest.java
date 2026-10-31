@@ -77,9 +77,9 @@ class SpotifyArtistDataServiceTest {
     private ChatClient configuredClient;
     private ValidatorFactory validatorFactory;
     private Validator validator;
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
-    private LibraryJobSynchronizer.LibraryJobRegistration jobRegistration;
     private final ShutdownService shutdownService = new ShutdownService();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(shutdownService);
+    private LibraryJobSynchronizer.LibraryJobRegistration jobRegistration;
     private final Map<String, String> cache = new HashMap<>();
     private final List<Prompt> prompts = new ArrayList<>();
     private final List<String> queuedResponses = new ArrayList<>();
@@ -535,12 +535,12 @@ class SpotifyArtistDataServiceTest {
 
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(shutdownService, jobSynchronizer));
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(discoveryTaskRepository, transactionManager()),
-                logService, jobSynchronizer, shutdownService, 1, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 1, 1, Duration.ofMinutes(10));
         return new SpotifyArtistDataService(operation,
-                validator, artistRepository, logService, shutdownService,
+                validator, artistRepository, logService,
                 jobSynchronizer, transactionManager(), promptResource,
                 new ClassPathResource("prompts/spotify-artist-data-verification.txt"));
     }

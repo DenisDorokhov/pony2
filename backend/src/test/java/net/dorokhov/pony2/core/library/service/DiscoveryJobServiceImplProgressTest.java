@@ -3,6 +3,7 @@ package net.dorokhov.pony2.core.library.service;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.NoOpTaskExecutor;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
@@ -60,7 +61,7 @@ public class DiscoveryJobServiceImplProgressTest {
 
     @Spy
     @SuppressWarnings("unused")
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(new ShutdownService());
 
     @Spy
     @SuppressWarnings("unused")

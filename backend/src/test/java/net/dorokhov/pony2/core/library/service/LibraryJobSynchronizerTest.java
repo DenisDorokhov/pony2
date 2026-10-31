@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service;
 
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,31 @@ import static org.awaitility.Awaitility.await;
 
 class LibraryJobSynchronizerTest {
 
-    private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer();
+    private final ShutdownService shutdownService = new ShutdownService();
+    private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer(shutdownService);
+
+    @Test
+    void shouldContinueDiscoveryWhenNotStopped() {
+        assertThatCode(synchronizer::interruptDiscoveryIfStopped).doesNotThrowAnyException();
+        assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
+    }
+
+    @Test
+    void shouldInterruptDiscoveryOnShutdownWithoutCancelling() {
+        shutdownService.onApplicationEvent();
+
+        assertThatThrownBy(synchronizer::interruptDiscoveryIfStopped).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThatCode(synchronizer::interruptDiscoveryIfCancelled).doesNotThrowAnyException();
+        assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
+    }
+
+    @Test
+    void shouldKeepDiscoveryCancelledAfterStopCheck() {
+        synchronizer.cancelDiscovery();
+
+        assertThatThrownBy(synchronizer::interruptDiscoveryIfStopped).isInstanceOf(DiscoveryInterruptedException.class);
+        assertThat(synchronizer.isDiscoveryCancelled()).isTrue();
+    }
 
     @Test
     void shouldWaitForCancelledDiscoveryJobAndAllTasks() throws Exception {

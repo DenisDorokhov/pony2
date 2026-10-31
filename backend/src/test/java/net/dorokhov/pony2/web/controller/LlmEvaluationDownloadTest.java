@@ -2,6 +2,7 @@ package net.dorokhov.pony2.web.controller;
 
 import net.dorokhov.pony2.api.llm.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.web.service.DiscoveryFacade;
 import net.dorokhov.pony2.web.service.LibraryFacade;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.*;
 class LlmEvaluationDownloadTest {
 
     private final LlmEvaluationExportService exportService = mock(LlmEvaluationExportService.class);
-    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer();
+    private final LibraryJobSynchronizer jobSynchronizer = new LibraryJobSynchronizer(new ShutdownService());
     private final LibraryAdminController controller = new LibraryAdminController(mock(ScanFacade.class),
             mock(DiscoveryFacade.class), mock(LibraryFacade.class), mock(DiscoveryCacheService.class),
             exportService, jobSynchronizer);
