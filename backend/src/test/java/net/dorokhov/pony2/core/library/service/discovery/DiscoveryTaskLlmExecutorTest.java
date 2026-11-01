@@ -558,7 +558,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .isSameAs(failure);
 
         verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
-        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        assertThat(task.getRawResponses()).isEmpty();
         assertThat(cache).isEmpty();
     }
 
@@ -594,7 +594,7 @@ class DiscoveryTaskLlmExecutorTest {
 
         verify(model, times(2)).call(any(Prompt.class));
         verify(tool).call(anyString(), any());
-        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        assertThat(task.getRawResponses()).isEmpty();
         verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
         verifyNoInteractions(logService);
     }
@@ -622,7 +622,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .hasMessage("LLM call failed with finish reason '" + finishReason + "': " + content);
 
         verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
-        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        assertThat(task.getRawResponses()).isEmpty();
         verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
         verifyNoInteractions(logService);
     }
@@ -647,7 +647,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .hasMessage("LLM call refused: " + refusal);
 
         verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
-        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        assertThat(task.getRawResponses()).isEmpty();
         verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
         verifyNoInteractions(logService);
     }
@@ -767,7 +767,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .isSameAs(failure);
 
         assertThat(task.getRawRequests()).hasSize(2);
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(answer), null);
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(answer));
         assertThat(cache).hasSize(1);
     }
 
@@ -915,7 +915,7 @@ class DiscoveryTaskLlmExecutorTest {
             throw new AssertionError("A cancelled operation must not process the response");
         })).isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(cancelledTask.getRawResponses()).containsExactly((Object) null);
+        assertThat(cancelledTask.getRawResponses()).isEmpty();
         verify(model, times(2)).call(any(Prompt.class));
     }
 
@@ -944,7 +944,7 @@ class DiscoveryTaskLlmExecutorTest {
         })).isInstanceOf(DiscoveryInterruptedException.class);
 
         assertThat(cancelledTask.getRawRequests()).containsExactly(effectiveRequest);
-        assertThat(cancelledTask.getRawResponses()).containsExactly((Object) null);
+        assertThat(cancelledTask.getRawResponses()).isEmpty();
         assertThat(cache).isEqualTo(cacheBeforeCancellation);
         verify(model, times(4)).call(any(Prompt.class));
     }

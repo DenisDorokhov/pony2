@@ -539,7 +539,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getToolChoice()).isEqualTo("none");
             DiscoveryTask task = taskRepository.findAll().stream().filter(value -> value.getStatus() == DiscoveryTask.Status.STARTED).findFirst().orElseThrow();
             assertThat(task.getRawRequests()).hasSize(2);
-            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), null);
+            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse));
             return response("{\"id\":\"group\"}");
         });
 
@@ -953,7 +953,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(onlyTask().getResult()).contains("LLM unavailable");
-        assertThat(onlyTask().getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), null);
+        assertThat(onlyTask().getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse));
     }
 
     @Test
@@ -1283,7 +1283,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(onlyTask().getResult()).contains(invalidResponse ? "searchTitle" : "Normalization unavailable");
-        assertThat(onlyTask().getRawResponses()).hasSize(invalidResponse ? 5 : 2);
+        assertThat(onlyTask().getRawResponses()).hasSize(invalidResponse ? 5 : 1);
         assertThat(cacheRepository.count()).isZero();
         verify(session, times(1)).searchReleaseGroups(anyString());
         verify(model, times(invalidResponse ? 4 : 1)).call(any(Prompt.class));
@@ -1493,7 +1493,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         }).when(session).searchReleaseGroups(anyString());
         albumService.discover(job(DiscoveryType.ALBUM), album, null);
         assertThat(onlyTask().getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
-        assertThat(onlyTask().getRawResponses()).containsExactly((Object) null);
+        assertThat(onlyTask().getRawResponses()).isEmpty();
         doAnswer(invocation -> {
             jobSynchronizer.cancelDiscovery();
             throw new MusicBrainzClient.CancelledException();
@@ -2562,7 +2562,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             exchangeObserver.onRequest(SEARCH_URL);
             DiscoveryTask task = taskRepository.findAll().stream().filter(value -> value.getStatus() == DiscoveryTask.Status.STARTED).findFirst().orElseThrow();
             assertThat(task.getRawRequests()).contains(SEARCH_URL);
-            assertThat(task.getRawResponses()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).isEmpty();
             exchangeObserver.onResponse(SEARCH_URL, rawSearchResponse);
             return new MusicBrainzClient.ReleaseGroupSearchResult(groups, rawSearchResponse);
         }).when(session).searchReleaseGroups(anyString());

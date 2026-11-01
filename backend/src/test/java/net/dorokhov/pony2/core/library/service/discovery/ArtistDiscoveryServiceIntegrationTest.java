@@ -132,7 +132,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                             assertThat(prompt.getInstructions().getLast().getText()).isEqualTo(rawResponse);
                         }
                         assertThat(rawRequest.albumTitles()).isEqualTo(List.of("Album"));
-                        assertThat(task.getRawResponses()).containsExactly((Object) null);
+                        assertThat(task.getRawResponses()).isEmpty();
                     });
             getTransactionTemplate().executeWithoutResult(status -> {
                 List<DiscoveryTask> tasks = taskRepository.findAll().stream()
@@ -331,7 +331,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(task.getResult()).contains("Browser unavailable");
             assertThat(task.getRawRequests()).isNotEmpty();
-            assertThat(task.getRawResponses()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).isEmpty();
         });
         assertFailedTopTracks();
         assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
@@ -552,7 +552,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();
-            assertThat(task.getRawResponses()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).isEmpty();
         });
         assertThat(cacheRepository.count()).isEqualTo(1);
         verify(model, times(3)).call(any(Prompt.class));
@@ -573,7 +573,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 .extracting(ArtistDiscovery::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
         assertThat(interruptedTask.getResult()).isNull();
         assertThat(interruptedTask.getRawRequests()).isNotEmpty();
-        assertThat(interruptedTask.getRawResponses()).containsExactly((Object) null);
+        assertThat(interruptedTask.getRawResponses()).isEmpty();
         DiscoveryTask unfinishedTask = saveTask(job, DiscoveryTask.Status.STARTED, null);
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);
@@ -622,7 +622,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
             assertThat(task.getResult()).isNull();
-            assertThat(task.getRawResponses()).containsExactly((Object) null);
+            assertThat(task.getRawResponses()).isEmpty();
         });
         assertThat(cacheRepository.count()).isZero();
         assertThat(logRepository.findAll()).noneMatch(log -> log.getLevel() == LogMessage.Level.ERROR);

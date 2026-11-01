@@ -88,7 +88,7 @@ public class DiscoveryTaskLlmExecutor {
      * Requests without tools return a structured response in a single call.
      * LlmHallucinationException restarts the call chain with the original request up to the configured limit.
      * The response handler may throw LlmFollowUpException to append a prompt and retry up to the configured limit.
-     * Raw requests and responses are appended to parallel JSON arrays before the response is processed.
+     * Raw requests are saved before each exchange, and received responses are appended before processing.
      * Only an accepted response enters the cache, under the original request's key. Null cache settings disable caching.
      * Calls for the same task must be sequential; task status and the final result belong to its lifecycle.
      */

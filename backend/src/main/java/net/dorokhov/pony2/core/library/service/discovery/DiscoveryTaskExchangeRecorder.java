@@ -31,7 +31,6 @@ public class DiscoveryTaskExchangeRecorder {
         List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
         List<Object> responses = task.getRawResponses() != null ? new ArrayList<>(task.getRawResponses()) : new ArrayList<>();
         requests.add(request);
-        responses.add(null);
         save(task, requests, responses);
     }
 
@@ -53,7 +52,7 @@ public class DiscoveryTaskExchangeRecorder {
         List<Object> requests = requireNonNull(task.getRawRequests());
         List<Object> responses = requireNonNull(task.getRawResponses());
         // Task finalization must retain this response if the history transaction fails.
-        responses.set(responses.size() - 1, JsonConverter.fromJsonOrString(response));
+        responses.add(JsonConverter.fromJsonOrString(response));
         save(task, requests, responses);
     }
 
@@ -61,7 +60,7 @@ public class DiscoveryTaskExchangeRecorder {
         List<Object> requests = task.getRawRequests() != null ? new ArrayList<>(task.getRawRequests()) : new ArrayList<>();
         List<Object> responses = task.getRawResponses() != null ? new ArrayList<>(task.getRawResponses()) : new ArrayList<>();
         checkState(!requests.isEmpty() && requestUrl.equals(requests.getLast()), "MusicBrainz exchanges must be sequential.");
-        responses.set(responses.size() - 1, JsonConverter.fromJsonOrString(response));
+        responses.add(JsonConverter.fromJsonOrString(response));
         save(task, requests, responses);
     }
 }
