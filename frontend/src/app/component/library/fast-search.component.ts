@@ -248,6 +248,10 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  isTopTrack(song: Song): boolean {
+    return this.libraryService.isTopTrack(song);
+  }
+
   selectSong(song: Song, event?: MouseEvent) {
     if (event?.altKey) {
       return;

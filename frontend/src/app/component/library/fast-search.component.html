@@ -28,12 +28,13 @@
          [hidden]="(searchResult?.songs?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
       @for (song of searchResult?.songs; track $index) {
+        @let topTrack = isTopTrack(song);
         <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
            title="{{ song.name | ponyUnknownSong }}
 {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
            (mousedown)="selectSong(song, $event)" (click)="goToSong(song, $event)">
           <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-          <div class="text" [class.liked]="idToNavigationItem[song.id].liked">
+          <div class="text" [class.with-status-icon]="idToNavigationItem[song.id].liked || topTrack">
             <div>{{ song.name | ponyUnknownSong }}</div>
             <div>
               <small>{{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }}{{ song.album.year ? ' (' + song.album.year + ')' : '' }}</small>
@@ -42,6 +43,10 @@
           @if (idToNavigationItem[song.id].liked) {
             <div class="like">
               <i class="bi bi-star-fill"></i>
+            </div>
+          } @else if (topTrack) {
+            <div class="like">
+              <i class="bi bi-fire top-track-icon" aria-hidden="true"></i>
             </div>
           }
         </a>
