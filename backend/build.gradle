@@ -20,6 +20,7 @@ repositories {
 dependencies {
 
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.springframework.boot:spring-boot-h2console'
 
     implementation project(':frontend')
 
