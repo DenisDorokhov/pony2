@@ -81,11 +81,16 @@ public class MusicBrainzAlbumDataService {
         jobSynchronizer.interruptDiscoveryIfStopped();
         String albumId = requireNonNull(task.getAlbum(),
                 () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
-        AlbumInput input = requireNonNull(transactionTemplate.execute(status -> {
+        AlbumInput input = transactionTemplate.execute(status -> {
             Album album = albumRepository.findById(albumId).orElseThrow();
-            return new AlbumInput(album.getName(), album.getYear(), album.getArtist().getName());
-        }));
-        if (input.title() == null || input.title().isBlank() || input.artistName() == null || input.artistName().isBlank()) {
+            String title = album.getName();
+            String artistName = album.getArtist().getName();
+            if (title == null || title.isBlank() || artistName == null || artistName.isBlank()) {
+                return null;
+            }
+            return new AlbumInput(title, album.getYear(), artistName);
+        });
+        if (input == null) {
             logger.debug("Skipping MusicBrainz discovery for album '{}': album title or artist name is unavailable.", albumId);
             return null;
         }

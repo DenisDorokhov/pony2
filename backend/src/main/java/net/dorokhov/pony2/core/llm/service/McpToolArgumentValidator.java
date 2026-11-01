@@ -55,6 +55,7 @@ public class McpToolArgumentValidator {
                 .toArray(ToolCallback[]::new);
     }
 
+    @SuppressWarnings("ClassCanBeRecord")
     private static final class ValidatingToolCallback implements ToolCallback {
 
         private final ToolCallback delegate;

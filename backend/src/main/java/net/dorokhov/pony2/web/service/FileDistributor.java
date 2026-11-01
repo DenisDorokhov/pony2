@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.service;
 
-import com.google.common.base.Charsets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.dorokhov.pony2.web.dto.FileDistribution;
 import org.springframework.stereotype.Component;
@@ -11,6 +10,7 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -143,7 +143,7 @@ public class FileDistributor {
         // Initialize response.
         response.reset();
         response.setBufferSize(BUFFER_SIZE);
-        response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(distribution.getName(), Charsets.UTF_8.name()) + "\"");
+        response.setHeader("Content-Disposition", disposition + ";filename=\"" + UriUtils.encodeQuery(distribution.getName(), StandardCharsets.UTF_8.name()) + "\"");
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("ETag", createETag(distribution));
         response.setDateHeader("Last-Modified", lastModified);

@@ -61,6 +61,7 @@ public class ValidLlmConfigValidatorTest {
     }
 
     @ParameterizedTest
+    @SuppressWarnings("HttpUrlsUsage")
     @ValueSource(strings = {"invalid", "https://api.openai.com", "https://api.openai.com/", "ftp://localhost/v1", "http:///v1"})
     public void shouldFailValidationWhenUrlIsInvalid(String url) {
         ConfigDto config = new ConfigDto()

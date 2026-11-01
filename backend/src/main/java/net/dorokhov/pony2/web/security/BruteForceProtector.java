@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class BruteForceProtector {
@@ -20,7 +20,7 @@ public class BruteForceProtector {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final LoadingCache<String, Integer> loginAttemptCounter = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.DAYS)
+            .expireAfterWrite(Duration.ofDays(1))
             .build(new CacheLoader<>() {
                 @Override
                 public @Nonnull Integer load(@Nonnull String key) {

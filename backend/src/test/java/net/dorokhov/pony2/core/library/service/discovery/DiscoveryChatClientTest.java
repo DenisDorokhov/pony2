@@ -77,6 +77,7 @@ class DiscoveryChatClientTest {
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
             assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             Thread.interrupted();
         }
     }
@@ -96,6 +97,7 @@ class DiscoveryChatClientTest {
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
             assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             Thread.interrupted();
         }
     }
@@ -121,6 +123,7 @@ class DiscoveryChatClientTest {
         CountDownLatch release = new CountDownLatch(1);
         DiscoveryChatClient client = createClient(exchange -> blockResponse(exchange, responseStarted, received, release));
         LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        //noinspection TryFinallyCanBeTryWithResources
         try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
             Future<String> result = worker.submit(() -> {
                 try (task) {
@@ -134,7 +137,7 @@ class DiscoveryChatClientTest {
                 if (responseStarted) {
                     assertThat(responseBodyRead.await(5, TimeUnit.SECONDS)).isTrue();
                 }
-                try (LibraryJobSynchronizer.LibraryJobRegistration scan = synchronizer.registerScanJob(Duration.ofSeconds(2))) {
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredScan = synchronizer.registerScanJob(Duration.ofSeconds(2))) {
                     assertCancelled(result);
                     assertThat(requests).hasValue(1);
                     assertThat(synchronizer.hasRunningTasks()).isFalse();
@@ -365,6 +368,7 @@ class DiscoveryChatClientTest {
     }
 
     private Response observeResponseBody(Interceptor.Chain chain) throws IOException {
+        //noinspection resource
         Response response = chain.proceed(chain.request());
         ResponseBody body = requireNonNull(response.body());
         BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {

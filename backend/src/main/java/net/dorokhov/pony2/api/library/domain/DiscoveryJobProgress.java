@@ -3,6 +3,7 @@ package net.dorokhov.pony2.api.library.domain;
 import com.google.common.base.MoreObjects;
 import jakarta.annotation.Nullable;
 
+@SuppressWarnings("ClassCanBeRecord")
 public final class DiscoveryJobProgress {
 
     private final DiscoveryJob discoveryJob;

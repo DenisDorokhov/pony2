@@ -32,6 +32,7 @@ public class RateLimitedRequestExecutorTest {
             assertThat(calls).hasValue(0);
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             Thread.interrupted();
         }
     }
@@ -53,6 +54,7 @@ public class RateLimitedRequestExecutorTest {
             assertThat(sleepDurations).isEmpty();
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             Thread.interrupted();
         }
     }
@@ -76,6 +78,7 @@ public class RateLimitedRequestExecutorTest {
             assertThat(sleeps).hasValue(1);
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             Thread.interrupted();
         }
     }

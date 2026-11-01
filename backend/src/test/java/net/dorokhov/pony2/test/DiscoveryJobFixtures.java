@@ -10,16 +10,8 @@ public final class DiscoveryJobFixtures {
     private DiscoveryJobFixtures() {
     }
 
-    public static DiscoveryJob discoveryJobFull() {
-        return discoveryJob(DiscoveryType.FULL);
-    }
-
     public static DiscoveryJob discoveryJobArtist() {
         return discoveryJob(DiscoveryType.ARTIST);
-    }
-
-    public static DiscoveryJob discoveryJobAlbum() {
-        return discoveryJob(DiscoveryType.ALBUM);
     }
 
     public static DiscoveryJob discoveryJob(DiscoveryType discoveryType) {

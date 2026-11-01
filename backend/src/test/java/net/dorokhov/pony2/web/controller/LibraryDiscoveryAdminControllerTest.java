@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.test.DiscoveryJobFixtures.discoveryJob;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,10 +111,10 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(discoveryJob.getStatus()).isSameAs(DiscoveryJob.Status.STARTING);
             assertThat(objectMapper.readTree(response).has("parameter")).isFalse();
             if (type == DiscoveryType.ARTIST || type == DiscoveryType.ALBUM) {
-                assertThat(discoveryJob.getArtist().getId()).isEqualTo(artist.getId());
+                assertThat(requireNonNull(discoveryJob.getArtist()).getId()).isEqualTo(artist.getId());
             }
             if (type == DiscoveryType.ALBUM) {
-                assertThat(discoveryJob.getAlbum().getId()).isEqualTo(album.getId());
+                assertThat(requireNonNull(discoveryJob.getAlbum()).getId()).isEqualTo(album.getId());
             }
             assertThat(discoveryJob.getLogMessage()).satisfies(logMessage -> {
                 assertThat(logMessage.getId()).isEqualTo("log1");
@@ -207,9 +208,8 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(page.getPageIndex()).isEqualTo(pageIndex);
             assertThat(page.getPageSize()).isEqualTo(pageSize);
             assertThat(page.getTotalPages()).isEqualTo((100 + pageSize - 1) / pageSize);
-            assertThat(page.getDiscoveryJobs()).singleElement().satisfies(discoveryJob -> {
-                assertThat(discoveryJob.getId()).isEqualTo("job1");
-            });
+            assertThat(page.getDiscoveryJobs()).singleElement().satisfies(discoveryJob ->
+                    assertThat(discoveryJob.getId()).isEqualTo("job1"));
         });
 
         verify(discoveryJobService).getAll(pageRequest);
@@ -300,7 +300,7 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(activeStatus.isDiscoveryEnabled()).isEqualTo(discoveryEnabled);
         assertThat(activeStatus.getProgress()).satisfies(progress -> {
             assertThat(progress.getDiscoveryJob().getId()).isEqualTo("job1");
-            assertThat(progress.getDiscoveryProgress().getValue().getItemsComplete()).isEqualTo(3);
+            assertThat(requireNonNull(requireNonNull(progress.getDiscoveryProgress()).getValue()).getItemsComplete()).isEqualTo(3);
             assertThat(progress.getDiscoveryProgress().getValue().getItemsTotal()).isEqualTo(10);
         });
     }
@@ -398,9 +398,9 @@ public class LibraryDiscoveryAdminControllerTest {
         DiscoveryTaskSummaryDto summary = page.getDiscoveryTasks().getFirst();
         assertThat(summary.getStatus()).isSameAs(taskStatus);
         assertThat(summary.getType()).isSameAs(taskType);
-        assertThat(summary.getArtist().getName()).isEqualTo("Artist");
+        assertThat(requireNonNull(summary.getArtist()).getName()).isEqualTo("Artist");
         if (taskType == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
-            assertThat(summary.getAlbum().getName()).isEqualTo("Album");
+            assertThat(requireNonNull(summary.getAlbum()).getName()).isEqualTo("Album");
         }
         assertThat(page.getDiscoveryTasks().getLast().getArtist()).isNull();
         assertThat(page.getDiscoveryTasks().getLast().getAlbum()).isNull();
@@ -496,9 +496,9 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(summary.getType()).isSameAs(type);
             assertThat(summary.getStatus()).isSameAs(DiscoveryTask.Status.COMPLETE);
             assertThat(summary.getDuration()).isEqualTo(900L);
-            assertThat(summary.getArtist().getName()).isEqualTo("Artist");
+            assertThat(requireNonNull(summary.getArtist()).getName()).isEqualTo("Artist");
             if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
-                assertThat(summary.getAlbum().getName()).isEqualTo("Album");
+                assertThat(requireNonNull(summary.getAlbum()).getName()).isEqualTo("Album");
                 assertThat(summary.getAlbum().getYear()).isEqualTo(2001);
             } else {
                 assertThat(summary.getAlbum()).isNull();
@@ -585,8 +585,8 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(page.getTotalPages()).isEqualTo(3);
         assertThat(page.getDiscoveryTasks()).singleElement().satisfies(summary -> {
             assertThat(summary.getId()).isEqualTo(task.getId());
-            assertThat(summary.getArtist().getId()).isEqualTo("artist1");
-            assertThat(summary.getAlbum().getId()).isEqualTo("album1");
+            assertThat(requireNonNull(summary.getArtist()).getId()).isEqualTo("artist1");
+            assertThat(requireNonNull(summary.getAlbum()).getId()).isEqualTo("album1");
         });
         verify(discoveryJobService, never()).getById(any());
     }
@@ -655,10 +655,10 @@ public class LibraryDiscoveryAdminControllerTest {
         DiscoveryTaskSummaryDto summary = objectMapper.readValue(response, DiscoveryTaskPageDto.class).getDiscoveryTasks().getFirst();
 
         if (genreTarget) {
-            assertThat(summary.getGenre().getId()).isEqualTo(genre.getId());
+            assertThat(requireNonNull(summary.getGenre()).getId()).isEqualTo(genre.getId());
             assertThat(summary.getSong()).isNull();
         } else {
-            assertThat(summary.getSong().getId()).isEqualTo(song.getId());
+            assertThat(requireNonNull(summary.getSong()).getId()).isEqualTo(song.getId());
             assertThat(summary.getSong().getName()).isEqualTo(song.getName());
             assertThat(summary.getGenre()).isNull();
         }

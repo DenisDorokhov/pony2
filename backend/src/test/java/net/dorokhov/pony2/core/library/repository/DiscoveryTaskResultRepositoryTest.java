@@ -40,8 +40,8 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     void shouldReadLatestCompletedArtistDataAcrossJobs() {
         Artist artist = saveArtist();
         Artist otherArtist = saveArtist();
-        DiscoveryJob olderJob = saveDiscovery(artist, DiscoveryJob.Status.COMPLETE);
-        DiscoveryJob currentJob = saveDiscovery(artist, DiscoveryJob.Status.STARTED);
+        DiscoveryJob olderJob = saveDiscovery(DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob currentJob = saveDiscovery(DiscoveryJob.Status.STARTED);
         LocalDateTime date = LocalDateTime.of(2026, 10, 16, 12, 0);
         DiscoveryTask older = saveTask(artist, olderJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 DiscoveryTask.Status.COMPLETE, date.minusHours(1), "older");
@@ -69,8 +69,8 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     void shouldReadLatestCompletedTopTracksForArtistAcrossJobs() {
         Artist artist = saveArtist();
         Artist otherArtist = saveArtist();
-        DiscoveryJob olderDiscovery = saveDiscovery(artist, DiscoveryJob.Status.COMPLETE);
-        DiscoveryJob newerDiscovery = saveDiscovery(artist, DiscoveryJob.Status.FAILED);
+        DiscoveryJob olderDiscovery = saveDiscovery(DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob newerDiscovery = saveDiscovery(DiscoveryJob.Status.FAILED);
         LocalDateTime date = LocalDateTime.of(2026, 10, 16, 12, 0);
         DiscoveryTask older = saveTask(artist, olderDiscovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
                 DiscoveryTask.Status.COMPLETE, date.minusHours(1), "[\"older\"]");
@@ -80,7 +80,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
         for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.FAILED, DiscoveryTask.Status.INTERRUPTED, DiscoveryTask.Status.STARTED)) {
             saveTask(artist, newerDiscovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, status, date.plusHours(2), "[\"incomplete\"]");
         }
-        DiscoveryJob otherDiscovery = saveDiscovery(otherArtist, DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob otherDiscovery = saveDiscovery(DiscoveryJob.Status.COMPLETE);
         saveTask(otherArtist, otherDiscovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE, date.plusHours(3), "[\"other\"]");
 
         assertThat(taskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artist.getId(), Limit.of(1)))
@@ -102,8 +102,8 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     void shouldReadLatestCompletedCreationDateForAlbumAcrossJobs() {
         Artist artist = saveArtist();
         Album album = albumRepository.save(new Album().setArtist(artist).setName("Album"));
-        DiscoveryJob olderJob = saveDiscovery(artist, DiscoveryJob.Status.COMPLETE);
-        DiscoveryJob newerJob = saveDiscovery(artist, DiscoveryJob.Status.FAILED);
+        DiscoveryJob olderJob = saveDiscovery(DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob newerJob = saveDiscovery(DiscoveryJob.Status.FAILED);
         LocalDateTime date = LocalDateTime.of(2026, 10, 16, 12, 0);
         DiscoveryTask older = saveAlbumTask(album, olderJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
                 DiscoveryTask.Status.COMPLETE, date.minusHours(1));
@@ -125,7 +125,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     @Test
     void shouldBreakCreationDateTiesByTaskId() {
         Artist artist = saveArtist();
-        DiscoveryJob discovery = saveDiscovery(artist, DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob discovery = saveDiscovery(DiscoveryJob.Status.COMPLETE);
         LocalDateTime date = LocalDateTime.of(2026, 10, 16, 12, 0);
         DiscoveryTask first = saveTask(artist, discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE, date, "[\"first\"]");
         DiscoveryTask second = saveTask(artist, discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE, date, "[\"second\"]");
@@ -140,7 +140,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     @ValueSource(strings = {"null", "[]", "[null]"})
     void shouldNotFallBackWhenLatestCompletedResultIsEmpty(@Nullable String result) {
         Artist artist = saveArtist();
-        DiscoveryJob discovery = saveDiscovery(artist, DiscoveryJob.Status.COMPLETE);
+        DiscoveryJob discovery = saveDiscovery(DiscoveryJob.Status.COMPLETE);
         LocalDateTime date = LocalDateTime.of(2026, 10, 16, 12, 0);
         saveTask(artist, discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE, date.minusHours(1), "[\"older\"]");
         saveTask(artist, discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE, date, result);
@@ -152,7 +152,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
     @Test
     void shouldReturnEmptyWhenArtistHasNoCompletedTopTracks() {
         Artist artist = saveArtist();
-        DiscoveryJob discovery = saveDiscovery(artist, DiscoveryJob.Status.STARTED);
+        DiscoveryJob discovery = saveDiscovery(DiscoveryJob.Status.STARTED);
         saveTask(artist, discovery, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.STARTED,
                 LocalDateTime.of(2026, 10, 16, 12, 0), null);
 
@@ -163,7 +163,7 @@ class DiscoveryTaskResultRepositoryTest extends IntegrationTest {
         return artistRepository.save(new Artist().setName("Artist"));
     }
 
-    private DiscoveryJob saveDiscovery(Artist artist, DiscoveryJob.Status status) {
+    private DiscoveryJob saveDiscovery(DiscoveryJob.Status status) {
         return jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(status));
     }
 

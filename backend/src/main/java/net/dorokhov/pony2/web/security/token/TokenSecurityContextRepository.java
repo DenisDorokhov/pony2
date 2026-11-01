@@ -45,6 +45,7 @@ public class TokenSecurityContextRepository implements SecurityContextRepository
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
         SecurityContext securityContext;
         try {

@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,13 +70,19 @@ class LlmEvaluationDownloadTest {
     void shouldHoldLibraryLockUntilExportFinishes() throws Exception {
         doAnswer(invocation -> {
             assertThatThrownBy(jobSynchronizer::registerDiscoveryJob).isInstanceOf(ConcurrentLibraryJobException.class);
-            assertThatThrownBy(() -> jobSynchronizer.registerScanJob(Duration.ZERO))
+            assertThatThrownBy(() -> {
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = jobSynchronizer.registerScanJob(Duration.ZERO)) {
+                    fail("Expected the operation to reject this request.");
+                }
+            })
                     .isInstanceOf(ConcurrentLibraryJobException.class);
             assertThatThrownBy(jobSynchronizer::registerMaintenanceJob).isInstanceOf(ConcurrentLibraryJobException.class);
             return null;
         }).when(exportService).write(any(), any());
 
-        controller.downloadEvaluation(new MockHttpServletResponse());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        controller.downloadEvaluation(response);
+        assertThat(response.getStatus()).isEqualTo(200);
 
         try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerDiscoveryJob()) {
             assertThat(jobSynchronizer.isDiscoveryCancelled()).isFalse();

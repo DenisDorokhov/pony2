@@ -102,7 +102,7 @@ class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
         AtomicBoolean cancelled = new AtomicBoolean();
         try (
                 LibraryJobSynchronizer.LibraryJobRegistration registration = jobSynchronizer.registerDiscoveryJob();
-                LibraryJobSynchronizer.CancellationSubscription subscription = jobSynchronizer.onCancel(() -> {
+                LibraryJobSynchronizer.CancellationSubscription ignoredSubscription = jobSynchronizer.onCancel(() -> {
                     assertThat(configService.get().discoveryEnabled()).isTrue();
                     cancelled.set(true);
                     registration.close();
@@ -142,7 +142,11 @@ class LibraryJobConcurrencyIntegrationTest extends InstallingIntegrationTest {
             } else {
                 assertThatCode(() -> discoveryService.startFullJob()).doesNotThrowAnyException();
                 assertThat(discoveryJobRepository.count()).isEqualTo(1);
-                assertThatThrownBy(() -> jobSynchronizer.registerScanJob(Duration.ZERO))
+                assertThatThrownBy(() -> {
+                    try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = jobSynchronizer.registerScanJob(Duration.ZERO)) {
+                        fail("Expected the operation to reject this request.");
+                    }
+                })
                         .isInstanceOf(ConcurrentLibraryJobException.class);
                 assertThat(scanJobRepository.count()).isZero();
             }

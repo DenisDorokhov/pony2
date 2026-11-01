@@ -51,9 +51,13 @@ public class RateLimitedPlaywrightMcpClient {
             throw new IllegalArgumentException("Only Playwright MCP tools can be called: " + toolName);
         }
         return rateLimitedRequestExecutor.execute(() -> {
-            logger.trace("Calling rate-limited Playwright MCP tool '{}'.", toolName);
+            logToolCall(toolName);
             return playwrightMcpClient.call(toolName, input);
         });
+    }
+
+    private void logToolCall(String toolName) {
+        logger.trace("Calling rate-limited Playwright MCP tool '{}'.", toolName);
     }
 
     public String call(ToolCallback toolCallback, String input) {
@@ -66,11 +70,12 @@ public class RateLimitedPlaywrightMcpClient {
             throw new IllegalArgumentException("Only Playwright MCP tools can be called: " + toolName);
         }
         return rateLimitedRequestExecutor.execute(() -> {
-            logger.trace("Calling rate-limited Playwright MCP tool '{}'.", toolName);
+            logToolCall(toolName);
             return playwrightMcpClient.call(toolCallback, input, toolContext);
         });
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isPlaywrightToolName(String toolName) {
         return PlaywrightMcpClient.isPlaywrightToolName(toolName);
     }

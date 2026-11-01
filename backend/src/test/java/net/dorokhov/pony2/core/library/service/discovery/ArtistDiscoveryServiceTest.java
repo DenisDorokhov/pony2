@@ -47,10 +47,12 @@ class ArtistDiscoveryServiceTest {
     private ArtistDiscoveryService artistDiscoveryService;
 
     @Mock
+    @SuppressWarnings("unused")
     private AlbumRepository albumRepository;
     @Mock
     private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock
+    @SuppressWarnings("unused")
     private DiscoveryTaskResultReader discoveryTaskResultReader;
     @Mock
     private AlbumDiscoveryService albumDiscoveryService;
@@ -59,6 +61,7 @@ class ArtistDiscoveryServiceTest {
     @Mock
     private LibraryJobSynchronizer jobSynchronizer;
     @Mock
+    @SuppressWarnings("unused")
     private PlatformTransactionManager transactionManager;
 
     private final List<DiscoveryTaskType> executedTasks = new ArrayList<>();
@@ -77,7 +80,7 @@ class ArtistDiscoveryServiceTest {
     @CsvSource({"0,true,true", "1,false,true", "2,false,false"})
     public void shouldRetryOnlyMissingArtistTasks(long completedTasks, boolean artistRequired, boolean topTracksRequired) {
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1");
+        Artist artist = artist();
         artistTasks("artist1", completedTasks, LocalDateTime.now());
 
         artistDiscoveryService.discoverIfUpdated(job, artist, List.of(), true, null);
@@ -92,7 +95,7 @@ class ArtistDiscoveryServiceTest {
     public void shouldDiscoverOutdatedArtistEvenWhenTasksAreComplete() {
         LocalDateTime now = LocalDateTime.now();
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1").setUpdateDate(now.plusMinutes(1));
+        Artist artist = artist().setUpdateDate(now.plusMinutes(1));
         artistTasks("artist1", 2, now.plusMinutes(2));
         when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                 "artist1", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
@@ -114,7 +117,7 @@ class ArtistDiscoveryServiceTest {
                 ZoneId.systemDefault());
         LocalDateTime taskDate = implementedAt.plusMinutes(minutesAfterUpdate);
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1").setCreationDate(implementedAt.minusDays(1));
+        Artist artist = artist().setCreationDate(implementedAt.minusDays(1));
         artistTasks(artist.getId(), 2, implementedAt.plusMinutes(1));
         when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(artist.getId(), type, Limit.of(1)))
                 .thenReturn(Optional.of(taskDate));
@@ -149,8 +152,8 @@ class ArtistDiscoveryServiceTest {
                                                                boolean outdated, boolean required) {
         LocalDateTime now = LocalDateTime.now();
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1");
-        Album album = album("album1", artist);
+        Artist artist = artist();
+        Album album = album(artist);
         if (outdated) {
             album.setUpdateDate(now.plusMinutes(1));
         }
@@ -171,8 +174,8 @@ class ArtistDiscoveryServiceTest {
         LocalDateTime implementedAt = LocalDateTime.ofInstant(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow(),
                 ZoneId.systemDefault());
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1").setCreationDate(implementedAt.minusDays(1));
-        Album album = album("album1", artist);
+        Artist artist = artist().setCreationDate(implementedAt.minusDays(1));
+        Album album = album(artist);
         artistTasks(artist.getId(), 2, LocalDateTime.now());
         albumTasks(album.getId(), 1, implementedAt.plusMinutes(minutesAfterUpdate));
 
@@ -196,8 +199,8 @@ class ArtistDiscoveryServiceTest {
         try {
             Instant implementedAt = DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow();
             LocalDateTime taskDate = LocalDateTime.ofInstant(implementedAt.plusSeconds(secondsAfterUpdate), ZoneId.systemDefault());
-            Artist artist = artist("artist1").setCreationDate(taskDate.minusDays(1));
-            Album album = album("album1", artist);
+            Artist artist = artist().setCreationDate(taskDate.minusDays(1));
+            Album album = album(artist);
             artistTasks(artist.getId(), 2, taskDate.plusDays(1));
             albumTasks(album.getId(), 1, taskDate);
 
@@ -213,8 +216,8 @@ class ArtistDiscoveryServiceTest {
     @Test
     public void shouldStopBeforeIncompleteAlbumWhenArtistIsComplete() {
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist("artist1");
-        Album album = album("album1", artist);
+        Artist artist = artist();
+        Album album = album(artist);
         artistTasks("artist1", 2L, LocalDateTime.now());
         doThrow(new DiscoveryInterruptedException()).when(jobSynchronizer).interruptDiscoveryIfCancelled();
 
@@ -243,11 +246,11 @@ class ArtistDiscoveryServiceTest {
         return new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.STARTED);
     }
 
-    private Artist artist(String id) {
-        return new Artist().setId(id).setName("Artist").setCreationDate(LocalDateTime.now().minusDays(1));
+    private Artist artist() {
+        return new Artist().setId("artist1").setName("Artist").setCreationDate(LocalDateTime.now().minusDays(1));
     }
 
-    private Album album(String id, Artist artist) {
-        return new Album().setId(id).setArtist(artist).setName(id).setCreationDate(artist.getCreationDate());
+    private Album album(Artist artist) {
+        return new Album().setId("album1").setArtist(artist).setName("album1").setCreationDate(artist.getCreationDate());
     }
 }

@@ -1,5 +1,7 @@
 pony2.iml
-.idea
+**/.idea/*
+!/.idea/sqlDataSources.xml
+!/.idea/sqldialects.xml
 .gradle
 build
 out

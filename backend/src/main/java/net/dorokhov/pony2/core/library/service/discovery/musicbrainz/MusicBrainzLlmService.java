@@ -113,7 +113,7 @@ public class MusicBrainzLlmService {
         this.alternativeArtistInstructions = "\n" + alternativeArtistInstructions.getContentAsString(UTF_8).strip();
     }
 
-    public NormalizationResponse normalizeTitle(DiscoveryTask task, AlbumInput input, boolean cacheEnabled) {
+    NormalizationResponse normalizeTitle(DiscoveryTask task, AlbumInput input, boolean cacheEnabled) {
         String title = input.title();
         PreparationRequest request = new PreparationRequest(normalizationPrompt,
                 JsonConverter.toJson(Map.of("albumTitle", title)), configService.get().llmModel(), 0.0, "none");
@@ -167,7 +167,7 @@ public class MusicBrainzLlmService {
         return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
     }
 
-    public List<String> selectSearchArtists(DiscoveryTask task, AlbumInput input, List<TrackInput> tracks, boolean cacheEnabled) {
+    List<String> selectSearchArtists(DiscoveryTask task, AlbumInput input, List<TrackInput> tracks, boolean cacheEnabled) {
         List<String> alternatives = new ArrayList<>();
         for (TrackInput track : tracks) {
             String name = track.artistName() != null ? track.artistName().strip() : "";
@@ -209,7 +209,7 @@ public class MusicBrainzLlmService {
         });
     }
 
-    public @Nullable String selectReleaseGroup(
+    @Nullable String selectReleaseGroup(
             DiscoveryTask task, AlbumInput input, MusicBrainzClient.ReleaseGroupSearchResult searchResult,
             List<TrackInput> tracks, List<String> searchArtistNames, boolean cacheEnabled
     ) {
@@ -261,7 +261,7 @@ public class MusicBrainzLlmService {
         });
     }
 
-    public @Nullable String selectArtist(
+    @Nullable String selectArtist(
             DiscoveryTask task, AlbumInput input, ReleaseGroupSelection selection, List<TrackInput> tracks, boolean cacheEnabled
     ) {
         MusicBrainzDto.ReleaseGroup group = selection.group();
@@ -287,7 +287,7 @@ public class MusicBrainzLlmService {
     }
 
     @JsonPropertyOrder({"title", "year", "artistName"})
-    record AlbumInput(@Nullable String title, @Nullable Integer year, @Nullable String artistName) {
+    record AlbumInput(String title, @Nullable Integer year, String artistName) {
     }
 
     @JsonPropertyOrder({"title", "discNumber", "trackNumber", "durationSeconds", "artistName", "albumArtistName"})

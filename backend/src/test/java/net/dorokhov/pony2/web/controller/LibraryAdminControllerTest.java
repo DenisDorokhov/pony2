@@ -22,6 +22,7 @@ import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobExce
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -36,7 +37,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.Repeat;
 import tools.jackson.databind.json.JsonMapper;
 
 import jakarta.annotation.Nullable;
@@ -85,8 +85,7 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         runAndVerifyInitialScan();
     }
 
-    @Test
-    @Repeat(10)
+    @RepeatedTest(10)
     public void shouldPerformFullScanRepeatedly() throws IOException {
         shouldPerformFullScan();
     }

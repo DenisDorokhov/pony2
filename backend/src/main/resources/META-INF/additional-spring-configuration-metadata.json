@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "pony.home",
+      "type": "java.lang.String",
+      "description": "Root directory for Pony application data."
+    }
+  ]
+}

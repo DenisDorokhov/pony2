@@ -52,6 +52,7 @@ public class PlaywrightMcpToolRateLimiter {
         return new RateLimitedToolCallback(toolCallback, rateLimitedPlaywrightMcpClient);
     }
 
+    @SuppressWarnings("ClassCanBeRecord")
     private static class RateLimitedToolCallback implements ToolCallback {
 
         private final ToolCallback delegate;

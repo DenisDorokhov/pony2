@@ -75,8 +75,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @Autowired
     private ScanJobService scanJobService;
 
-    private ArtworkFiles artworkFiles;
-
     private Genre genre1;
     private Genre genre2;
 
@@ -97,6 +95,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     public void setUp() {
         getTransactionTemplate().execute(transactionStatus -> {
 
+            ArtworkFiles artworkFiles;
             try {
                 artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
             } catch (IOException e) {

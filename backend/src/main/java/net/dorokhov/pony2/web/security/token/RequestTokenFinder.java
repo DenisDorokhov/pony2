@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.security.token;
 
-import com.google.common.base.Charsets;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +10,7 @@ import org.springframework.web.util.WebUtils;
 import jakarta.annotation.Nullable;
 
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class RequestTokenFinder {
@@ -32,7 +32,7 @@ public class RequestTokenFinder {
     public @Nullable String findStaticToken(ServletRequest request) {
         Cookie cookie = WebUtils.getCookie((HttpServletRequest) request, TOKEN_COOKIE_NAME);
         if (cookie != null) {
-            return URLDecoder.decode(cookie.getValue(), Charsets.UTF_8);
+            return URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8);
         }
         return request.getParameter(TOKEN_PARAM_NAME);
     }

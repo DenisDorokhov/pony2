@@ -222,7 +222,7 @@ public class DiscoveryTaskLlmExecutor {
                         + "Do not invent missing information, perform discovery, or call tools. Return only the JSON object."
                         + "\n\nJSON Schema:\n" + responseSchema),
                 new UserMessage(collectedResponse));
-        return chatClient.call(toolsEnabled, spec -> spec.messages(formattingMessages)
+        return chatClient.call(spec -> spec.messages(formattingMessages)
                 .options(collectionOptions.clone().toolChoice("none")
                         .responseFormat(ResponseFormat.builder().jsonSchema(responseSchema).strict(true).build()))
                 .call().content());

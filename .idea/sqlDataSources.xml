@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDataSourceStorage">
+    <option name="dataSources">
+      <list>
+        <State>
+          <option name="id" value="6b7b8c83-1a8d-4671-9a0f-35ae8549a222" />
+          <option name="name" value="Pony Flyway schema" />
+          <option name="dbmsName" value="H2" />
+          <option name="urls">
+            <array>
+              <option value="file://$PROJECT_DIR$/backend/src/main/resources/db/migration" />
+            </array>
+          </option>
+        </State>
+      </list>
+    </option>
+  </component>
+</project>

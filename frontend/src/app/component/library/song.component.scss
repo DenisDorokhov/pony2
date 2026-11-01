@@ -4,7 +4,6 @@
   position: relative;
   border-radius: 4px;
   cursor: pointer;
-  -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   break-inside: avoid;
 
@@ -19,7 +18,7 @@
     left: 0;
     width: 43px !important;
     height: 26px !important;
-    background-position: center right !important;
+    background-position: right center !important;
     text-align: center;
     color: var(--color-text-muted);
     text-overflow: ellipsis;

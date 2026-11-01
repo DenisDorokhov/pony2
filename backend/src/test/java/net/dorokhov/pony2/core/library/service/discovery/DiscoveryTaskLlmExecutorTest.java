@@ -54,7 +54,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.IntStream;
+import net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures;
 
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
@@ -86,7 +88,7 @@ class DiscoveryTaskLlmExecutorTest {
     void setUp() throws Exception {
         jobRegistration = jobSynchronizer.registerDiscoveryJob();
         lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(1)))
-                .thenAnswer(invocation -> Optional.ofNullable(cache.get(invocation.getArgument(1))));
+                .thenAnswer(invocation -> Optional.ofNullable(cache.get(invocation.getArgument(1, String.class))));
         lenient().when(cacheService.put(eq(SPOTIFY), anyString(), eq(1), anyString())).thenAnswer(invocation -> {
             cache.put(invocation.getArgument(1), invocation.getArgument(3));
             return null;
@@ -121,7 +123,7 @@ class DiscoveryTaskLlmExecutorTest {
 
         assertThat(prompts).hasSize(2).allSatisfy(prompt -> {
             OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
-            assertThat(options.getModel()).isEqualTo("settings-model");
+            assertThat(requireNonNull(options).getModel()).isEqualTo("settings-model");
             assertThat(options.getTimeout()).isEqualTo(Duration.ofMinutes(10));
             assertThat(options.getTemperature()).isEqualTo(temperature != null ? temperature : 0.7);
         });
@@ -137,14 +139,14 @@ class DiscoveryTaskLlmExecutorTest {
 
         Prompt prompt = prompts.getFirst();
         OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
-        assertThat(options.getModel()).isEqualTo("configured-model");
+        assertThat(requireNonNull(options).getModel()).isEqualTo("configured-model");
         assertThat(options.getToolChoice()).isEqualTo(toolChoice);
         assertThat(options.getTemperature()).isEqualTo(0.2);
-        assertThat(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.TEXT);
+        assertThat(requireNonNull(options.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.TEXT);
         OpenAiChatOptions formattingOptions = (OpenAiChatOptions) prompts.getLast().getOptions();
-        assertThat(formattingOptions.getToolChoice()).isEqualTo("none");
+        assertThat(requireNonNull(formattingOptions).getToolChoice()).isEqualTo("none");
         ResponseFormat format = formattingOptions.getResponseFormat();
-        assertThat(format.getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+        assertThat(requireNonNull(format).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
         assertThat(format.getStrict()).isTrue();
         assertThat(prompts.getLast().getInstructions().getFirst().getText())
                 .endsWith("\n\nJSON Schema:\n" + format.getJsonSchema());
@@ -153,7 +155,7 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(schema.get("required")).isEqualTo(List.of("answer"));
         assertThat(schema.get("additionalProperties")).isEqualTo(false);
         assertThat(prompt.getInstructions().subList(0, 2)).extracting(Message::getText).containsExactly("Find artist data", "Artist");
-        Map<?, ?> snapshot = (Map<?, ?>) task.getRawRequests().getFirst();
+        Map<?, ?> snapshot = (Map<?, ?>) requireNonNull(task.getRawRequests()).getFirst();
         assertThat(snapshot.get("responseSchema")).isEqualTo(schema);
         assertThat(prompts).hasSize(2);
     }
@@ -163,6 +165,7 @@ class DiscoveryTaskLlmExecutorTest {
     void shouldPreserveTaskToolsPolicyAcrossRestartsAndFollowUps(DiscoveryTaskType type) {
         List<Boolean> toolsEnabledValues = new ArrayList<>();
         ChatClient client = ChatClient.builder(model).build();
+        //noinspection ExtractMethodRecommender
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> {
             toolsEnabledValues.add(toolsEnabled);
             return client;
@@ -206,13 +209,13 @@ class DiscoveryTaskLlmExecutorTest {
 
         assertThat(prompts).singleElement().satisfies(prompt -> {
             OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
-            assertThat(options.getModel()).isEqualTo("settings-model");
+            assertThat(requireNonNull(options).getModel()).isEqualTo("settings-model");
             assertThat(options.getTimeout()).isEqualTo(Duration.ofMinutes(10));
             assertThat(options.getTemperature()).isEqualTo(temperature != null ? temperature : 0.7);
             assertThat(options.getToolChoice()).isEqualTo("none");
             assertThat(options.getToolCallbacks()).isNullOrEmpty();
             ResponseFormat format = options.getResponseFormat();
-            assertThat(format.getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+            assertThat(requireNonNull(format).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
             assertThat(format.getStrict()).isTrue();
             assertThat(prompt.getInstructions().getFirst().getText()).isEqualTo("Artist");
             assertThat(prompt.getInstructions().getLast().getText()).endsWith(format.getJsonSchema());
@@ -256,7 +259,7 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(prompts).hasSize(4);
         assertThat(prompts.subList(0, 3)).allSatisfy(prompt -> {
             OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
-            assertThat(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.TEXT);
+            assertThat(requireNonNull(requireNonNull(options).getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.TEXT);
             assertThat(options.getToolChoice()).isEqualTo("auto");
         });
         assertThat(prompts.getFirst().getInstructions().getLast().getText()).contains("\"answer\"", "\"required\"");
@@ -264,8 +267,8 @@ class DiscoveryTaskLlmExecutorTest {
                 .hasSize(2);
         Prompt formatting = prompts.getLast();
         OpenAiChatOptions options = (OpenAiChatOptions) formatting.getOptions();
-        assertThat(options.getToolChoice()).isEqualTo("none");
-        assertThat(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+        assertThat(requireNonNull(options).getToolChoice()).isEqualTo("none");
+        assertThat(requireNonNull(options.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
         assertThat(options.getResponseFormat().getStrict()).isTrue();
         assertThat(options.getModel()).isEqualTo("configured-model");
         assertThat(options.getTemperature()).isEqualTo(0.2);
@@ -368,7 +371,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
                 .withBean(LogService.class, () -> logService)
                 .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
-                .withBean(PlatformTransactionManager.class, () -> transactionManager());
+                .withBean(PlatformTransactionManager.class, PlatformTransactionManagerFixtures::transactionManager);
         if (!configuredRestarts.isEmpty()) {
             runner = runner.withPropertyValues("pony.discovery.llm.restartsOnHallucination=" + configuredRestarts);
         }
@@ -559,8 +562,8 @@ class DiscoveryTaskLlmExecutorTest {
     void shouldKeepNullableFieldsRequiredWithoutMakingListItemsNullable() {
         operation.call(task(), searchRequest(), NullableResponse.class, null, Function.identity());
 
-        ResponseFormat format = ((OpenAiChatOptions) prompts.getLast().getOptions()).getResponseFormat();
-        Map<?, ?> schema = JsonConverter.fromJson(format.getJsonSchema(), Map.class);
+        ResponseFormat format = requireNonNull(((OpenAiChatOptions) prompts.getLast().getOptions())).getResponseFormat();
+        Map<?, ?> schema = JsonConverter.fromJson(requireNonNull(format).getJsonSchema(), Map.class);
         assertThat(schema.get("required")).isEqualTo(List.of("id", "matches", "name"));
         assertThat(schema.get("additionalProperties")).isEqualTo(false);
         Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
@@ -738,10 +741,10 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(prompts.get(prompts.size() - 2).getInstructions().subList(0, 8)).extracting(Message::getText)
                 .containsExactly("Find artist data", "Artist", "answer 1", "Verify answer 1",
                         "answer 2", "Verify answer 2", "answer 3", "Verify answer 3");
-        assertThat(prompts).filteredOn(prompt -> ((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.JSON_SCHEMA)
+        assertThat(prompts).filteredOn(prompt -> requireNonNull(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType() == ResponseFormat.Type.JSON_SCHEMA)
                 .hasSize(4).allSatisfy(prompt -> {
-            ResponseFormat format = ((OpenAiChatOptions) prompt.getOptions()).getResponseFormat();
-            assertThat(format.getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+            ResponseFormat format = requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat();
+            assertThat(requireNonNull(format).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
             assertThat(format.getStrict()).isTrue();
             assertThat(JsonConverter.fromJson(format.getJsonSchema(), Map.class).get("required")).isEqualTo(List.of("answer"));
         });
@@ -768,7 +771,7 @@ class DiscoveryTaskLlmExecutorTest {
                 .withBean(DiscoveryTaskRepository.class, () -> taskRepository)
                 .withBean(LogService.class, () -> logService)
                 .withBean(LibraryJobSynchronizer.class, () -> jobSynchronizer)
-                .withBean(PlatformTransactionManager.class, () -> transactionManager());
+                .withBean(PlatformTransactionManager.class, PlatformTransactionManagerFixtures::transactionManager);
         if (!configuredRetries.isEmpty()) {
             runner = runner.withPropertyValues("pony.discovery.llm.retriesOnFollowUpException=" + configuredRetries);
         }
@@ -815,7 +818,7 @@ class DiscoveryTaskLlmExecutorTest {
             }
             return response;
         });
-        Object effectiveRequest = originalTask.getRawRequests().getLast();
+        Object effectiveRequest = requireNonNull(originalTask.getRawRequests()).getLast();
         assertThat(effectiveRequest).isNotEqualTo(originalTask.getRawRequests().getFirst());
         Map<String, String> cacheBeforeCancellation = new HashMap<>(cache);
         String cached = cache.values().iterator().next();

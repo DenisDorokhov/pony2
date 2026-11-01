@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -25,6 +25,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,10 +96,12 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
     void shouldCommitEachJobSeparatelyAndRollbackTasksOfFailingJob() throws Exception {
         populate();
         List<String> ids = jobRepository.findAll().stream().map(DiscoveryJob::getId).sorted().toList();
-        jdbcTemplate.execute("CREATE TABLE cleanup_blocker (job_id CHAR(36) REFERENCES discovery_job(id))");
-        jdbcTemplate.update("INSERT INTO cleanup_blocker (job_id) VALUES (?)", ids.getLast());
-
-        assertThatThrownBy(discoveryJobService::cleanDiscoveryData).isInstanceOf(DataIntegrityViolationException.class);
+        getTransactionTemplate().executeWithoutResult(status -> {
+            assertThat(jdbcTemplate.queryForObject("SELECT id FROM discovery_job WHERE id = ? FOR UPDATE",
+                    String.class, ids.getLast())).isEqualTo(ids.getLast());
+            assertThatThrownBy(discoveryJobService::cleanDiscoveryData)
+                    .isInstanceOf(PessimisticLockingFailureException.class);
+        });
 
         assertThat(jobRepository.findById(ids.getFirst())).isEmpty();
         assertThat(taskRepository.countByJobId(ids.getFirst())).isZero();
@@ -109,7 +112,6 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerMaintenanceJob()) {
             assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
         }
-        jdbcTemplate.update("DELETE FROM cleanup_blocker");
         discoveryJobService.cleanDiscoveryData();
         assertThat(jobRepository.count()).isZero();
         assertThat(taskRepository.count()).isZero();
@@ -128,7 +130,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         Song song = songRepository.save(song().setAlbum(album).setGenre(genre));
         DiscoveryJob first = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         DiscoveryJob second = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.FAILED));
-        List<DiscoveryJob> jobs = List.of(first, second).stream().sorted(Comparator.comparing(DiscoveryJob::getId)).toList();
+        List<DiscoveryJob> jobs = Stream.of(first, second).sorted(Comparator.comparing(DiscoveryJob::getId)).toList();
         taskRepository.save(task(jobs.getFirst()).setArtist(artist));
         taskRepository.save(task(jobs.getFirst()).setAlbum(album));
         taskRepository.save(task(jobs.getLast()).setGenre(genre));

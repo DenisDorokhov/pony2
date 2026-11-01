@@ -13,10 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.web.context.HttpRequestResponseHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +48,7 @@ public class TokenSecurityContextRepositoryTest {
                 .setRoles(Sets.newHashSet(User.Role.USER, User.Role.ADMIN));
         when(userService.getById("1")).thenReturn(Optional.of(user));
 
-        SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+        SecurityContext securityContext = tokenSecurityContextRepository.loadDeferredContext(new MockHttpServletRequest()).get();
 
         assertThat(securityContext.getAuthentication()).satisfies(authentication -> {
             assertThat(authentication.getPrincipal()).isInstanceOfSatisfying(UserDetailsImpl.class, userDetails -> {
@@ -77,7 +75,7 @@ public class TokenSecurityContextRepositoryTest {
         when(requestTokenFinder.findAccessToken(any())).thenReturn(null);
         when(requestTokenFinder.findStaticToken(any())).thenReturn(null);
 
-        SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+        SecurityContext securityContext = tokenSecurityContextRepository.loadDeferredContext(new MockHttpServletRequest()).get();
 
         assertThat(securityContext.getAuthentication()).isNull();
     }
@@ -88,7 +86,7 @@ public class TokenSecurityContextRepositoryTest {
         when(requestTokenFinder.findAccessToken(any())).thenReturn("invalidToken");
         when(tokenService.verifyAccessTokenAndGetUserId("invalidToken")).thenThrow(new InvalidTokenException());
 
-        SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+        SecurityContext securityContext = tokenSecurityContextRepository.loadDeferredContext(new MockHttpServletRequest()).get();
 
         assertThat(securityContext.getAuthentication()).isNull();
     }
@@ -100,7 +98,7 @@ public class TokenSecurityContextRepositoryTest {
         when(tokenService.verifyAccessTokenAndGetUserId("someToken")).thenReturn("1");
         when(userService.getById("1")).thenReturn(Optional.empty());
 
-        SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+        SecurityContext securityContext = tokenSecurityContextRepository.loadDeferredContext(new MockHttpServletRequest()).get();
 
         assertThat(securityContext.getAuthentication()).isNull();
     }
@@ -135,7 +133,7 @@ public class TokenSecurityContextRepositoryTest {
                 .setRoles(Sets.newHashSet(User.Role.USER, User.Role.ADMIN));
         when(userService.getById("1")).thenReturn(Optional.of(user));
 
-        SecurityContext securityContext = tokenSecurityContextRepository.loadContext(httpRequestResponseHolder());
+        SecurityContext securityContext = tokenSecurityContextRepository.loadDeferredContext(new MockHttpServletRequest()).get();
 
         assertThat(securityContext.getAuthentication()).satisfies(authentication -> {
             assertThat(authentication.getPrincipal()).isInstanceOfSatisfying(UserDetailsImpl.class, userDetails -> {
@@ -151,9 +149,5 @@ public class TokenSecurityContextRepositoryTest {
             });
             assertThat(authentication.getCredentials()).isNull();
         });
-    }
-
-    private HttpRequestResponseHolder httpRequestResponseHolder() {
-        return new HttpRequestResponseHolder(new MockHttpServletRequest(), new MockHttpServletResponse());
     }
 }

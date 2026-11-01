@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,7 +48,7 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         saveTask(task(fullJob).setArtist(otherArtist), date.plusHours(1));
         saveTask(task(fullJob).setAlbum(otherAlbum), date.plusHours(1));
         saveTask(task(fullJob), date.plusHours(1));
-        List<String> tiedIds = List.of(firstAlbumTask.getId(), secondAlbumTask.getId()).stream()
+        List<String> tiedIds = Stream.of(firstAlbumTask.getId(), secondAlbumTask.getId())
                 .sorted(Comparator.reverseOrder()).toList();
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, null);
 

@@ -2,9 +2,11 @@ package net.dorokhov.pony2.common;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import java.util.List;
 
+@Converter
 public class ListOfStringsJsonAttributeConverter implements AttributeConverter<List<String>, String> {
 
     @Override

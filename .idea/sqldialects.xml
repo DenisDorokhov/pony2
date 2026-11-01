@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/backend/src" dialect="H2" />
+  </component>
+  <component name="SqlResolveMappings">
+    <file url="file://$PROJECT_DIR$/backend/src" scope="{&quot;node&quot;:{&quot;@negative&quot;:&quot;1&quot;,&quot;group&quot;:{&quot;@kind&quot;:&quot;root&quot;,&quot;node&quot;:{&quot;name&quot;:{&quot;@qname&quot;:&quot;6b7b8c83-1a8d-4671-9a0f-35ae8549a222&quot;}}}}}" />
+  </component>
+</project>

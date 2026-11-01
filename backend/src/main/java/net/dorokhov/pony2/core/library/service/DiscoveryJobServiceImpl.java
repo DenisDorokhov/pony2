@@ -274,15 +274,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             case GENRE, SONG ->
                     throw new UnsupportedOperationException("Discovery type " + discoveryType + " is not supported yet.");
         }
-        String targetName = switch (startingJob.getType()) {
-            case FULL -> null;
-            case GENRE -> startingJob.getGenre() != null ? startingJob.getGenre().getName() : null;
-            case ARTIST -> startingJob.getArtist() != null ? startingJob.getArtist().getName() : null;
-            case ALBUM -> startingJob.getAlbum() != null ? startingJob.getAlbum().getName() : null;
-            case SONG -> startingJob.getSong() != null ? startingJob.getSong().getName() : null;
-        };
-        String targetDescription = startingJob.getType().name().toLowerCase(Locale.ROOT) +
-                (targetName != null ? " '" + targetName + "'" : "");
+        String targetDescription = describeTarget(startingJob);
         String cacheNote = cacheEnabled ? "" : " (cache disabled)";
         Optional<LogMessage> logStarting = logService.info(logger, "{}{}.",
                 discoveryType == DiscoveryType.FULL ? "Starting full discovery job" : "Starting discovery job for " + targetDescription,
@@ -308,11 +300,24 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         return discoveryJob;
     }
 
+    private String describeTarget(DiscoveryJob job) {
+        String targetName = switch (job.getType()) {
+            case FULL -> null;
+            case GENRE -> job.getGenre() != null ? job.getGenre().getName() : null;
+            case ARTIST -> job.getArtist() != null ? job.getArtist().getName() : null;
+            case ALBUM -> job.getAlbum() != null ? job.getAlbum().getName() : null;
+            case SONG -> job.getSong() != null ? job.getSong().getName() : null;
+        };
+        return job.getType().name().toLowerCase(Locale.ROOT) +
+                (targetName != null ? " '" + targetName + "'" : "");
+    }
+
     private void runDiscoveryJob(
             DiscoveryJob discoveryJob, DiscoveryType discoveryType, boolean cacheEnabled, String targetDescription,
             LibraryJobSynchronizer.LibraryJobRegistration jobRegistration
     ) {
         DiscoveryJob currentDiscoveryJob = discoveryJob;
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             jobSynchronizer.interruptDiscoveryIfCancelled();
             currentDiscoveryJob = changeDiscoveryJobStatusInTransaction(() -> {

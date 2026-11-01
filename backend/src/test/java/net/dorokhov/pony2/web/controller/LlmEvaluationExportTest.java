@@ -73,14 +73,14 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
 
     @Test
     void shouldExportLatestSuccessfulTasksForEveryTargetKindWithMetadata() {
-        insertArtist(1, "Bj\u00f6rk \"quoted\"\n\u65e5\u672c\u8a9e");
+        insertArtist(1, "Björk \"quoted\"\n日本語");
         insertAlbum(1, 1);
         for (int number = 1; number <= 103; number++) {
             jdbcTemplate.update("INSERT INTO genre (id, creation_date, name) VALUES (?, ?, ?)", id(number), CREATED, "Genre " + number);
             jdbcTemplate.update("INSERT INTO artist_genre (id, creation_date, artist_id, genre_id) VALUES (?, ?, ?, ?)",
                     id(number), CREATED, id(1), id(number));
         }
-        insertSong(1);
+        insertSong();
         insertJob(1);
         insertJob(2);
         jdbcTemplate.update("UPDATE discovery_job SET status = 'FAILED' WHERE id = ?", id(2));
@@ -129,7 +129,7 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         JsonNode artist = document.get("artists").get(0);
         assertThat(artist.get("genres").size()).isEqualTo(103);
         assertThat(artist.get("genres").get(102).get("name").asString()).isEqualTo("Genre 103");
-        assertThat(artist.get("name").asString()).isEqualTo("Bj\u00f6rk \"quoted\"\n\u65e5\u672c\u8a9e");
+        assertThat(artist.get("name").asString()).isEqualTo("Björk \"quoted\"\n日本語");
         JsonNode album = document.get("albums").get(0);
         assertThat(album.get("year").intValue()).isEqualTo(2020);
         assertThat(album.get("artist").get("id").asString()).isEqualTo(id(1));
@@ -236,13 +236,13 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
                 id(number), CREATED, "Album " + number, 2020, id(artist));
     }
 
-    private void insertSong(int number) {
+    private void insertSong() {
         jdbcTemplate.update("""
                 INSERT INTO song (id, creation_date, path, mime_type, file_extension, size, duration,
                                   bit_rate, bit_rate_variable, name, song_year, disc_number, track_number,
                                   artist_id, album_id, genre_id)
                 VALUES (?, ?, ?, 'audio/mpeg', 'mp3', 100, 120, 320, FALSE, 'Song', 2020, 1, 2, ?, ?, ?)
-                """, id(number), CREATED, "song-" + number + ".mp3", id(1), id(1), id(1));
+                """, id(1), CREATED, "song-1.mp3", id(1), id(1), id(1));
     }
 
     private void insertJob(int number) {

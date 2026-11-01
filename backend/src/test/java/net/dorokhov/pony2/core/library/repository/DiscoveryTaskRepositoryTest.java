@@ -24,7 +24,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DiscoveryTaskRepositoryTest extends IntegrationTest {
@@ -55,8 +57,8 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
             DiscoveryTask loaded = taskRepository.findById(task.getId()).orElseThrow();
             assertThat(loaded.getRawRequests()).isEqualTo(requests);
             assertThat(loaded.getRawResponses()).isEqualTo(responses);
-            loaded.getRawRequests().add("https://musicbrainz.org/artist");
-            loaded.getRawResponses().set(1, "LLM response\nline two");
+            requireNonNull(loaded.getRawRequests()).add("https://musicbrainz.org/artist");
+            requireNonNull(loaded.getRawResponses()).set(1, "LLM response\nline two");
             loaded.getRawResponses().add(null);
         });
 
@@ -107,7 +109,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         DiscoveryTask secondArtist = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.INTERRUPTED, date);
         DiscoveryTask started = saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.STARTED, null);
         DiscoveryTask album = saveTask(otherJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(1));
-        List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
+        List<String> artistIds = Stream.of(firstArtist.getId(), secondArtist.getId()).sorted(Comparator.reverseOrder()).toList();
         List<String> expectedIds = filterType ? List.of(started.getId(), artistIds.getFirst(), artistIds.getLast(), older.getId())
                 : List.of(started.getId(), album.getId(), artistIds.getFirst(), artistIds.getLast(), older.getId());
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null);
@@ -144,7 +146,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         DiscoveryTask.Status otherStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.COMPLETE : DiscoveryTask.Status.FAILED;
         saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), null);
-        List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
+        List<String> artistIds = Stream.of(firstArtist.getId(), secondArtist.getId()).sorted(Comparator.reverseOrder()).toList();
         List<String> expectedIds = filterType ? artistIds : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast());
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null);
 
@@ -169,7 +171,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         DiscoveryTask topTracks = saveTask(job, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.INTERRUPTED, date);
         DiscoveryTask started = saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.STARTED, null);
         saveTask(otherJob, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTask.Status.COMPLETE, date.plusHours(1));
-        List<String> newestIds = List.of(album.getId(), topTracks.getId()).stream().sorted(Comparator.reverseOrder()).toList();
+        List<String> newestIds = Stream.of(album.getId(), topTracks.getId()).sorted(Comparator.reverseOrder()).toList();
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, null);
 
         Page<DiscoveryTask> first = discoveryJobService.getJobTasks(job.getId(), filter, PageRequest.of(0, 2));
@@ -225,7 +227,7 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
         DiscoveryTask.Status otherStatus = result == DiscoveryTaskFilter.Result.FAILED
                 ? DiscoveryTask.Status.COMPLETE : DiscoveryTask.Status.FAILED;
         saveTask(job, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, otherStatus, date.plusHours(2), null);
-        List<String> artistIds = List.of(firstArtist.getId(), secondArtist.getId()).stream().sorted(Comparator.reverseOrder()).toList();
+        List<String> artistIds = Stream.of(firstArtist.getId(), secondArtist.getId()).sorted(Comparator.reverseOrder()).toList();
         List<String> expectedIds = filterType ? artistIds : List.of(album.getId(), artistIds.getFirst(), artistIds.getLast());
         DiscoveryTaskType type = filterType ? DiscoveryTaskType.SPOTIFY_ARTIST_DATA : null;
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(result, type);

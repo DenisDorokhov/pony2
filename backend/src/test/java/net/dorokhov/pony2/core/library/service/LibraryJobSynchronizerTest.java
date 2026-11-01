@@ -48,6 +48,7 @@ class LibraryJobSynchronizerTest {
     void shouldWaitForCancelledDiscoveryJobAndAllTasks() throws Exception {
         LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
         LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        //noinspection TryFinallyCanBeTryWithResources
         try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
             Future<?> cancellation = worker.submit(() -> synchronizer.cancelDiscoveryAndWait(Duration.ofSeconds(3)));
             await().until(synchronizer::isDiscoveryCancelled);
@@ -87,8 +88,9 @@ class LibraryJobSynchronizerTest {
     void shouldNotifyOutsideLockWhenStartingScan() throws Exception {
         LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
         LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        //noinspection TryFinallyCanBeTryWithResources
         try (ExecutorService worker = Executors.newSingleThreadExecutor();
-             LibraryJobSynchronizer.CancellationSubscription subscription = synchronizer.onCancel(() -> {
+             LibraryJobSynchronizer.CancellationSubscription ignoredSubscription = synchronizer.onCancel(() -> {
                  try {
                      worker.submit(() -> {
                          task.close();
@@ -98,7 +100,7 @@ class LibraryJobSynchronizerTest {
                      throw new AssertionError(e);
                  }
              });
-             LibraryJobSynchronizer.LibraryJobRegistration scan = synchronizer.registerScanJob(Duration.ofSeconds(3))) {
+             LibraryJobSynchronizer.LibraryJobRegistration ignoredScan = synchronizer.registerScanJob(Duration.ofSeconds(3))) {
             assertThat(synchronizer.hasRunningTasks()).isFalse();
             assertBusy();
         } finally {
@@ -111,9 +113,9 @@ class LibraryJobSynchronizerTest {
     void shouldUnsubscribeIndependentlyAndNotifyOnlyOnce() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         Runnable callback = calls::incrementAndGet;
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob();
              LibraryJobSynchronizer.CancellationSubscription first = synchronizer.onCancel(callback);
-             LibraryJobSynchronizer.CancellationSubscription second = synchronizer.onCancel(callback)) {
+             LibraryJobSynchronizer.CancellationSubscription ignoredSecond = synchronizer.onCancel(callback)) {
             first.close();
             first.close();
             synchronizer.cancelDiscovery();
@@ -125,10 +127,10 @@ class LibraryJobSynchronizerTest {
 
     @Test
     void shouldImmediatelyNotifyLateSubscription() throws Exception {
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob()) {
             synchronizer.cancelDiscovery();
             AtomicInteger calls = new AtomicInteger();
-            try (LibraryJobSynchronizer.CancellationSubscription subscription = synchronizer.onCancel(calls::incrementAndGet)) {
+            try (LibraryJobSynchronizer.CancellationSubscription ignoredSubscription = synchronizer.onCancel(calls::incrementAndGet)) {
                 assertThat(calls).hasValue(1);
             }
         }
@@ -138,10 +140,10 @@ class LibraryJobSynchronizerTest {
     void shouldClearSubscriptionsWhenJobFinishes() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         LibraryJobSynchronizer.CancellationSubscription subscription;
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob()) {
             subscription = synchronizer.onCancel(calls::incrementAndGet);
         }
-        try (LibraryJobSynchronizer.LibraryJobRegistration next = synchronizer.registerDiscoveryJob()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredNext = synchronizer.registerDiscoveryJob()) {
             synchronizer.cancelDiscovery();
             subscription.close();
             assertThat(calls).hasValue(0);
@@ -151,11 +153,11 @@ class LibraryJobSynchronizerTest {
     @Test
     void shouldContinueNotifyingAfterCallbackFailure() throws Exception {
         AtomicInteger calls = new AtomicInteger();
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
-             LibraryJobSynchronizer.CancellationSubscription first = synchronizer.onCancel(() -> {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob();
+             LibraryJobSynchronizer.CancellationSubscription ignoredFirst = synchronizer.onCancel(() -> {
                  throw new IllegalStateException("Test failure");
              });
-             LibraryJobSynchronizer.CancellationSubscription second = synchronizer.onCancel(calls::incrementAndGet)) {
+             LibraryJobSynchronizer.CancellationSubscription ignoredSecond = synchronizer.onCancel(calls::incrementAndGet)) {
             synchronizer.cancelDiscovery();
             assertThat(calls).hasValue(1);
         }
@@ -170,11 +172,11 @@ class LibraryJobSynchronizerTest {
         worker.join(5000);
         assertThat(worker.isAlive()).isFalse();
 
-        try (LibraryJobSynchronizer.LibraryJobRegistration second = synchronizer.registerDiscoveryJob()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredSecond = synchronizer.registerDiscoveryJob()) {
             first.close();
             assertBusy();
         }
-        try (LibraryJobSynchronizer.LibraryJobRegistration third = synchronizer.registerScanJob(Duration.ZERO)) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredThird = synchronizer.registerScanJob(Duration.ZERO)) {
             assertBusy();
         }
     }
@@ -190,7 +192,11 @@ class LibraryJobSynchronizerTest {
                 await().atMost(Duration.ofSeconds(2)).until(synchronizer::isDiscoveryCancelled);
                 assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(DiscoveryInterruptedException.class);
                 assertBusy();
-                assertThatThrownBy(() -> synchronizer.registerScanJob(Duration.ZERO))
+                assertThatThrownBy(() -> {
+                    try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = synchronizer.registerScanJob(Duration.ZERO)) {
+                        fail("Expected the operation to reject this request.");
+                    }
+                })
                         .isInstanceOf(ConcurrentLibraryJobException.class);
 
                 discovery.close();
@@ -200,14 +206,14 @@ class LibraryJobSynchronizerTest {
                 assertBusy();
                 secondTask.close();
 
-                try (LibraryJobSynchronizer.LibraryJobRegistration jobRegistration = scan.get(2, TimeUnit.SECONDS)) {
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredJobRegistration = scan.get(2, TimeUnit.SECONDS)) {
                     assertThat(synchronizer.hasRunningTasks()).isFalse();
                     assertBusy();
                     discovery.close();
                     secondTask.close();
                     assertBusy();
                 }
-                try (LibraryJobSynchronizer.LibraryJobRegistration next = synchronizer.registerDiscoveryJob()) {
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredNext = synchronizer.registerDiscoveryJob()) {
                     assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
                 }
             } finally {
@@ -221,13 +227,13 @@ class LibraryJobSynchronizerTest {
 
     @Test
     void shouldKeepJobReservedAfterLastTaskFinishes() throws Exception {
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
-            try (LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob()) {
+            try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignoredTask = synchronizer.registerDiscoveryTask()) {
                 assertThat(synchronizer.hasRunningTasks()).isTrue();
             }
             assertThat(synchronizer.hasRunningTasks()).isFalse();
             assertBusy();
-            try (LibraryJobSynchronizer.DiscoveryTaskRegistration nextTask = synchronizer.registerDiscoveryTask()) {
+            try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignoredNextTask = synchronizer.registerDiscoveryTask()) {
                 assertThat(synchronizer.hasRunningTasks()).isTrue();
             }
         }
@@ -235,9 +241,13 @@ class LibraryJobSynchronizerTest {
 
     @Test
     void shouldKeepCancellationAfterTimeoutUntilNextDiscoveryJob() throws Exception {
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
-            try (LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask()) {
-                assertThatThrownBy(() -> synchronizer.registerScanJob(Duration.ofMillis(20)))
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob()) {
+            try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignoredTask = synchronizer.registerDiscoveryTask()) {
+                assertThatThrownBy(() -> {
+                    try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = synchronizer.registerScanJob(Duration.ofMillis(20))) {
+                        fail("Expected the operation to reject this request.");
+                    }
+                })
                         .isInstanceOf(ConcurrentLibraryJobException.class)
                         .hasMessage("Timed out waiting for discovery to finish.")
                         .hasCauseInstanceOf(TimeoutException.class);
@@ -246,19 +256,23 @@ class LibraryJobSynchronizerTest {
             // Finishing the last task must not let another task reset this job's cancellation.
             assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(DiscoveryInterruptedException.class);
         }
-        try (LibraryJobSynchronizer.LibraryJobRegistration next = synchronizer.registerDiscoveryJob();
-             LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredNext = synchronizer.registerDiscoveryJob();
+             LibraryJobSynchronizer.DiscoveryTaskRegistration ignoredTask = synchronizer.registerDiscoveryTask()) {
             assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
         }
-        try (LibraryJobSynchronizer.LibraryJobRegistration scan = synchronizer.registerScanJob(Duration.ZERO)) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredScan = synchronizer.registerScanJob(Duration.ZERO)) {
             assertBusy();
         }
     }
 
     @Test
     void shouldCancelQueuedDiscoveryEvenWithoutRegisteredTasks() throws Exception {
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
-            assertThatThrownBy(() -> synchronizer.registerScanJob(Duration.ZERO))
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob()) {
+            assertThatThrownBy(() -> {
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = synchronizer.registerScanJob(Duration.ZERO)) {
+                    fail("Expected the operation to reject this request.");
+                }
+            })
                     .isInstanceOf(ConcurrentLibraryJobException.class).hasCauseInstanceOf(TimeoutException.class);
             assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(DiscoveryInterruptedException.class);
         }
@@ -267,11 +281,11 @@ class LibraryJobSynchronizerTest {
     @Test
     void shouldRejectRegistrationOutsideDiscoveryJob() throws Exception {
         assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(IllegalStateException.class);
-        try (LibraryJobSynchronizer.LibraryJobRegistration scan = synchronizer.registerScanJob(Duration.ZERO)) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredScan = synchronizer.registerScanJob(Duration.ZERO)) {
             assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(DiscoveryInterruptedException.class);
         }
         LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
-        try (LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask()) {
+        try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignoredTask = synchronizer.registerDiscoveryTask()) {
             discovery.close();
             assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(IllegalStateException.class);
             assertBusy();
@@ -280,8 +294,12 @@ class LibraryJobSynchronizerTest {
 
     @Test
     void shouldRejectNegativeTimeoutWithoutCancelling() throws Exception {
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob()) {
-            assertThatThrownBy(() -> synchronizer.registerScanJob(Duration.ofSeconds(-1)))
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob()) {
+            assertThatThrownBy(() -> {
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = synchronizer.registerScanJob(Duration.ofSeconds(-1))) {
+                    fail("Expected the operation to reject this request.");
+                }
+            })
                     .isInstanceOf(IllegalArgumentException.class);
             assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
         }
@@ -289,15 +307,20 @@ class LibraryJobSynchronizerTest {
 
     @Test
     void shouldReleaseScanReservationOnInterruptionAndPreserveCancellation() throws Exception {
-        try (LibraryJobSynchronizer.LibraryJobRegistration discovery = synchronizer.registerDiscoveryJob();
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredDiscovery = synchronizer.registerDiscoveryJob();
              ExecutorService callers = Executors.newSingleThreadExecutor()) {
             Future<?> waiter = callers.submit(() -> {
                 Thread.currentThread().interrupt();
                 try {
-                    assertThatThrownBy(() -> synchronizer.registerScanJob(Duration.ofSeconds(5)))
+                    assertThatThrownBy(() -> {
+                        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredUnexpectedRegistration = synchronizer.registerScanJob(Duration.ofSeconds(5))) {
+                            fail("Expected the operation to reject this request.");
+                        }
+                    })
                             .isInstanceOf(RuntimeException.class).hasCauseInstanceOf(InterruptedException.class);
                     assertThat(Thread.currentThread().isInterrupted()).isTrue();
                 } finally {
+                    //noinspection ResultOfMethodCallIgnored
                     Thread.interrupted();
                 }
             });
@@ -305,7 +328,7 @@ class LibraryJobSynchronizerTest {
             assertThat(synchronizer.isDiscoveryCancelled()).isTrue();
             assertThatThrownBy(synchronizer::registerDiscoveryTask).isInstanceOf(DiscoveryInterruptedException.class);
         }
-        try (LibraryJobSynchronizer.LibraryJobRegistration next = synchronizer.registerDiscoveryJob()) {
+        try (LibraryJobSynchronizer.LibraryJobRegistration ignoredNext = synchronizer.registerDiscoveryJob()) {
             assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
         }
     }

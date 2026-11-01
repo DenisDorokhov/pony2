@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static org.assertj.core.api.Assertions.*;
@@ -116,13 +117,13 @@ class SpotifyTopTracksServiceTest {
         lenient().when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
-            if (((OpenAiChatOptions) prompt.getOptions()).getResponseFormat().getType() == ResponseFormat.Type.TEXT) {
+            if (requireNonNull(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType() == ResponseFormat.Type.TEXT) {
                 return new ChatResponse(List.of(new Generation(new AssistantMessage("Collected matching data"))));
             }
             return new ChatResponse(List.of(new Generation(new AssistantMessage(responses.removeFirst()))));
         });
         lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(1)))
-                .thenAnswer(invocation -> Optional.ofNullable(cache.get(invocation.getArgument(1))));
+                .thenAnswer(invocation -> Optional.ofNullable(cache.get(invocation.getArgument(1, String.class))));
         lenient().when(cacheService.put(eq(SPOTIFY), anyString(), eq(1), anyString())).thenAnswer(invocation -> {
             cache.put(invocation.getArgument(1), invocation.getArgument(3));
             return null;
@@ -157,7 +158,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(prompts).hasSize(4);
-        Map<?, ?> albumSchema = JsonConverter.fromJson(((OpenAiChatOptions) prompts.get(1).getOptions()).getResponseFormat().getJsonSchema(), Map.class);
+        Map<?, ?> albumSchema = JsonConverter.fromJson(requireNonNull(requireNonNull(((OpenAiChatOptions) prompts.get(1).getOptions())).getResponseFormat()).getJsonSchema(), Map.class);
         assertThat(albumSchema.get("type")).isEqualTo("object");
         assertThat(albumSchema.get("required")).isEqualTo(List.of("albumMatches"));
         Map<?, ?> albumMatchesSchema = (Map<?, ?>) ((Map<?, ?>) albumSchema.get("properties")).get("albumMatches");
@@ -165,7 +166,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(albumItemSchema.get("required")).isEqualTo(List.of("databaseAlbumId", "spotifyAlbumId"));
         Map<?, ?> albumIdSchema = (Map<?, ?>) ((Map<?, ?>) albumItemSchema.get("properties")).get("databaseAlbumId");
         assertThat(albumIdSchema.get("type")).isEqualTo(List.of("string", "null"));
-        Map<?, ?> trackSchema = JsonConverter.fromJson(((OpenAiChatOptions) prompts.getLast().getOptions()).getResponseFormat().getJsonSchema(), Map.class);
+        Map<?, ?> trackSchema = JsonConverter.fromJson(requireNonNull(requireNonNull(((OpenAiChatOptions) prompts.getLast().getOptions())).getResponseFormat()).getJsonSchema(), Map.class);
         assertThat(trackSchema.get("type")).isEqualTo("object");
         assertThat(trackSchema.get("required")).isEqualTo(List.of("trackMatches"));
         Map<?, ?> trackMatchesSchema = (Map<?, ?>) ((Map<?, ?>) trackSchema.get("properties")).get("trackMatches");

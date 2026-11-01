@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import static org.assertj.core.api.Assertions.fail;
+import static java.util.Objects.requireNonNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,7 +74,7 @@ class MusicBrainzClientTest {
         server.start();
         baseUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/";
         when(cacheService.get(eq(MUSICBRAINZ), anyString(), eq(1))).thenAnswer(invocation ->
-                Optional.ofNullable(cachedResponses.get(invocation.getArgument(1))));
+                Optional.ofNullable(cachedResponses.get(invocation.getArgument(1, String.class))));
         when(cacheService.put(eq(MUSICBRAINZ), anyString(), eq(1), anyString())).thenAnswer(invocation -> {
             cachedResponses.put(invocation.getArgument(1), invocation.getArgument(3));
             return null;
@@ -95,7 +96,7 @@ class MusicBrainzClientTest {
         String query = "release:\"A \\\"B\\\" & C\" AND artistname:\"Artist\"";
         server.createContext("/ws/2/release-group", exchange -> {
             HttpUrl url = HttpUrl.get(baseUrl).resolve(exchange.getRequestURI().toString());
-            limits.add(url.queryParameter("limit"));
+            limits.add(requireNonNull(url).queryParameter("limit"));
             offsets.add(url.queryParameter("offset"));
             queries.add(url.queryParameter("query"));
             userAgents.add(exchange.getRequestHeaders().getFirst("User-Agent"));
@@ -201,7 +202,7 @@ class MusicBrainzClientTest {
 
         for (String userAgent : List.of("pony2/first", "pony2/second")) {
             try (MusicBrainzClient.Session session = client.openSession(userAgent, observer, cacheEnabled)) {
-                assertThat(session.getArtist("artist").area().country()).containsExactly("US");
+                assertThat(requireNonNull(session.getArtist("artist").area()).country()).containsExactly("US");
             }
         }
 
@@ -340,7 +341,7 @@ class MusicBrainzClientTest {
         try (MusicBrainzClient.Session session = client(Duration.ZERO).openSession("pony2/test (admin@example.com)", observer, false)) {
             MusicBrainzDto.Artist artistData = session.getArtist("artist");
             assertThat(artistData.country()).isEqualTo("DE");
-            assertThat(artistData.area().country()).containsExactly("US", "GB");
+            assertThat(requireNonNull(artistData.area()).country()).containsExactly("US", "GB");
             assertThatThrownBy(() -> session.getArtist("error")).isInstanceOf(IllegalStateException.class).hasMessageContaining("HTTP 503");
         }
 
@@ -415,7 +416,7 @@ class MusicBrainzClientTest {
         server.createContext("/ws/2/artist/artist", exchange -> {
             received.countDown();
             try {
-                release.await(5, TimeUnit.SECONDS);
+                release.await();
                 respond(exchange, 200, "{\"id\":\"artist\"}");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -427,14 +428,14 @@ class MusicBrainzClientTest {
             session.cancel();
             assertThatThrownBy(() -> result.get(5, TimeUnit.SECONDS)).isInstanceOf(ExecutionException.class)
                     .hasCauseInstanceOf(MusicBrainzClient.CancelledException.class);
-            assertThat(responses).isEqualTo(Arrays.asList((String) null));
+            assertThat(responses).containsExactly((String) null);
         } finally {
             release.countDown();
         }
     }
 
     @Test
-    void shouldCancelRateLimitWaitingAndRejectNewSessionsAfterShutdown() throws Exception {
+    void shouldCancelRateLimitWaitingAndRejectNewSessionsAfterShutdown() {
         server.createContext("/ws/2/artist/artist", exchange -> respond(exchange, 200, "{\"id\":\"artist\"}"));
         MusicBrainzClient client = client(Duration.ofSeconds(30));
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer, false)) {
@@ -444,7 +445,11 @@ class MusicBrainzClientTest {
             assertThatThrownBy(() -> result.get(5, TimeUnit.SECONDS)).isInstanceOf(ExecutionException.class)
                     .hasCauseInstanceOf(MusicBrainzClient.CancelledException.class);
             assertThat(urls).hasSize(1);
-            assertThatThrownBy(() -> client.openSession("pony2/test (admin@example.com)", observer, false))
+            assertThatThrownBy(() -> {
+                try (MusicBrainzClient.Session ignoredUnexpectedSession = client.openSession("pony2/test (admin@example.com)", observer, false)) {
+                    fail("Expected the operation to reject this request.");
+                }
+            })
                     .isInstanceOf(MusicBrainzClient.CancelledException.class);
         }
     }

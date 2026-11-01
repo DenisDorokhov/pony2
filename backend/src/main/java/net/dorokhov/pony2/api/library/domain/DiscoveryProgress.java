@@ -10,6 +10,7 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryType.ALBUM;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryType.ARTIST;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryType.FULL;
 
+@SuppressWarnings("ClassCanBeRecord")
 public final class DiscoveryProgress {
 
     public enum Step {

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,7 +74,7 @@ class LlmConfigTest {
 
         ArgumentCaptor<Prompt> prompt = ArgumentCaptor.forClass(Prompt.class);
         verify(model).call(prompt.capture());
-        assertThat(((ToolCallingChatOptions) prompt.getValue().getOptions()).getToolCallbacks())
+        assertThat(requireNonNull(((ToolCallingChatOptions) prompt.getValue().getOptions())).getToolCallbacks())
                 .extracting(callback -> callback.getToolDefinition().name())
                 .containsExactlyInAnyOrder("fetch_url", "browser_snapshot", "browser_evaluate");
     }
