@@ -59,6 +59,8 @@ export interface ArtistSongsDto {
 export interface ArtistDiscoveryDataDto {
   countryCode: string | undefined;
   topSongIds: string[];
+  bioExternalImageId: string | undefined;
+  avatarExternalImageId: string | undefined;
 }
 
 export interface SongDto {

@@ -4,4 +4,9 @@ import jakarta.annotation.Nullable;
 
 import java.util.List;
 
-public record ArtistDiscoveryData(@Nullable String countryCode, List<String> topSongIds) {}
+public record ArtistDiscoveryData(
+        @Nullable String countryCode,
+        List<String> topSongIds,
+        @Nullable String bioExternalImageId,
+        @Nullable String avatarExternalImageId
+) {}

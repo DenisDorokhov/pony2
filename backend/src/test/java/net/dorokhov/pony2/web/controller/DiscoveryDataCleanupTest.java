@@ -3,18 +3,22 @@ package net.dorokhov.pony2.web.controller;
 import net.dorokhov.pony2.ApiTemplate;
 import net.dorokhov.pony2.InstallingIntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
-import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
+import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.core.library.repository.*;
-import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository;
+import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony2.core.library.service.artwork.command.FileArtworkStorageCommand;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import net.dorokhov.pony2.web.dto.ErrorDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -22,11 +26,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static net.dorokhov.pony2.test.ExternalImageFixtures.saveExternalImage;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,7 +50,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
     @Autowired private LibraryJobSynchronizer jobSynchronizer;
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
-    @Autowired private ArtistDiscoveryIndexRepository indexRepository;
+    @Autowired private ArtistDiscoveryRepository indexRepository;
     @Autowired private DiscoveryCacheRepository cacheRepository;
     @Autowired private DiscoveryCacheService cacheService;
     @Autowired private ArtistRepository artistRepository;
@@ -48,6 +58,48 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
     @Autowired private GenreRepository genreRepository;
     @Autowired private SongRepository songRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private ArtworkStorage artworkStorage;
+    @Autowired private ArtworkRepository artworkRepository;
+    @Autowired private ExternalImageRepository externalImageRepository;
+    @Value("${pony.externalImage.path}") private File externalImageFolder;
+
+    @Test
+    void shouldCleanExternalImagesAcrossBatchesAndKeepLibraryArtwork() throws Exception {
+        List<ExternalImageFile> externalImageFiles = new ArrayList<>();
+        ArtworkFiles kept = saveArtwork("red.png");
+        Artist libraryArtist = artistRepository.save(new Artist().setArtwork(kept.getArtwork()));
+        indexRepository.save(new ArtistDiscovery().setArtist(libraryArtist));
+        getTransactionTemplate().executeWithoutResult(status -> {
+            try {
+                for (int index = 0; index < 101; index++) {
+                    Artist artist = artistRepository.save(new Artist());
+                    ExternalImageFile bio = saveExternalImage(externalImageRepository, externalImageFolder, "image.png");
+                    ExternalImageFile avatar = saveExternalImage(externalImageRepository, externalImageFolder, "green.png");
+                    externalImageFiles.add(bio);
+                    externalImageFiles.add(avatar);
+                    indexRepository.save(new ArtistDiscovery().setArtist(artist)
+                            .setBioExternalImage(bio.getExternalImage()).setAvatarExternalImage(avatar.getExternalImage()));
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+
+        discoveryJobService.cleanDiscoveryData();
+
+        assertThat(indexRepository.count()).isZero();
+        assertThat(externalImageRepository.count()).isZero();
+        assertThat(artworkRepository.count()).isOne();
+        assertThat(artworkRepository.existsById(kept.getArtwork().getId())).isTrue();
+        assertThat(externalImageFiles).allSatisfy(externalImageFile -> assertThat(externalImageFile.getFile()).doesNotExist());
+        assertThat(kept.getSmallFile()).exists();
+        assertThat(kept.getLargeFile()).exists();
+    }
+
+    private ArtworkFiles saveArtwork(String resourceName) throws IOException {
+        return artworkStorage.getOrSave(new FileArtworkStorageCommand(
+                URI.create("https://example.com/" + resourceName), new ClassPathResource(resourceName).getFile()));
+    }
 
     @Test
     void shouldCleanAllDiscoveryDataAndKeepLibrary() throws Exception {
@@ -135,7 +187,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         taskRepository.save(task(jobs.getFirst()).setAlbum(album));
         taskRepository.save(task(jobs.getLast()).setGenre(genre));
         taskRepository.save(task(jobs.getLast()).setSong(song));
-        indexRepository.save(new ArtistDiscoveryIndex().setArtist(artist).setSpotifyArtistId("spotify"));
+        indexRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify"));
         cacheService.put(DiscoveryCacheRegion.SPOTIFY, "key", 1, "value");
     }
 

@@ -11,6 +11,7 @@ import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService;
 import net.dorokhov.pony2.core.library.service.discovery.FullDiscoveryService;
+import net.dorokhov.pony2.core.library.service.scan.LibraryCleaner;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     private final DiscoveryJobRepository discoveryJobRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
-    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final LibraryCleaner libraryCleaner;
     private final DiscoveryCacheRepository discoveryCacheRepository;
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
@@ -66,7 +68,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     public DiscoveryJobServiceImpl(
             DiscoveryJobRepository discoveryJobRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
-            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            ArtistDiscoveryRepository artistDiscoveryRepository,
+            LibraryCleaner libraryCleaner,
             DiscoveryCacheRepository discoveryCacheRepository,
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
@@ -81,7 +84,8 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
         this.discoveryJobRepository = discoveryJobRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
-        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.libraryCleaner = libraryCleaner;
         this.discoveryCacheRepository = discoveryCacheRepository;
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
@@ -111,7 +115,16 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                     });
                 }
             }
-            transactionTemplate.executeWithoutResult(status -> artistDiscoveryIndexRepository.deleteAllInBatch());
+            while (true) {
+                Boolean deleted = transactionTemplate.execute(status -> {
+                    List<ArtistDiscovery> discoveries = artistDiscoveryRepository.findAll(PageRequest.of(0, 100)).getContent();
+                    discoveries.forEach(libraryCleaner::deleteArtistDiscovery);
+                    return !discoveries.isEmpty();
+                });
+                if (!Boolean.TRUE.equals(deleted)) {
+                    break;
+                }
+            }
             transactionTemplate.executeWithoutResult(status -> discoveryCacheRepository.deleteAllInBatch());
         }
     }

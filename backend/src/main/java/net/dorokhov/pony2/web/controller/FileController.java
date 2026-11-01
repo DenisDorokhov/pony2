@@ -52,6 +52,11 @@ public class FileController implements ErrorHandlingController {
         handleStreamingExceptions(() -> fileDistributor.distribute(fileFacade.getSmallArtworkDistribution(artworkId), request, response), response);
     }
 
+    @GetMapping(value = "/api/file/externalImage/{externalImageId}", produces = {"image/*", APPLICATION_JSON_VALUE})
+    public void getExternalImage(@PathVariable String externalImageId, HttpServletRequest request, HttpServletResponse response) {
+        handleStreamingExceptions(() -> fileDistributor.distribute(fileFacade.getExternalImageDistribution(externalImageId), request, response), response);
+    }
+
     @GetMapping(value = "/api/file/export/song/{songId}", produces = {"audio/*", APPLICATION_JSON_VALUE})
     public ResponseEntity<?> exportSong(@PathVariable String songId, HttpServletResponse response) {
         try {

@@ -9,10 +9,11 @@ import net.dorokhov.pony2.api.library.service.ScanJobService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
+import net.dorokhov.pony2.core.library.repository.ExternalImageRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -40,6 +41,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static net.dorokhov.pony2.test.ExternalImageFixtures.externalImage;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -62,7 +64,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @Autowired
     private SongRepository songRepository;
     @Autowired
-    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
+    @Autowired
+    private ExternalImageRepository externalImageRepository;
     @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
     @Autowired
@@ -310,8 +314,10 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldGetArtistSongsWithLatestCompletedDiscoveryData() {
         enableLlm();
-        artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex().setArtist(artist1).setCountryCode("DE"));
-        artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex().setArtist(artist2).setCountryCode("GB"));
+        ExternalImage externalImage = externalImageRepository.save(externalImage());
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setCountryCode("DE")
+                .setBioExternalImage(externalImage).setAvatarExternalImage(externalImage));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist2).setCountryCode("GB"));
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.FAILED));
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
         String single = JsonConverter.toJson(new MusicBrainzAlbumData("single", "Single", List.of(), null, "artist", List.of("US")));
@@ -340,6 +346,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         ArtistSongsDto artistSongs = requireNonNull(response.getBody());
         assertThat(artistSongs.getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
+        assertThat(artistSongs.getArtist().getDiscoveryData().getBioExternalImageId()).isEqualTo(externalImage.getId());
+        assertThat(artistSongs.getArtist().getDiscoveryData().getAvatarExternalImageId()).isEqualTo(externalImage.getId());
         assertThat(artistSongs.getArtist().getDiscoveryData().getTopSongIds())
                 .containsExactly(song1_1_2.getId(), song1_2_1.getId(), song1_1_1.getId());
         assertThat(artistSongs.getAlbumSongs()).extracting(album -> album.getAlbum().getDiscoveryData().getReleaseType())

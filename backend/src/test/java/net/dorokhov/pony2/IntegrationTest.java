@@ -59,6 +59,8 @@ abstract public class IntegrationTest {
 
     @Value("${pony.artwork.path}")
     private File artworkFolder;
+    @Value("${pony.externalImage.path}")
+    private File externalImageFolder;
     
     private TransactionTemplate transactionTemplate;
 
@@ -92,6 +94,10 @@ abstract public class IntegrationTest {
 
     private void cleanFiles() {
         Optional.ofNullable(artworkFolder.listFiles())
+                .map(Arrays::asList)
+                .orElse(emptyList())
+                .forEach(FileSystemUtils::deleteRecursively);
+        Optional.ofNullable(externalImageFolder.listFiles())
                 .map(Arrays::asList)
                 .orElse(emptyList())
                 .forEach(FileSystemUtils::deleteRecursively);

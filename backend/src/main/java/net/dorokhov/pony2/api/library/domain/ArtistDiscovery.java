@@ -7,8 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony2.api.common.BaseEntity;
 
 @Entity
-@Table(name = "artist_discovery_index")
-public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
+@Table(name = "artist_discovery")
+public class ArtistDiscovery extends BaseEntity<ArtistDiscovery> {
 
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id", nullable = false, unique = true)
@@ -24,11 +24,19 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
     @Column(name = "country_code")
     private String countryCode;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bio_external_image_id")
+    private ExternalImage bioExternalImage;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avatar_external_image_id")
+    private ExternalImage avatarExternalImage;
+
     public Artist getArtist() {
         return artist;
     }
 
-    public ArtistDiscoveryIndex setArtist(Artist artist) {
+    public ArtistDiscovery setArtist(Artist artist) {
         this.artist = artist;
         return this;
     }
@@ -37,7 +45,7 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return spotifyArtistId;
     }
 
-    public ArtistDiscoveryIndex setSpotifyArtistId(@Nullable String spotifyArtistId) {
+    public ArtistDiscovery setSpotifyArtistId(@Nullable String spotifyArtistId) {
         this.spotifyArtistId = spotifyArtistId;
         return this;
     }
@@ -46,7 +54,7 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return musicBrainzArtistId;
     }
 
-    public ArtistDiscoveryIndex setMusicBrainzArtistId(@Nullable String musicBrainzArtistId) {
+    public ArtistDiscovery setMusicBrainzArtistId(@Nullable String musicBrainzArtistId) {
         this.musicBrainzArtistId = musicBrainzArtistId;
         return this;
     }
@@ -55,8 +63,26 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
         return countryCode;
     }
 
-    public ArtistDiscoveryIndex setCountryCode(@Nullable String countryCode) {
+    public ArtistDiscovery setCountryCode(@Nullable String countryCode) {
         this.countryCode = countryCode;
+        return this;
+    }
+
+    public @Nullable ExternalImage getBioExternalImage() {
+        return bioExternalImage;
+    }
+
+    public ArtistDiscovery setBioExternalImage(@Nullable ExternalImage bioExternalImage) {
+        this.bioExternalImage = bioExternalImage;
+        return this;
+    }
+
+    public @Nullable ExternalImage getAvatarExternalImage() {
+        return avatarExternalImage;
+    }
+
+    public ArtistDiscovery setAvatarExternalImage(@Nullable ExternalImage avatarExternalImage) {
+        this.avatarExternalImage = avatarExternalImage;
         return this;
     }
 
@@ -70,6 +96,8 @@ public class ArtistDiscoveryIndex extends BaseEntity<ArtistDiscoveryIndex> {
                 .add("spotifyArtistId", spotifyArtistId)
                 .add("musicBrainzArtistId", musicBrainzArtistId)
                 .add("countryCode", countryCode)
+                .add("bioExternalImage", bioExternalImage)
+                .add("avatarExternalImage", avatarExternalImage)
                 .toString();
     }
 }

@@ -7,9 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.io.File;
+import java.io.IOException;
+
+import static net.dorokhov.pony2.test.ExternalImageFixtures.saveExternalImage;
 import static net.dorokhov.pony2.test.SongFixtures.song;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class LibraryCleanerIntegrationTest extends IntegrationTest {
 
@@ -25,11 +32,69 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     @Autowired
     private SongRepository songRepository;
     @Autowired
-    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
     @Autowired
     private DiscoveryTaskRepository discoveryTaskRepository;
+    @Autowired
+    private ExternalImageRepository externalImageRepository;
+    @Value("${pony.externalImage.path}")
+    private File externalImageFolder;
+
+    @Test
+    void shouldDeleteBothExternalImagesAndFilesWithArtist() throws IOException {
+        Artist artist = artistRepository.save(new Artist());
+        ExternalImageFile bio = saveExternalImage(externalImageRepository, externalImageFolder, "image.png");
+        ExternalImageFile avatar = saveExternalImage(externalImageRepository, externalImageFolder, "green.png");
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist)
+                .setBioExternalImage(bio.getExternalImage()).setAvatarExternalImage(avatar.getExternalImage()));
+
+        assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isTrue();
+
+        assertThat(externalImageRepository.count()).isZero();
+        assertThat(bio.getFile()).doesNotExist();
+        assertThat(avatar.getFile()).doesNotExist();
+    }
+
+    @Test
+    void shouldRejectAccidentalExternalImageReuseAndKeepFile() throws IOException {
+        Artist first = artistRepository.save(new Artist());
+        Artist second = artistRepository.save(new Artist());
+        ExternalImageFile externalImageFile = saveExternalImage(externalImageRepository, externalImageFolder, "image.png");
+        ExternalImage externalImage = externalImageFile.getExternalImage();
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(first)
+                .setBioExternalImage(externalImage));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(second).setAvatarExternalImage(externalImage));
+
+        assertThatThrownBy(() -> libraryCleaner.deleteArtistIfUnused(first))
+                .isInstanceOf(DataIntegrityViolationException.class);
+
+        assertThat(artistRepository.existsById(first.getId())).isTrue();
+        assertThat(artistDiscoveryRepository.findByArtistId(first.getId())).isPresent();
+        assertThat(artistDiscoveryRepository.findByArtistId(second.getId())).isPresent();
+        assertThat(externalImageRepository.existsById(externalImage.getId())).isTrue();
+        assertThat(externalImageFile.getFile()).exists();
+    }
+
+    @Test
+    void shouldKeepExternalImageAndFileWhenArtistDeletionIsRolledBack() throws IOException {
+        Artist artist = artistRepository.save(new Artist());
+        ExternalImageFile externalImageFile = saveExternalImage(externalImageRepository, externalImageFolder, "image.png");
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist)
+                .setBioExternalImage(externalImageFile.getExternalImage()));
+
+        getTransactionTemplate().executeWithoutResult(status -> {
+            assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isTrue();
+            assertThat(externalImageFile.getFile()).exists();
+            status.setRollbackOnly();
+        });
+
+        assertThat(artistRepository.existsById(artist.getId())).isTrue();
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).isPresent();
+        assertThat(externalImageRepository.existsById(externalImageFile.getExternalImage().getId())).isTrue();
+        assertThat(externalImageFile.getFile()).exists();
+    }
 
     @Test
     public void shouldDeleteArtistWithDiscovery() {
@@ -39,13 +104,13 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
                 new DiscoveryTask().setArtist(artist).setJob(job)
                         .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
                         .setResult("{}"));
-        artistDiscoveryIndexRepository.saveAndFlush(new ArtistDiscoveryIndex()
+        artistDiscoveryRepository.saveAndFlush(new ArtistDiscovery()
                 .setArtist(artist).setSpotifyArtistId("spotify-artist"));
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isTrue();
 
         assertThat(artistRepository.findById(artist.getId())).isEmpty();
-        assertThat(artistDiscoveryIndexRepository.count()).isZero();
+        assertThat(artistDiscoveryRepository.count()).isZero();
         assertThat(discoveryJobRepository.findById(job.getId()).orElseThrow().getArtist()).isNull();
         assertThat(discoveryTaskRepository.count()).isOne();
         assertThat(discoveryTaskRepository.findById(task.getId()).orElseThrow().getArtist()).isNull();
@@ -55,13 +120,13 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     public void shouldKeepDiscoveryIndexWhenArtistStillHasAlbums() {
         Artist artist = artistRepository.save(new Artist());
         albumRepository.save(new Album().setArtist(artist));
-        ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+        ArtistDiscovery index = artistDiscoveryRepository.save(new ArtistDiscovery()
                 .setArtist(artist)
                 .setSpotifyArtistId("spotify-artist"));
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist)).isFalse();
 
-        assertThat(artistDiscoveryIndexRepository.findById(index.getId())).isNotEmpty();
+        assertThat(artistDiscoveryRepository.findById(index.getId())).isNotEmpty();
         assertThat(artistRepository.findById(artist.getId())).isNotEmpty();
     }
 

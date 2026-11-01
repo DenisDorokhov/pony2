@@ -3,6 +3,7 @@ package net.dorokhov.pony2.web.service;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.ExportService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
+import net.dorokhov.pony2.core.library.service.image.ExternalImageStorage;
 import net.dorokhov.pony2.web.dto.FileDistribution;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,12 @@ public class FileFacade {
     
     private final LibraryService libraryService;
     private final ExportService exportService;
+    private final ExternalImageStorage externalImageStorage;
 
-    public FileFacade(LibraryService libraryService, ExportService exportService) {
+    public FileFacade(LibraryService libraryService, ExportService exportService, ExternalImageStorage externalImageStorage) {
         this.libraryService = libraryService;
         this.exportService = exportService;
+        this.externalImageStorage = externalImageStorage;
     }
 
     @Transactional(readOnly = true)
@@ -60,6 +63,21 @@ public class FileFacade {
                 .setName(file.getName())
                 .setMimeType(artwork.getMimeType())
                 .setModificationDate(artwork.getDate());
+    }
+
+    @Transactional(readOnly = true)
+    public FileDistribution getExternalImageDistribution(String externalImageId) throws ObjectNotFoundException {
+        ExternalImageFile externalImageFile = externalImageStorage.getImageFile(externalImageId).orElse(null);
+        if (externalImageFile == null || !externalImageFile.getFile().isFile()) {
+            throw new ObjectNotFoundException(ExternalImage.class, externalImageId);
+        }
+        ExternalImage externalImage = externalImageFile.getExternalImage();
+        File file = externalImageFile.getFile();
+        return new FileDistribution()
+                .setFile(file)
+                .setName(file.getName())
+                .setMimeType(externalImage.getMimeType())
+                .setModificationDate(externalImage.getDate());
     }
 
     @Transactional(readOnly = true)

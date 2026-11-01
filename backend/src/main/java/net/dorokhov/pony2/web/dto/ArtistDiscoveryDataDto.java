@@ -10,6 +10,8 @@ public final class ArtistDiscoveryDataDto {
 
     private String countryCode;
     private List<String> topSongIds;
+    private String bioExternalImageId;
+    private String avatarExternalImageId;
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public @Nullable String getCountryCode() {
@@ -30,9 +32,29 @@ public final class ArtistDiscoveryDataDto {
         return this;
     }
 
+    public @Nullable String getBioExternalImageId() {
+        return bioExternalImageId;
+    }
+
+    public ArtistDiscoveryDataDto setBioExternalImageId(@Nullable String bioExternalImageId) {
+        this.bioExternalImageId = bioExternalImageId;
+        return this;
+    }
+
+    public @Nullable String getAvatarExternalImageId() {
+        return avatarExternalImageId;
+    }
+
+    public ArtistDiscoveryDataDto setAvatarExternalImageId(@Nullable String avatarExternalImageId) {
+        this.avatarExternalImageId = avatarExternalImageId;
+        return this;
+    }
+
     public static ArtistDiscoveryDataDto of(ArtistDiscoveryData data) {
         return new ArtistDiscoveryDataDto()
                 .setCountryCode(data.countryCode())
-                .setTopSongIds(data.topSongIds());
+                .setTopSongIds(data.topSongIds())
+                .setBioExternalImageId(data.bioExternalImageId())
+                .setAvatarExternalImageId(data.avatarExternalImageId());
     }
 }

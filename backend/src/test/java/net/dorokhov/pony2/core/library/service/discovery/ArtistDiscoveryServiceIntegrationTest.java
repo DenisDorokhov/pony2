@@ -69,7 +69,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private DiscoveryJobRepository jobRepository;
     @Autowired
-    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired
     private DiscoveryTaskRepository taskRepository;
     @Autowired
@@ -182,18 +182,18 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                 chatResponse(spotifyArtistData("second-spotify-artist")));
 
         service.discover(saveJob(), artist, false, null);
-        ArtistDiscoveryIndex original = artistDiscoveryIndexRepository.findByArtistId(artist.getId()).orElseThrow();
+        ArtistDiscovery original = artistDiscoveryRepository.findByArtistId(artist.getId()).orElseThrow();
         assertThat(original.getSpotifyArtistId()).isEqualTo("first-spotify-artist");
 
         service.discover(saveJob(), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
             assertThat(index.getCreationDate()).isEqualTo(original.getCreationDate());
             assertThat(index.getUpdateDate()).isNotNull();
             assertThat(index.getSpotifyArtistId()).isEqualTo("second-spotify-artist");
         });
-        assertThat(artistDiscoveryIndexRepository.count()).isOne();
+        assertThat(artistDiscoveryRepository.count()).isOne();
         assertThat(artistDataTasks()).hasSize(2)
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
@@ -203,8 +203,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         Artist artist = saveArtist("Album");
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(spotifyArtistData("spotify-artist")));
         service.discover(saveJob(), artist, true, null);
-        ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId()).orElseThrow();
-        artistDiscoveryIndexRepository.deleteById(index.getId());
+        ArtistDiscovery index = artistDiscoveryRepository.findByArtistId(artist.getId()).orElseThrow();
+        artistDiscoveryRepository.deleteById(index.getId());
         clearInvocations(model);
         List<DiscoveryProgress> progress = new ArrayList<>();
 
@@ -212,9 +212,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, 3), DiscoveryProgress.Value.of(1, 3), DiscoveryProgress.Value.of(2, 3), DiscoveryProgress.Value.of(3, 3));
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("spotify-artist");
-        assertThat(artistDiscoveryIndexRepository.count()).isOne();
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getSpotifyArtistId).isEqualTo("spotify-artist");
+        assertThat(artistDiscoveryRepository.count()).isOne();
         verify(model, never()).call(any(Prompt.class));
     }
 
@@ -222,7 +222,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     @ValueSource(booleans = {true, false})
     void shouldRollBackCompletedTaskAndIndexWhenIndexSavingFails(boolean existingIndex) {
         Artist artist = saveArtist("Album");
-        ArtistDiscoveryIndex previousIndex = existingIndex ? saveIndex(artist) : null;
+        ArtistDiscovery previousIndex = existingIndex ? saveIndex(artist) : null;
         // Pass response validation but exceed the database column length to force a transaction rollback.
         SpotifyArtistData result = spotifyArtistData("x".repeat(256));
         when(model.call(any(Prompt.class))).thenReturn(chatResponse(result));
@@ -234,13 +234,13 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getResult()).contains("Value too long", "SPOTIFY_ARTIST_ID");
         });
         if (previousIndex == null) {
-            assertThat(artistDiscoveryIndexRepository.count()).isZero();
+            assertThat(artistDiscoveryRepository.count()).isZero();
         } else {
-            assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+            assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
                 assertThat(index.getId()).isEqualTo(previousIndex.getId());
                 assertThat(index.getSpotifyArtistId()).isEqualTo("previous-spotify-artist");
             });
-            assertThat(artistDiscoveryIndexRepository.count()).isOne();
+            assertThat(artistDiscoveryRepository.count()).isOne();
         }
     }
 
@@ -285,8 +285,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         });
         assertFailedTopTracks();
         assertThat(cacheRepository.count()).isZero();
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
     }
 
     @Test
@@ -334,8 +334,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getRawResponses()).containsExactly((Object) null);
         });
         assertFailedTopTracks();
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
         verify(model).call(any(Prompt.class));
         assertThat(logRepository.findAll()).anySatisfy(log -> {
             assertThat(log.getLevel()).isEqualTo(LogMessage.Level.ERROR);
@@ -366,9 +366,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(artistDataTasks()).singleElement().satisfies(task ->
                 assertThat(requireNonNull(task.getArtist()).getId()).isEqualTo(artist.getId()));
         assertThat(cacheRepository.count()).isZero();
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isNull();
-        assertThat(artistDiscoveryIndexRepository.count()).isOne();
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getSpotifyArtistId).isNull();
+        assertThat(artistDiscoveryRepository.count()).isOne();
         assertThat(logRepository.findAll()).isEmpty();
         verify(model, never()).call(any(Prompt.class));
     }
@@ -413,17 +413,17 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getResult()).isNull();
             assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(result));
         });
-        ArtistDiscoveryIndex original = artistDiscoveryIndexRepository.findByArtistId(artist.getId()).orElseThrow();
+        ArtistDiscovery original = artistDiscoveryRepository.findByArtistId(artist.getId()).orElseThrow();
         assertThat(original.getSpotifyArtistId()).isNull();
-        artistDiscoveryIndexRepository.save(original.setSpotifyArtistId("previous-spotify-artist"));
+        artistDiscoveryRepository.save(original.setSpotifyArtistId("previous-spotify-artist"));
 
         service.discover(saveJob(), artist, true, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
             assertThat(index.getSpotifyArtistId()).isNull();
         });
-        assertThat(artistDiscoveryIndexRepository.count()).isOne();
+        assertThat(artistDiscoveryRepository.count()).isOne();
         assertThat(artistDataTasks()).hasSize(2).allSatisfy(task -> assertThat(task.getResult()).isNull());
         verify(model, times(2)).call(any(Prompt.class));
     }
@@ -481,8 +481,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             if (prompts.size() > 2) {
                 assertThat(artistDataTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
-                assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                        .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("spotify-artist");
+                assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                        .extracting(ArtistDiscovery::getSpotifyArtistId).isEqualTo("spotify-artist");
                 assertThat(topTracksTasks()).singleElement()
                         .satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.STARTED));
             }
@@ -569,8 +569,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         DiscoveryTask interruptedTask = taskRepository.findAll().getFirst();
         assertThat(interruptedTask.getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                .extracting(ArtistDiscoveryIndex::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getSpotifyArtistId).isEqualTo("previous-spotify-artist");
         assertThat(interruptedTask.getResult()).isNull();
         assertThat(interruptedTask.getRawRequests()).isNotEmpty();
         assertThat(interruptedTask.getRawResponses()).containsExactly((Object) null);
@@ -683,8 +683,8 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         return artist;
     }
 
-    private ArtistDiscoveryIndex saveIndex(Artist artist) {
-        return artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+    private ArtistDiscovery saveIndex(Artist artist) {
+        return artistDiscoveryRepository.save(new ArtistDiscovery()
                 .setArtist(artist)
                 .setSpotifyArtistId("previous-spotify-artist"));
     }

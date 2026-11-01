@@ -5,6 +5,7 @@ import net.dorokhov.pony2.InstallingIntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
+import net.dorokhov.pony2.core.library.repository.ExternalImageRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -15,6 +16,7 @@ import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -29,6 +31,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 
 import static java.util.Objects.requireNonNull;
+import static net.dorokhov.pony2.test.ExternalImageFixtures.saveExternalImage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileControllerTest extends InstallingIntegrationTest {
@@ -38,6 +41,10 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
     @Autowired
     private ApiTemplate apiTemplate;
+    @Autowired
+    private ExternalImageRepository externalImageRepository;
+    @Value("${pony.externalImage.path}")
+    private File externalImageFolder;
     
     @Autowired
     private ArtworkStorage artworkStorage;
@@ -88,6 +95,31 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
+    }
+
+    @Test
+    void shouldServeOriginalExternalImageAndReturnNotFoundForMissingFile() throws IOException {
+        ExternalImageFile externalImageFile = saveExternalImage(externalImageRepository, externalImageFolder, "image.png");
+        String externalImageId = externalImageFile.getExternalImage().getId();
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
+                "/api/file/externalImage/{externalImageId}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, externalImageId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(Files.readAllBytes(IMAGE_RESOURCE.getFile().toPath()));
+        assertThat(response.getHeaders().getContentType().toString()).isEqualTo("image/png");
+
+        Files.delete(externalImageFile.getFile().toPath());
+        assertThat(apiTemplate.getRestTemplate().exchange(
+                "/api/file/externalImage/{externalImageId}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, externalImageId)
+                .getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(apiTemplate.getRestTemplate().exchange(
+                "/api/file/externalImage/{externalImageId}", HttpMethod.GET,
+                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, "missing")
+                .getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test

@@ -12,7 +12,7 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -29,7 +29,7 @@ import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -123,7 +123,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private SongRepository songRepository;
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
-    @Autowired private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    @Autowired private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private DiscoveryCacheRepository cacheRepository;
@@ -1409,8 +1409,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(JsonConverter.fromJson(albumTasks(album).getFirst().getResult(), MusicBrainzAlbumData.class).country())
                 .containsExactly("DE");
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get()
-                .extracting(ArtistDiscoveryIndex::getCountryCode).isEqualTo("DE");
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getCountryCode).isEqualTo("DE");
     }
 
     @Test
@@ -1818,15 +1818,15 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldRestoreArtistIndexFromReusedCompletedAlbumAfterInterruption() {
         DiscoveryJob previousJob = job(DiscoveryType.ARTIST);
         artistService.discover(previousJob, artist, false, null);
-        ArtistDiscoveryIndex previousIndex = artistDiscoveryIndexRepository.findByArtistId(artist.getId()).orElseThrow();
-        artistDiscoveryIndexRepository.deleteAll();
+        ArtistDiscovery previousIndex = artistDiscoveryRepository.findByArtistId(artist.getId()).orElseThrow();
+        artistDiscoveryRepository.deleteAll();
         jobRepository.save(previousJob.setStatus(DiscoveryJob.Status.INTERRUPTED));
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
 
         fullDiscoveryService.discover(nextJob, false, null);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo(previousIndex.getMusicBrainzArtistId());
             assertThat(index.getCountryCode()).isEqualTo(previousIndex.getCountryCode());
         });
@@ -1837,7 +1837,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumRepository.save(new Album().setArtist(artist).setName("Earlier demo").setYear(1980));
         DiscoveryJob previousJob = job(DiscoveryType.ARTIST);
         artistService.discover(previousJob, artist, false, null);
-        artistDiscoveryIndexRepository.deleteAll();
+        artistDiscoveryRepository.deleteAll();
         jobRepository.save(previousJob.setStatus(DiscoveryJob.Status.INTERRUPTED));
         clearInvocations(session);
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
@@ -1846,7 +1846,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
         verifyNoInteractions(session);
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
         });
@@ -1873,7 +1873,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).filteredOn(task -> task.getAlbum() != null).extracting(DiscoveryTask::getStatus)
                 .containsExactlyInAnyOrder(DiscoveryTask.Status.COMPLETE, DiscoveryTask.Status.INTERRUPTED);
         assertThat(taskRepository.findAll()).noneMatch(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
         });
@@ -1885,7 +1885,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, null);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(2);
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
         });
@@ -1902,7 +1902,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, progress -> {
             long complete = requireNonNull(progress.getValue()).getItemsComplete();
             if (complete > 1 && complete <= 3) {
-                assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+                assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
                     assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
                     assertThat(index.getCountryCode()).isEqualTo("US");
                 });
@@ -1927,7 +1927,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         saveDiscoveryHistory(job(DiscoveryType.FULL), 2, -1);
         artistService.discoverIfUpdated(job(DiscoveryType.FULL), artist, List.of(album), false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
         });
@@ -1945,7 +1945,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("first-artist");
             assertThat(index.getCountryCode()).isEqualTo("BE");
         });
@@ -1962,7 +1962,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("first-artist");
             assertThat(index.getCountryCode()).isEqualTo("DE");
             assertThat(index.getSpotifyArtistId()).isNull();
@@ -1975,7 +1975,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @ParameterizedTest
     @CsvSource({"updated-artist,US", "artist,DE", "updated-artist,DE"})
     void shouldUpdateChangedMusicBrainzArtistIndexValues(String artistId, String countryCode) {
-        ArtistDiscoveryIndex original = artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+        ArtistDiscovery original = artistDiscoveryRepository.save(new ArtistDiscovery()
                 .setArtist(artist).setSpotifyArtistId("spotify-artist")
                 .setMusicBrainzArtistId("artist").setCountryCode("US"));
         search(List.of(group("group", "Group", "Reign in Blood", List.of(credit(artistId, "Slayer", "Slayer")))));
@@ -1985,7 +1985,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         saveDiscoveryHistory(job(DiscoveryType.FULL), 2, -1);
         artistService.discoverIfUpdated(job(DiscoveryType.FULL), artist, List.of(album), false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
             assertThat(index.getCreationDate()).isEqualTo(original.getCreationDate());
             assertThat(index.getUpdateDate()).isNotNull();
@@ -1993,7 +1993,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getCountryCode()).isEqualTo(countryCode);
             assertThat(index.getSpotifyArtistId()).isEqualTo("spotify-artist");
         });
-        assertThat(artistDiscoveryIndexRepository.count()).isOne();
+        assertThat(artistDiscoveryRepository.count()).isOne();
     }
 
     @Test
@@ -2011,7 +2011,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findLatestCompletedByAlbumIdAndType(album.getId(),
                 DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, org.springframework.data.domain.Limit.of(1))).get()
                 .extracting(task -> task.getJob().getId()).isEqualTo(otherJob.getId());
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("other-job-artist");
             assertThat(index.getCountryCode()).isEqualTo("DE");
         });
@@ -2019,12 +2019,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @Test
     void shouldKeepMusicBrainzArtistIndexDatesWhenValuesAreUnchanged() {
-        ArtistDiscoveryIndex original = artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+        ArtistDiscovery original = artistDiscoveryRepository.save(new ArtistDiscovery()
                 .setArtist(artist).setMusicBrainzArtistId("artist").setCountryCode("US"));
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getId()).isEqualTo(original.getId());
             assertThat(index.getCreationDate()).isEqualTo(original.getCreationDate());
             assertThat(index.getUpdateDate()).isEqualTo(original.getUpdateDate());
@@ -2037,14 +2037,14 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @ValueSource(booleans = {true, false})
     void shouldPreserveExistingCountryWhenMusicBrainzHasNoCountry(boolean existingIndex) {
         if (existingIndex) {
-            artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+            artistDiscoveryRepository.save(new ArtistDiscovery()
                     .setArtist(artist).setMusicBrainzArtistId("artist").setCountryCode("US"));
         }
         rawArtistResponse = "{\"id\":\"artist\"}";
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo(existingIndex ? "US" : null);
         });
@@ -2055,7 +2055,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     void shouldUseNextAlbumWhenFirstAlbumHasNoResult(boolean failed, boolean existingIndex) {
         notFoundResponses();
         if (existingIndex) {
-            artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+            artistDiscoveryRepository.save(new ArtistDiscovery()
                     .setArtist(artist).setMusicBrainzArtistId("previous-artist").setCountryCode("DE"));
         }
         albumRepository.save(new Album().setArtist(artist).setName("Second album").setYear(2000));
@@ -2076,7 +2076,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
             assertThat(index.getUpdateDate()).isNotNull();
@@ -2088,12 +2088,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Test
     void shouldSkipMusicBrainzArtistIndexUpdateWhenArtistHasNoAlbums() {
         albumRepository.deleteById(album.getId());
-        artistDiscoveryIndexRepository.save(new ArtistDiscoveryIndex()
+        artistDiscoveryRepository.save(new ArtistDiscovery()
                 .setArtist(artist).setMusicBrainzArtistId("previous-artist").setCountryCode("DE"));
 
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
 
-        assertThat(artistDiscoveryIndexRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("previous-artist");
             assertThat(index.getCountryCode()).isEqualTo("DE");
             assertThat(index.getUpdateDate()).isNull();

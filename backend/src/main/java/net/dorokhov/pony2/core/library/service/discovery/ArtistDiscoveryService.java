@@ -3,7 +3,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -12,7 +12,7 @@ import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.spotify.SpotifyArtistDataService;
@@ -42,7 +42,7 @@ public class ArtistDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final AlbumRepository albumRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final DiscoveryTaskResultReader resultReader;
@@ -55,7 +55,7 @@ public class ArtistDiscoveryService {
     private final TransactionTemplate transactionTemplate;
 
     public ArtistDiscoveryService(
-            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            ArtistDiscoveryRepository artistDiscoveryRepository,
             AlbumRepository albumRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             DiscoveryTaskResultReader resultReader,
@@ -67,7 +67,7 @@ public class ArtistDiscoveryService {
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager
     ) {
-        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.albumRepository = albumRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.resultReader = resultReader;
@@ -176,13 +176,13 @@ public class ArtistDiscoveryService {
             if (musicBrainzArtistId == null && countryCode == null) {
                 return;
             }
-            ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
-                    .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
+            ArtistDiscovery index = artistDiscoveryRepository.findByArtistId(artist.getId())
+                    .orElseGet(() -> new ArtistDiscovery().setArtist(artist));
             String updatedArtistId = musicBrainzArtistId != null ? musicBrainzArtistId : index.getMusicBrainzArtistId();
             String updatedCountryCode = countryCode != null ? countryCode : index.getCountryCode();
             if (!Objects.equals(index.getMusicBrainzArtistId(), updatedArtistId) ||
                     !Objects.equals(index.getCountryCode(), updatedCountryCode)) {
-                artistDiscoveryIndexRepository.save(index.setMusicBrainzArtistId(updatedArtistId).setCountryCode(updatedCountryCode));
+                artistDiscoveryRepository.save(index.setMusicBrainzArtistId(updatedArtistId).setCountryCode(updatedCountryCode));
             }
         });
     }
@@ -229,10 +229,10 @@ public class ArtistDiscoveryService {
 
         @Override
         public void onResult(DiscoveryTask task, @Nullable SpotifyArtistData result) {
-            ArtistDiscoveryIndex index = artistDiscoveryIndexRepository.findByArtistId(artist.getId())
-                    .orElseGet(() -> new ArtistDiscoveryIndex().setArtist(artist));
+            ArtistDiscovery index = artistDiscoveryRepository.findByArtistId(artist.getId())
+                    .orElseGet(() -> new ArtistDiscovery().setArtist(artist));
             String spotifyArtistId = result != null ? result.artist().id() : null;
-            artistDiscoveryIndexRepository.save(index.setSpotifyArtistId(spotifyArtistId));
+            artistDiscoveryRepository.save(index.setSpotifyArtistId(spotifyArtistId));
         }
 
         @Override

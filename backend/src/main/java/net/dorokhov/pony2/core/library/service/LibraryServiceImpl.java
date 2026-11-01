@@ -30,7 +30,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
-    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final DiscoveryTaskResultReader resultReader;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
@@ -42,7 +42,7 @@ public class LibraryServiceImpl implements LibraryService {
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
-            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            ArtistDiscoveryRepository artistDiscoveryRepository,
             DiscoveryTaskResultReader resultReader,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
@@ -53,7 +53,7 @@ public class LibraryServiceImpl implements LibraryService {
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
-        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.resultReader = resultReader;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
@@ -112,9 +112,14 @@ public class LibraryServiceImpl implements LibraryService {
                     .filter(existingSongIds::contains)
                     .toList();
         }
-        return Optional.of(new ArtistDiscoveryData(artistDiscoveryIndexRepository.findByArtistId(artistId)
-                .map(ArtistDiscoveryIndex::getCountryCode)
-                .orElse(null), topSongIds));
+        ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artistId).orElse(null);
+        ExternalImage bioExternalImage = discovery != null ? discovery.getBioExternalImage() : null;
+        ExternalImage avatarExternalImage = discovery != null ? discovery.getAvatarExternalImage() : null;
+        return Optional.of(new ArtistDiscoveryData(
+                discovery != null ? discovery.getCountryCode() : null,
+                topSongIds,
+                bioExternalImage != null ? bioExternalImage.getId() : null,
+                avatarExternalImage != null ? avatarExternalImage.getId() : null));
     }
 
     @Override

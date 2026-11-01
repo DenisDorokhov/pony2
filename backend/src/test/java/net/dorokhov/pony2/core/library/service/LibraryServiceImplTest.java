@@ -6,14 +6,14 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryIndex;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.ArtworkFiles;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryIndexRepository;
+import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
@@ -65,7 +65,7 @@ public class LibraryServiceImplTest {
     @Mock
     private ArtistGenreRepository artistGenreRepository;
     @Mock
-    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
     private SongRepository songRepository;
     @Mock
@@ -78,7 +78,7 @@ public class LibraryServiceImplTest {
     @BeforeEach
     void setUp() {
         libraryService = new LibraryServiceImpl(genreRepository, artistRepository, albumRepository, artistGenreRepository,
-                artistDiscoveryIndexRepository, new DiscoveryTaskResultReader(discoveryTaskRepository), songRepository,
+                artistDiscoveryRepository, new DiscoveryTaskResultReader(discoveryTaskRepository), songRepository,
                 artworkStorage, randomFetcher, configService);
         lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
     }
@@ -89,7 +89,7 @@ public class LibraryServiceImplTest {
 
         assertThat(libraryService.getArtistDiscoveryData("artist")).isEmpty();
         assertThat(libraryService.getAlbumDiscoveryData("album")).isEmpty();
-        verifyNoInteractions(discoveryTaskRepository, artistDiscoveryIndexRepository, songRepository);
+        verifyNoInteractions(discoveryTaskRepository, artistDiscoveryRepository, songRepository);
     }
 
     @Test
@@ -202,12 +202,12 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\"]"));
         when(songRepository.findExistingIds(List.of("second", "deleted", "first"))).thenReturn(List.of("first", "second"));
         if (countryCodeAvailable) {
-            when(artistDiscoveryIndexRepository.findByArtistId("artist"))
-                    .thenReturn(Optional.of(new ArtistDiscoveryIndex().setCountryCode("DE")));
+            when(artistDiscoveryRepository.findByArtistId("artist"))
+                    .thenReturn(Optional.of(new ArtistDiscovery().setCountryCode("DE")));
         }
 
         assertThat(libraryService.getArtistDiscoveryData("artist"))
-                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first")));
+                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first"), null, null));
     }
 
     @Test

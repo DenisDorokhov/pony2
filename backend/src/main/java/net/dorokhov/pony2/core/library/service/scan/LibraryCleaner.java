@@ -2,10 +2,12 @@ package net.dorokhov.pony2.core.library.service.scan;
 
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
+import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony2.core.library.service.image.ExternalImageStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -23,10 +25,11 @@ public class LibraryCleaner {
     private final ArtistRepository artistRepository;
     private final GenreRepository genreRepository;
     private final ArtistGenreRepository artistGenreRepository;
-    private final ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private final ArtistDiscoveryRepository artistDiscoveryRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final DiscoveryJobRepository discoveryJobRepository;
     private final ArtworkStorage artworkStorage;
+    private final ExternalImageStorage externalImageStorage;
 
     public LibraryCleaner(
             SongRepository songRepository,
@@ -34,34 +37,55 @@ public class LibraryCleaner {
             ArtistRepository artistRepository,
             GenreRepository genreRepository,
             ArtistGenreRepository artistGenreRepository,
-            ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository,
+            ArtistDiscoveryRepository artistDiscoveryRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             DiscoveryJobRepository discoveryJobRepository,
-            ArtworkStorage artworkStorage
+            ArtworkStorage artworkStorage,
+            ExternalImageStorage externalImageStorage
     ) {
         this.songRepository = songRepository;
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.genreRepository = genreRepository;
         this.artistGenreRepository = artistGenreRepository;
-        this.artistDiscoveryIndexRepository = artistDiscoveryIndexRepository;
+        this.artistDiscoveryRepository = artistDiscoveryRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.discoveryJobRepository = discoveryJobRepository;
         this.artworkStorage = artworkStorage;
+        this.externalImageStorage = externalImageStorage;
     }
 
     @Transactional
     public boolean deleteArtistIfUnused(Artist artist) {
         if (albumRepository.countByArtistId(artist.getId()) == 0) {
-            artistDiscoveryIndexRepository.deleteByArtistId(artist.getId());
+            ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artist.getId()).orElse(null);
+            artistDiscoveryRepository.deleteByArtistId(artist.getId());
             artistGenreRepository.deleteByArtistId(artist.getId());
             discoveryTaskRepository.clearArtistByArtistId(artist.getId());
             discoveryJobRepository.clearArtistByArtistId(artist.getId());
             artistRepository.deleteById(artist.getId());
+            if (discovery != null) {
+                deleteDiscoveryExternalImages(discovery);
+            }
             logger.debug("Deleting artist '{}'.", artist);
             return true;
         }
         return false;
+    }
+
+    private void deleteDiscoveryExternalImages(ArtistDiscovery discovery) {
+        if (discovery.getBioExternalImage() != null) {
+            externalImageStorage.delete(discovery.getBioExternalImage().getId());
+        }
+        if (discovery.getAvatarExternalImage() != null) {
+            externalImageStorage.delete(discovery.getAvatarExternalImage().getId());
+        }
+    }
+
+    @Transactional
+    public void deleteArtistDiscovery(ArtistDiscovery discovery) {
+        artistDiscoveryRepository.delete(discovery);
+        deleteDiscoveryExternalImages(discovery);
     }
 
     @Transactional

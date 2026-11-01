@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.library.domain.Artwork;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
+import net.dorokhov.pony2.core.library.service.image.ExternalImageStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,13 +36,15 @@ public class LibraryCleanerTest {
     @Mock
     private ArtistGenreRepository artistGenreRepository;
     @Mock
-    private ArtistDiscoveryIndexRepository artistDiscoveryIndexRepository;
+    private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
     private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock
     private DiscoveryJobRepository discoveryJobRepository;
     @Mock
     private ArtworkStorage artworkStorage;
+    @Mock
+    private ExternalImageStorage externalImageStorage;
 
     @BeforeEach
     public void setUp() {
@@ -51,10 +54,11 @@ public class LibraryCleanerTest {
                 artistRepository,
                 genreRepository,
                 artistGenreRepository,
-                artistDiscoveryIndexRepository,
+                artistDiscoveryRepository,
                 discoveryTaskRepository,
                 discoveryJobRepository,
-                artworkStorage
+                artworkStorage,
+                externalImageStorage
         );
     }
 
@@ -68,12 +72,12 @@ public class LibraryCleanerTest {
         when(albumRepository.countByArtistId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist1)).isTrue();
-        verify(artistDiscoveryIndexRepository).deleteByArtistId("1");
+        verify(artistDiscoveryRepository).deleteByArtistId("1");
         verify(artistGenreRepository).deleteByArtistId("1");
         verify(artistRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteArtistIfUnused(artist2)).isFalse();
-        verify(artistDiscoveryIndexRepository, never()).deleteByArtistId("2");
+        verify(artistDiscoveryRepository, never()).deleteByArtistId("2");
         verify(artistGenreRepository, never()).deleteByArtistId("2");
         verify(artistRepository, never()).deleteById("2");
     }

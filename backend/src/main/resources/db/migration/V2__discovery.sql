@@ -99,7 +99,20 @@ CREATE INDEX index_discovery_task_artist_status_type_creation_date ON discovery_
 CREATE INDEX index_discovery_task_album_status_type_creation_date ON discovery_task (album_id, status, type, creation_date DESC, id DESC);
 CREATE INDEX index_discovery_task_song_status_type_creation_date ON discovery_task (song_id, status, type, creation_date DESC, id DESC);
 
-CREATE TABLE artist_discovery_index (
+CREATE TABLE external_image (
+
+  id CHAR(36) PRIMARY KEY,
+
+  date TIMESTAMP(9) NOT NULL,
+  source_uri VARCHAR (2048) NOT NULL,
+  path VARCHAR (255) NOT NULL,
+  mime_type VARCHAR (255) NOT NULL,
+  size BIGINT NOT NULL,
+
+  UNIQUE (path)
+);
+
+CREATE TABLE artist_discovery (
 
   id CHAR(36) PRIMARY KEY,
 
@@ -110,15 +123,19 @@ CREATE TABLE artist_discovery_index (
   spotify_artist_id VARCHAR (255),
   music_brainz_artist_id VARCHAR (255),
   country_code VARCHAR (255),
+  bio_external_image_id CHAR(36),
+  avatar_external_image_id CHAR(36),
 
   FOREIGN KEY (artist_id) REFERENCES artist (id),
+  FOREIGN KEY (bio_external_image_id) REFERENCES external_image (id),
+  FOREIGN KEY (avatar_external_image_id) REFERENCES external_image (id),
 
   UNIQUE (artist_id)
 );
 
-CREATE INDEX index_artist_discovery_index_spotify_artist_id ON artist_discovery_index (spotify_artist_id);
-CREATE INDEX index_artist_discovery_index_music_brainz_artist_id ON artist_discovery_index (music_brainz_artist_id);
-CREATE INDEX index_artist_discovery_index_country_code ON artist_discovery_index (country_code);
+CREATE INDEX index_artist_discovery_spotify_artist_id ON artist_discovery (spotify_artist_id);
+CREATE INDEX index_artist_discovery_music_brainz_artist_id ON artist_discovery (music_brainz_artist_id);
+CREATE INDEX index_artist_discovery_country_code ON artist_discovery (country_code);
 
 CREATE INDEX index_song_creation_date ON song (creation_date);
 CREATE INDEX index_song_update_date_creation_date ON song (update_date, creation_date);
