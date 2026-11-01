@@ -26,16 +26,20 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
+import org.springframework.ai.model.tool.ToolCallLimitExceededException;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.tool.ToolCallback;
@@ -556,6 +560,113 @@ class DiscoveryTaskLlmExecutorTest {
         verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
         assertThat(task.getRawResponses()).containsExactly((Object) null);
         assertThat(cache).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldFailWhenToolCallingAdvisorStopsAtLimit(boolean totalLimit) {
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("browser_navigate").description("Open Spotify").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
+        DefaultToolCallingManager manager = DefaultToolCallingManager.builder()
+                .maxCallsPerTool(totalLimit ? 2 : 1).maxTotalToolCalls(totalLimit ? 1 : 2).build();
+        ChatClient client = ChatClient.builder(model).defaultTools(tool)
+                .defaultAdvisors(ToolCallingAdvisor.builder().toolCallingManager(manager).build()).build();
+        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
+                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
+        when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
+            prompts.add(invocation.getArgument(0));
+            return new ChatResponse(List.of(new Generation(AssistantMessage.builder()
+                    .toolCalls(List.of(new AssistantMessage.ToolCall("call-" + prompts.size(), "function", "browser_navigate", "{}")))
+                    .build())));
+        });
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, new ToolRequest("auto"), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            throw new AssertionError("A tool call limit response must not reach the response handler.");
+        })).isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(ToolCallLimitExceededException.FINISH_REASON)
+                .hasMessageContaining(totalLimit ? "Total tool call limit (1)" : "Tool call limit (1)");
+
+        verify(model, times(2)).call(any(Prompt.class));
+        verify(tool).call(anyString(), any());
+        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
+        verifyNoInteractions(logService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "toolCallLimitExceeded, false", "toolCallLimitExceeded, true",
+            "LENGTH, false", "LENGTH, true",
+            "CONTENT_FILTER, false", "CONTENT_FILTER, true"
+    })
+    void shouldRejectFailedCompletionDuringCollectionOrFormatting(String finishReason, boolean formattingFailure) {
+        String content = "{\"answer\":\"Incomplete data\"}";
+        ChatResponse failedResponse = new ChatResponse(List.of(new Generation(new AssistantMessage(content),
+                ChatGenerationMetadata.builder().finishReason(finishReason).build())));
+        if (formattingFailure) {
+            when(model.call(any(Prompt.class))).thenReturn(response("Collected data"), failedResponse);
+        } else {
+            when(model.call(any(Prompt.class))).thenReturn(failedResponse);
+        }
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            throw new AssertionError("A failed completion must not reach the response handler.");
+        })).isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessage("LLM call failed with finish reason '" + finishReason + "': " + content);
+
+        verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
+        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
+        verifyNoInteractions(logService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldRejectRefusalDuringCollectionOrFormattingEvenWithStopFinishReason(boolean formattingFailure) {
+        String refusal = "I cannot fulfill this request.";
+        ChatResponse refusedResponse = new ChatResponse(List.of(new Generation(AssistantMessage.builder()
+                .content("").properties(Map.of("refusal", refusal)).build(),
+                ChatGenerationMetadata.builder().finishReason("STOP").build())));
+        if (formattingFailure) {
+            when(model.call(any(Prompt.class))).thenReturn(response("Collected data"), refusedResponse);
+        } else {
+            when(model.call(any(Prompt.class))).thenReturn(refusedResponse);
+        }
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            throw new AssertionError("A refused completion must not reach the response handler.");
+        })).isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessage("LLM call refused: " + refusal);
+
+        verify(model, times(formattingFailure ? 2 : 1)).call(any(Prompt.class));
+        assertThat(task.getRawResponses()).containsExactly((Object) null);
+        verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
+        verifyNoInteractions(logService);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void shouldAcceptStopResponseWithoutRefusal(@Nullable String refusal) {
+        String content = "{\"answer\":\"Accepted data\"}";
+        ChatResponse acceptedResponse = new ChatResponse(List.of(new Generation(AssistantMessage.builder()
+                .content(content).properties(refusal != null ? Map.of("refusal", refusal) : Map.of()).build(),
+                ChatGenerationMetadata.builder().finishReason("STOP").build())));
+        when(model.call(any(Prompt.class))).thenReturn(acceptedResponse);
+
+        assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isEqualTo(content);
+
+        verify(model, times(2)).call(any(Prompt.class));
+        assertThat(cache).hasSize(1);
     }
 
     @Test

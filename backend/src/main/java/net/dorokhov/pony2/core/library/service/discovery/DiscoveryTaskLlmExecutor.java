@@ -24,6 +24,8 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -42,6 +44,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 public class DiscoveryTaskLlmExecutor {
+
+    private static final String FINISH_REASON_TOOL_CALL_LIMIT_EXCEEDED = "toolCallLimitExceeded";
+    private static final String FINISH_REASON_LENGTH = "LENGTH";
+    private static final String FINISH_REASON_CONTENT_FILTER = "CONTENT_FILTER";
+    private static final String METADATA_REFUSAL = "refusal";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -199,8 +206,8 @@ public class DiscoveryTaskLlmExecutor {
         List<Message> collectionMessages = new ArrayList<>(prompt.getInstructions());
         collectionMessages.add(new UserMessage("Collect all data needed to answer the request using the following JSON schema. "
                 + "Include all collected values in your final answer.\n\n" + responseSchema));
-        String collectedResponse = chatClient.call(toolsEnabled, spec -> spec.messages(collectionMessages)
-                .options(collectionOptions.clone()).call().content());
+        String collectedResponse = responseContent(chatClient.call(toolsEnabled, spec -> spec.messages(collectionMessages)
+                .options(collectionOptions.clone()).call().chatResponse()));
         jobSynchronizer.interruptDiscoveryIfStopped();
         if (collectedResponse == null || collectedResponse.isBlank()) {
             return collectedResponse;
@@ -222,10 +229,29 @@ public class DiscoveryTaskLlmExecutor {
                         + "Do not invent missing information, perform discovery, or call tools. Return only the JSON object."
                         + "\n\nJSON Schema:\n" + responseSchema),
                 new UserMessage(collectedResponse));
-        return chatClient.call(spec -> spec.messages(formattingMessages)
+        return responseContent(chatClient.call(spec -> spec.messages(formattingMessages)
                 .options(collectionOptions.clone().toolChoice("none")
                         .responseFormat(ResponseFormat.builder().jsonSchema(responseSchema).strict(true).build()))
-                .call().content());
+                .call().chatResponse()));
+    }
+
+    private @Nullable String responseContent(@Nullable ChatResponse response) {
+        Generation generation = response != null ? response.getResult() : null;
+        if (generation == null) {
+            return null;
+        }
+        String finishReason = generation.getMetadata().getFinishReason();
+        if (FINISH_REASON_TOOL_CALL_LIMIT_EXCEEDED.equals(finishReason) ||
+                FINISH_REASON_LENGTH.equals(finishReason) ||
+                FINISH_REASON_CONTENT_FILTER.equals(finishReason)) {
+            throw new IllegalStateException("LLM call failed with finish reason '" + finishReason + "': "
+                    + generation.getOutput().getText());
+        }
+        Object refusal = generation.getOutput().getMetadata().get(METADATA_REFUSAL);
+        if (refusal instanceof String refusalMessage && !refusalMessage.isBlank()) {
+            throw new IllegalStateException("LLM call refused: " + refusalMessage);
+        }
+        return generation.getOutput().getText();
     }
 
     private String responseSchema(Class<?> responseClass) {
