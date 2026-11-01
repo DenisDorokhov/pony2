@@ -160,6 +160,12 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
     Optional<LocalDateTime> findLatestCompletedCreationDateByAlbumIdAndType(String albumId, DiscoveryTaskType type, Limit limit);
 
     @Query("""
+            SELECT MAX(t.creationDate) FROM DiscoveryTask t
+            WHERE t.album.artist.id = :artistId AND t.type = MUSICBRAINZ_ALBUM_DATA AND t.status = COMPLETE
+            """)
+    Optional<LocalDateTime> findLatestCompletedMusicBrainzCreationDateByArtistId(String artistId);
+
+    @Query("""
             SELECT t FROM DiscoveryTask t
             WHERE t.song.id = :songId AND t.type = :type AND t.status = COMPLETE
             ORDER BY t.song.id, t.status, t.type, t.creationDate DESC, t.id DESC

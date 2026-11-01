@@ -1,6 +1,8 @@
 package net.dorokhov.pony2.core.library.repository;
 
 import net.dorokhov.pony2.IntegrationTest;
+import net.dorokhov.pony2.api.library.domain.Album;
+import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
@@ -39,6 +41,35 @@ class DiscoveryTaskRepositoryTest extends IntegrationTest {
     private DiscoveryJobService discoveryJobService;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private ArtistRepository artistRepository;
+    @Autowired
+    private AlbumRepository albumRepository;
+
+    @Test
+    void shouldFindNewestCompletedMusicBrainzDateAcrossArtistsAlbumsIncludingEmptyResults() {
+        Artist artist = artistRepository.save(new Artist().setName("Artist"));
+        Artist otherArtist = artistRepository.save(new Artist().setName("Other artist"));
+        Album first = albumRepository.save(new Album().setArtist(artist).setName("First"));
+        Album second = albumRepository.save(new Album().setArtist(artist).setName("Second"));
+        Album other = albumRepository.save(new Album().setArtist(otherArtist).setName("Other"));
+        DiscoveryJob job = saveJob();
+        assertThat(taskRepository.findLatestCompletedMusicBrainzCreationDateByArtistId(artist.getId())).isEmpty();
+        taskRepository.save(new DiscoveryTask().setJob(job).setAlbum(first).setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA)
+                .setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}"));
+        DiscoveryTask newest = taskRepository.save(new DiscoveryTask().setJob(job).setAlbum(second)
+                .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA).setStatus(DiscoveryTask.Status.COMPLETE));
+        for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.FAILED, DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
+            DiscoveryTask task = taskRepository.save(new DiscoveryTask().setJob(job).setAlbum(second)
+                    .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA).setStatus(status));
+            jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", newest.getCreationDate().plusDays(1), task.getId());
+        }
+        DiscoveryTask otherTask = taskRepository.save(new DiscoveryTask().setJob(job).setAlbum(other)
+                .setType(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA).setStatus(DiscoveryTask.Status.COMPLETE));
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?", newest.getCreationDate().plusDays(2), otherTask.getId());
+
+        assertThat(taskRepository.findLatestCompletedMusicBrainzCreationDateByArtistId(artist.getId())).contains(newest.getCreationDate());
+    }
 
     @Test
     void shouldPersistRawExchangesAsJsonAndSupportListUpdates() {

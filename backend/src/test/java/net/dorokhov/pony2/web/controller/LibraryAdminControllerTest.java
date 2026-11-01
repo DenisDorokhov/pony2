@@ -45,6 +45,8 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService.ALBUM_TASK_COUNT;
+import static net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService.ARTIST_TASK_COUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,8 +77,13 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
 
     @AfterEach
     public void tearDown() {
+        blockingObserver.unlock();
+        blockingDiscoveryObserver.unlock();
         scanJobService.removeObserver(blockingObserver);
         discoveryJobService.removeObserver(blockingDiscoveryObserver);
+        await().atMost(30, SECONDS).until(() ->
+                scanJobService.getCurrentScanJobProgress().isEmpty() &&
+                        discoveryJobService.getCurrentDiscoveryJobProgress().isEmpty());
         scanTestPlanExecutor.clean();
     }
 
@@ -239,8 +246,8 @@ public class LibraryAdminControllerTest extends InstallingIntegrationTest {
         };
         long tasksTotal = switch (type) {
             case FULL -> 0;
-            case ARTIST -> 2;
-            case ALBUM -> 1;
+            case ARTIST -> ARTIST_TASK_COUNT;
+            case ALBUM -> ALBUM_TASK_COUNT;
             case GENRE, SONG -> throw new UnsupportedOperationException();
         };
         discoveryJobService.addObserver(blockingDiscoveryObserver);

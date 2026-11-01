@@ -1,9 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -17,24 +13,21 @@ import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedExc
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Limit;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.TimeZone;
 
+import static net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService.ARTIST_TASK_COUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -77,8 +70,10 @@ class ArtistDiscoveryServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"0,true,true", "1,false,true", "2,false,false"})
-    public void shouldRetryOnlyMissingArtistTasks(long completedTasks, boolean artistRequired, boolean topTracksRequired) {
+    @CsvSource({"0,true,true,true,true", "1,false,true,true,true", "2,false,false,true,true",
+            "3,false,false,false,true", "4,false,false,false,false"})
+    public void shouldRetryOnlyMissingArtistTasks(long completedTasks, boolean artistRequired, boolean topTracksRequired,
+                                                 boolean bioImageRequired, boolean avatarImageRequired) {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist();
         artistTasks("artist1", completedTasks, LocalDateTime.now());
@@ -89,6 +84,10 @@ class ArtistDiscoveryServiceTest {
                 .hasSize(artistRequired ? 1 : 0);
         assertThat(executedTasks).filteredOn(type -> type == DiscoveryTaskType.SPOTIFY_TOP_TRACKS)
                 .hasSize(topTracksRequired ? 1 : 0);
+        assertThat(executedTasks).filteredOn(type -> type == DiscoveryTaskType.ARTIST_BIO_IMAGE)
+                .hasSize(bioImageRequired ? 1 : 0);
+        assertThat(executedTasks).filteredOn(type -> type == DiscoveryTaskType.ARTIST_AVATAR_IMAGE)
+                .hasSize(avatarImageRequired ? 1 : 0);
     }
 
     @Test
@@ -96,54 +95,130 @@ class ArtistDiscoveryServiceTest {
         LocalDateTime now = LocalDateTime.now();
         DiscoveryJob job = discoveryJob();
         Artist artist = artist().setUpdateDate(now.plusMinutes(1));
-        artistTasks("artist1", 2, now.plusMinutes(2));
+        artistTasks("artist1", ARTIST_TASK_COUNT, now.plusMinutes(2));
         when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                 "artist1", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.of(now));
 
         artistDiscoveryService.discoverIfUpdated(job, artist, List.of(), true, null);
 
-        assertThat(executedTasks).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
+        assertThat(executedTasks).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
+                DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DiscoveryTaskType.class, names = {"ARTIST_BIO_IMAGE", "ARTIST_AVATAR_IMAGE"})
+    void shouldRediscoverOutdatedImageIndependently(DiscoveryTaskType type) {
+        LocalDateTime now = LocalDateTime.now();
+        Artist artist = artist().setUpdateDate(now);
+        artistTasks(artist.getId(), ARTIST_TASK_COUNT, now.plusMinutes(1));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(artist.getId(), type, Limit.of(1)))
+                .thenReturn(Optional.of(now.minusMinutes(1)));
+
+        artistDiscoveryService.discoverIfUpdated(discoveryJob(), artist, List.of(), true, null);
+
+        assertThat(executedTasks).containsExactly(type);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"SPOTIFY_TOP_TRACKS,-1,false", "SPOTIFY_TOP_TRACKS,0,false", "SPOTIFY_TOP_TRACKS,1,true",
+            "ARTIST_BIO_IMAGE,-1,false", "ARTIST_BIO_IMAGE,0,false", "ARTIST_BIO_IMAGE,1,true",
+            "ARTIST_AVATAR_IMAGE,-1,false", "ARTIST_AVATAR_IMAGE,0,false", "ARTIST_AVATAR_IMAGE,1,true"})
+    void shouldRediscoverDependentTaskOnlyWhenSpotifyDataIsNewer(DiscoveryTaskType type, int minutesAfterImage, boolean required) {
+        LocalDateTime imageDate = LocalDateTime.now();
+        Artist artist = artist();
+        artistTasks(artist.getId(), ARTIST_TASK_COUNT, imageDate.plusMinutes(2));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(Optional.of(imageDate.plusMinutes(minutesAfterImage)));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(artist.getId(), type, Limit.of(1)))
+                .thenReturn(Optional.of(imageDate));
+
+        artistDiscoveryService.discoverIfUpdated(discoveryJob(), artist, List.of(), true, null);
+
+        assertThat(executedTasks).containsExactlyElementsOf(required ? List.of(type) : List.of());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"-1,false", "0,false", "1,true"})
+    void shouldRediscoverTopTracksOnlyWhenMusicBrainzDataIsNewer(int minutesAfterTopTracks, boolean required) {
+        LocalDateTime taskDate = LocalDateTime.now();
+        Artist artist = artist();
+        artistTasks(artist.getId(), ARTIST_TASK_COUNT, taskDate);
+        when(discoveryTaskRepository.findLatestCompletedMusicBrainzCreationDateByArtistId(artist.getId()))
+                .thenReturn(Optional.of(taskDate.plusMinutes(minutesAfterTopTracks)));
+
+        artistDiscoveryService.discoverIfUpdated(discoveryJob(), artist, List.of(), true, null);
+
+        assertThat(executedTasks).containsExactlyElementsOf(required ? List.of(DiscoveryTaskType.SPOTIFY_TOP_TRACKS) : List.of());
+    }
+
+    @Test
+    void shouldCheckTopTracksFreshnessAfterAlbumDiscovery() {
+        LocalDateTime taskDate = LocalDateTime.now();
+        DiscoveryJob job = discoveryJob();
+        Artist artist = artist();
+        Album album = album(artist);
+        artistTasks(artist.getId(), ARTIST_TASK_COUNT, taskDate);
+        doAnswer(invocation -> {
+            executedTasks.add(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
+            when(discoveryTaskRepository.findLatestCompletedMusicBrainzCreationDateByArtistId(artist.getId()))
+                    .thenReturn(Optional.of(taskDate.plusMinutes(1)));
+            return null;
+        }).when(albumDiscoveryService).discover(job, album, true, null);
+
+        artistDiscoveryService.discoverIfUpdated(job, artist, List.of(album), true, null);
+
+        assertThat(executedTasks).containsExactly(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
+    }
+
+    @Test
+    void shouldDiscoverImagesAfterAlbumsAndTopTracks() {
+        DiscoveryJob job = discoveryJob();
+        Artist artist = artist();
+        Album album = album(artist);
+        doAnswer(invocation -> {
+            executedTasks.add(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA);
+            return null;
+        }).when(albumDiscoveryService).discover(job, album, true, null);
+
+        artistDiscoveryService.discoverIfUpdated(job, artist, List.of(album), true, null);
+
+        assertThat(executedTasks).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
+                DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "SPOTIFY_ARTIST_DATA,-1,false", "SPOTIFY_ARTIST_DATA,0,false", "SPOTIFY_ARTIST_DATA,1,false",
-            "SPOTIFY_TOP_TRACKS,-1,true", "SPOTIFY_TOP_TRACKS,0,false", "SPOTIFY_TOP_TRACKS,1,false"
+            "SPOTIFY_ARTIST_DATA,-1,true", "SPOTIFY_ARTIST_DATA,0,false", "SPOTIFY_ARTIST_DATA,1,false",
+            "SPOTIFY_TOP_TRACKS,-1,true", "SPOTIFY_TOP_TRACKS,0,false", "SPOTIFY_TOP_TRACKS,1,false",
+            "ARTIST_BIO_IMAGE,-1,true", "ARTIST_BIO_IMAGE,0,false", "ARTIST_BIO_IMAGE,1,false",
+            "ARTIST_AVATAR_IMAGE,-1,true", "ARTIST_AVATAR_IMAGE,0,false", "ARTIST_AVATAR_IMAGE,1,false"
     })
-    public void shouldRediscoverOnlyTaskWhoseImplementationIsNewer(DiscoveryTaskType type, int minutesAfterUpdate,
-                                                                 boolean required) {
-        LocalDateTime implementedAt = LocalDateTime.ofInstant(DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow(),
-                ZoneId.systemDefault());
-        LocalDateTime taskDate = implementedAt.plusMinutes(minutesAfterUpdate);
+    public void shouldDiscoverArtistTaskOnlyWhenInputIsNewer(DiscoveryTaskType type, int minutesAfterInput,
+                                                             boolean required) {
+        LocalDateTime inputDate = LocalDateTime.of(2026, 1, 1, 12, 0);
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist().setCreationDate(implementedAt.minusDays(1));
-        artistTasks(artist.getId(), 2, implementedAt.plusMinutes(1));
+        Artist artist = artist().setCreationDate(inputDate.minusDays(1)).setUpdateDate(inputDate);
+        artistTasks(artist.getId(), ARTIST_TASK_COUNT, inputDate.plusMinutes(2));
+        when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(Optional.of(inputDate));
         when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(artist.getId(), type, Limit.of(1)))
-                .thenReturn(Optional.of(taskDate));
-        Logger logger = (Logger) LoggerFactory.getLogger(ArtistDiscoveryService.class);
-        Level previousLevel = logger.getLevel();
-        ListAppender<ILoggingEvent> appender = new ListAppender<>();
-        appender.start();
-        logger.addAppender(appender);
-        logger.setLevel(Level.DEBUG);
-        try {
-            artistDiscoveryService.discoverIfUpdated(job, artist, List.of(), true, null);
+                .thenReturn(Optional.of(inputDate.plusMinutes(minutesAfterInput)));
 
-            assertThat(executedTasks).containsExactlyElementsOf(required ? List.of(DiscoveryTaskType.SPOTIFY_TOP_TRACKS) : List.of());
-            assertThat(appender.list).hasSize(required ? 1 : 0);
-            if (required) {
-                assertThat(appender.list).singleElement().satisfies(event -> {
-                    assertThat(event.getLevel()).isEqualTo(Level.DEBUG);
-                    assertThat(event.getArgumentArray()).containsExactly(type, artist.getId(),
-                            DiscoveryTaskType.SPOTIFY_TOP_TRACKS.getImplementedAt().orElseThrow(), taskDate.atZone(ZoneId.systemDefault()).toInstant());
-                });
-            }
-        } finally {
-            logger.detachAppender(appender);
-            logger.setLevel(previousLevel);
-            appender.stop();
+        artistDiscoveryService.discoverIfUpdated(job, artist, List.of(), true, null);
+
+        List<DiscoveryTaskType> expectedTasks;
+        if (!required) {
+            expectedTasks = List.of();
+        } else if (type == DiscoveryTaskType.SPOTIFY_ARTIST_DATA) {
+            expectedTasks = List.of(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
+                    DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+        } else {
+            expectedTasks = List.of(type);
         }
+        assertThat(executedTasks).containsExactlyElementsOf(expectedTasks);
     }
 
     @ParameterizedTest
@@ -157,7 +232,7 @@ class ArtistDiscoveryServiceTest {
         if (outdated) {
             album.setUpdateDate(now.plusMinutes(1));
         }
-        artistTasks("artist1", 2L, now);
+        artistTasks("artist1", ARTIST_TASK_COUNT, now);
         if (exists) {
             albumTasks("album1", completedTasks, now);
         }
@@ -170,14 +245,13 @@ class ArtistDiscoveryServiceTest {
 
     @ParameterizedTest
     @CsvSource({"-1,true", "0,false", "1,false"})
-    public void shouldRediscoverAlbumOnlyWhenTaskImplementationIsNewer(int minutesAfterUpdate, boolean required) {
-        LocalDateTime implementedAt = LocalDateTime.ofInstant(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow(),
-                ZoneId.systemDefault());
+    public void shouldDiscoverAlbumOnlyWhenInputIsNewer(int minutesAfterInput, boolean required) {
+        LocalDateTime inputDate = LocalDateTime.of(2026, 1, 1, 12, 0);
         DiscoveryJob job = discoveryJob();
-        Artist artist = artist().setCreationDate(implementedAt.minusDays(1));
-        Album album = album(artist);
-        artistTasks(artist.getId(), 2, LocalDateTime.now());
-        albumTasks(album.getId(), 1, implementedAt.plusMinutes(minutesAfterUpdate));
+        Artist artist = artist().setCreationDate(inputDate.minusDays(1));
+        Album album = album(artist).setUpdateDate(inputDate);
+        artistTasks(artist.getId(), ARTIST_TASK_COUNT, inputDate.plusMinutes(2));
+        albumTasks(album.getId(), 1, inputDate.plusMinutes(minutesAfterInput));
 
         artistDiscoveryService.discoverIfUpdated(job, artist, List.of(album), true, null);
 
@@ -185,40 +259,12 @@ class ArtistDiscoveryServiceTest {
         assertThat(executedTasks).isEmpty();
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "UTC,-1,true", "UTC,0,false", "UTC,1,false",
-            "Europe/Berlin,-1,true", "Europe/Berlin,0,false", "Europe/Berlin,1,false",
-            "Pacific/Kiritimati,-1,true", "Pacific/Kiritimati,0,false", "Pacific/Kiritimati,1,false",
-            "Etc/GMT+12,-1,true", "Etc/GMT+12,0,false", "Etc/GMT+12,1,false"
-    })
-    @ResourceLock("java.util.TimeZone.default")
-    void shouldCompareImplementationInstantsInAnyTimeZone(String timeZoneId, int secondsAfterUpdate, boolean required) {
-        TimeZone previousTimeZone = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone(timeZoneId));
-        try {
-            Instant implementedAt = DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElseThrow();
-            LocalDateTime taskDate = LocalDateTime.ofInstant(implementedAt.plusSeconds(secondsAfterUpdate), ZoneId.systemDefault());
-            Artist artist = artist().setCreationDate(taskDate.minusDays(1));
-            Album album = album(artist);
-            artistTasks(artist.getId(), 2, taskDate.plusDays(1));
-            albumTasks(album.getId(), 1, taskDate);
-
-            artistDiscoveryService.discoverIfUpdated(discoveryJob(), artist, List.of(album), true, null);
-
-            verify(albumDiscoveryService, times(required ? 1 : 0)).discover(any(), eq(album), eq(true), isNull());
-            assertThat(executedTasks).isEmpty();
-        } finally {
-            TimeZone.setDefault(previousTimeZone);
-        }
-    }
-
     @Test
     public void shouldStopBeforeIncompleteAlbumWhenArtistIsComplete() {
         DiscoveryJob job = discoveryJob();
         Artist artist = artist();
         Album album = album(artist);
-        artistTasks("artist1", 2L, LocalDateTime.now());
+        artistTasks("artist1", ARTIST_TASK_COUNT, LocalDateTime.now());
         doThrow(new DiscoveryInterruptedException()).when(jobSynchronizer).interruptDiscoveryIfCancelled();
 
         assertThatThrownBy(() -> artistDiscoveryService.discoverIfUpdated(job, artist, List.of(album), true, null))
@@ -228,12 +274,13 @@ class ArtistDiscoveryServiceTest {
     }
 
     private void artistTasks(String artistId, long count, LocalDateTime date) {
-        lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
-                artistId, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
-                .thenReturn(count >= 1 ? Optional.of(date) : Optional.empty());
-        lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
-                artistId, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, Limit.of(1)))
-                .thenReturn(count >= 2 ? Optional.of(date) : Optional.empty());
+        List<DiscoveryTaskType> types = List.of(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
+                DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+        for (int i = 0; i < types.size(); i++) {
+            lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
+                    artistId, types.get(i), Limit.of(1)))
+                    .thenReturn(count > i ? Optional.of(date) : Optional.empty());
+        }
     }
 
     private void albumTasks(String albumId, long count, LocalDateTime date) {

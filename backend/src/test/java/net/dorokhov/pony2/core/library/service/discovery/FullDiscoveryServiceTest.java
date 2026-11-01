@@ -23,6 +23,8 @@ import java.util.function.Consumer;
 
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_DISCOVERY;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.FULL_DISCOVERY;
+import static net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService.ALBUM_TASK_COUNT;
+import static net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService.ARTIST_TASK_COUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -77,22 +79,25 @@ public class FullDiscoveryServiceTest {
         Artist second = artist("artist2");
         List<Album> firstAlbums = List.of(album("album1", first), album("album2", first));
         List<Album> secondAlbums = List.of(album("album3", second));
+        long firstTasksTotal = ARTIST_TASK_COUNT + (long) firstAlbums.size() * ALBUM_TASK_COUNT;
+        long secondTasksTotal = ARTIST_TASK_COUNT + (long) secondAlbums.size() * ALBUM_TASK_COUNT;
+        long tasksTotal = firstTasksTotal + secondTasksTotal;
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(first, second));
         when(albumRepository.count()).thenReturn(3L);
         when(albumRepository.findByArtistId("artist1")).thenReturn(firstAlbums);
         when(albumRepository.findByArtistId("artist2")).thenReturn(secondAlbums);
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(4);
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 4)));
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 4)));
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(4, 4)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, firstTasksTotal)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, firstTasksTotal)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(firstTasksTotal, firstTasksTotal)));
             return null;
         }).when(artistDiscoveryService).discoverIfUpdated(eq(job), eq(first), eq(firstAlbums), eq(true),
                 any());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(4);
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(2, 3)));
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(3, 3)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, secondTasksTotal)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(secondTasksTotal, secondTasksTotal)));
             return null;
         }).when(artistDiscoveryService).discoverIfUpdated(eq(job), eq(second), eq(secondAlbums), eq(true),
                 any());
@@ -102,10 +107,10 @@ public class FullDiscoveryServiceTest {
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getStep).containsOnly(FULL_DISCOVERY);
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 7), DiscoveryProgress.Value.of(0, 7),
-                DiscoveryProgress.Value.of(1, 7), DiscoveryProgress.Value.of(4, 7),
-                DiscoveryProgress.Value.of(4, 7), DiscoveryProgress.Value.of(6, 7),
-                DiscoveryProgress.Value.of(7, 7), DiscoveryProgress.Value.of(7, 7));
+                DiscoveryProgress.Value.of(0, tasksTotal), DiscoveryProgress.Value.of(0, tasksTotal),
+                DiscoveryProgress.Value.of(1, tasksTotal), DiscoveryProgress.Value.of(firstTasksTotal, tasksTotal),
+                DiscoveryProgress.Value.of(firstTasksTotal, tasksTotal), DiscoveryProgress.Value.of(firstTasksTotal + ARTIST_TASK_COUNT, tasksTotal),
+                DiscoveryProgress.Value.of(tasksTotal, tasksTotal), DiscoveryProgress.Value.of(tasksTotal, tasksTotal));
     }
 
     @Test
@@ -119,7 +124,7 @@ public class FullDiscoveryServiceTest {
                 .isInstanceOf(DiscoveryInterruptedException.class);
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
-                .containsExactly(DiscoveryProgress.Value.of(0, 2));
+                .containsExactly(DiscoveryProgress.Value.of(0, ARTIST_TASK_COUNT));
         verifyNoInteractions(artistDiscoveryService);
         verify(albumRepository, never()).findByArtistId(any());
         verify(taskRegistration).close();
@@ -134,7 +139,7 @@ public class FullDiscoveryServiceTest {
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(first, second));
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(4);
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 2)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, ARTIST_TASK_COUNT)));
             throw new DiscoveryInterruptedException();
         }).when(artistDiscoveryService).discoverIfUpdated(eq(job), eq(first), eq(List.of()), eq(true),
                 any());
@@ -144,7 +149,7 @@ public class FullDiscoveryServiceTest {
                 .isInstanceOf(DiscoveryInterruptedException.class);
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 4), DiscoveryProgress.Value.of(1, 4));
+                DiscoveryProgress.Value.of(0, 2L * ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(1, 2L * ARTIST_TASK_COUNT));
         verify(artistDiscoveryService, never()).discoverIfUpdated(eq(job), eq(second), anyList(), anyBoolean(), any());
         verify(taskRegistration).close();
     }
@@ -158,8 +163,8 @@ public class FullDiscoveryServiceTest {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(4);
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, null));
             observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(0, 0)));
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, 2)));
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(2, 2)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(1, ARTIST_TASK_COUNT)));
+            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT)));
             return null;
         }).when(artistDiscoveryService).discoverIfUpdated(eq(job), eq(artist), eq(List.of()), eq(true),
                 any());
@@ -168,8 +173,8 @@ public class FullDiscoveryServiceTest {
         fullDiscoveryService.discover(job, progressCalls::add);
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2),
-                DiscoveryProgress.Value.of(2, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(1, ARTIST_TASK_COUNT),
+                DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
     }
 
     @Test
@@ -182,7 +187,7 @@ public class FullDiscoveryServiceTest {
         fullDiscoveryService.discover(job, progressCalls::add);
 
         assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(
-                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(2, 2));
+                DiscoveryProgress.Value.of(0, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
         verify(artistDiscoveryService).discoverIfUpdated(eq(job), eq(artist), eq(List.of()), eq(true),
                 any());
     }

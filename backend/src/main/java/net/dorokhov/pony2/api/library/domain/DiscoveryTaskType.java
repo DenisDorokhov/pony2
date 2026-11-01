@@ -7,8 +7,11 @@ import java.util.Optional;
 
 public enum DiscoveryTaskType {
     SPOTIFY_ARTIST_DATA(true),
-    SPOTIFY_TOP_TRACKS(true, Instant.parse("2026-10-27T13:36:25Z")),
-    MUSICBRAINZ_ALBUM_DATA(false, Instant.parse("2026-10-28T15:46:56Z"));
+    SPOTIFY_TOP_TRACKS(true),
+    MUSICBRAINZ_ALBUM_DATA(false),
+    ARTIST_BIO_IMAGE(false),
+    ARTIST_AVATAR_IMAGE(false),
+    ;
 
     private final boolean toolsEnabled;
     private final Instant implementedAt;

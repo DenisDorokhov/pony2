@@ -191,7 +191,8 @@ class DiscoveryTaskLlmExecutorTest {
         });
 
         assertThat(result).isEqualTo("Accepted answer");
-        assertThat(toolsEnabledValues).hasSize(type.isToolsEnabled() ? 5 : 3).containsOnly(type != MUSICBRAINZ_ALBUM_DATA);
+        boolean expectedToolsEnabled = type == DiscoveryTaskType.SPOTIFY_ARTIST_DATA || type == DiscoveryTaskType.SPOTIFY_TOP_TRACKS;
+        assertThat(toolsEnabledValues).hasSize(expectedToolsEnabled ? 5 : 3).containsOnly(expectedToolsEnabled);
         assertThat(responses).isEmpty();
     }
 

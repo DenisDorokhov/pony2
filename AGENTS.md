@@ -9,6 +9,12 @@
 
 - Write all code comments, including JavaDoc, in English only.
 
+# Integration tests
+
+- Reuse the shared Spring application context provided by `IntegrationTest`.
+- Do not create additional Spring contexts with test-specific properties, profiles, configurations, `@TestPropertySource`, `@DynamicPropertySource`, `@MockitoBean`, `@MockitoSpyBean`, or `@DirtiesContext`.
+- Use test-local collaborators when different configuration or mocks are needed. Restore any temporarily modified shared state after each test.
+
 # Styles
 
 - Prefer local component styles over changes in global stylesheets.
