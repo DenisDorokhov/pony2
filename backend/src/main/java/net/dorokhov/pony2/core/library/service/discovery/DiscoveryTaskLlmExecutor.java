@@ -46,7 +46,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class DiscoveryTaskLlmExecutor {
 
     private static final String FINISH_REASON_TOOL_CALL_LIMIT_EXCEEDED = "toolCallLimitExceeded";
-    private static final String FINISH_REASON_LENGTH = "LENGTH";
     private static final String FINISH_REASON_CONTENT_FILTER = "CONTENT_FILTER";
     private static final String METADATA_REFUSAL = "refusal";
 
@@ -242,7 +241,6 @@ public class DiscoveryTaskLlmExecutor {
         }
         String finishReason = generation.getMetadata().getFinishReason();
         if (FINISH_REASON_TOOL_CALL_LIMIT_EXCEEDED.equals(finishReason) ||
-                FINISH_REASON_LENGTH.equals(finishReason) ||
                 FINISH_REASON_CONTENT_FILTER.equals(finishReason)) {
             throw new IllegalStateException("LLM call failed with finish reason '" + finishReason + "': "
                     + generation.getOutput().getText());

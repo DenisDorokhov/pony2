@@ -603,7 +603,6 @@ class DiscoveryTaskLlmExecutorTest {
     @ParameterizedTest
     @CsvSource({
             "toolCallLimitExceeded, false", "toolCallLimitExceeded, true",
-            "LENGTH, false", "LENGTH, true",
             "CONTENT_FILTER, false", "CONTENT_FILTER, true"
     })
     void shouldRejectFailedCompletionDuringCollectionOrFormatting(String finishReason, boolean formattingFailure) {
@@ -654,13 +653,15 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = " ")
-    void shouldAcceptStopResponseWithoutRefusal(@Nullable String refusal) {
+    @CsvSource({
+            "STOP,", "STOP, ''", "STOP, ' '",
+            "LENGTH,", "LENGTH, ''", "LENGTH, ' '"
+    })
+    void shouldAcceptResponseWithoutRefusal(String finishReason, @Nullable String refusal) {
         String content = "{\"answer\":\"Accepted data\"}";
         ChatResponse acceptedResponse = new ChatResponse(List.of(new Generation(AssistantMessage.builder()
                 .content(content).properties(refusal != null ? Map.of("refusal", refusal) : Map.of()).build(),
-                ChatGenerationMetadata.builder().finishReason("STOP").build())));
+                ChatGenerationMetadata.builder().finishReason(finishReason).build())));
         when(model.call(any(Prompt.class))).thenReturn(acceptedResponse);
 
         assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
