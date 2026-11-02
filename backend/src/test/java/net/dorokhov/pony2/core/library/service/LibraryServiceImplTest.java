@@ -207,7 +207,7 @@ public class LibraryServiceImplTest {
         }
 
         assertThat(libraryService.getArtistDiscoveryData("artist"))
-                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first"), null, null));
+                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first"), null));
     }
 
     @Test

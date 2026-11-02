@@ -113,12 +113,10 @@ public class LibraryServiceImpl implements LibraryService {
                     .toList();
         }
         ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artistId).orElse(null);
-        ExternalImage bioExternalImage = discovery != null ? discovery.getBioExternalImage() : null;
         ExternalImage avatarExternalImage = discovery != null ? discovery.getAvatarExternalImage() : null;
         return Optional.of(new ArtistDiscoveryData(
                 discovery != null ? discovery.getCountryCode() : null,
                 topSongIds,
-                bioExternalImage != null ? bioExternalImage.getId() : null,
                 avatarExternalImage != null ? avatarExternalImage.getId() : null));
     }
 

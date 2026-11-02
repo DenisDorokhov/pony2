@@ -346,7 +346,6 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         ArtistSongsDto artistSongs = requireNonNull(response.getBody());
         assertThat(artistSongs.getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
-        assertThat(artistSongs.getArtist().getDiscoveryData().getBioExternalImageId()).isEqualTo(externalImage.getId());
         assertThat(artistSongs.getArtist().getDiscoveryData().getAvatarExternalImageId()).isEqualTo(externalImage.getId());
         assertThat(artistSongs.getArtist().getDiscoveryData().getTopSongIds())
                 .containsExactly(song1_1_2.getId(), song1_2_1.getId(), song1_1_1.getId());

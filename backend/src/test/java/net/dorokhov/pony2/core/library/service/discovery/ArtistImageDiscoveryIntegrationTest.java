@@ -92,6 +92,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
 
     private static final HttpServer proxyServer = createProxyServer();
     private final SpotifyArtistDataService spotifyArtistDataService = mock(SpotifyArtistDataService.class);
+    private final ArtistBioImageFacesService artistBioImageFacesService = mock(ArtistBioImageFacesService.class);
     private final AtomicInteger downloads = new AtomicInteger();
     private final AtomicBoolean cancelDownload = new AtomicBoolean();
     private final AtomicBoolean missingImageAvailable = new AtomicBoolean();
@@ -137,7 +138,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         ExternalImageStorage imageStorage = new ExternalImageStorage(externalImageRepository, fileTypeResolver,
                 externalImageFolder, URI.create("http://127.0.0.1:" + proxyServer.getAddress().getPort()));
         service = new ArtistDiscoveryService(taskArtistDiscoveryRepository, albumRepository, taskRepository, resultReader,
-                spotifyArtistDataService, spotifyTopTracksService, albumDiscoveryService, imageStorage, logService,
+                spotifyArtistDataService, spotifyTopTracksService, albumDiscoveryService, imageStorage, artistBioImageFacesService, logService,
                 taskExecutor, jobSynchronizer, transactionManager);
         when(spotifyArtistDataService.discover(any(), anyBoolean())).thenReturn(artistData("/bio", "/avatar"));
     }
@@ -173,11 +174,12 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)))
                 .extracting(DiscoveryTask::getType).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                        DiscoveryTaskType.SPOTIFY_TOP_TRACKS, ARTIST_BIO_IMAGE, ARTIST_AVATAR_IMAGE);
-        assertThat(downloadingTasks).containsExactly(ARTIST_BIO_IMAGE, ARTIST_AVATAR_IMAGE);
+                        DiscoveryTaskType.SPOTIFY_TOP_TRACKS, ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
+        assertThat(downloadingTasks).containsExactly(ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE);
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(1, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(2, ARTIST_TASK_COUNT),
-                DiscoveryProgress.Value.of(3, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
+                DiscoveryProgress.Value.of(3, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(4, ARTIST_TASK_COUNT),
+                DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
         for (DiscoveryTaskType type : List.of(ARTIST_BIO_IMAGE, ARTIST_AVATAR_IMAGE)) {
             ExternalImageFile image = image(type);
             assertThat(Files.readAllBytes(image.getFile().toPath())).isEqualTo(content);

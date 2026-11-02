@@ -111,6 +111,7 @@ $dropdown-min-width: 100px;
   --color-task-musicbrainz-album-data: #08716f;
   --color-task-artist-bio-image: #9a5b00;
   --color-task-artist-avatar-image: #a73555;
+  --color-task-artist-bio-image-faces: #3f6f12;
 
   .btn-light {
     --bs-btn-color: var(--bs-body-color);
@@ -181,6 +182,7 @@ $dropdown-min-width: 100px;
   --color-task-musicbrainz-album-data: #62d5ce;
   --color-task-artist-bio-image: #f4c16b;
   --color-task-artist-avatar-image: #ff9eb5;
+  --color-task-artist-bio-image-faces: #b0d85a;
 
   .btn-light {
     --bs-btn-color: var(--bs-body-color);
@@ -231,6 +233,10 @@ $dropdown-min-width: 100px;
 
 .discovery-task-type[data-task-type="ARTIST_AVATAR_IMAGE"] {
   color: var(--color-task-artist-avatar-image);
+}
+
+.discovery-task-type[data-task-type="ARTIST_BIO_IMAGE_FACES"] {
+  color: var(--color-task-artist-bio-image-faces);
 }
 
 .dropdown-menu {

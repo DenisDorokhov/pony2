@@ -59,7 +59,6 @@ export interface ArtistSongsDto {
 export interface ArtistDiscoveryDataDto {
   countryCode: string | undefined;
   topSongIds: string[];
-  bioExternalImageId: string | undefined;
   avatarExternalImageId: string | undefined;
 }
 
@@ -308,8 +307,9 @@ export enum DiscoveryTaskType {
   SPOTIFY_ARTIST_DATA = 'SPOTIFY_ARTIST_DATA',
   SPOTIFY_TOP_TRACKS = 'SPOTIFY_TOP_TRACKS',
   MUSICBRAINZ_ALBUM_DATA = 'MUSICBRAINZ_ALBUM_DATA',
-  ARTIST_BIO_IMAGE = 'ARTIST_BIO_IMAGE',
   ARTIST_AVATAR_IMAGE = 'ARTIST_AVATAR_IMAGE',
+  ARTIST_BIO_IMAGE = 'ARTIST_BIO_IMAGE',
+  ARTIST_BIO_IMAGE_FACES = 'ARTIST_BIO_IMAGE_FACES',
 }
 
 export enum DiscoveryTaskResultFilter {

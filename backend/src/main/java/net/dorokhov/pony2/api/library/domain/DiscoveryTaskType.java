@@ -9,8 +9,9 @@ public enum DiscoveryTaskType {
     SPOTIFY_ARTIST_DATA(true),
     SPOTIFY_TOP_TRACKS(true),
     MUSICBRAINZ_ALBUM_DATA(false),
-    ARTIST_BIO_IMAGE(false),
     ARTIST_AVATAR_IMAGE(false),
+    ARTIST_BIO_IMAGE(false),
+    ARTIST_BIO_IMAGE_FACES(false),
     ;
 
     private final boolean toolsEnabled;

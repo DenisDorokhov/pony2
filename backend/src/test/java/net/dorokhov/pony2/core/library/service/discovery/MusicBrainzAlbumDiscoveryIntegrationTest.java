@@ -1592,7 +1592,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(tasks).hasSize(total).allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         assertThat(tasks).extracting(DiscoveryTask::getType).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
                 DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
-                DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+                DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
         getTransactionTemplate().executeWithoutResult(status -> {
             assertThat(artistTasks()).hasSize(ARTIST_TASK_COUNT);
             assertThat(taskRepository.findAll().stream().filter(value -> value.getAlbum() != null))
@@ -1804,7 +1804,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"0,1", "3,2", "5,5"})
+    @CsvSource({"0,1", "4,2", "6,5"})
     void shouldCancelFullDiscoveryWhenAllPartsAreAlreadyComplete(long completedTasksBeforeCancellation, int expectedProgressCalls) {
         enableLlm();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
@@ -1831,10 +1831,10 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
-            "INTERRUPTED,-1,1,4", "INTERRUPTED,0,0,5", "INTERRUPTED,1,0,4",
-            "INTERRUPTED,2,-1,4", "INTERRUPTED,2,0,4", "INTERRUPTED,2,1,2",
-            "INTERRUPTED,3,1,1", "INTERRUPTED,4,1,0",
-            "MODERATE,1,1,3", "MODERATE,4,0,2", "COMPLETE,4,1,0"
+            "INTERRUPTED,-1,1,5", "INTERRUPTED,0,0,6", "INTERRUPTED,1,0,5",
+            "INTERRUPTED,2,-1,5", "INTERRUPTED,2,0,5", "INTERRUPTED,2,1,3",
+            "INTERRUPTED,3,1,2", "INTERRUPTED,4,1,1", "INTERRUPTED,5,1,0",
+            "MODERATE,1,1,4", "MODERATE,5,0,2", "COMPLETE,5,1,0"
     })
     void shouldResumeFullDiscoveryByCompletedTaskCounts(DiscoveryJob.Status previousStatus, int artistTasks,
                                                        int albumTasks, int expectedNewTasks) {
@@ -1865,6 +1865,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         task(previousJob, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, incompleteStatus);
         task(previousJob, DiscoveryTaskType.ARTIST_BIO_IMAGE, incompleteStatus);
         task(previousJob, DiscoveryTaskType.ARTIST_AVATAR_IMAGE, incompleteStatus);
+        task(previousJob, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES, incompleteStatus);
         task(previousJob, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, incompleteStatus);
         search(List.of());
         doAnswer(invocation -> {
@@ -1876,7 +1877,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         fullDiscoveryService.discover(nextJob, false, null);
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(4);
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(ARTIST_TASK_COUNT);
     }
 
     @Test
@@ -1920,7 +1921,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"true,false,4", "false,true,2", "true,true,5"})
+    @CsvSource({"true,false,5", "false,true,2", "true,true,6"})
     void shouldRetryOutdatedPartsOfFullDiscovery(boolean artistUpdated, boolean albumUpdated, int expectedNewTasks) {
         enableLlm();
         notFoundResponses();
@@ -1988,7 +1989,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             albumService.discover(nextJob, album, false, null);
         }
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(type == DiscoveryType.ARTIST ? 5 : 1);
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(type == DiscoveryType.ARTIST ? TASKS_WITH_ONE_ALBUM : 1);
     }
 
     @Test
@@ -2061,7 +2062,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         fullDiscoveryService.discover(nextJob, false, null);
 
-        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(4);
+        assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(ARTIST_TASK_COUNT);
         assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get().satisfies(index -> {
             assertThat(index.getMusicBrainzArtistId()).isEqualTo("artist");
             assertThat(index.getCountryCode()).isEqualTo("US");
@@ -2145,7 +2146,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getSpotifyArtistId()).isNull();
             assertThat(index.getUpdateDate()).isNotNull();
         });
-        assertThat(taskRepository.findAll()).hasSize(6)
+        assertThat(taskRepository.findAll()).hasSize(ARTIST_TASK_COUNT + 2 * ALBUM_TASK_COUNT)
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
@@ -2184,7 +2185,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         artistService.discoverIfUpdated(job(DiscoveryType.FULL), artist, List.of(album), false, null);
 
-        assertThat(taskRepository.findAll()).hasSize(7);
+        assertThat(taskRepository.findAll()).hasSize(ARTIST_TASK_COUNT + 3 * ALBUM_TASK_COUNT);
         assertThat(taskRepository.findLatestCompletedByAlbumIdAndType(album.getId(),
                 DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, org.springframework.data.domain.Limit.of(1))).get()
                 .extracting(task -> task.getJob().getId()).isEqualTo(otherJob.getId());
@@ -2258,7 +2259,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getCountryCode()).isEqualTo("US");
             assertThat(index.getUpdateDate()).isNotNull();
         });
-        assertThat(taskRepository.findAll()).hasSize(6);
+        assertThat(taskRepository.findAll()).hasSize(ARTIST_TASK_COUNT + 2 * ALBUM_TASK_COUNT);
         verify(session).getArtist("artist");
     }
 
@@ -2275,7 +2276,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(index.getCountryCode()).isEqualTo("DE");
             assertThat(index.getUpdateDate()).isNull();
         });
-        assertThat(taskRepository.findAll()).hasSize(4)
+        assertThat(taskRepository.findAll()).hasSize(ARTIST_TASK_COUNT)
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
@@ -2901,10 +2902,13 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             task(job, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTask.Status.COMPLETE);
         }
         if (artistTasks >= 3) {
-            task(job, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTask.Status.COMPLETE);
+            task(job, DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTask.Status.COMPLETE);
         }
         if (artistTasks >= 4) {
-            task(job, DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTask.Status.COMPLETE);
+            task(job, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTask.Status.COMPLETE);
+        }
+        if (artistTasks >= 5) {
+            task(job, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES, DiscoveryTask.Status.COMPLETE);
         }
     }
 

@@ -43,8 +43,9 @@ public class ArtistDiscoveryService {
     private static final Set<DiscoveryTaskType> ARTIST_TASK_TYPES = Set.of(
             DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
             DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
+            DiscoveryTaskType.ARTIST_AVATAR_IMAGE,
             DiscoveryTaskType.ARTIST_BIO_IMAGE,
-            DiscoveryTaskType.ARTIST_AVATAR_IMAGE
+            DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES
     );
 
     public static final int ARTIST_TASK_COUNT = ARTIST_TASK_TYPES.size();
@@ -59,6 +60,7 @@ public class ArtistDiscoveryService {
     private final SpotifyTopTracksService spotifyTopTracksService;
     private final AlbumDiscoveryService albumDiscoveryService;
     private final ExternalImageStorage externalImageStorage;
+    private final ArtistBioImageFacesService artistBioImageFacesService;
     private final LogService logService;
     private final DiscoveryTaskExecutor taskExecutor;
     private final LibraryJobSynchronizer jobSynchronizer;
@@ -73,6 +75,7 @@ public class ArtistDiscoveryService {
             SpotifyTopTracksService spotifyTopTracksService,
             AlbumDiscoveryService albumDiscoveryService,
             ExternalImageStorage externalImageStorage,
+            ArtistBioImageFacesService artistBioImageFacesService,
             LogService logService,
             DiscoveryTaskExecutor taskExecutor,
             LibraryJobSynchronizer jobSynchronizer,
@@ -86,6 +89,7 @@ public class ArtistDiscoveryService {
         this.spotifyTopTracksService = spotifyTopTracksService;
         this.albumDiscoveryService = albumDiscoveryService;
         this.externalImageStorage = externalImageStorage;
+        this.artistBioImageFacesService = artistBioImageFacesService;
         this.logService = logService;
         this.taskExecutor = taskExecutor;
         this.jobSynchronizer = jobSynchronizer;
@@ -108,7 +112,11 @@ public class ArtistDiscoveryService {
         EnumSet<DiscoveryTaskType> taskTypes = EnumSet.copyOf(ARTIST_TASK_TYPES);
         if (!shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA)) {
             taskTypes.remove(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
-            taskTypes.removeIf(type -> type != DiscoveryTaskType.SPOTIFY_TOP_TRACKS && !shouldDiscoverArtistTask(artist, type));
+            taskTypes.removeIf(type -> type != DiscoveryTaskType.SPOTIFY_TOP_TRACKS &&
+                    type != DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES && !shouldDiscoverArtistTask(artist, type));
+            if (!taskTypes.contains(DiscoveryTaskType.ARTIST_BIO_IMAGE) && !artistBioImageFacesService.shouldDiscover(artist)) {
+                taskTypes.remove(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
+            }
         }
         discover(discoveryJob, artist, cacheEnabled, albums, taskTypes, album -> {
             jobSynchronizer.interruptDiscoveryIfCancelled();
@@ -184,12 +192,18 @@ public class ArtistDiscoveryService {
             }
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
+        if (taskTypes.contains(DiscoveryTaskType.ARTIST_AVATAR_IMAGE)) {
+            taskExecutor.execute(new ArtistImageTaskExecution(discoveryJob, artist, DiscoveryTaskType.ARTIST_AVATAR_IMAGE));
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+        }
         if (taskTypes.contains(DiscoveryTaskType.ARTIST_BIO_IMAGE)) {
             taskExecutor.execute(new ArtistImageTaskExecution(discoveryJob, artist, DiscoveryTaskType.ARTIST_BIO_IMAGE));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
-        if (taskTypes.contains(DiscoveryTaskType.ARTIST_AVATAR_IMAGE)) {
-            taskExecutor.execute(new ArtistImageTaskExecution(discoveryJob, artist, DiscoveryTaskType.ARTIST_AVATAR_IMAGE));
+        if (taskTypes.contains(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES)) {
+            if (taskTypes.contains(DiscoveryTaskType.SPOTIFY_ARTIST_DATA) || artistBioImageFacesService.shouldDiscover(artist)) {
+                taskExecutor.execute(new ArtistBioImageFacesTaskExecution(discoveryJob, artist, cacheEnabled));
+            }
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
     }
@@ -381,5 +395,33 @@ public class ArtistDiscoveryService {
     }
 
     private record ArtistImageResult(String externalImageId, String sourceUri) {
+    }
+
+    private class ArtistBioImageFacesTaskExecution implements DiscoveryTaskExecution<ArtistBioImageFacesService.Result> {
+
+        private final DiscoveryJob job;
+        private final Artist artist;
+        private final boolean cacheEnabled;
+
+        private ArtistBioImageFacesTaskExecution(DiscoveryJob job, Artist artist, boolean cacheEnabled) {
+            this.job = job;
+            this.artist = artist;
+            this.cacheEnabled = cacheEnabled;
+        }
+
+        @Override
+        public DiscoveryTask startTask() {
+            return ArtistDiscoveryService.this.startTask(job, artist, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
+        }
+
+        @Override
+        public @Nullable ArtistBioImageFacesService.Result executeTask(DiscoveryTask task) {
+            return artistBioImageFacesService.discover(task, cacheEnabled);
+        }
+
+        @Override
+        public void onError(DiscoveryTask task, Throwable error) {
+            logService.error(logger, "Could not detect biography image faces for artist '{}'.", artist.getName(), error);
+        }
     }
 }

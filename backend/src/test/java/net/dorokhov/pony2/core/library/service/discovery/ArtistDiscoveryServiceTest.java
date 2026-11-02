@@ -50,6 +50,8 @@ class ArtistDiscoveryServiceTest {
     @Mock
     private AlbumDiscoveryService albumDiscoveryService;
     @Mock
+    private ArtistBioImageFacesService artistBioImageFacesService;
+    @Mock
     private DiscoveryTaskExecutor taskExecutor;
     @Mock
     private LibraryJobSynchronizer jobSynchronizer;
@@ -71,7 +73,7 @@ class ArtistDiscoveryServiceTest {
 
     @ParameterizedTest
     @CsvSource({"0,true,true,true,true", "1,false,true,true,true", "2,false,false,true,true",
-            "3,false,false,false,true", "4,false,false,false,false"})
+            "3,false,false,true,false", "4,false,false,false,false"})
     public void shouldRetryOnlyMissingArtistTasks(long completedTasks, boolean artistRequired, boolean topTracksRequired,
                                                  boolean bioImageRequired, boolean avatarImageRequired) {
         DiscoveryJob job = discoveryJob();
@@ -103,7 +105,7 @@ class ArtistDiscoveryServiceTest {
         artistDiscoveryService.discoverIfUpdated(job, artist, List.of(), true, null);
 
         assertThat(executedTasks).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
-                DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+                DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
     }
 
     @ParameterizedTest
@@ -185,7 +187,8 @@ class ArtistDiscoveryServiceTest {
         artistDiscoveryService.discoverIfUpdated(job, artist, List.of(album), true, null);
 
         assertThat(executedTasks).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
-                DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+                DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE,
+                DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
     }
 
     @ParameterizedTest
@@ -214,7 +217,7 @@ class ArtistDiscoveryServiceTest {
             expectedTasks = List.of();
         } else if (type == DiscoveryTaskType.SPOTIFY_ARTIST_DATA) {
             expectedTasks = List.of(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
-                    DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+                    DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
         } else {
             expectedTasks = List.of(type);
         }
@@ -275,7 +278,7 @@ class ArtistDiscoveryServiceTest {
 
     private void artistTasks(String artistId, long count, LocalDateTime date) {
         List<DiscoveryTaskType> types = List.of(DiscoveryTaskType.SPOTIFY_ARTIST_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
-                DiscoveryTaskType.ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_AVATAR_IMAGE);
+                DiscoveryTaskType.ARTIST_AVATAR_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE);
         for (int i = 0; i < types.size(); i++) {
             lenient().when(discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                     artistId, types.get(i), Limit.of(1)))

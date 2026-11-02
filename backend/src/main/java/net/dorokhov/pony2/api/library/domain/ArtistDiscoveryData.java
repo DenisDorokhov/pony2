@@ -7,6 +7,5 @@ import java.util.List;
 public record ArtistDiscoveryData(
         @Nullable String countryCode,
         List<String> topSongIds,
-        @Nullable String bioExternalImageId,
         @Nullable String avatarExternalImageId
 ) {}

@@ -296,17 +296,13 @@ export class ArtistDiscoveryData {
 
   countryCode: string | undefined;
   topSongIds: string[];
-  bioExternalImageId: string | undefined;
   avatarExternalImageId: string | undefined;
-  bioExternalImageUrl: string | undefined;
   avatarExternalImageUrl: string | undefined;
 
   constructor(dto: ArtistDiscoveryDataDto | undefined) {
     this.countryCode = dto?.countryCode;
     this.topSongIds = dto?.topSongIds ?? [];
-    this.bioExternalImageId = dto?.bioExternalImageId;
     this.avatarExternalImageId = dto?.avatarExternalImageId;
-    this.bioExternalImageUrl = this.bioExternalImageId ? '/api/file/externalImage/' + this.bioExternalImageId : undefined;
     this.avatarExternalImageUrl = this.avatarExternalImageId ? '/api/file/externalImage/' + this.avatarExternalImageId : undefined;
   }
 }
