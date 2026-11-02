@@ -225,8 +225,8 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(avatar.getFile()).exists();
         assertThat(downloads.get()).isEqualTo(2);
         assertThat(externalImageRepository.count()).isEqualTo(2);
-        assertNoImageResult(ARTIST_BIO_IMAGE);
-        assertNoImageResult(ARTIST_AVATAR_IMAGE);
+        assertImageResult(ARTIST_BIO_IMAGE, bio);
+        assertImageResult(ARTIST_AVATAR_IMAGE, avatar);
     }
 
     private void assertNoImageResult(DiscoveryTaskType type) {
@@ -279,7 +279,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(externalImageRepository.existsById(previous.getExternalImage().getId())).isFalse();
         assertThat(image(otherType).getExternalImage().getId()).isEqualTo(other.getExternalImage().getId());
         assertThat(other.getFile()).exists();
-        assertNoImageResult(otherType);
+        assertImageResult(otherType, other);
         assertThat(downloads.get()).isEqualTo(3);
         assertThat(externalImageRepository.count()).isEqualTo(2);
     }
@@ -371,7 +371,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(latestTask(ARTIST_BIO_IMAGE).getResult()).contains("Could not save image index");
         assertThat(image(ARTIST_BIO_IMAGE).getExternalImage().getId()).isEqualTo(previous.getExternalImage().getId());
         assertThat(previous.getFile()).exists();
-        assertNoImageResult(ARTIST_AVATAR_IMAGE);
+        assertImageResult(ARTIST_AVATAR_IMAGE, image(ARTIST_AVATAR_IMAGE));
         assertThat(externalImageRepository.count()).isEqualTo(2);
         assertImageFileCount(2);
     }

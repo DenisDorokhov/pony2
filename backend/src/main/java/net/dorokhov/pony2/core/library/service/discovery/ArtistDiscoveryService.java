@@ -341,7 +341,7 @@ public class ArtistDiscoveryService {
                     ? (type == DiscoveryTaskType.ARTIST_BIO_IMAGE ? artistDiscovery.getBioExternalImage() : artistDiscovery.getAvatarExternalImage())
                     : null;
             if (previousImage != null && previousImage.getSourceUri().toString().equals(result)) {
-                discoveryTaskRepository.save(task.setResult(null));
+                discoveryTaskRepository.save(task.setResult(JsonConverter.toJson(new ArtistImageResult(previousImage.getId(), result))));
                 return;
             }
             if (previousImage == null && result == null) {
