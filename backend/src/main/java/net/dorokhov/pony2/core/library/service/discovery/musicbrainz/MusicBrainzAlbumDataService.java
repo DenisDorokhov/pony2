@@ -81,32 +81,13 @@ public class MusicBrainzAlbumDataService {
         jobSynchronizer.interruptDiscoveryIfStopped();
         String albumId = requireNonNull(task.getAlbum(),
                 () -> "Discovery task '" + task.getId() + "' has no associated album.").getId();
-        AlbumInput input = transactionTemplate.execute(status -> {
-            Album album = albumRepository.findById(albumId).orElseThrow();
-            String title = album.getName();
-            String artistName = album.getArtist().getName();
-            if (title == null || title.isBlank() || artistName == null || artistName.isBlank()) {
-                return null;
-            }
-            return new AlbumInput(title, album.getYear(), artistName);
-        });
+        AlbumInput input = loadAlbumInput(albumId);
         if (input == null) {
             logger.debug("Skipping MusicBrainz discovery for album '{}': album title or artist name is unavailable.", albumId);
             return null;
         }
         String userAgent = "pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (" + userService.getMainAdmin().getEmail() + ")";
-        MusicBrainzClient.ExchangeObserver observer = new MusicBrainzClient.ExchangeObserver() {
-            @Override
-            public void onRequest(String url) {
-                jobSynchronizer.interruptDiscoveryIfStopped();
-                exchangeRecorder.startExchange(task, url);
-            }
-
-            @Override
-            public void onResponse(String url, String response) {
-                exchangeRecorder.completeExchange(task, url, response);
-            }
-        };
+        MusicBrainzClient.ExchangeObserver observer = createExchangeObserver(task);
         try (
                 MusicBrainzClient.Session session = client.openSession(userAgent, observer, cacheEnabled);
                 LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(session::cancel)
@@ -136,52 +117,93 @@ public class MusicBrainzAlbumDataService {
         }
     }
 
+    private @Nullable AlbumInput loadAlbumInput(String albumId) {
+        return transactionTemplate.execute(status -> {
+            Album album = albumRepository.findById(albumId).orElseThrow();
+            String title = album.getName();
+            String artistName = album.getArtist().getName();
+            if (title == null || title.isBlank() || artistName == null || artistName.isBlank()) {
+                return null;
+            }
+            return new AlbumInput(title, album.getYear(), artistName);
+        });
+    }
+
+    private MusicBrainzClient.ExchangeObserver createExchangeObserver(DiscoveryTask task) {
+        return new MusicBrainzClient.ExchangeObserver() {
+            @Override
+            public void onRequest(String url) {
+                jobSynchronizer.interruptDiscoveryIfStopped();
+                exchangeRecorder.startExchange(task, url);
+            }
+
+            @Override
+            public void onResponse(String url, String response) {
+                exchangeRecorder.completeExchange(task, url, response);
+            }
+        };
+    }
+
     private @Nullable ReleaseGroupSelection findReleaseGroup(
             DiscoveryTask task, MusicBrainzClient.Session session, AlbumInput input, boolean cacheEnabled
     ) {
         String query = "release:\"" + escapeQuery(input.title()) + "\" AND artistname:\"" + escapeQuery(normalizeArtistName(input.artistName())) + "\"";
-        MusicBrainzClient.ReleaseGroupSearchResult searchResult = session.searchReleaseGroups(query);
+        MusicBrainzClient.ReleaseGroupSearchResult initialSearchResult = session.searchReleaseGroups(query);
         jobSynchronizer.interruptDiscoveryIfStopped();
-        if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+        if (isSearchResponseTooLarge(input, initialSearchResult.rawResponse())) {
             return null;
         }
         NormalizationResponse normalization = null;
-        if (searchResult.groups().isEmpty()) {
+        ReleaseGroupSelection selection = null;
+        if (initialSearchResult.groups().isEmpty()) {
             normalization = llmService.normalizeTitle(task, input, cacheEnabled);
-            String normalizedQuery = normalizationQuery(input, normalization);
-            jobSynchronizer.interruptDiscoveryIfStopped();
-            if (normalizedQuery != null) {
-                searchResult = session.searchReleaseGroups(normalizedQuery);
-                jobSynchronizer.interruptDiscoveryIfStopped();
-                if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+            MusicBrainzClient.ReleaseGroupSearchResult normalizedSearchResult = searchNormalizedTitle(session, input, normalization);
+            if (normalizedSearchResult != null) {
+                if (isSearchResponseTooLarge(input, normalizedSearchResult.rawResponse())) {
                     return null;
                 }
+                selection = selectReleaseGroup(task, input, normalizedSearchResult, cacheEnabled, List.of());
             }
+        } else {
+            selection = selectReleaseGroup(task, input, initialSearchResult, cacheEnabled, List.of());
         }
-        ReleaseGroupSelection selection = selectReleaseGroup(task, input, searchResult, cacheEnabled, List.of());
         if (selection != null) {
             return selection;
         }
         List<String> searchArtistNames = llmService.selectSearchArtists(task, input, loadTracks(task), cacheEnabled);
         if (!searchArtistNames.isEmpty()) {
-            searchResult = searchAlternativeArtists(session, input, searchArtistNames, null);
-            if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+            MusicBrainzClient.ReleaseGroupSearchResult alternativeSearchResult = searchAlternativeArtists(session, input, searchArtistNames, null);
+            if (isSearchResponseTooLarge(input, alternativeSearchResult.rawResponse())) {
                 return null;
             }
-            selection = selectReleaseGroup(task, input, searchResult, cacheEnabled, searchArtistNames);
+            selection = selectReleaseGroup(task, input, alternativeSearchResult, cacheEnabled, searchArtistNames);
             if (selection != null) {
                 return selection;
             }
-            if (normalization == null) {
-                normalization = llmService.normalizeTitle(task, input, cacheEnabled);
-            }
-            searchResult = searchAlternativeArtists(session, input, searchArtistNames, normalization);
-            if (isSearchResponseTooLarge(input, searchResult.rawResponse())) {
+        }
+        if (normalization == null) {
+            normalization = llmService.normalizeTitle(task, input, cacheEnabled);
+        }
+        if (!searchArtistNames.isEmpty()) {
+            MusicBrainzClient.ReleaseGroupSearchResult normalizedAlternativeSearchResult = searchAlternativeArtists(session, input, searchArtistNames, normalization);
+            if (isSearchResponseTooLarge(input, normalizedAlternativeSearchResult.rawResponse())) {
                 return null;
             }
-            selection = selectReleaseGroup(task, input, searchResult, cacheEnabled, searchArtistNames);
+            selection = selectReleaseGroup(task, input, normalizedAlternativeSearchResult, cacheEnabled, searchArtistNames);
             if (selection != null) {
                 return selection;
+            }
+        }
+        if (!initialSearchResult.groups().isEmpty()) {
+            MusicBrainzClient.ReleaseGroupSearchResult normalizedSearchResult = searchNormalizedTitle(session, input, normalization);
+            if (normalizedSearchResult != null) {
+                if (isSearchResponseTooLarge(input, normalizedSearchResult.rawResponse())) {
+                    return null;
+                }
+                selection = selectReleaseGroup(task, input, normalizedSearchResult, cacheEnabled, List.of());
+                if (selection != null) {
+                    return selection;
+                }
             }
         }
         logger.debug("No unambiguous MusicBrainz release group was selected for album '{}'.", requireNonNull(task.getAlbum()).getId());
@@ -201,6 +223,19 @@ public class MusicBrainzAlbumDataService {
         logService.warn(logger, "Skipping MusicBrainz discovery for album '{}' -> '{}': search response size {} bytes exceeds the limit of {} bytes.",
                 input.artistName(), input.title(), responseBytes, maxSearchResponseBytes);
         return true;
+    }
+
+    private @Nullable MusicBrainzClient.ReleaseGroupSearchResult searchNormalizedTitle(
+            MusicBrainzClient.Session session, AlbumInput input, NormalizationResponse normalization
+    ) {
+        String query = normalizationQuery(input, normalization);
+        jobSynchronizer.interruptDiscoveryIfStopped();
+        if (query == null) {
+            return null;
+        }
+        MusicBrainzClient.ReleaseGroupSearchResult result = session.searchReleaseGroups(query);
+        jobSynchronizer.interruptDiscoveryIfStopped();
+        return result;
     }
 
     private List<TrackInput> loadTracks(DiscoveryTask task) {

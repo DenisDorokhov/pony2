@@ -7,7 +7,7 @@ Return ONLY one valid JSON object with exactly these fields:
 {"searchTitle":"non-empty string","searchFragments":["string"],"alternativeTitles":["string"]}
 
 Search context:
-The original-title search returned no results. The caller applies an artist constraint and removes duplicate queries. Each alternative title is an independent quoted clause. All fragments are quoted clauses joined with AND. The full searchTitle, each alternative title, and the complete AND-fragment condition are joined with OR. The caller handles query construction, escaping, and punctuation variants. Return literal title text: do not add query syntax or query escaping, but preserve symbols and words that belong to the title.
+The original-title search returned no results or no candidate could be confidently matched. The caller applies an artist constraint and removes duplicate queries. Each alternative title is an independent quoted clause. All fragments are quoted clauses joined with AND. The full searchTitle, each alternative title, and the complete AND-fragment condition are joined with OR. The caller handles query construction, escaping, and punctuation variants. Return literal title text: do not add query syntax or query escaping, but preserve symbols and words that belong to the title.
 
 searchTitle:
 1. Remove clearly external technical metadata: codecs, bitrate, bit depth, sampling rate, rip source, platform/source tags, log/cue information, catalog and release identifiers, UUID/MBID/UPC/matrix labels, and carrier/disc annotations such as [Disc 1] or (CD1 of 2).
