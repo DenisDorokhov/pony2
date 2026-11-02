@@ -415,7 +415,7 @@ public class ArtistDiscoveryService {
         }
 
         @Override
-        public @Nullable ArtistBioImageFacesService.Result executeTask(DiscoveryTask task) {
+        public ArtistBioImageFacesService.Result executeTask(DiscoveryTask task) {
             return artistBioImageFacesService.discover(task, cacheEnabled);
         }
 

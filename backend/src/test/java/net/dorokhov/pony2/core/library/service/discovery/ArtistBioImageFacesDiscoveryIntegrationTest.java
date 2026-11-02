@@ -14,6 +14,7 @@ import net.dorokhov.pony2.core.library.service.discovery.spotify.SpotifyTopTrack
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.image.ExternalImageStorage;
 import net.dorokhov.pony2.core.library.service.image.ImageSizeReader;
+import net.dorokhov.pony2.web.dto.DiscoveryTaskSummaryDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -221,17 +222,51 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
 
     @Test
     void shouldCompleteWithoutModelWhenBiographyImageIsAbsent() {
+        removeBiographyImage();
+
+        service.discover(job(), artist, true, null);
+
+        DiscoveryTask task = facesTask();
+        assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(task.getResult()).isNotNull();
+        assertThat(JsonConverter.fromJson(task.getResult(), ArtistBioImageFacesService.Result.class))
+                .isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
+        assertThat(DiscoveryTaskSummaryDto.of(task, null, null, null, null).isNoResult()).isFalse();
+
+        DiscoveryJob next = job();
+        service.discoverIfUpdated(next, artist, List.of(), true, null);
+
+        assertThat(taskRepository.countByJobId(next.getId())).isZero();
+        verify(model, never()).call(any(Prompt.class));
+    }
+
+    private void removeBiographyImage() {
         getTransactionTemplate().executeWithoutResult(status -> {
             ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artist.getId()).orElseThrow();
             discovery.setBioExternalImage(null);
         });
         when(spotify.discover(any(), anyBoolean())).thenReturn(new SpotifyArtistData(spotifyData().artist(), spotifyData().matchedAlbum(),
                 null, null, null, null, null, null));
+    }
 
+    @Test
+    void shouldBackfillLegacyNullResultForMissingImageOnlyOnce() {
+        removeBiographyImage();
         service.discover(job(), artist, true, null);
+        DiscoveryTask task = facesTask();
+        taskRepository.save(task.setResult(null));
 
-        assertThat(facesTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(facesTask().getResult()).isNull();
+        DiscoveryJob backfill = job();
+        service.discoverIfUpdated(backfill, artist, List.of(), true, null);
+
+        assertThat(taskRepository.findAll()).filteredOn(candidate -> candidate.getJob().getId().equals(backfill.getId()))
+                .singleElement().satisfies(candidate -> {
+                    assertThat(candidate.getType()).isEqualTo(ARTIST_BIO_IMAGE_FACES);
+                    assertThat(DiscoveryTaskSummaryDto.of(candidate, null, null, null, null).isNoResult()).isFalse();
+                });
+        DiscoveryJob following = job();
+        service.discoverIfUpdated(following, artist, List.of(), true, null);
+        assertThat(taskRepository.countByJobId(following.getId())).isZero();
         verify(model, never()).call(any(Prompt.class));
     }
 

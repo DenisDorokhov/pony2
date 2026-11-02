@@ -209,9 +209,46 @@ class ArtistBioImageFacesServiceTest {
     void shouldNotCallModelWhenBiographyImageIsAbsent() {
         when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
 
-        assertThat(service.discover(task(), true)).isNull();
+        assertThat(service.discover(task(), true)).isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
 
         assertThat(requests).isEmpty();
+    }
+
+    @Test
+    void shouldSkipRepeatedMissingImageResultAndAnalyzeImageWhenItAppears() {
+        when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
+                .thenReturn(Optional.of(task().setResult(JsonConverter.toJson(new ArtistBioImageFacesService.Result(null, null, List.of())))));
+        when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
+
+        assertThat(service.shouldDiscover(artist)).isFalse();
+
+        when(artistDiscoveryRepository.findByArtistId("artist"))
+                .thenReturn(Optional.of(new ArtistDiscovery().setArtist(artist).setBioExternalImage(image)));
+        assertThat(service.shouldDiscover(artist)).isTrue();
+        assertThat(requests).isEmpty();
+    }
+
+    @Test
+    void shouldReplaceLegacyNullResultWhenImageIsStillMissing() {
+        when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
+                .thenReturn(Optional.of(task().setResult(null)));
+        when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
+
+        assertThat(service.shouldDiscover(artist)).isTrue();
+        assertThat(service.discover(task(), true)).isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
+        assertThat(requests).isEmpty();
+    }
+
+    @Test
+    void shouldRecordMissingImageAfterPreviouslyAnalyzedImageIsRemoved() {
+        ArtistBioImageFacesService.Result result = service.discover(task(), true);
+        when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
+                .thenReturn(Optional.of(task().setResult(JsonConverter.toJson(result))));
+        when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
+
+        assertThat(service.shouldDiscover(artist)).isTrue();
+        assertThat(service.discover(task(), true)).isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
+        assertThat(requests).hasSize(1);
     }
 
     @Test

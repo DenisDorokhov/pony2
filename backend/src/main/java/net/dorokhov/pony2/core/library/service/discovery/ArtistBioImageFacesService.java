@@ -81,18 +81,14 @@ public class ArtistBioImageFacesService {
     public boolean shouldDiscover(Artist artist) {
         DiscoveryTask completed = taskRepository.findLatestCompletedByArtistIdAndType(
                 artist.getId(), ARTIST_BIO_IMAGE_FACES, Limit.of(1)).orElse(null);
-        if (completed == null) {
+        if (completed == null || completed.getResult() == null) {
             return true;
         }
-        String previousResult = completed.getResult();
+        Result previous = JsonConverter.fromJson(completed.getResult(), Result.class);
         ExternalImageFile image = findBioImageFile(artist.getId());
         if (image == null) {
-            return previousResult != null;
+            return previous.externalImageId() != null;
         }
-        if (previousResult == null) {
-            return true;
-        }
-        Result previous = JsonConverter.fromJson(previousResult, Result.class);
         if (!image.getExternalImage().getId().equals(previous.externalImageId())) {
             return true;
         }
@@ -124,10 +120,10 @@ public class ArtistBioImageFacesService {
         return new Request(prompt, config.llmUrl(), config.llmModel(), imageHash, CACHE_VERSION, prepared);
     }
 
-    public @Nullable Result discover(DiscoveryTask task, boolean cacheEnabled) {
+    public Result discover(DiscoveryTask task, boolean cacheEnabled) {
         ExternalImageFile image = findBioImageFile(task.getArtist().getId());
         if (image == null) {
-            return null;
+            return new Result(null, null, List.of());
         }
         Request request = createRequest(imageHash(image), prepareImage(image));
         List<ImageFace> faces = llmExecutor.call(task, request, Response.class,
@@ -179,7 +175,7 @@ public class ArtistBioImageFacesService {
         }
     }
 
-    public record Result(String externalImageId, String analysisKey, List<ImageFace> faces) {
+    public record Result(@Nullable String externalImageId, @Nullable String analysisKey, List<ImageFace> faces) {
     }
 
     private record Response(List<List<Double>> faces) {

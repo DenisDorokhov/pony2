@@ -2914,6 +2914,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     private DiscoveryTask task(DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status) {
         DiscoveryTask task = new DiscoveryTask().setJob(job).setType(type).setStatus(status);
+        if (type == DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES && status == DiscoveryTask.Status.COMPLETE) {
+            task.setResult(JsonConverter.toJson(new ArtistBioImageFacesService.Result(null, null, List.of())));
+        }
         if (type == DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA) {
             task.setAlbum(album);
         } else {
