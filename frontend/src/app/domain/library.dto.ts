@@ -60,6 +60,39 @@ export interface ArtistDiscoveryDataDto {
   countryCode: string | undefined;
   topSongIds: string[];
   avatarExternalImageId: string | undefined;
+  biographyAvailable: boolean;
+}
+
+export interface ArtistBiographyDto {
+  artist: ArtistDetailsDto;
+  externalImageId: string | undefined;
+  faces: ImageFaceDto[] | undefined;
+  text: string | undefined;
+  links: ArtistBiographyDto.Link[];
+}
+
+export namespace ArtistBiographyDto {
+  export interface Link {
+    type: LinkType;
+    url: string;
+  }
+
+  export enum LinkType {
+    INSTAGRAM = 'INSTAGRAM',
+    FACEBOOK = 'FACEBOOK',
+    X = 'X',
+    TIKTOK = 'TIKTOK',
+    WIKIPEDIA = 'WIKIPEDIA',
+    WHATSAPP = 'WHATSAPP',
+    WEBSITE = 'WEBSITE',
+  }
+}
+
+export interface ImageFaceDto {
+  xMin: number;
+  yMin: number;
+  xMax: number;
+  yMax: number;
 }
 
 export interface SongDto {

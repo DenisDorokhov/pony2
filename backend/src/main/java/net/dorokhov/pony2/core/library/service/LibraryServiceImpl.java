@@ -102,6 +102,10 @@ public class LibraryServiceImpl implements LibraryService {
         if (!configService.get().discoveryEnabled()) {
             return Optional.empty();
         }
+        return Optional.of(buildArtistDiscoveryData(artistId, resultReader.readArtistBiography(artistId, null).isAvailable()));
+    }
+
+    private ArtistDiscoveryData buildArtistDiscoveryData(String artistId, boolean biographyAvailable) {
         List<String> topSongIds = resultReader.readSpotifyTopTracks(artistId).stream()
                 .filter(Objects::nonNull)
                 .distinct()
@@ -114,10 +118,33 @@ public class LibraryServiceImpl implements LibraryService {
         }
         ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artistId).orElse(null);
         ExternalImage avatarExternalImage = discovery != null ? discovery.getAvatarExternalImage() : null;
-        return Optional.of(new ArtistDiscoveryData(
+        return new ArtistDiscoveryData(
                 discovery != null ? discovery.getCountryCode() : null,
                 topSongIds,
-                avatarExternalImage != null ? avatarExternalImage.getId() : null));
+                avatarExternalImage != null ? avatarExternalImage.getId() : null,
+                biographyAvailable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, ArtistDiscoveryData> getArtistDiscoveryData(List<String> artistIds) {
+        if (artistIds.isEmpty() || !configService.get().discoveryEnabled()) {
+            return Map.of();
+        }
+        Map<String, Boolean> biographyAvailability = resultReader.readArtistBiographyAvailability(artistIds);
+        return artistIds.stream().collect(Collectors.toMap(artistId -> artistId,
+                artistId -> buildArtistDiscoveryData(artistId, biographyAvailability.getOrDefault(artistId, false))));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ArtistBiographyData> getArtistBiographyData(String artistId) {
+        if (!configService.get().discoveryEnabled()) {
+            return Optional.empty();
+        }
+        ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artistId).orElse(null);
+        ExternalImage image = discovery != null ? discovery.getBioExternalImage() : null;
+        return Optional.of(resultReader.readArtistBiography(artistId, image != null ? image.getId() : null));
     }
 
     @Override

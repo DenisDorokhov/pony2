@@ -5,6 +5,8 @@ import {
   ArtistDto,
   ArtistDiscoveryDataDto,
   ArtistSongsDto,
+  ArtistBiographyDto,
+  ImageFaceDto,
   GenreDto,
   PlaybackHistoryDto,
   PlaybackHistorySongDto,
@@ -298,12 +300,31 @@ export class ArtistDiscoveryData {
   topSongIds: string[];
   avatarExternalImageId: string | undefined;
   avatarExternalImageUrl: string | undefined;
+  biographyAvailable: boolean;
 
   constructor(dto: ArtistDiscoveryDataDto | undefined) {
     this.countryCode = dto?.countryCode;
     this.topSongIds = dto?.topSongIds ?? [];
     this.avatarExternalImageId = dto?.avatarExternalImageId;
     this.avatarExternalImageUrl = this.avatarExternalImageId ? '/api/file/externalImage/' + this.avatarExternalImageId : undefined;
+    this.biographyAvailable = dto?.biographyAvailable ?? false;
+  }
+}
+
+export class ArtistBiography {
+
+  artist: Artist;
+  imageUrl: string | undefined;
+  faces: ImageFaceDto[] | undefined;
+  text: string | undefined;
+  links: ArtistBiographyDto.Link[];
+
+  constructor(dto: ArtistBiographyDto) {
+    this.artist = new Artist(dto.artist.artist, dto.artist.discoveryData);
+    this.imageUrl = dto.externalImageId ? '/api/file/externalImage/' + dto.externalImageId : undefined;
+    this.faces = dto.faces;
+    this.text = dto.text;
+    this.links = dto.links;
   }
 }
 

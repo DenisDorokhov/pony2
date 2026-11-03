@@ -2,10 +2,11 @@ import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, forkJoin, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, filter, map, tap} from 'rxjs/operators';
-import {Album, AlbumSongs, Artist, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
+import {Album, AlbumSongs, Artist, ArtistBiography, ArtistSongs, Genre, SearchResult, Song} from '../domain/library.model';
 import {AuthenticationService} from './authentication.service';
 import {
   ArtistDetailsDto,
+  ArtistBiographyDto,
   ArtistSongsDto,
   GenreDto,
   RandomSongsRequestDto,
@@ -246,6 +247,11 @@ export class LibraryService {
           return artistSongs;
         }),
       );
+  }
+
+  getArtistBiography(artistId: string): Observable<ArtistBiography> {
+    return this.httpClient.get<ArtistBiographyDto>(`/api/library/artistBiography/${artistId}`)
+      .pipe(map(dto => new ArtistBiography(dto)));
   }
 
   sortArtistSongs(artistSongs: ArtistSongs) {

@@ -78,6 +78,19 @@
       }
     }
 
+    button.biography-link {
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      vertical-align: baseline;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      text-decoration-thickness: 1px;
+    }
+
     button.artist-likes {
       margin-left: 2px;
       padding-left: 7px;

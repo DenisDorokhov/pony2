@@ -38,6 +38,11 @@ public class LibraryController implements ErrorHandlingController {
         return libraryFacade.getArtistSongs(artistId);
     }
 
+    @GetMapping("/api/library/artistBiography/{artistId}")
+    public ArtistBiographyDto getArtistBiography(@PathVariable String artistId) throws ObjectNotFoundException {
+        return libraryFacade.getArtistBiography(artistId);
+    }
+
     @GetMapping("/api/library/genres")
     public List<GenreDto> getGenres() {
         return libraryFacade.getGenres();

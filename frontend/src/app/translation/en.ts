@@ -143,6 +143,9 @@ export default {
     noHistoryLabel: 'No songs played yet :-(',
     statisticsLabel: '{count} of {totalCount, plural, one {# total song} other {# total songs}} in playback history',
   },
+  artistBiography: {
+    header: 'Artist Details',
+  },
   artistLikes: {
     header: '{artistName}',
     statisticsLabel: '{count, plural, one {# favorite song} other {# favorite songs}} of {artistName}',

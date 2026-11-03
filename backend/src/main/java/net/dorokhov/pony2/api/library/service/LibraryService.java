@@ -3,6 +3,7 @@ package net.dorokhov.pony2.api.library.service;
 import net.dorokhov.pony2.api.library.domain.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface LibraryService {
@@ -18,6 +19,10 @@ public interface LibraryService {
     Optional<Artist> getArtistById(String artistId);
 
     Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId);
+
+    Map<String, ArtistDiscoveryData> getArtistDiscoveryData(List<String> artistIds);
+
+    Optional<ArtistBiographyData> getArtistBiographyData(String artistId);
 
     Optional<AlbumDiscoveryData> getAlbumDiscoveryData(String albumId);
 

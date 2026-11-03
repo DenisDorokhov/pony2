@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 
@@ -49,14 +50,12 @@ public class LibraryFacade {
 
     @Transactional(readOnly = true)
     public List<ArtistDetailsDto> getArtists() {
-        return libraryService.getArtists().stream()
-                .sorted()
-                .map(this::toArtistDetailsDto)
+        List<Artist> artists = libraryService.getArtists().stream().sorted().toList();
+        Map<String, ArtistDiscoveryData> discoveryData = libraryService.getArtistDiscoveryData(
+                artists.stream().map(Artist::getId).toList());
+        return artists.stream()
+                .map(artist -> ArtistDetailsDto.of(artist, discoveryData.get(artist.getId())))
                 .toList();
-    }
-
-    private ArtistDetailsDto toArtistDetailsDto(Artist artist) {
-        return ArtistDetailsDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null));
     }
 
     @Transactional(readOnly = true)
@@ -87,6 +86,18 @@ public class LibraryFacade {
                         album,
                         libraryService.getAlbumDiscoveryData(album.getId()).orElse(null),
                         admin));
+    }
+
+    @Transactional(readOnly = true)
+    public ArtistBiographyDto getArtistBiography(String artistId) throws ObjectNotFoundException {
+        Artist artist = libraryService.getArtistById(artistId)
+                .orElseThrow(() -> new ObjectNotFoundException(Artist.class, artistId));
+        return ArtistBiographyDto.of(toArtistDetailsDto(artist),
+                libraryService.getArtistBiographyData(artistId).orElse(null));
+    }
+
+    private ArtistDetailsDto toArtistDetailsDto(Artist artist) {
+        return ArtistDetailsDto.of(artist, libraryService.getArtistDiscoveryData(artist.getId()).orElse(null));
     }
 
     @Transactional(readOnly = true)

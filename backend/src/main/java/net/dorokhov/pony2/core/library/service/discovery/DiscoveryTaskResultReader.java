@@ -1,6 +1,8 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.annotation.Nullable;
+import net.dorokhov.pony2.api.library.domain.ArtistBiographyData;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.ImageFace;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
@@ -34,16 +38,43 @@ public class DiscoveryTaskResultReader {
     }
 
     public List<String> readSpotifyTopTracks(String artistId) {
-        return taskRepository.findLatestCompletedSpotifyTopTracksResultByArtistId(artistId, Limit.of(1))
+        return taskRepository.findLatestCompletedResultByArtistIdAndType(artistId, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, Limit.of(1))
                 .map(json -> JsonConverter.listFromJson(json, String.class)).orElse(emptyList());
     }
+
+    public ArtistBiographyData readArtistBiography(String artistId, @Nullable String imageId) {
+        String result = taskRepository.findLatestCompletedResultByArtistIdAndType(artistId, DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1))
+                .orElse(null);
+        return toArtistBiography(artistId, imageId, result);
+    }
+
+    private ArtistBiographyData toArtistBiography(String artistId, @Nullable String imageId, @Nullable String result) {
+        Biography biography = result != null ? JsonConverter.fromJson(result, Biography.class) : null;
+        String text = biography != null ? biography.biography() : null;
+        List<ArtistBiographyData.Link> links = biography != null && biography.links() != null
+                ? biography.links().stream().map(ArtistBiographyData.Link::of).toList()
+                : emptyList();
+        return new ArtistBiographyData(imageId, readArtistBioImageFaces(artistId, imageId),
+                text != null && !text.isBlank() ? text : null, links);
+    }
+
+    public Map<String, Boolean> readArtistBiographyAvailability(List<String> artistIds) {
+        if (artistIds.isEmpty()) {
+            return Map.of();
+        }
+        return taskRepository.findLatestCompletedResultsByArtistIdsAndType(artistIds, DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
+                .stream().collect(Collectors.toMap(DiscoveryTaskRepository.ArtistResult::getArtistId,
+                        result -> toArtistBiography(result.getArtistId(), null, result.getResult()).isAvailable()));
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record Biography(@Nullable String biography, @Nullable List<SpotifyArtistData.ExternalLink> links) {}
 
     public @Nullable List<ImageFace> readArtistBioImageFaces(String artistId, @Nullable String imageId) {
         if (imageId == null) {
             return null;
         }
-        return taskRepository.findLatestCompletedByArtistIdAndType(artistId, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES, Limit.of(1))
-                .map(DiscoveryTask::getResult)
+        return taskRepository.findLatestCompletedResultByArtistIdAndType(artistId, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES, Limit.of(1))
                 .map(json -> JsonConverter.fromJson(json, ArtistBioImageFacesService.Result.class))
                 .filter(result -> imageId.equals(result.externalImageId()))
                 .map(ArtistBioImageFacesService.Result::faces)
@@ -51,7 +82,7 @@ public class DiscoveryTaskResultReader {
     }
 
     public @Nullable MusicBrainzAlbumData readMusicBrainzAlbumData(String albumId) {
-        return taskRepository.findLatestCompletedMusicBrainzResultByAlbumId(albumId, Limit.of(1))
+        return taskRepository.findLatestCompletedResultByAlbumIdAndType(albumId, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, Limit.of(1))
                 .map(json -> JsonConverter.fromJson(json, MusicBrainzAlbumData.class)).orElse(null);
     }
 }

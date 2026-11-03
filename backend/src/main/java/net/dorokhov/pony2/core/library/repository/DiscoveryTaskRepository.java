@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.repository;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import org.springframework.data.domain.Limit;
@@ -174,17 +175,33 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
 
     @Query("""
             SELECT t.result FROM DiscoveryTask t
-            WHERE t.artist.id = :artistId AND t.type = SPOTIFY_TOP_TRACKS AND t.status = COMPLETE
+            WHERE t.artist.id = :artistId AND t.type = :type AND t.status = COMPLETE
             ORDER BY t.artist.id, t.status, t.type, t.creationDate DESC, t.id DESC
             """)
-    Optional<String> findLatestCompletedSpotifyTopTracksResultByArtistId(String artistId, Limit limit);
+    Optional<String> findLatestCompletedResultByArtistIdAndType(String artistId, DiscoveryTaskType type, Limit limit);
+
+    @Query("""
+            SELECT artist.id AS artistId,
+                   (SELECT t.result FROM DiscoveryTask t
+                    WHERE t.artist = artist AND t.type = :type AND t.status = COMPLETE
+                    ORDER BY t.artist.id, t.status, t.type, t.creationDate DESC, t.id DESC
+                    FETCH FIRST 1 ROW ONLY) AS result
+            FROM Artist artist WHERE artist.id IN :artistIds
+            """)
+    List<ArtistResult> findLatestCompletedResultsByArtistIdsAndType(List<String> artistIds, DiscoveryTaskType type);
+
+    interface ArtistResult {
+        String getArtistId();
+
+        @Nullable String getResult();
+    }
 
     @Query("""
             SELECT t.result FROM DiscoveryTask t
-            WHERE t.album.id = :albumId AND t.type = MUSICBRAINZ_ALBUM_DATA AND t.status = COMPLETE
+            WHERE t.album.id = :albumId AND t.type = :type AND t.status = COMPLETE
             ORDER BY t.album.id, t.status, t.type, t.creationDate DESC, t.id DESC
             """)
-    Optional<String> findLatestCompletedMusicBrainzResultByAlbumId(String albumId, Limit limit);
+    Optional<String> findLatestCompletedResultByAlbumIdAndType(String albumId, DiscoveryTaskType type, Limit limit);
 
     @Modifying
     @Query("DELETE FROM DiscoveryTask t WHERE t.job.id = :jobId")

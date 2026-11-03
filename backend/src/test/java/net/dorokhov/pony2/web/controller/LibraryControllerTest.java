@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.test.ExternalImageFixtures.externalImage;
@@ -302,6 +303,87 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(albumDiscoveryData.path("releaseType").asString()).isEqualTo("UNKNOWN");
         assertThat(albumDiscoveryData.has("releaseDate")).isFalse();
         assertThat(albumDiscoveryData.has("topSongIds")).isFalse();
+    }
+
+    @Test
+    void shouldGetArtistBiographyAndItsAvailability() {
+        enableLlm();
+        ExternalImage image = externalImageRepository.save(externalImage());
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setBioExternalImage(image));
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("biography", "Biography\n\nParagraph two", "links",
+                        List.of(Map.of("title", "Instagram", "url", "https://instagram.com/artist"))))));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("externalImageId", image.getId(), "analysisKey", "key",
+                        "faces", List.of(new ImageFace(.1, .2, .3, .4))))));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ArtistBiographyDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        ArtistBiographyDto biography = requireNonNull(response.getBody());
+        assertThat(biography.getArtist().getArtist().getId()).isEqualTo(artist1.getId());
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isTrue();
+        assertThat(biography.getExternalImageId()).isEqualTo(image.getId());
+        assertThat(biography.getText()).isEqualTo("Biography\n\nParagraph two");
+        assertThat(biography.getFaces()).containsExactly(new ImageFaceDto(.1, .2, .3, .4));
+        assertThat(biography.getLinks()).containsExactly(new ArtistBiographyDto.Link(ArtistBiographyData.LinkType.INSTAGRAM, "https://instagram.com/artist"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldAllowLinksOnlyBiographyAndDiscardFacesFromAnotherImage(boolean linksAvailable) {
+        enableLlm();
+        ExternalImage image = externalImageRepository.save(externalImage());
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setBioExternalImage(image));
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("links", linksAvailable
+                        ? List.of(Map.of("title", "Wikipedia", "url", "https://en.wikipedia.org/wiki/Artist")) : List.of()))));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("externalImageId", "old-image", "faces", List.of(new ImageFace(.1, .2, .3, .4))))));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isEqualTo(linksAvailable);
+        assertThat(biography.getFaces()).isNull();
+        assertThat(biography.getText()).isNull();
+        assertThat(biography.getLinks()).hasSize(linksAvailable ? 1 : 0);
+    }
+
+    @Test
+    void shouldGetBiographyWithoutDiscoveryDataWhenDisabled() {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+
+        assertThat(biography.getArtist().getArtist().getId()).isEqualTo(artist1.getId());
+        assertThat(biography.getArtist().getDiscoveryData()).isNull();
+        assertThat(biography.getLinks()).isEmpty();
+        assertThat(biography.getText()).isNull();
+        assertThat(biography.getExternalImageId()).isNull();
+    }
+
+    @Test
+    void shouldFailGettingBiographyOfUnknownArtist() {
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/missing", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     private void enableLlm() {

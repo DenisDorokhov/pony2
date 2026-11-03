@@ -15,7 +15,13 @@
       class="panel-heading">
       <div class="panel-title">
         <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
-          <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
+          @if (discoveryEnabled && artistSongs.artist.discoveryData.biographyAvailable) {
+            <button type="button" class="biography-link" aria-haspopup="dialog" (click)="openArtistBiography()">
+              {{ artistSongs.artist.name | ponyUnknownArtist }}
+            </button>
+          } @else {
+            <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
+          }
           <div ngbDropdown container="body" class="artist-options h4" dropdownClass="pony-dropdown">
             <button ngbDropdownToggle type="button" class="menu">
               <i class="bi bi-three-dots-vertical"></i>

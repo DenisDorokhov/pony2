@@ -11,6 +11,7 @@ public final class ArtistDiscoveryDataDto {
     private String countryCode;
     private List<String> topSongIds;
     private String avatarExternalImageId;
+    private boolean biographyAvailable;
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public @Nullable String getCountryCode() {
@@ -40,10 +41,20 @@ public final class ArtistDiscoveryDataDto {
         return this;
     }
 
+    public boolean isBiographyAvailable() {
+        return biographyAvailable;
+    }
+
+    public ArtistDiscoveryDataDto setBiographyAvailable(boolean biographyAvailable) {
+        this.biographyAvailable = biographyAvailable;
+        return this;
+    }
+
     public static ArtistDiscoveryDataDto of(ArtistDiscoveryData data) {
         return new ArtistDiscoveryDataDto()
                 .setCountryCode(data.countryCode())
                 .setTopSongIds(data.topSongIds())
-                .setAvatarExternalImageId(data.avatarExternalImageId());
+                .setAvatarExternalImageId(data.avatarExternalImageId())
+                .setBiographyAvailable(data.biographyAvailable());
     }
 }

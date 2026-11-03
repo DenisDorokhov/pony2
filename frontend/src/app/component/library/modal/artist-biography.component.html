@@ -1,0 +1,49 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="artist-biography-title">
+    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>{{ 'artistBiography.header' | translate }}
+  </h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body p-0">
+  @if (loadingState === LoadingState.LOADING) {
+    <pony-loading-indicator class="state"></pony-loading-indicator>
+  }
+  @if (loadingState === LoadingState.ERROR) {
+    <pony-error-indicator class="state"></pony-error-indicator>
+  }
+  @if (biography; as data) {
+    @if (data.imageUrl && !imageFailed) {
+      <div #hero class="hero" [class.full-image]="!crop" [class.pending]="!imageLoaded" [style.height.px]="crop?.height">
+        <img #image [src]="data.imageUrl" [alt]="data.artist.name | ponyUnknownArtist"
+             [style.top.px]="crop ? -crop.top : null" (load)="onImageLoaded(image)" (error)="onImageError()">
+        @if (crop) {
+          <div class="image-fade" [style.background]="imageGradient"></div>
+        }
+      </div>
+    }
+    <article class="copy" [class.without-image]="!data.imageUrl || imageFailed">
+      <h2 class="artist-title">{{ data.artist.name | ponyUnknownArtist }}</h2>
+      @if (data.text) {
+        <p class="biography-text">{{ data.text }}</p>
+      }
+      @if (!data.text && !links.length) {
+        <pony-no-content-indicator [message]="'discoveryTasks.noResult' | translate"></pony-no-content-indicator>
+      }
+    </article>
+  }
+</div>
+
+@if (links.length) {
+  <div class="modal-footer">
+    <nav class="social-links">
+      @for (link of links; track $index) {
+        <a class="btn btn-light btn-sm social-link" [href]="link.url" target="_blank" rel="noopener noreferrer">
+          <i class="bi" [class]="link.icon" aria-hidden="true"></i>
+          <span>{{ link.label }}</span>
+          <i class="bi bi-arrow-up-right external" aria-hidden="true"></i>
+        </a>
+      }
+    </nav>
+  </div>
+}
