@@ -93,8 +93,10 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     if (!image || !width) {
       return;
     }
-    const targetHeight = Math.max(180, Math.min(330, width * .39, window.innerHeight * .38));
-    this.crop = cropArtistBiographyImage(image.naturalWidth, image.naturalHeight, width, targetHeight, this.biography?.faces);
+    const maxHeight = Math.min(300, window.innerHeight * .38);
+    const targetHeight = Math.min(maxHeight, Math.max(180, width * .48));
+    this.crop = cropArtistBiographyImage(image.naturalWidth, image.naturalHeight, width, targetHeight, maxHeight,
+      this.biography?.faces);
     if (this.crop) {
       const start = this.crop.fadeStart;
       const rgb = 'var(--biography-background-rgb)';

@@ -3,29 +3,41 @@ import {ArtistBiographyDto, ImageFaceDto} from '../domain/library.dto';
 export interface ArtistBiographyImageCrop {
   height: number;
   top: number;
+  width: number;
   fadeStart: number;
 }
 
 export function cropArtistBiographyImage(
-  imageWidth: number, imageHeight: number, displayWidth: number, targetHeight: number,
+  imageWidth: number, imageHeight: number, displayWidth: number, targetHeight: number, maxHeight: number,
   faces: ImageFaceDto[] | undefined
 ): ArtistBiographyImageCrop | undefined {
-  if (imageWidth <= 0 || imageHeight <= 0 || displayWidth <= 0 || !faces?.length || faces.some(face =>
+  if (imageWidth <= 0 || imageHeight <= 0 || displayWidth <= 0 || targetHeight <= 0 || maxHeight <= 0 || !faces?.length || faces.some(face =>
     ![face.xMin, face.yMin, face.xMax, face.yMax].every(value => Number.isFinite(value) && value >= 0 && value <= 1) ||
     face.xMin >= face.xMax || face.yMin >= face.yMax)) {
     return undefined;
   }
-  const fullHeight = displayWidth * imageHeight / imageWidth;
+  const originalHeight = displayWidth * imageHeight / imageWidth;
+  const originalFaceTop = Math.min(...faces.map(face => face.yMin)) * originalHeight;
+  const originalFaceBottom = Math.max(...faces.map(face => face.yMax)) * originalHeight;
+  const fadeSpace = Math.min(32, displayWidth * .06, maxHeight * .15);
+  const scale = Math.min(1, (maxHeight - fadeSpace) / (originalFaceBottom - originalFaceTop));
+  const width = displayWidth * scale;
+  const fullHeight = originalHeight * scale;
+  const faceTop = originalFaceTop * scale;
+  const faceBottom = originalFaceBottom * scale;
   const faceHeight = Math.max(...faces.map(face => (face.yMax - face.yMin) * fullHeight));
-  const safeTop = Math.max(0, Math.min(...faces.map(face => face.yMin)) * fullHeight - faceHeight * .55);
-  const safeBottom = Math.min(fullHeight, Math.max(...faces.map(face => face.yMax)) * fullHeight + faceHeight * .70);
-  const fadeSpace = Math.min(66, displayWidth * .075, fullHeight - safeBottom);
-  const height = Math.min(fullHeight, Math.max(targetHeight, safeBottom - safeTop + fadeSpace));
+  const topMargin = Math.min(40, faceHeight * .25, faceTop);
+  const bottomMargin = Math.min(32, faceHeight * .20, fullHeight - faceBottom);
+  const marginSpace = Math.max(0, maxHeight - (faceBottom - faceTop) - fadeSpace);
+  const marginScale = topMargin + bottomMargin > 0 ? Math.min(1, marginSpace / (topMargin + bottomMargin)) : 0;
+  const safeTop = faceTop - topMargin * marginScale;
+  const safeBottom = faceBottom + bottomMargin * marginScale;
+  const height = Math.min(maxHeight, Math.max(Math.min(targetHeight, fullHeight), safeBottom - safeTop + fadeSpace));
   const minTop = Math.max(0, safeBottom + fadeSpace - height);
-  const maxTop = Math.min(safeTop, fullHeight - height);
+  const maxTop = Math.min(safeTop, Math.max(0, fullHeight + fadeSpace - height));
   const preferredTop = (safeTop + safeBottom) / 2 - (height - fadeSpace) / 2;
   const top = Math.max(0, Math.min(maxTop, Math.max(minTop, preferredTop)));
-  return {height, top, fadeStart: (height - fadeSpace) / height * 100};
+  return {height, top, width, fadeStart: (height - fadeSpace) / height * 100};
 }
 
 export const ARTIST_BIOGRAPHY_LINKS: Record<ArtistBiographyDto.LinkType, {label: string; icon: string}> = {

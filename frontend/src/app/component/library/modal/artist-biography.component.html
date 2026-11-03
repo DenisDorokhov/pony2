@@ -16,7 +16,8 @@
     @if (data.imageUrl && !imageFailed) {
       <div #hero class="hero" [class.full-image]="!crop" [class.pending]="!imageLoaded" [style.height.px]="crop?.height">
         <img #image [src]="data.imageUrl" [alt]="data.artist.name | ponyUnknownArtist"
-             [style.top.px]="crop ? -crop.top : null" (load)="onImageLoaded(image)" (error)="onImageError()">
+             [style.top.px]="crop ? -crop.top : null" [style.width.px]="crop?.width"
+             (load)="onImageLoaded(image)" (error)="onImageError()">
         @if (crop) {
           <div class="image-fade" [style.background]="imageGradient"></div>
         }
