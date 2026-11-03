@@ -81,14 +81,18 @@ public class ArtistBioImageFacesService {
     public boolean shouldDiscover(Artist artist) {
         DiscoveryTask completed = taskRepository.findLatestCompletedByArtistIdAndType(
                 artist.getId(), ARTIST_BIO_IMAGE_FACES, Limit.of(1)).orElse(null);
-        if (completed == null || completed.getResult() == null) {
+        if (completed == null) {
             return true;
         }
-        Result previous = JsonConverter.fromJson(completed.getResult(), Result.class);
+        String previousResult = completed.getResult();
         ExternalImageFile image = findBioImageFile(artist.getId());
         if (image == null) {
-            return previous.externalImageId() != null;
+            return previousResult != null;
         }
+        if (previousResult == null) {
+            return true;
+        }
+        Result previous = JsonConverter.fromJson(previousResult, Result.class);
         if (!image.getExternalImage().getId().equals(previous.externalImageId())) {
             return true;
         }
@@ -120,10 +124,10 @@ public class ArtistBioImageFacesService {
         return new Request(prompt, config.llmUrl(), config.llmModel(), imageHash, CACHE_VERSION, prepared);
     }
 
-    public Result discover(DiscoveryTask task, boolean cacheEnabled) {
+    public @Nullable Result discover(DiscoveryTask task, boolean cacheEnabled) {
         ExternalImageFile image = findBioImageFile(task.getArtist().getId());
         if (image == null) {
-            return new Result(null, null, List.of());
+            return null;
         }
         Request request = createRequest(imageHash(image), prepareImage(image));
         List<ImageFace> faces = llmExecutor.call(task, request, Response.class,

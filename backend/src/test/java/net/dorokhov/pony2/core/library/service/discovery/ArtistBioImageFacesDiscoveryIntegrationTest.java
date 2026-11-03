@@ -221,17 +221,15 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldCompleteWithoutModelWhenBiographyImageIsAbsent() {
+    void shouldCompleteWithNoResultWithoutModelWhenBiographyImageIsAbsent() {
         removeBiographyImage();
 
         service.discover(job(), artist, true, null);
 
         DiscoveryTask task = facesTask();
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-        assertThat(task.getResult()).isNotNull();
-        assertThat(JsonConverter.fromJson(task.getResult(), ArtistBioImageFacesService.Result.class))
-                .isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
-        assertThat(DiscoveryTaskSummaryDto.of(task, null, null, null, null).isNoResult()).isFalse();
+        assertThat(task.getResult()).isNull();
+        assertThat(DiscoveryTaskSummaryDto.of(task, null, null, null, null).isNoResult()).isTrue();
 
         DiscoveryJob next = job();
         service.discoverIfUpdated(next, artist, List.of(), true, null);
@@ -250,11 +248,11 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldBackfillLegacyNullResultForMissingImageOnlyOnce() {
+    void shouldReplaceLegacyMissingImageResultWithNoResultOnlyOnce() {
         removeBiographyImage();
         service.discover(job(), artist, true, null);
         DiscoveryTask task = facesTask();
-        taskRepository.save(task.setResult(null));
+        taskRepository.save(task.setResult(JsonConverter.toJson(new ArtistBioImageFacesService.Result(null, null, List.of()))));
 
         DiscoveryJob backfill = job();
         service.discoverIfUpdated(backfill, artist, List.of(), true, null);
@@ -262,7 +260,8 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.findAll()).filteredOn(candidate -> candidate.getJob().getId().equals(backfill.getId()))
                 .singleElement().satisfies(candidate -> {
                     assertThat(candidate.getType()).isEqualTo(ARTIST_BIO_IMAGE_FACES);
-                    assertThat(DiscoveryTaskSummaryDto.of(candidate, null, null, null, null).isNoResult()).isFalse();
+                    assertThat(candidate.getResult()).isNull();
+                    assertThat(DiscoveryTaskSummaryDto.of(candidate, null, null, null, null).isNoResult()).isTrue();
                 });
         DiscoveryJob following = job();
         service.discoverIfUpdated(following, artist, List.of(), true, null);

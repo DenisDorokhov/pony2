@@ -209,7 +209,7 @@ class ArtistBioImageFacesServiceTest {
     void shouldNotCallModelWhenBiographyImageIsAbsent() {
         when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
 
-        assertThat(service.discover(task(), true)).isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
+        assertThat(service.discover(task(), true)).isNull();
 
         assertThat(requests).isEmpty();
     }
@@ -217,7 +217,7 @@ class ArtistBioImageFacesServiceTest {
     @Test
     void shouldSkipRepeatedMissingImageResultAndAnalyzeImageWhenItAppears() {
         when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
-                .thenReturn(Optional.of(task().setResult(JsonConverter.toJson(new ArtistBioImageFacesService.Result(null, null, List.of())))));
+                .thenReturn(Optional.of(task().setResult(null)));
         when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
 
         assertThat(service.shouldDiscover(artist)).isFalse();
@@ -229,13 +229,13 @@ class ArtistBioImageFacesServiceTest {
     }
 
     @Test
-    void shouldReplaceLegacyNullResultWhenImageIsStillMissing() {
+    void shouldReplaceLegacyMissingImageResultWithNoResult() {
         when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
-                .thenReturn(Optional.of(task().setResult(null)));
+                .thenReturn(Optional.of(task().setResult(JsonConverter.toJson(new ArtistBioImageFacesService.Result(null, null, List.of())))));
         when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
 
         assertThat(service.shouldDiscover(artist)).isTrue();
-        assertThat(service.discover(task(), true)).isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
+        assertThat(service.discover(task(), true)).isNull();
         assertThat(requests).isEmpty();
     }
 
@@ -247,7 +247,7 @@ class ArtistBioImageFacesServiceTest {
         when(artistDiscoveryRepository.findByArtistId("artist")).thenReturn(Optional.empty());
 
         assertThat(service.shouldDiscover(artist)).isTrue();
-        assertThat(service.discover(task(), true)).isEqualTo(new ArtistBioImageFacesService.Result(null, null, List.of()));
+        assertThat(service.discover(task(), true)).isNull();
         assertThat(requests).hasSize(1);
     }
 
