@@ -69,7 +69,7 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     if (base.length !== 3 || !base.every(Number.isFinite)) {
       return;
     }
-    const amount = this.imageColor ? (this.themeService.theme === 'dark' ? .20 : .065) : 0;
+    const amount = this.imageColor ? .20 : 0;
     const mixed = base.map((channel, index) => Math.round(channel * (1 - amount) + (this.imageColor?.[index] ?? channel) * amount));
     this.element.nativeElement.style.setProperty('--biography-background', `rgb(${mixed.join(',')})`);
     this.element.nativeElement.style.setProperty('--biography-background-rgb', mixed.join(','));

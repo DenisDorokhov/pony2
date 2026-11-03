@@ -226,7 +226,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   }
 
   openArtistBiography() {
-    const modalRef = this.modal.open(ArtistBiographyComponent, {size: 'lg', scrollable: true, centered: true,
+    const modalRef = this.modal.open(ArtistBiographyComponent, {scrollable: true, centered: true,
       ariaLabelledBy: 'artist-biography-title'});
     (modalRef.componentInstance as ArtistBiographyComponent).artistId = this.artistSongs.artist.id;
   }
