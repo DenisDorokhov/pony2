@@ -89,8 +89,10 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
   @HostListener('window:resize')
   protected updateCrop(): void {
     const image = this.imageElement?.nativeElement;
-    const width = this.heroElement?.nativeElement.clientWidth;
-    if (!image || !width) {
+    // Keep the crop height independent of the scrollbar to avoid resize feedback.
+    const width = this.element.nativeElement.clientWidth;
+    const displayWidth = this.heroElement?.nativeElement.clientWidth;
+    if (!image || !width || !displayWidth) {
       return;
     }
     const maxHeight = Math.min(300, window.innerHeight * .38);
@@ -98,11 +100,16 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     this.crop = cropArtistBiographyImage(image.naturalWidth, image.naturalHeight, width, targetHeight, maxHeight,
       this.biography?.faces);
     if (this.crop) {
+      const scale = Math.min(1, displayWidth / this.crop.width);
+      this.crop = {...this.crop, width: this.crop.width * scale, top: this.crop.top * scale};
       const start = this.crop.fadeStart;
       const rgb = 'var(--biography-background-rgb)';
-      this.imageGradient = `linear-gradient(to bottom, rgba(${rgb},0) 0%, rgba(${rgb},0) ${start}%, ` +
-        `rgba(${rgb},.12) ${start + (100 - start) * .25}%, rgba(${rgb},.50) ${start + (100 - start) * .56}%, ` +
-        `rgba(${rgb},.90) ${start + (100 - start) * .83}%, var(--biography-background) 100%)`;
+      const stops = Array.from({length: 16}, (_, index) => {
+        const progress = index / 15;
+        const opacity = (1 - Math.cos(Math.PI * progress)) / 2;
+        return `rgba(${rgb},${opacity}) ${start + (100 - start) * progress}%`;
+      });
+      this.imageGradient = `linear-gradient(to bottom, rgba(${rgb},0) 0%, ${stops.join(', ')})`;
     }
   }
 

@@ -13,6 +13,7 @@
 .modal-header, .modal-footer {
   flex-shrink: 0;
   background: var(--biography-background);
+  border-color: color-mix(in srgb, var(--biography-background) 78%, black);
 }
 
 .modal-title i {
@@ -125,7 +126,16 @@
   gap: 8px;
 }
 
-.social-link {
+.social-links .social-link {
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-bg: color-mix(in srgb, var(--biography-background) 88%, black);
+  --bs-btn-border-color: color-mix(in srgb, var(--biography-background) 78%, black);
+  --bs-btn-hover-color: var(--bs-emphasis-color);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--biography-background) 82%, black);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--biography-background) 70%, black);
+  --bs-btn-active-color: var(--bs-emphasis-color);
+  --bs-btn-active-bg: color-mix(in srgb, var(--biography-background) 76%, black);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--biography-background) 64%, black);
   display: inline-flex;
   align-items: center;
   gap: 8px;
