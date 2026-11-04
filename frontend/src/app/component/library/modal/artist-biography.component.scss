@@ -63,7 +63,7 @@
 }
 
 .copy {
-  padding: 8px 32px 18px;
+  padding: 8px 32px 20px;
 
   &.without-image {
     padding-top: 16px;
@@ -116,6 +116,18 @@
 
 .modal-footer {
   justify-content: flex-start;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -21px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to bottom, rgba(var(--biography-background-rgb), 0), var(--biography-background));
+    pointer-events: none;
+  }
 }
 
 .social-links {

@@ -194,11 +194,11 @@ export class LibraryDiscoveryService {
     return this.startDiscoveryJob('/api/admin/library/discoveryJobs/full', cacheEnabled);
   }
 
-  startArtistDiscoveryJob(artistId: string, cacheEnabled = true): Observable<DiscoveryStatusDto> {
+  startArtistDiscoveryJob(artistId: string, cacheEnabled = false): Observable<DiscoveryStatusDto> {
     return this.startDiscoveryJob(`/api/admin/library/discoveryJobs/artist/${artistId}`, cacheEnabled);
   }
 
-  startAlbumDiscoveryJob(albumId: string, cacheEnabled = true): Observable<DiscoveryStatusDto> {
+  startAlbumDiscoveryJob(albumId: string, cacheEnabled = false): Observable<DiscoveryStatusDto> {
     return this.startDiscoveryJob(`/api/admin/library/discoveryJobs/album/${albumId}`, cacheEnabled);
   }
 

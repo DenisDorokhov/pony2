@@ -30,8 +30,29 @@
 
 <div class="modal-footer">
   <small>
-    {{
-      'artistLikes.statisticsLabel' | translate:{artistName: artistSongs.artist.name, count: likeCount}
-    }}
+    @let topTrackCount = songs.length - likeCount;
+    @if (topTrackCount === 0) {
+      {{
+        'artistLikes.favoritesStatisticsLabel' | translate:{
+          artistName: artistSongs.artist.name,
+          count: likeCount
+        }
+      }}
+    } @else if (likeCount === 0) {
+      {{
+        'artistLikes.topTracksStatisticsLabel' | translate:{
+          artistName: artistSongs.artist.name,
+          count: topTrackCount
+        }
+      }}
+    } @else {
+      {{
+        'artistLikes.favoritesAndTopTracksStatisticsLabel' | translate:{
+          artistName: artistSongs.artist.name,
+          favoriteCount: likeCount,
+          topTrackCount: topTrackCount
+        }
+      }}
+    }
   </small>
 </div>

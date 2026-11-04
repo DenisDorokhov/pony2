@@ -149,7 +149,9 @@ export default {
   },
   artistLikes: {
     header: '{artistName}',
-    statisticsLabel: '{count, plural, one {# favorite song} other {# favorite songs}} of {artistName}',
+    favoritesStatisticsLabel: '{count, plural, one {# favorite song} other {# favorite songs}} of {artistName}',
+    topTracksStatisticsLabel: '{count, plural, one {# top track} other {# top tracks}} of {artistName}',
+    favoritesAndTopTracksStatisticsLabel: '{favoriteCount} favorite and {topTrackCount, plural, one {# top track} other {# top tracks}} of {artistName}',
   },
   playlist: {
     header: 'Playlists',
