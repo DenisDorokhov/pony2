@@ -3,23 +3,26 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {TranslateModule} from '@ngx-translate/core';
 import {Subscription} from 'rxjs';
 import {ArtistBiography} from '../../../domain/library.model';
-import {ArtistBiographyDto} from '../../../domain/library.dto';
 import {LoadingState} from '../../../domain/common.model';
+import {CountryService} from '../../../service/country.service';
 import {LibraryService} from '../../../service/library.service';
 import {ThemeService} from '../../../service/theme.service';
 import {UnknownArtistPipe} from '../../../pipe/unknown-artist.pipe';
+import {UnknownGenrePipe} from '../../../pipe/unknown-genre.pipe';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../../common/no-content-indicator.component';
 import {
   ArtistBiographyImageCrop,
+  ArtistBiographyTextPart,
   artistBiographyImageColor,
   ARTIST_BIOGRAPHY_LINKS,
-  cropArtistBiographyImage
+  cropArtistBiographyImage,
+  formatArtistBiographyText
 } from '../../../utils/artist-biography.utils';
 
 @Component({
-  imports: [TranslateModule, UnknownArtistPipe, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent],
+  imports: [TranslateModule, UnknownArtistPipe, UnknownGenrePipe, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent],
   selector: 'pony-artist-biography',
   templateUrl: './artist-biography.component.html',
   styleUrls: ['./artist-biography.component.scss']
@@ -29,6 +32,7 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
   readonly activeModal = inject(NgbActiveModal);
 
   private readonly libraryService = inject(LibraryService);
+  private readonly countryService = inject(CountryService);
   private readonly themeService = inject(ThemeService);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly ngZone = inject(NgZone);
@@ -41,7 +45,10 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
   readonly LoadingState = LoadingState;
   loadingState = LoadingState.LOADING;
   biography: ArtistBiography | undefined;
-  links: (ArtistBiographyDto.Link & {label: string; icon: string})[] = [];
+  countryName: string | undefined;
+  countryFlagCode: string | undefined;
+  paragraphs: ArtistBiographyTextPart[][] = [];
+  links: {url: string; label: string; icon: string}[] = [];
   crop: ArtistBiographyImageCrop | undefined;
   imageLoaded = false;
   imageFailed = false;
@@ -56,7 +63,15 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.libraryService.getArtistBiography(this.artistId).subscribe({
       next: biography => {
         this.biography = biography;
+        this.countryFlagCode = this.countryService.getFlagCode(biography.artist.discoveryData.countryCode);
+        this.countryName = this.countryService.getName(this.countryFlagCode);
+        this.paragraphs = formatArtistBiographyText(biography.text);
         this.links = biography.links.map(link => ({...link, ...ARTIST_BIOGRAPHY_LINKS[link.type]}));
+        const spotifyArtistId = biography.artist.discoveryData.spotifyArtistId;
+        if (spotifyArtistId) {
+          this.links.push({url: `https://open.spotify.com/artist/${encodeURIComponent(spotifyArtistId)}`,
+            label: 'Spotify', icon: 'bi-spotify'});
+        }
         this.loadingState = LoadingState.LOADED;
       },
       error: () => this.loadingState = LoadingState.ERROR,
@@ -90,8 +105,8 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
   protected updateCrop(): void {
     const image = this.imageElement?.nativeElement;
     // Keep the crop height independent of the scrollbar to avoid resize feedback.
-    const width = this.element.nativeElement.clientWidth;
-    const displayWidth = this.heroElement?.nativeElement.clientWidth;
+    const width = this.element.nativeElement.getBoundingClientRect().width;
+    const displayWidth = this.heroElement?.nativeElement.getBoundingClientRect().width;
     if (!image || !width || !displayWidth) {
       return;
     }
@@ -102,6 +117,10 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     if (this.crop) {
       const scale = Math.min(1, displayWidth / this.crop.width);
       this.crop = {...this.crop, width: this.crop.width * scale, top: this.crop.top * scale};
+      const imageBottom = image.naturalHeight * this.crop.width / image.naturalWidth - this.crop.top;
+      const height = Math.min(this.crop.height, imageBottom);
+      const fadeHeight = this.crop.height * (1 - this.crop.fadeStart / 100);
+      this.crop = {...this.crop, height, fadeStart: Math.max(0, (height - fadeHeight) / height * 100)};
       const start = this.crop.fadeStart;
       const rgb = 'var(--biography-background-rgb)';
       const stops = Array.from({length: 16}, (_, index) => {

@@ -45,7 +45,7 @@ class ArtistDiscoveryRepositoryTest extends IntegrationTest {
             getTransactionTemplate().executeWithoutResult(status -> {
                 ArtistDiscovery loaded = indexRepository.findByArtistId(discovery.getArtist().getId()).orElseThrow();
                 ArtistDiscoveryDataDto dto = ArtistDiscoveryDataDto.of(new ArtistDiscoveryData(
-                        loaded.getCountryCode(), List.of(), loaded.getAvatarExternalImage().getId(), false));
+                        loaded.getCountryCode(), List.of(), loaded.getAvatarExternalImage().getId(), false, loaded.getSpotifyArtistId()));
 
                 assertThat(loaded.getBioExternalImage().getId()).isEqualTo(bio.getId());
                 assertThat(dto.getAvatarExternalImageId()).isEqualTo(avatar.getId());

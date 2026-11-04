@@ -47,23 +47,6 @@
     height: auto;
   }
 
-  &.full-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 28px 24px 0;
-
-    img {
-      position: static;
-      transform: none;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: min(54vh, 490px);
-      border-radius: 5px;
-    }
-  }
-
   &.pending {
     min-height: 235px;
 
@@ -80,10 +63,18 @@
 }
 
 .copy {
-  padding: 8px 32px 26px;
+  padding: 8px 32px 18px;
 
-  &.without-image, .full-image + & {
-    padding-top: 28px;
+  &.without-image {
+    padding-top: 16px;
+  }
+}
+
+.artist-heading {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 
@@ -93,31 +84,38 @@
   line-height: 1.2;
   letter-spacing: -1.1px;
   overflow-wrap: anywhere;
-  margin: 0 0 18px;
+  margin: 0;
+}
+
+.artist-details {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+
+  .country-flag {
+    margin-left: 6px;
+  }
 }
 
 .biography-text {
   font-size: 15px;
   line-height: 1.75;
-  white-space: pre-line;
   margin: 0;
   overflow-wrap: anywhere;
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  + .biography-text {
+    margin-top: 1em;
+  }
 }
 
 .modal-footer {
   justify-content: flex-start;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -19px;
-    left: 0;
-    right: 0;
-    height: 18px;
-    background: linear-gradient(to bottom, rgba(var(--biography-background-rgb), 0), var(--biography-background));
-    pointer-events: none;
-  }
 }
 
 .social-links {

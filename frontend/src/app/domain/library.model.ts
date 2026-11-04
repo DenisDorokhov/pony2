@@ -296,6 +296,7 @@ export class Artist {
 
 export class ArtistDiscoveryData {
 
+  spotifyArtistId: string | undefined;
   countryCode: string | undefined;
   topSongIds: string[];
   avatarExternalImageId: string | undefined;
@@ -303,6 +304,7 @@ export class ArtistDiscoveryData {
   biographyAvailable: boolean;
 
   constructor(dto: ArtistDiscoveryDataDto | undefined) {
+    this.spotifyArtistId = dto?.spotifyArtistId;
     this.countryCode = dto?.countryCode;
     this.topSongIds = dto?.topSongIds ?? [];
     this.avatarExternalImageId = dto?.avatarExternalImageId;

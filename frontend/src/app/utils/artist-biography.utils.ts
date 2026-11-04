@@ -1,4 +1,37 @@
+import {LinkifyIt} from 'linkify-it';
 import {ArtistBiographyDto, ImageFaceDto} from '../domain/library.dto';
+
+const BIOGRAPHY_LINKIFY = new LinkifyIt({fuzzyLink: true}).add('ftp:', null).add('//', null);
+
+export interface ArtistBiographyTextPart {
+  text: string;
+  href?: string;
+}
+
+export function formatArtistBiographyText(text: string | undefined): ArtistBiographyTextPart[][] {
+  text = text?.replace(/\\n/gu, '');
+  if (!text || !/\p{L}/u.test(text)) {
+    return [];
+  }
+  return text.split(/[\r\n\u2028\u2029]+/u).map(paragraph => paragraph.trim()).filter(Boolean).map(paragraph => {
+    const parts: ArtistBiographyTextPart[] = [];
+    let offset = 0;
+    // Keep original offsets while treating bullets and invisible separators as link boundaries.
+    const textForLinks = paragraph.replace(/[\u2022\u2063]/gu, ' ');
+    for (const match of BIOGRAPHY_LINKIFY.match(textForLinks) ?? []) {
+      if (match.index > offset) {
+        parts.push({text: paragraph.slice(offset, match.index)});
+      }
+      parts.push({text: paragraph.slice(match.index, match.lastIndex),
+        href: match.schema ? match.url : `https://${match.raw}`});
+      offset = match.lastIndex;
+    }
+    if (offset < paragraph.length) {
+      parts.push({text: paragraph.slice(offset)});
+    }
+    return parts;
+  });
+}
 
 export interface ArtistBiographyImageCrop {
   height: number;
@@ -11,15 +44,20 @@ export function cropArtistBiographyImage(
   imageWidth: number, imageHeight: number, displayWidth: number, targetHeight: number, maxHeight: number,
   faces: ImageFaceDto[] | undefined
 ): ArtistBiographyImageCrop | undefined {
-  if (imageWidth <= 0 || imageHeight <= 0 || displayWidth <= 0 || targetHeight <= 0 || maxHeight <= 0 || !faces?.length || faces.some(face =>
-    ![face.xMin, face.yMin, face.xMax, face.yMax].every(value => Number.isFinite(value) && value >= 0 && value <= 1) ||
-    face.xMin >= face.xMax || face.yMin >= face.yMax)) {
+  if (imageWidth <= 0 || imageHeight <= 0 || displayWidth <= 0 || targetHeight <= 0 || maxHeight <= 0) {
     return undefined;
   }
   const originalHeight = displayWidth * imageHeight / imageWidth;
+  const fadeSpace = Math.min(32, displayWidth * .06, maxHeight * .15);
+  if (!faces?.length || faces.some(face =>
+    ![face.xMin, face.yMin, face.xMax, face.yMax].every(value => Number.isFinite(value) && value >= 0 && value <= 1) ||
+    face.xMin >= face.xMax || face.yMin >= face.yMax)) {
+    const height = Math.min(maxHeight, originalHeight);
+    return {height, top: (originalHeight - height) / 2, width: displayWidth,
+      fadeStart: Math.max(0, (height - fadeSpace) / height * 100)};
+  }
   const originalFaceTop = Math.min(...faces.map(face => face.yMin)) * originalHeight;
   const originalFaceBottom = Math.max(...faces.map(face => face.yMax)) * originalHeight;
-  const fadeSpace = Math.min(32, displayWidth * .06, maxHeight * .15);
   const scale = Math.min(1, (maxHeight - fadeSpace) / (originalFaceBottom - originalFaceTop));
   const width = displayWidth * scale;
   const fullHeight = originalHeight * scale;

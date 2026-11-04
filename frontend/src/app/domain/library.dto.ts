@@ -57,6 +57,7 @@ export interface ArtistSongsDto {
 }
 
 export interface ArtistDiscoveryDataDto {
+  spotifyArtistId: string | undefined;
   countryCode: string | undefined;
   topSongIds: string[];
   avatarExternalImageId: string | undefined;

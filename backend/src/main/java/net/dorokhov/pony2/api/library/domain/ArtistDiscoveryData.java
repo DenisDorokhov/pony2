@@ -8,5 +8,6 @@ public record ArtistDiscoveryData(
         @Nullable String countryCode,
         List<String> topSongIds,
         @Nullable String avatarExternalImageId,
-        boolean biographyAvailable
+        boolean biographyAvailable,
+        @Nullable String spotifyArtistId
 ) {}

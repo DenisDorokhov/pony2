@@ -122,7 +122,8 @@ public class LibraryServiceImpl implements LibraryService {
                 discovery != null ? discovery.getCountryCode() : null,
                 topSongIds,
                 avatarExternalImage != null ? avatarExternalImage.getId() : null,
-                biographyAvailable);
+                biographyAvailable,
+                discovery != null ? discovery.getSpotifyArtistId() : null);
     }
 
     @Override

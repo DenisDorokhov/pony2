@@ -3,7 +3,8 @@ export default {
   songTitlePrefix: 'Pony | ',
   songTitleBody: '{artistName} - {songName} | ',
   country: {
-    us: 'USA'
+    us: 'USA',
+    tr: 'Turkey'
   },
   installation: {
     mainHeader: 'Installation',
@@ -144,7 +145,7 @@ export default {
     statisticsLabel: '{count} of {totalCount, plural, one {# total song} other {# total songs}} in playback history',
   },
   artistBiography: {
-    header: 'Artist Details',
+    header: 'About',
   },
   artistLikes: {
     header: '{artistName}',

@@ -1,6 +1,6 @@
 <div class="modal-header">
   <h4 class="modal-title" id="artist-biography-title">
-    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>{{ 'artistBiography.header' | translate }}
+    <i class="bi bi-journal-text" aria-hidden="true"></i>{{ 'artistBiography.header' | translate }}
   </h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
@@ -14,7 +14,7 @@
   }
   @if (biography; as data) {
     @if (data.imageUrl && !imageFailed) {
-      <div #hero class="hero" [class.full-image]="!crop" [class.pending]="!imageLoaded" [style.height.px]="crop?.height">
+      <div #hero class="hero" [class.pending]="!imageLoaded" [style.height.px]="crop?.height">
         <img #image [src]="data.imageUrl" [alt]="data.artist.name | ponyUnknownArtist"
              [style.top.px]="crop ? -crop.top : null" [style.width.px]="crop?.width"
              (load)="onImageLoaded(image)" (error)="onImageError()">
@@ -24,11 +24,34 @@
       </div>
     }
     <article class="copy" [class.without-image]="!data.imageUrl || imageFailed">
-      <h2 class="artist-title">{{ data.artist.name | ponyUnknownArtist }}</h2>
-      @if (data.text) {
-        <p class="biography-text">{{ data.text }}</p>
+      <header class="artist-heading">
+        <h2 class="artist-title">{{ data.artist.name | ponyUnknownArtist }}</h2>
+        @if (data.artist.genres.length || countryName) {
+          <p class="artist-details">
+            @for (genre of data.artist.genres; track genre.id) {
+              <span>{{ genre.name | ponyUnknownGenre }}{{ !$last || countryName ? ', ' : '' }}</span>
+            }
+            @if (countryName) {
+              <span>{{ countryName }}</span>
+              @if (countryFlagCode) {
+                <span class="country-flag fi" [class]="'fi-' + countryFlagCode" aria-hidden="true"></span>
+              }
+            }
+          </p>
+        }
+      </header>
+      @for (paragraph of paragraphs; track $index) {
+        <p class="biography-text">
+          @for (part of paragraph; track $index) {
+            @if (part.href) {
+              <a [href]="part.href" target="_blank" rel="noopener noreferrer">{{ part.text }}</a>
+            } @else {
+              <span>{{ part.text }}</span>
+            }
+          }
+        </p>
       }
-      @if (!data.text && !links.length) {
+      @if (!paragraphs.length && !links.length) {
         <pony-no-content-indicator [message]="'discoveryTasks.noResult' | translate"></pony-no-content-indicator>
       }
     </article>

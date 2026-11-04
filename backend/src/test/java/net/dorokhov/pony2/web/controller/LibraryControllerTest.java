@@ -309,7 +309,8 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     void shouldGetArtistBiographyAndItsAvailability() {
         enableLlm();
         ExternalImage image = externalImageRepository.save(externalImage());
-        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setBioExternalImage(image));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setBioExternalImage(image)
+                .setSpotifyArtistId("spotify-artist"));
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
@@ -329,6 +330,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         ArtistBiographyDto biography = requireNonNull(response.getBody());
         assertThat(biography.getArtist().getArtist().getId()).isEqualTo(artist1.getId());
         assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isTrue();
+        assertThat(biography.getArtist().getDiscoveryData().getSpotifyArtistId()).isEqualTo("spotify-artist");
         assertThat(biography.getExternalImageId()).isEqualTo(image.getId());
         assertThat(biography.getText()).isEqualTo("Biography\n\nParagraph two");
         assertThat(biography.getFaces()).containsExactly(new ImageFaceDto(.1, .2, .3, .4));

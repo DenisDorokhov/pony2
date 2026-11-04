@@ -12,6 +12,7 @@ public final class ArtistDiscoveryDataDto {
     private List<String> topSongIds;
     private String avatarExternalImageId;
     private boolean biographyAvailable;
+    private String spotifyArtistId;
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public @Nullable String getCountryCode() {
@@ -50,11 +51,21 @@ public final class ArtistDiscoveryDataDto {
         return this;
     }
 
+    public @Nullable String getSpotifyArtistId() {
+        return spotifyArtistId;
+    }
+
+    public ArtistDiscoveryDataDto setSpotifyArtistId(@Nullable String spotifyArtistId) {
+        this.spotifyArtistId = spotifyArtistId;
+        return this;
+    }
+
     public static ArtistDiscoveryDataDto of(ArtistDiscoveryData data) {
         return new ArtistDiscoveryDataDto()
                 .setCountryCode(data.countryCode())
                 .setTopSongIds(data.topSongIds())
                 .setAvatarExternalImageId(data.avatarExternalImageId())
-                .setBiographyAvailable(data.biographyAvailable());
+                .setBiographyAvailable(data.biographyAvailable())
+                .setSpotifyArtistId(data.spotifyArtistId());
     }
 }
