@@ -3,13 +3,13 @@
 
   .artwork-link {
     float: left;
+    margin-bottom: 50px;
   }
 
   pony-image-loader {
     float: left;
     width: 140px;
     height: 140px;
-    margin-bottom: 50px;
   }
 
   pony-image-loader.pointer {
@@ -154,7 +154,7 @@
     min-height: 140px;
   }
 
-  pony-image-loader {
+  .artwork-link {
     margin-bottom: 0;
   }
 
