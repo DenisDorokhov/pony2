@@ -121,7 +121,8 @@
   &::before {
     content: '';
     position: absolute;
-    top: -21px;
+    // Overlap the footer border to avoid gaps at fractional device pixel ratios.
+    bottom: 100%;
     left: 0;
     right: 0;
     height: 20px;
