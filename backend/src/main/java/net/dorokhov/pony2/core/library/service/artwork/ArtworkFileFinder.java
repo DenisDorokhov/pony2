@@ -27,10 +27,10 @@ public class ArtworkFileFinder {
     private final Set<String> artworkFolderNames;
 
     public ArtworkFileFinder(
-            @Value("${pony.artwork.size-ratio.min}") double artworkSizeRatioMin,
-            @Value("${pony.artwork.size-ratio.max}") double artworkSizeRatioMax,
-            @Value("${pony.artwork.file-names}") String[] artworkFileNames,
-            @Value("${pony.artwork.folder-names}") String[] artworkFolderNames
+            @Value("${pony.artwork.sizeRatio.min}") double artworkSizeRatioMin,
+            @Value("${pony.artwork.sizeRatio.max}") double artworkSizeRatioMax,
+            @Value("${pony.artwork.fileNames}") String[] artworkFileNames,
+            @Value("${pony.artwork.folderNames}") String[] artworkFolderNames
     ) {
         this.artworkSizeRatioMin = artworkSizeRatioMin;
         this.artworkSizeRatioMax = artworkSizeRatioMax;

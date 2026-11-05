@@ -67,7 +67,7 @@ class LlmConfigTest {
         BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> factory = new LlmConfig().llmChatClientFactory(
                 model, ObservationRegistry.NOOP, fetchUrlTool,
                 new PlaywrightMcpToolRateLimiter(rateLimitedPlaywrightMcpClient),
-                new McpToolArgumentValidator(3), toolCallbackProviders);
+                new McpToolArgumentValidator(3), toolCallbackProviders, 60);
         ChatClient client = factory.apply(builder -> {}, true);
 
         assertThat(client.prompt("Collect artist data").call().content()).isEqualTo("OK");
@@ -125,7 +125,7 @@ class LlmConfigTest {
         when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         return new LlmConfig().llmChatClientFactory(model, ObservationRegistry.NOOP, fetchUrlTool,
                 new PlaywrightMcpToolRateLimiter(rateLimitedPlaywrightMcpClient),
-                new McpToolArgumentValidator(3), toolCallbackProviders);
+                new McpToolArgumentValidator(3), toolCallbackProviders, 60);
     }
 
     private ChatResponse toolResponse(String id, String name, String arguments) {

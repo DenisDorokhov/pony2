@@ -6,10 +6,13 @@ import net.dorokhov.pony2.core.llm.service.FetchUrlTool;
 import net.dorokhov.pony2.core.llm.service.McpToolArgumentValidator;
 import net.dorokhov.pony2.core.llm.service.PlaywrightMcpToolRateLimiter;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,10 +35,15 @@ public class LlmConfig {
             FetchUrlTool fetchUrlTool,
             PlaywrightMcpToolRateLimiter playwrightMcpToolRateLimiter,
             McpToolArgumentValidator mcpToolArgumentValidator,
-            ObjectProvider<ToolCallbackProvider> toolCallbackProviders
+            ObjectProvider<ToolCallbackProvider> toolCallbackProviders,
+            @Value("${pony.llm.maxCallsPerTool:60}") int maxCallsPerTool
     ) {
         return (customizer, toolsEnabled) -> {
-            ChatClient.Builder builder = ChatClient.builder(chatModel.createChatModel(customizer), observationRegistry, null, null);
+            ChatClient.Builder builder = ChatClient.builder(chatModel.createChatModel(customizer), observationRegistry, null, null,
+                    ToolCallingAdvisor.builder().toolCallingManager(DefaultToolCallingManager.builder()
+                            .observationRegistry(observationRegistry)
+                            .maxCallsPerTool(maxCallsPerTool)
+                            .build()));
             if (toolsEnabled) {
                 Object[] tools = Stream.concat(
                         Stream.of(fetchUrlTool),
