@@ -5,6 +5,10 @@
 - For multiline Java conditions, place logical operators (`&&`, `||`) at the end of the preceding line.
 - Place private methods as close as possible to their first use.
 
+# Application properties
+
+- Use camelCase for application property names (for example, `pony.llm.maxCallsPerTool`).
+
 # Comments
 
 - Write all code comments, including JavaDoc, in English only.
@@ -25,6 +29,11 @@
 - Prefer local component styles over changes in global stylesheets.
 - Use global styles only for framework styles already customized in the global stylesheet, or when no local solution is available.
 - Before adding a global rule, check whether the change can be implemented locally without bypassing style encapsulation.
+
+# Browser automation
+
+- Use only Playwright with isolated browser sessions for browser tasks. Do not use or control the user's desktop browser or personal browser profiles.
+- If controlling a browser on the user's computer is necessary, first explain why Playwright is insufficient and ask for the user's permission. Proceed only after receiving explicit permission.
 
 # Strict scope control
 

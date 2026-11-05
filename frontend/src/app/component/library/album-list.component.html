@@ -17,7 +17,10 @@
         <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
           @if (discoveryEnabled && artistSongs.artist.discoveryData?.biographyAvailable) {
             <button type="button" class="biography-link" aria-haspopup="dialog" (click)="openArtistBiography()">
-              {{ artistSongs.artist.name | ponyUnknownArtist }}
+              <span class="biography-name">{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
+              <svg class="biography-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                <use href="./icons/bootstrap-icons.svg#book"></use>
+              </svg>
             </button>
           } @else {
             <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
