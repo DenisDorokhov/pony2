@@ -27,11 +27,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static com.google.common.base.Throwables.getRootCause;
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_DISCOVERY;
 import static net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService.ALBUM_TASK_COUNT;
@@ -363,6 +365,7 @@ public class ArtistDiscoveryService {
             }
             ExternalImage image = null;
             if (result != null) {
+                task.setRawRequests(List.of(result)).setRawResponses(List.of());
                 try {
                     image = externalImageStorage.downloadAndSave(URI.create(result)).getExternalImage();
                 } catch (IOException e) {
@@ -383,6 +386,7 @@ public class ArtistDiscoveryService {
                 externalImageStorage.delete(previousImage.getId());
             }
             if (image != null) {
+                task.setRawResponses(List.of(Map.of("status", "success", "mimeType", image.getMimeType(), "size", image.getSize())));
                 // Replace the source URL with the saved image metadata before this transaction commits.
                 discoveryTaskRepository.save(task.setResult(JsonConverter.toJson(new ArtistImageResult(image.getId(), result))));
             }
@@ -390,6 +394,9 @@ public class ArtistDiscoveryService {
 
         @Override
         public void onError(DiscoveryTask task, Throwable error) {
+            if (task.getRawRequests() != null && !task.getRawRequests().isEmpty()) {
+                task.setRawResponses(List.of(Map.of("status", "error", "error", getRootCause(error).toString())));
+            }
             logService.error(logger, "Could not discover image of type {} for artist '{}'.", type, artist.getName(), error);
         }
     }

@@ -184,8 +184,16 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
             ExternalImageFile image = image(type);
             assertThat(Files.readAllBytes(image.getFile().toPath())).isEqualTo(content);
             assertImageResult(type, image);
+            assertImageDownload(type, image);
         }
         assertThat(externalImageRepository.count()).isEqualTo(2);
+    }
+
+    private void assertImageDownload(DiscoveryTaskType type, ExternalImageFile image) {
+        DiscoveryTask task = latestTask(type);
+        assertThat(task.getRawRequests()).containsExactly(image.getExternalImage().getSourceUri().toString());
+        assertThat(task.getRawResponses()).containsExactly(Map.of(
+                "status", "success", "mimeType", image.getExternalImage().getMimeType(), "size", content.length));
     }
 
     private void discover(@Nullable Consumer<DiscoveryProgress> observer) {
@@ -229,6 +237,14 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(externalImageRepository.count()).isEqualTo(2);
         assertImageResult(ARTIST_BIO_IMAGE, bio);
         assertImageResult(ARTIST_AVATAR_IMAGE, avatar);
+        assertNoImageExchange(ARTIST_BIO_IMAGE);
+        assertNoImageExchange(ARTIST_AVATAR_IMAGE);
+    }
+
+    private void assertNoImageExchange(DiscoveryTaskType type) {
+        DiscoveryTask task = latestTask(type);
+        assertThat(task.getRawRequests()).isNull();
+        assertThat(task.getRawResponses()).isNull();
     }
 
     private void assertNoImageResult(DiscoveryTaskType type) {
@@ -259,6 +275,8 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(downloads.get()).isEqualTo(2);
         assertNoImageResult(ARTIST_BIO_IMAGE);
         assertNoImageResult(ARTIST_AVATAR_IMAGE);
+        assertNoImageExchange(ARTIST_BIO_IMAGE);
+        assertNoImageExchange(ARTIST_AVATAR_IMAGE);
     }
 
     @ParameterizedTest
@@ -277,11 +295,13 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(replacement.getExternalImage().getId()).isNotEqualTo(previous.getExternalImage().getId());
         assertThat(replacement.getExternalImage().getSourceUri()).isEqualTo(sourceUri("/replacement"));
         assertImageResult(type, replacement);
+        assertImageDownload(type, replacement);
         assertThat(previous.getFile()).doesNotExist();
         assertThat(externalImageRepository.existsById(previous.getExternalImage().getId())).isFalse();
         assertThat(image(otherType).getExternalImage().getId()).isEqualTo(other.getExternalImage().getId());
         assertThat(other.getFile()).exists();
         assertImageResult(otherType, other);
+        assertNoImageExchange(otherType);
         assertThat(downloads.get()).isEqualTo(3);
         assertThat(externalImageRepository.count()).isEqualTo(2);
     }
@@ -301,9 +321,17 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(latestTask(type).getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(latestTask(type).getResult()).contains(error);
+        assertThat(latestTask(type).getRawRequests()).containsExactly(sourceUri(path).toString());
+        assertThat(latestTask(type).getRawResponses()).singleElement().satisfies(response -> {
+            assertThat(response).isInstanceOf(Map.class);
+            Map<?, ?> responseData = (Map<?, ?>) response;
+            assertThat(responseData.get("status")).isEqualTo("error");
+            assertThat(responseData.get("error")).asString().startsWith("java.io.IOException: ").contains(error);
+        });
         assertThat(image(type).getExternalImage().getId()).isEqualTo(previous.getExternalImage().getId());
         assertThat(previous.getFile()).exists();
         assertImageResult(otherType, image(otherType));
+        assertImageDownload(otherType, image(otherType));
         assertThat(other.getFile()).doesNotExist();
         assertThat(externalImageRepository.count()).isEqualTo(2);
     }
@@ -328,6 +356,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         ExternalImageFile replacement = image(type);
         assertThat(replacement.getExternalImage().getSourceUri()).isEqualTo(sourceUri("/missing"));
         assertImageResult(type, replacement);
+        assertImageDownload(type, replacement);
         assertThat(previous.getFile()).doesNotExist();
         assertThat(image(otherType).getExternalImage().getId()).isEqualTo(other.getExternalImage().getId());
         assertThat(other.getFile()).exists();
@@ -355,6 +384,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         for (DiscoveryTaskType type : List.of(ARTIST_BIO_IMAGE, ARTIST_AVATAR_IMAGE)) {
             assertThat(latestTask(type).getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
             assertThat(latestTask(type).getResult()).contains("No completed SPOTIFY_ARTIST_DATA task");
+            assertNoImageExchange(type);
         }
         assertThat(downloads.get()).isZero();
         assertThat(externalImageRepository.count()).isZero();
@@ -371,6 +401,9 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(latestTask(ARTIST_BIO_IMAGE).getStatus()).isEqualTo(DiscoveryTask.Status.FAILED);
         assertThat(latestTask(ARTIST_BIO_IMAGE).getResult()).contains("Could not save image index");
+        assertThat(latestTask(ARTIST_BIO_IMAGE).getRawRequests()).containsExactly(sourceUri("/replacement").toString());
+        assertThat(latestTask(ARTIST_BIO_IMAGE).getRawResponses()).containsExactly(Map.of(
+                "status", "error", "error", "java.lang.IllegalStateException: Could not save image index"));
         assertThat(image(ARTIST_BIO_IMAGE).getExternalImage().getId()).isEqualTo(previous.getExternalImage().getId());
         assertThat(previous.getFile()).exists();
         assertImageResult(ARTIST_AVATAR_IMAGE, image(ARTIST_AVATAR_IMAGE));
@@ -395,6 +428,8 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(latestTask(ARTIST_BIO_IMAGE).getStatus()).isEqualTo(DiscoveryTask.Status.INTERRUPTED);
         assertThat(latestTask(ARTIST_BIO_IMAGE).getResult()).isNull();
+        assertThat(latestTask(ARTIST_BIO_IMAGE).getRawRequests()).containsExactly(sourceUri("/replacement").toString());
+        assertThat(latestTask(ARTIST_BIO_IMAGE).getRawResponses()).isEmpty();
         assertThat(image(ARTIST_BIO_IMAGE).getExternalImage().getId()).isEqualTo(previous.getExternalImage().getId());
         assertThat(previous.getFile()).exists();
         assertThat(externalImageRepository.count()).isEqualTo(2);
