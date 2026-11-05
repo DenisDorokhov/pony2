@@ -8,6 +8,10 @@
 
   &.is-rounded {
     border-radius: 50%;
+
+    img.loaded {
+      object-fit: cover;
+    }
   }
 
   .container {
