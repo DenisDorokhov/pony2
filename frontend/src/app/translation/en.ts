@@ -146,6 +146,11 @@ export default {
   },
   artistBiography: {
     header: 'About',
+    expandText: 'Read more',
+    collapseText: 'Show less',
+    similarArtists: 'Similar Artists',
+    expandArtists: 'Show all ({count})',
+    collapseArtists: 'Show less',
   },
   artistLikes: {
     header: '{artistName}',

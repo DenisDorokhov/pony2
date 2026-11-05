@@ -1,11 +1,11 @@
 <div class="modal-header">
   <h4 class="modal-title" id="artist-biography-title">
-    <i class="bi bi-journal-text" aria-hidden="true"></i>{{ 'artistBiography.header' | translate }}
+    <i class="bi bi-book" aria-hidden="true"></i>{{ 'artistBiography.header' | translate }}
   </h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
-<div class="modal-body p-0">
+<div #body class="modal-body p-0" data-pony-image-loader-scroller>
   @if (loadingState === LoadingState.LOADING) {
     <pony-loading-indicator class="state"></pony-loading-indicator>
   }
@@ -40,18 +40,58 @@
           </p>
         }
       </header>
-      @for (paragraph of paragraphs; track $index) {
-        <p class="biography-text">
-          @for (part of paragraph; track $index) {
-            @if (part.href) {
-              <a [href]="part.href" target="_blank" rel="noopener noreferrer">{{ part.text }}</a>
-            } @else {
-              <span>{{ part.text }}</span>
+      @if (paragraphs.length) {
+        <div class="biography-preview" [class.collapsed]="biographyCanExpand && !biographyExpanded">
+          <div #biographyContent id="artist-biography-content" class="biography-content">
+            @for (paragraph of paragraphs; track $index) {
+              <p class="biography-text">
+                @for (part of paragraph; track $index) {
+                  @if (part.href) {
+                    <a [href]="part.href" target="_blank" rel="noopener noreferrer"
+                       [attr.tabindex]="biographyCanExpand && !biographyExpanded ? -1 : null">{{ part.text }}</a>
+                  } @else {
+                    <span>{{ part.text }}</span>
+                  }
+                }
+              </p>
             }
-          }
-        </p>
+          </div>
+        </div>
+        @if (biographyCanExpand) {
+          <button type="button" class="content-toggle" [attr.aria-expanded]="biographyExpanded"
+                  aria-controls="artist-biography-content" (click)="toggleBiography()">
+            <span>{{ (biographyExpanded ? 'artistBiography.collapseText' : 'artistBiography.expandText') | translate }}</span>
+            <i class="bi" [class]="biographyExpanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+          </button>
+        }
       }
-      @if (!paragraphs.length && !links.length) {
+      @if (data.similarArtists.length) {
+        <section #similarArtists class="similar-artists" [class.without-text]="!paragraphs.length"
+                 aria-labelledby="similar-artists-title">
+          <h3 id="similar-artists-title" class="similar-artists-title">
+            {{ 'artistBiography.similarArtists' | translate }}
+          </h3>
+          <div id="similar-artists-list" class="similar-artists-grid">
+            @for (artist of visibleSimilarArtists; track artist.id) {
+              <button type="button" class="similar-artist" [title]="artist.name | ponyUnknownArtist"
+                      (click)="goToArtist(artist, $event)">
+                <pony-image-loader [url]="artist.discoveryData?.avatarExternalImageUrl || artist.largeArtworkUrl"
+                                   [rounded]="true" aria-hidden="true"></pony-image-loader>
+                <span class="similar-artist-name">{{ artist.name | ponyUnknownArtist }}</span>
+              </button>
+            }
+          </div>
+          @if (data.similarArtists.length > similarArtistPreviewCount) {
+            <button type="button" class="content-toggle" [attr.aria-expanded]="similarArtistsExpanded"
+                    aria-controls="similar-artists-list" (click)="toggleSimilarArtists()">
+              <span>{{ (similarArtistsExpanded ? 'artistBiography.collapseArtists' : 'artistBiography.expandArtists')
+                | translate:{count: data.similarArtists.length} }}</span>
+              <i class="bi" [class]="similarArtistsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+            </button>
+          }
+        </section>
+      }
+      @if (!paragraphs.length && !links.length && !data.similarArtists.length) {
         <pony-no-content-indicator [message]="'discoveryTasks.noResult' | translate"></pony-no-content-indicator>
       }
     </article>

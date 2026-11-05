@@ -9,6 +9,11 @@
 
 - Write all code comments, including JavaDoc, in English only.
 
+# Artifacts outside the project
+
+- Whenever you create an artifact outside the project (for example, an image, mockup, or document), always include an explicit clickable link to it in the final response, even if the tool already displays a preview.
+- For local artifacts, also provide the full absolute path so the user can copy it and open the artifact manually. Do not rely on automatic previews or attachments in the JetBrains agent interface.
+
 # Integration tests
 
 - Reuse the shared Spring application context provided by `IntegrationTest`.

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -93,6 +94,28 @@ class DiscoveryTaskResultReaderTest {
         assertThat(result.externalImageId()).isEqualTo("image");
         assertThat(result.isAvailable()).isFalse();
         assertThat(result.faces()).isNull();
+        assertThat(result.similarArtistSpotifyIds()).isEmpty();
+    }
+
+    @Test
+    void shouldReadDistinctSimilarArtistSpotifyIdsInOriginalOrder() {
+        when(taskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(Optional.of("""
+                        {"similarArtists":[{"id":"second"},null,{"id":""},{"id":" "},{"name":"Missing ID"},
+                        {"id":"first"},{"id":"second"}]}
+                        """));
+
+        assertThat(reader.readArtistBiography("artist", null).similarArtistSpotifyIds()).containsExactly("second", "first");
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"null", "{}", "{\"similarArtists\":null}", "{\"similarArtists\":[]}"})
+    void shouldReadEmptySimilarArtistsWhenResultOrFieldIsMissing(String result) {
+        when(taskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
+                .thenReturn(Optional.ofNullable(result));
+
+        assertThat(reader.readArtistBiography("artist", null).similarArtistSpotifyIds()).isEmpty();
     }
 
     @Test

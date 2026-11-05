@@ -18,6 +18,8 @@ public interface LibraryService {
 
     Optional<Artist> getArtistById(String artistId);
 
+    List<Artist> getArtistsBySpotifyIds(List<String> spotifyArtistIds);
+
     Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId);
 
     Map<String, ArtistDiscoveryData> getArtistDiscoveryData(List<String> artistIds);

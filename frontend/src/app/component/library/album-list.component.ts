@@ -158,7 +158,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.albumCount = 0;
           this.songCount = 0;
           this.artistSongs = artistSongs;
-          this.countryFlagCode = this.countryService.getFlagCode(artistSongs.artist.discoveryData.countryCode);
+          this.countryFlagCode = this.countryService.getFlagCode(artistSongs.artist.discoveryData?.countryCode);
           this.countryName = this.countryService.getName(this.countryFlagCode);
           this.genreNames = this.artistSongs.artist.genres.map(genre => {
             if (genre.name) {

@@ -96,6 +96,8 @@ public class LibraryServiceImplTest {
         assertThat(libraryService.getArtistDiscoveryData("artist")).isEmpty();
         assertThat(libraryService.getArtistDiscoveryData(List.of("first", "second"))).isEmpty();
         assertThat(libraryService.getAlbumDiscoveryData("album")).isEmpty();
+        assertThat(libraryService.getArtistBiographyData("artist")).isEmpty();
+        assertThat(libraryService.getArtistsBySpotifyIds(List.of("spotify-artist"))).isEmpty();
         verifyNoInteractions(discoveryTaskRepository, artistDiscoveryRepository, songRepository);
     }
 
@@ -147,6 +149,27 @@ public class LibraryServiceImplTest {
         when(artistRepository.findById(any())).thenReturn(Optional.of(artist));
 
         assertThat(libraryService.getArtistById("1")).containsSame(artist);
+    }
+
+    @Test
+    void shouldFindAllLocalArtistsInSpotifyOrderWithoutDuplicates() {
+        Artist first = new Artist().setId("first").setName("First");
+        Artist sharedA = new Artist().setId("shared-a").setName("A");
+        Artist sharedZ = new Artist().setId("shared-z").setName("Z");
+        List<String> spotifyIds = List.of("shared", "missing", "first", "shared");
+        when(artistDiscoveryRepository.findAllBySpotifyArtistIdIn(spotifyIds)).thenReturn(List.of(
+                new ArtistDiscovery().setArtist(first).setSpotifyArtistId("first"),
+                new ArtistDiscovery().setArtist(sharedZ).setSpotifyArtistId("shared"),
+                new ArtistDiscovery().setArtist(sharedA).setSpotifyArtistId("shared")));
+
+        assertThat(libraryService.getArtistsBySpotifyIds(spotifyIds)).containsExactly(sharedA, sharedZ, first);
+        verify(artistDiscoveryRepository).findAllBySpotifyArtistIdIn(spotifyIds);
+    }
+
+    @Test
+    void shouldNotLookUpArtistsForEmptySpotifyIds() {
+        assertThat(libraryService.getArtistsBySpotifyIds(List.of())).isEmpty();
+        verifyNoInteractions(artistDiscoveryRepository);
     }
 
     @ParameterizedTest

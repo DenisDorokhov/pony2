@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
@@ -49,13 +50,33 @@ public class DiscoveryTaskResultReader {
     }
 
     private ArtistBiographyData toArtistBiography(String artistId, @Nullable String imageId, @Nullable String result) {
-        Biography biography = result != null ? JsonConverter.fromJson(result, Biography.class) : null;
-        String text = biography != null ? biography.biography() : null;
-        List<ArtistBiographyData.Link> links = biography != null && biography.links() != null
-                ? biography.links().stream().map(ArtistBiographyData.Link::of).toList()
-                : emptyList();
-        return new ArtistBiographyData(imageId, readArtistBioImageFaces(artistId, imageId),
-                text != null && !text.isBlank() ? text : null, links);
+        Biography biography = null;
+        if (result != null) {
+            biography = JsonConverter.fromJson(result, Biography.class);
+        }
+        String text = null;
+        List<ArtistBiographyData.Link> links = emptyList();
+        List<String> similarArtistSpotifyIds = emptyList();
+        if (biography != null) {
+            text = biography.biography();
+            if (biography.links() != null) {
+                links = biography.links().stream().map(ArtistBiographyData.Link::of).toList();
+            }
+            if (biography.similarArtists() != null) {
+                similarArtistSpotifyIds = biography.similarArtists().stream()
+                        .filter(Objects::nonNull)
+                        .map(SpotifyArtistData.SpotifyArtist::id)
+                        .filter(id -> id != null && !id.isBlank())
+                        .distinct()
+                        .toList();
+            }
+        }
+        if (text != null && text.isBlank()) {
+            text = null;
+        }
+        return new ArtistBiographyData(
+                imageId, readArtistBioImageFaces(artistId, imageId), text, links, similarArtistSpotifyIds
+        );
     }
 
     public Map<String, Boolean> readArtistBiographyAvailability(List<String> artistIds) {
@@ -68,7 +89,10 @@ public class DiscoveryTaskResultReader {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record Biography(@Nullable String biography, @Nullable List<SpotifyArtistData.ExternalLink> links) {}
+    private record Biography(
+            @Nullable String biography, @Nullable List<SpotifyArtistData.ExternalLink> links,
+            @Nullable List<SpotifyArtistData.SpotifyArtist> similarArtists
+    ) {}
 
     public @Nullable List<ImageFace> readArtistBioImageFaces(String artistId, @Nullable String imageId) {
         if (imageId == null) {

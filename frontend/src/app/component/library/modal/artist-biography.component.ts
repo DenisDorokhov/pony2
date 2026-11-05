@@ -2,7 +2,7 @@ import {Component, ElementRef, HostListener, inject, Input, NgZone, OnDestroy, O
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {TranslateModule} from '@ngx-translate/core';
 import {Subscription} from 'rxjs';
-import {ArtistBiography} from '../../../domain/library.model';
+import {Artist, ArtistBiography} from '../../../domain/library.model';
 import {LoadingState} from '../../../domain/common.model';
 import {CountryService} from '../../../service/country.service';
 import {LibraryService} from '../../../service/library.service';
@@ -12,6 +12,7 @@ import {UnknownGenrePipe} from '../../../pipe/unknown-genre.pipe';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../../common/no-content-indicator.component';
+import {ImageLoaderComponent} from '../../common/image-loader.component';
 import {
   ArtistBiographyImageCrop,
   ArtistBiographyTextPart,
@@ -22,7 +23,7 @@ import {
 } from '../../../utils/artist-biography.utils';
 
 @Component({
-  imports: [TranslateModule, UnknownArtistPipe, UnknownGenrePipe, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent],
+  imports: [TranslateModule, UnknownArtistPipe, UnknownGenrePipe, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, ImageLoaderComponent],
   selector: 'pony-artist-biography',
   templateUrl: './artist-biography.component.html',
   styleUrls: ['./artist-biography.component.scss']
@@ -41,6 +42,21 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
 
   @ViewChild('hero') private heroElement?: ElementRef<HTMLElement>;
   @ViewChild('image') private imageElement?: ElementRef<HTMLImageElement>;
+  @ViewChild('body') private bodyElement?: ElementRef<HTMLElement>;
+  @ViewChild('similarArtists') private similarArtistsElement?: ElementRef<HTMLElement>;
+
+  @ViewChild('biographyContent')
+  private set biographyContent(element: ElementRef<HTMLElement> | undefined) {
+    this.textResizeObserver?.disconnect();
+    this.biographyContentElement = element;
+    if (element) {
+      this.textResizeObserver = new ResizeObserver(() => this.ngZone.run(() => {
+        const lineHeight = parseFloat(getComputedStyle(element.nativeElement).lineHeight);
+        this.biographyCanExpand = element.nativeElement.scrollHeight > lineHeight * 9 + 1;
+      }));
+      this.textResizeObserver.observe(element.nativeElement);
+    }
+  }
 
   readonly LoadingState = LoadingState;
   loadingState = LoadingState.LOADING;
@@ -53,21 +69,64 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
   imageLoaded = false;
   imageFailed = false;
   imageGradient = '';
+  biographyCanExpand = false;
+  biographyExpanded = false;
+  similarArtistsExpanded = false;
+  readonly similarArtistPreviewCount = 4;
 
   private subscriptions: Subscription[] = [];
   private resizeObserver: ResizeObserver | undefined;
+  private textResizeObserver: ResizeObserver | undefined;
+  private biographyContentElement: ElementRef<HTMLElement> | undefined;
   private imageColor: number[] | undefined;
+
+  get visibleSimilarArtists(): Artist[] {
+    const artists = this.biography?.similarArtists ?? [];
+    return this.similarArtistsExpanded ? artists : artists.slice(0, this.similarArtistPreviewCount);
+  }
+
+  toggleBiography(): void {
+    this.biographyExpanded = !this.biographyExpanded;
+    if (!this.biographyExpanded) {
+      this.scrollBackTo(this.biographyContentElement?.nativeElement);
+    }
+  }
+
+  private scrollBackTo(element: HTMLElement | undefined): void {
+    const body = this.bodyElement?.nativeElement;
+    if (element && body) {
+      const top = element.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 16;
+      body.scrollTop = Math.min(body.scrollTop, Math.max(0, top));
+    }
+  }
+
+  toggleSimilarArtists(): void {
+    this.similarArtistsExpanded = !this.similarArtistsExpanded;
+    if (!this.similarArtistsExpanded) {
+      this.scrollBackTo(this.similarArtistsElement?.nativeElement);
+    }
+  }
+
+  goToArtist(artist: Artist, event: MouseEvent): void {
+    if (event.altKey) {
+      event.preventDefault();
+      return;
+    }
+    this.libraryService.selectArtistAndMakeDefault(artist);
+    this.libraryService.requestScrollToArtist(artist);
+    this.activeModal.dismiss();
+  }
 
   ngOnInit(): void {
     this.subscriptions.push(this.themeService.observeTheme().subscribe(() => this.updateBackground()));
     this.subscriptions.push(this.libraryService.getArtistBiography(this.artistId).subscribe({
       next: biography => {
         this.biography = biography;
-        this.countryFlagCode = this.countryService.getFlagCode(biography.artist.discoveryData.countryCode);
+        this.countryFlagCode = this.countryService.getFlagCode(biography.artist.discoveryData?.countryCode);
         this.countryName = this.countryService.getName(this.countryFlagCode);
         this.paragraphs = formatArtistBiographyText(biography.text);
         this.links = biography.links.map(link => ({...link, ...ARTIST_BIOGRAPHY_LINKS[link.type]}));
-        const spotifyArtistId = biography.artist.discoveryData.spotifyArtistId;
+        const spotifyArtistId = biography.artist.discoveryData?.spotifyArtistId;
         if (spotifyArtistId) {
           this.links.push({url: `https://open.spotify.com/artist/${encodeURIComponent(spotifyArtistId)}`,
             label: 'Spotify', icon: 'bi-spotify'});
@@ -140,5 +199,6 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
     this.resizeObserver?.disconnect();
+    this.textResizeObserver?.disconnect();
   }
 }

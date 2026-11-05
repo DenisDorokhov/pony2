@@ -12,6 +12,7 @@ public final class ArtistBiographyDto {
     private List<ImageFaceDto> faces;
     private String text;
     private List<Link> links;
+    private List<ArtistDetailsDto> similarArtists = List.of();
 
     public ArtistDetailsDto getArtist() {
         return artist;
@@ -55,6 +56,15 @@ public final class ArtistBiographyDto {
 
     public ArtistBiographyDto setLinks(List<Link> links) {
         this.links = links;
+        return this;
+    }
+
+    public List<ArtistDetailsDto> getSimilarArtists() {
+        return similarArtists;
+    }
+
+    public ArtistBiographyDto setSimilarArtists(List<ArtistDetailsDto> similarArtists) {
+        this.similarArtists = similarArtists;
         return this;
     }
 

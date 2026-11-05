@@ -45,7 +45,7 @@ export class ArtistLikesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const artistSongs = this.artistSongs.albumSongs.flatMap(albumSongs => albumSongs.songs);
-    const topSongs = this.artistSongs.artist.discoveryData.topSongIds
+    const topSongs = (this.artistSongs.artist.discoveryData?.topSongIds ?? [])
       .map(songId => artistSongs.find(song => song.id === songId))
       .filter((song): song is Song => song !== undefined);
     this.subscriptions.push(this.playlistService.observeLikePlaylist().subscribe(likePlaylist => {

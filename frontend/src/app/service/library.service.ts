@@ -203,7 +203,11 @@ export class LibraryService {
 
   isTopTrack(song: Song): boolean {
     const artist = this.artistsById.get(song.album.artist.id);
-    return artist?.discoveryData.topSongIds.includes(song.id) ?? song.isTopTrack;
+    if (artist) {
+      // Missing discovery data in the cache must override stale top-track data in the song after discovery is disabled.
+      return artist.discoveryData?.topSongIds.includes(song.id) ?? false;
+    }
+    return song.isTopTrack;
   }
 
   requestArtists(): Observable<Artist[]> {

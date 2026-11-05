@@ -40,6 +40,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.test.ExternalImageFixtures.externalImage;
@@ -375,6 +376,79 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(biography.getLinks()).isEmpty();
         assertThat(biography.getText()).isNull();
         assertThat(biography.getExternalImageId()).isNull();
+        assertThat(biography.getSimilarArtists()).isEmpty();
+    }
+
+    @Test
+    void shouldResolveSimilarArtistsInSpotifyOrderWithDiscoveryDetails() {
+        enableLlm();
+        ExternalImage avatar = externalImageRepository.save(externalImage());
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setSpotifyArtistId("self"));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist2).setSpotifyArtistId("second")
+                .setCountryCode("DE").setAvatarExternalImage(avatar));
+        Artist sharedZ = artistRepository.save(new Artist().setName("Z"));
+        Artist sharedA = artistRepository.save(new Artist().setName("A"));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(sharedZ).setSpotifyArtistId("shared"));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(sharedA).setSpotifyArtistId("shared"));
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("biography", "Biography", "similarArtists", List.of(
+                        Map.of("id", "second"), Map.of("id", "missing"), Map.of("id", "shared"),
+                        Map.of("id", "second"), Map.of("id", "self"))))));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+
+        assertThat(biography.getSimilarArtists()).extracting(dto -> dto.getArtist().getId())
+                .containsExactly(artist2.getId(), sharedA.getId(), sharedZ.getId());
+        ArtistDiscoveryDataDto discoveryData = biography.getSimilarArtists().getFirst().getDiscoveryData();
+        assertThat(discoveryData).isNotNull();
+        assertThat(discoveryData.getSpotifyArtistId()).isEqualTo("second");
+        assertThat(discoveryData.getCountryCode()).isEqualTo("DE");
+        assertThat(discoveryData.getAvatarExternalImageId()).isEqualTo(avatar.getId());
+    }
+
+    @Test
+    void shouldReturnAllFortyLocalSimilarArtists() {
+        enableLlm();
+        List<Artist> similarArtists = getTransactionTemplate().execute(status -> IntStream.range(0, 40).mapToObj(index -> {
+            Artist artist = artistRepository.save(new Artist().setName("Similar artist " + index));
+            artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify-" + index));
+            return artist;
+        }).toList());
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("similarArtists",
+                        IntStream.range(0, 40).mapToObj(index -> Map.of("id", "spotify-" + index)).toList()))));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+
+        assertThat(biography.getSimilarArtists()).extracting(dto -> dto.getArtist().getId())
+                .containsExactlyElementsOf(requireNonNull(similarArtists).stream().map(Artist::getId).toList());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"similarArtists\":null}", "{\"similarArtists\":[]}",
+            "{\"similarArtists\":[{\"id\":\"missing\"}]}"})
+    void shouldReturnEmptySimilarArtistsWithoutLocalMatches(String result) {
+        enableLlm();
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE).setResult(result));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+
+        assertThat(biography.getSimilarArtists()).isEmpty();
     }
 
     @Test
@@ -549,6 +623,36 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReturnArtistDiscoveryDetailsInSearchWhenEnabled(boolean discoveryEnabled) {
+        if (discoveryEnabled) {
+            enableLlm();
+        }
+        ExternalImage avatar = externalImageRepository.save(externalImage());
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setSpotifyArtistId("spotify-artist")
+                .setCountryCode("DE").setAvatarExternalImage(avatar));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange(
+                "/api/library/search?query=foo", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode artists = JsonConverter.fromJson(requireNonNull(response.getBody()), JsonNode.class).path("artists");
+        assertThat(artists.size()).isEqualTo(2);
+        JsonNode first = artists.get(0);
+        assertThat(first.path("artist").path("id").asString()).isEqualTo(artist1.getId());
+        assertThat(first.has("discoveryData")).isEqualTo(discoveryEnabled);
+        assertThat(artists.get(1).has("discoveryData")).isEqualTo(discoveryEnabled);
+        if (discoveryEnabled) {
+            JsonNode discoveryData = first.path("discoveryData");
+            assertThat(discoveryData.path("countryCode").asString()).isEqualTo("DE");
+            assertThat(discoveryData.path("spotifyArtistId").asString()).isEqualTo("spotify-artist");
+            assertThat(discoveryData.path("avatarExternalImageId").asString()).isEqualTo(avatar.getId());
+        }
+    }
+
     @Test
     public void shouldSearch() {
 
@@ -567,8 +671,9 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
             });
             assertThat(searchResult.getArtists()).satisfies(artists -> {
                 assertThat(artists).hasSize(2);
-                checkArtistDto(artists.get(0), artist1);
-                checkArtistDto(artists.get(1), artist2);
+                checkArtistDto(artists.get(0).getArtist(), artist1);
+                checkArtistDto(artists.get(1).getArtist(), artist2);
+                assertThat(artists).allSatisfy(artist -> assertThat(artist.getDiscoveryData()).isNull());
             });
             assertThat(searchResult.getAlbumDetails()).satisfies(albums -> {
                 assertThat(albums).hasSize(3);

@@ -98,6 +98,25 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Artist> getArtistsBySpotifyIds(List<String> spotifyArtistIds) {
+        if (spotifyArtistIds.isEmpty() || !configService.get().discoveryEnabled()) {
+            return emptyList();
+        }
+        Map<String, List<Artist>> artistsBySpotifyId = artistDiscoveryRepository.findAllBySpotifyArtistIdIn(spotifyArtistIds).stream()
+                .collect(
+                        Collectors.groupingBy(ArtistDiscovery::getSpotifyArtistId,
+                        Collectors.mapping(ArtistDiscovery::getArtist, Collectors.toList()))
+                );
+        return spotifyArtistIds.stream()
+                .distinct()
+                .flatMap(id -> artistsBySpotifyId.getOrDefault(id, emptyList()).stream()
+                        .sorted(Comparator.<Artist>naturalOrder().thenComparing(Artist::getId)))
+                .distinct()
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId) {
         if (!configService.get().discoveryEnabled()) {
             return Optional.empty();

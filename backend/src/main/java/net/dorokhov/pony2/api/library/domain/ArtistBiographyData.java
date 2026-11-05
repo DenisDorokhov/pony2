@@ -10,7 +10,8 @@ public record ArtistBiographyData(
         @Nullable String externalImageId,
         @Nullable List<ImageFace> faces,
         @Nullable String text,
-        List<Link> links
+        List<Link> links,
+        List<String> similarArtistSpotifyIds
 ) {
     public boolean isAvailable() {
         return (text != null && !text.isBlank()) || !links.isEmpty();

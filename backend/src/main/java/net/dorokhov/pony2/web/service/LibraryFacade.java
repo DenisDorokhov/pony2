@@ -92,8 +92,19 @@ public class LibraryFacade {
     public ArtistBiographyDto getArtistBiography(String artistId) throws ObjectNotFoundException {
         Artist artist = libraryService.getArtistById(artistId)
                 .orElseThrow(() -> new ObjectNotFoundException(Artist.class, artistId));
-        return ArtistBiographyDto.of(toArtistDetailsDto(artist),
-                libraryService.getArtistBiographyData(artistId).orElse(null));
+        ArtistBiographyData biography = libraryService.getArtistBiographyData(artistId).orElse(null);
+        List<Artist> similarArtists = List.of();
+        if (biography != null) {
+            similarArtists = libraryService.getArtistsBySpotifyIds(biography.similarArtistSpotifyIds()).stream()
+                    .filter(similarArtist -> !artistId.equals(similarArtist.getId()))
+                    .toList();
+        }
+        Map<String, ArtistDiscoveryData> discoveryData = libraryService.getArtistDiscoveryData(
+                similarArtists.stream().map(Artist::getId).toList());
+        return ArtistBiographyDto.of(toArtistDetailsDto(artist), biography)
+                .setSimilarArtists(similarArtists.stream()
+                        .map(similarArtist -> ArtistDetailsDto.of(similarArtist, discoveryData.get(similarArtist.getId())))
+                        .toList());
     }
 
     private ArtistDetailsDto toArtistDetailsDto(Artist artist) {
@@ -114,7 +125,10 @@ public class LibraryFacade {
         List<Artist> artists = librarySearchService.searchArtists(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         List<Album> albums = librarySearchService.searchAlbums(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
         List<Song> songs = librarySearchService.searchSongs(LibrarySearchQuery.of(query), SEARCH_RESULT_COUNT);
-        return SearchResultDto.of(genres, artists, albums, songs, ArtistDto::of, ArtistAlbumDto::of, isAdmin());
+        Map<String, ArtistDiscoveryData> discoveryData = libraryService.getArtistDiscoveryData(
+                artists.stream().map(Artist::getId).toList());
+        return SearchResultDto.of(genres, artists, albums, songs,
+                artist -> ArtistDetailsDto.of(artist, discoveryData.get(artist.getId())), ArtistAlbumDto::of, isAdmin());
     }
 
     @Transactional(readOnly = true)

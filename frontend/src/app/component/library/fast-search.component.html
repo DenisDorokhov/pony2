@@ -16,7 +16,8 @@
         <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
            title="{{ artist.name | ponyUnknownArtist }}"
            (mousedown)="selectArtist(artist, $event)" (click)="goToArtist(artist, $event)">
-          <pony-image-loader [url]="artist.smallArtworkUrl"></pony-image-loader>
+          <pony-image-loader [url]="artist.discoveryData?.avatarExternalImageUrl || artist.smallArtworkUrl"
+                             [rounded]="artist.discoveryData !== undefined"></pony-image-loader>
           <div class="text no-description">{{ artist.name | ponyUnknownArtist }}</div>
         </a>
       }

@@ -67,7 +67,7 @@ export class Song {
   }
 
   get isTopTrack(): boolean {
-    return this.album.artist.discoveryData.topSongIds.includes(this.id);
+    return this.album.artist.discoveryData?.topSongIds.includes(this.id) ?? false;
   }
 
   getRelativeDurationInMinutes(progress: number, fractionDigits = 0) {
@@ -251,7 +251,7 @@ export class Artist {
   smallArtworkUrl: string | undefined;
   largeArtworkUrl: string | undefined;
   genres: Genre[];
-  discoveryData: ArtistDiscoveryData;
+  discoveryData: ArtistDiscoveryData | undefined;
 
   constructor(artistDto: ArtistDto, discoveryData?: ArtistDiscoveryDataDto) {
     this.id = artistDto.id;
@@ -262,7 +262,9 @@ export class Artist {
     this.smallArtworkUrl = this.artworkId ? '/api/file/artwork/small/' + this.artworkId : undefined;
     this.largeArtworkUrl = this.artworkId ? '/api/file/artwork/large/' + this.artworkId : undefined;
     this.genres = artistDto.genres.map(genreDto => new Genre(genreDto));
-    this.discoveryData = new ArtistDiscoveryData(discoveryData);
+    if (discoveryData !== undefined) {
+      this.discoveryData = new ArtistDiscoveryData(discoveryData);
+    }
   }
 
   static equals(artist1: Artist | undefined, artist2: Artist | undefined) {
@@ -303,13 +305,13 @@ export class ArtistDiscoveryData {
   avatarExternalImageUrl: string | undefined;
   biographyAvailable: boolean;
 
-  constructor(dto: ArtistDiscoveryDataDto | undefined) {
-    this.spotifyArtistId = dto?.spotifyArtistId;
-    this.countryCode = dto?.countryCode;
-    this.topSongIds = dto?.topSongIds ?? [];
-    this.avatarExternalImageId = dto?.avatarExternalImageId;
+  constructor(dto: ArtistDiscoveryDataDto) {
+    this.spotifyArtistId = dto.spotifyArtistId;
+    this.countryCode = dto.countryCode;
+    this.topSongIds = dto.topSongIds ?? [];
+    this.avatarExternalImageId = dto.avatarExternalImageId;
     this.avatarExternalImageUrl = this.avatarExternalImageId ? '/api/file/externalImage/' + this.avatarExternalImageId : undefined;
-    this.biographyAvailable = dto?.biographyAvailable ?? false;
+    this.biographyAvailable = dto.biographyAvailable ?? false;
   }
 }
 
@@ -320,6 +322,7 @@ export class ArtistBiography {
   faces: ImageFaceDto[] | undefined;
   text: string | undefined;
   links: ArtistBiographyDto.Link[];
+  similarArtists: Artist[];
 
   constructor(dto: ArtistBiographyDto) {
     this.artist = new Artist(dto.artist.artist, dto.artist.discoveryData);
@@ -327,6 +330,7 @@ export class ArtistBiography {
     this.faces = dto.faces;
     this.text = dto.text;
     this.links = dto.links;
+    this.similarArtists = dto.similarArtists.map(artist => new Artist(artist.artist, artist.discoveryData));
   }
 }
 
@@ -350,7 +354,7 @@ export class SearchResult {
 
   constructor(searchResultDto: SearchResultDto) {
     this.artists = searchResultDto.artists.map(artist =>
-      new Artist(artist));
+      new Artist(artist.artist, artist.discoveryData));
     this.albums = searchResultDto.albumDetails.map(albumDetails =>
       new Album(albumDetails.album, new Artist(albumDetails.artist)));
     this.songs = searchResultDto.songDetails.map(songDetails =>

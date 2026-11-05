@@ -70,6 +70,7 @@ export interface ArtistBiographyDto {
   faces: ImageFaceDto[] | undefined;
   text: string | undefined;
   links: ArtistBiographyDto.Link[];
+  similarArtists: ArtistDetailsDto[];
 }
 
 export namespace ArtistBiographyDto {
@@ -414,7 +415,7 @@ export interface SongDetailsDto {
 
 export interface SearchResultDto {
   genres: GenreDto[];
-  artists: ArtistDto[];
+  artists: ArtistDetailsDto[];
   albumDetails: ArtistAlbumDto[];
   songDetails: SongDetailsDto[];
 }

@@ -15,7 +15,7 @@
       class="panel-heading">
       <div class="panel-title">
         <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
-          @if (discoveryEnabled && artistSongs.artist.discoveryData.biographyAvailable) {
+          @if (discoveryEnabled && artistSongs.artist.discoveryData?.biographyAvailable) {
             <button type="button" class="biography-link" aria-haspopup="dialog" (click)="openArtistBiography()">
               {{ artistSongs.artist.name | ponyUnknownArtist }}
             </button>

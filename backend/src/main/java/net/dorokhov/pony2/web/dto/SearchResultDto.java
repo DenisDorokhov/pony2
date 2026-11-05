@@ -12,7 +12,7 @@ import java.util.function.Function;
 public final class SearchResultDto {
 
     private List<GenreDto> genres = new ArrayList<>();
-    private List<ArtistDto> artists = new ArrayList<>();
+    private List<ArtistDetailsDto> artists = new ArrayList<>();
     private List<ArtistAlbumDto> albumDetails = new ArrayList<>();
     private List<SongDetailsDto> songDetails = new ArrayList<>();
 
@@ -28,14 +28,14 @@ public final class SearchResultDto {
         return this;
     }
 
-    public List<ArtistDto> getArtists() {
+    public List<ArtistDetailsDto> getArtists() {
         if (artists == null) {
             artists = new ArrayList<>();
         }
         return artists;
     }
 
-    public SearchResultDto setArtists(List<ArtistDto> artists) {
+    public SearchResultDto setArtists(List<ArtistDetailsDto> artists) {
         this.artists = artists;
         return this;
     }
@@ -66,7 +66,7 @@ public final class SearchResultDto {
 
     public static SearchResultDto of(
             List<Genre> genres, List<Artist> artists, List<Album> albums, List<Song> songs,
-            Function<Artist, ArtistDto> artistMapper, Function<Album, ArtistAlbumDto> albumMapper,
+            Function<Artist, ArtistDetailsDto> artistMapper, Function<Album, ArtistAlbumDto> albumMapper,
             boolean isAdmin
     ) {
         return new SearchResultDto()
