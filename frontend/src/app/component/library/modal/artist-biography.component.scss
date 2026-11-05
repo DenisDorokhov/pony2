@@ -226,6 +226,7 @@
 .modal-footer {
   justify-content: flex-start;
   position: relative;
+  padding-inline: 32px;
 
   &::before {
     content: '';
@@ -244,6 +245,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-inline: 0;
 }
 
 .social-links .social-link {
@@ -268,7 +270,7 @@
 }
 
 @container (max-width: 520px) {
-  .copy {
+  .copy, .modal-footer {
     padding-left: 24px;
     padding-right: 24px;
   }

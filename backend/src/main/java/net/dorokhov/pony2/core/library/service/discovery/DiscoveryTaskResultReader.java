@@ -79,13 +79,13 @@ public class DiscoveryTaskResultReader {
         );
     }
 
-    public Map<String, Boolean> readArtistBiographyAvailability(List<String> artistIds) {
+    public Map<String, ArtistBiographyData> readArtistBiographies(List<String> artistIds) {
         if (artistIds.isEmpty()) {
             return Map.of();
         }
         return taskRepository.findLatestCompletedResultsByArtistIdsAndType(artistIds, DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
                 .stream().collect(Collectors.toMap(DiscoveryTaskRepository.ArtistResult::getArtistId,
-                        result -> toArtistBiography(result.getArtistId(), null, result.getResult()).isAvailable()));
+                        result -> toArtistBiography(result.getArtistId(), null, result.getResult())));
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

@@ -13,10 +13,6 @@ public record ArtistBiographyData(
         List<Link> links,
         List<String> similarArtistSpotifyIds
 ) {
-    public boolean isAvailable() {
-        return (text != null && !text.isBlank()) || !links.isEmpty();
-    }
-
     public record Link(LinkType type, String url) {
         public static Link of(SpotifyArtistData.ExternalLink link) {
             return new Link(LinkType.fromUrl(link.url()), link.url());

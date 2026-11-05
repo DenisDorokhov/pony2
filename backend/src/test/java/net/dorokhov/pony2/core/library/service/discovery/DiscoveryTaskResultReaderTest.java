@@ -55,7 +55,6 @@ class DiscoveryTaskResultReaderTest {
         ArtistBiographyData result = reader.readArtistBiography("artist", null);
 
         assertThat(result.text()).isEqualTo("Biography\n\nSecond paragraph");
-        assertThat(result.isAvailable()).isTrue();
         assertThat(result.faces()).isNull();
         verify(taskRepository, never()).findLatestCompletedByArtistIdAndType(anyString(), any(), any());
     }
@@ -63,26 +62,24 @@ class DiscoveryTaskResultReaderTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\n\t"})
-    void shouldTreatMissingOrBlankTextAsUnavailable(String text) {
+    void shouldNormalizeMissingOrBlankTextToNull(String text) {
         when(taskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.of(JsonConverter.toJson(new Biography(text, null))));
 
         ArtistBiographyData result = reader.readArtistBiography("artist", null);
 
-        assertThat(result.isAvailable()).isFalse();
         assertThat(result.text()).isNull();
         assertThat(result.links()).isEmpty();
     }
 
     @Test
-    void shouldMakeLinksOnlyBiographyAvailable() {
+    void shouldReadLinksOnlyBiography() {
         SpotifyArtistData.ExternalLink instagram = new SpotifyArtistData.ExternalLink("Instagram", "https://www.instagram.com/artist");
         when(taskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.of(JsonConverter.toJson(new Biography(null, List.of(instagram)))));
 
         ArtistBiographyData result = reader.readArtistBiography("artist", null);
 
-        assertThat(result.isAvailable()).isTrue();
         assertThat(result.text()).isNull();
         assertThat(result.links()).containsExactly(new ArtistBiographyData.Link(ArtistBiographyData.LinkType.INSTAGRAM, instagram.url()));
     }
@@ -92,7 +89,8 @@ class DiscoveryTaskResultReaderTest {
         ArtistBiographyData result = reader.readArtistBiography("artist", "image");
 
         assertThat(result.externalImageId()).isEqualTo("image");
-        assertThat(result.isAvailable()).isFalse();
+        assertThat(result.text()).isNull();
+        assertThat(result.links()).isEmpty();
         assertThat(result.faces()).isNull();
         assertThat(result.similarArtistSpotifyIds()).isEmpty();
     }
@@ -105,17 +103,24 @@ class DiscoveryTaskResultReaderTest {
                         {"id":"first"},{"id":"second"}]}
                         """));
 
-        assertThat(reader.readArtistBiography("artist", null).similarArtistSpotifyIds()).containsExactly("second", "first");
+        ArtistBiographyData result = reader.readArtistBiography("artist", null);
+
+        assertThat(result.similarArtistSpotifyIds()).containsExactly("second", "first");
+        assertThat(result.text()).isNull();
+        assertThat(result.links()).isEmpty();
     }
 
     @ParameterizedTest
     @NullSource
-    @ValueSource(strings = {"null", "{}", "{\"similarArtists\":null}", "{\"similarArtists\":[]}"})
+    @ValueSource(strings = {"null", "{}", "{\"similarArtists\":null}", "{\"similarArtists\":[]}",
+            "{\"similarArtists\":[null,{\"id\":\"\"},{\"id\":\" \"},{\"name\":\"Missing ID\"}]}"})
     void shouldReadEmptySimilarArtistsWhenResultOrFieldIsMissing(String result) {
         when(taskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
                 .thenReturn(Optional.ofNullable(result));
 
-        assertThat(reader.readArtistBiography("artist", null).similarArtistSpotifyIds()).isEmpty();
+        ArtistBiographyData biography = reader.readArtistBiography("artist", null);
+
+        assertThat(biography.similarArtistSpotifyIds()).isEmpty();
     }
 
     @Test
@@ -146,7 +151,7 @@ class DiscoveryTaskResultReaderTest {
     private record Biography(String biography, List<SpotifyArtistData.ExternalLink> links) {}
 
     @Test
-    void shouldReadBiographyAvailabilityInOneBatchUsingTheSameContentRules() {
+    void shouldReadBiographiesInOneBatchUsingTheSameContentRules() {
         DiscoveryTaskRepository.ArtistResult text = mock(DiscoveryTaskRepository.ArtistResult.class);
         when(text.getArtistId()).thenReturn("text");
         when(text.getResult()).thenReturn(JsonConverter.toJson(new Biography("Biography", null)));
@@ -154,20 +159,29 @@ class DiscoveryTaskResultReaderTest {
         when(links.getArtistId()).thenReturn("links");
         when(links.getResult()).thenReturn(JsonConverter.toJson(new Biography(null,
                 List.of(new SpotifyArtistData.ExternalLink("Instagram", "https://instagram.com/artist")))));
+        DiscoveryTaskRepository.ArtistResult similarArtists = mock(DiscoveryTaskRepository.ArtistResult.class);
+        when(similarArtists.getArtistId()).thenReturn("similarArtists");
+        when(similarArtists.getResult()).thenReturn("{\"similarArtists\":[{\"id\":\"similar\"}]}");
         DiscoveryTaskRepository.ArtistResult empty = mock(DiscoveryTaskRepository.ArtistResult.class);
         when(empty.getArtistId()).thenReturn("empty");
-        List<String> artistIds = List.of("text", "links", "empty", "missing");
+        List<String> artistIds = List.of("text", "links", "similarArtists", "empty", "missing");
         when(taskRepository.findLatestCompletedResultsByArtistIdsAndType(artistIds, DiscoveryTaskType.SPOTIFY_ARTIST_DATA))
-                .thenReturn(List.of(text, links, empty));
+                .thenReturn(List.of(text, links, similarArtists, empty));
 
-        assertThat(reader.readArtistBiographyAvailability(artistIds))
-                .containsExactlyInAnyOrderEntriesOf(Map.of("text", true, "links", true, "empty", false));
+        assertThat(reader.readArtistBiographies(artistIds))
+                .containsExactlyInAnyOrderEntriesOf(Map.of(
+                        "text", new ArtistBiographyData(null, null, "Biography", List.of(), List.of()),
+                        "links", new ArtistBiographyData(null, null, null,
+                                List.of(new ArtistBiographyData.Link(ArtistBiographyData.LinkType.INSTAGRAM, "https://instagram.com/artist")),
+                                List.of()),
+                        "similarArtists", new ArtistBiographyData(null, null, null, List.of(), List.of("similar")),
+                        "empty", new ArtistBiographyData(null, null, null, List.of(), List.of())));
         verify(taskRepository, never()).findLatestCompletedResultByArtistIdAndType(anyString(), any(), any());
     }
 
     @Test
-    void shouldNotQueryAvailabilityForEmptyArtistList() {
-        assertThat(reader.readArtistBiographyAvailability(List.of())).isEmpty();
+    void shouldNotQueryBiographiesForEmptyArtistList() {
+        assertThat(reader.readArtistBiographies(List.of())).isEmpty();
         verifyNoInteractions(taskRepository);
     }
 

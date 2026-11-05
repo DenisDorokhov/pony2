@@ -23,6 +23,7 @@ import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -430,8 +431,51 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 "/api/library/artistBiography/{artistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
 
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isTrue();
+        assertThat(biography.getText()).isNull();
+        assertThat(biography.getLinks()).isEmpty();
         assertThat(biography.getSimilarArtists()).extracting(dto -> dto.getArtist().getId())
                 .containsExactlyElementsOf(requireNonNull(similarArtists).stream().map(Artist::getId).toList());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"missing, second, false", "self, second, false", "second, second, true", "self, self, true"})
+    void shouldDetermineBiographyAvailabilityFromLocalSimilarArtists(
+            String similarSpotifyId, String localSpotifyId, boolean available) {
+        enableLlm();
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setSpotifyArtistId("self"));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist2).setSpotifyArtistId(localSpotifyId));
+        DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
+        discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
+                .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
+                .setResult(JsonConverter.toJson(Map.of("similarArtists", List.of(Map.of("id", similarSpotifyId))))));
+        AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isEqualTo(available);
+        assertThat(biography.getText()).isNull();
+        assertThat(biography.getLinks()).isEmpty();
+        assertThat(biography.getSimilarArtists()).hasSize(available ? 1 : 0);
+
+        ArtistSongsDto artistSongs = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId()).getBody());
+        assertThat(artistSongs.getArtist().getDiscoveryData().isBiographyAvailable()).isEqualTo(available);
+
+        ArtistDetailsDto[] artists = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/artists", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDetailsDto[].class).getBody());
+        assertThat(artists).filteredOn(artist -> artist.getArtist().getId().equals(artist1.getId()))
+                .singleElement().satisfies(artist -> assertThat(artist.getDiscoveryData().isBiographyAvailable()).isEqualTo(available));
+
+        SearchResultDto search = requireNonNull(apiTemplate.getRestTemplate().exchange(
+                "/api/library/search?query=foo", HttpMethod.GET,
+                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SearchResultDto.class).getBody());
+        assertThat(search.getArtists()).filteredOn(artist -> artist.getArtist().getId().equals(artist1.getId()))
+                .singleElement().satisfies(artist -> assertThat(artist.getDiscoveryData().isBiographyAvailable()).isEqualTo(available));
     }
 
     @ParameterizedTest
@@ -448,6 +492,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 "/api/library/artistBiography/{artistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
 
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isFalse();
         assertThat(biography.getSimilarArtists()).isEmpty();
     }
 
