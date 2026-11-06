@@ -26,9 +26,11 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -61,9 +63,13 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     private LibraryJobSynchronizer.LibraryJobRegistration registration;
     private Artist artist;
     private Album album;
+    private Instant originalAlbumImplementedAt;
 
     @BeforeEach
     void setUp() throws Exception {
+        originalAlbumImplementedAt = MUSICBRAINZ_ALBUM_DATA.getImplementedAt().orElse(null);
+        // Keep incremental-discovery scenarios independent of the production migration cutoff.
+        ReflectionTestUtils.setField(MUSICBRAINZ_ALBUM_DATA, "implementedAt", Instant.EPOCH);
         configService.update(new ConfigSetUpdateCommand().setDiscoveryEnabled(true)
                 .setLlmUrl("http://localhost:11434/v1").setLlmModel("test"));
         registration = jobSynchronizer.registerDiscoveryJob();
@@ -88,7 +94,11 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
 
     @AfterEach
     void tearDown() {
-        registration.close();
+        try {
+            registration.close();
+        } finally {
+            ReflectionTestUtils.setField(MUSICBRAINZ_ALBUM_DATA, "implementedAt", originalAlbumImplementedAt);
+        }
     }
 
     @Test
