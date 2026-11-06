@@ -52,7 +52,8 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     if (element) {
       this.textResizeObserver = new ResizeObserver(() => this.ngZone.run(() => {
         const lineHeight = parseFloat(getComputedStyle(element.nativeElement).lineHeight);
-        this.biographyCanExpand = element.nativeElement.scrollHeight > lineHeight * 9 + 1;
+        this.biographyCanExpand = !!this.biography?.similarArtists.length &&
+          element.nativeElement.scrollHeight > lineHeight * 9 + 1;
       }));
       this.textResizeObserver.observe(element.nativeElement);
     }

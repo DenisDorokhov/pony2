@@ -14,10 +14,6 @@
 .modal-header, .modal-footer {
   flex-shrink: 0;
   background: var(--biography-background);
-  border-color: color-mix(in srgb, var(--biography-background) 78%, black);
-}
-
-.modal-header {
   border-color: color-mix(in srgb, var(--biography-background) 85%, var(--bs-body-color));
 }
 
@@ -30,6 +26,17 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(128, 128, 128, .35) transparent;
+
+  &.with-footer::after {
+    content: '';
+    display: block;
+    position: sticky;
+    bottom: 0;
+    height: 20px;
+    margin-top: -20px;
+    background: linear-gradient(to bottom, rgba(var(--biography-background-rgb), 0), var(--biography-background));
+    pointer-events: none;
+  }
 }
 
 .state {
@@ -225,20 +232,7 @@
 
 .modal-footer {
   justify-content: flex-start;
-  position: relative;
   padding-inline: 32px;
-
-  &::before {
-    content: '';
-    position: absolute;
-    // Overlap the footer border to avoid gaps at fractional device pixel ratios.
-    bottom: 100%;
-    left: 0;
-    right: 0;
-    height: 20px;
-    background: linear-gradient(to bottom, rgba(var(--biography-background-rgb), 0), var(--biography-background));
-    pointer-events: none;
-  }
 }
 
 .social-links {

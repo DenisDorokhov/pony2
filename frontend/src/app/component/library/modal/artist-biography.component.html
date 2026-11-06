@@ -5,7 +5,7 @@
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
-<div #body class="modal-body p-0" data-pony-image-loader-scroller>
+<div #body class="modal-body p-0" [class.with-footer]="links.length > 0" data-pony-image-loader-scroller>
   @if (loadingState === LoadingState.LOADING) {
     <pony-loading-indicator class="state"></pony-loading-indicator>
   }
