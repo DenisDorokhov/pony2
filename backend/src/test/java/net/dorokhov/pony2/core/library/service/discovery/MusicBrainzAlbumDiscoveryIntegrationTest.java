@@ -10,38 +10,19 @@ import io.micrometer.observation.ObservationRegistry;
 import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
-import net.dorokhov.pony2.api.library.domain.Album;
-import net.dorokhov.pony2.api.library.domain.Artist;
-import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
-import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
-import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
-import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
-import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
-import net.dorokhov.pony2.api.library.domain.DiscoveryType;
-import net.dorokhov.pony2.api.library.domain.Genre;
-import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
-import net.dorokhov.pony2.api.library.domain.Song;
-import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
-import net.dorokhov.pony2.api.library.domain.DiscoveryCache;
+import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
-import net.dorokhov.pony2.core.library.repository.AlbumRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
-import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.repository.DiscoveryJobRepository;
-import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
-import net.dorokhov.pony2.core.library.repository.GenreRepository;
-import net.dorokhov.pony2.core.library.repository.SongRepository;
+import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzAlbumDataService;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzClient;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzDto;
-import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzAlbumDataService;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzLlmService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
-import net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.log.repository.LogMessageRepository;
 import net.dorokhov.pony2.core.user.repository.UserRepository;
@@ -50,11 +31,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.*;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -74,22 +51,17 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.time.LocalDateTime;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService.ALBUM_TASK_COUNT;
 import static net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService.ARTIST_TASK_COUNT;
@@ -99,11 +71,9 @@ import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
 
 class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
@@ -129,7 +99,6 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private SongRepository songRepository;
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
-    @Autowired private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private DiscoveryCacheRepository cacheRepository;
@@ -1654,7 +1623,6 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 null, null, null, null, null);
         List<String> responses = new ArrayList<>(List.of(spotifyArtistResponse(spotifyData),
                 "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-compilation\",\"databaseAlbumId\":null}]}",
-                "{\"trackMatches\":[{\"databaseTrackId\":null}]}",
                 "{\"trackMatches\":[{\"databaseTrackId\":\"" + track.getId() + "\"}]}"));
         when(model.call(argThat(this::isOriginalTaskPrompt))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
@@ -1685,9 +1653,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     } else {
                         assertThat(task.getResult()).isNull();
                     }
-                    assertThat(task.getRawResponses()).hasSize(eligible ? 3 : 2);
+                    assertThat(task.getRawResponses()).hasSize(eligible ? 2 : 1);
                 });
-        verify(model, times(eligible ? 8 : 6)).call(argThat(this::isOriginalTaskPrompt));
+        verify(model, times(eligible ? 4 : 3)).call(argThat(this::isOriginalTaskPrompt));
     }
 
     @ParameterizedTest
@@ -1706,8 +1674,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                         "Compilation", "spotify-compilation", "https://open.spotify.com/album/spotify-compilation")),
                 null, null, null, null, null);
         String albumMatches = "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-compilation\",\"databaseAlbumId\":null}]}";
-        String trackMatches = "{\"trackMatches\":[{\"databaseTrackId\":null}]}";
-        List<String> responses = new ArrayList<>(List.of(spotifyArtistResponse(spotifyData), albumMatches, trackMatches));
+        List<String> responses = new ArrayList<>(List.of(spotifyArtistResponse(spotifyData), albumMatches));
         AtomicBoolean failMatching = new AtomicBoolean();
         when(model.call(argThat(this::isOriginalTaskPrompt))).thenAnswer(invocation -> {
             if (failMatching.getAndSet(false)) {
@@ -1732,7 +1699,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         } else {
             jdbcTemplate.update("UPDATE album SET update_date = ? WHERE id = ?", LocalDateTime.now(), album.getId());
         }
-        responses.addAll(List.of(albumMatches, trackMatches, "{\"trackMatches\":[{\"databaseTrackId\":\"" + track.getId() + "\"}]}"));
+        responses.addAll(List.of(albumMatches, "{\"trackMatches\":[{\"databaseTrackId\":\"" + track.getId() + "\"}]}"));
         failMatching.set(failFirstMatching);
         DiscoveryJob refreshJob = job(DiscoveryType.FULL);
         List<DiscoveryProgress> progress = new ArrayList<>();

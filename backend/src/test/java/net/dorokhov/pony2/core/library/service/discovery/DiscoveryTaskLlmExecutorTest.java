@@ -191,7 +191,7 @@ class DiscoveryTaskLlmExecutorTest {
         });
 
         assertThat(result).isEqualTo("Accepted answer");
-        boolean expectedToolsEnabled = type == DiscoveryTaskType.SPOTIFY_ARTIST_DATA || type == DiscoveryTaskType.SPOTIFY_TOP_TRACKS;
+        boolean expectedToolsEnabled = type == DiscoveryTaskType.SPOTIFY_ARTIST_DATA;
         assertThat(toolsEnabledValues).hasSize(expectedToolsEnabled ? 5 : 3).containsOnly(expectedToolsEnabled);
         assertThat(responses).isEmpty();
     }

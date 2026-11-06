@@ -66,6 +66,13 @@ class SpotifyTopTracksServiceTest {
                 {"spotifyAlbumId":"spotify-missing","databaseAlbumId":null}
             ]}
             """;
+    private static final String NO_ALBUM_MATCHES = """
+            {"albumMatches":[
+                {"spotifyAlbumId":"spotify-a","databaseAlbumId":null},
+                {"spotifyAlbumId":"spotify-b","databaseAlbumId":null},
+                {"spotifyAlbumId":"spotify-missing","databaseAlbumId":null}
+            ]}
+            """;
     private static final String TRACK_RESPONSE = """
             {"trackMatches":[
                 {"databaseTrackId":"song-a"},
@@ -117,9 +124,6 @@ class SpotifyTopTracksServiceTest {
         lenient().when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
-            if (requireNonNull(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType() == ResponseFormat.Type.TEXT) {
-                return new ChatResponse(List.of(new Generation(new AssistantMessage("Collected matching data"))));
-            }
             return new ChatResponse(List.of(new Generation(new AssistantMessage(responses.removeFirst()))));
         });
         lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(1)))
@@ -129,7 +133,10 @@ class SpotifyTopTracksServiceTest {
             return null;
         });
         ChatClient client = ChatClient.builder(model).build();
-        DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
+        DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> {
+            assertThat(toolsEnabled).isFalse();
+            return client;
+        },
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
@@ -157,8 +164,14 @@ class SpotifyTopTracksServiceTest {
         assertThat(service.discover(task, cacheEnabled)).containsExactly("song-a", "song-b", null);
 
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
-        assertThat(prompts).hasSize(4);
-        Map<?, ?> albumSchema = JsonConverter.fromJson(requireNonNull(requireNonNull(((OpenAiChatOptions) prompts.get(1).getOptions())).getResponseFormat()).getJsonSchema(), Map.class);
+        assertThat(prompts).hasSize(2).allSatisfy(prompt -> {
+            OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
+            assertThat(requireNonNull(options).getToolChoice()).isEqualTo("none");
+            assertThat(options.getToolCallbacks()).isNullOrEmpty();
+            assertThat(requireNonNull(options.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+            assertThat(options.getResponseFormat().getStrict()).isTrue();
+        });
+        Map<?, ?> albumSchema = JsonConverter.fromJson(requireNonNull(requireNonNull(((OpenAiChatOptions) prompts.getFirst().getOptions())).getResponseFormat()).getJsonSchema(), Map.class);
         assertThat(albumSchema.get("type")).isEqualTo("object");
         assertThat(albumSchema.get("required")).isEqualTo(List.of("albumMatches"));
         Map<?, ?> albumMatchesSchema = (Map<?, ?>) ((Map<?, ?>) albumSchema.get("properties")).get("albumMatches");
@@ -175,7 +188,7 @@ class SpotifyTopTracksServiceTest {
         Map<?, ?> trackIdSchema = (Map<?, ?>) ((Map<?, ?>) trackItemSchema.get("properties")).get("databaseTrackId");
         assertThat(trackIdSchema.get("type")).isEqualTo(List.of("string", "null"));
         assertThat(prompts.getFirst().getInstructions().get(1).getText()).contains("spotify-a", "album-a", "2000");
-        assertThat(prompts.get(2).getInstructions().get(1).getText()).contains("song-a", "song-b", "Shared title");
+        assertThat(prompts.get(1).getInstructions().get(1).getText()).contains("song-a", "song-b", "Shared title");
         assertThat(cache).hasSize(cacheEnabled ? 2 : 0);
         if (!cacheEnabled) {
             verifyNoInteractions(cacheService);
@@ -184,28 +197,22 @@ class SpotifyTopTracksServiceTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldReturnNullWhenAllTracksAreUnmatched(boolean cacheEnabled) {
+    void shouldSkipTrackMatchingWhenNoAlbumsMatch(boolean cacheEnabled) {
         responses.clear();
-        responses.addAll(List.of("""
-                {"albumMatches":[
-                    {"spotifyAlbumId":"spotify-a","databaseAlbumId":null},
-                    {"spotifyAlbumId":"spotify-b","databaseAlbumId":null},
-                    {"spotifyAlbumId":"spotify-missing","databaseAlbumId":null}
-                ]}
-                """, "{\"trackMatches\":[{\"databaseTrackId\":null},{\"databaseTrackId\":null},{\"databaseTrackId\":null}]}"));
+        responses.add(NO_ALBUM_MATCHES);
 
         DiscoveryTask task = task();
 
         assertThat(service.discover(task, cacheEnabled)).isNull();
 
-        assertThat(task.getRawResponses()).hasSize(2);
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(NO_ALBUM_MATCHES));
         if (cacheEnabled) {
             assertThat(service.discover(task(), true)).isNull();
         } else {
             verifyNoInteractions(cacheService);
         }
-        assertThat(prompts).hasSize(4);
-        assertThat(cache).hasSize(cacheEnabled ? 2 : 0);
+        assertThat(prompts).hasSize(1);
+        assertThat(cache).hasSize(cacheEnabled ? 1 : 0);
     }
 
     @Test
@@ -216,7 +223,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(cached, true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(4);
+        assertThat(prompts).hasSize(2);
         assertThat(cached.getRawRequests()).isEqualTo(original.getRawRequests());
         assertThat(cached.getRawResponses()).isEqualTo(original.getRawResponses());
     }
@@ -228,7 +235,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", "song-a");
 
-        assertThat(prompts).hasSize(4);
+        assertThat(prompts).hasSize(2);
         verifyNoInteractions(libraryService);
     }
 
@@ -247,8 +254,8 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(original, cacheEnabled)).containsExactly("song-a", "song-b", "fallback-song");
 
-        assertThat(prompts).hasSize(6);
-        assertThat(prompts.get(4).getInstructions().get(1).getText())
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.get(2).getInstructions().get(1).getText())
                 .contains("\"id\":\"missing\"", "fallback-song")
                 .doesNotContain("\"id\":\"first\"", "\"id\":\"second\"", "\"id\":\"song-a\"", "\"id\":\"song-b\"");
         assertThat(original.getRawResponses())
@@ -260,7 +267,7 @@ class SpotifyTopTracksServiceTest {
             assertThat(service.discover(cached, true)).containsExactly("song-a", "song-b", "fallback-song");
             assertThat(cached.getRawRequests()).isEqualTo(original.getRawRequests());
             assertThat(cached.getRawResponses()).isEqualTo(original.getRawResponses());
-            assertThat(prompts).hasSize(6);
+            assertThat(prompts).hasSize(3);
         } else {
             verifyNoInteractions(cacheService);
         }
@@ -294,28 +301,28 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(4 + 2 * expectedOrder.size());
+        assertThat(prompts).hasSize(2 + expectedOrder.size());
         for (int i = 0; i < expectedOrder.size(); i++) {
-            String request = prompts.get(4 + 2 * i).getInstructions().get(1).getText();
+            String request = prompts.get(2 + i).getInstructions().get(1).getText();
             assertThat(request).contains("Database album with tracks: {\"id\":\"" + expectedOrder.get(i) + "\"");
         }
     }
 
-    @Test
-    void shouldFindTracksAcrossFallbackAlbumsAndStopAfterAllAreMatched() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldFindTracksAcrossFallbackAlbumsAndStopAfterAllAreMatched(boolean cacheEnabled) {
         fallbackAlbum("first-lp", ReleaseType.LP, LocalDateTime.of(1990, 1, 1, 0, 0), null);
         fallbackAlbum("second-lp", ReleaseType.LP, LocalDateTime.of(2000, 1, 1, 0, 0), null);
         fallbackAlbum("unused-ep", ReleaseType.EP, LocalDateTime.of(1980, 1, 1, 0, 0), null);
-        responses.set(0, ALBUM_RESPONSE.replace("\"databaseAlbumId\":\"album-a\"", "\"databaseAlbumId\":null")
-                .replace("\"databaseAlbumId\":\"album-b\"", "\"databaseAlbumId\":null"));
-        responses.set(1, NO_TRACK_MATCHES);
+        responses.set(0, NO_ALBUM_MATCHES);
+        responses.remove(1);
         responses.add("{\"trackMatches\":[{\"databaseTrackId\":null},{\"databaseTrackId\":\"first-lp-song\"},{\"databaseTrackId\":null}]}");
         responses.add("{\"trackMatches\":[{\"databaseTrackId\":\"second-lp-song\"},{\"databaseTrackId\":\"second-lp-song\"}]}");
 
-        assertThat(service.discover(task(), true)).containsExactly("second-lp-song", "first-lp-song", "second-lp-song");
+        assertThat(service.discover(task(), cacheEnabled)).containsExactly("second-lp-song", "first-lp-song", "second-lp-song");
 
-        assertThat(prompts).hasSize(8);
-        assertThat(prompts.get(6).getInstructions().get(1).getText())
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.get(2).getInstructions().get(1).getText())
                 .contains("\"id\":\"first\"", "\"id\":\"missing\"").doesNotContain("\"id\":\"second\"");
     }
 
@@ -326,7 +333,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(4);
+        assertThat(prompts).hasSize(2);
     }
 
     @Test
@@ -337,7 +344,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task(), true)).isNull();
 
-        assertThat(prompts).hasSize(6);
+        assertThat(prompts).hasSize(3);
     }
 
     @ParameterizedTest
@@ -354,8 +361,8 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", "fallback-song");
 
-        assertThat(prompts).hasSize(8);
-        assertThat(prompts.get(6).getInstructions()).extracting(Message::getText)
+        assertThat(prompts).hasSize(4);
+        assertThat(prompts.get(3).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("single supplied database album's track list"));
         assertThat(task.getRawResponses()).hasSize(4);
         assertThat(cache).hasSize(3);
@@ -368,7 +375,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThatThrownBy(() -> service.discover(task(), true)).hasMessageContaining("expected 1");
 
-        assertThat(prompts).hasSize(8);
+        assertThat(prompts).hasSize(4);
         assertThat(cache).hasSize(2);
     }
 
@@ -388,7 +395,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThatThrownBy(() -> service.discover(task(), true)).isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(prompts).hasSize(6);
+        assertThat(prompts).hasSize(3);
     }
 
     @ParameterizedTest
@@ -404,7 +411,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
         assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(4);
+        assertThat(prompts).hasSize(2);
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(albumResponse), JsonConverter.fromJsonOrString(trackResponse));
         assertThat(cache).hasSize(2);
         verifyNoInteractions(logService);
@@ -432,8 +439,8 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(6);
-        assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.get(1).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
@@ -454,9 +461,9 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(6);
-        assertThat(prompts.get(2).getInstructions().get(1).getText()).startsWith("Spotify albums (ID to title):");
-        assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.get(1).getInstructions().get(1).getText()).startsWith("Spotify albums (ID to title):");
+        assertThat(prompts.get(1).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(invalidResponse),
                 JsonConverter.fromJsonOrString(acceptedResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
@@ -471,7 +478,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThatThrownBy(() -> service.discover(task, true)).hasMessageContaining("must include every supplied Spotify album ID");
 
-        assertThat(prompts).hasSize(4);
+        assertThat(prompts).hasSize(2);
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(incompleteResponse), JsonConverter.fromJsonOrString(incompleteResponse));
         assertThat(cache).isEmpty();
     }
@@ -496,8 +503,8 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
 
-        assertThat(prompts).hasSize(6);
-        assertThat(prompts.get(prompts.size() - 2).getInstructions()).extracting(Message::getText)
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.getLast().getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
@@ -516,8 +523,8 @@ class SpotifyTopTracksServiceTest {
 
         assertThat(service.discover(task, true)).containsExactly(trackId, "song-b", null);
 
-        assertThat(prompts).hasSize(6);
-        assertThat(prompts.get(4).getInstructions()).extracting(Message::getText)
+        assertThat(prompts).hasSize(3);
+        assertThat(prompts.get(2).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
         assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE),
                 JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(acceptedResponse));
@@ -530,7 +537,7 @@ class SpotifyTopTracksServiceTest {
 
         assertThatThrownBy(() -> service.discover(task(), true)).hasMessageContaining("expected 3");
 
-        assertThat(prompts).hasSize(6);
+        assertThat(prompts).hasSize(3);
         assertThat(cache).hasSize(1);
     }
 

@@ -167,6 +167,9 @@ public class SpotifyTopTracksService {
             DiscoveryTask task, String artistId, List<SpotifyArtistData.TopTrack> topTracks,
             Map<String, String> albumMatches, boolean cacheEnabled
     ) {
+        if (albumMatches.values().stream().allMatch(Objects::isNull)) {
+            return new ArrayList<>(Collections.nCopies(topTracks.size(), null));
+        }
         List<AlbumTracks> albumTracks = readMatchedAlbumTracks(artistId, albumMatches);
         Request request = new Request(tracksPrompt,
                 "Spotify top tracks in original order: " + JsonConverter.toJson(topTracks)
