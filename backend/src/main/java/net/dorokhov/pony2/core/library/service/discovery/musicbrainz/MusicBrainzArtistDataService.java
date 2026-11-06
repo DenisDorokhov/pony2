@@ -82,6 +82,15 @@ public class MusicBrainzArtistDataService {
         if (input.artistName() == null || input.artistName().isBlank() || input.candidates().isEmpty()) {
             return null;
         }
+        if (input.candidates().size() == 1) {
+            Candidate candidate = input.candidates().getFirst();
+            if (input.artistName().equalsIgnoreCase(candidate.artistName()) ||
+                    candidate.albums().stream().flatMap(album -> album.artistCreditNames().stream())
+                            .anyMatch(input.artistName()::equalsIgnoreCase)) {
+                return new MusicBrainzArtistData(candidate.artistId(),
+                        candidate.country().isEmpty() ? null : candidate.country().getFirst());
+            }
+        }
         Request request = new Request(prompt, JsonConverter.toJson(input), configService.get().llmModel());
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ARTIST_DATA", 1) : null;

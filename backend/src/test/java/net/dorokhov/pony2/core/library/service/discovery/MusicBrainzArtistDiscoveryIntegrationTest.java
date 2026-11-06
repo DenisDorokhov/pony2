@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -31,6 +32,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,7 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAIN
 import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Mockito.*;
@@ -147,6 +150,47 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
         verify(model).call(any(Prompt.class));
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldSelectSingleMatchingArtistWithoutCallingLlm(boolean cacheEnabled) {
+        albumResult(album, "nick-cave", "NICK CAVE", List.of("AU"), List.of());
+
+        runUpdated(cacheEnabled);
+
+        assertDiscovery("nick-cave", "AU");
+        assertThat(latestTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
+        assertThat(JsonConverter.fromJson(latestTask().getResult(), MusicBrainzArtistData.class))
+                .isEqualTo(new MusicBrainzArtistData("nick-cave", "AU"));
+        assertThat(latestTask().getRawRequests()).isNull();
+        assertThat(latestTask().getRawResponses()).isNull();
+        verifyNoInteractions(model, musicBrainzClient);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "Nicholas Edward Cave")
+    void shouldSelectSingleArtistWithMatchingCreditWithoutCallingLlm(String artistName) {
+        saveDiscovery();
+        albumResult(album, "nick-cave", artistName, List.of(), List.of("NICK CAVE"));
+
+        runUpdated(false);
+
+        assertDiscovery("nick-cave", null);
+        verifyNoInteractions(model, musicBrainzClient);
+    }
+
+    @Test
+    void shouldUseLatestMetadataForSingleArtistAcrossAlbumsWithoutCallingLlm() {
+        albumResult(album, "nick-cave", "Nick Cave", List.of("GB"));
+        Album newer = albumRepository.save(new Album().setArtist(artist).setName("Seven Psalms"));
+        albumResult(newer, "nick-cave", "Nick Cave", List.of("AU"));
+
+        runUpdated(false);
+
+        assertDiscovery("nick-cave", "AU");
+        verifyNoInteractions(model, musicBrainzClient);
+    }
+
     @Test
     void shouldClearCountryWhenSelectedArtistHasNoCountry() {
         saveDiscovery();
@@ -180,10 +224,11 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
         albumResult(album, "nick-cave", "Nick Cave", List.of("GB"));
         Album newer = albumRepository.save(new Album().setArtist(artist).setName("Seven Psalms"));
         albumResult(newer, "nick-cave", "Nick Cave", List.of("AU"));
+        relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             Map<String, Object> input = JsonConverter.mapFromJson(prompt.getInstructions().get(1).getText(), String.class, Object.class);
-            assertThat((List<?>) input.get("candidates")).hasSize(1);
+            assertThat((List<?>) input.get("candidates")).hasSize(2);
             assertThat(prompt.getInstructions().get(1).getText()).contains("Idiot Prayer", "Seven Psalms");
             return response("{\"id\":\"nick-cave\"}");
         });
@@ -191,6 +236,11 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
         runUpdated(false);
 
         assertDiscovery("nick-cave", "AU");
+    }
+
+    private void relatedAlbumResult() {
+        Album related = albumRepository.save(new Album().setArtist(artist).setName("Burnin' the Ice").setYear(1983));
+        albumResult(related, "die-haut", "Die Haut", List.of("DE"));
     }
 
     @Test
@@ -210,22 +260,23 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     @EnumSource(value = DiscoveryTask.Status.class, names = {"STARTED", "FAILED", "INTERRUPTED"})
     void shouldRecheckAfterNewAlbumAttemptAndUseItsLatestCompletedData(DiscoveryTask.Status status) {
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"nick-cave\"}"));
         runUpdated(false);
-        String previousTaskId = latestTask().getId();
+        DiscoveryTask previousTask = latestTask();
+        await().until(() -> LocalDateTime.now().isAfter(previousTask.getCreationDate()));
         taskRepository.save(new DiscoveryTask().setJob(job()).setAlbum(album).setType(MUSICBRAINZ_ALBUM_DATA).setStatus(status));
 
         runUpdated(false);
 
-        assertThat(latestTask().getId()).isNotEqualTo(previousTaskId);
+        assertThat(latestTask().getId()).isNotEqualTo(previousTask.getId());
         assertDiscovery("nick-cave", "AU");
-        verify(model, times(2)).call(any(Prompt.class));
+        verifyNoInteractions(model);
     }
 
     @Test
     void shouldRetryFailedCheckAndPreserveDiscoveryUntilSuccess() {
         saveDiscovery();
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
+        relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("LLM unavailable"));
 
         runUpdated(false);
@@ -243,6 +294,7 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     void shouldResumeInterruptedCheckWithoutPublishingPartialChanges() {
         saveDiscovery();
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
+        relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenThrow(new DiscoveryInterruptedException());
 
         assertThatThrownBy(() -> runUpdated(false)).isInstanceOf(DiscoveryInterruptedException.class);
@@ -258,7 +310,6 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     void shouldRollBackCompletedTaskWhenUpdatingDiscoveryFails() {
         saveDiscovery();
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"nick-cave\"}"));
         ArtistDiscoveryRepository failingRepository = mock(ArtistDiscoveryRepository.class, delegatesTo(artistDiscoveryRepository));
         doThrow(new IllegalStateException("Cannot save discovery")).when(failingRepository).save(any(ArtistDiscovery.class));
         service = service(failingRepository);
@@ -273,6 +324,7 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     @ValueSource(strings = {"{}", "{\"id\":123}", "{\"id\":\"invented\"}", "not JSON"})
     void shouldRecordInvalidAnswersAndValidateFollowUp(String invalidResponse) {
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
+        relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenReturn(response(invalidResponse), response("{\"id\":\"nick-cave\"}"));
 
         runUpdated(false);
@@ -287,7 +339,6 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
         ArtistDiscovery previous = artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist)
                 .setMusicBrainzArtistId("nick-cave").setCountryCode("AU").setSpotifyArtistId("spotify-id"));
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"nick-cave\"}"));
 
         runUpdated(false);
 
@@ -303,6 +354,7 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     @ValueSource(booleans = {true, false})
     void shouldReuseLlmCacheAndRecordBothExchanges(boolean cacheEnabled) {
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
+        relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"nick-cave\"}"));
 
         service.discover(job(), artist, cacheEnabled, null);
@@ -323,6 +375,7 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
         Album other = albumRepository.save(new Album().setArtist(artist).setName("Seven Psalms").setYear(2022));
         albumResult(other, "nick-cave", "Nick Cave", List.of("AU"));
+        relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"nick-cave\"}"));
         runUpdated(true);
         String previousTaskId = latestTask().getId();
@@ -340,10 +393,14 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private void albumResult(Album target, String artistId, String artistName, List<String> country) {
+        albumResult(target, artistId, artistName, country, List.of(artistName));
+    }
+
+    private void albumResult(Album target, String artistId, String artistName, List<String> country, List<String> creditNames) {
         taskRepository.save(new DiscoveryTask().setJob(job()).setAlbum(target).setType(MUSICBRAINZ_ALBUM_DATA)
                 .setStatus(DiscoveryTask.Status.COMPLETE).setResult(JsonConverter.toJson(new MusicBrainzAlbumData(
                         "group-" + target.getId(), "Album", List.of(), null, artistId, country, artistName,
-                        "Artist description", "nick-cave".equals(artistId) ? "Person" : "Group", List.of(artistName)))));
+                        "Artist description", "nick-cave".equals(artistId) ? "Person" : "Group", creditNames))));
     }
 
     private DiscoveryJob job() {
