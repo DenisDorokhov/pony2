@@ -47,7 +47,7 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.ARTIST_BIO
 @Service
 public class ArtistBioImageFacesService {
 
-    private static final int CACHE_VERSION = 2;
+    private static final int CACHE_VERSION = 1;
 
     private final DiscoveryTaskLlmExecutor llmExecutor;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
