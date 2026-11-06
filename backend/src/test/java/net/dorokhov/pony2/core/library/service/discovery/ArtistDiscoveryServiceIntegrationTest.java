@@ -512,9 +512,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getRawRequests()).hasSize(2);
             assertThat(requireNonNull(task.getArtist()).getId()).isEqualTo(artist.getId());
         });
-        assertThat(prompts).hasSize(6);
+        assertThat(prompts).hasSize(4);
         assertThat(prompts.get(2).getInstructions().get(1).getText()).contains(album.getId(), otherAlbum.getId());
-        assertThat(prompts.get(4).getInstructions().get(1).getText()).contains(first.getId(), second.getId()).doesNotContain(other.getId());
+        assertThat(prompts.get(3).getInstructions().get(1).getText()).contains(first.getId(), second.getId()).doesNotContain(other.getId());
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 3 : 0);
     }
 
@@ -528,17 +528,17 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         ChatResponse albumResponse = new ChatResponse(List.of(new Generation(new AssistantMessage("""
                 {"albumMatches":[{"spotifyAlbumId":"missing-album","databaseAlbumId":null}]}
                 """))));
-        ChatResponse trackResponse = new ChatResponse(List.of(new Generation(new AssistantMessage("{\"trackMatches\":[{\"databaseTrackId\":null}]}"))));
-        when(model.call(any(Prompt.class))).thenReturn(artistResponse, artistResponse, albumResponse, albumResponse,
-                trackResponse, trackResponse);
+        when(model.call(any(Prompt.class))).thenReturn(artistResponse, artistResponse, albumResponse);
 
         service.discover(saveJob(), artist, true, null);
 
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNull();
+            assertThat(task.getRawRequests()).hasSize(1);
+            assertThat(task.getRawResponses()).hasSize(1);
         });
-        verify(model, times(6)).call(any(Prompt.class));
+        verify(model, times(3)).call(any(Prompt.class));
     }
 
     @Test
