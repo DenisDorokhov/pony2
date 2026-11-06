@@ -103,9 +103,9 @@ class ArtistBioImageFacesServiceTest {
         server.start();
         config = new ConfigSet(null, List.of(), true, "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "face-test", null);
         lenient().when(configService.get()).thenAnswer(invocation -> config);
-        lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(2)))
+        lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(1)))
                 .thenAnswer(invocation -> Optional.ofNullable(cache.get(invocation.getArgument(1))));
-        lenient().when(cacheService.put(eq(SPOTIFY), anyString(), eq(2), anyString())).thenAnswer(invocation -> {
+        lenient().when(cacheService.put(eq(SPOTIFY), anyString(), eq(1), anyString())).thenAnswer(invocation -> {
             cache.put(invocation.getArgument(1), invocation.getArgument(3));
             return null;
         });
