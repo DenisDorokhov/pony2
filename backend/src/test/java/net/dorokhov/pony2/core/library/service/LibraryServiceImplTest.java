@@ -221,7 +221,7 @@ public class LibraryServiceImplTest {
     }, delimiter = '|')
     void shouldDetermineAlbumReleaseType(String primaryType, String secondaryTypes, AlbumDiscoveryData.ReleaseType expected) {
         MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", primaryType,
-                secondaryTypes != null ? List.of(secondaryTypes.split(";")) : List.of(), "1986-10-07", "artist", List.of());
+                secondaryTypes != null ? List.of(secondaryTypes.split(";")) : List.of(), "1986-10-07", "artist", List.of(), null, null, null, List.of());
         when(discoveryTaskRepository.findLatestCompletedResultByAlbumIdAndType(eq("album"), eq(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
@@ -237,7 +237,7 @@ public class LibraryServiceImplTest {
             "2000-02-29, 2000-02-29T00:00"
     })
     void shouldDetermineAlbumReleaseDate(String firstReleaseDate, String expected) {
-        MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of());
+        MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of(), null, null, null, List.of());
         when(discoveryTaskRepository.findLatestCompletedResultByAlbumIdAndType(eq("album"), eq(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
@@ -248,7 +248,7 @@ public class LibraryServiceImplTest {
     @NullAndEmptySource
     @ValueSource(strings = {" ", "not a date", "1986-02-29", "1986-13", "1986-10-32", "1986-00", "1986-1", "1986-10-07T12:00"})
     void shouldReturnNullWhenAlbumReleaseDateIsMissingOrInvalid(String firstReleaseDate) {
-        MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of());
+        MusicBrainzAlbumData data = new MusicBrainzAlbumData("release-group", "Album", List.of(), firstReleaseDate, "artist", List.of(), null, null, null, List.of());
         when(discoveryTaskRepository.findLatestCompletedResultByAlbumIdAndType(eq("album"), eq(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA), any(Limit.class)))
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 

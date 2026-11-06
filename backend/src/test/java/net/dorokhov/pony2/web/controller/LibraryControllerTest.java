@@ -523,10 +523,10 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist2).setCountryCode("GB"));
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.FAILED));
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
-        String single = JsonConverter.toJson(new MusicBrainzAlbumData("single", "Single", List.of(), null, "artist", List.of("US")));
+        String single = JsonConverter.toJson(new MusicBrainzAlbumData("single", "Single", List.of(), null, "artist", List.of("US"), null, null, null, List.of()));
         String compilation = JsonConverter.toJson(new MusicBrainzAlbumData("compilation", "Album", List.of("Live", "Compilation"),
-                "1986-10", "artist", List.of("US")));
-        String ep = JsonConverter.toJson(new MusicBrainzAlbumData("ep", "EP", List.of(), "1987", "artist", List.of("US")));
+                "1986-10", "artist", List.of("US"), null, null, null, List.of()));
+        String ep = JsonConverter.toJson(new MusicBrainzAlbumData("ep", "EP", List.of(), "1987", "artist", List.of("US"), null, null, null, List.of()));
         DiscoveryTask older = saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
                 DiscoveryTask.Status.COMPLETE, date.minusHours(1), single);
         jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?", Timestamp.valueOf(date.plusHours(5)), older.getId());
@@ -610,7 +610,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         enableLlm();
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM).setStatus(DiscoveryJob.Status.COMPLETE));
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
-        String album = JsonConverter.toJson(new MusicBrainzAlbumData("album", "Album", List.of(), null, "artist", List.of()));
+        String album = JsonConverter.toJson(new MusicBrainzAlbumData("album", "Album", List.of(), null, "artist", List.of(), null, null, null, List.of()));
         saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date.minusHours(1), album);
         saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, result);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();

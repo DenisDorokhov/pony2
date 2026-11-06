@@ -2,6 +2,14 @@
   --bs-dropdown-link-active-bg: var(--bs-dropdown-link-hover-bg);
 }
 
+.discovery-task-type[data-task-type="MUSICBRAINZ_ARTIST_DATA"] {
+  color: #b33e23;
+}
+
+:host-context([data-bs-theme="dark"]) .discovery-task-type[data-task-type="MUSICBRAINZ_ARTIST_DATA"] {
+  color: #ffad96;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

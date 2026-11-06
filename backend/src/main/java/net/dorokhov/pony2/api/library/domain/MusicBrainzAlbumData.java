@@ -10,5 +10,10 @@ public record MusicBrainzAlbumData(
         List<String> secondaryTypes,
         @Nullable String firstReleaseDate,
         String artistId,
-        List<String> country
-) {}
+        List<String> country,
+        @Nullable String artistName,
+        @Nullable String artistDisambiguation,
+        @Nullable String artistType,
+        List<String> artistCreditNames
+) {
+}

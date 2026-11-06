@@ -108,8 +108,22 @@ public class MusicBrainzAlbumDataService {
             if (country.isEmpty() && artist.country() != null && !artist.country().isBlank()) {
                 country = List.of(artist.country());
             }
-            MusicBrainzAlbumData result = new MusicBrainzAlbumData(group.id(), group.primaryType(), group.secondaryTypes(), group.firstReleaseDate(),
-                    artist.id(), country);
+            MusicBrainzAlbumData result = new MusicBrainzAlbumData(
+                    group.id(),
+                    group.primaryType(),
+                    group.secondaryTypes(),
+                    group.firstReleaseDate(),
+                    artist.id(),
+                    country,
+                    artist.name(),
+                    artist.disambiguation() != null && !artist.disambiguation().isBlank() ? artist.disambiguation() : null,
+                    artist.type(),
+                    group.artistCredit().stream()
+                            .filter(credit -> artist.id().equals(credit.artist().id()))
+                            .map(MusicBrainzDto.ArtistCredit::name)
+                            .filter(name -> name != null && !name.isBlank())
+                            .distinct()
+                            .toList());
             logger.debug("MusicBrainz discovery result for album '{}': {}.", albumId, result);
             return result;
         } catch (MusicBrainzClient.CancelledException e) {

@@ -214,7 +214,10 @@ public class DiscoveryJobServiceImplTest {
         switch (type) {
             case FULL -> verify(fullDiscoveryService).discover(any(), eq(cacheEnabled), any());
             case ARTIST -> verify(artistDiscoveryService).discover(any(), same(artist), eq(cacheEnabled), any());
-            case ALBUM -> verify(albumDiscoveryService).discover(any(), same(album), eq(cacheEnabled), any());
+            case ALBUM -> {
+                verify(albumDiscoveryService).discover(any(), same(album), eq(cacheEnabled), any());
+                verifyNoInteractions(artistDiscoveryService);
+            }
         }
     }
 
@@ -282,6 +285,7 @@ public class DiscoveryJobServiceImplTest {
         ArgumentCaptor<DiscoveryJob> savedDiscoveryJob = ArgumentCaptor.forClass(DiscoveryJob.class);
         verify(discoveryJobRepository, times(3)).save(savedDiscoveryJob.capture());
         verify(albumDiscoveryService).discover(any(), same(album), eq(true), any());
+        verifyNoInteractions(artistDiscoveryService);
 
         DiscoveryJob discoveryJobComplete = savedDiscoveryJob.getValue();
         assertThat(discoveryJobComplete.getType()).isSameAs(ALBUM);

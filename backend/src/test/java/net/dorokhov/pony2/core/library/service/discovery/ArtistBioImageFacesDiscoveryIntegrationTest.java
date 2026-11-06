@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import net.dorokhov.pony2.IntegrationTest;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzArtistDataService;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
@@ -56,6 +57,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private DiscoveryTaskLlmExecutor llmExecutor;
     @Autowired private DiscoveryTaskExecutor taskExecutor;
     @Autowired private AlbumDiscoveryService albumDiscoveryService;
+    @Autowired private MusicBrainzArtistDataService musicBrainzArtistDataService;
     @Autowired private LibraryJobSynchronizer jobSynchronizer;
     @Autowired private LogService logService;
     @Autowired private PlatformTransactionManager transactionManager;
@@ -79,7 +81,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         ArtistBioImageFacesService faces = new ArtistBioImageFacesService(llmExecutor, artistDiscoveryRepository, taskRepository,
                 imageStorage, imageSizeReader, configuration, transactionManager, new ClassPathResource("prompts/artist-bio-image-faces.txt"));
         service = new ArtistDiscoveryService(artistDiscoveryRepository, albumRepository, taskRepository, resultReader,
-                spotify, topTracks, albumDiscoveryService, imageStorage, faces, logService, taskExecutor, jobSynchronizer, transactionManager);
+                spotify, topTracks, albumDiscoveryService, musicBrainzArtistDataService, imageStorage, faces, logService, taskExecutor, jobSynchronizer, transactionManager);
         when(spotify.discover(any(), anyBoolean())).thenReturn(spotifyData());
         when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
@@ -114,8 +116,8 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThat(taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)))
                 .extracting(DiscoveryTask::getType).containsExactly(SPOTIFY_ARTIST_DATA, SPOTIFY_TOP_TRACKS,
-                        ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE, ARTIST_BIO_IMAGE_FACES);
-        assertThat(progress).extracting(value -> value.getValue().getItemsComplete()).containsExactly(0L, 1L, 2L, 3L, 4L, 5L);
+                        MUSICBRAINZ_ARTIST_DATA, ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE, ARTIST_BIO_IMAGE_FACES);
+        assertThat(progress).extracting(value -> value.getValue().getItemsComplete()).containsExactly(0L, 1L, 2L, 3L, 4L, 5L, 6L);
         DiscoveryTask task = facesTask();
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         ArtistBioImageFacesService.Result result = JsonConverter.fromJson(task.getResult(), ArtistBioImageFacesService.Result.class);

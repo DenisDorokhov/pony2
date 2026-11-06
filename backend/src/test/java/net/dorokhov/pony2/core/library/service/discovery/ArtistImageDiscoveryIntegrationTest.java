@@ -3,6 +3,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import com.sun.net.httpserver.HttpServer;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.IntegrationTest;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzArtistDataService;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
@@ -84,6 +85,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private DiscoveryTaskResultReader resultReader;
     @Autowired private SpotifyTopTracksService spotifyTopTracksService;
     @Autowired private AlbumDiscoveryService albumDiscoveryService;
+    @Autowired private MusicBrainzArtistDataService musicBrainzArtistDataService;
     @Autowired private LogService logService;
     @Autowired private DiscoveryTaskExecutor taskExecutor;
     @Autowired private PlatformTransactionManager transactionManager;
@@ -138,7 +140,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         ExternalImageStorage imageStorage = new ExternalImageStorage(externalImageRepository, fileTypeResolver,
                 externalImageFolder, URI.create("http://127.0.0.1:" + proxyServer.getAddress().getPort()));
         service = new ArtistDiscoveryService(taskArtistDiscoveryRepository, albumRepository, taskRepository, resultReader,
-                spotifyArtistDataService, spotifyTopTracksService, albumDiscoveryService, imageStorage, artistBioImageFacesService, logService,
+                spotifyArtistDataService, spotifyTopTracksService, albumDiscoveryService, musicBrainzArtistDataService, imageStorage, artistBioImageFacesService, logService,
                 taskExecutor, jobSynchronizer, transactionManager);
         when(spotifyArtistDataService.discover(any(), anyBoolean())).thenReturn(artistData("/bio", "/avatar"));
     }
@@ -167,18 +169,18 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldDownloadImagesLastAndPersistResultsAndProgress() throws IOException {
+    void shouldDownloadImagesAfterMusicBrainzArtistDataAndPersistResultsAndProgress() throws IOException {
         List<DiscoveryProgress> progress = new ArrayList<>();
 
         discover(progress::add);
 
         assertThat(taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)))
                 .extracting(DiscoveryTask::getType).containsExactly(DiscoveryTaskType.SPOTIFY_ARTIST_DATA,
-                        DiscoveryTaskType.SPOTIFY_TOP_TRACKS, ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
+                        DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA, ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE, DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
         assertThat(downloadingTasks).containsExactly(ARTIST_AVATAR_IMAGE, ARTIST_BIO_IMAGE);
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(1, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(2, ARTIST_TASK_COUNT),
-                DiscoveryProgress.Value.of(3, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(4, ARTIST_TASK_COUNT),
+                DiscoveryProgress.Value.of(3, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(4, ARTIST_TASK_COUNT), DiscoveryProgress.Value.of(5, ARTIST_TASK_COUNT),
                 DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
         for (DiscoveryTaskType type : List.of(ARTIST_BIO_IMAGE, ARTIST_AVATAR_IMAGE)) {
             ExternalImageFile image = image(type);

@@ -8,12 +8,14 @@ import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzArtistDataService;
 import net.dorokhov.pony2.core.library.service.discovery.spotify.SpotifyArtistDataService;
 import net.dorokhov.pony2.core.library.service.discovery.spotify.SpotifyTopTracksService;
 import net.dorokhov.pony2.core.library.service.image.ExternalImageStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -47,7 +49,8 @@ public class ArtistDiscoveryService {
             DiscoveryTaskType.SPOTIFY_TOP_TRACKS,
             DiscoveryTaskType.ARTIST_AVATAR_IMAGE,
             DiscoveryTaskType.ARTIST_BIO_IMAGE,
-            DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES
+            DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES,
+            DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA
     );
 
     public static final int ARTIST_TASK_COUNT = ARTIST_TASK_TYPES.size();
@@ -61,6 +64,7 @@ public class ArtistDiscoveryService {
     private final SpotifyArtistDataService spotifyArtistDataService;
     private final SpotifyTopTracksService spotifyTopTracksService;
     private final AlbumDiscoveryService albumDiscoveryService;
+    private final MusicBrainzArtistDataService musicBrainzArtistDataService;
     private final ExternalImageStorage externalImageStorage;
     private final ArtistBioImageFacesService artistBioImageFacesService;
     private final LogService logService;
@@ -76,6 +80,7 @@ public class ArtistDiscoveryService {
             SpotifyArtistDataService spotifyArtistDataService,
             SpotifyTopTracksService spotifyTopTracksService,
             AlbumDiscoveryService albumDiscoveryService,
+            MusicBrainzArtistDataService musicBrainzArtistDataService,
             ExternalImageStorage externalImageStorage,
             ArtistBioImageFacesService artistBioImageFacesService,
             LogService logService,
@@ -90,6 +95,7 @@ public class ArtistDiscoveryService {
         this.spotifyArtistDataService = spotifyArtistDataService;
         this.spotifyTopTracksService = spotifyTopTracksService;
         this.albumDiscoveryService = albumDiscoveryService;
+        this.musicBrainzArtistDataService = musicBrainzArtistDataService;
         this.externalImageStorage = externalImageStorage;
         this.artistBioImageFacesService = artistBioImageFacesService;
         this.logService = logService;
@@ -115,6 +121,7 @@ public class ArtistDiscoveryService {
         if (!shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA)) {
             taskTypes.remove(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
             taskTypes.removeIf(type -> type != DiscoveryTaskType.SPOTIFY_TOP_TRACKS &&
+                    type != DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA &&
                     type != DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES && !shouldDiscoverArtistTask(artist, type));
             if (!taskTypes.contains(DiscoveryTaskType.ARTIST_BIO_IMAGE) && !artistBioImageFacesService.shouldDiscover(artist)) {
                 taskTypes.remove(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
@@ -128,13 +135,18 @@ public class ArtistDiscoveryService {
 
     private boolean shouldDiscoverArtistTask(Artist artist, DiscoveryTaskType type) {
         LocalDateTime artistDate = artist.getUpdateDate() != null ? artist.getUpdateDate() : artist.getCreationDate();
-        LocalDateTime spotifyDate = type != DiscoveryTaskType.SPOTIFY_ARTIST_DATA
+        LocalDateTime spotifyDate = type != DiscoveryTaskType.SPOTIFY_ARTIST_DATA && type != DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA
                 ? discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
                 artist.getId(), DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)).orElse(artistDate)
                 : artistDate;
-        LocalDateTime albumDate = type == DiscoveryTaskType.SPOTIFY_TOP_TRACKS
-                ? discoveryTaskRepository.findLatestCompletedMusicBrainzCreationDateByArtistId(artist.getId()).orElse(artistDate)
-                : artistDate;
+        LocalDateTime albumDate = switch (type) {
+            case SPOTIFY_TOP_TRACKS -> discoveryTaskRepository.findLatestCompletedMusicBrainzCreationDateByArtistId(artist.getId())
+                    .orElse(artistDate);
+            case MUSICBRAINZ_ARTIST_DATA -> discoveryTaskRepository.findByArtistId(
+                            artist.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, false, false, PageRequest.of(0, 1))
+                    .stream().findFirst().map(DiscoveryTask::getCreationDate).orElse(artistDate);
+            default -> artistDate;
+        };
         LocalDateTime dependencyDate = spotifyDate.isAfter(albumDate) ? spotifyDate : albumDate;
         LocalDateTime entityDate = dependencyDate.isAfter(artistDate) ? dependencyDate : artistDate;
         return discoveryTaskRepository.findLatestCompletedCreationDateByArtistIdAndType(
@@ -179,11 +191,12 @@ public class ArtistDiscoveryService {
             taskExecutor.execute(artistDataExecution);
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
+        boolean albumsDiscovered = false;
         for (Album album : albums) {
             if (shouldDiscoverAlbum.test(album)) {
                 albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
+                albumsDiscovered = true;
             }
-            updateArtistIndex(album.getArtist());
             tasksComplete += ALBUM_TASK_COUNT;
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
         }
@@ -194,6 +207,11 @@ public class ArtistDiscoveryService {
             }
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
+        jobSynchronizer.interruptDiscoveryIfCancelled();
+        if (albumsDiscovered || shouldDiscoverArtistTask(artist, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA)) {
+            taskExecutor.execute(new MusicBrainzArtistDataTaskExecution(discoveryJob, artist, cacheEnabled));
+        }
+        notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         if (taskTypes.contains(DiscoveryTaskType.ARTIST_AVATAR_IMAGE)) {
             taskExecutor.execute(new ArtistImageTaskExecution(discoveryJob, artist, DiscoveryTaskType.ARTIST_AVATAR_IMAGE));
             notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
@@ -210,35 +228,44 @@ public class ArtistDiscoveryService {
         }
     }
 
-    private void updateArtistIndex(Artist artist) {
-        transactionTemplate.executeWithoutResult(status -> {
-            List<Album> albums = albumRepository.findByArtistId(artist.getId()).stream().sorted().toList();
-            String musicBrainzArtistId = null;
-            String countryCode = null;
-            for (Album album : albums) {
-                MusicBrainzAlbumData data = resultReader.readMusicBrainzAlbumData(album.getId());
-                if (data == null) {
-                    continue;
-                }
-                if (musicBrainzArtistId == null) {
-                    musicBrainzArtistId = data.artistId();
-                }
-                if (countryCode == null && !data.country().isEmpty()) {
-                    countryCode = data.country().getFirst();
-                }
-            }
-            if (musicBrainzArtistId == null && countryCode == null) {
-                return;
-            }
-            ArtistDiscovery index = artistDiscoveryRepository.findByArtistId(artist.getId())
+    private class MusicBrainzArtistDataTaskExecution implements DiscoveryTaskExecution<MusicBrainzArtistData> {
+
+        private final DiscoveryJob job;
+        private final Artist artist;
+        private final boolean cacheEnabled;
+
+        private MusicBrainzArtistDataTaskExecution(DiscoveryJob job, Artist artist, boolean cacheEnabled) {
+            this.job = job;
+            this.artist = artist;
+            this.cacheEnabled = cacheEnabled;
+        }
+
+        @Override
+        public DiscoveryTask startTask() {
+            return ArtistDiscoveryService.this.startTask(job, artist, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA);
+        }
+
+        @Override
+        public @Nullable MusicBrainzArtistData executeTask(DiscoveryTask task) {
+            return musicBrainzArtistDataService.discover(task, cacheEnabled);
+        }
+
+        @Override
+        public void onResult(DiscoveryTask task, @Nullable MusicBrainzArtistData result) {
+            ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artist.getId())
                     .orElseGet(() -> new ArtistDiscovery().setArtist(artist));
-            String updatedArtistId = musicBrainzArtistId != null ? musicBrainzArtistId : index.getMusicBrainzArtistId();
-            String updatedCountryCode = countryCode != null ? countryCode : index.getCountryCode();
-            if (!Objects.equals(index.getMusicBrainzArtistId(), updatedArtistId) ||
-                    !Objects.equals(index.getCountryCode(), updatedCountryCode)) {
-                artistDiscoveryRepository.save(index.setMusicBrainzArtistId(updatedArtistId).setCountryCode(updatedCountryCode));
+            String artistId = result != null ? result.artistId() : null;
+            String countryCode = result != null ? result.countryCode() : null;
+            if (!Objects.equals(discovery.getMusicBrainzArtistId(), artistId) ||
+                    !Objects.equals(discovery.getCountryCode(), countryCode)) {
+                artistDiscoveryRepository.save(discovery.setMusicBrainzArtistId(artistId).setCountryCode(countryCode));
             }
-        });
+        }
+
+        @Override
+        public void onError(DiscoveryTask task, Throwable error) {
+            logService.error(logger, "Could not discover MusicBrainz data for artist '{}'.", requireNonNull(task.getArtist()).getName(), error);
+        }
     }
 
     private DiscoveryTask startTask(DiscoveryJob job, Artist artist, DiscoveryTaskType type) {
