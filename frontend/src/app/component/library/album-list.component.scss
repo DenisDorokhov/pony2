@@ -47,8 +47,6 @@
     .artist-name {
       flex-grow: 1;
       font-size: 20px;
-      margin-left: -6px;
-      padding-left: 6px;
       padding-right: 6px;
       min-width: 250px;
     }
@@ -80,48 +78,13 @@
       }
     }
 
-    .biography-link + .artist-options {
-      margin-left: -5px;
-    }
-
-    button.biography-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      height: 30px;
-      border: 0;
-      border-radius: 5px;
-      padding: 0 6px;
-      margin: 0 0 0 -6px;
-      background: transparent;
-      color: inherit;
-      font: inherit;
-      vertical-align: baseline;
-
-      .biography-name {
-        text-box: trim-both cap alphabetic;
-      }
-
-      .biography-icon {
-        flex-shrink: 0;
-        width: 15px;
-        height: 15px;
-        color: var(--color-text-muted);
-        transform: translateY(1px);
-      }
-
-      &:hover, &:focus-visible {
-        background-color: rgba(var(--bs-emphasis-color-rgb), .07);
-
-        .biography-icon {
-          color: inherit;
-        }
-      }
-    }
-
-    button.artist-likes {
+    button.artist-biography, button.artist-likes {
       margin-left: 2px;
       padding-left: 7px;
+    }
+
+    button.artist-biography {
+      margin-right: 2px;
     }
 
     .counts {

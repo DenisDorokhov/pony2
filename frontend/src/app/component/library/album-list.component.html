@@ -15,16 +15,7 @@
       class="panel-heading">
       <div class="panel-title">
         <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
-          @if (discoveryEnabled && artistSongs.artist.discoveryData?.biographyAvailable) {
-            <button type="button" class="biography-link" aria-haspopup="dialog" (click)="openArtistBiography()">
-              <span class="biography-name">{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
-              <svg class="biography-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
-                <use href="./icons/bootstrap-icons.svg#book"></use>
-              </svg>
-            </button>
-          } @else {
-            <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
-          }
+          <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
           <div ngbDropdown container="body" class="artist-options h4" dropdownClass="pony-dropdown">
             <button ngbDropdownToggle type="button" class="menu">
               <i class="bi bi-three-dots-vertical"></i>
@@ -43,6 +34,13 @@
               }
             </ul>
           </div>
+          @if (discoveryEnabled && artistSongs.artist.discoveryData?.biographyAvailable) {
+            <button type="button" class="btn btn-sm btn-light artist-biography" aria-haspopup="dialog"
+                    [attr.aria-label]="'artistBiography.header' | translate"
+                    title="{{ 'artistBiography.header' | translate }}" (click)="openArtistBiography()">
+              <i class="bi bi-book no-padding" aria-hidden="true"></i>
+            </button>
+          }
           @if (likedAndTopTrackCount > 0) {
             <button class="btn btn-sm btn-light artist-likes" (click)="openArtistLikes()">
               <i class="bi" [class.bi-star-fill]="likeCount > 0" [class.bi-fire]="likeCount === 0"></i>{{ likedAndTopTrackCount }}

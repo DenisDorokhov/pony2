@@ -30,11 +30,6 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              {
-                "glob": "bootstrap-icons.svg",
-                "input": "node_modules/bootstrap-icons",
-                "output": "icons"
               }
             ],
             "styles": [
