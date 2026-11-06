@@ -115,8 +115,12 @@ public class MusicBrainzLlmService {
 
     NormalizationResponse normalizeTitle(DiscoveryTask task, AlbumInput input, boolean cacheEnabled) {
         String title = input.title();
-        PreparationRequest request = new PreparationRequest(normalizationPrompt,
-                JsonConverter.toJson(Map.of("albumTitle", title)), configService.get().llmModel(), 0.0, "none");
+        PreparationRequest request = new PreparationRequest(
+                normalizationPrompt,
+                JsonConverter.toJson(Map.of("albumTitle", title)),
+                configService.get().llmModel(),
+                "none"
+        );
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, NORMALIZATION_CACHE_PREFIX, NORMALIZATION_CACHE_VERSION) : null;
         return llmExecutor.call(task, request, NormalizationResponse.class, cacheSettings, response -> {
@@ -179,9 +183,12 @@ public class MusicBrainzLlmService {
         if (alternatives.isEmpty()) {
             return List.of();
         }
-        PreparationRequest request = new PreparationRequest(artistSearchPrompt,
+        PreparationRequest request = new PreparationRequest(
+                artistSearchPrompt,
                 JsonConverter.toJson(Map.of("album", input, "tracks", tracks, "alternativeArtistNames", alternatives)),
-                configService.get().llmModel(), 0.0, "none");
+                configService.get().llmModel(),
+                "none"
+        );
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ALBUM_ARTIST_SEARCH", CACHE_VERSION) : null;
         return llmExecutor.call(task, request, ArtistNamesResponse.class, cacheSettings, response -> {
@@ -315,14 +322,14 @@ public class MusicBrainzLlmService {
     record NormalizationResponse(String searchTitle, List<String> searchFragments, List<String> alternativeTitles) {
     }
 
-    @JsonPropertyOrder({"systemPrompt", "userPrompt", "model", "temperature", "toolChoice"})
+    @JsonPropertyOrder({"systemPrompt", "userPrompt", "model", "toolChoice"})
     private record PreparationRequest(
-            String systemPrompt, String userPrompt, String model, double temperature, String toolChoice
+            String systemPrompt, String userPrompt, String model, String toolChoice
     ) implements DiscoveryTaskLlmExecutor.Request {
         @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
-                    OpenAiChatOptions.builder().model(model).temperature(temperature).toolChoice(toolChoice).build());
+                    OpenAiChatOptions.builder().model(model).toolChoice(toolChoice).build());
         }
     }
 

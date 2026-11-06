@@ -103,9 +103,9 @@ class ArtistBioImageFacesServiceTest {
         server.start();
         config = new ConfigSet(null, List.of(), true, "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "face-test", null);
         lenient().when(configService.get()).thenAnswer(invocation -> config);
-        lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(1)))
+        lenient().when(cacheService.get(eq(SPOTIFY), anyString(), eq(2)))
                 .thenAnswer(invocation -> Optional.ofNullable(cache.get(invocation.getArgument(1))));
-        lenient().when(cacheService.put(eq(SPOTIFY), anyString(), eq(1), anyString())).thenAnswer(invocation -> {
+        lenient().when(cacheService.put(eq(SPOTIFY), anyString(), eq(2), anyString())).thenAnswer(invocation -> {
             cache.put(invocation.getArgument(1), invocation.getArgument(3));
             return null;
         });
@@ -150,7 +150,7 @@ class ArtistBioImageFacesServiceTest {
         assertThat(result.externalImageId()).isEqualTo("image");
         assertThat(result.faces()).containsExactly(new ImageFace(0.1, 0.2, 0.3, 0.5), new ImageFace(0.6, 0.1, 0.9, 0.6));
         Map<String, Object> request = JsonConverter.mapFromJson(requests.getFirst(), String.class, Object.class);
-        assertThat(request).containsEntry("model", "face-test").containsEntry("temperature", 0.0).containsEntry("tool_choice", "none");
+        assertThat(request).containsEntry("model", "face-test").containsEntry("tool_choice", "none").doesNotContainKey("temperature");
         assertThat(request.get("tools")).isNull();
         Map<?, ?> format = (Map<?, ?>) request.get("response_format");
         assertThat(format.get("type")).isEqualTo("json_schema");

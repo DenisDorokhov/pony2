@@ -47,7 +47,7 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.ARTIST_BIO
 @Service
 public class ArtistBioImageFacesService {
 
-    private static final int CACHE_VERSION = 1;
+    private static final int CACHE_VERSION = 2;
 
     private final DiscoveryTaskLlmExecutor llmExecutor;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
@@ -187,7 +187,11 @@ public class ArtistBioImageFacesService {
 
     @JsonPropertyOrder({"prompt", "endpoint", "model", "imageHash", "version"})
     private record Request(
-            String prompt, @Nullable String endpoint, @Nullable String model, String imageHash, int version,
+            String prompt,
+            @Nullable String endpoint,
+            @Nullable String model,
+            String imageHash,
+            int version,
             @JsonIgnore byte[] image
     ) implements DiscoveryTaskLlmExecutor.Request {
 
@@ -199,8 +203,14 @@ public class ArtistBioImageFacesService {
         public Prompt toPrompt() {
             UserMessage message = UserMessage.builder().text(prompt)
                     .media(new Media(MimeTypeUtils.IMAGE_PNG, new ByteArrayResource(image))).build();
-            return new Prompt(List.of(message), OpenAiChatOptions.builder().model(model).temperature(0.0)
-                    .seed(42).maxTokens(1024).extraBody(Map.of("chat_template_kwargs", Map.of("enable_thinking", false))).build());
+            return new Prompt(
+                    List.of(message),
+                    OpenAiChatOptions.builder()
+                            .model(model)
+                            .seed(42)
+                            .maxTokens(1024)
+                            .extraBody(Map.of("chat_template_kwargs", Map.of("enable_thinking", false)))
+                            .build());
         }
     }
 }

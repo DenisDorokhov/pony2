@@ -993,7 +993,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
             assertThat(requireNonNull(options).getToolCallbacks()).isNullOrEmpty();
             assertThat(options.getModel()).isEqualTo("test");
-            assertThat(options.getTemperature()).isEqualTo(0.0);
+            assertThat(options.getTemperature()).isNull();
             assertThat(options.getToolChoice()).isEqualTo("none");
             assertThat(requireNonNull(options.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
             assertThat(options.getResponseFormat().getStrict()).isTrue();
@@ -1023,7 +1023,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             Map<?, ?> snapshot = ((Map<?, ?>) requests.get(1));
             assertThat(snapshot.get("systemPrompt")).isEqualTo(systemPrompt);
             assertThat(snapshot.get("model")).isEqualTo("test");
-            assertThat(snapshot.get("temperature")).isEqualTo(0.0);
+            assertThat(snapshot.containsKey("temperature")).isFalse();
             assertThat(snapshot.get("toolChoice")).isEqualTo("none");
             assertThat(snapshot.get("responseSchema")).isInstanceOf(Map.class);
             assertThat(requests.get(2)).isEqualTo(NORMALIZED_SEARCH_URL);
