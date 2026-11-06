@@ -13,6 +13,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {LoadingIndicatorComponent} from '../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../common/error-indicator.component';
 import {NoContentIndicatorComponent} from '../common/no-content-indicator.component';
+import {MenuIconComponent} from '../common/menu-icon.component';
 import {AlbumComponent} from './album.component';
 import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaylistService} from '../../service/playlist.service';
@@ -29,7 +30,7 @@ import {ArtistBiographyComponent} from './modal/artist-biography.component';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
 
 @Component({
-  imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
+  imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, MenuIconComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
   selector: 'pony-album-list',
   templateUrl: './album-list.component.html',
   styleUrls: ['./album-list.component.scss']

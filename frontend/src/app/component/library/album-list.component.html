@@ -18,7 +18,7 @@
           <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
           <div ngbDropdown container="body" class="artist-options h4" dropdownClass="pony-dropdown">
             <button ngbDropdownToggle type="button" class="menu">
-              <i class="bi bi-three-dots-vertical"></i>
+              <pony-menu-icon />
             </button>
             <ul ngbDropdownMenu class="dropdown-menu artist-options-menu" role="menu">
               <button ngbDropdownItem [disabled]="songCount === 0" (click)="startArtistShuffle()">

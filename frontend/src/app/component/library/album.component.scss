@@ -17,19 +17,21 @@
   }
 
   .options {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: top;
+    height: 32px;
+    line-height: 32px;
+    font-size: 24px;
     padding: 0;
 
     button.menu {
+      display: block;
       border: none;
       background-color: var(--color-button-background-transparent);
       margin-left: 0 !important;
-      padding: 0 0 2px 0;
-
-      i {
-        font-size: 18px;
-        color: var(--bs-body-color);
-      }
+      padding: 0;
+      font: inherit;
     }
 
     .dropdown-toggle::after {
@@ -50,6 +52,18 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
+      }
+
+      .release-type, small {
+        line-height: 1;
+
+        // Match the title's text line without changing the metadata font size.
+        &::before {
+          content: '\200B';
+          font-size: 24px;
+          font-weight: 500;
+          line-height: 32px;
+        }
       }
 
       .album-name {
@@ -82,7 +96,6 @@
         color: #fff;
         font-size: .875em;
         font-weight: normal;
-        line-height: 30px;
 
         .release-type-badge {
           display: inline-flex;
@@ -137,7 +150,6 @@
         font-weight: normal;
         color: var(--color-text-muted);
         display: inline-block;
-        line-height: 30px;
         padding-left: 6px;
       }
     }

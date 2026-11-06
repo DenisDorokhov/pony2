@@ -5,10 +5,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  margin: 0;
+  margin: 1px;
 
   border-radius: 6px;
-  border: 1px solid var(--color-panel-border);
+  border: 0;
+  outline: 1px solid var(--color-panel-border);
   overflow: hidden;
 
   pony-loading-indicator, pony-error-indicator {
@@ -34,7 +35,6 @@
     button {
       border: 1px solid var(--color-panel-border);
       margin-left: 6px;
-      vertical-align: 2px;
 
       i {
         padding-right: 6px;
@@ -45,32 +45,38 @@
     }
 
     .artist-name {
+      display: flex;
+      align-items: center;
       flex-grow: 1;
       font-size: 20px;
       padding-right: 6px;
       min-width: 250px;
+
+      > span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      > button {
+        flex-shrink: 0;
+      }
     }
 
     .artist-options {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      vertical-align: top;
-      height: 39px;
+      flex-shrink: 0;
       margin: 0;
+      font: inherit;
 
       button.menu {
-        position: relative;
-        top: -0.5px;
+        display: block;
         border: none;
         background-color: var(--color-button-background-transparent);
         margin: 0;
-        padding: 0 0 2px 0;
-
-        i {
-          font-size: 18px;
-          padding-right: 0;
-          color: var(--bs-body-color);
-        }
+        padding: 0;
+        font: inherit;
       }
 
       .dropdown-toggle::after {
