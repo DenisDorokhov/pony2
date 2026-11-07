@@ -5,6 +5,7 @@ import {TokenStorageService} from './token-storage.service';
 import {catchError} from 'rxjs/operators';
 import {NotificationService} from './notification.service';
 import {TranslateService} from '@ngx-translate/core';
+import {ErrorDto} from '../domain/common.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -37,7 +38,8 @@ export class SecurityInterceptor implements HttpInterceptor {
             this.translateService.instant('notification.authenticationErrorText')
           );
         }
-        if (error.status === 403) {
+        // Filter out generic server / proxy level access denied errors.
+        if (error.status === 403 && error.error?.code === ErrorDto.Code.ACCESS_DENIED) {
           this.notificationService.error(
             this.translateService.instant('notification.authorizationErrorTitle'),
             this.translateService.instant('notification.authorizationErrorText')
