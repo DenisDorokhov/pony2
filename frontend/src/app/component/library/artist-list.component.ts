@@ -34,6 +34,10 @@ import {keyboardLayoutInsensitiveMatch} from '../../utils/search.utils';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
 
+const NAVIGATION_ID_ALL_ARTISTS = 'all';
+const NAVIGATION_ID_UPDATED_ARTISTS = 'updated';
+const NAVIGATION_ID_UNKNOWN_COUNTRY = 'country:unknown';
+
 export class NavigationItem {
 
   id: string;
@@ -225,6 +229,18 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
         );
       })
       .sort((left, right) => left.title.localeCompare(right.title));
+    if (countryNavigationItems.length > 0) {
+      const unknownCountryName = this.translateService.instant('library.artist.unknownCountryLabel');
+      countryNavigationItems.push(new NavigationItem(
+        NAVIGATION_ID_UNKNOWN_COUNTRY,
+        this.translateService.instant('library.artist.countryNavigationLabel', {
+          'countryName': unknownCountryName,
+          'artistCount': this.artists.filter(artist =>
+            !this.countryService.getFlagCode(artist.discoveryData?.countryCode)).length
+        }),
+        unknownCountryName
+      ));
+    }
     this.genres.forEach(genre => {
       const genreName = genre.name ?? this.translateService.instant('library.genre.unknownLabel');
       const navigationItem = new NavigationItem(
@@ -261,7 +277,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private allArtistsNavigationItem() {
     return new NavigationItem(
-      'all',
+      NAVIGATION_ID_ALL_ARTISTS,
       this.translateService.instant('library.artist.allArtistsLabel', {'artistCount': this.artists.length}),
       this.translateService.instant('library.artist.allArtistsTitleLabel')
     );
@@ -269,7 +285,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updatedArtistsNavigationItem() {
     return new NavigationItem(
-      'updated',
+      NAVIGATION_ID_UPDATED_ARTISTS,
       this.translateService.instant('library.artist.updatedArtistsLabel', {
         'artistCount': this.artists.filter(artist =>
           shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
@@ -280,12 +296,15 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private filterArtists(scrollToSelectedArtist = false) {
-    if (this.selectedNavigationItem.id === 'all') {
+    if (this.selectedNavigationItem.id === NAVIGATION_ID_ALL_ARTISTS) {
       this.filteredArtists = this.artists;
-    } else if (this.selectedNavigationItem.id === 'updated') {
+    } else if (this.selectedNavigationItem.id === NAVIGATION_ID_UPDATED_ARTISTS) {
       this.filteredArtists = this.artists.filter(artist =>
         shouldShowNewIndicator(artist.updateDate, this.installationService.installationStatus) ||
         shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus));
+    } else if (this.selectedNavigationItem.id === NAVIGATION_ID_UNKNOWN_COUNTRY) {
+      this.filteredArtists = this.artists.filter(artist =>
+        !this.countryService.getFlagCode(artist.discoveryData?.countryCode));
     } else if (this.selectedNavigationItem.countryCode) {
       this.filteredArtists = this.artists.filter(artist =>
         this.countryService.getFlagCode(artist.discoveryData?.countryCode) === this.selectedNavigationItem.countryCode);
