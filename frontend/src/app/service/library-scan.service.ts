@@ -54,7 +54,12 @@ export class LibraryScanService {
     this.libraryService.observeRefreshRequest().pipe(
       mergeMap(() => {
         if (this.authenticationService.isAuthenticated) {
-          return this.updateScanStatistics();
+          return this.updateScanStatistics().pipe(
+            catchError(error => {
+              console.error(`Could not update scan statistics: ${JSON.stringify(error)}`);
+              return of(undefined);
+            })
+          );
         }
         return of(undefined);
       })
