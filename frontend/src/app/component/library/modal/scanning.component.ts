@@ -48,6 +48,7 @@ export class ScanningComponent implements OnInit, OnDestroy {
   private scanJobEndedSubscription: Subscription | undefined;
   private discoveryStatusSubscription: Subscription | undefined;
   private refreshRequestSubscription: Subscription | undefined;
+  private scanJobsSubscription: Subscription | undefined;
   private discoveryRunning = false;
   private discoveryEnabled = false;
 
@@ -90,10 +91,13 @@ export class ScanningComponent implements OnInit, OnDestroy {
     this.scanJobEndedSubscription?.unsubscribe();
     this.discoveryStatusSubscription?.unsubscribe();
     this.refreshRequestSubscription?.unsubscribe();
+    this.scanJobsSubscription?.unsubscribe();
   }
 
   private loadScanJobs(pageIndex = 0, pageSize = 5) {
-    this.libraryScanService.getScanJobs(pageIndex, pageSize).subscribe({
+    this.pageToLoad = {pageIndex, pageSize, totalPages: this.currentPage?.totalPages ?? 0};
+    this.scanJobsSubscription?.unsubscribe();
+    this.scanJobsSubscription = this.libraryScanService.getScanJobs(pageIndex, pageSize).subscribe({
       next: scanJobPage => {
         this.scanJobs = scanJobPage.scanJobs;
         this.currentPage = this.pageToLoad = scanJobPage;

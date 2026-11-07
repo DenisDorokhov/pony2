@@ -1,4 +1,4 @@
-import {Component, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {
   NgbActiveModal,
   NgbDropdown,
@@ -15,6 +15,7 @@ import {CommonModule, DatePipe} from '@angular/common';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {Subscription} from 'rxjs';
 import Level = LogMessageDto.Level;
 
 class LogWithException implements LogMessageDto {
@@ -44,7 +45,7 @@ class LogWithException implements LogMessageDto {
     templateUrl: './log.component.html',
     styleUrls: ['./log.component.scss']
 })
-export class LogComponent implements OnInit {
+export class LogComponent implements OnInit, OnDestroy {
 
   readonly activeModal = inject(NgbActiveModal);
 
@@ -63,12 +64,19 @@ export class LogComponent implements OnInit {
 
   @ViewChild('scroller') containerElement!: ElementRef;
 
+  private pageSubscription: Subscription | undefined;
+
   ngOnInit(): void {
     this.loadPage();
   }
 
+  ngOnDestroy(): void {
+    this.pageSubscription?.unsubscribe();
+  }
+
   private loadPage(pageIndex = 0, pageSize = 30) {
-    this.logService.getLog(
+    this.pageSubscription?.unsubscribe();
+    this.pageSubscription = this.logService.getLog(
       this.minLevel,
       pageIndex, pageSize
     ).subscribe({

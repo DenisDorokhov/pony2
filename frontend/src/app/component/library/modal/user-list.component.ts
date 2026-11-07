@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {UserDto, UserPageDto} from '../../../domain/user.dto';
@@ -10,6 +10,7 @@ import {LoadingIndicatorComponent} from '../../common/loading-indicator.componen
 import {UserComponent} from './user.component';
 import {AuthenticationService} from '../../../service/authentication.service';
 import {NotificationService} from '../../../service/notification.service';
+import {Subscription} from 'rxjs';
 
 @Component({
     imports: [TranslateModule, CommonModule, ErrorIndicatorComponent, LoadingIndicatorComponent],
@@ -17,7 +18,7 @@ import {NotificationService} from '../../../service/notification.service';
     templateUrl: './user-list.component.html',
     styleUrls: ['./user-list.component.scss']
 })
-export class UserListComponent implements OnInit {
+export class UserListComponent implements OnInit, OnDestroy {
 
   readonly activeModal = inject(NgbActiveModal);
   readonly authenticationService = inject(AuthenticationService);
@@ -36,12 +37,19 @@ export class UserListComponent implements OnInit {
   page: UserPageDto | undefined;
   emptyRowCount = 5;
 
+  private pageSubscription: Subscription | undefined;
+
   ngOnInit(): void {
     this.loadPage();
   }
 
+  ngOnDestroy(): void {
+    this.pageSubscription?.unsubscribe();
+  }
+
   private loadPage(pageIndex = 0, pageSize = 5) {
-    this.userService.getAllUsers(pageIndex, pageSize).subscribe({
+    this.pageSubscription?.unsubscribe();
+    this.pageSubscription = this.userService.getAllUsers(pageIndex, pageSize).subscribe({
       next: userPage => {
         this.users = userPage.users;
         this.page = userPage;
