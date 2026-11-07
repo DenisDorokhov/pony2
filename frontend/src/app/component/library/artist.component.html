@@ -2,14 +2,15 @@
    (click)="select($event)">
   <pony-image-loader [url]="artist.discoveryData?.avatarExternalImageUrl || artist.smallArtworkUrl"
                      [rounded]="artist.discoveryData !== undefined"></pony-image-loader>
-  <div class="artist-name"
-       [class.playing]="playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PLAYING || playbackState === PlaybackState.PAUSED">
-    {{ artist.name | ponyUnknownArtist }}
+  <div class="artist-title">
+    <div class="artist-name">{{ artist.name | ponyUnknownArtist }}</div>
+    @if (showNewIndicator) {
+      <span class="new-indicator-container">
+        <span class="new-indicator">{{ 'shared.newLabel' | translate }}</span>
+      </span>
+    }
   </div>
-  @if (showNewIndicator) {
-    <span class="new-indicator">{{ 'shared.newLabel' | translate }}</span>
-  }
-  <div class="playback-indicator" [class.playing]="playbackState === PlaybackState.PLAYING">
+  <div class="playback-indicator">
     @if (playbackState === PlaybackState.PLAYING) {
       <i class="bi bi-volume-up-fill"></i>
     }

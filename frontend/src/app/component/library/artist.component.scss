@@ -42,16 +42,30 @@
     margin: -3px 0 -3px -3px;
   }
 
-  .artist-name {
+  .artist-title {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
     flex: 1;
+    min-width: 0;
+  }
+
+  .artist-name {
+    flex: 0 1 auto;
     min-width: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
   }
 
-  .new-indicator {
+  // Preserve the artist font metrics for the badge's vertical alignment.
+  .new-indicator-container {
     flex-shrink: 0;
+  }
+
+  .new-indicator {
+    display: inline-block;
+    vertical-align: middle;
     padding: 1px 2px;
     border: 1px solid var(--color-new-badge-border);
     border-radius: 2px;
@@ -66,10 +80,6 @@
     display: none;
     flex-shrink: 0;
     width: 20px;
-  }
-
-  .playback-indicator.playing {
-    width: 16px;
   }
 }
 
