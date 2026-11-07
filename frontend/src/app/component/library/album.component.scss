@@ -54,7 +54,7 @@
         overflow: hidden;
       }
 
-      .release-type, small {
+      small {
         line-height: 1;
 
         // Match the title's text line without changing the metadata font size.
@@ -89,35 +89,35 @@
         }
       }
 
-      .release-type {
+      .new-indicator-container, .release-type {
         display: inline-block;
         overflow: hidden;
         margin-left: 6px;
+        font-size: 24px;
+        line-height: 32px;
+      }
+
+      .new-indicator, .release-type-badge {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 1px 2px;
+        border-radius: 2px;
+        font-size: .5em;
+        font-weight: bold;
+        line-height: 1;
+      }
+
+      .new-indicator {
+        border: 1px solid var(--color-new-badge-border);
+        background-color: var(--color-new-badge-background);
+        color: var(--color-new-badge-text);
+      }
+
+      .release-type {
         color: #fff;
-        font-size: .875em;
-        font-weight: normal;
 
         .release-type-badge {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          height: calc(1cap + 1px);
-          padding: 1px 3px;
           border: 1px solid rgb(255 255 255 / 25%);
-          border-radius: 2px;
-          line-height: 1;
-
-          // Use the bottom edge of the first flex item as the badge baseline.
-          &::before {
-            content: '';
-            height: inherit;
-          }
-
-          span {
-            font-size: 12px;
-            font-weight: bold;
-            text-box: trim-both cap alphabetic;
-          }
         }
 
         &.lp .release-type-badge {
@@ -150,7 +150,7 @@
         font-weight: normal;
         color: var(--color-text-muted);
         display: inline-block;
-        padding-left: 6px;
+        padding-left: 5px;
       }
     }
   }

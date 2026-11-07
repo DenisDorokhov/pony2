@@ -1,6 +1,6 @@
 <div class="album-container">
   <a class="artwork-link" [attr.href]="albumSongs.album.largeArtworkUrl ? 'javascript:void(0);' : null" (click)="openArtwork($event)">
-    <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl" [showNewIndicator]="showNewIndicator"
+    <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl"
                        [url]="albumSongs.album.largeArtworkUrl" title="{{
         (albumSongs.album.artist.name | ponyUnknownArtist) +
         ' - ' +
@@ -18,6 +18,11 @@
       ('library.album.sizeLabel' | translate:{ songCount: albumSongs.songs.length, duration })
     }}">
       <span class="album-name">{{ albumSongs.album.name | ponyUnknownAlbum }}</span>
+      @if (showNewIndicator) {
+        <span class="new-indicator-container">
+          <span class="new-indicator">{{ 'shared.newLabel' | translate }}</span>
+        </span>
+      }
       @if (albumSongs.album.discoveryData.releaseType !== ReleaseType.UNKNOWN) {
         <span class="release-type" [class]="albumSongs.album.discoveryData.releaseType.toLowerCase()">
           <span class="release-type-badge"><span>{{
