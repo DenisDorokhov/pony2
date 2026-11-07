@@ -35,6 +35,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   private isIntersecting = false;
 
   private intersectionSubscription: Subscription | undefined;
+  private intersectionRetryTimeout: ReturnType<typeof setTimeout> | undefined;
 
   @Input()
   get url(): string | undefined {
@@ -71,7 +72,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
     this.scroller = this.findScroller();
     this.subscribeToIntersections();
     // Fix for a bug of intersection not detected during application bootstrap.
-    setTimeout(() => {
+    this.intersectionRetryTimeout = setTimeout(() => {
       if (this.state !== ImageLoaderComponentState.LOADING && this.state !== ImageLoaderComponentState.LOADED) {
         this.subscribeToIntersections();
       }
@@ -140,6 +141,7 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.intersectionRetryTimeout);
     this.intersectionSubscription?.unsubscribe();
   }
 
