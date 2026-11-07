@@ -78,7 +78,7 @@ export default {
       unknownLabel: 'Unknown Artist',
       genreNavigationLabel: '{genreName} ({artistCount})',
       countryNavigationLabel: '{countryName} ({artistCount})',
-      unknownCountryLabel: 'Unknown',
+      unknownCountryLabel: 'Unknown Country',
       noFilteredArtistsLabel: 'No matching artists found :-(',
       filterGenresPlaceholder: 'Filter (Ctrl+Shift+G)',
       resetButton: 'Reset Filter',

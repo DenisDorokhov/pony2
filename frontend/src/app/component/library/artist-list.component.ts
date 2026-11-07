@@ -100,7 +100,8 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.push(this.libraryService.observeGenres().subscribe(genres => {
-      this.genres = genres;
+      // Move the unknown genre to the end of the list.
+      this.genres = [...genres].sort((left, right) => Number(left.name == null) - Number(right.name == null));
       const oldSelectedNavigationItem = this.selectedNavigationItem;
       this.reloadNavigationItems();
       this.filterArtists(oldSelectedNavigationItem.id !== this.selectedNavigationItem.id);
