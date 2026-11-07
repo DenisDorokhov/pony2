@@ -27,15 +27,9 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(128, 128, 128, .35) transparent;
 
-  &.with-footer::after {
-    content: '';
-    display: block;
-    position: sticky;
-    bottom: 0;
-    height: 20px;
-    margin-top: -20px;
-    background: linear-gradient(to bottom, rgba(var(--biography-background-rgb), 0), var(--biography-background));
-    pointer-events: none;
+  &.with-footer {
+    // Fade the scroller itself to avoid subpixel gaps from a sticky overlay.
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent calc(100% - 1px));
   }
 }
 
