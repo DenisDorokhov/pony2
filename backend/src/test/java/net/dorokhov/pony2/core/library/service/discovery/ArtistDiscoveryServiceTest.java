@@ -4,6 +4,7 @@ import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.DiscoveryType;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
@@ -295,7 +296,7 @@ class ArtistDiscoveryServiceTest {
         artistTasks(artist.getId(), ARTIST_TASK_COUNT, taskDate);
         when(discoveryTaskRepository.findByArtistId(artist.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA,
                 false, false, PageRequest.of(0, 1))).thenReturn(new PageImpl<>(List.of(
-                new DiscoveryTask().setCreationDate(taskDate.plusMinutes(minutesAfterCheck)))));
+                DiscoveryTaskSummary.of(new DiscoveryTask().setCreationDate(taskDate.plusMinutes(minutesAfterCheck))))));
 
         artistDiscoveryService.discoverIfUpdated(discoveryJob(), artist, List.of(), true, null);
 

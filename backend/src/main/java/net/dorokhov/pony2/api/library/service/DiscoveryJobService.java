@@ -3,6 +3,7 @@ package net.dorokhov.pony2.api.library.service;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import org.springframework.data.domain.Page;
@@ -41,13 +42,13 @@ public interface DiscoveryJobService {
 
     long getTaskCount(String discoveryJobId);
 
-    Page<DiscoveryTask> getAllTasks(DiscoveryTaskFilter filter, Pageable pageable);
+    Page<DiscoveryTaskSummary> getAllTasks(DiscoveryTaskFilter filter, Pageable pageable);
 
-    Page<DiscoveryTask> getJobTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable);
+    Page<DiscoveryTaskSummary> getJobTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable);
 
-    Page<DiscoveryTask> getArtistTasks(String artistId, DiscoveryTaskFilter filter, Pageable pageable);
+    Page<DiscoveryTaskSummary> getArtistTasks(String artistId, DiscoveryTaskFilter filter, Pageable pageable);
 
-    Page<DiscoveryTask> getAlbumTasks(String albumId, DiscoveryTaskFilter filter, Pageable pageable);
+    Page<DiscoveryTaskSummary> getAlbumTasks(String albumId, DiscoveryTaskFilter filter, Pageable pageable);
 
     Optional<DiscoveryTask> getTaskById(String id);
 

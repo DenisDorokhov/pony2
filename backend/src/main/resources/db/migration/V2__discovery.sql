@@ -82,17 +82,17 @@ CREATE TABLE discovery_task (
   )
 );
 
-CREATE INDEX index_discovery_task_update_date ON discovery_task (update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_type_update_date ON discovery_task (type, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_status_update_date ON discovery_task (status DESC, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_status_type_update_date ON discovery_task (status, type, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_status_result_update_date ON discovery_task (status, result, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_status_type_result_update_date ON discovery_task (status, type, result, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_job_type_update_date ON discovery_task (discovery_job_id, type, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_job_status_update_date ON discovery_task (discovery_job_id, status, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_job_status_type_update_date ON discovery_task (discovery_job_id, status, type, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_job_status_result_update_date ON discovery_task (discovery_job_id, status, result, update_date DESC NULLS LAST, id DESC);
-CREATE INDEX index_discovery_task_job_status_type_result_update_date ON discovery_task (discovery_job_id, status, type, result, update_date DESC NULLS LAST, id DESC);
+CREATE INDEX index_discovery_task_creation_date ON discovery_task (creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_type_creation_date ON discovery_task (type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_status_creation_date ON discovery_task (status DESC, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_status_type_creation_date ON discovery_task (status, type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_status_result_creation_date ON discovery_task (status, result, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_status_type_result_creation_date ON discovery_task (status, type, result, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_job_type_creation_date ON discovery_task (discovery_job_id, type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_job_status_creation_date ON discovery_task (discovery_job_id, status, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_job_status_type_creation_date ON discovery_task (discovery_job_id, status, type, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_job_status_result_creation_date ON discovery_task (discovery_job_id, status, result, creation_date DESC, id DESC);
+CREATE INDEX index_discovery_task_job_status_type_result_creation_date ON discovery_task (discovery_job_id, status, type, result, creation_date DESC, id DESC);
 
 CREATE INDEX index_discovery_task_genre_status_type_creation_date ON discovery_task (genre_id, status, type, creation_date DESC, id DESC);
 CREATE INDEX index_discovery_task_artist_status_type_creation_date ON discovery_task (artist_id, status, type, creation_date DESC, id DESC);

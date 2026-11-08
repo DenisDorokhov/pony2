@@ -7,6 +7,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJobProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
@@ -131,14 +132,14 @@ public class DiscoveryFacade {
         return DiscoveryTaskDto.of(task);
     }
 
-    private DiscoveryTaskSummaryDto toDiscoveryTaskSummary(DiscoveryTask task) {
-        Album album = task.getAlbum();
-        Artist artist = album != null ? album.getArtist() : task.getArtist();
+    private DiscoveryTaskSummaryDto toDiscoveryTaskSummary(DiscoveryTaskSummary task) {
+        Album album = task.album();
+        Artist artist = album != null ? album.getArtist() : task.artist();
         return DiscoveryTaskSummaryDto.of(task,
-                task.getGenre() != null ? GenreDto.of(task.getGenre()) : null,
+                task.genre() != null ? GenreDto.of(task.genre()) : null,
                 artist != null ? ArtistDto.of(artist) : null,
                 album != null ? AlbumDto.of(album) : null,
-                task.getSong() != null ? SongDto.of(task.getSong(), true) : null);
+                task.song() != null ? SongDto.of(task.song(), true) : null);
     }
 
     public void cleanDiscoveryData() throws ConcurrentLibraryJobException {

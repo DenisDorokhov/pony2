@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.repository;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -21,107 +22,219 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
     long countByJobId(String jobId);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
-            ORDER BY COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
+            ORDER BY t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findAllTasks(Pageable pageable);
+    Page<DiscoveryTaskSummary> findAllTasks(Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.type = :type
-            ORDER BY t.type, COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
+            ORDER BY t.type, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findByType(DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTaskSummary> findByType(DiscoveryTaskType type, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.status = FAILED
-            ORDER BY t.status DESC, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.status DESC, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findFailed(Pageable pageable);
+    Page<DiscoveryTaskSummary> findFailed(Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.status = FAILED AND t.type = :type
-            ORDER BY t.status, t.type, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.status, t.type, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findFailedByType(DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTaskSummary> findFailedByType(DiscoveryTaskType type, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.status = COMPLETE AND t.result IS NULL
-            ORDER BY t.status, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.status, t.result, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findWithoutResult(Pageable pageable);
+    Page<DiscoveryTaskSummary> findWithoutResult(Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.status = COMPLETE AND t.type = :type AND t.result IS NULL
-            ORDER BY t.status, t.type, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.status, t.type, t.result, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findWithoutResultByType(DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTaskSummary> findWithoutResultByType(DiscoveryTaskType type, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.job.id = :jobId
-            ORDER BY t.job.id, COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
+            ORDER BY t.job.id, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findByJobId(String jobId, Pageable pageable);
+    Page<DiscoveryTaskSummary> findByJobId(String jobId, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.job.id = :jobId AND t.type = :type
-            ORDER BY t.job.id, t.type, COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
+            ORDER BY t.job.id, t.type, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTaskSummary> findByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.job.id = :jobId AND t.status = FAILED
-            ORDER BY t.job.id, t.status, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.job.id, t.status, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findFailedByJobId(String jobId, Pageable pageable);
+    Page<DiscoveryTaskSummary> findFailedByJobId(String jobId, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.job.id = :jobId AND t.status = FAILED AND t.type = :type
-            ORDER BY t.job.id, t.status, t.type, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.job.id, t.status, t.type, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findFailedByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTaskSummary> findFailedByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.result IS NULL
-            ORDER BY t.job.id, t.status, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.job.id, t.status, t.result, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findWithoutResultByJobId(String jobId, Pageable pageable);
+    Page<DiscoveryTaskSummary> findWithoutResultByJobId(String jobId, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.job.id = :jobId AND t.status = COMPLETE AND t.type = :type AND t.result IS NULL
-            ORDER BY t.job.id, t.status, t.type, t.result, t.updateDate DESC NULLS LAST, t.id DESC
+            ORDER BY t.job.id, t.status, t.type, t.result, t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
+    Page<DiscoveryTaskSummary> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t LEFT JOIN t.album a
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE (t.artist.id = :artistId OR a.artist.id = :artistId)
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
               AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
-            ORDER BY COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
+            ORDER BY t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findByArtistId(String artistId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
+    Page<DiscoveryTaskSummary> findByArtistId(String artistId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
 
     @Query("""
-            SELECT t FROM DiscoveryTask t
+            SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
+                t.id, t.creationDate, t.updateDate, t.status, t.type,
+                CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
+                g, ar, a, s)
+            FROM DiscoveryTask t
+            LEFT JOIN t.genre g
+            LEFT JOIN t.artist ar
+            LEFT JOIN t.album a
+            LEFT JOIN t.song s
             WHERE t.album.id = :albumId
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
               AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
-            ORDER BY COALESCE(t.updateDate, t.creationDate) DESC, t.id DESC
+            ORDER BY t.creationDate DESC, t.id DESC
             """)
-    Page<DiscoveryTask> findByAlbumId(String albumId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
+    Page<DiscoveryTaskSummary> findByAlbumId(String albumId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
 
     long countByJobIdAndStatus(String jobId, DiscoveryTask.Status status);
 

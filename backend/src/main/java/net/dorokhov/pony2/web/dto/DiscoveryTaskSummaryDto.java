@@ -2,6 +2,7 @@ package net.dorokhov.pony2.web.dto;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 
 import java.time.Duration;
@@ -90,17 +91,17 @@ public final class DiscoveryTaskSummaryDto extends BaseDto<DiscoveryTaskSummaryD
         return this;
     }
 
-    public static DiscoveryTaskSummaryDto of(DiscoveryTask task, @Nullable GenreDto genre, @Nullable ArtistDto artist,
+    public static DiscoveryTaskSummaryDto of(DiscoveryTaskSummary task, @Nullable GenreDto genre, @Nullable ArtistDto artist,
                                             @Nullable AlbumDto album, @Nullable SongDto song) {
-        LocalDateTime endDate = task.getStatus() == DiscoveryTask.Status.STARTED ? LocalDateTime.now() : task.getUpdateDate();
+        LocalDateTime endDate = task.status() == DiscoveryTask.Status.STARTED ? LocalDateTime.now() : task.updateDate();
         return new DiscoveryTaskSummaryDto()
-                .setId(task.getId())
-                .setCreationDate(task.getCreationDate())
-                .setUpdateDate(task.getUpdateDate())
-                .setStatus(task.getStatus())
-                .setNoResult(task.getStatus() == DiscoveryTask.Status.COMPLETE && task.getResult() == null)
-                .setType(task.getType())
-                .setDuration(endDate != null ? Duration.between(task.getCreationDate(), endDate).toSeconds() : null)
+                .setId(task.id())
+                .setCreationDate(task.creationDate())
+                .setUpdateDate(task.updateDate())
+                .setStatus(task.status())
+                .setNoResult(task.noResult())
+                .setType(task.type())
+                .setDuration(endDate != null ? Duration.between(task.creationDate(), endDate).toSeconds() : null)
                 .setGenre(genre)
                 .setArtist(artist)
                 .setAlbum(album)

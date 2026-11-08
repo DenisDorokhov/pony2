@@ -144,7 +144,7 @@ public class ArtistDiscoveryService {
                     .orElse(artistDate);
             case MUSICBRAINZ_ARTIST_DATA -> discoveryTaskRepository.findByArtistId(
                             artist.getId(), DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, false, false, PageRequest.of(0, 1))
-                    .stream().findFirst().map(DiscoveryTask::getCreationDate).orElse(artistDate);
+                    .stream().findFirst().map(DiscoveryTaskSummary::creationDate).orElse(artistDate);
             default -> artistDate;
         };
         LocalDateTime dependencyDate = spotifyDate.isAfter(albumDate) ? spotifyDate : albumDate;

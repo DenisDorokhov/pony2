@@ -27,10 +27,12 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,6 +55,7 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private DiscoveryTaskResultReader resultReader;
     @Autowired private MusicBrainzArtistDataService musicBrainzArtistDataService;
     @Autowired private DiscoveryTaskExecutor taskExecutor;
@@ -247,8 +250,12 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     void shouldIgnoreOlderAlbumDataWhenLatestCompletedResultIsEmpty() {
         saveDiscovery();
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
-        taskRepository.save(new DiscoveryTask().setJob(job()).setAlbum(album).setType(MUSICBRAINZ_ALBUM_DATA)
+        DiscoveryTask emptyTask = taskRepository.save(new DiscoveryTask().setJob(job()).setAlbum(album).setType(MUSICBRAINZ_ALBUM_DATA)
                 .setStatus(DiscoveryTask.Status.COMPLETE));
+        jdbcTemplate.update("""
+                UPDATE discovery_task SET creation_date = ?
+                WHERE album_id = ? AND type = ? AND result IS NOT NULL
+                """, Timestamp.valueOf(emptyTask.getCreationDate().minusNanos(1)), album.getId(), MUSICBRAINZ_ALBUM_DATA.name());
 
         runUpdated(false);
 
@@ -420,8 +427,9 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private DiscoveryTask latestTask() {
-        return taskRepository.findByArtistId(artist.getId(), MUSICBRAINZ_ARTIST_DATA,
-                false, false, PageRequest.of(0, 1)).getContent().getFirst();
+        String taskId = taskRepository.findByArtistId(artist.getId(), MUSICBRAINZ_ARTIST_DATA,
+                false, false, PageRequest.of(0, 1)).getContent().getFirst().id();
+        return taskRepository.findById(taskId).orElseThrow();
     }
 
     private ChatResponse response(String text) {

@@ -31,7 +31,7 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
     @Autowired private JdbcTemplate jdbcTemplate;
 
     @Test
-    void shouldIncludeArtistAndAllAlbumsAcrossJobsWithStableOrderByLastActivity() {
+    void shouldIncludeArtistAndAllAlbumsAcrossJobsWithStableOrderByCreationDate() {
         Artist artist = artistRepository.save(new Artist().setName("Artist"));
         Artist otherArtist = artistRepository.save(new Artist().setName("Other artist"));
         Album firstAlbum = albumRepository.save(new Album().setArtist(artist).setName("First album"));
@@ -41,24 +41,25 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         DiscoveryJob albumJob = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM)
                 .setAlbum(firstAlbum).setStatus(DiscoveryJob.Status.STARTED));
         LocalDateTime date = LocalDateTime.of(2026, 10, 22, 8, 0);
-        DiscoveryTask ownTask = saveTask(task(fullJob).setArtist(artist), date.minusHours(1));
-        DiscoveryTask firstAlbumTask = saveTask(task(fullJob).setAlbum(firstAlbum), date);
-        DiscoveryTask secondAlbumTask = saveTask(task(albumJob).setAlbum(secondAlbum), date);
-        DiscoveryTask runningTask = saveTask(task(albumJob).setArtist(artist).setStatus(DiscoveryTask.Status.STARTED), null);
-        saveTask(task(fullJob).setArtist(otherArtist), date.plusHours(1));
-        saveTask(task(fullJob).setAlbum(otherAlbum), date.plusHours(1));
-        saveTask(task(fullJob), date.plusHours(1));
+        DiscoveryTask ownTask = saveTask(task(fullJob).setArtist(artist), date.minusHours(1), date.plusHours(3));
+        DiscoveryTask firstAlbumTask = saveTask(task(fullJob).setAlbum(firstAlbum), date, date.plusHours(2));
+        DiscoveryTask secondAlbumTask = saveTask(task(albumJob).setAlbum(secondAlbum), date, date.plusHours(1));
+        DiscoveryTask runningTask = saveTask(task(albumJob).setArtist(artist).setStatus(DiscoveryTask.Status.STARTED),
+                date.plusHours(1), null);
+        saveTask(task(fullJob).setArtist(otherArtist), date.plusHours(2), date.plusHours(4));
+        saveTask(task(fullJob).setAlbum(otherAlbum), date.plusHours(2), date.plusHours(4));
+        saveTask(task(fullJob), date.plusHours(2), date.plusHours(4));
         List<String> tiedIds = Stream.of(firstAlbumTask.getId(), secondAlbumTask.getId())
                 .sorted(Comparator.reverseOrder()).toList();
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, null);
 
-        Page<DiscoveryTask> first = discoveryJobService.getArtistTasks(artist.getId(), filter, PageRequest.of(0, 2));
-        Page<DiscoveryTask> second = discoveryJobService.getArtistTasks(artist.getId(), filter, PageRequest.of(1, 2));
+        Page<DiscoveryTaskSummary> first = discoveryJobService.getArtistTasks(artist.getId(), filter, PageRequest.of(0, 2));
+        Page<DiscoveryTaskSummary> second = discoveryJobService.getArtistTasks(artist.getId(), filter, PageRequest.of(1, 2));
 
         assertThat(first.getTotalElements()).isEqualTo(4);
         assertThat(first.getTotalPages()).isEqualTo(2);
-        assertThat(first.getContent()).extracting(DiscoveryTask::getId).containsExactly(runningTask.getId(), tiedIds.getFirst());
-        assertThat(second.getContent()).extracting(DiscoveryTask::getId).containsExactly(tiedIds.getLast(), ownTask.getId());
+        assertThat(first.getContent()).extracting(DiscoveryTaskSummary::id).containsExactly(runningTask.getId(), tiedIds.getFirst());
+        assertThat(second.getContent()).extracting(DiscoveryTaskSummary::id).containsExactly(tiedIds.getLast(), ownTask.getId());
         assertThat(discoveryJobService.getArtistTasks("missing", filter, PageRequest.of(0, 30))).isEmpty();
         assertThat(discoveryJobService.getAlbumTasks("missing", filter, PageRequest.of(0, 30))).isEmpty();
     }
@@ -68,28 +69,26 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
                 .setStatus(DiscoveryTask.Status.COMPLETE);
     }
 
-    private DiscoveryTask saveTask(DiscoveryTask task, @Nullable LocalDateTime updateDate) {
+    private DiscoveryTask saveTask(DiscoveryTask task, LocalDateTime creationDate, @Nullable LocalDateTime updateDate) {
         DiscoveryTask saved = taskRepository.save(task);
-        jdbcTemplate.update("UPDATE discovery_task SET update_date = ? WHERE id = ?",
-                updateDate != null ? Timestamp.valueOf(updateDate) : null, saved.getId());
-        return saved;
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ?, update_date = ? WHERE id = ?",
+                Timestamp.valueOf(creationDate), updateDate != null ? Timestamp.valueOf(updateDate) : null, saved.getId());
+        return saved.setCreationDate(creationDate).setUpdateDate(updateDate);
     }
 
     @ParameterizedTest
     @CsvSource({"ALL,false", "ALL,true", "JOB,false", "JOB,true", "ARTIST,false", "ARTIST,true", "ALBUM,false", "ALBUM,true"})
-    void shouldKeepNewTasksAheadOfHistoryBeforeAndAfterFirstUpdate(String scope, boolean filterType) {
+    void shouldKeepCreationOrderBeforeAndAfterTaskUpdates(String scope, boolean filterType) {
         Artist artist = artistRepository.save(new Artist().setName("Artist"));
         Album album = albumRepository.save(new Album().setArtist(artist).setName("Album"));
         DiscoveryJob job = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.ARTIST)
                 .setArtist(artist).setStatus(DiscoveryJob.Status.STARTED));
         LocalDateTime date = LocalDateTime.of(2026, 10, 22, 8, 0);
-        DiscoveryTask olderRunningTask = saveTask(task(job).setAlbum(album).setStatus(DiscoveryTask.Status.STARTED), null);
-        DiscoveryTask completedTask = saveTask(task(job).setAlbum(album), date);
-        DiscoveryTask newTask = saveTask(task(job).setAlbum(album).setStatus(DiscoveryTask.Status.STARTED), null);
-        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?",
-                Timestamp.valueOf(date.minusMinutes(1)), olderRunningTask.getId());
-        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE id = ?",
-                Timestamp.valueOf(date.plusMinutes(1)), newTask.getId());
+        DiscoveryTask olderRunningTask = saveTask(task(job).setAlbum(album).setStatus(DiscoveryTask.Status.STARTED),
+                date.minusMinutes(1), null);
+        DiscoveryTask completedTask = saveTask(task(job).setAlbum(album), date, date.plusMinutes(2));
+        DiscoveryTask newTask = saveTask(task(job).setAlbum(album).setStatus(DiscoveryTask.Status.STARTED),
+                date.plusMinutes(1), null);
         DiscoveryTaskFilter filter = new DiscoveryTaskFilter(null, filterType ? DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA : null);
         List<String> expectedIds = List.of(newTask.getId(), completedTask.getId(), olderRunningTask.getId());
 
@@ -98,10 +97,12 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
             if (complete) {
                 taskRepository.save(newTask.setStatus(DiscoveryTask.Status.COMPLETE));
                 assertThat(taskRepository.findById(newTask.getId()).orElseThrow().getUpdateDate()).isNotNull();
+                taskRepository.save(olderRunningTask.setStatus(DiscoveryTask.Status.COMPLETE));
+                assertThat(taskRepository.findById(olderRunningTask.getId()).orElseThrow().getUpdateDate()).isNotNull();
             }
             for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
                 PageRequest pageRequest = PageRequest.of(pageIndex, 1);
-                Page<DiscoveryTask> page = switch (scope) {
+                Page<DiscoveryTaskSummary> page = switch (scope) {
                     case "ALL" -> discoveryJobService.getAllTasks(filter, pageRequest);
                     case "JOB" -> discoveryJobService.getJobTasks(job.getId(), filter, pageRequest);
                     case "ARTIST" -> discoveryJobService.getArtistTasks(artist.getId(), filter, pageRequest);
@@ -111,7 +112,7 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
 
                 assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
                 assertThat(page.getTotalPages()).isEqualTo(expectedIds.size());
-                assertThat(page.getContent()).extracting(DiscoveryTask::getId).containsExactly(expectedIds.get(pageIndex));
+                assertThat(page.getContent()).extracting(DiscoveryTaskSummary::id).containsExactly(expectedIds.get(pageIndex));
             }
         }
     }
@@ -135,21 +136,26 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         String matchingResult = result == DiscoveryTaskFilter.Result.NO_RESULT ? null : "{}";
         LocalDateTime date = LocalDateTime.of(2026, 10, 22, 8, 0);
         DiscoveryTask artistTask = saveTask(task(firstJob).setArtist(artist).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
-                .setStatus(matchingStatus).setResult(matchingResult), date);
+                .setStatus(matchingStatus).setResult(matchingResult), date, date.plusMinutes(3));
         DiscoveryTask olderAlbumTask = saveTask(task(firstJob).setAlbum(album)
-                .setStatus(matchingStatus).setResult(matchingResult), date.plusMinutes(1));
+                .setStatus(matchingStatus).setResult(matchingResult), date.plusMinutes(1), date.plusMinutes(2));
         DiscoveryTask newerAlbumTask = saveTask(task(secondJob).setAlbum(album)
-                .setStatus(matchingStatus).setResult(matchingResult), date.plusMinutes(2));
-        saveTask(task(firstJob).setArtist(otherArtist).setStatus(matchingStatus).setResult(matchingResult), date.plusHours(1));
-        saveTask(task(firstJob).setAlbum(otherAlbum).setStatus(matchingStatus).setResult(matchingResult), date.plusHours(1));
+                .setStatus(matchingStatus).setResult(matchingResult), date.plusMinutes(2), null);
+        saveTask(task(firstJob).setArtist(otherArtist).setStatus(matchingStatus).setResult(matchingResult),
+                date.plusHours(1), date.plusHours(2));
+        saveTask(task(firstJob).setAlbum(otherAlbum).setStatus(matchingStatus).setResult(matchingResult),
+                date.plusHours(1), date.plusHours(2));
         if (result != null) {
             for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
-                saveTask(task(firstJob).setAlbum(album).setStatus(status).setResult(null), date.plusHours(1));
+                saveTask(task(firstJob).setAlbum(album).setStatus(status).setResult(null), date.plusHours(1), date.plusHours(2));
             }
-            saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}"), date.plusHours(1));
-            saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("[]"), date.plusHours(1));
+            saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}"),
+                    date.plusHours(1), date.plusHours(2));
+            saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("[]"),
+                    date.plusHours(1), date.plusHours(2));
             if (result == DiscoveryTaskFilter.Result.NO_RESULT) {
-                saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.FAILED).setResult(null), date.plusHours(1));
+                saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.FAILED).setResult(null),
+                        date.plusHours(1), date.plusHours(2));
             }
         }
         List<String> expectedIds = new ArrayList<>(List.of(newerAlbumTask.getId(), olderAlbumTask.getId()));
@@ -160,13 +166,13 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
 
         for (int pageIndex = 0; pageIndex < expectedIds.size(); pageIndex++) {
             PageRequest pageRequest = PageRequest.of(pageIndex, 1);
-            Page<DiscoveryTask> page = scope == DiscoveryType.ARTIST
+            Page<DiscoveryTaskSummary> page = scope == DiscoveryType.ARTIST
                     ? discoveryJobService.getArtistTasks(artist.getId(), filter, pageRequest)
                     : discoveryJobService.getAlbumTasks(album.getId(), filter, pageRequest);
 
             assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
             assertThat(page.getTotalPages()).isEqualTo(expectedIds.size());
-            assertThat(page.getContent()).extracting(DiscoveryTask::getId).containsExactly(expectedIds.get(pageIndex));
+            assertThat(page.getContent()).extracting(DiscoveryTaskSummary::id).containsExactly(expectedIds.get(pageIndex));
         }
     }
 }

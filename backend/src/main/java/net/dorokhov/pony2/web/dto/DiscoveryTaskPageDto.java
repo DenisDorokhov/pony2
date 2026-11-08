@@ -1,6 +1,6 @@
 package net.dorokhov.pony2.web.dto;
 
-import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
+import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public final class DiscoveryTaskPageDto extends PageDto<DiscoveryTaskPageDto> {
         return this;
     }
 
-    public static DiscoveryTaskPageDto of(Page<DiscoveryTask> taskPage, Function<DiscoveryTask, DiscoveryTaskSummaryDto> taskMapper) {
+    public static DiscoveryTaskPageDto of(Page<DiscoveryTaskSummary> taskPage, Function<DiscoveryTaskSummary, DiscoveryTaskSummaryDto> taskMapper) {
         return new DiscoveryTaskPageDto()
                 .setPageIndex(taskPage.getNumber())
                 .setPageSize(taskPage.getSize())

@@ -175,7 +175,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DiscoveryTask> getAllTasks(DiscoveryTaskFilter filter, Pageable pageable) {
+    public Page<DiscoveryTaskSummary> getAllTasks(DiscoveryTaskFilter filter, Pageable pageable) {
         DiscoveryTaskFilter.Result result = filter.result();
         DiscoveryTaskType type = filter.type();
         if (result == DiscoveryTaskFilter.Result.FAILED) {
@@ -192,7 +192,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DiscoveryTask> getJobTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable) {
+    public Page<DiscoveryTaskSummary> getJobTasks(String discoveryJobId, DiscoveryTaskFilter filter, Pageable pageable) {
         DiscoveryTaskFilter.Result result = filter.result();
         DiscoveryTaskType type = filter.type();
         if (result == DiscoveryTaskFilter.Result.FAILED) {
@@ -209,7 +209,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DiscoveryTask> getArtistTasks(String artistId, DiscoveryTaskFilter filter, Pageable pageable) {
+    public Page<DiscoveryTaskSummary> getArtistTasks(String artistId, DiscoveryTaskFilter filter, Pageable pageable) {
         return discoveryTaskRepository.findByArtistId(artistId, filter.type(),
                 filter.result() == DiscoveryTaskFilter.Result.FAILED,
                 filter.result() == DiscoveryTaskFilter.Result.NO_RESULT, pageable);
@@ -217,7 +217,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DiscoveryTask> getAlbumTasks(String albumId, DiscoveryTaskFilter filter, Pageable pageable) {
+    public Page<DiscoveryTaskSummary> getAlbumTasks(String albumId, DiscoveryTaskFilter filter, Pageable pageable) {
         return discoveryTaskRepository.findByAlbumId(albumId, filter.type(),
                 filter.result() == DiscoveryTaskFilter.Result.FAILED,
                 filter.result() == DiscoveryTaskFilter.Result.NO_RESULT, pageable);

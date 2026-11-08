@@ -231,7 +231,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         DiscoveryTask task = facesTask();
         assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(task.getResult()).isNull();
-        assertThat(DiscoveryTaskSummaryDto.of(task, null, null, null, null).isNoResult()).isTrue();
+        assertThat(DiscoveryTaskSummaryDto.of(DiscoveryTaskSummary.of(task), null, null, null, null).isNoResult()).isTrue();
 
         DiscoveryJob next = job();
         service.discoverIfUpdated(next, artist, List.of(), true, null);
@@ -263,7 +263,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
                 .singleElement().satisfies(candidate -> {
                     assertThat(candidate.getType()).isEqualTo(ARTIST_BIO_IMAGE_FACES);
                     assertThat(candidate.getResult()).isNull();
-                    assertThat(DiscoveryTaskSummaryDto.of(candidate, null, null, null, null).isNoResult()).isTrue();
+                    assertThat(DiscoveryTaskSummaryDto.of(DiscoveryTaskSummary.of(candidate), null, null, null, null).isNoResult()).isTrue();
                 });
         DiscoveryJob following = job();
         service.discoverIfUpdated(following, artist, List.of(), true, null);
