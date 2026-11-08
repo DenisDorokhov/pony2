@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.ProxiedHttpClientFactory;
 import okhttp3.HttpUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -88,6 +91,53 @@ class MusicBrainzClientTest {
     }
 
     @Test
+    void shouldSendSearchAndArtistRequestsThroughConfiguredProxy() {
+        List<URI> proxyRequests = new ArrayList<>();
+        List<String> userAgents = new ArrayList<>();
+        server.createContext("/ws/2/", exchange -> {
+            proxyRequests.add(exchange.getRequestURI());
+            userAgents.add(exchange.getRequestHeaders().getFirst("User-Agent"));
+            String response = exchange.getRequestURI().getPath().endsWith("/release-group")
+                    ? "{\"count\":0,\"offset\":0,\"release-groups\":[]}" : "{\"id\":\"artist\"}";
+            respond(exchange, 200, response);
+        });
+        MusicBrainzClient client = new MusicBrainzClient(cacheService, "http://musicbrainz.invalid/ws/2/",
+                Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25, new ProxiedHttpClientFactory(URI.create(baseUrl)));
+
+        try (MusicBrainzClient.Session session = client.openSession("pony2/test", observer, false)) {
+            assertThat(session.searchReleaseGroups("test").groups()).isEmpty();
+            assertThat(session.getArtist("artist").id()).isEqualTo("artist");
+        }
+
+        assertThat(proxyRequests).containsExactly(
+                URI.create("http://musicbrainz.invalid/ws/2/release-group?query=test&fmt=json&limit=25"),
+                URI.create("http://musicbrainz.invalid/ws/2/artist/artist?fmt=json"));
+        assertThat(userAgents).containsExactly("pony2/test", "pony2/test");
+    }
+
+    @Test
+    void shouldNotConnectDirectlyWhenProxyIsUnavailable() throws IOException {
+        AtomicInteger directRequests = new AtomicInteger();
+        server.createContext("/ws/2/artist/artist", exchange -> {
+            directRequests.incrementAndGet();
+            respond(exchange, 200, "{\"id\":\"artist\"}");
+        });
+        int unavailableProxyPort;
+        try (ServerSocket socket = new ServerSocket(0, 1, java.net.InetAddress.getLoopbackAddress())) {
+            unavailableProxyPort = socket.getLocalPort();
+        }
+        MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0,
+                Duration.ofSeconds(10), 25, new ProxiedHttpClientFactory(URI.create("http://127.0.0.1:" + unavailableProxyPort)));
+
+        try (MusicBrainzClient.Session session = client.openSession("pony2/test", observer, false)) {
+            assertThatThrownBy(() -> session.getArtist("artist"))
+                    .isInstanceOf(IllegalStateException.class).hasCauseInstanceOf(IOException.class);
+        }
+
+        assertThat(directRequests).hasValue(0);
+    }
+
+    @Test
     void shouldSearchOnceAndSendLimitUserAgentAndEncodedQuery() {
         List<String> limits = new ArrayList<>();
         List<String> offsets = new ArrayList<>();
@@ -133,7 +183,8 @@ class MusicBrainzClientTest {
         appender.start();
         logger.addAppender(appender);
         logger.setLevel(Level.WARN);
-        MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), searchLimit);
+        MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0,
+                Duration.ofSeconds(10), searchLimit, new ProxiedHttpClientFactory(URI.create(baseUrl)));
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer, true)) {
             assertThat(session.searchReleaseGroups("query").groups()).containsExactlyElementsOf(groups);
             assertThat(session.searchReleaseGroups("query").groups()).containsExactlyElementsOf(groups);
@@ -224,9 +275,9 @@ class MusicBrainzClientTest {
         });
         MusicBrainzClient client = client(Duration.ZERO);
         MusicBrainzClient limitedClient = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0,
-                Duration.ofSeconds(10), 10);
+                Duration.ofSeconds(10), 10, new ProxiedHttpClientFactory(URI.create(baseUrl)));
         MusicBrainzClient otherServerClient = new MusicBrainzClient(cacheService, baseUrl.replace("/ws/2/", "/other/"),
-                Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
+                Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25, new ProxiedHttpClientFactory(URI.create(baseUrl)));
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/test", observer, true);
              MusicBrainzClient.Session limitedSession = limitedClient.openSession("pony2/test", observer, true);
@@ -359,7 +410,7 @@ class MusicBrainzClientTest {
             }
         });
         MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ofMillis(100), 3,
-                Duration.ofSeconds(10), 25);
+                Duration.ofSeconds(10), 25, new ProxiedHttpClientFactory(URI.create(baseUrl)));
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer, false)) {
             assertThat(session.getArtist("artist").id()).isEqualTo("artist");
@@ -378,7 +429,7 @@ class MusicBrainzClientTest {
             respond(exchange, 503, "service unavailable");
         });
         MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ofMillis(10), 3,
-                Duration.ofSeconds(10), 25);
+                Duration.ofSeconds(10), 25, new ProxiedHttpClientFactory(URI.create(baseUrl)));
 
         try (MusicBrainzClient.Session session = client.openSession("pony2/test (admin@example.com)", observer, false)) {
             assertThatThrownBy(() -> session.getArtist("artist"))
@@ -477,7 +528,8 @@ class MusicBrainzClientTest {
     }
 
     private MusicBrainzClient client(Duration interval) {
-        return new MusicBrainzClient(cacheService, baseUrl, interval, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
+        return new MusicBrainzClient(cacheService, baseUrl, interval, Duration.ZERO, 0, Duration.ofSeconds(10), 25,
+                new ProxiedHttpClientFactory(URI.create(baseUrl)));
     }
 
     private MusicBrainzDto.ReleaseGroup group(String id) {

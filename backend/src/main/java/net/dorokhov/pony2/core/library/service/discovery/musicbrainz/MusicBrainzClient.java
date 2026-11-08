@@ -3,6 +3,7 @@ package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 import com.google.common.hash.Hashing;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.ProxiedHttpClientFactory;
 import net.dorokhov.pony2.core.llm.service.RateLimitedRequestExecutor;
 import okhttp3.Call;
 import okhttp3.HttpUrl;
@@ -56,7 +57,8 @@ public class MusicBrainzClient {
             @Value("${pony.discovery.musicbrainz.rateLimit.retryDelay:10s}") Duration retryDelay,
             @Value("${pony.discovery.musicbrainz.rateLimit.retriesOnException:9}") int retriesOnException,
             @Value("${pony.discovery.musicbrainz.timeout:30s}") Duration timeout,
-            @Value("${pony.discovery.musicbrainz.searchLimit:25}") int searchLimit
+            @Value("${pony.discovery.musicbrainz.searchLimit:25}") int searchLimit,
+            ProxiedHttpClientFactory httpClientFactory
     ) {
         checkArgument(!requestInterval.isNegative(), "Request interval must not be negative.");
         checkArgument(!timeout.isNegative() && !timeout.isZero(), "Request timeout must be positive.");
@@ -66,7 +68,7 @@ public class MusicBrainzClient {
         this.searchLimit = searchLimit;
         requestExecutor = new RateLimitedRequestExecutor("musicbrainz",
                 new RateLimitedRequestExecutor.Settings(requestInterval, Duration.ZERO, retryDelay, retriesOnException, 1));
-        httpClient = new OkHttpClient.Builder()
+        httpClient = httpClientFactory.newBuilder()
                 .retryOnConnectionFailure(false)
                 .followRedirects(false)
                 .followSslRedirects(false)

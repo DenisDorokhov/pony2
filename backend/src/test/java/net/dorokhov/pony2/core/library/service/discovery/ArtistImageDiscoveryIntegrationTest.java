@@ -3,6 +3,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import com.sun.net.httpserver.HttpServer;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.IntegrationTest;
+import net.dorokhov.pony2.core.ProxiedHttpClientFactory;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzArtistDataService;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
@@ -138,7 +139,7 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
         });
         taskArtistDiscoveryRepository = mock(ArtistDiscoveryRepository.class, delegatesTo(artistDiscoveryRepository));
         ExternalImageStorage imageStorage = new ExternalImageStorage(externalImageRepository, fileTypeResolver,
-                externalImageFolder, URI.create("http://127.0.0.1:" + proxyServer.getAddress().getPort()));
+                new ProxiedHttpClientFactory(URI.create("http://127.0.0.1:" + proxyServer.getAddress().getPort())), externalImageFolder);
         service = new ArtistDiscoveryService(taskArtistDiscoveryRepository, albumRepository, taskRepository, resultReader,
                 spotifyArtistDataService, spotifyTopTracksService, albumDiscoveryService, musicBrainzArtistDataService, imageStorage, artistBioImageFacesService, logService,
                 taskExecutor, jobSynchronizer, transactionManager);

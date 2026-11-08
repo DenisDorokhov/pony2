@@ -13,6 +13,12 @@
 
 - Write all code comments, including JavaDoc, in English only.
 
+# External resources
+
+- Access external resources through the configured proxy; do not fall back to direct connections.
+- For backend HTTP access to external resources, use `ProxiedHttpClientFactory`, which reads `pony.proxy.url`.
+- Do not instantiate `OkHttpClient` or `OkHttpClient.Builder` directly outside `ProxiedHttpClientFactory` in production code.
+
 # Artifacts outside the project
 
 - Whenever you create an artifact outside the project (for example, an image, mockup, or document), always include an explicit clickable link to it in the final response, even if the tool already displays a preview.

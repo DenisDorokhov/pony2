@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.library.domain.ExternalImageFile;
+import net.dorokhov.pony2.core.ProxiedHttpClientFactory;
 import net.dorokhov.pony2.core.library.repository.ExternalImageRepository;
 import net.dorokhov.pony2.core.library.service.file.FileTypeResolver;
 import org.junit.jupiter.api.AfterAll;
@@ -220,7 +221,7 @@ class ExternalImageStorageTest extends IntegrationTest {
                 unavailableProxyPort = socket.getLocalPort();
             }
             ExternalImageStorage storage = new ExternalImageStorage(externalImageRepository, fileTypeResolver,
-                    externalImageFolder, URI.create("http://127.0.0.1:" + unavailableProxyPort));
+                    new ProxiedHttpClientFactory(URI.create("http://127.0.0.1:" + unavailableProxyPort)), externalImageFolder);
             URI target = URI.create("http://127.0.0.1:" + originServer.getAddress().getPort() + "/image");
 
             assertThatThrownBy(() -> storage.downloadAndSave(target)).isInstanceOf(IOException.class);

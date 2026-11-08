@@ -15,6 +15,7 @@ import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.core.ProxiedHttpClientFactory;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
@@ -49,6 +50,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.time.Duration;
@@ -263,7 +265,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/";
         MusicBrainzClient client = new MusicBrainzClient(cacheService, baseUrl, Duration.ZERO, Duration.ZERO, 0,
-                Duration.ofSeconds(10), 25);
+                Duration.ofSeconds(10), 25, new ProxiedHttpClientFactory(URI.create(baseUrl)));
         when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2));
@@ -375,7 +377,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             }
         });
         MusicBrainzClient client = new MusicBrainzClient(cacheService,
-                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 2, Duration.ofSeconds(10), 25);
+                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 2, Duration.ofSeconds(10), 25,
+                new ProxiedHttpClientFactory(URI.create("http://127.0.0.1:" + server.getAddress().getPort())));
         when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2));
@@ -431,7 +434,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             }
         });
         MusicBrainzClient client = new MusicBrainzClient(cacheService,
-                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
+                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25,
+                new ProxiedHttpClientFactory(URI.create("http://127.0.0.1:" + server.getAddress().getPort())));
         when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation ->
                 client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
         server.start();
@@ -1436,7 +1440,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             }
         });
         MusicBrainzClient client = new MusicBrainzClient(cacheService,
-                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25);
+                "http://127.0.0.1:" + server.getAddress().getPort() + "/ws/2/", Duration.ZERO, Duration.ZERO, 0, Duration.ofSeconds(10), 25,
+                new ProxiedHttpClientFactory(URI.create("http://127.0.0.1:" + server.getAddress().getPort())));
         when(musicBrainzClient.openSession(anyString(), any(), anyBoolean())).thenAnswer(invocation ->
                 client.openSession(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
         server.start();
