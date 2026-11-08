@@ -11,6 +11,7 @@ import net.dorokhov.pony2.api.library.domain.SpotifyArtistData;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -48,6 +50,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,6 +87,7 @@ class SpotifyArtistDataServiceTest {
     private final Map<String, String> cache = new HashMap<>();
     private final List<Prompt> prompts = new ArrayList<>();
     private final List<String> queuedResponses = new ArrayList<>();
+    private final List<String> formattedResponses = new ArrayList<>();
     private int modelCalls;
     private int artistCount;
     private String response;
@@ -108,11 +112,13 @@ class SpotifyArtistDataServiceTest {
                 return new ChatResponse(List.of(new Generation(new AssistantMessage("Collected Spotify artist data"))));
             }
             String nextResponse = queuedResponses.isEmpty() ? response : queuedResponses.removeFirst();
-            return new ChatResponse(List.of(new Generation(new AssistantMessage(nextResponse))));
+            String stageResponse = stageResponse(prompt, nextResponse);
+            formattedResponses.add(stageResponse);
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(stageResponse))));
         });
         response = spotifyArtistResponse(found());
         configuredClient = ChatClient.builder(model).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
     }
 
     @AfterEach
@@ -124,38 +130,38 @@ class SpotifyArtistDataServiceTest {
     @Test
     void shouldReuseConfiguredClientAndCacheResponse() throws IOException {
         configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate"), tool("fetch_url")).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
         Artist artist = artist();
 
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
 
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(10);
         assertThat(prompts.getFirst().getInstructions()).anySatisfy(message ->
                 assertThat(message.getText()).contains("Playwright MCP", "browser_navigate", "open.spotify.com"));
         assertThat(requireNonNull(((ToolCallingChatOptions) prompts.getFirst().getOptions())).getToolCallbacks())
                 .extracting(tool -> tool.getToolDefinition().name()).containsExactly("browser_navigate", "fetch_url");
-        assertThat(cache).hasSize(1);
-        Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
+        assertThat(cache).hasSize(5);
+        Map<?, ?> entry = cacheEntry("SPOTIFY_ARTIST_IDENTITY");
         Map<?, ?> request = (Map<?, ?>) entry.get("request");
         assertThat(request).hasSize(4);
         assertThat(request.get("systemPrompt")).isEqualTo(prompts.getFirst().getInstructions().getFirst().getText());
         assertThat(request.get("userPrompt")).isEqualTo(prompts.getFirst().getInstructions().get(1).getText());
         assertThat(request.get("albumTitles")).isEqualTo(List.of("Album"));
-        assertThat(entry.get("response")).isEqualTo(response);
+        assertThat(entry.get("response")).isEqualTo(formattedResponses.getFirst());
         Map<?, ?> schema = JsonConverter.fromJson(
-                requireNonNull(requireNonNull(((OpenAiChatOptions) prompts.getLast().getOptions())).getResponseFormat()).getJsonSchema(), Map.class);
+                requireNonNull(requireNonNull(((OpenAiChatOptions) prompts.get(1).getOptions())).getResponseFormat()).getJsonSchema(), Map.class);
         assertThat(requireNonNull(((OpenAiChatOptions) prompts.getFirst().getOptions()).getResponseFormat()).getType())
                 .isEqualTo(ResponseFormat.Type.TEXT);
         assertThat(((OpenAiChatOptions) prompts.getLast().getOptions()).getToolChoice()).isEqualTo("none");
         assertThat(request.get("responseSchema")).isEqualTo(schema);
         assertThat(schema.get("additionalProperties")).isEqualTo(false);
         assertThat((List<?>) schema.get("required")).extracting(Object::toString).containsExactlyInAnyOrder(
-                "status", "artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl", "avatarUrl");
+                "status", "artist", "matchedAlbum", "avatarUrl");
         Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
         Map<?, ?> avatarSchema = (Map<?, ?>) properties.get("avatarUrl");
         assertThat((List<?>) avatarSchema.get("type")).extracting(Object::toString).containsExactlyInAnyOrder("string", "null");
-        for (String field : List.of("artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl", "avatarUrl")) {
+        for (String field : List.of("artist", "matchedAlbum", "avatarUrl")) {
             Map<?, ?> property = (Map<?, ?>) properties.get(field);
             if (property.get("type") instanceof List<?> types) {
                 assertThat(types).extracting(Object::toString).contains("null");
@@ -180,11 +186,11 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task(artist), false)).isNull();
 
         verifyNoInteractions(cacheService);
-        assertThat(modelCalls).isEqualTo(6);
+        assertThat(modelCalls).isEqualTo(14);
         assertThat(cache).isEqualTo(originalCache);
 
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
-        assertThat(modelCalls).isEqualTo(6);
+        assertThat(modelCalls).isEqualTo(14);
     }
 
     @Test
@@ -195,7 +201,7 @@ class SpotifyArtistDataServiceTest {
 
         verifyNoInteractions(cacheService);
         assertThat(cache).isEmpty();
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(10);
     }
 
     @Test
@@ -203,13 +209,177 @@ class SpotifyArtistDataServiceTest {
         Artist original = artist();
         service.discover(task(original), true);
         service.discover(task(artist("Artist", new Album().setName("Album"), new Album().setName("Second"))), true);
-        String changedPrompt = new ClassPathResource("prompts/spotify-artist-data.txt").getContentAsString(UTF_8)
+        String changedPrompt = new ClassPathResource("prompts/spotify-artist-identity.txt").getContentAsString(UTF_8)
                 + "\nExtra instruction";
         SpotifyArtistDataService changedService = createService(configuredClient, new ByteArrayResource(changedPrompt.getBytes(UTF_8)));
         changedService.discover(task(original), true);
 
-        assertThat(cache).hasSize(3);
-        assertThat(modelCalls).isEqualTo(6);
+        assertThat(cache).hasSize(7);
+        assertThat(modelCalls).isEqualTo(14);
+    }
+
+    @Test
+    void shouldStartEachStageWithOnlyItsOwnInstructionsAndConfirmedArtist() {
+        Artist artist = artist("Artist", new Album().setName("Album"), new Album().setName("Private library album"));
+
+        assertThat(service.discover(task(artist), false)).isEqualTo(found());
+
+        assertThat(prompts).hasSize(10);
+        for (int i = 2; i < prompts.size(); i += 2) {
+            Prompt collection = prompts.get(i);
+            assertThat(collection.getInstructions()).hasSize(3).noneMatch(AssistantMessage.class::isInstance);
+            assertThat(collection.getInstructions().get(1).getText())
+                    .isEqualTo("Confirmed Spotify artist: " + JsonConverter.toJson(found().artist()))
+                    .doesNotContain("Private library album", found().biography(), "Top track", "Related artist");
+        }
+    }
+
+    @Test
+    void shouldKeepFollowUpHistoryInsideTheFailedStage() {
+        queuedResponses.add(response);
+        queuedResponses.add(response);
+        queuedResponses.add("Invalid biography response");
+        DiscoveryTask task = task(artist());
+
+        assertThat(service.discover(task, true)).isEqualTo(found());
+
+        assertThat(modelCalls).isEqualTo(12);
+        Prompt originalBiography = prompts.get(4);
+        Prompt biographyFollowUp = prompts.get(6);
+        assertThat(biographyFollowUp.getInstructions().subList(0, 2))
+                .isEqualTo(originalBiography.getInstructions().subList(0, 2));
+        assertThat(biographyFollowUp.getInstructions().get(2)).isInstanceOf(AssistantMessage.class);
+        assertThat(biographyFollowUp.getInstructions().get(2).getText()).isEqualTo("Invalid biography response");
+        assertThat(prompts.get(8).getInstructions()).hasSize(3).noneMatch(AssistantMessage.class::isInstance);
+        assertThat(prompts.get(8).getInstructions().get(1).getText())
+                .isEqualTo("Confirmed Spotify artist: " + JsonConverter.toJson(found().artist()));
+        assertThat(task.getRawRequests()).hasSize(6);
+        assertThat(cache).hasSize(5);
+    }
+
+    @Test
+    void shouldReuseSuccessfulStagesAfterLaterStageFails() {
+        Artist artist = artist();
+        queuedResponses.add(response);
+        queuedResponses.add(response);
+        queuedResponses.add("Invalid biography response");
+        queuedResponses.add("Invalid biography response");
+
+        assertThatThrownBy(() -> service.discover(task(artist), true)).isInstanceOf(RuntimeException.class);
+        assertThat(cache).hasSize(2);
+        assertThat(modelCalls).isEqualTo(8);
+
+        assertThat(service.discover(task(artist), true)).isEqualTo(found());
+
+        assertThat(modelCalls).isEqualTo(14);
+        assertThat(cache).hasSize(5);
+        assertThat(prompts.get(8).getInstructions().getFirst().getText()).contains("biography");
+    }
+
+    @Test
+    void shouldInvalidateOnlyTheChangedStagePrompt() throws IOException {
+        Artist artist = artist();
+        assertThat(service.discover(task(artist), true)).isEqualTo(found());
+        String changedBiographyPrompt = new ClassPathResource("prompts/spotify-artist-biography.txt").getContentAsString(UTF_8)
+                + "\nExtra biography instruction";
+        SpotifyArtistDataService changedService = createService(configuredClient,
+                new ClassPathResource("prompts/spotify-artist-identity.txt"),
+                new ByteArrayResource(changedBiographyPrompt.getBytes(UTF_8)));
+
+        assertThat(changedService.discover(task(artist), true)).isEqualTo(found());
+
+        assertThat(modelCalls).isEqualTo(12);
+        assertThat(cache).hasSize(6);
+        assertThat(prompts.get(10).getInstructions().getFirst().getText()).isEqualTo(changedBiographyPrompt);
+    }
+
+    @Test
+    void shouldStopBetweenStagesWhenDiscoveryIsCancelled() {
+        when(cacheService.put(eq(SPOTIFY), anyString(), eq(1), anyString())).thenAnswer(invocation -> {
+            cache.put(invocation.getArgument(1), invocation.getArgument(3));
+            jobSynchronizer.cancelDiscovery();
+            return null;
+        });
+
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(DiscoveryInterruptedException.class);
+
+        assertThat(modelCalls).isEqualTo(2);
+        assertThat(cache).hasSize(1);
+    }
+
+    @Test
+    void shouldPreserveCompleteBiographyWithItsOriginalLanguageAndWhitespace() {
+        SpotifyArtistData data = found();
+        String biography = "Арам Хачатурян — «Композитор»\n\nOriginal wording: \"About\".\n日本語の紹介\n".repeat(1000);
+        SpotifyArtistData longBiography = new SpotifyArtistData(data.artist(), data.matchedAlbum(), data.topTracks(),
+                data.similarArtists(), biography, data.links(), data.imageUrl(), data.avatarUrl());
+        response = spotifyArtistResponse(longBiography);
+
+        assertThat(service.discover(task(artist()), true)).isEqualTo(longBiography);
+        assertThat(service.discover(task(artist()), true).biography()).isEqualTo(biography);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidPopularTracks")
+    void shouldRejectInvalidPopularTracks(List<SpotifyArtistData.TopTrack> tracks) {
+        SpotifyArtistData data = found();
+        response = spotifyArtistResponse(new SpotifyArtistData(data.artist(), data.matchedAlbum(), tracks,
+                data.similarArtists(), data.biography(), data.links(), data.imageUrl(), data.avatarUrl()));
+
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(RuntimeException.class);
+
+        assertThat(cache).hasSize(1);
+        assertThat(cache.keySet()).allMatch(key -> key.startsWith("SPOTIFY_ARTIST_IDENTITY:"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldRejectDuplicateOrSelfSimilarArtists(boolean self) {
+        SpotifyArtistData data = found();
+        List<SpotifyArtistData.SpotifyArtist> artists = self ? List.of(data.artist())
+                : List.of(data.similarArtists().getFirst(), data.similarArtists().getFirst());
+        response = spotifyArtistResponse(new SpotifyArtistData(data.artist(), data.matchedAlbum(), data.topTracks(),
+                artists, data.biography(), data.links(), data.imageUrl(), data.avatarUrl()));
+
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(RuntimeException.class);
+
+        assertThat(cache).hasSize(4);
+        assertThat(cache.keySet()).noneMatch(key -> key.startsWith("SPOTIFY_ARTIST_SIMILAR_ARTISTS:"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("missingStageFields")
+    void shouldRequestStageLocalVerificationWhenOptionalFieldIsOmitted(int stageIndex, String incompleteResponse) {
+        for (int i = 0; i < stageIndex; i++) {
+            queuedResponses.add(response);
+        }
+        queuedResponses.add(incompleteResponse);
+
+        assertThat(service.discover(task(artist()), true)).isEqualTo(found());
+
+        assertThat(modelCalls).isEqualTo(12);
+        assertThat(cache).hasSize(5);
+        Prompt originalStage = prompts.get(stageIndex * 2);
+        Prompt followUp = prompts.get((stageIndex + 1) * 2);
+        assertThat(followUp.getInstructions().subList(0, 2))
+                .isEqualTo(originalStage.getInstructions().subList(0, 2));
+        assertThat(followUp.getInstructions().get(2)).isInstanceOf(AssistantMessage.class);
+        assertThat(followUp.getInstructions().get(2).getText()).isEqualTo(incompleteResponse);
+    }
+
+    @ParameterizedTest
+    @MethodSource("missingStageFields")
+    void shouldRejectAndNotCacheOptionalStageWithRepeatedlyOmittedField(int stageIndex, String incompleteResponse) {
+        for (int i = 0; i < stageIndex; i++) {
+            queuedResponses.add(response);
+        }
+        queuedResponses.add(incompleteResponse);
+        queuedResponses.add(incompleteResponse);
+
+        assertThatThrownBy(() -> service.discover(task(artist()), true)).isInstanceOf(RuntimeException.class);
+
+        assertThat(modelCalls).isEqualTo((stageIndex + 2) * 2);
+        assertThat(cache).hasSize(stageIndex);
     }
 
     @Test
@@ -232,11 +402,12 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task, true)).isEqualTo(found());
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
 
-        assertThat(modelCalls).isEqualTo(2);
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(response));
+        assertThat(modelCalls).isEqualTo(10);
+        assertThat(task.getRawResponses()).containsExactlyElementsOf(
+                formattedResponses.stream().map(JsonConverter::fromJsonOrString).toList());
         verifyNoInteractions(logService);
-        Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
-        assertThat(entry.get("response")).isEqualTo(response);
+        Map<?, ?> entry = cacheEntry("SPOTIFY_ARTIST_IDENTITY");
+        assertThat(entry.get("response")).isEqualTo(formattedResponses.getFirst());
     }
 
     @ParameterizedTest
@@ -245,7 +416,7 @@ class SpotifyArtistDataServiceTest {
             "Result: {\"status\":\"UNKNOWN\"}", "Result: {\"status\":\"FOUND\"}"})
     void shouldRequestVerificationAndWarnAboutInvalidResponse(String invalidResponseTemplate) throws IOException {
         configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate")).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
         String invalidResponse = invalidResponseTemplate != null ? invalidResponseTemplate.formatted(response) : null;
         queuedResponses.add(invalidResponse);
         Artist artist = artist();
@@ -253,8 +424,9 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task, true)).isEqualTo(found());
 
-        assertThat(modelCalls).isEqualTo(4);
-        assertThat(task.getRawResponses()).hasSize(2).endsWith(JsonConverter.fromJsonOrString(response));
+        assertThat(modelCalls).isEqualTo(12);
+        assertThat(task.getRawResponses()).hasSize(6).containsExactlyElementsOf(
+                formattedResponses.stream().map(JsonConverter::fromJsonOrString).toList());
         Prompt verification = prompts.get(2);
         assertThat(verification.getInstructions().subList(0, 2)).isEqualTo(prompts.getFirst().getInstructions().subList(0, 2));
         if (invalidResponse != null && !invalidResponse.isBlank()) {
@@ -262,14 +434,14 @@ class SpotifyArtistDataServiceTest {
             assertThat(verification.getInstructions().get(2).getText()).isEqualTo(invalidResponse);
         }
         String verificationPrompt = verification.getInstructions().get(verification.getInstructions().size() - 2).getText();
-        assertThat(verificationPrompt).contains("Recheck the entire answer", "all URLs");
+        assertThat(verificationPrompt).contains("current stage", "all URLs");
         assertThat(requireNonNull(((ToolCallingChatOptions) verification.getOptions())).getToolCallbacks())
                 .extracting(callback -> callback.getToolDefinition().name()).containsExactly("browser_navigate");
         verify(logService).warn(any(), eq("Invalid Spotify response from the LLM for artist '{}'."),
                 eq(artist.getName()), any(RuntimeException.class));
-        assertThat(cache).hasSize(1);
-        Map<?, ?> entry = JsonConverter.fromJson(cache.values().iterator().next(), Map.class);
-        assertThat(entry.get("response")).isEqualTo(response);
+        assertThat(cache).hasSize(5);
+        Map<?, ?> entry = cacheEntry("SPOTIFY_ARTIST_IDENTITY");
+        assertThat(entry.get("response")).isEqualTo(formattedResponses.get(1));
         assertThat(((Map<?, ?>) entry.get("request")).get("userPrompt")).isEqualTo(verificationPrompt);
     }
 
@@ -279,7 +451,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist()), false)).isEqualTo(found());
 
-        assertThat(modelCalls).isEqualTo(4);
+        assertThat(modelCalls).isEqualTo(12);
         verifyNoInteractions(cacheService);
     }
 
@@ -351,7 +523,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist), true)).isEqualTo(data);
         assertThat(service.discover(task(artist), true)).isEqualTo(data);
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(10);
     }
 
     @Test
@@ -387,7 +559,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(service.discover(task(artist), true)).isEqualTo(partial);
         assertThat(service.discover(task(artist), true)).isEqualTo(partial);
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(modelCalls).isEqualTo(10);
     }
 
     @Test
@@ -446,7 +618,7 @@ class SpotifyArtistDataServiceTest {
     void shouldNotExecuteToolsWhenShutdownStartsDuringLlmCall() throws IOException {
         ToolCallback callback = tool("browser_navigate");
         configuredClient = ChatClient.builder(model).defaultTools(callback).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             shutdownService.onApplicationEvent();
             return toolCallResponse();
@@ -471,7 +643,7 @@ class SpotifyArtistDataServiceTest {
             return "Spotify page loaded";
         });
         configuredClient = ChatClient.builder(model).defaultTools(callback).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-data.txt"));
+        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             modelCalls++;
             return modelCalls <= toolCallsBeforeShutdown ? toolCallResponse()
@@ -508,8 +680,8 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(prompts.getFirst().getInstructions().get(1).getText())
                 .contains("- \"Z album\" (year: 2000)\n- \"Album\" (year: 2010)");
-        assertThat(cache).hasSize(1);
-        assertThat(modelCalls).isEqualTo(2);
+        assertThat(cache).hasSize(5);
+        assertThat(modelCalls).isEqualTo(10);
     }
 
     @Test
@@ -535,6 +707,10 @@ class SpotifyArtistDataServiceTest {
     }
 
     private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
+        return createService(client, promptResource, new ClassPathResource("prompts/spotify-artist-biography.txt"));
+    }
+
+    private SpotifyArtistDataService createService(ChatClient client, Resource promptResource, Resource biographyPromptResource) throws IOException {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
@@ -543,7 +719,45 @@ class SpotifyArtistDataServiceTest {
         return new SpotifyArtistDataService(operation,
                 validator, artistRepository, logService,
                 jobSynchronizer, transactionManager(), promptResource,
-                new ClassPathResource("prompts/spotify-artist-data-verification.txt"));
+                new ClassPathResource("prompts/spotify-artist-stage-verification.txt"),
+                new ClassPathResource("prompts/spotify-artist-popular-tracks.txt"),
+                biographyPromptResource,
+                new ClassPathResource("prompts/spotify-artist-about-media.txt"),
+                new ClassPathResource("prompts/spotify-artist-similar-artists.txt"));
+    }
+
+    private String stageResponse(Prompt prompt, String suppliedResponse) {
+        if (suppliedResponse == null || suppliedResponse.isBlank()) {
+            return suppliedResponse;
+        }
+        Object parsed;
+        try {
+            parsed = LlmJsonConverter.fromJson(suppliedResponse);
+        } catch (RuntimeException e) {
+            return suppliedResponse;
+        }
+        if (!(parsed instanceof Map<?, ?> values)) {
+            return suppliedResponse;
+        }
+        OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
+        String schemaJson = requireNonNull(requireNonNull(options).getResponseFormat()).getJsonSchema();
+        Map<?, ?> schema = JsonConverter.fromJson(schemaJson, Map.class);
+        Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
+        Map<String, Object> stageValues = new LinkedHashMap<>();
+        properties.keySet().forEach(key -> {
+            if (values.containsKey(key)) {
+                stageValues.put(key.toString(), values.get(key));
+            }
+        });
+        int start = suppliedResponse.indexOf('{');
+        int end = suppliedResponse.lastIndexOf('}');
+        return suppliedResponse.substring(0, start) + JsonConverter.toJson(stageValues) + suppliedResponse.substring(end + 1);
+    }
+
+    private Map<?, ?> cacheEntry(String prefix) {
+        String value = cache.entrySet().stream().filter(entry -> entry.getKey().startsWith(prefix + ":"))
+                .findFirst().orElseThrow().getValue();
+        return JsonConverter.fromJson(value, Map.class);
     }
 
     private Artist artist() {
@@ -577,6 +791,28 @@ class SpotifyArtistDataServiceTest {
 
     private static String albumUrl() {
         return "https://open.spotify.com/album/" + ALBUM_ID;
+    }
+
+    private static Stream<Arguments> missingStageFields() {
+        return Stream.of(
+                Arguments.of(1, "{}"),
+                Arguments.of(2, "{}"),
+                Arguments.of(3, "{}"),
+                Arguments.of(4, "{}"),
+                Arguments.of(3, "{\"links\":null}"),
+                Arguments.of(3, "{\"imageUrl\":null}"));
+    }
+
+    private static Stream<List<SpotifyArtistData.TopTrack>> invalidPopularTracks() {
+        SpotifyArtistData.TopTrack track = found().topTracks().getFirst();
+        List<SpotifyArtistData.TopTrack> tooMany = new ArrayList<>();
+        for (int i = 0; i < 11; i++) {
+            tooMany.add(new SpotifyArtistData.TopTrack("track-" + i, track.title(), track.url(),
+                    track.albumTitle(), track.albumId(), track.albumUrl()));
+        }
+        return Stream.of(tooMany, List.of(track, track),
+                List.of(new SpotifyArtistData.TopTrack("", track.title(), track.url(),
+                        track.albumTitle(), track.albumId(), track.albumUrl())));
     }
 
     private static Stream<String> invalidResponses() {

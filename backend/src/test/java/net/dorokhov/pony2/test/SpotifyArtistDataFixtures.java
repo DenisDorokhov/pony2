@@ -18,6 +18,17 @@ public final class SpotifyArtistDataFixtures {
         return JsonConverter.toJson(response);
     }
 
+    public static List<String> spotifyArtistStageResponses(SpotifyArtistData data) {
+        Map<String, Object> response = JsonConverter.mapFromJson(spotifyArtistResponse(data), String.class, Object.class);
+        List<List<String>> stages = List.of(List.of("status", "artist", "matchedAlbum", "avatarUrl"),
+                List.of("topTracks"), List.of("biography"), List.of("links", "imageUrl"), List.of("similarArtists"));
+        return stages.stream().map(fields -> {
+            Map<String, Object> stage = new LinkedHashMap<>();
+            fields.forEach(field -> stage.put(field, response.get(field)));
+            return JsonConverter.toJson(stage);
+        }).toList();
+    }
+
     public static String spotifyArtistResponse(String status) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", status);

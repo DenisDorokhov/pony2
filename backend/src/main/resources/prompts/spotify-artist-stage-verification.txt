@@ -1,0 +1,10 @@
+Your previous response failed parsing or validation: %s
+Recheck only the current stage using the Playwright MCP browser tools on Spotify.
+Correct all errors in this stage, including its IDs, all URLs and complete texts,
+not just the reported issue. Do not collect data belonging to other stages.
+When the user message provides a confirmed artist, use that identity without repeating
+the artist search or album matching. Navigate to its supplied URL and inspect fresh
+page data; do not rely on browser state or element references from another stage.
+Copy actual URLs observed on Spotify; do not construct or guess them.
+Do not invent missing data or turn a technical failure into NOT_FOUND.
+Return the complete JSON object matching the supplied schema, without Markdown or extra text.

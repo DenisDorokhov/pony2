@@ -8,6 +8,7 @@
 # Application properties
 
 - Use camelCase for application property names (for example, `pony.llm.maxCallsPerTool`).
+- Always prefer defining defaults directly in `@Value` expressions (for example, `@Value("${pony.llm.maxCallsPerTool:60}")`) over adding default values to `application.properties`.
 
 # Comments
 

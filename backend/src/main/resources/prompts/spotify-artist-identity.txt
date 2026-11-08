@@ -1,4 +1,4 @@
-Use the Playwright MCP browser tools to collect artist data directly from Spotify.
+Use the Playwright MCP browser tools to identify an artist directly on Spotify.
 Start by calling browser_navigate to open https://open.spotify.com/ in the browser.
 Search for the artist named in the user message using Spotify's browser UI.
 Use browser_snapshot, browser_click, browser_evaluate and other Playwright MCP tools
@@ -14,8 +14,8 @@ album from the supplied list. Either of the following is sufficient confirmation
 - The matching album's page or one of its tracks directly links to the candidate
   artist. No additional confirmation in the artist's discography is required.
 Open the album's Spotify page to verify the release itself. Once either route
-confirms the association, proceed to collect the remaining data without seeking
-additional proof of participation, unless new evidence contradicts the match.
+confirms the association, stop checking albums without seeking additional proof of
+participation, unless new evidence contradicts the match. One matching album is enough.
 Album editions may have suffixes such as Deluxe or Remastered; inspect the actual
 release to establish the match. Copy inputTitle exactly from the supplied list and
 title exactly from Spotify. Use years, when provided, to help distinguish artists.
@@ -27,25 +27,6 @@ error, or blocked page is a technical failure: report the failure instead of NOT
 For FOUND, collect:
 - artist: Spotify ID, displayed name, and artist page URL observed in the browser.
 - matchedAlbum: supplied inputTitle, Spotify album title, ID and album page URL.
-- topTracks: up to 10 tracks from the artist page's Popular section in displayed
-  order. Click "Show more" if needed to reveal all 10 tracks. Open each track's
-  Spotify page to collect its actual album title, album ID and album URL, as well
-  as the track ID, title and URL. Do not infer album membership.
-- similarArtists: IDs, displayed names and URLs from Spotify's Fans also like
-  section. Click "See all" if available to open the full list of related artists.
-  Collect all artists from that list, scrolling if necessary. Do not generate
-  your own recommendations.
-- biography: the complete text of the artist's Spotify About biography, preserving
-  its original language and wording. Do not summarize, translate or invent it.
-- links: external website and social links shown in the artist's About section,
-  each with its displayed title and actual destination URL. Open the expanded About
-  view and inspect its links, including content rendered in dialogs or overlays
-  outside the main page element. Do not invent URLs or return an empty list without
-  inspecting the About section. Do not visit external websites.
-- imageUrl: the URL of the first image in the artist's About photo gallery with
-  dimensions of at least 400×300 pixels. Check dimensions using img.naturalWidth and
-  img.naturalHeight. Do not analyze image contents or search for alternatives. If no
-  image qualifies, set this field to null.
 - avatarUrl: the image URL from the confirmed artist's Spotify search-result
   card (including the Top result card when applicable). Collect it while the
   search results are visible, before navigating away. Identify the correct
@@ -62,11 +43,12 @@ For FOUND, collect:
   identifiable from page attributes or markup.
   If the card has no usable image URL after loading, set avatarUrl to null.
 
+Collect only the artist identity, one matched album and the search-card avatar.
+Do not collect Popular tracks, the About section, or Fans also like.
+
 Read Spotify IDs from links or page data observed in the browser. Copy the actual
-artist, album and track page URLs. Do not construct URLs or assume a fixed URL path,
+artist and album page URLs. Do not construct URLs or assume a fixed URL path,
 domain, or ID format. Preserve locale segments and query parameters when present.
-Always include every field. Set unavailable optional fields to null. Use an empty
-list only when the section was inspected and contains no items. Do not include placeholder items, duplicate IDs, or
-the selected artist in similarArtists. If a section is blocked or fails to load,
-report the technical failure rather than silently treating it as absent. Return only
-the JSON object matching the supplied schema, with no additional text.
+Always include every field. Set an unavailable avatarUrl to null. If a page is blocked
+or fails to load, report the technical failure rather than silently treating it as
+absent. Return only the JSON object matching the supplied schema, with no additional text.

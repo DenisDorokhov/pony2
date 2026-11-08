@@ -69,6 +69,7 @@ import static net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoverySe
 import static net.dorokhov.pony2.core.library.service.discovery.ArtistDiscoveryService.ARTIST_TASK_COUNT;
 import static net.dorokhov.pony2.test.SongFixtures.song;
 import static net.dorokhov.pony2.test.SpotifyArtistDataFixtures.spotifyArtistResponse;
+import static net.dorokhov.pony2.test.SpotifyArtistDataFixtures.spotifyArtistStageResponses;
 import static net.dorokhov.pony2.test.UserFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -1626,7 +1627,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                 List.of(new SpotifyArtistData.TopTrack("spotify-track", "Raining Blood", "https://open.spotify.com/track/spotify-track",
                         "Compilation", "spotify-compilation", "https://open.spotify.com/album/spotify-compilation")),
                 null, null, null, null, null);
-        List<String> responses = new ArrayList<>(List.of(spotifyArtistResponse(spotifyData),
+        List<String> responses = new ArrayList<>(spotifyArtistStageResponses(spotifyData));
+        responses.addAll(List.of(
                 "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-compilation\",\"databaseAlbumId\":null}]}",
                 "{\"trackMatches\":[{\"databaseTrackId\":\"" + track.getId() + "\"}]}"));
         when(model.call(argThat(this::isOriginalTaskPrompt))).thenAnswer(invocation -> {
@@ -1660,7 +1662,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     }
                     assertThat(task.getRawResponses()).hasSize(eligible ? 2 : 1);
                 });
-        verify(model, times(eligible ? 4 : 3)).call(argThat(this::isOriginalTaskPrompt));
+        verify(model, times(eligible ? 12 : 11)).call(argThat(this::isOriginalTaskPrompt));
     }
 
     @ParameterizedTest
@@ -1679,7 +1681,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                         "Compilation", "spotify-compilation", "https://open.spotify.com/album/spotify-compilation")),
                 null, null, null, null, null);
         String albumMatches = "{\"albumMatches\":[{\"spotifyAlbumId\":\"spotify-compilation\",\"databaseAlbumId\":null}]}";
-        List<String> responses = new ArrayList<>(List.of(spotifyArtistResponse(spotifyData), albumMatches));
+        List<String> responses = new ArrayList<>(spotifyArtistStageResponses(spotifyData));
+        responses.add(albumMatches);
         AtomicBoolean failMatching = new AtomicBoolean();
         when(model.call(argThat(this::isOriginalTaskPrompt))).thenAnswer(invocation -> {
             if (failMatching.getAndSet(false)) {

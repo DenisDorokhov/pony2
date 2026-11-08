@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery.spotify;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolation;
@@ -37,6 +38,7 @@ import tools.jackson.core.JacksonException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -59,8 +61,12 @@ public class SpotifyArtistDataService {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
 
-    private final String systemPrompt;
+    private final String identityPrompt;
     private final String verificationPrompt;
+    private final String popularTracksPrompt;
+    private final String biographyPrompt;
+    private final String aboutMediaPrompt;
+    private final String similarArtistsPrompt;
 
     public SpotifyArtistDataService(
             DiscoveryTaskLlmExecutor llmOperation,
@@ -69,8 +75,12 @@ public class SpotifyArtistDataService {
             LogService logService,
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
-            @Value("classpath:prompts/spotify-artist-data.txt") Resource promptResource,
-            @Value("classpath:prompts/spotify-artist-data-verification.txt") Resource verificationPromptResource
+            @Value("classpath:prompts/spotify-artist-identity.txt") Resource identityPromptResource,
+            @Value("classpath:prompts/spotify-artist-stage-verification.txt") Resource verificationPromptResource,
+            @Value("classpath:prompts/spotify-artist-popular-tracks.txt") Resource popularTracksPromptResource,
+            @Value("classpath:prompts/spotify-artist-biography.txt") Resource biographyPromptResource,
+            @Value("classpath:prompts/spotify-artist-about-media.txt") Resource aboutMediaPromptResource,
+            @Value("classpath:prompts/spotify-artist-similar-artists.txt") Resource similarArtistsPromptResource
     ) throws IOException {
         this.llmOperation = llmOperation;
         this.validator = validator;
@@ -78,8 +88,12 @@ public class SpotifyArtistDataService {
         this.logService = logService;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        systemPrompt = promptResource.getContentAsString(UTF_8);
+        identityPrompt = identityPromptResource.getContentAsString(UTF_8);
         verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
+        popularTracksPrompt = popularTracksPromptResource.getContentAsString(UTF_8);
+        biographyPrompt = biographyPromptResource.getContentAsString(UTF_8);
+        aboutMediaPrompt = aboutMediaPromptResource.getContentAsString(UTF_8);
+        similarArtistsPrompt = similarArtistsPromptResource.getContentAsString(UTF_8);
     }
 
     public @Nullable SpotifyArtistData discover(DiscoveryTask task, boolean cacheEnabled) {
@@ -96,24 +110,27 @@ public class SpotifyArtistDataService {
         if (request == null) {
             return null;
         }
-        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(
-                SPOTIFY, "SPOTIFY_ARTIST_DATA", CACHE_VERSION) : null;
-        Response result = llmOperation.call(task, request, Response.class, cacheSettings, response -> {
-            try {
-                Response data = response != null ? LlmJsonConverter.fromJson(response, Response.class) : null;
-                validateResponse(data, request);
-                return data;
-            } catch (JacksonException | IllegalStateException e) {
-                transactionTemplate.executeWithoutResult(status ->
-                        logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}'.",
-                                artistRepository.findById(artistId).orElseThrow().getName(), e));
-                throw new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
-            }
-        });
+        IdentityResponse identity = callStage(task, artistId, request, IdentityResponse.class,
+                "SPOTIFY_ARTIST_IDENTITY", cacheEnabled, response -> validateIdentity(response, request));
+        if (identity.status() != Status.FOUND) {
+            return null;
+        }
+        SpotifyArtist artist = requireNonNull(identity.artist());
+        String userPrompt = "Confirmed Spotify artist: " + JsonConverter.toJson(artist);
+        TopTracksResponse topTracks = callStage(task, artistId, new ArtistRequest(popularTracksPrompt, userPrompt),
+                TopTracksResponse.class, "SPOTIFY_ARTIST_POPULAR_TRACKS", cacheEnabled, this::validateTopTracks);
+        BiographyResponse biography = callStage(task, artistId, new ArtistRequest(biographyPrompt, userPrompt),
+                BiographyResponse.class, "SPOTIFY_ARTIST_BIOGRAPHY", cacheEnabled, response -> {});
+        AboutMediaResponse aboutMedia = callStage(task, artistId, new ArtistRequest(aboutMediaPrompt, userPrompt),
+                AboutMediaResponse.class, "SPOTIFY_ARTIST_ABOUT_MEDIA", cacheEnabled, response -> {});
+        SimilarArtistsResponse similarArtists = callStage(task, artistId, new ArtistRequest(similarArtistsPrompt, userPrompt),
+                SimilarArtistsResponse.class, "SPOTIFY_ARTIST_SIMILAR_ARTISTS", cacheEnabled,
+                response -> validateSimilarArtists(response, artist));
+        SpotifyArtistData result = new SpotifyArtistData(artist, requireNonNull(identity.matchedAlbum()),
+                topTracks.topTracks(), similarArtists.similarArtists(), biography.biography(),
+                aboutMedia.links(), aboutMedia.imageUrl(), identity.avatarUrl());
         logger.debug("Spotify discovery result for artist '{}': {}.", artistId, result);
-        return result.status() == Status.FOUND ? new SpotifyArtistData(
-                requireNonNull(result.artist()), requireNonNull(result.matchedAlbum()), result.topTracks(),
-                result.similarArtists(), result.biography(), result.links(), result.imageUrl(), result.avatarUrl()) : null;
+        return result;
     }
 
     private @Nullable Request prepareRequest(String artistId) {
@@ -134,12 +151,33 @@ public class SpotifyArtistDataService {
                         + (album.getYear() != null ? " (year: " + album.getYear() + ")" : ""))
                 .collect(Collectors.joining("\n"));
         String userPrompt = "Artist name: " + JsonConverter.toJson(artist.getName()) + "\nAlbums from the database:\n" + albumList;
-        return new Request(systemPrompt, userPrompt, albums.stream().map(Album::getName).toList());
+        return new Request(identityPrompt, userPrompt, albums.stream().map(Album::getName).toList());
     }
 
-    private void validateResponse(@Nullable Response response, Request request) {
+    private <R> R callStage(
+            DiscoveryTask task, String artistId, DiscoveryTaskLlmExecutor.Request request, Class<R> responseClass,
+            String cachePrefix, boolean cacheEnabled, Consumer<R> responseValidator
+    ) {
+        DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
+                ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, cachePrefix, CACHE_VERSION) : null;
+        return llmOperation.call(task, request, responseClass, cacheSettings, response -> {
+            try {
+                R data = response != null ? LlmJsonConverter.fromJson(response, responseClass) : null;
+                validateResponse(data);
+                responseValidator.accept(data);
+                return data;
+            } catch (JacksonException | IllegalStateException e) {
+                transactionTemplate.executeWithoutResult(status ->
+                        logService.warn(logger, "Invalid Spotify response from the LLM for artist '{}'.",
+                                artistRepository.findById(artistId).orElseThrow().getName(), e));
+                throw new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
+            }
+        });
+    }
+
+    private <R> void validateResponse(@Nullable R response) {
         checkState(response != null, "The LLM returned an invalid Spotify response: the response is null.");
-        Set<ConstraintViolation<Response>> violations = validator.validate(response);
+        Set<ConstraintViolation<R>> violations = validator.validate(response);
         if (!violations.isEmpty()) {
             throw new IllegalStateException("The LLM returned an invalid Spotify response: validation failed: "
                     + violations.stream()
@@ -147,6 +185,9 @@ public class SpotifyArtistDataService {
                             .sorted()
                             .collect(Collectors.joining("; ")) + ".");
         }
+    }
+
+    private void validateIdentity(IdentityResponse response, Request request) {
         if (response.status() != Status.FOUND) {
             return;
         }
@@ -158,17 +199,43 @@ public class SpotifyArtistDataService {
                 response.matchedAlbum().inputTitle(), request.albumTitles());
     }
 
-    private record Response(
+    private void validateTopTracks(TopTracksResponse response) {
+        if (response.topTracks() == null) {
+            return;
+        }
+        checkState(response.topTracks().size() <= 10,
+                "The LLM returned an invalid Spotify response: topTracks contains more than 10 tracks.");
+        checkState(response.topTracks().stream().map(TopTrack::id).distinct().count() == response.topTracks().size(),
+                "The LLM returned an invalid Spotify response: topTracks contains duplicate track IDs.");
+    }
+
+    private void validateSimilarArtists(SimilarArtistsResponse response, SpotifyArtist artist) {
+        if (response.similarArtists() == null) {
+            return;
+        }
+        checkState(response.similarArtists().stream().map(SpotifyArtist::id).distinct().count() == response.similarArtists().size(),
+                "The LLM returned an invalid Spotify response: similarArtists contains duplicate artist IDs.");
+        checkState(response.similarArtists().stream().noneMatch(similarArtist -> similarArtist.id().equals(artist.id())),
+                "The LLM returned an invalid Spotify response: similarArtists contains the selected artist.");
+    }
+
+    private record IdentityResponse(
             @NotNull Status status,
             @Nullable @Valid SpotifyArtist artist,
             @Nullable @Valid MatchedAlbum matchedAlbum,
-            @Nullable List<@NotNull @Valid TopTrack> topTracks,
-            @Nullable List<@NotNull @Valid SpotifyArtist> similarArtists,
-            @Nullable String biography,
-            @Nullable List<@NotNull @Valid ExternalLink> links,
-            @Nullable String imageUrl,
             @Nullable String avatarUrl
     ) {}
+
+    private record TopTracksResponse(@JsonProperty(required = true) @Nullable List<@NotNull @Valid TopTrack> topTracks) {}
+
+    private record BiographyResponse(@JsonProperty(required = true) @Nullable String biography) {}
+
+    private record AboutMediaResponse(
+            @JsonProperty(required = true) @Nullable List<@NotNull @Valid ExternalLink> links,
+            @JsonProperty(required = true) @Nullable String imageUrl
+    ) {}
+
+    private record SimilarArtistsResponse(@JsonProperty(required = true) @Nullable List<@NotNull @Valid SpotifyArtist> similarArtists) {}
 
     private enum Status {
         FOUND, NOT_FOUND, AMBIGUOUS
@@ -180,6 +247,14 @@ public class SpotifyArtistDataService {
             String userPrompt,
             List<String> albumTitles
     ) implements DiscoveryTaskLlmExecutor.Request {
+        @Override
+        public Prompt toPrompt() {
+            return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
+        }
+    }
+
+    @JsonPropertyOrder({"systemPrompt", "userPrompt"})
+    private record ArtistRequest(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
         @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
