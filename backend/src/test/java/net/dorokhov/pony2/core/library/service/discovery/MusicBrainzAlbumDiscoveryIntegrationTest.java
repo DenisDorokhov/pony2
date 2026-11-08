@@ -1640,8 +1640,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).primaryType()).isEqualTo(primaryType);
                 });
             }
-            String result = requireNonNull(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType() == ResponseFormat.Type.TEXT
-                    ? responses.getFirst() : responses.removeFirst();
+            String result = responses.removeFirst();
             return response(result);
         });
         DiscoveryJob discoveryJob = job(type);
@@ -1662,7 +1661,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     }
                     assertThat(task.getRawResponses()).hasSize(eligible ? 2 : 1);
                 });
-        verify(model, times(eligible ? 12 : 11)).call(argThat(this::isOriginalTaskPrompt));
+        verify(model, times(eligible ? 7 : 6)).call(argThat(this::isOriginalTaskPrompt));
     }
 
     @ParameterizedTest
@@ -1688,10 +1687,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             if (failMatching.getAndSet(false)) {
                 throw new IllegalStateException("Matching unavailable");
             }
-            Prompt prompt = invocation.getArgument(0);
-            String result = requireNonNull(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType() == ResponseFormat.Type.TEXT
-                    ? responses.getFirst() : responses.removeFirst();
-            return response(result);
+            return response(responses.removeFirst());
         });
         artistService.discover(job(DiscoveryType.ARTIST), artist, false, null);
         assertThat(taskRepository.findAll()).filteredOn(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS)

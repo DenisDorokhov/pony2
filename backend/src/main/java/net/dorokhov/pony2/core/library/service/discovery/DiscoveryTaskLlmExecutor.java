@@ -15,6 +15,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
@@ -31,6 +32,7 @@ import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -83,7 +85,8 @@ public class DiscoveryTaskLlmExecutor {
     /**
      * Makes a synchronous model call, or reuses its cached response. The caller supplies conversation history
      * and the response class used to generate a strict JSON schema.
-     * Requests with tools collect data first, then format the collected answer with tools disabled.
+     * Requests with tools collect data first, then format the collected answer with tools disabled only
+     * if it cannot be deserialized into the response class.
      * Requests without tools return a structured response in a single call.
      * LlmHallucinationException restarts the call chain with the original request up to the configured limit.
      * The response handler may throw LlmFollowUpException to append a prompt and retry up to the configured limit.
@@ -100,7 +103,7 @@ public class DiscoveryTaskLlmExecutor {
         int restarts = 0;
         while (true) {
             try {
-                return callWithFollowUps(task, request, responseSchema, cacheSettings, responseHandler);
+                return callWithFollowUps(task, request, responseClass, responseSchema, cacheSettings, responseHandler);
             } catch (LlmHallucinationException e) {
                 if (restarts >= restartsOnHallucination) {
                     logService.error(logger, "Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}.",
@@ -115,10 +118,10 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     private <R> R callWithFollowUps(
-            DiscoveryTask task, Request request, String responseSchema,
+            DiscoveryTask task, Request request, Class<?> responseClass, String responseSchema,
             @Nullable CacheSettings cacheSettings, Function<String, R> responseHandler
     ) {
-        Exchange exchange = performExchange(task, request, responseSchema, cacheSettings);
+        Exchange exchange = performExchange(task, request, responseClass, responseSchema, cacheSettings);
         String response = exchange.response();
         R result;
         Request acceptedRequest = request;
@@ -137,7 +140,7 @@ public class DiscoveryTaskLlmExecutor {
                         task.getId(), task.getType(), retries + 2, retriesOnFollowUpException + 1,
                         retriesOnFollowUpException - retries - 1);
                 acceptedRequest = new FollowUpRequest(acceptedRequest, response, e.getPrompt());
-                response = performExchange(task, acceptedRequest, responseSchema, null).response();
+                response = performExchange(task, acceptedRequest, responseClass, responseSchema, null).response();
                 jobSynchronizer.interruptDiscoveryIfStopped();
                 retries++;
             }
@@ -151,7 +154,7 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     private Exchange performExchange(
-            DiscoveryTask task, Request request, String responseSchema, @Nullable CacheSettings cacheSettings
+            DiscoveryTask task, Request request, Class<?> responseClass, String responseSchema, @Nullable CacheSettings cacheSettings
     ) {
         jobSynchronizer.interruptDiscoveryIfStopped();
 
@@ -176,7 +179,7 @@ public class DiscoveryTaskLlmExecutor {
                 logger.debug("Requesting LLM response for discovery task '{}' of type {}.\n\nRequest:\n\n{}",
                         task.getId(), task.getType(), JsonConverter.toPrettyJson(rawRequest));
             }
-            response = callModel(task, prompt, responseSchema);
+            response = callModel(task, prompt, responseClass, responseSchema);
         }
         jobSynchronizer.interruptDiscoveryIfStopped();
 
@@ -189,7 +192,9 @@ public class DiscoveryTaskLlmExecutor {
         return new Exchange(response, key, cached.isPresent());
     }
 
-    private @Nullable String callModel(DiscoveryTask task, Prompt prompt, String responseSchema) {
+    private @Nullable String callModel(
+            DiscoveryTask task, Prompt prompt, Class<?> responseClass, String responseSchema
+    ) {
         boolean toolsEnabled = task.getType().isToolsEnabled();
         OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder();
         if (prompt.getOptions() != null) {
@@ -218,7 +223,7 @@ public class DiscoveryTaskLlmExecutor {
         if (collectedResponse.contains("<tool_call>")) {
             throw new LlmHallucinationException("Model tool call hallucination detected in the LLM data collection response.");
         }
-        if (!toolsEnabled) {
+        if (!toolsEnabled || canParseResponse(collectedResponse, responseClass)) {
             return collectedResponse;
         }
         List<Message> formattingMessages = List.of(
@@ -232,6 +237,14 @@ public class DiscoveryTaskLlmExecutor {
                 .options(collectionOptions.clone().toolChoice("none")
                         .responseFormat(ResponseFormat.builder().jsonSchema(responseSchema).strict(true).build()))
                 .call().chatResponse()));
+    }
+
+    private boolean canParseResponse(String response, Class<?> responseClass) {
+        try {
+            return LlmJsonConverter.fromJson(response, responseClass) != null;
+        } catch (JacksonException e) {
+            return false;
+        }
     }
 
     private @Nullable String responseContent(@Nullable ChatResponse response) {

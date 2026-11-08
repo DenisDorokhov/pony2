@@ -136,7 +136,7 @@ class DiscoveryTaskLlmExecutorTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"none", "auto"})
-    void shouldAlwaysCollectThenFormatAndPreserveRequestOptions(String toolChoice) {
+    void shouldFormatUnparseableCollectionAndPreserveRequestOptions(String toolChoice) {
         DiscoveryTask task = task();
 
         operation.call(task, new ToolRequest(toolChoice), AnswerResponse.class, CACHE_SETTINGS, Function.identity());
@@ -194,6 +194,90 @@ class DiscoveryTaskLlmExecutorTest {
         boolean expectedToolsEnabled = type == DiscoveryTaskType.SPOTIFY_ARTIST_DATA;
         assertThat(toolsEnabledValues).hasSize(expectedToolsEnabled ? 5 : 3).containsOnly(expectedToolsEnabled);
         assertThat(responses).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"%s", "Here is the result:\n%s", "```json\n%s\n```"})
+    void shouldUseAndCacheCollectedJsonWithoutFormatting(String template) {
+        String answer = "{\"answer\":\"Collected data\"}";
+        String collected = template.formatted(answer);
+        when(model.call(any(Prompt.class))).thenReturn(response(collected));
+        DialogueRequest request = searchRequest();
+        DiscoveryTask task = task();
+        AtomicInteger handled = new AtomicInteger();
+
+        String result = operation.call(task, request, AnswerResponse.class, CACHE_SETTINGS, responseText -> {
+            handled.incrementAndGet();
+            return responseText;
+        });
+
+        assertThat(result).isEqualTo(collected);
+        assertThat(handled).hasValue(1);
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(collected));
+        assertThat(operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(collected);
+        verify(model).call(any(Prompt.class));
+        assertThat(cache.values()).singleElement().satisfies(entry ->
+                assertThat(JsonConverter.fromJson(entry, Map.class).get("response")).isEqualTo(collected));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"answer\":42}", "{\"answer\":\"Collected data\",\"extra\":true}"})
+    void shouldUseCollectedJsonAcceptedByExistingConverter(String collected) {
+        when(model.call(any(Prompt.class))).thenReturn(response(collected));
+
+        assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, null, Function.identity()))
+                .isEqualTo(collected);
+
+        verify(model).call(any(Prompt.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"not JSON", "{\"answer\":{}}", "null"})
+    void shouldFormatUnusableCollectedJsonWithoutCallingHandlerTwice(String collected) {
+        String formatted = "{\"answer\":\"Formatted data\"}";
+        when(model.call(any(Prompt.class))).thenReturn(response(collected), response(formatted));
+        AtomicInteger handled = new AtomicInteger();
+
+        String result = operation.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            handled.incrementAndGet();
+            return answer;
+        });
+
+        assertThat(result).isEqualTo(formatted);
+        assertThat(handled).hasValue(1);
+        ArgumentCaptor<Prompt> captured = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(2)).call(captured.capture());
+        OpenAiChatOptions formattingOptions = (OpenAiChatOptions) captured.getAllValues().getLast().getOptions();
+        assertThat(requireNonNull(formattingOptions).getToolChoice()).isEqualTo("none");
+        assertThat(requireNonNull(formattingOptions.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+        assertThat(captured.getAllValues().getLast().getInstructions().getLast().getText()).isEqualTo(collected);
+    }
+
+    @Test
+    void shouldSkipFormattingAcrossFollowUpAndCacheAcceptedAnswer() {
+        String rejected = "{\"answer\":\"Rejected\"}";
+        String accepted = "{\"answer\":\"Accepted\"}";
+        when(model.call(any(Prompt.class))).thenReturn(response(rejected), response(accepted));
+        DiscoveryTask task = task();
+        AtomicInteger handled = new AtomicInteger();
+
+        String result = operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            handled.incrementAndGet();
+            if (answer.equals(rejected)) {
+                throw new LlmFollowUpException("Verify this answer", new IllegalStateException("Invalid response"));
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo(accepted);
+        assertThat(handled).hasValue(2);
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(rejected), JsonConverter.fromJson(accepted));
+        ArgumentCaptor<Prompt> captured = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(2)).call(captured.capture());
+        assertThat(captured.getAllValues().getLast().getInstructions()).extracting(Message::getText)
+                .contains(rejected, "Verify this answer");
+        assertThat(cache.values()).singleElement().satisfies(entry ->
+                assertThat(JsonConverter.fromJson(entry, Map.class).get("response")).isEqualTo(accepted));
     }
 
     @ParameterizedTest
@@ -667,7 +751,7 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
                 .isEqualTo(content);
 
-        verify(model, times(2)).call(any(Prompt.class));
+        verify(model).call(any(Prompt.class));
         assertThat(cache).hasSize(1);
     }
 
