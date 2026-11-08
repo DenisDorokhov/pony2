@@ -43,5 +43,11 @@ services:
       - ./llm/squid/squid.conf:/etc/squid/squid.conf:ro
     restart: unless-stopped
 
+networks:
+    default:
+      driver: bridge
+      driver_opts:
+        com.docker.network.bridge.name: br-pony2
+
 volumes:
   playwright-profile:
