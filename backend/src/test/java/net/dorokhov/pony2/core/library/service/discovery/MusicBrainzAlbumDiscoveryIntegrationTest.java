@@ -661,7 +661,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             updateConfig(new ConfigSetUpdateCommand()
                     .setDiscoveryEnabled(true).setLlmUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1")
                     .setLlmModel(configuredModel));
-            ChatModelImpl httpModel = new ChatModelImpl(configService, ObservationRegistry.NOOP, llmTimeout);
+            ChatModelImpl httpModel = new ChatModelImpl(configService, ObservationRegistry.NOOP, llmTimeout,
+                    null, null, null, null, null, null);
             when(model.createChatModel(any())).thenAnswer(invocation -> httpModel.createChatModel(invocation.getArgument(0)));
             search(List.of(group("group", "Other", artistSelection ? album.getName() : "Deluxe title",
                     artistSelection ? List.of(credit("artist", "A", null), credit("other", "B", null))
