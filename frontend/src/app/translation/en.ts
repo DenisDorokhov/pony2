@@ -240,6 +240,7 @@ export default {
     statusLabel: 'Status:',
     progressLabel: 'Progress:',
     startFullDiscoveryButton: 'Full Discovery',
+    useCacheConfirmation: 'Use cached data for this discovery? Click OK to use the cache, or Cancel to run without it.',
     allTasksButton: 'All Tasks',
     startDateColumn: 'Start Date',
     updateDateColumn: 'Update Date',
