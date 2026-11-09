@@ -14,3 +14,13 @@ exactly one object per supplied Spotify top track in the same order. Set databas
 to its database track ID, or null if there is no match. Always include databaseTrackId.
 Preserve all positions, including unmatched tracks. All databaseTrackId values may be null.
 Do not include Markdown or additional text.
+
+
+Consider abbreviation matches normally.
+
+If further analysis repeats the same arguments without additional
+evidence from the supplied data, stop reconsidering that match.
+Keep an already established confident match; otherwise return null
+for that position and continue to the next track.
+
+Preserve every track position and return the complete result.
