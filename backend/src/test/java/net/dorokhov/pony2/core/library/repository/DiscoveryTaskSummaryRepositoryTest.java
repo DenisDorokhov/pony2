@@ -106,6 +106,38 @@ class DiscoveryTaskSummaryRepositoryTest extends IntegrationTest {
         });
     }
 
+    @Test
+    void shouldCountArtistAndAlbumHistoryWithoutJoiningTargets() {
+        Artist artist = artistRepository.save(new Artist().setName("Artist"));
+        Album album = albumRepository.save(new Album().setArtist(artist).setName("Album"));
+        DiscoveryJob job = saveJob();
+        taskRepository.save(task(job).setAlbum(album));
+        taskRepository.save(task(job).setAlbum(album));
+        List<String> statements = new ArrayList<>();
+        SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
+        StatementInspector statementInspector = sql -> {
+            statements.add(sql);
+            return sql;
+        };
+        try (Session session = sessionFactory.withOptions().statementInspector(statementInspector).openSession()) {
+            DiscoveryTaskRepository repository = new JpaRepositoryFactory(session).getRepository(DiscoveryTaskRepository.class);
+            PageRequest pageRequest = PageRequest.of(0, 1);
+            List<Supplier<Page<DiscoveryTaskSummary>>> queries = List.of(
+                    () -> repository.findByArtistId(artist.getId(), null, false, false, pageRequest),
+                    () -> repository.findByAlbumId(album.getId(), null, false, false, pageRequest));
+            for (Supplier<Page<DiscoveryTaskSummary>> query : queries) {
+                statements.clear();
+
+                assertThat(query.get().getTotalElements()).isEqualTo(2);
+
+                assertThat(statements).filteredOn(sql -> sql.toLowerCase(Locale.ROOT).contains("count("))
+                        .singleElement().satisfies(sql -> assertThat(sql.toLowerCase(Locale.ROOT))
+                                .contains(".album_id")
+                                .doesNotContain(" join "));
+            }
+        }
+    }
+
     private DiscoveryJob saveJob() {
         return jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
     }

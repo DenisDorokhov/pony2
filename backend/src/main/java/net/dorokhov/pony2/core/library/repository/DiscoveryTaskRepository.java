@@ -200,7 +200,7 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             """)
     Page<DiscoveryTaskSummary> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
-    @Query("""
+    @Query(value = """
             SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
                 t.id, t.creationDate, t.updateDate, t.status, t.type,
                 CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
@@ -210,15 +210,32 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             LEFT JOIN t.artist ar
             LEFT JOIN t.album a
             LEFT JOIN t.song s
-            WHERE (t.artist.id = :artistId OR a.artist.id = :artistId)
+            WHERE (fk(t.artist) = :artistId OR fk(t.album) IN (
+                SELECT al.id FROM Album al WHERE al.artist.id = :artistId
+            ))
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
               AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
             ORDER BY t.creationDate DESC, t.id DESC
+            """, countQuery = """
+            SELECT
+                (SELECT COUNT(artistTask) FROM DiscoveryTask artistTask
+                 WHERE fk(artistTask.artist) = :artistId
+                   AND (:type IS NULL OR artistTask.type = :type)
+                   AND (:failed = false OR artistTask.status = FAILED)
+                   AND (:withoutResult = false OR (artistTask.status = COMPLETE AND artistTask.result IS NULL)))
+                +
+                (SELECT COUNT(albumTask) FROM DiscoveryTask albumTask
+                 WHERE fk(albumTask.album) IN (
+                     SELECT al.id FROM Album al WHERE al.artist.id = :artistId
+                 )
+                   AND (:type IS NULL OR albumTask.type = :type)
+                   AND (:failed = false OR albumTask.status = FAILED)
+                   AND (:withoutResult = false OR (albumTask.status = COMPLETE AND albumTask.result IS NULL)))
             """)
     Page<DiscoveryTaskSummary> findByArtistId(String artistId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
 
-    @Query("""
+    @Query(value = """
             SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
                 t.id, t.creationDate, t.updateDate, t.status, t.type,
                 CASE WHEN t.status = COMPLETE AND t.result IS NULL THEN true ELSE false END,
@@ -228,11 +245,17 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             LEFT JOIN t.artist ar
             LEFT JOIN t.album a
             LEFT JOIN t.song s
-            WHERE t.album.id = :albumId
+            WHERE fk(t.album) = :albumId
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
               AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
             ORDER BY t.creationDate DESC, t.id DESC
+            """, countQuery = """
+            SELECT COUNT(t) FROM DiscoveryTask t
+            WHERE fk(t.album) = :albumId
+              AND (:type IS NULL OR t.type = :type)
+              AND (:failed = false OR t.status = FAILED)
+              AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
             """)
     Page<DiscoveryTaskSummary> findByAlbumId(String albumId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
 

@@ -148,14 +148,20 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         if (result != null) {
             for (DiscoveryTask.Status status : List.of(DiscoveryTask.Status.STARTED, DiscoveryTask.Status.INTERRUPTED)) {
                 saveTask(task(firstJob).setAlbum(album).setStatus(status).setResult(null), date.plusHours(1), date.plusHours(2));
+                saveTask(task(firstJob).setArtist(artist).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
+                        .setStatus(status).setResult(null), date.plusHours(1), date.plusHours(2));
             }
             saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}"),
                     date.plusHours(1), date.plusHours(2));
+            saveTask(task(firstJob).setArtist(artist).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
+                    .setStatus(DiscoveryTask.Status.COMPLETE).setResult("{}"), date.plusHours(1), date.plusHours(2));
             saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.COMPLETE).setResult("[]"),
                     date.plusHours(1), date.plusHours(2));
             if (result == DiscoveryTaskFilter.Result.NO_RESULT) {
                 saveTask(task(firstJob).setAlbum(album).setStatus(DiscoveryTask.Status.FAILED).setResult(null),
                         date.plusHours(1), date.plusHours(2));
+                saveTask(task(firstJob).setArtist(artist).setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)
+                        .setStatus(DiscoveryTask.Status.FAILED).setResult(null), date.plusHours(1), date.plusHours(2));
             }
         }
         List<String> expectedIds = new ArrayList<>(List.of(newerAlbumTask.getId(), olderAlbumTask.getId()));
