@@ -447,6 +447,7 @@ class SpotifyArtistDataServiceTest {
     @ValueSource(strings = {"Here is the result:\n%s", "%s\nDone.", "```json\n%s\n```",
             "Here is the result:\n```json\n%s\n```\nDone."})
     void shouldExtractJsonWithoutRequestingVerification(String responseTemplate) {
+        String jsonResponse = response;
         response = responseTemplate.formatted(response);
         Artist artist = artist();
         DiscoveryTask task = task(artist);
@@ -456,7 +457,7 @@ class SpotifyArtistDataServiceTest {
 
         assertThat(modelCalls).isEqualTo(5);
         assertThat(task.getRawResponses()).containsExactlyElementsOf(
-                collectedResponses.stream().map(JsonConverter::fromJsonOrString).toList());
+                prompts.stream().map(prompt -> JsonConverter.fromJson(stageResponse(prompt, jsonResponse))).toList());
         verifyNoInteractions(logService);
         Map<?, ?> entry = cacheEntry("SPOTIFY_ARTIST_IDENTITY");
         assertThat(entry.get("response")).isEqualTo(collectedResponses.getFirst());
@@ -464,7 +465,8 @@ class SpotifyArtistDataServiceTest {
 
     @ParameterizedTest
     @MethodSource("invalidResponsesRequiringVerification")
-    void shouldRequestVerificationAndWarnAboutInvalidResponse(String invalidResponseTemplate, boolean requiresFormatting) throws IOException {
+    void shouldRequestVerificationAndWarnAboutInvalidResponse(String invalidResponseTemplate, boolean requiresFormatting,
+                                                              String recordedInvalidResponse) throws IOException {
         configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate")).build();
         service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
         String invalidResponse = invalidResponseTemplate != null ? invalidResponseTemplate.formatted(response) : null;
@@ -475,8 +477,11 @@ class SpotifyArtistDataServiceTest {
         assertThat(service.discover(task, true)).isEqualTo(found());
 
         assertThat(modelCalls).isEqualTo(requiresFormatting ? 7 : 6);
-        assertThat(task.getRawResponses()).hasSize(6).containsExactlyElementsOf(
-                collectedResponses.stream().map(JsonConverter::fromJsonOrString).toList());
+        List<Object> expectedResponses = new ArrayList<>();
+        expectedResponses.add(JsonConverter.fromJsonOrString(recordedInvalidResponse));
+        expectedResponses.addAll(collectedResponses.subList(1, collectedResponses.size()).stream()
+                .map(JsonConverter::fromJson).toList());
+        assertThat(task.getRawResponses()).hasSize(6).containsExactlyElementsOf(expectedResponses);
         Prompt verification = prompts.get(requiresFormatting ? 2 : 1);
         assertThat(verification.getInstructions().subList(0, 2)).isEqualTo(prompts.getFirst().getInstructions().subList(0, 2));
         if (invalidResponse != null && !invalidResponse.isBlank()) {
@@ -497,14 +502,14 @@ class SpotifyArtistDataServiceTest {
 
     private static Stream<Arguments> invalidResponsesRequiringVerification() {
         return Stream.of(
-                Arguments.of(null, false),
-                Arguments.of("", false),
-                Arguments.of("not JSON", true),
-                Arguments.of("{}", false),
-                Arguments.of("{\"status\":\"FOUND\"}", false),
-                Arguments.of("Result: {status: 'FOUND'}", true),
-                Arguments.of("Result: {\"status\":\"UNKNOWN\"}", true),
-                Arguments.of("Result: {\"status\":\"FOUND\"}", false));
+                Arguments.of(null, false, null),
+                Arguments.of("", false, ""),
+                Arguments.of("not JSON", true, "not JSON"),
+                Arguments.of("{}", false, "{}"),
+                Arguments.of("{\"status\":\"FOUND\"}", false, "{\"status\":\"FOUND\"}"),
+                Arguments.of("Result: {status: 'FOUND'}", true, "Result: {status: 'FOUND'}"),
+                Arguments.of("Result: {\"status\":\"UNKNOWN\"}", true, "{\"status\":\"UNKNOWN\"}"),
+                Arguments.of("Result: {\"status\":\"FOUND\"}", false, "{\"status\":\"FOUND\"}"));
     }
 
     @Test

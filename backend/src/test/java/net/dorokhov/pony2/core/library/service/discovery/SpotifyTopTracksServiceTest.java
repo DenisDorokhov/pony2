@@ -412,7 +412,7 @@ class SpotifyTopTracksServiceTest {
         assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
 
         assertThat(prompts).hasSize(2);
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(albumResponse), JsonConverter.fromJsonOrString(trackResponse));
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(ALBUM_RESPONSE), JsonConverter.fromJson(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
         verifyNoInteractions(logService);
     }
@@ -436,13 +436,15 @@ class SpotifyTopTracksServiceTest {
     void shouldVerifyInvalidAlbumResponse(String invalidResponse) {
         responses.addFirst(invalidResponse);
         DiscoveryTask task = task();
+        String recordedInvalidResponse = invalidResponse.startsWith("Result: {\"")
+                ? invalidResponse.substring("Result: ".length()) : invalidResponse;
 
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
 
         assertThat(prompts).hasSize(3);
         assertThat(prompts.get(1).getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(recordedInvalidResponse), JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
         verify(logService).warn(any(), eq("Invalid Spotify top tracks response from the LLM for artist '{}'."),
                 eq(artist.getName()), any(RuntimeException.class));
@@ -500,13 +502,15 @@ class SpotifyTopTracksServiceTest {
     void shouldVerifyInvalidTrackResponse(String invalidResponse) {
         responses.add(1, invalidResponse);
         DiscoveryTask task = task();
+        String recordedInvalidResponse = invalidResponse.startsWith("Result: {\"")
+                ? invalidResponse.substring("Result: ".length()) : invalidResponse;
 
         assertThat(service.discover(task, true)).containsExactly("song-a", "song-b", null);
 
         assertThat(prompts).hasSize(3);
         assertThat(prompts.getLast().getInstructions()).extracting(Message::getText)
                 .anySatisfy(text -> assertThat(text).contains("Recheck the entire answer"));
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(invalidResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(ALBUM_RESPONSE), JsonConverter.fromJsonOrString(recordedInvalidResponse), JsonConverter.fromJsonOrString(TRACK_RESPONSE));
         assertThat(cache).hasSize(2);
     }
 
