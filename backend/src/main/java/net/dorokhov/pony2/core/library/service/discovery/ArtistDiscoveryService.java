@@ -354,6 +354,10 @@ public class ArtistDiscoveryService {
 
     private class ArtistImageTaskExecution implements DiscoveryTaskExecution<String> {
 
+        private static final Set<String> PLACEHOLDER_AVATAR_URLS = Set.of(
+                "https://i.scdn.co/image/ab676161000051749a59d583f5b3d98825ddf0f6"
+        );
+
         private final DiscoveryJob job;
         private final Artist artist;
         private final DiscoveryTaskType type;
@@ -374,6 +378,11 @@ public class ArtistDiscoveryService {
             jobSynchronizer.interruptDiscoveryIfStopped();
             SpotifyArtistData data = transactionTemplate.execute(status -> resultReader.readSpotifyArtistData(artist.getId()));
             String url = data != null ? (type == DiscoveryTaskType.ARTIST_BIO_IMAGE ? data.imageUrl() : data.avatarUrl()) : null;
+            if (type == DiscoveryTaskType.ARTIST_AVATAR_IMAGE && url != null && PLACEHOLDER_AVATAR_URLS.contains(url)) {
+                task.setRawRequests(List.of(url))
+                        .setRawResponses(List.of(Map.of("status", "skipped", "reason", "placeholder")));
+                return null;
+            }
             return url != null && !url.isBlank() ? url : null;
         }
 

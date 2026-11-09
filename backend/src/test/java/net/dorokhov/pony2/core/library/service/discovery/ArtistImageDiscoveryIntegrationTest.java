@@ -258,6 +258,39 @@ class ArtistImageDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
+    void shouldSkipPlaceholderAvatarWithoutDownloadingOrSaving(boolean hasPreviousAvatar) throws IOException {
+        when(spotifyArtistDataService.discover(any(), anyBoolean())).thenReturn(artistData(null, "/avatar"));
+        ExternalImageFile previousAvatar = null;
+        if (hasPreviousAvatar) {
+            discover(null);
+            previousAvatar = image(ARTIST_AVATAR_IMAGE);
+        }
+        String placeholderUrl = "https://i.scdn.co/image/ab676161000051749a59d583f5b3d98825ddf0f6";
+        SpotifyArtistData data = artistData(null, null);
+        when(spotifyArtistDataService.discover(any(), anyBoolean())).thenReturn(new SpotifyArtistData(
+                data.artist(), data.matchedAlbum(), data.topTracks(), data.similarArtists(), data.biography(),
+                data.links(), data.imageUrl(), placeholderUrl));
+
+        discover(null);
+
+        assertNoImageResult(ARTIST_AVATAR_IMAGE);
+        DiscoveryTask task = latestTask(ARTIST_AVATAR_IMAGE);
+        assertThat(task.getRawRequests()).containsExactly(placeholderUrl);
+        assertThat(task.getRawResponses()).containsExactly(Map.of("status", "skipped", "reason", "placeholder"));
+        getTransactionTemplate().executeWithoutResult(status -> {
+            ArtistDiscovery index = artistDiscoveryRepository.findByArtistId(artist.getId()).orElseThrow();
+            assertThat(index.getAvatarExternalImage()).isNull();
+        });
+        assertThat(downloads.get()).isEqualTo(hasPreviousAvatar ? 1 : 0);
+        assertThat(externalImageRepository.count()).isZero();
+        assertImageFileCount(0);
+        if (previousAvatar != null) {
+            assertThat(previousAvatar.getFile()).doesNotExist();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
     void shouldClearImagesAndDeleteTheirFilesWhenArtistDataOrUrlsAreAbsent(boolean missingData) {
         discover(null);
         ExternalImageFile bio = image(ARTIST_BIO_IMAGE);
