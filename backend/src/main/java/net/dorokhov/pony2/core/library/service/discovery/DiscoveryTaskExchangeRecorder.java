@@ -3,11 +3,13 @@ package net.dorokhov.pony2.core.library.service.discovery;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +54,19 @@ public class DiscoveryTaskExchangeRecorder {
         List<Object> requests = requireNonNull(task.getRawRequests());
         List<Object> responses = requireNonNull(task.getRawResponses());
         // Task finalization must retain this response if the history transaction fails.
-        responses.add(JsonConverter.fromJsonOrString(response));
+        responses.add(normalizeLlmResponse(response));
         save(task, requests, responses);
+    }
+
+    private @Nullable Object normalizeLlmResponse(@Nullable String response) {
+        if (response == null) {
+            return null;
+        }
+        try {
+            return LlmJsonConverter.fromJson(response);
+        } catch (JacksonException e) {
+            return response;
+        }
     }
 
     public void completeExchange(DiscoveryTask task, String requestUrl, String response) {

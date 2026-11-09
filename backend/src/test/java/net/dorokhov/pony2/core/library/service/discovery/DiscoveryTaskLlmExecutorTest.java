@@ -197,7 +197,8 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"%s", "Here is the result:\n%s", "```json\n%s\n```"})
+    @ValueSource(strings = {"%s", "Here is the result:\n%s", "%s\nDone.", "```json\n%s\n```",
+            "Here is the result:\n```json\n%s\n```\nDone."})
     void shouldUseAndCacheCollectedJsonWithoutFormatting(String template) {
         String answer = "{\"answer\":\"Collected data\"}";
         String collected = template.formatted(answer);
@@ -213,8 +214,10 @@ class DiscoveryTaskLlmExecutorTest {
 
         assertThat(result).isEqualTo(collected);
         assertThat(handled).hasValue(1);
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(collected));
-        assertThat(operation.call(task(), request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(collected);
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(answer));
+        DiscoveryTask cachedTask = task();
+        assertThat(operation.call(cachedTask, request, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(collected);
+        assertThat(cachedTask.getRawResponses()).isEqualTo(task.getRawResponses());
         verify(model).call(any(Prompt.class));
         assertThat(cache.values()).singleElement().satisfies(entry ->
                 assertThat(JsonConverter.fromJson(entry, Map.class).get("response")).isEqualTo(collected));
@@ -224,10 +227,12 @@ class DiscoveryTaskLlmExecutorTest {
     @ValueSource(strings = {"{}", "{\"answer\":42}", "{\"answer\":\"Collected data\",\"extra\":true}"})
     void shouldUseCollectedJsonAcceptedByExistingConverter(String collected) {
         when(model.call(any(Prompt.class))).thenReturn(response(collected));
+        DiscoveryTask task = task();
 
-        assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, null, Function.identity()))
+        assertThat(operation.call(task, searchRequest(), AnswerResponse.class, null, Function.identity()))
                 .isEqualTo(collected);
 
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(collected));
         verify(model).call(any(Prompt.class));
     }
 
@@ -621,10 +626,12 @@ class DiscoveryTaskLlmExecutorTest {
     @ValueSource(strings = " ")
     void shouldSkipFormattingWhenNoDataWasCollected(String collectedResponse) {
         when(model.call(any(Prompt.class))).thenReturn(response(collectedResponse));
+        DiscoveryTask task = task();
 
-        assertThat(operation.call(task(), new ToolRequest(null), AnswerResponse.class, null, Function.identity()))
+        assertThat(operation.call(task, new ToolRequest(null), AnswerResponse.class, null, Function.identity()))
                 .isEqualTo(collectedResponse);
 
+        assertThat(task.getRawResponses()).containsExactly(collectedResponse);
         verify(model).call(any(Prompt.class));
     }
 

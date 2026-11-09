@@ -121,7 +121,9 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         SpotifyArtistData found = spotifyArtistData("spotify-artist");
         SpotifyArtistData result = new SpotifyArtistData(found.artist(), found.matchedAlbum(),
                 null, null, "Biography".repeat(1000), null, null, found.avatarUrl());
-        List<String> rawResponses = spotifyArtistStageResponses(result).stream().map(response -> "\n " + response + "\n").toList();
+        List<String> responses = spotifyArtistStageResponses(result);
+        List<String> rawResponses = responses.stream()
+                .map(response -> "Here is the result:\n```json\n" + response + "\n```\nDone.").toList();
         List<Prompt> prompts = new ArrayList<>();
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
@@ -183,7 +185,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                         assertThat(JsonConverter.mapFromJson(task.getResult(), String.class, Object.class)).doesNotContainKey("status");
                         assertThat(task.getRawRequests()).hasSize(5);
                         assertThat(task.getRawResponses()).containsExactlyElementsOf(
-                                rawResponses.stream().map(JsonConverter::fromJsonOrString).toList());
+                                responses.stream().map(JsonConverter::fromJson).toList());
                     });
         });
         assertEmptyTopTracks();
@@ -264,7 +266,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
     void shouldPersistRawExchangeFromCache() {
         Artist artist = saveArtist("Album");
         String result = spotifyArtistResponse("NOT_FOUND");
-        String rawResponse = "\n " + result + "\n";
+        String rawResponse = "Here is the result:\n```json\n" + result + "\n```\nDone.";
         when(model.call(any(Prompt.class)))
                 .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(rawResponse)))));
         service.discover(saveJob(), artist, true, null);
@@ -277,7 +279,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         assertThat(artistDataTasks()).hasSize(2).allSatisfy(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getRawRequests()).isEqualTo(originalTask.getRawRequests());
-            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawResponse));
+            assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(result));
         });
         verify(model, never()).call(any(Prompt.class));
     }
