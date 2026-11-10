@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 
@@ -12,7 +11,6 @@ public final class MusicBrainzDto {
 
     private MusicBrainzDto() {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public record ReleaseGroupSearch(
             int count,
             int offset,
@@ -23,7 +21,6 @@ public final class MusicBrainzDto {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public record ReleaseGroup(
             String id,
             @Nullable String title,
@@ -41,17 +38,14 @@ public final class MusicBrainzDto {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Release(String id, @Nullable String title) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public record ArtistCredit(@Nullable String name, @Nullable String joinphrase, Artist artist) {
         public ArtistCredit {
             requireNonNull(artist);
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Artist(
             String id, @Nullable String name, @Nullable Area area, @Nullable String country,
             @Nullable String disambiguation, @Nullable String type
@@ -61,7 +55,6 @@ public final class MusicBrainzDto {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Area(@JsonProperty("iso-3166-1-codes") List<String> country) {
         public Area {
             country = country != null ? List.copyOf(country) : List.of();

@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.web.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
 
@@ -14,7 +13,6 @@ public final class ArtistDiscoveryDataDto {
     private boolean biographyAvailable;
     private String spotifyArtistId;
 
-    @JsonInclude(JsonInclude.Include.ALWAYS)
     public @Nullable String getCountryCode() {
         return countryCode;
     }

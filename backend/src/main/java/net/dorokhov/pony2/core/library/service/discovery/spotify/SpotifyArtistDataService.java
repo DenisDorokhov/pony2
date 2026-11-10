@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery.spotify;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
@@ -226,16 +225,16 @@ public class SpotifyArtistDataService {
             @Nullable String avatarUrl
     ) {}
 
-    private record TopTracksResponse(@JsonProperty(required = true) @Nullable List<@NotNull @Valid TopTrack> topTracks) {}
+    private record TopTracksResponse(@Nullable List<@NotNull @Valid TopTrack> topTracks) {}
 
-    private record BiographyResponse(@JsonProperty(required = true) @Nullable String biography) {}
+    private record BiographyResponse(@Nullable String biography) {}
 
     private record AboutMediaResponse(
-            @JsonProperty(required = true) @Nullable List<@NotNull @Valid ExternalLink> links,
-            @JsonProperty(required = true) @Nullable String imageUrl
+            @Nullable List<@NotNull @Valid ExternalLink> links,
+            @Nullable String imageUrl
     ) {}
 
-    private record SimilarArtistsResponse(@JsonProperty(required = true) @Nullable List<@NotNull @Valid SpotifyArtist> similarArtists) {}
+    private record SimilarArtistsResponse(@Nullable List<@NotNull @Valid SpotifyArtist> similarArtists) {}
 
     private enum Status {
         FOUND, NOT_FOUND, AMBIGUOUS

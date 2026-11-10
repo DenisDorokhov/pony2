@@ -293,8 +293,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(artistSongs.path("artist").path("artist").path("id").asString()).isEqualTo(artist1.getId());
         assertThat(artistSongs.path("artist").path("artist").has("discoveryData")).isFalse();
         JsonNode artistDiscoveryData = artistSongs.path("artist").path("discoveryData");
-        assertThat(artistDiscoveryData.has("countryCode")).isTrue();
-        assertThat(artistDiscoveryData.path("countryCode").isNull()).isTrue();
+        assertThat(artistDiscoveryData.has("countryCode")).isFalse();
         assertThat(artistDiscoveryData.path("topSongIds").isArray()).isTrue();
         assertThat(artistDiscoveryData.path("topSongIds").size()).isZero();
         JsonNode albumSongs = artistSongs.path("albumSongs").get(0);

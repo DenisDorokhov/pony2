@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
@@ -22,11 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.cfg.CoercionAction;
-import tools.jackson.databind.cfg.CoercionInputShape;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.type.LogicalType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,14 +37,6 @@ import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAIN
 
 @Service
 public class MusicBrainzArtistDataService {
-
-    private static final JsonMapper RESPONSE_MAPPER = JsonMapper.builder()
-            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
-            .withCoercionConfig(LogicalType.Textual, config -> config
-                    .setCoercion(CoercionInputShape.Integer, CoercionAction.Fail)
-                    .setCoercion(CoercionInputShape.Float, CoercionAction.Fail)
-                    .setCoercion(CoercionInputShape.Boolean, CoercionAction.Fail))
-            .build();
 
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
@@ -96,8 +82,7 @@ public class MusicBrainzArtistDataService {
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ARTIST_DATA", 1) : null;
         String selectedId = llmExecutor.call(task, request, IdResponse.class, cacheSettings, response -> {
             try {
-                IdResponse data = RESPONSE_MAPPER.convertValue(
-                        response != null ? LlmJsonConverter.fromJson(response) : null, IdResponse.class);
+                IdResponse data = response != null ? LlmJsonConverter.fromJson(response, IdResponse.class) : null;
                 checkState(data != null, "The response must be a JSON object containing the id field.");
                 checkState(data.id() == null || input.candidates().stream().anyMatch(candidate -> candidate.artistId().equals(data.id())),
                         "Choose one of the supplied candidate IDs or null.");
@@ -150,7 +135,7 @@ public class MusicBrainzArtistDataService {
 
     private record AlbumContext(@Nullable String title, @Nullable Integer year, List<String> artistCreditNames) {}
 
-    private record IdResponse(@JsonProperty(required = true) @Nullable String id) {}
+    private record IdResponse(@Nullable String id) {}
 
     private record Request(String systemPrompt, String userPrompt, String model) implements DiscoveryTaskLlmExecutor.Request {
 

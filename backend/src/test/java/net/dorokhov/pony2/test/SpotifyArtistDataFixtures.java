@@ -32,7 +32,7 @@ public final class SpotifyArtistDataFixtures {
     public static String spotifyArtistResponse(String status) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", status);
-        for (String field : List.of("artist", "matchedAlbum", "topTracks", "similarArtists", "biography", "links", "imageUrl", "avatarUrl")) {
+        for (String field : List.of("artist", "matchedAlbum", "avatarUrl")) {
             response.put(field, null);
         }
         return JsonConverter.toJson(response);

@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -23,11 +22,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.cfg.CoercionAction;
-import tools.jackson.databind.cfg.CoercionInputShape;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.type.LogicalType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,14 +43,6 @@ public class MusicBrainzLlmService {
     private static final int CACHE_VERSION = 1;
     private static final int NORMALIZATION_CACHE_VERSION = 1;
     private static final String NORMALIZATION_CACHE_PREFIX = "MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION";
-
-    private static final JsonMapper RESPONSE_MAPPER = JsonMapper.builder()
-            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
-            .withCoercionConfig(LogicalType.Textual, config -> config
-                    .setCoercion(CoercionInputShape.Integer, CoercionAction.Fail)
-                    .setCoercion(CoercionInputShape.Float, CoercionAction.Fail)
-                    .setCoercion(CoercionInputShape.Boolean, CoercionAction.Fail))
-            .build();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ConfigService configService;
@@ -121,8 +107,7 @@ public class MusicBrainzLlmService {
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, NORMALIZATION_CACHE_PREFIX, NORMALIZATION_CACHE_VERSION) : null;
         return llmExecutor.call(task, request, NormalizationResponse.class, cacheSettings, response -> {
             try {
-                NormalizationResponse data = RESPONSE_MAPPER.convertValue(
-                        response != null ? LlmJsonConverter.fromJson(response) : null, NormalizationResponse.class);
+                NormalizationResponse data = response != null ? LlmJsonConverter.fromJson(response, NormalizationResponse.class) : null;
                 checkState(data != null, "The normalization response must be a JSON object.");
                 checkState(data.searchTitle() != null && !data.searchTitle().isBlank(),
                         "searchTitle must be a non-blank string.");
@@ -189,8 +174,7 @@ public class MusicBrainzLlmService {
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ALBUM_ARTIST_SEARCH", CACHE_VERSION) : null;
         return llmExecutor.call(task, request, ArtistNamesResponse.class, cacheSettings, response -> {
             try {
-                ArtistNamesResponse data = RESPONSE_MAPPER.convertValue(
-                        response != null ? LlmJsonConverter.fromJson(response) : null, ArtistNamesResponse.class);
+                ArtistNamesResponse data = response != null ? LlmJsonConverter.fromJson(response, ArtistNamesResponse.class) : null;
                 checkState(data != null, "The artist search response must be a JSON object.");
                 checkState(data.artistNames() != null, "artistNames must be an array.");
                 List<String> names = new ArrayList<>();
@@ -251,8 +235,7 @@ public class MusicBrainzLlmService {
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, keyPrefix, CACHE_VERSION) : null;
         return llmExecutor.call(task, request, IdResponse.class, cacheSettings, response -> {
             try {
-                IdResponse data = RESPONSE_MAPPER.convertValue(
-                        response != null ? LlmJsonConverter.fromJson(response) : null, IdResponse.class);
+                IdResponse data = response != null ? LlmJsonConverter.fromJson(response, IdResponse.class) : null;
                 checkState(data != null, "The LLM response must be a JSON object containing the id field.");
                 String id = data.id();
                 checkState(id == null || candidates.contains(id),
@@ -301,7 +284,7 @@ public class MusicBrainzLlmService {
     record ReleaseGroupSelection(MusicBrainzDto.ReleaseGroup group, String response, List<String> searchArtistNames) {
     }
 
-    private record IdResponse(@JsonProperty(required = true) @Nullable String id) {
+    private record IdResponse(@Nullable String id) {
     }
 
     private record ArtistNamesResponse(List<String> artistNames) {

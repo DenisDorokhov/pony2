@@ -2693,7 +2693,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             if (prompt.getInstructions().getFirst().getText().startsWith("Choose alternative album artist names")) {
                 return response("{\"artistNames\":[]}");
             }
-            return response("{\"status\":\"NOT_FOUND\"}");
+            return response(spotifyArtistResponse("NOT_FOUND"));
         });
     }
 

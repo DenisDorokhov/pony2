@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.common;
 
+import jakarta.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -58,5 +59,46 @@ class LlmJsonConverterTest {
                 .isInstanceOf(JacksonException.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "Result: {}", "```json\n{}\n```"})
+    void shouldRejectOmittedNullableField(String response) {
+        assertThatThrownBy(() -> LlmJsonConverter.fromJson(response, NullableValue.class))
+                .isInstanceOf(JacksonException.class);
+    }
+
+    @Test
+    void shouldAcceptExplicitNullForNullableFields() {
+        assertThat(LlmJsonConverter.fromJson("{\"value\":null}", NullableValue.class))
+                .isEqualTo(new NullableValue(null));
+        assertThat(LlmJsonConverter.fromJson("{\"nested\":{\"value\":null}}", NestedValue.class))
+                .isEqualTo(new NestedValue(new NullableValue(null)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{\"nested\":{}}", "Result: {\"nested\":{}}"})
+    void shouldRejectOmittedNullableFieldInNestedObject(String response) {
+        assertThatThrownBy(() -> LlmJsonConverter.fromJson(response, NestedValue.class))
+                .isInstanceOf(JacksonException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{\"name\":\"Foobar\",\"extra\":true}", "{\"name\":42}",
+            "{\"name\":1.5}", "{\"name\":true}"})
+    void shouldRejectUnknownFieldsAndCoercionToText(String response) {
+        assertThatThrownBy(() -> LlmJsonConverter.fromJson(response, NamedValue.class))
+                .isInstanceOf(JacksonException.class);
+    }
+
+    @Test
+    void shouldKeepStoredJsonParsingPermissive() {
+        assertThat(JsonConverter.fromJson("{}", NullableValue.class)).isEqualTo(new NullableValue(null));
+        assertThat(JsonConverter.fromJson("{\"name\":\"Foobar\",\"extra\":true}", NamedValue.class))
+                .isEqualTo(new NamedValue("Foobar"));
+    }
+
     public record NamedValue(String name) {}
+
+    public record NullableValue(@Nullable String value) {}
+
+    public record NestedValue(NullableValue nested) {}
 }

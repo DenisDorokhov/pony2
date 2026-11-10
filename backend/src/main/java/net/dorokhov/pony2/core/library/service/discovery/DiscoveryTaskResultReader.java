@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.ArtistBiographyData;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -88,7 +87,6 @@ public class DiscoveryTaskResultReader {
                         result -> toArtistBiography(result.getArtistId(), null, result.getResult())));
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Biography(
             @Nullable String biography, @Nullable List<SpotifyArtistData.ExternalLink> links,
             @Nullable List<SpotifyArtistData.SpotifyArtist> similarArtists

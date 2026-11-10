@@ -353,22 +353,56 @@ class SpotifyArtistDataServiceTest {
     }
 
     @Test
-    void shouldAcceptIdentityWhenNullableFieldIsMissing() {
+    void shouldFormatIdentityWithMissingAvatarBeforeAcceptingExplicitNull() {
         Map<String, Object> identity = new LinkedHashMap<>(JsonConverter.mapFromJson(response, String.class, Object.class));
         identity.remove("avatarUrl");
         queuedResponses.add(JsonConverter.toJson(identity));
+        identity.put("avatarUrl", null);
+        queuedFormattingResponses.add(JsonConverter.toJson(identity));
         SpotifyArtistData expected = found();
+        Artist artist = artist();
+        DiscoveryTask task = task(artist);
+        SpotifyArtistData expectedWithoutAvatar = new SpotifyArtistData(expected.artist(), expected.matchedAlbum(),
+                expected.topTracks(), expected.similarArtists(), expected.biography(), expected.links(), expected.imageUrl(), null);
 
-        assertThat(service.discover(task(artist()), true)).isEqualTo(new SpotifyArtistData(expected.artist(),
-                expected.matchedAlbum(), expected.topTracks(), expected.similarArtists(), expected.biography(),
-                expected.links(), expected.imageUrl(), null));
+        assertThat(service.discover(task, true)).isEqualTo(expectedWithoutAvatar);
+        assertThat(service.discover(task(artist), true)).isEqualTo(expectedWithoutAvatar);
 
-        assertThat(modelCalls).isEqualTo(5);
-        assertThat(prompts).allSatisfy(prompt -> assertThat(
-                requireNonNull(requireNonNull(((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType())
-                .isEqualTo(ResponseFormat.Type.TEXT));
+        assertThat(modelCalls).isEqualTo(6);
+        assertThat(prompts).filteredOn(prompt -> requireNonNull(requireNonNull(
+                ((OpenAiChatOptions) prompt.getOptions())).getResponseFormat()).getType() == ResponseFormat.Type.JSON_SCHEMA)
+                .singleElement().satisfies(prompt -> {
+                    assertThat(((OpenAiChatOptions) prompt.getOptions()).getToolChoice()).isEqualTo("none");
+                    assertThat(JsonConverter.fromJson(prompt.getInstructions().getLast().getText(), Map.class))
+                            .doesNotContainKey("avatarUrl");
+                });
+        assertThat(task.getRawRequests()).hasSize(5);
+        assertThat(task.getRawResponses()).hasSize(5);
         assertThat(cache).hasSize(5);
         verifyNoInteractions(logService);
+    }
+
+    @Test
+    void shouldRevalidateCachedIdentityWhenAvatarFieldIsMissing() {
+        Artist artist = artist();
+        assertThat(service.discover(task(artist), true)).isEqualTo(found());
+        String cacheKey = cache.keySet().stream().filter(key -> key.startsWith("SPOTIFY_ARTIST_IDENTITY:"))
+                .findFirst().orElseThrow();
+        Map<String, Object> entry = JsonConverter.mapFromJson(cache.get(cacheKey), String.class, Object.class);
+        Map<String, Object> identity = JsonConverter.mapFromJson((String) entry.get("response"), String.class, Object.class);
+        identity.remove("avatarUrl");
+        entry.put("response", JsonConverter.toJson(identity));
+        cache.put(cacheKey, JsonConverter.toJson(entry));
+
+        assertThat(service.discover(task(artist), true)).isEqualTo(found());
+
+        assertThat(modelCalls).isEqualTo(6);
+        assertThat(prompts.getLast().getInstructions().get(2)).isInstanceOf(AssistantMessage.class);
+        verify(logService).warn(any(), eq("Invalid Spotify response from the LLM for artist '{}'."),
+                eq(artist.getName()), any(RuntimeException.class));
+        Map<String, Object> repaired = JsonConverter.mapFromJson((String) cacheEntry("SPOTIFY_ARTIST_IDENTITY").get("response"),
+                String.class, Object.class);
+        assertThat(repaired.get("avatarUrl")).isEqualTo(found().avatarUrl());
     }
 
     @ParameterizedTest
@@ -505,11 +539,11 @@ class SpotifyArtistDataServiceTest {
                 Arguments.of(null, false, null),
                 Arguments.of("", false, ""),
                 Arguments.of("not JSON", true, "not JSON"),
-                Arguments.of("{}", false, "{}"),
-                Arguments.of("{\"status\":\"FOUND\"}", false, "{\"status\":\"FOUND\"}"),
+                Arguments.of("{}", true, "{}"),
+                Arguments.of("{\"status\":\"FOUND\"}", true, "{\"status\":\"FOUND\"}"),
                 Arguments.of("Result: {status: 'FOUND'}", true, "Result: {status: 'FOUND'}"),
                 Arguments.of("Result: {\"status\":\"UNKNOWN\"}", true, "{\"status\":\"UNKNOWN\"}"),
-                Arguments.of("Result: {\"status\":\"FOUND\"}", false, "{\"status\":\"FOUND\"}"));
+                Arguments.of("Result: {\"status\":\"FOUND\"}", true, "{\"status\":\"FOUND\"}"));
     }
 
     @Test
@@ -890,7 +924,7 @@ class SpotifyArtistDataServiceTest {
     private static Stream<String> invalidResponses() {
         SpotifyArtistData data = found();
         return Stream.of(
-                "{\"status\":null}",
+                "{\"status\":null,\"artist\":null,\"matchedAlbum\":null,\"avatarUrl\":null}",
                 spotifyArtistResponse(new SpotifyArtistData(null, data.matchedAlbum(), null, null, null, null, null, null)),
                 spotifyArtistResponse(new SpotifyArtistData(data.artist(), null, null, null, null, null, null, null)),
                 spotifyArtistResponse(new SpotifyArtistData(new SpotifyArtistData.SpotifyArtist("", "Artist", "url"),

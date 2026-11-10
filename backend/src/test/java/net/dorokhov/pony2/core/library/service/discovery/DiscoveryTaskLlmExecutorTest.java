@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
@@ -225,20 +226,8 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"{}", "{\"answer\":42}", "{\"answer\":\"Collected data\",\"extra\":true}"})
-    void shouldUseCollectedJsonAcceptedByExistingConverter(String collected) {
-        when(model.call(any(Prompt.class))).thenReturn(response(collected));
-        DiscoveryTask task = task();
-
-        assertThat(operation.call(task, searchRequest(), AnswerResponse.class, null, Function.identity()))
-                .isEqualTo(collected);
-
-        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(collected));
-        verify(model).call(any(Prompt.class));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"not JSON", "{\"answer\":{}}", "null"})
+    @ValueSource(strings = {"not JSON", "{\"answer\":{}}", "null", "{}", "{\"answer\":42}",
+            "{\"answer\":\"Collected data\",\"extra\":true}"})
     void shouldFormatUnusableCollectedJsonWithoutCallingHandlerTwice(String collected) {
         String formatted = "{\"answer\":\"Formatted data\"}";
         when(model.call(any(Prompt.class))).thenReturn(response(collected), response(formatted));
@@ -257,6 +246,32 @@ class DiscoveryTaskLlmExecutorTest {
         assertThat(requireNonNull(formattingOptions).getToolChoice()).isEqualTo("none");
         assertThat(requireNonNull(formattingOptions.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
         assertThat(captured.getAllValues().getLast().getInstructions().getLast().getText()).isEqualTo(collected);
+    }
+
+    @Test
+    void shouldFormatOmittedNullableFieldBeforeInvokingHandler() {
+        String collected = "{}";
+        String formatted = "{\"answer\":null}";
+        when(model.call(any(Prompt.class))).thenReturn(response(collected), response(formatted));
+        AtomicInteger handled = new AtomicInteger();
+        DiscoveryTask task = task();
+
+        NullableAnswerResponse result = operation.call(task, searchRequest(), NullableAnswerResponse.class, CACHE_SETTINGS, answer -> {
+            handled.incrementAndGet();
+            return LlmJsonConverter.fromJson(answer, NullableAnswerResponse.class);
+        });
+
+        assertThat(result).isEqualTo(new NullableAnswerResponse(null));
+        assertThat(handled).hasValue(1);
+        assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJson(formatted));
+        assertThat(cache).hasSize(1);
+        ArgumentCaptor<Prompt> captured = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(2)).call(captured.capture());
+        Prompt formatting = captured.getAllValues().getLast();
+        OpenAiChatOptions options = (OpenAiChatOptions) formatting.getOptions();
+        assertThat(requireNonNull(options).getToolChoice()).isEqualTo("none");
+        assertThat(requireNonNull(options.getResponseFormat()).getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
+        assertThat(formatting.getInstructions().getLast().getText()).isEqualTo(collected);
     }
 
     @Test
@@ -1114,6 +1129,8 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     private record AnswerResponse(String answer) {}
+
+    private record NullableAnswerResponse(@Nullable String answer) {}
 
     private record OtherResponse(String value) {}
 

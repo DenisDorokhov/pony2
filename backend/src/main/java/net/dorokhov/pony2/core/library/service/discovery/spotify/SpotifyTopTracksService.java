@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery.spotify;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
 import net.dorokhov.pony2.api.library.domain.AlbumDiscoveryData;
@@ -29,11 +28,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.cfg.CoercionAction;
-import tools.jackson.databind.cfg.CoercionInputShape;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.type.LogicalType;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -55,14 +49,6 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 public class SpotifyTopTracksService {
 
     private static final int CACHE_VERSION = 1;
-
-    private static final JsonMapper RESPONSE_MAPPER = JsonMapper.builder()
-            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
-            .withCoercionConfig(LogicalType.Textual, config -> config
-                    .setCoercion(CoercionInputShape.Integer, CoercionAction.Fail)
-                    .setCoercion(CoercionInputShape.Float, CoercionAction.Fail)
-                    .setCoercion(CoercionInputShape.Boolean, CoercionAction.Fail))
-            .build();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -271,8 +257,7 @@ public class SpotifyTopTracksService {
     }
 
     private Map<String, String> parseAlbumMatches(@Nullable String response, Map<String, String> spotifyAlbums, List<AlbumData> albums) {
-        AlbumMatchesResponse parsed = RESPONSE_MAPPER.convertValue(
-                response != null ? LlmJsonConverter.fromJson(response) : null, AlbumMatchesResponse.class);
+        AlbumMatchesResponse parsed = response != null ? LlmJsonConverter.fromJson(response, AlbumMatchesResponse.class) : null;
         checkState(parsed != null,
                 "The LLM album response must be a JSON object containing only the albumMatches field.");
         checkState(parsed.albumMatches() != null, "The LLM albumMatches field must be a JSON array.");
@@ -296,8 +281,7 @@ public class SpotifyTopTracksService {
     }
 
     private List<String> parseTrackMatches(@Nullable String response, List<String> albumIds, List<AlbumTracks> albums) {
-        TrackMatchesResponse parsed = RESPONSE_MAPPER.convertValue(
-                response != null ? LlmJsonConverter.fromJson(response) : null, TrackMatchesResponse.class);
+        TrackMatchesResponse parsed = response != null ? LlmJsonConverter.fromJson(response, TrackMatchesResponse.class) : null;
         checkState(parsed != null,
                 "The LLM track response must be a JSON object containing only the trackMatches field.");
         checkState(parsed.trackMatches() != null, "The LLM trackMatches field must be a JSON array.");
@@ -338,12 +322,12 @@ public class SpotifyTopTracksService {
 
     private record AlbumMatch(
             String spotifyAlbumId,
-            @JsonProperty(required = true) @Nullable String databaseAlbumId
+            @Nullable String databaseAlbumId
     ) {}
 
     private record TrackMatchesResponse(List<TrackMatch> trackMatches) {}
 
-    private record TrackMatch(@JsonProperty(required = true) @Nullable String databaseTrackId) {}
+    private record TrackMatch(@Nullable String databaseTrackId) {}
 
     private record Request(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
         @Override
