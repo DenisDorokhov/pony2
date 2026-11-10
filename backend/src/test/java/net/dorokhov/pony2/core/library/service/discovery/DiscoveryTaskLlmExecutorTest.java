@@ -51,6 +51,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1122,6 +1123,11 @@ class DiscoveryTaskLlmExecutorTest {
 
     private record RequestWithoutModel(@Nullable Double temperature) implements DiscoveryTaskLlmExecutor.Request {
         @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Collections.singletonMap("temperature", temperature));
+        }
+
+        @Override
         public Prompt toPrompt() {
             return new Prompt("Artist", temperature != null ? ChatOptions.builder().temperature(temperature).build() : null);
         }
@@ -1129,12 +1135,22 @@ class DiscoveryTaskLlmExecutorTest {
 
     private record MapRequest(Object input) implements DiscoveryTaskLlmExecutor.Request {
         @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("input", input));
+        }
+
+        @Override
         public Prompt toPrompt() {
             return new Prompt(JsonConverter.toJson(input));
         }
     }
 
     private record ToolRequest(@Nullable String toolChoice) implements DiscoveryTaskLlmExecutor.Request {
+        @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Collections.singletonMap("toolChoice", toolChoice));
+        }
+
         @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage("Find artist data"), new UserMessage("Artist")),
@@ -1146,6 +1162,11 @@ class DiscoveryTaskLlmExecutorTest {
     private record DialogueRequest(List<Message> messages) implements DiscoveryTaskLlmExecutor.Request {
         private DialogueRequest {
             messages = List.copyOf(messages);
+        }
+
+        @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("messages", messages));
         }
 
         @Override

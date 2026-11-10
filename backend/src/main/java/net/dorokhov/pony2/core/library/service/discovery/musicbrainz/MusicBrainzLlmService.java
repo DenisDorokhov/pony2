@@ -313,6 +313,12 @@ public class MusicBrainzLlmService {
     private record PreparationRequest(
             String systemPrompt, String userPrompt, String model, String toolChoice
     ) implements DiscoveryTaskLlmExecutor.Request {
+
+        @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt, "toolChoice", toolChoice));
+        }
+
         @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
@@ -321,11 +327,11 @@ public class MusicBrainzLlmService {
     }
 
     private record Request(
-            String systemPrompt, String userPrompt, @JsonIgnore String cacheUserPrompt, @JsonIgnore String model
+            String systemPrompt, String userPrompt, @JsonIgnore String cacheUserPrompt, String model
     ) implements DiscoveryTaskLlmExecutor.Request {
         @Override
         public String toCacheJson() {
-            return JsonConverter.toJson(new Request(systemPrompt, cacheUserPrompt, cacheUserPrompt, model));
+            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", cacheUserPrompt));
         }
 
         @Override

@@ -252,7 +252,7 @@ class ArtistBioImageFacesServiceTest {
     }
 
     @Test
-    void shouldReuseOnlyAnalysisOfTheCurrentImageAndConfiguration() {
+    void shouldReuseAnalysisAndCacheAcrossModelAndEndpointChanges() {
         ArtistBioImageFacesService.Result result = service.discover(task(), true);
         when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
                 .thenReturn(Optional.of(task().setResult(JsonConverter.toJson(result))));
@@ -260,9 +260,13 @@ class ArtistBioImageFacesServiceTest {
         assertThat(service.shouldDiscover(artist)).isFalse();
 
         config = new ConfigSet(null, List.of(), true, config.llmUrl(), "another-model", null);
-        assertThat(service.shouldDiscover(artist)).isTrue();
+        assertThat(service.shouldDiscover(artist)).isFalse();
+        assertThat(service.discover(task(), true)).isEqualTo(result);
         config = new ConfigSet(null, List.of(), true, "http://another-endpoint/v1", "face-test", null);
-        assertThat(service.shouldDiscover(artist)).isTrue();
+        assertThat(service.shouldDiscover(artist)).isFalse();
+        assertThat(service.discover(task(), true)).isEqualTo(result);
+        assertThat(requests).hasSize(1);
+        assertThat(cache).hasSize(1);
         config = new ConfigSet(null, List.of(), true, "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "face-test", null);
         when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
                 .thenReturn(Optional.of(task().setResult(null)));

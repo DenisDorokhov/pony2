@@ -194,7 +194,12 @@ public class ArtistBioImageFacesService {
     ) implements DiscoveryTaskLlmExecutor.Request {
 
         private String analysisKey() {
-            return Hashing.sha256().hashString(JsonConverter.toJson(this), UTF_8).toString();
+            return Hashing.sha256().hashString(toCacheJson(), UTF_8).toString();
+        }
+
+        @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("prompt", prompt, "imageHash", imageHash, "version", version));
         }
 
         @Override

@@ -296,17 +296,15 @@ public class DiscoveryTaskLlmExecutor {
 
     /**
      * A serializable snapshot of all prompt inputs, including previous messages and any model options.
-     * Its JSON is used for the raw request and, by default, the cache key.
+     * Its JSON is used for the raw request; cache key inputs are selected explicitly by each implementation.
      */
     public interface Request {
         Prompt toPrompt();
 
         /**
-         * Returns the JSON used to derive the cache key. Implementations may exclude volatile metadata.
+         * Returns explicitly selected inputs used to derive the cache key, excluding the LLM model and endpoint.
          */
-        default String toCacheJson() {
-            return JsonConverter.toJson(this);
-        }
+        String toCacheJson();
     }
 
     public record CacheSettings(DiscoveryCacheRegion region, String keyPrefix, int version) {}
@@ -316,6 +314,12 @@ public class DiscoveryTaskLlmExecutor {
     private record CacheEntry(Object request, @Nullable String response) {}
 
     private record FollowUpRequest(Request originalRequest, @Nullable String previousResponse, String userPrompt) implements Request {
+
+        @Override
+        public String toCacheJson() {
+            throw new UnsupportedOperationException("Follow-up requests are not cached.");
+        }
+
         @Override
         public Prompt toPrompt() {
             Prompt originalPrompt = originalRequest.toPrompt();

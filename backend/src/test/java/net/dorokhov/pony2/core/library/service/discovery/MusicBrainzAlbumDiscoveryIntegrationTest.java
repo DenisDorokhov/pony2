@@ -568,6 +568,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(requests).hasSize(3);
             assertThat(requests.get(0)).isEqualTo(SEARCH_URL);
             assertThat(requests.get(1)).isInstanceOf(Map.class);
+            Map<?, ?> snapshot = (Map<?, ?>) requests.get(1);
+            assertThat(snapshot.get("model")).isEqualTo("test");
+            assertThat(snapshot.containsKey("cacheUserPrompt")).isFalse();
             assertThat(requests.get(2)).isEqualTo(ARTIST_URL);
             assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString(rawSearchResponse), JsonConverter.fromJsonOrString("{\"id\":\"group\"}"), JsonConverter.fromJsonOrString(rawArtistResponse));
         });
@@ -741,10 +744,16 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         verify(model, times(cacheEnabled ? 2 : 4)).call(any(Prompt.class));
         if (cacheEnabled) {
             List<Object> requests = tasks.getFirst().getRawRequests();
+            Map<?, ?> groupRequest = (Map<?, ?>) requireNonNull(requests).get(1);
+            Map<?, ?> artistRequest = (Map<?, ?>) requests.get(2);
+            Map<String, Object> groupCacheInput = Map.of("systemPrompt", groupRequest.get("systemPrompt"),
+                    "userPrompt", groupRequest.get("userPrompt"), "responseSchema", groupRequest.get("responseSchema"));
+            Map<String, Object> artistCacheInput = Map.of("systemPrompt", artistRequest.get("systemPrompt"),
+                    "userPrompt", artistRequest.get("userPrompt"), "responseSchema", artistRequest.get("responseSchema"));
             assertThat(cacheRepository.findAll()).allSatisfy(cache -> assertThat(cache.getRegion()).isEqualTo(MUSICBRAINZ))
                     .extracting(DiscoveryCache::getKey).containsExactlyInAnyOrder(
-                            "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP:" + Hashing.sha256().hashString(JsonConverter.toJson(requireNonNull(requests).get(1)), UTF_8),
-                            "MUSICBRAINZ_ALBUM_DATA_ARTIST:" + Hashing.sha256().hashString(JsonConverter.toJson(requests.get(2)), UTF_8));
+                            "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP:" + Hashing.sha256().hashString(JsonConverter.toJson(groupCacheInput), UTF_8),
+                            "MUSICBRAINZ_ALBUM_DATA_ARTIST:" + Hashing.sha256().hashString(JsonConverter.toJson(artistCacheInput), UTF_8));
         } else {
             assertThat(cacheRepository.count()).isZero();
         }
@@ -798,7 +807,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(requests).hasSize(4);
             for (int index : List.of(1, 2)) {
                 Map<?, ?> request = (Map<?, ?>) requests.get(index);
-                assertThat(request).hasSize(3);
+                assertThat(request).hasSize(4);
+                assertThat(request.get("model")).isEqualTo("test");
+                assertThat(request.containsKey("cacheUserPrompt")).isFalse();
                 assertThat(request.get("userPrompt")).asString().contains(
                         "\"created\":\"2026-10-11T", "\"metadata\":{\"created\":\"album-metadata\"}", "complete-response-marker");
             }
@@ -1247,8 +1258,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"model", "prompt", "title"})
-    void shouldSeparateNormalizationCacheByModelPromptAndOriginalTitle(String change) throws IOException {
+    @ValueSource(strings = {"prompt", "title"})
+    void shouldSeparateNormalizationCacheByPromptAndOriginalTitle(String change) throws IOException {
         enableLlm();
         search(List.of());
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
@@ -1263,8 +1274,6 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             verify(model, times(1)).call(any(Prompt.class));
             String originalKey = cacheRepository.findAll().getFirst().getKey();
             switch (change) {
-                case "model" -> updateConfig(new ConfigSetUpdateCommand()
-                        .setDiscoveryEnabled(true).setLlmUrl("http://localhost:11434/v1").setLlmModel("different-model"));
                 case "prompt" -> ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationPrompt", originalPrompt + "\n");
                 case "title" -> albumRepository.save(album.setName("Different title"));
                 default -> throw new IllegalArgumentException(change);
@@ -2003,7 +2012,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldFindBillyNovikOnlyAfterExistingAttemptsAndCacheAlternativeSearch(boolean cacheEnabled) {
+    void shouldFindBillyNovikOnlyAfterExistingAttemptsAndReuseCacheAcrossModelAndEndpointChanges(boolean cacheEnabled) {
         enableLlm();
         artistRepository.save(artist.setName("Billy’s Band"));
         albumRepository.save(album.setName("Песни Егора Летова").setYear(2018));
@@ -2033,6 +2042,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
 
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
+        updateConfig(new ConfigSetUpdateCommand().setDiscoveryEnabled(true)
+                .setLlmUrl("http://another-endpoint/v1").setLlmModel("different-model"));
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
 
         verify(model, times(cacheEnabled ? 3 : 6)).call(any(Prompt.class));

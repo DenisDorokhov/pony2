@@ -347,6 +347,11 @@ public class SpotifyTopTracksService {
 
     private record Request(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
         @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt));
+        }
+
+        @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
         }

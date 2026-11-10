@@ -36,6 +36,7 @@ import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -246,12 +247,22 @@ public class SpotifyArtistDataService {
             List<String> albumTitles
     ) implements DiscoveryTaskLlmExecutor.Request {
         @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt, "albumTitles", albumTitles));
+        }
+
+        @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
         }
     }
 
     private record ArtistRequest(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
+        @Override
+        public String toCacheJson() {
+            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt));
+        }
+
         @Override
         public Prompt toPrompt() {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));

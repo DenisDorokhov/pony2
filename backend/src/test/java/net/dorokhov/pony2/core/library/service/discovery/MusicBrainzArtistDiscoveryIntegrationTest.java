@@ -359,12 +359,16 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldReuseLlmCacheAndRecordBothExchanges(boolean cacheEnabled) {
+    void shouldReuseLlmCacheAcrossModelAndEndpointChangesAndRecordBothExchanges(boolean cacheEnabled) throws Exception {
         albumResult(album, "nick-cave", "Nick Cave", List.of("AU"));
         relatedAlbumResult();
         when(model.call(any(Prompt.class))).thenReturn(response("{\"id\":\"nick-cave\"}"));
 
         service.discover(job(), artist, cacheEnabled, null);
+        registration.close();
+        configService.update(new ConfigSetUpdateCommand().setDiscoveryEnabled(true)
+                .setLlmUrl("http://another-endpoint/v1").setLlmModel("different-model"));
+        registration = jobSynchronizer.registerDiscoveryJob();
         service.discover(job(), artist, cacheEnabled, null);
 
         verify(model, times(cacheEnabled ? 1 : 2)).call(any(Prompt.class));
@@ -373,7 +377,11 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(task.getRawRequests()).hasSize(1);
             assertThat(task.getRawResponses()).containsExactly(JsonConverter.fromJsonOrString("{\"id\":\"nick-cave\"}"));
         });
-        assertThat(tasks.getFirst().getRawRequests()).isEqualTo(tasks.getLast().getRawRequests());
+        if (cacheEnabled) {
+            assertThat(tasks.getFirst().getRawRequests()).isEqualTo(tasks.getLast().getRawRequests());
+        } else {
+            assertThat(tasks.getFirst().getRawRequests()).isNotEqualTo(tasks.getLast().getRawRequests());
+        }
         verifyNoInteractions(musicBrainzClient);
     }
 
