@@ -4,6 +4,8 @@ import jakarta.annotation.Nullable;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.cfg.EnumFeature;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -15,6 +17,9 @@ public final class JsonConverter {
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .configure(EnumFeature.READ_ENUMS_USING_TO_STRING, false)
             .configure(EnumFeature.WRITE_ENUMS_USING_TO_STRING, false)
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .disable(MapperFeature.SORT_CREATOR_PROPERTIES_FIRST)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
             .build();
 
     private JsonConverter() {

@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery.spotify;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
@@ -241,7 +240,6 @@ public class SpotifyArtistDataService {
         FOUND, NOT_FOUND, AMBIGUOUS
     }
 
-    @JsonPropertyOrder({"systemPrompt", "userPrompt", "albumTitles"})
     private record Request(
             String systemPrompt,
             String userPrompt,
@@ -253,7 +251,6 @@ public class SpotifyArtistDataService {
         }
     }
 
-    @JsonPropertyOrder({"systemPrompt", "userPrompt"})
     private record ArtistRequest(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
         @Override
         public Prompt toPrompt() {

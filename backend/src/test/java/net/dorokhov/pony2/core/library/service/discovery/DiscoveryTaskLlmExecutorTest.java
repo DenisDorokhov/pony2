@@ -784,6 +784,32 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @Test
+    void shouldReuseCacheRegardlessOfObjectFieldOrderButDistinguishValuesAndListOrder() {
+        String original = "{\"album\":{\"title\":\"Album\",\"artistName\":\"Artist\"},\"tracks\":[\"First\",\"Second\"]}";
+        String reordered = "{\"tracks\":[\"First\",\"Second\"],\"album\":{\"artistName\":\"Artist\",\"title\":\"Album\"}}";
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"answer\":\"Accepted\"}"));
+        DiscoveryTask task = task();
+        operation.call(task, new MapRequest(JsonConverter.fromJson(original)), AnswerResponse.class,
+                CACHE_SETTINGS, Function.identity());
+        DiscoveryTask cachedTask = task();
+
+        assertThat(operation.call(cachedTask, new MapRequest(JsonConverter.fromJson(reordered)), AnswerResponse.class,
+                CACHE_SETTINGS, Function.identity())).isEqualTo("{\"answer\":\"Accepted\"}");
+
+        assertThat(cache).hasSize(1);
+        assertThat(cachedTask.getRawRequests()).isEqualTo(task.getRawRequests());
+        verify(model).call(any(Prompt.class));
+
+        operation.call(task(), new MapRequest(JsonConverter.fromJson(original.replace("Artist", "Other artist"))),
+                AnswerResponse.class, CACHE_SETTINGS, Function.identity());
+        operation.call(task(), new MapRequest(JsonConverter.fromJson(original.replace(
+                "[\"First\",\"Second\"]", "[\"Second\",\"First\"]"))), AnswerResponse.class, CACHE_SETTINGS, Function.identity());
+
+        assertThat(cache).hasSize(3);
+        verify(model, times(3)).call(any(Prompt.class));
+    }
+
+    @Test
     void shouldSeparateCachedResponsesBySchema() {
         DialogueRequest request = searchRequest();
 
@@ -1098,6 +1124,13 @@ class DiscoveryTaskLlmExecutorTest {
         @Override
         public Prompt toPrompt() {
             return new Prompt("Artist", temperature != null ? ChatOptions.builder().temperature(temperature).build() : null);
+        }
+    }
+
+    private record MapRequest(Object input) implements DiscoveryTaskLlmExecutor.Request {
+        @Override
+        public Prompt toPrompt() {
+            return new Prompt(JsonConverter.toJson(input));
         }
     }
 

@@ -47,6 +47,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -720,7 +721,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         String originalResponse = rawSearchResponse;
 
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
-        rawSearchResponse = JsonConverter.toPrettyJson(reverseObjectFields(JsonConverter.fromJson(originalResponse)));
+        rawSearchResponse = JsonMapper.builder().build().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(reverseObjectFields(JsonConverter.fromJson(originalResponse)));
         assertThat(rawSearchResponse).isNotEqualTo(originalResponse);
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
 
@@ -730,9 +732,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(JsonConverter.fromJson(task.getResult(), MusicBrainzAlbumData.class).artistId()).isEqualTo("artist");
             List<Object> requests = task.getRawRequests();
             assertThat(requests).hasSize(4);
-            assertThat(JsonConverter.toJson(requests.get(1))).startsWith("{\"systemPrompt\":");
             assertThat(((Map<?, ?>) requests.get(1)).get("userPrompt")).asString().contains(
-                    "Album from the library: {\"title\":\"Reign in Blood\",\"year\":1986,\"artistName\":\"Slayer\"}");
+                    "Album from the library: {\"artistName\":\"Slayer\",\"title\":\"Reign in Blood\",\"year\":1986}");
             assertThat(task.getRawResponses()).hasSize(4);
         });
         assertThat(tasks.stream().map(task -> requireNonNull(task.getRawResponses()).getFirst()))
@@ -785,7 +786,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
         searchResponse.put("created", "2026-10-11T11:00:00Z");
-        rawSearchResponse = JsonConverter.toPrettyJson(reverseObjectFields(searchResponse));
+        rawSearchResponse = JsonMapper.builder().build().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(reverseObjectFields(searchResponse));
         albumService.discover(job(DiscoveryType.ALBUM), album, cacheEnabled, null);
 
         List<DiscoveryTask> tasks = taskRepository.findAll();
@@ -1016,7 +1018,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
                     .isEqualTo(Map.of("albumTitle", requireNonNull(album.getName())));
             assertThat(prompt.getInstructions().getLast().getText()).contains("Collect all data needed");
             Map<?, ?> schema = JsonConverter.fromJson(options.getResponseFormat().getJsonSchema(), Map.class);
-            assertThat(schema.get("required")).isEqualTo(List.of("searchTitle", "searchFragments", "alternativeTitles"));
+            assertThat(schema.get("required")).isEqualTo(List.of("alternativeTitles", "searchFragments", "searchTitle"));
             assertThat(schema.get("additionalProperties")).isEqualTo(false);
             Map<?, ?> properties = (Map<?, ?>) schema.get("properties");
             assertThat(((Map<?, ?>) properties.get("searchTitle")).get("type")).isEqualTo("string");
@@ -2021,6 +2023,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             if (system.startsWith("Choose alternative album artist names")) {
                 verify(session, atLeastOnce()).searchReleaseGroups(normalizedQuery);
                 assertThat(prompt.getInstructions().get(1).getText()).contains("Billy’s Band", "Билли Новик", track.getName());
+                assertThat(JsonConverter.mapFromJson(prompt.getInstructions().get(1).getText(), String.class, Object.class).keySet())
+                        .containsExactly("album", "alternativeArtistNames", "tracks");
                 return response("{\"artistNames\":[\"Билли Новик\"]}");
             }
             assertThat(system).contains("organizational grouping");

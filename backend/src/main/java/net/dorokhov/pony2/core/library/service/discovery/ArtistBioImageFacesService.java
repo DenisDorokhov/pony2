@@ -1,7 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import jakarta.annotation.Nullable;
@@ -185,7 +184,6 @@ public class ArtistBioImageFacesService {
     private record Response(List<List<Double>> faces) {
     }
 
-    @JsonPropertyOrder({"prompt", "endpoint", "model", "imageHash", "version"})
     private record Request(
             String prompt,
             @Nullable String endpoint,

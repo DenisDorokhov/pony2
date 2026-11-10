@@ -5,7 +5,6 @@ import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.generator.SchemaVersion;
-import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import com.github.victools.jsonschema.module.jackson.JacksonSchemaModule;
 import com.google.common.base.Stopwatch;
 import com.google.common.hash.Hashing;
@@ -267,7 +266,7 @@ public class DiscoveryTaskLlmExecutor {
 
     private String responseSchema(Class<?> responseClass) {
         SchemaGeneratorConfigBuilder builder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
-                .with(new JacksonSchemaModule(JacksonOption.RESPECT_JSONPROPERTY_ORDER))
+                .with(new JacksonSchemaModule())
                 .with(Option.PLAIN_DEFINITION_KEYS, Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT);
         builder.forFields()
                 .withRequiredCheck(field -> true)

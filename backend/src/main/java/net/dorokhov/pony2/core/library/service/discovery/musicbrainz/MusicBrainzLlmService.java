@@ -1,10 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -39,7 +36,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.fasterxml.jackson.annotation.JsonFormat.Feature.WRITE_SORTED_MAP_ENTRIES;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.MUSICBRAINZ;
@@ -244,7 +240,7 @@ public class MusicBrainzLlmService {
             data.remove("created");
         }
         return "Album from the library: " + JsonConverter.toJson(input)
-                + "\nMusicBrainz search response: " + JsonConverter.toJson(new SearchResponse(data));
+                + "\nMusicBrainz search response: " + JsonConverter.toJson(data);
     }
 
     private @Nullable String selectId(
@@ -293,11 +289,9 @@ public class MusicBrainzLlmService {
         ARTIST_SELECTION
     }
 
-    @JsonPropertyOrder({"title", "year", "artistName"})
     record AlbumInput(String title, @Nullable Integer year, String artistName) {
     }
 
-    @JsonPropertyOrder({"title", "discNumber", "trackNumber", "durationSeconds", "artistName", "albumArtistName"})
     record TrackInput(
             @Nullable String title, @Nullable Integer discNumber, @Nullable Integer trackNumber, Long durationSeconds,
             @Nullable String artistName, @Nullable String albumArtistName
@@ -307,22 +301,15 @@ public class MusicBrainzLlmService {
     record ReleaseGroupSelection(MusicBrainzDto.ReleaseGroup group, String response, List<String> searchArtistNames) {
     }
 
-    private record SearchResponse(
-            @JsonAnyGetter @JsonFormat(with = WRITE_SORTED_MAP_ENTRIES) Map<String, Object> data
-    ) {
-    }
-
     private record IdResponse(@JsonProperty(required = true) @Nullable String id) {
     }
 
     private record ArtistNamesResponse(List<String> artistNames) {
     }
 
-    @JsonPropertyOrder({"searchTitle", "searchFragments", "alternativeTitles"})
     record NormalizationResponse(String searchTitle, List<String> searchFragments, List<String> alternativeTitles) {
     }
 
-    @JsonPropertyOrder({"systemPrompt", "userPrompt", "model", "toolChoice"})
     private record PreparationRequest(
             String systemPrompt, String userPrompt, String model, String toolChoice
     ) implements DiscoveryTaskLlmExecutor.Request {
@@ -333,7 +320,6 @@ public class MusicBrainzLlmService {
         }
     }
 
-    @JsonPropertyOrder({"systemPrompt", "userPrompt"})
     private record Request(
             String systemPrompt, String userPrompt, @JsonIgnore String cacheUserPrompt, @JsonIgnore String model
     ) implements DiscoveryTaskLlmExecutor.Request {

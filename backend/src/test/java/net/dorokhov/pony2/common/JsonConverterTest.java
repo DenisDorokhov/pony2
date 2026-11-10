@@ -40,6 +40,28 @@ public class JsonConverterTest {
         assertThat(json).isEqualTo("{\"k1\":\"string\",\"k2\":2.1}");
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"b\":[{\"z\":2,\"a\":1},null,\"{\\\"z\\\":2,\\\"a\\\":1}\"],\"a\":true}",
+            "{\"a\":true,\"b\":[{\"a\":1,\"z\":2},null,\"{\\\"z\\\":2,\\\"a\\\":1}\"]}"
+    })
+    void shouldSortMapKeysRecursivelyWithoutChangingListsOrStrings(String json) {
+        Object input = JsonConverter.fromJson(json);
+        String expected = "{\"a\":true,\"b\":[{\"a\":1,\"z\":2},null,\"{\\\"z\\\":2,\\\"a\\\":1}\"]}";
+
+        assertThat(JsonConverter.toJson(input)).isEqualTo(expected);
+        assertThat(JsonConverter.toPrettyJson(input)).isEqualTo(JsonConverter.toPrettyJson(JsonConverter.fromJson(expected)));
+    }
+
+    @Test
+    void shouldSerializeRecordFieldsInTheSameOrderRegardlessOfDeclarationOrder() {
+        FirstValue first = new FirstValue("last", Map.of("z", 2, "a", 1));
+        SecondValue second = new SecondValue(Map.of("a", 1, "z", 2), "last");
+
+        assertThat(JsonConverter.toJson(first)).isEqualTo(JsonConverter.toJson(second))
+                .isEqualTo("{\"a\":{\"a\":1,\"z\":2},\"z\":\"last\"}");
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void shouldConvertUnknownFromJson() {
@@ -80,6 +102,10 @@ public class JsonConverterTest {
     }
 
     public record NamedValue(String name) {}
+
+    private record FirstValue(String z, Map<String, Integer> a) {}
+
+    private record SecondValue(Map<String, Integer> a, String z) {}
 
     @Test
     public void shouldConvertListFromJson() {

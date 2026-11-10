@@ -229,6 +229,21 @@ class SpotifyTopTracksServiceTest {
     }
 
     @Test
+    void shouldReuseTrackCacheWhenAlbumMatchesAreReturnedInDifferentOrder() {
+        service.discover(task(), true);
+        cache.keySet().removeIf(key -> key.startsWith("SPOTIFY_TOP_TRACKS_ALBUMS:"));
+        Map<String, Object> albumResponse = JsonConverter.mapFromJson(ALBUM_RESPONSE, String.class, Object.class);
+        List<?> albumMatches = (List<?>) albumResponse.get("albumMatches");
+        responses.add(JsonConverter.toJson(Map.of("albumMatches", albumMatches.reversed())));
+
+        assertThat(service.discover(task(), true)).containsExactly("song-a", "song-b", null);
+
+        assertThat(prompts).hasSize(3);
+        assertThat(cache).hasSize(2);
+        assertThat(responses).isEmpty();
+    }
+
+    @Test
     void shouldSkipFallbackWhenAllTracksMatchTheirAlbums() {
         responses.set(0, ALBUM_RESPONSE.replace("\"databaseAlbumId\":null", "\"databaseAlbumId\":\"album-a\""));
         responses.set(1, TRACK_RESPONSE.replace("\"databaseTrackId\":null", "\"databaseTrackId\":\"song-a\""));
