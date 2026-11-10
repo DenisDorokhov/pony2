@@ -1,8 +1,9 @@
 import {Component, Input} from '@angular/core';
-import {Observable} from 'rxjs';
+import {Observable, tap} from 'rxjs';
 import {DiscoveryStatusDto, DiscoveryTaskPageDto} from '../../../domain/library.dto';
 import {AbstractDiscoveryTasksComponent, DISCOVERY_TASKS_IMPORTS} from './abstract-discovery-tasks.component';
 import {AllDiscoveryTasksComponent} from './all-discovery-tasks.component';
+import {DiscoveryComponent} from './discovery.component';
 
 @Component({
   imports: DISCOVERY_TASKS_IMPORTS,
@@ -27,6 +28,8 @@ export class AlbumDiscoveryTasksComponent extends AbstractDiscoveryTasksComponen
   }
 
   protected override startDiscoveryJob(): Observable<DiscoveryStatusDto> {
-    return this.libraryDiscoveryService.startAlbumDiscoveryJob(this.albumId);
+    return this.libraryDiscoveryService.startAlbumDiscoveryJob(this.albumId).pipe(
+      tap(() => this.modal.open(DiscoveryComponent, {size: 'xl'}))
+    );
   }
 }

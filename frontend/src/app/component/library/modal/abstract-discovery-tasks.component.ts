@@ -76,9 +76,10 @@ export abstract class AbstractDiscoveryTasksComponent implements OnInit, OnDestr
   readonly activeModal = inject(NgbActiveModal);
 
   protected readonly libraryDiscoveryService = inject(LibraryDiscoveryService);
+  protected readonly modal = inject(NgbModal);
+
   private readonly libraryService = inject(LibraryService);
   private readonly translateService = inject(TranslateService);
-  private readonly modal = inject(NgbModal);
 
   readonly LoadingState = LoadingState;
   readonly TaskStatus = DiscoveryTaskDto.Status;
