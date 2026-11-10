@@ -104,7 +104,10 @@ public class SpotifyTopTracksService {
             String artistId = requireNonNull(task.getArtist(),
                     () -> "Discovery task '" + task.getId() + "' has no associated artist.").getId();
             SpotifyArtistData data = readArtistData(artistId);
-            if (data == null || data.topTracks() == null || data.topTracks().isEmpty()) {
+            if (data == null) {
+                return null;
+            }
+            if (data.topTracks() == null || data.topTracks().isEmpty()) {
                 return List.of();
             }
             Map<String, String> albumMatches = matchAlbums(task, artistId, data.topTracks(), cacheEnabled);

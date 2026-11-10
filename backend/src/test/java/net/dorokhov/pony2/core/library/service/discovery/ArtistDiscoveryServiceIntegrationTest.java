@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.config.service.command.ConfigSetUpdateCommand;
@@ -188,7 +189,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
                                 responses.stream().map(JsonConverter::fromJson).toList());
                     });
         });
-        assertEmptyTopTracks();
+        assertTopTracksResult("[]");
     }
 
     @Test
@@ -382,7 +383,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getRawRequests()).isNull();
             assertThat(task.getRawResponses()).isNull();
         });
-        assertEmptyTopTracks();
+        assertTopTracksResult(null);
         assertThat(artistDataTasks()).singleElement().satisfies(task ->
                 assertThat(requireNonNull(task.getArtist()).getId()).isEqualTo(artist.getId()));
         assertThat(cacheRepository.count()).isZero();
@@ -414,7 +415,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNull();
         });
-        assertEmptyTopTracks();
+        assertTopTracksResult(null);
         assertThat(cacheRepository.count()).isEqualTo(1);
     }
 
@@ -427,7 +428,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         service.discover(saveJob(), artist, true, null);
 
-        assertEmptyTopTracks();
+        assertTopTracksResult(null);
         assertThat(artistDataTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
             assertThat(task.getResult()).isNull();
@@ -458,7 +459,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
 
         service.discover(saveJob(), saveArtist("Album"), true, null);
 
-        assertEmptyTopTracks();
+        assertTopTracksResult("[]");
         verify(model, times(5)).call(any(Prompt.class));
     }
 
@@ -669,10 +670,10 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         return taskRepository.findAll().stream().filter(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS).toList();
     }
 
-    private void assertEmptyTopTracks() {
+    private void assertTopTracksResult(@Nullable String result) {
         assertThat(topTracksTasks()).singleElement().satisfies(task -> {
             assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
-            assertThat(task.getResult()).isEqualTo("[]");
+            assertThat(task.getResult()).isEqualTo(result);
             assertThat(task.getRawRequests()).isNull();
             assertThat(task.getRawResponses()).isNull();
         });

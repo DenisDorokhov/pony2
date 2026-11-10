@@ -561,10 +561,10 @@ class SpotifyTopTracksServiceTest {
     }
 
     @Test
-    void shouldReturnNoTracksWhenCompletedArtistDataIsEmpty() {
+    void shouldReturnNullWhenCompletedArtistDataIsEmpty() {
         previousTask.setResult(null);
 
-        assertThat(service.discover(task(), true)).isEmpty();
+        assertThat(service.discover(task(), true)).isNull();
 
         verifyNoInteractions(model, cacheService, artistRepository);
     }
