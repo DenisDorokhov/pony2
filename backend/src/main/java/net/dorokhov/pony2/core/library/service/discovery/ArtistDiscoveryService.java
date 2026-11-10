@@ -355,7 +355,8 @@ public class ArtistDiscoveryService {
     private class ArtistImageTaskExecution implements DiscoveryTaskExecution<String> {
 
         private static final Set<String> PLACEHOLDER_AVATAR_URLS = Set.of(
-                "https://i.scdn.co/image/ab676161000051749a59d583f5b3d98825ddf0f6"
+                "https://i.scdn.co/image/ab676161000051749a59d583f5b3d98825ddf0f6",
+                "https://i.scdn.co/image/ab6761610000517494bcce453a85ce934aac371d"
         );
 
         private final DiscoveryJob job;
