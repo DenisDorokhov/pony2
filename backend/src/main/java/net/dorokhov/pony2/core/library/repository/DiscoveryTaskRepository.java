@@ -200,6 +200,11 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             """)
     Page<DiscoveryTaskSummary> findWithoutResultByJobIdAndType(String jobId, DiscoveryTaskType type, Pageable pageable);
 
+    /**
+     * This H2-specific query shape is a performance optimization: each target branch uses its index
+     * before the paged primary-key lookup. An OR between artist and album targets scans unrelated
+     * tasks. The separate count query avoids the joins needed by the summary projection.
+     */
     @Query(value = """
             SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
                 t.id, t.creationDate, t.updateDate, t.status, t.type,
@@ -210,9 +215,20 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             LEFT JOIN t.artist ar
             LEFT JOIN t.album a
             LEFT JOIN t.song s
-            WHERE (fk(t.artist) = :artistId OR fk(t.album) IN (
-                SELECT al.id FROM Album al WHERE al.artist.id = :artistId
-            ))
+            WHERE t.id = function('sql' as String, 'any(? || ?)',
+                coalesce((
+                    SELECT array_agg(artistTask.id) WITHIN GROUP (ORDER BY artistTask.id)
+                    FROM DiscoveryTask artistTask
+                    WHERE fk(artistTask.artist) = :artistId
+                ), array()),
+                coalesce((
+                    SELECT array_agg(albumTask.id) WITHIN GROUP (ORDER BY albumTask.id)
+                    FROM DiscoveryTask albumTask
+                    WHERE fk(albumTask.album) IN (
+                        SELECT al.id FROM Album al WHERE al.artist.id = :artistId
+                    )
+                ), array())
+            )
               AND (:type IS NULL OR t.type = :type)
               AND (:failed = false OR t.status = FAILED)
               AND (:withoutResult = false OR (t.status = COMPLETE AND t.result IS NULL))
@@ -235,6 +251,11 @@ public interface DiscoveryTaskRepository extends JpaRepository<DiscoveryTask, St
             """)
     Page<DiscoveryTaskSummary> findByArtistId(String artistId, DiscoveryTaskType type, boolean failed, boolean withoutResult, Pageable pageable);
 
+    /**
+     * The foreign-key predicate is a performance optimization: filtering stays on discovery_task.album_id
+     * instead of the joined album ID. The explicit count avoids projection joins and a Hibernate
+     * fk() count-query derivation failure.
+     */
     @Query(value = """
             SELECT new net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary(
                 t.id, t.creationDate, t.updateDate, t.status, t.type,

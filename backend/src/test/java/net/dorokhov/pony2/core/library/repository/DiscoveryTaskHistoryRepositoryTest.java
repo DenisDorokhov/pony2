@@ -1,15 +1,20 @@
 package net.dorokhov.pony2.core.library.repository;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.EntityManagerFactory;
 import net.dorokhov.pony2.IntegrationTest;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Timestamp;
@@ -29,6 +34,7 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
     @Autowired private AlbumRepository albumRepository;
     @Autowired private DiscoveryJobService discoveryJobService;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private EntityManagerFactory entityManagerFactory;
 
     @Test
     void shouldIncludeArtistAndAllAlbumsAcrossJobsWithStableOrderByCreationDate() {
@@ -62,6 +68,71 @@ class DiscoveryTaskHistoryRepositoryTest extends IntegrationTest {
         assertThat(second.getContent()).extracting(DiscoveryTaskSummary::id).containsExactly(tiedIds.getLast(), ownTask.getId());
         assertThat(discoveryJobService.getArtistTasks("missing", filter, PageRequest.of(0, 30))).isEmpty();
         assertThat(discoveryJobService.getAlbumTasks("missing", filter, PageRequest.of(0, 30))).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true,false", "false,true", "false,false"})
+    void shouldKeepArtistHistoryWhenEitherTargetBranchIsEmpty(boolean artistTasks, boolean albumTasks) {
+        Artist artist = artistRepository.save(new Artist().setName("Artist"));
+        DiscoveryJob job = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL)
+                .setStatus(DiscoveryJob.Status.COMPLETE));
+        LocalDateTime date = LocalDateTime.of(2026, 10, 22, 8, 0);
+        List<String> expectedIds = new ArrayList<>();
+        if (albumTasks) {
+            Album album = albumRepository.save(new Album().setArtist(artist).setName("Album"));
+            expectedIds.add(saveTask(task(job).setAlbum(album), date.plusMinutes(1), date.plusMinutes(2)).getId());
+        }
+        if (artistTasks) {
+            expectedIds.add(saveTask(task(job).setArtist(artist), date, date.plusMinutes(1)).getId());
+        }
+        saveTask(task(job), date.plusHours(1), date.plusHours(2));
+
+        Page<DiscoveryTaskSummary> page = taskRepository.findByArtistId(artist.getId(), null, false, false,
+                PageRequest.of(0, 1));
+
+        assertThat(page.getTotalElements()).isEqualTo(expectedIds.size());
+        assertThat(page.getContent()).extracting(DiscoveryTaskSummary::id).containsExactlyElementsOf(expectedIds);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ARTIST", "ALBUM"})
+    void shouldUseIndexedLookupsForPagedTargetHistory(DiscoveryType scope) {
+        Artist artist = artistRepository.save(new Artist().setName("Artist"));
+        Album album = albumRepository.save(new Album().setArtist(artist).setName("Album"));
+        DiscoveryJob job = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL)
+                .setStatus(DiscoveryJob.Status.COMPLETE));
+        taskRepository.save(task(job).setArtist(artist));
+        taskRepository.save(task(job).setAlbum(album));
+        List<String> statements = new ArrayList<>();
+        StatementInspector statementInspector = sql -> {
+            statements.add(sql);
+            return sql;
+        };
+        SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
+        try (Session session = sessionFactory.withOptions().statementInspector(statementInspector).openSession()) {
+            DiscoveryTaskRepository repository = new JpaRepositoryFactory(session).getRepository(DiscoveryTaskRepository.class);
+
+            Page<DiscoveryTaskSummary> page = scope == DiscoveryType.ARTIST
+                    ? repository.findByArtistId(artist.getId(), null, false, false, PageRequest.of(0, 1))
+                    : repository.findByAlbumId(album.getId(), null, false, false, PageRequest.of(0, 1));
+
+            assertThat(page).hasSize(1);
+        }
+        String plan = scope == DiscoveryType.ARTIST
+                ? jdbcTemplate.queryForObject("EXPLAIN ANALYZE " + statements.getFirst(), String.class,
+                        artist.getId(), artist.getId(), null, null, false, false, 1)
+                : jdbcTemplate.queryForObject("EXPLAIN ANALYZE " + statements.getFirst(), String.class,
+                        album.getId(), null, null, false, false, 1);
+
+        if (scope == DiscoveryType.ARTIST) {
+            assertThat(plan).containsPattern("(?s)FROM \"PUBLIC\"\\.\"DISCOVERY_TASK\" \"[^\"]+\"\\s*" +
+                            "/\\* PUBLIC\\.PRIMARY_KEY_[^:]+: ID = ANY\\(")
+                    .contains("INDEX_DISCOVERY_TASK_ARTIST_STATUS_TYPE_CREATION_DATE",
+                            "INDEX_DISCOVERY_TASK_ALBUM_STATUS_TYPE_CREATION_DATE");
+        } else {
+            assertThat(statements.getFirst()).containsPattern("where \\w+\\.album_id=\\?");
+            assertThat(plan).contains("ALBUM_ID = ?1");
+        }
     }
 
     private DiscoveryTask task(DiscoveryJob job) {
