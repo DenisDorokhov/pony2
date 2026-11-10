@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery.musicbrainz;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -97,12 +96,12 @@ public class MusicBrainzLlmService {
 
     NormalizationResponse normalizeTitle(DiscoveryTask task, AlbumInput input, boolean cacheEnabled) {
         String title = input.title();
-        PreparationRequest request = new PreparationRequest(
+        PreparationRequest request = new PreparationRequest(new PreparationRawRequest(
                 normalizationPrompt,
                 JsonConverter.toJson(Map.of("albumTitle", title)),
                 configService.get().llmModel(),
                 "none"
-        );
+        ));
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, NORMALIZATION_CACHE_PREFIX, NORMALIZATION_CACHE_VERSION) : null;
         return llmExecutor.call(task, request, NormalizationResponse.class, cacheSettings, response -> {
@@ -164,12 +163,12 @@ public class MusicBrainzLlmService {
         if (alternatives.isEmpty()) {
             return List.of();
         }
-        PreparationRequest request = new PreparationRequest(
+        PreparationRequest request = new PreparationRequest(new PreparationRawRequest(
                 artistSearchPrompt,
                 JsonConverter.toJson(Map.of("album", input, "tracks", tracks, "alternativeArtistNames", alternatives)),
                 configService.get().llmModel(),
                 "none"
-        );
+        ));
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ALBUM_ARTIST_SEARCH", CACHE_VERSION) : null;
         return llmExecutor.call(task, request, ArtistNamesResponse.class, cacheSettings, response -> {
@@ -206,9 +205,9 @@ public class MusicBrainzLlmService {
             prompt += alternativeArtistInstructions;
             trackContext += "\nAlternative artist search names: " + JsonConverter.toJson(searchArtistNames);
         }
-        Request request = new Request(prompt, context(input, searchResult.rawResponse(), false) + trackContext,
-                context(input, searchResult.rawResponse(), true) + trackContext,
-                configService.get().llmModel());
+        Request request = new Request(
+                new RawRequest(prompt, context(input, searchResult.rawResponse(), false) + trackContext, configService.get().llmModel()),
+                new CacheKey(prompt, context(input, searchResult.rawResponse(), true) + trackContext));
         Set<String> candidates = searchResult.groups().stream().map(MusicBrainzDto.ReleaseGroup::id).collect(Collectors.toSet());
         return selectId(task, input, request, candidates, "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP",
                 LlmStage.RELEASE_GROUP_SELECTION, cacheEnabled);
@@ -259,8 +258,9 @@ public class MusicBrainzLlmService {
             prompt += alternativeArtistInstructions;
             selectedGroup += "\nAlternative artist search names: " + JsonConverter.toJson(searchArtistNames) + trackContext(tracks);
         }
-        Request request = new Request(prompt, context(input, selection.response(), false) + selectedGroup,
-                context(input, selection.response(), true) + selectedGroup, configService.get().llmModel());
+        Request request = new Request(
+                new RawRequest(prompt, context(input, selection.response(), false) + selectedGroup, configService.get().llmModel()),
+                new CacheKey(prompt, context(input, selection.response(), true) + selectedGroup));
         return selectId(task, input, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST",
                 LlmStage.ARTIST_SELECTION, cacheEnabled);
     }
@@ -293,34 +293,35 @@ public class MusicBrainzLlmService {
     record NormalizationResponse(String searchTitle, List<String> searchFragments, List<String> alternativeTitles) {
     }
 
-    private record PreparationRequest(
+    private record PreparationRawRequest(
             String systemPrompt, String userPrompt, String model, String toolChoice
-    ) implements DiscoveryTaskLlmExecutor.Request {
+    ) {}
+
+    private record PreparationCacheKey(String systemPrompt, String userPrompt, String toolChoice) {}
+
+    private record PreparationRequest(PreparationRawRequest rawRequest) implements DiscoveryTaskLlmExecutor.Request {
 
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt, "toolChoice", toolChoice));
+        public PreparationCacheKey cacheKey() {
+            return new PreparationCacheKey(rawRequest.systemPrompt(), rawRequest.userPrompt(), rawRequest.toolChoice());
         }
 
         @Override
         public Prompt toPrompt() {
-            return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
-                    OpenAiChatOptions.builder().model(model).toolChoice(toolChoice).build());
+            return new Prompt(List.of(new SystemMessage(rawRequest.systemPrompt()), new UserMessage(rawRequest.userPrompt())),
+                    OpenAiChatOptions.builder().model(rawRequest.model()).toolChoice(rawRequest.toolChoice()).build());
         }
     }
 
-    private record Request(
-            String systemPrompt, String userPrompt, @JsonIgnore String cacheUserPrompt, String model
-    ) implements DiscoveryTaskLlmExecutor.Request {
-        @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", cacheUserPrompt));
-        }
+    private record RawRequest(String systemPrompt, String userPrompt, String model) {}
 
+    private record CacheKey(String systemPrompt, String userPrompt) {}
+
+    private record Request(RawRequest rawRequest, CacheKey cacheKey) implements DiscoveryTaskLlmExecutor.Request {
         @Override
         public Prompt toPrompt() {
-            return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
-                    OpenAiChatOptions.builder().model(model).toolChoice("none").build());
+            return new Prompt(List.of(new SystemMessage(rawRequest.systemPrompt()), new UserMessage(rawRequest.userPrompt())),
+                    OpenAiChatOptions.builder().model(rawRequest.model()).toolChoice("none").build());
         }
     }
 }

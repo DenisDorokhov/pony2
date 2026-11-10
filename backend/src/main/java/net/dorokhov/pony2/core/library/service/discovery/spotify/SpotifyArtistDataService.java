@@ -35,7 +35,6 @@ import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -245,9 +244,15 @@ public class SpotifyArtistDataService {
             String userPrompt,
             List<String> albumTitles
     ) implements DiscoveryTaskLlmExecutor.Request {
+
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt, "albumTitles", albumTitles));
+        public RawRequest rawRequest() {
+            return new RawRequest(systemPrompt, userPrompt, albumTitles);
+        }
+
+        @Override
+        public CacheKey cacheKey() {
+            return new CacheKey(systemPrompt, userPrompt, albumTitles);
         }
 
         @Override
@@ -255,11 +260,21 @@ public class SpotifyArtistDataService {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
         }
     }
+
+    private record RawRequest(String systemPrompt, String userPrompt, List<String> albumTitles) {}
+
+    private record CacheKey(String systemPrompt, String userPrompt, List<String> albumTitles) {}
 
     private record ArtistRequest(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
+
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt));
+        public ArtistRawRequest rawRequest() {
+            return new ArtistRawRequest(systemPrompt, userPrompt);
+        }
+
+        @Override
+        public ArtistCacheKey cacheKey() {
+            return new ArtistCacheKey(systemPrompt, userPrompt);
         }
 
         @Override
@@ -267,4 +282,8 @@ public class SpotifyArtistDataService {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
         }
     }
+
+    private record ArtistRawRequest(String systemPrompt, String userPrompt) {}
+
+    private record ArtistCacheKey(String systemPrompt, String userPrompt) {}
 }

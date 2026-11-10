@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import com.google.common.hash.Hashing;
 import com.sun.net.httpserver.HttpServer;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
@@ -169,6 +170,32 @@ class ArtistBioImageFacesServiceTest {
     }
 
     @Test
+    void shouldPreserveRawRequestAndCacheKeyCompatibility() throws Exception {
+        DiscoveryTask task = task();
+
+        ArtistBioImageFacesService.Result result = service.discover(task, true);
+
+        String prompt = new ClassPathResource("prompts/artist-bio-image-faces.txt").getContentAsString(UTF_8);
+        String imageHash = Hashing.sha256().hashBytes(Files.readAllBytes(file)).toString();
+        Map<?, ?> rawRequest = (Map<?, ?>) task.getRawRequests().getFirst();
+        Object responseSchema = rawRequest.get("responseSchema");
+        Map<String, Object> expectedRawRequest = Map.of("prompt", prompt, "endpoint", config.llmUrl(),
+                "model", config.llmModel(), "imageHash", imageHash, "version", 1, "responseSchema", responseSchema);
+        Map<String, Object> expectedCacheInput = Map.of("prompt", prompt, "imageHash", imageHash, "version", 1);
+        Map<String, Object> expectedCacheRequest = new HashMap<>(expectedCacheInput);
+        expectedCacheRequest.put("responseSchema", responseSchema);
+        String expectedKey = "artistBioImageFaces:" + Hashing.sha256()
+                .hashString(JsonConverter.toJson(expectedCacheRequest), UTF_8);
+
+        assertThat(rawRequest).isEqualTo(expectedRawRequest);
+        assertThat(result.analysisKey()).isEqualTo(Hashing.sha256()
+                .hashString(JsonConverter.toJson(expectedCacheInput), UTF_8).toString());
+        assertThat(cache).containsOnlyKeys(expectedKey);
+        Map<String, Object> entry = JsonConverter.mapFromJson(cache.get(expectedKey), String.class, Object.class);
+        assertThat(entry.get("request")).isEqualTo(expectedRawRequest);
+    }
+
+    @Test
     void shouldAcceptAndCacheNoFaces() {
         responses.add("{\"faces\": []}");
 
@@ -198,11 +225,25 @@ class ArtistBioImageFacesServiceTest {
         service = service(1);
         responses.add("{\"faces\": [[10,20,1001,200]]}");
         responses.add("{\"faces\": [[10,20,100,200]]}");
+        DiscoveryTask task = task();
 
-        assertThat(service.discover(task(), true).faces()).containsExactly(new ImageFace(0.01, 0.02, 0.1, 0.2));
+        ArtistBioImageFacesService.Result result = service.discover(task, true);
 
+        assertThat(result.faces()).containsExactly(new ImageFace(0.01, 0.02, 0.1, 0.2));
         assertThat(requests).hasSize(2).allSatisfy(request -> assertThat(request).contains("data:image/png;base64,"));
         assertThat(cache).hasSize(1);
+        Map<String, Object> originalRawRequest = JsonConverter.mapFromJson(
+                JsonConverter.toJson(task.getRawRequests().getFirst()), String.class, Object.class);
+        originalRawRequest.remove("responseSchema");
+        Map<?, ?> followUpRawRequest = (Map<?, ?>) task.getRawRequests().getLast();
+        assertThat(followUpRawRequest.get("originalRequest")).isEqualTo(originalRawRequest);
+        assertThat(JsonConverter.toJson(task.getRawRequests())).doesNotContain("data:image", "iVBOR", "\"image\"");
+        Map<String, Object> entry = JsonConverter.mapFromJson(cache.values().iterator().next(), String.class, Object.class);
+        assertThat(entry.get("request")).isEqualTo(followUpRawRequest);
+        DiscoveryTask cachedTask = task();
+        assertThat(service.discover(cachedTask, true)).isEqualTo(result);
+        assertThat(cachedTask.getRawRequests()).containsExactly(followUpRawRequest);
+        assertThat(requests).hasSize(2);
     }
 
     @Test
@@ -271,6 +312,18 @@ class ArtistBioImageFacesServiceTest {
         when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
                 .thenReturn(Optional.of(task().setResult(null)));
         assertThat(service.shouldDiscover(artist)).isTrue();
+    }
+
+    @Test
+    void shouldCheckPreviousAnalysisWithoutReadingLlmConfiguration() {
+        ArtistBioImageFacesService.Result result = service.discover(task(), true);
+        when(taskRepository.findLatestCompletedByArtistIdAndType("artist", ARTIST_BIO_IMAGE_FACES, Limit.of(1)))
+                .thenReturn(Optional.of(task().setResult(JsonConverter.toJson(result))));
+        clearInvocations(configService);
+
+        assertThat(service.shouldDiscover(artist)).isFalse();
+
+        verifyNoInteractions(configService);
     }
 
     @Test

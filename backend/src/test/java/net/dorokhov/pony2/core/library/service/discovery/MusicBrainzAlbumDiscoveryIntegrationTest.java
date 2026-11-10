@@ -1046,6 +1046,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(requests.get(0)).isEqualTo(SEARCH_URL);
             assertThat(requests.get(1)).isInstanceOf(Map.class);
             Map<?, ?> snapshot = ((Map<?, ?>) requests.get(1));
+            assertThat(snapshot).hasSize(5);
             assertThat(snapshot.get("systemPrompt")).isEqualTo(systemPrompt);
             assertThat(snapshot.get("model")).isEqualTo("test");
             assertThat(snapshot.containsKey("temperature")).isFalse();
@@ -1058,9 +1059,14 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         });
         verify(session, times(2)).searchReleaseGroups("artistname:\"Slayer\" AND release:\"Reign\"");
         verify(session, times(4)).searchReleaseGroups(anyString());
+        OpenAiChatOptions options = (OpenAiChatOptions) captor.getAllValues().getFirst().getOptions();
+        Map<String, Object> cacheKey = Map.of("systemPrompt", systemPrompt,
+                "userPrompt", JsonConverter.toJson(Map.of("albumTitle", requireNonNull(album.getName()))), "toolChoice", "none",
+                "responseSchema", JsonConverter.fromJson(requireNonNull(requireNonNull(options).getResponseFormat()).getJsonSchema()));
         assertThat(cacheRepository.findAll()).hasSize(cacheEnabled ? 1 : 0).allSatisfy(entry -> {
             assertThat(entry.getRegion()).isEqualTo(MUSICBRAINZ);
-            assertThat(entry.getKey()).startsWith("MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION:");
+            assertThat(entry.getKey()).isEqualTo("MUSICBRAINZ_ALBUM_TITLE_NORMALIZATION:"
+                    + Hashing.sha256().hashString(JsonConverter.toJson(cacheKey), UTF_8));
         });
     }
 

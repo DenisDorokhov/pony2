@@ -140,8 +140,13 @@ public class MusicBrainzArtistDataService {
     private record Request(String systemPrompt, String userPrompt, String model) implements DiscoveryTaskLlmExecutor.Request {
 
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt));
+        public RawRequest rawRequest() {
+            return new RawRequest(systemPrompt, userPrompt, model);
+        }
+
+        @Override
+        public CacheKey cacheKey() {
+            return new CacheKey(systemPrompt, userPrompt);
         }
 
         @Override
@@ -150,4 +155,8 @@ public class MusicBrainzArtistDataService {
                     OpenAiChatOptions.builder().model(model).toolChoice("none").build());
         }
     }
+
+    private record RawRequest(String systemPrompt, String userPrompt, String model) {}
+
+    private record CacheKey(String systemPrompt, String userPrompt) {}
 }

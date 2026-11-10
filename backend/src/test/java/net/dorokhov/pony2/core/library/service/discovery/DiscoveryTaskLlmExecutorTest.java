@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import com.google.common.hash.Hashing;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
@@ -62,6 +63,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
@@ -826,6 +828,46 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @Test
+    void shouldPreserveCacheKeyAndFollowUpHistoryFromExplicitRequestData() {
+        RawRequest rawRequest = new RawRequest("Find artist data", "Original context", "model");
+        CacheKey cacheKey = new CacheKey("Find artist data", "Canonical context");
+        ExecutableRequest request = new ExecutableRequest(rawRequest, cacheKey, searchRequest().toPrompt());
+        String rejected = "{\"answer\":\"Rejected\"}";
+        String accepted = "{\"answer\":\"Accepted\"}";
+        when(model.call(any(Prompt.class))).thenReturn(response(rejected), response(accepted));
+        DiscoveryTask task = task();
+
+        String result = operation.call(task, request, AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            if (rejected.equals(answer)) {
+                throw new LlmFollowUpException("Verify answer", new IllegalStateException("Invalid response"));
+            }
+            return answer;
+        });
+
+        assertThat(result).isEqualTo(accepted);
+        List<Object> requests = requireNonNull(task.getRawRequests());
+        assertThat(requests).hasSize(2);
+        Object schema = ((Map<?, ?>) requests.getFirst()).get("responseSchema");
+        Map<String, Object> original = Map.of("systemPrompt", "Find artist data", "userPrompt", "Original context", "model", "model");
+        assertThat(requests.getFirst()).isEqualTo(Map.of("systemPrompt", "Find artist data", "userPrompt", "Original context",
+                "model", "model", "responseSchema", schema));
+        Map<String, Object> followUp = Map.of("originalRequest", original, "previousResponse", rejected,
+                "userPrompt", "Verify answer", "responseSchema", schema);
+        assertThat(requests.getLast()).isEqualTo(followUp);
+        String legacyKey = CACHE_SETTINGS.keyPrefix() + ":" + Hashing.sha256().hashString(JsonConverter.toJson(Map.of(
+                "systemPrompt", "Find artist data", "userPrompt", "Canonical context", "responseSchema", schema)), UTF_8);
+        assertThat(cache).containsOnlyKeys(legacyKey);
+        assertThat(JsonConverter.fromJson(cache.get(legacyKey), Map.class).get("request")).isEqualTo(followUp);
+
+        DiscoveryTask cachedTask = task();
+        ExecutableRequest changedRuntime = new ExecutableRequest(
+                new RawRequest("Find artist data", "Original context", "another-model"), cacheKey, searchRequest().toPrompt());
+        assertThat(operation.call(cachedTask, changedRuntime, AnswerResponse.class, CACHE_SETTINGS, Function.identity())).isEqualTo(accepted);
+        assertThat(cachedTask.getRawRequests()).containsExactly(followUp);
+        verify(model, times(2)).call(any(Prompt.class));
+    }
+
+    @Test
     void shouldSeparateCachedResponsesBySchema() {
         DialogueRequest request = searchRequest();
 
@@ -1140,8 +1182,13 @@ class DiscoveryTaskLlmExecutorTest {
 
     private record RequestWithoutModel(@Nullable Double temperature) implements DiscoveryTaskLlmExecutor.Request {
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Collections.singletonMap("temperature", temperature));
+        public Object rawRequest() {
+            return Collections.singletonMap("temperature", temperature);
+        }
+
+        @Override
+        public Object cacheKey() {
+            return Collections.singletonMap("temperature", temperature);
         }
 
         @Override
@@ -1152,8 +1199,13 @@ class DiscoveryTaskLlmExecutorTest {
 
     private record MapRequest(Object input) implements DiscoveryTaskLlmExecutor.Request {
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("input", input));
+        public Object rawRequest() {
+            return Map.of("input", input);
+        }
+
+        @Override
+        public Object cacheKey() {
+            return Map.of("input", input);
         }
 
         @Override
@@ -1164,8 +1216,13 @@ class DiscoveryTaskLlmExecutorTest {
 
     private record ToolRequest(@Nullable String toolChoice) implements DiscoveryTaskLlmExecutor.Request {
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Collections.singletonMap("toolChoice", toolChoice));
+        public Object rawRequest() {
+            return Collections.singletonMap("toolChoice", toolChoice);
+        }
+
+        @Override
+        public Object cacheKey() {
+            return Collections.singletonMap("toolChoice", toolChoice);
         }
 
         @Override
@@ -1182,14 +1239,30 @@ class DiscoveryTaskLlmExecutorTest {
         }
 
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("messages", messages));
+        public Object rawRequest() {
+            return Map.of("messages", messages);
+        }
+
+        @Override
+        public Object cacheKey() {
+            return Map.of("messages", messages);
         }
 
         @Override
         public Prompt toPrompt() {
             return new Prompt(messages, OpenAiChatOptions.builder()
                     .model("configured-model").toolChoice("none").temperature(0.2).build());
+        }
+    }
+
+    private record RawRequest(String systemPrompt, String userPrompt, String model) {}
+
+    private record CacheKey(String systemPrompt, String userPrompt) {}
+
+    private record ExecutableRequest(RawRequest rawRequest, CacheKey cacheKey, Prompt prompt) implements DiscoveryTaskLlmExecutor.Request {
+        @Override
+        public Prompt toPrompt() {
+            return prompt;
         }
     }
 }

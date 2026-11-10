@@ -147,7 +147,7 @@ public class DiscoveryTaskLlmExecutor {
         jobSynchronizer.interruptDiscoveryIfStopped();
         if (cacheSettings != null && (!exchange.cacheHit() || retries > 0)) {
             cacheService.put(cacheSettings.region(), exchange.cacheKey(), cacheSettings.version(),
-                    JsonConverter.toJson(new CacheEntry(requestSnapshot(JsonConverter.toJson(acceptedRequest), responseSchema), response)));
+                    JsonConverter.toJson(new CacheEntry(withResponseSchema(acceptedRequest.rawRequest(), responseSchema), response)));
         }
         return result;
     }
@@ -157,11 +157,11 @@ public class DiscoveryTaskLlmExecutor {
     ) {
         jobSynchronizer.interruptDiscoveryIfStopped();
 
-        Object rawRequest = requestSnapshot(JsonConverter.toJson(request), responseSchema);
+        Object rawRequest = withResponseSchema(request.rawRequest(), responseSchema);
         exchangeRecorder.startExchange(task, rawRequest);
 
         String key = cacheSettings != null ? cacheSettings.keyPrefix() + ":" + Hashing.sha256().hashString(
-                JsonConverter.toJson(requestSnapshot(request.toCacheJson(), responseSchema)), UTF_8) : null;
+                JsonConverter.toJson(withResponseSchema(request.cacheKey(), responseSchema)), UTF_8) : null;
         Optional<String> cached = cacheSettings != null ? cacheService.get(cacheSettings.region(), key, cacheSettings.version()) : Optional.empty();
         Stopwatch stopwatch = Stopwatch.createStarted();
         String response;
@@ -277,10 +277,10 @@ public class DiscoveryTaskLlmExecutor {
         return new SchemaGenerator(builder.build()).generateSchema(responseClass).toString();
     }
 
-    private Map<String, Object> requestSnapshot(String requestJson, String responseSchema) {
-        Map<String, Object> snapshot = new LinkedHashMap<>(JsonConverter.mapFromJson(requestJson, String.class, Object.class));
-        snapshot.put("responseSchema", JsonConverter.fromJson(responseSchema));
-        return snapshot;
+    private Map<String, Object> withResponseSchema(Object requestData, String responseSchema) {
+        Map<String, Object> data = new LinkedHashMap<>(JsonConverter.mapFromJson(JsonConverter.toJson(requestData), String.class, Object.class));
+        data.put("responseSchema", JsonConverter.fromJson(responseSchema));
+        return data;
     }
 
     private String formatResponseForLog(@Nullable String response) {
@@ -295,16 +295,17 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     /**
-     * A serializable snapshot of all prompt inputs, including previous messages and any model options.
-     * Its JSON is used for the raw request; cache key inputs are selected explicitly by each implementation.
+     * An executable model request with separate representations for history and cache identity.
      */
     public interface Request {
         Prompt toPrompt();
 
+        Object rawRequest();
+
         /**
          * Returns explicitly selected inputs used to derive the cache key, excluding the LLM model and endpoint.
          */
-        String toCacheJson();
+        Object cacheKey();
     }
 
     public record CacheSettings(DiscoveryCacheRegion region, String keyPrefix, int version) {}
@@ -316,7 +317,12 @@ public class DiscoveryTaskLlmExecutor {
     private record FollowUpRequest(Request originalRequest, @Nullable String previousResponse, String userPrompt) implements Request {
 
         @Override
-        public String toCacheJson() {
+        public FollowUpRawRequest rawRequest() {
+            return new FollowUpRawRequest(originalRequest.rawRequest(), previousResponse, userPrompt);
+        }
+
+        @Override
+        public Object cacheKey() {
             throw new UnsupportedOperationException("Follow-up requests are not cached.");
         }
 
@@ -331,4 +337,6 @@ public class DiscoveryTaskLlmExecutor {
             return new Prompt(messages, originalPrompt.getOptions());
         }
     }
+
+    private record FollowUpRawRequest(Object originalRequest, @Nullable String previousResponse, String userPrompt) {}
 }

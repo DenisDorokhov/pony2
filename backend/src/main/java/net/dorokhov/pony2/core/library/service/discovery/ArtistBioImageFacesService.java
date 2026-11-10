@@ -1,6 +1,5 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import jakarta.annotation.Nullable;
@@ -96,7 +95,7 @@ public class ArtistBioImageFacesService {
             return true;
         }
         try {
-            return !createRequest(imageHash(image), new byte[0]).analysisKey().equals(previous.analysisKey());
+            return !new CacheKey(prompt, imageHash(image), CACHE_VERSION).analysisKey().equals(previous.analysisKey());
         } catch (UncheckedIOException e) {
             // Let task execution record the image read failure without aborting the entire job.
             return true;
@@ -120,7 +119,9 @@ public class ArtistBioImageFacesService {
 
     private Request createRequest(String imageHash, byte[] prepared) {
         ConfigSet config = configService.get();
-        return new Request(prompt, config.llmUrl(), config.llmModel(), imageHash, CACHE_VERSION, prepared);
+        RawRequest rawRequest = new RawRequest(prompt, config.llmUrl(), config.llmModel(), imageHash, CACHE_VERSION);
+        CacheKey cacheKey = new CacheKey(prompt, imageHash, CACHE_VERSION);
+        return new Request(rawRequest, cacheKey, prepared);
     }
 
     public @Nullable Result discover(DiscoveryTask task, boolean cacheEnabled) {
@@ -132,7 +133,7 @@ public class ArtistBioImageFacesService {
         List<ImageFace> faces = llmExecutor.call(task, request, Response.class,
                 cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "artistBioImageFaces", CACHE_VERSION) : null,
                 this::parseFaces);
-        return new Result(image.getExternalImage().getId(), request.analysisKey(), faces);
+        return new Result(image.getExternalImage().getId(), request.cacheKey().analysisKey(), faces);
     }
 
     private byte[] prepareImage(ExternalImageFile image) {
@@ -184,32 +185,30 @@ public class ArtistBioImageFacesService {
     private record Response(List<List<Double>> faces) {
     }
 
-    private record Request(
+    private record RawRequest(
             String prompt,
             @Nullable String endpoint,
             @Nullable String model,
             String imageHash,
-            int version,
-            @JsonIgnore byte[] image
-    ) implements DiscoveryTaskLlmExecutor.Request {
+            int version
+    ) {}
 
+    private record CacheKey(String prompt, String imageHash, int version) {
         private String analysisKey() {
-            return Hashing.sha256().hashString(toCacheJson(), UTF_8).toString();
+            return Hashing.sha256().hashString(JsonConverter.toJson(this), UTF_8).toString();
         }
+    }
 
-        @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("prompt", prompt, "imageHash", imageHash, "version", version));
-        }
+    private record Request(RawRequest rawRequest, CacheKey cacheKey, byte[] image) implements DiscoveryTaskLlmExecutor.Request {
 
         @Override
         public Prompt toPrompt() {
-            UserMessage message = UserMessage.builder().text(prompt)
+            UserMessage message = UserMessage.builder().text(rawRequest.prompt())
                     .media(new Media(MimeTypeUtils.IMAGE_PNG, new ByteArrayResource(image))).build();
             return new Prompt(
                     List.of(message),
                     OpenAiChatOptions.builder()
-                            .model(model)
+                            .model(rawRequest.model())
                             .seed(42)
                             .maxTokens(1024)
                             .extraBody(Map.of("chat_template_kwargs", Map.of("enable_thinking", false)))

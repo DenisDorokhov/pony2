@@ -330,9 +330,15 @@ public class SpotifyTopTracksService {
     private record TrackMatch(@Nullable String databaseTrackId) {}
 
     private record Request(String systemPrompt, String userPrompt) implements DiscoveryTaskLlmExecutor.Request {
+
         @Override
-        public String toCacheJson() {
-            return JsonConverter.toJson(Map.of("systemPrompt", systemPrompt, "userPrompt", userPrompt));
+        public RawRequest rawRequest() {
+            return new RawRequest(systemPrompt, userPrompt);
+        }
+
+        @Override
+        public CacheKey cacheKey() {
+            return new CacheKey(systemPrompt, userPrompt);
         }
 
         @Override
@@ -340,4 +346,8 @@ public class SpotifyTopTracksService {
             return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)));
         }
     }
+
+    private record RawRequest(String systemPrompt, String userPrompt) {}
+
+    private record CacheKey(String systemPrompt, String userPrompt) {}
 }
