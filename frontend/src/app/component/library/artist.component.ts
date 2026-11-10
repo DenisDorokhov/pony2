@@ -9,9 +9,10 @@ import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {PlaybackState} from '../../service/audio-player.service';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {InstallationService} from '../../service/installation.service';
+import {SelectableButtonDirective} from '../common/selectable-button.directive';
 
 @Component({
-  imports: [TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
+  imports: [SelectableButtonDirective, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
   selector: 'pony-artist',
   templateUrl: './artist.component.html',
   styleUrls: ['./artist.component.scss'],

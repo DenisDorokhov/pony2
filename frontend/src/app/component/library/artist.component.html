@@ -1,21 +1,21 @@
-<a href="javascript:void(0);" class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
+<button type="button" ponySelectableButton class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
    (click)="select($event)">
   <pony-image-loader [url]="artist.discoveryData?.avatarExternalImageUrl || artist.smallArtworkUrl"
                      [rounded]="artist.discoveryData !== undefined"></pony-image-loader>
-  <div class="artist-title">
-    <div class="artist-name">{{ artist.name | ponyUnknownArtist }}</div>
+  <span class="artist-title">
+    <span class="artist-name">{{ artist.name | ponyUnknownArtist }}</span>
     @if (showNewIndicator) {
       <span class="new-indicator-container">
         <span class="new-indicator">{{ 'shared.newLabel' | translate }}</span>
       </span>
     }
-  </div>
-  <div class="playback-indicator">
+  </span>
+  <span class="playback-indicator">
     @if (playbackState === PlaybackState.PLAYING) {
       <i class="bi bi-volume-up-fill"></i>
     }
     @if (playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED) {
       <i class="bi bi-volume-off-fill"></i>
     }
-  </div>
-</a>
+  </span>
+</button>

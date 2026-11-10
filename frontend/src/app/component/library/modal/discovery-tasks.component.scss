@@ -10,6 +10,10 @@
   color: #ffad96;
 }
 
+a[role="button"] {
+  cursor: pointer;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

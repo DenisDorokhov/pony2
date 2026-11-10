@@ -24,9 +24,11 @@ import {PlaylistAddSongComponent} from '../playlist-add-song.component';
 import {PlaylistEditComponent} from '../playlist-edit.component';
 import {LibraryService} from '../../../../service/library.service';
 import {DropdownCloseOnScrollDirective} from '../../../common/dropdown-close-on-scroll.directive';
+import {SelectableButtonDirective} from '../../../common/selectable-button.directive';
 
 @Component({
   imports: [
+    SelectableButtonDirective,
     TranslateModule,
     UnknownArtistPipe,
     UnknownSongPipe,
@@ -153,7 +155,7 @@ export class LargeSongComponent implements OnInit, OnDestroy {
     let checkElement: Node | null = event.target as Node;
     let isButtonClick = false;
     do {
-      isButtonClick = checkElement.nodeName === 'BUTTON';
+      isButtonClick = checkElement instanceof HTMLButtonElement && !checkElement.classList.contains('song-link');
       checkElement = (checkElement as Node).parentNode;
     } while (!isButtonClick && checkElement);
     if (!isButtonClick && !event.altKey) {

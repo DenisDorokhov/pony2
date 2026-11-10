@@ -70,11 +70,17 @@
             <td>
               <span class="target-text" [title]="task.target">
                 @if (task.artist; as artist) {
-                  <a href="javascript:void(0);" class="discovery-task-type" [attr.data-task-type]="task.type"
+                  <a role="button" tabindex="0" class="discovery-task-type" [attr.data-task-type]="task.type"
+                     (keydown.enter)="$event.preventDefault(); !$any($event).altKey && $any($event.currentTarget).click()"
+                     (keydown.space)="$event.preventDefault()"
+                     (keyup.space)="$event.preventDefault(); !$any($event).altKey && $any($event.currentTarget).click()"
                      (click)="goToArtist(artist, $event)">{{ artist.name | ponyUnknownArtist }}</a>
                   @if (task.album; as album) {
-                    - <a href="javascript:void(0);" class="discovery-task-type" [attr.data-task-type]="task.type"
-                         (click)="goToAlbum(album, artist, $event)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
+                    - <a role="button" tabindex="0" class="discovery-task-type" [attr.data-task-type]="task.type"
+                       (keydown.enter)="$event.preventDefault(); !$any($event).altKey && $any($event.currentTarget).click()"
+                       (keydown.space)="$event.preventDefault()"
+                       (keyup.space)="$event.preventDefault(); !$any($event).altKey && $any($event.currentTarget).click()"
+                       (click)="goToAlbum(album, artist, $event)">{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</a>
                   }
                 } @else {
                   {{ task.target }}

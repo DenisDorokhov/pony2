@@ -40,9 +40,10 @@ import {PlaylistEditComponent} from './modal/playlist-edit.component';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistDto} from '../../domain/library.dto';
 import {DropdownCloseOnScrollDirective} from '../common/dropdown-close-on-scroll.directive';
+import {SelectableButtonDirective} from '../common/selectable-button.directive';
 
 @Component({
-    imports: [TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, DropdownCloseOnScrollDirective],
+    imports: [SelectableButtonDirective, TranslateModule, UnknownSongPipe, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, DropdownCloseOnScrollDirective],
     selector: 'pony-song',
     templateUrl: './song.component.html',
     styleUrls: ['./song.component.scss'],
@@ -151,7 +152,7 @@ export class SongComponent implements OnInit, AfterViewInit {
     let checkElement: Element | undefined = event.target as Element;
     let buttonClick = false;
     do {
-      buttonClick = checkElement?.tagName === 'BUTTON';
+      buttonClick = checkElement?.tagName === 'BUTTON' && !checkElement.classList.contains('song-link');
       checkElement = checkElement.parentNode as Element;
     } while (!buttonClick && checkElement);
     if (!buttonClick && !event.altKey) {

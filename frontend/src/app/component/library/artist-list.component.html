@@ -31,7 +31,11 @@
         }
       </div>
       <div class="reset-container" [hidden]="selectedNavigationItem.id === navigationItems[0].id">
-        <a href="javascript:void(0);" (click)="resetNavigation($event)" class="link-secondary">
+        <a role="button" tabindex="0" class="link-secondary"
+           (keydown.enter)="$event.preventDefault(); !$any($event).altKey && $any($event.currentTarget).click()"
+           (keydown.space)="$event.preventDefault()"
+           (keyup.space)="$event.preventDefault(); !$any($event).altKey && $any($event.currentTarget).click()"
+           (click)="resetNavigation($event)">
           {{ 'library.artist.resetButton' | translate }}
         </a>
       </div>

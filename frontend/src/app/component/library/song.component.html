@@ -56,8 +56,8 @@
       <i class="bi bi-fire top-track-icon" aria-hidden="true"></i>
     }
   </div>
-  <a href="javascript:void(0);" class="song-link" tabindex="-1">
-    <div class="title" [class.like-shown]="isMouseOver() || isLikedSong() || isTopTrack()">{{ song().name | ponyUnknownSong }}</div>
-    <div class="artist">{{ song().artistName }}</div>
-  </a>
+  <button type="button" ponySelectableButton class="song-link" tabindex="-1">
+    <span class="title" [class.like-shown]="isMouseOver() || isLikedSong() || isTopTrack()">{{ song().name | ponyUnknownSong }}</span>
+    <span class="artist">{{ song().artistName }}</span>
+  </button>
 </div>

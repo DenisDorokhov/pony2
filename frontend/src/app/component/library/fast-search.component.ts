@@ -21,6 +21,7 @@ import {UnknownArtistPipe} from '../../pipe/unknown-artist.pipe';
 import {UnknownAlbumPipe} from '../../pipe/unknown-album.pipe';
 import {PlaylistService} from '../../service/playlist.service';
 import scrollIntoElement = ScrollingUtils.scrollIntoElement;
+import {SelectableButtonDirective} from '../common/selectable-button.directive';
 
 class NavigationItem {
 
@@ -36,7 +37,7 @@ class NavigationItem {
 }
 
 @Component({
-  imports: [TranslateModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
+  imports: [SelectableButtonDirective, TranslateModule, ImageLoaderComponent, UnknownArtistPipe, UnknownArtistPipe, UnknownAlbumPipe, UnknownSongPipe],
   selector: 'pony-fast-search',
   templateUrl: './fast-search.component.html',
   styleUrls: ['./fast-search.component.scss']
@@ -193,7 +194,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
         event.preventDefault();
         break;
       case 'Enter': {
-        if (event.target instanceof HTMLAnchorElement) {
+        if (event.target instanceof HTMLButtonElement) {
           return;
         }
         const selectedIndex = this.indexOfSelectedNavigationItem();

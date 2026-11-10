@@ -1,5 +1,5 @@
 <div class="album-container">
-  <a class="artwork-link" [attr.href]="albumSongs.album.largeArtworkUrl ? 'javascript:void(0);' : null" (click)="openArtwork($event)">
+  <button type="button" class="artwork-link" [disabled]="!albumSongs.album.largeArtworkUrl" (click)="openArtwork($event)">
     <pony-image-loader [class.pointer]="albumSongs.album.largeArtworkUrl"
                        [url]="albumSongs.album.largeArtworkUrl" title="{{
         (albumSongs.album.artist.name | ponyUnknownArtist) +
@@ -8,7 +8,7 @@
         (albumSongs.album.year ? ' [' + albumSongs.album.year + ']' : '') + '\n' +
         ('library.album.sizeLabel' | translate:{ songCount: albumSongs.songs.length, duration })
       }}"></pony-image-loader>
-  </a>
+  </button>
   <div class="song-list-container">
     <h4 title="{{
       (albumSongs.album.artist.name | ponyUnknownArtist) +

@@ -15,9 +15,11 @@ import {NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle, NgbMod
 import {PlaylistDto} from '../../domain/library.dto';
 import {PlaylistAddSongComponent} from './modal/playlist-add-song.component';
 import {PlaylistEditComponent} from './modal/playlist-edit.component';
+import {SelectableButtonDirective} from '../common/selectable-button.directive';
+import {MenuIconComponent} from '../common/menu-icon.component';
 
 @Component({
-  imports: [ImageLoaderComponent, TranslateModule, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownItem],
+  imports: [SelectableButtonDirective, ImageLoaderComponent, TranslateModule, NgbDropdown, NgbDropdownMenu, NgbDropdownToggle, NgbDropdownItem, MenuIconComponent],
   selector: 'pony-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss']

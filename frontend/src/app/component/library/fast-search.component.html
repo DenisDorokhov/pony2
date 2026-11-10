@@ -13,13 +13,13 @@
          [hidden]="(searchResult?.artists?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundArtistsHeader' | translate }}</h5>
       @for (artist of searchResult?.artists; track $index) {
-        <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
+        <button type="button" ponySelectableButton #links class="link" [class.selected]="idToNavigationItem[artist.id].selected"
            title="{{ artist.name | ponyUnknownArtist }}"
            (mousedown)="selectArtist(artist, $event)" (click)="goToArtist(artist, $event)">
           <pony-image-loader [url]="artist.discoveryData?.avatarExternalImageUrl || artist.smallArtworkUrl"
                              [rounded]="artist.discoveryData !== undefined"></pony-image-loader>
-          <div class="text no-description">{{ artist.name | ponyUnknownArtist }}</div>
-        </a>
+          <span class="text no-description">{{ artist.name | ponyUnknownArtist }}</span>
+        </button>
       }
     </div>
 
@@ -30,27 +30,27 @@
       <h5>{{ 'fastSearch.foundSongsHeader' | translate }}</h5>
       @for (song of searchResult?.songs; track $index) {
         @let topTrack = isTopTrack(song);
-        <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
+        <button type="button" ponySelectableButton #links class="link" [class.selected]="idToNavigationItem[song.id].selected"
            title="{{ song.name | ponyUnknownSong }}
 {{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }} {{ song.album.year ? '(' + song.album.year + ')' : '' }}"
            (mousedown)="selectSong(song, $event)" (click)="goToSong(song, $event)">
           <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
-          <div class="text" [class.with-status-icon]="idToNavigationItem[song.id].liked || topTrack">
-            <div>{{ song.name | ponyUnknownSong }}</div>
-            <div>
+          <span class="text" [class.with-status-icon]="idToNavigationItem[song.id].liked || topTrack">
+            <span>{{ song.name | ponyUnknownSong }}</span>
+            <span>
               <small>{{ song.album.artist.name | ponyUnknownArtist }} - {{ song.album.name | ponyUnknownAlbum }}{{ song.album.year ? ' (' + song.album.year + ')' : '' }}</small>
-            </div>
-          </div>
+            </span>
+          </span>
           @if (idToNavigationItem[song.id].liked) {
-            <div class="like">
+            <span class="like">
               <i class="bi bi-star-fill"></i>
-            </div>
+            </span>
           } @else if (topTrack) {
-            <div class="like">
+            <span class="like">
               <i class="bi bi-fire top-track-icon" aria-hidden="true"></i>
-            </div>
+            </span>
           }
-        </a>
+        </button>
       }
     </div>
 
@@ -60,16 +60,16 @@
          [hidden]="(searchResult?.albums?.length ?? 0) < 1">
       <h5>{{ 'fastSearch.foundAlbumsHeader' | translate }}</h5>
       @for (album of searchResult?.albums; track $index) {
-        <a href="javascript:void(0);" #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
+        <button type="button" ponySelectableButton #links class="link" [class.selected]="idToNavigationItem[album.id].selected"
            title="{{ album.name | ponyUnknownAlbum }} {{ album.year ? '(' + album.year + ')' : '' }}
 {{ album.artist.name | ponyUnknownArtist }}"
            (mousedown)="selectAlbum(album, $event)" (click)="goToAlbum(album, $event)">
           <pony-image-loader [url]="album.smallArtworkUrl"></pony-image-loader>
-          <div class="text">
-            <div>{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</div>
-            <div><small>{{ album.artist.name | ponyUnknownArtist }}</small></div>
-          </div>
-        </a>
+          <span class="text">
+            <span>{{ album.name | ponyUnknownAlbum }}{{ album.year ? ' (' + album.year + ')' : '' }}</span>
+            <span><small>{{ album.artist.name | ponyUnknownArtist }}</small></span>
+          </span>
+        </button>
       }
     </div>
 

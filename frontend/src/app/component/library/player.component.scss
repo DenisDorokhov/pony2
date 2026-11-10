@@ -19,6 +19,9 @@
   }
 
   .title-container {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
     position: absolute;
     top: 0;
     left: 158px;
@@ -26,9 +29,15 @@
     text-align: center;
 
     .title {
+      margin: 0;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      text-align: inherit;
+      cursor: pointer;
       color: var(--bs-body-color);
       font-weight: bold;
-      padding: 0 5px;
+      padding: 0 0 0 5px;
       border-radius: 6px;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -43,12 +52,16 @@
     }
 
     .options {
-      display: inline;
-      position: inherit;
+      display: inline-flex;
+      flex-shrink: 0;
 
       button.menu {
+        display: block;
         border: none;
         background-color: var(--color-button-background-transparent);
+        margin: 0;
+        padding: 0;
+        font: inherit;
       }
 
       .dropdown-toggle::after {
@@ -202,6 +215,11 @@
   }
 
   .artwork-link {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
     position: absolute;
     bottom: 0;
     right: 0;

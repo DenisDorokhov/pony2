@@ -2,6 +2,11 @@
   clear: both;
 
   .artwork-link {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
     float: left;
     margin-bottom: 50px;
   }
