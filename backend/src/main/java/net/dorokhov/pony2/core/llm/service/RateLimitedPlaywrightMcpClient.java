@@ -23,7 +23,7 @@ public class RateLimitedPlaywrightMcpClient {
             PlaywrightMcpClient playwrightMcpClient,
             @Value("${pony.llm.playwrightMcp.rateLimit.notMoreOftenThan:2s}") Duration requestInterval,
             @Value("${pony.llm.playwrightMcp.rateLimit.randomDelay:4s}") Duration requestRandomDelay,
-            @Value("${pony.llm.playwrightMcp.rateLimit.retriesOnException:0}") int retriesOnException
+            @Value("${pony.llm.playwrightMcp.rateLimit.retriesOnException:1}") int retriesOnException
     ) {
         this(
                 playwrightMcpClient,
