@@ -9,13 +9,13 @@
         <span class="new-indicator">{{ 'shared.newLabel' | translate }}</span>
       </span>
     }
-  </span>
-  <span class="playback-indicator">
-    @if (playbackState === PlaybackState.PLAYING) {
-      <i class="bi bi-volume-up-fill"></i>
-    }
-    @if (playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED) {
-      <i class="bi bi-volume-off-fill"></i>
-    }
+    <span class="playback-indicator">
+      @if (playbackState === PlaybackState.PLAYING) {
+        <i class="bi bi-volume-up-fill"></i>
+      }
+      @if (playbackState === PlaybackState.LOADING || playbackState === PlaybackState.PAUSED) {
+        <i class="bi bi-volume-off-fill"></i>
+      }
+    </span>
   </span>
 </button>

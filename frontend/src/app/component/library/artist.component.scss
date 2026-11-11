@@ -83,7 +83,23 @@
   .playback-indicator {
     display: none;
     flex-shrink: 0;
-    width: 20px;
+    width: 26px;
+    margin-left: auto;
+    padding-left: 6px;
+    text-align: center;
+
+    .bi {
+      font-style: normal;
+
+      &::before {
+        vertical-align: middle;
+        transform: translateY(-1px);
+      }
+    }
+
+    .bi-volume-up-fill {
+      margin-right: -8px;
+    }
   }
 }
 
