@@ -302,7 +302,7 @@ export namespace DiscoveryProgressDto {
 
   export enum Step {
 
-    FULL_PLANNING = 'FULL_PLANNING',
+    FULL_PLANNING = 'FULL_PLANNING', // Has value.
     FULL_PROCESSING = 'FULL_PROCESSING', // Has value.
 
     ARTIST_PROCESSING = 'ARTIST_PROCESSING', // Has value.

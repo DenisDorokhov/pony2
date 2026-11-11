@@ -47,6 +47,10 @@
         <div class="progress">
           @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
             @switch (discoveryJobProgress!.discoveryProgress!.stepDescriptor.step) {
+              @case (Step.FULL_PLANNING) {
+                <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
+                     [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
+              }
               @case (Step.FULL_PROCESSING) {
                 <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
                      [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>

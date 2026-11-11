@@ -60,10 +60,12 @@ public class FullDiscoveryService {
         jobSynchronizer.interruptDiscoveryIfCancelled();
         List<Artist> artists = artistRepository.findAll(Sort.by("id")).stream().sorted().toList();
         List<DiscoveryPlan> plans = new ArrayList<>();
+        progressDiscovery(FULL_PLANNING, DiscoveryProgress.Value.of(0, artists.size()), observer);
         for (Artist artist : artists) {
             jobSynchronizer.interruptDiscoveryIfCancelled();
             List<Album> albums = albumRepository.findByArtistId(artist.getId()).stream().sorted().toList();
             plans.add(artistDiscoveryService.plan(artist, albums));
+            progressDiscovery(FULL_PLANNING, DiscoveryProgress.Value.of(plans.size(), artists.size()), observer);
         }
         jobSynchronizer.interruptDiscoveryIfCancelled();
         long tasksComplete = plans.stream().mapToLong(DiscoveryPlan::tasksSkipped).sum();

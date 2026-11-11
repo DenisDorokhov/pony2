@@ -71,9 +71,38 @@ public class FullDiscoveryServiceTest {
 
         fullDiscoveryService.discover(discoveryJob(), progressCalls::add);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getStep).containsExactly(FULL_PLANNING, FULL_PROCESSING);
-        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(null, DiscoveryProgress.Value.of(0, 0));
+        assertThat(progressCalls).extracting(DiscoveryProgress::getStep)
+                .containsExactly(FULL_PLANNING, FULL_PLANNING, FULL_PROCESSING);
+        assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
+                .containsExactly(null, DiscoveryProgress.Value.of(0, 0), DiscoveryProgress.Value.of(0, 0));
         verifyNoInteractions(artistDiscoveryService);
+    }
+
+    @Test
+    public void shouldReportPlanningProgressBeforeProcessing() {
+        Artist first = artist("artist1");
+        Artist second = artist("artist2");
+        when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(first, second));
+        List<DiscoveryProgress> progressCalls = new ArrayList<>();
+        when(artistDiscoveryService.plan(first, List.of())).thenAnswer(invocation -> {
+            assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
+                    .containsExactly(null, DiscoveryProgress.Value.of(0, 2));
+            return plan(first, ARTIST_TASK_COUNT);
+        });
+        when(artistDiscoveryService.plan(second, List.of())).thenAnswer(invocation -> {
+            assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
+                    .containsExactly(null, DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2));
+            return plan(second, ARTIST_TASK_COUNT);
+        });
+
+        fullDiscoveryService.discover(discoveryJob(), progressCalls::add);
+
+        assertThat(progressCalls).extracting(DiscoveryProgress::getStep)
+                .containsExactly(FULL_PLANNING, FULL_PLANNING, FULL_PLANNING, FULL_PLANNING, FULL_PROCESSING);
+        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(null,
+                DiscoveryProgress.Value.of(0, 2), DiscoveryProgress.Value.of(1, 2), DiscoveryProgress.Value.of(2, 2),
+                DiscoveryProgress.Value.of(2L * ARTIST_TASK_COUNT, 2L * ARTIST_TASK_COUNT));
+        verify(artistDiscoveryService, never()).discover(any(), any(ArtistDiscoveryService.DiscoveryPlan.class), anyBoolean(), any());
     }
 
     @ParameterizedTest
@@ -113,7 +142,8 @@ public class FullDiscoveryServiceTest {
 
         fullDiscoveryService.discover(job, progressCalls::add);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(null,
+        assertThat(progressCalls).filteredOn(progress -> progress.getStep() == FULL_PROCESSING)
+                .extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(98, 100), DiscoveryProgress.Value.of(98, 100),
                 DiscoveryProgress.Value.of(99, 100), DiscoveryProgress.Value.of(100, 100), DiscoveryProgress.Value.of(100, 100));
         verify(artistDiscoveryService, times(1)).discover(eq(job), any(ArtistDiscoveryService.DiscoveryPlan.class), eq(true), any());
@@ -139,7 +169,8 @@ public class FullDiscoveryServiceTest {
 
         fullDiscoveryService.discover(job, progressCalls::add);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(null,
+        assertThat(progressCalls).filteredOn(progress -> progress.getStep() == FULL_PROCESSING)
+                .extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(total - 2, total), DiscoveryProgress.Value.of(total - 1, total),
                 DiscoveryProgress.Value.of(total - 1, total), DiscoveryProgress.Value.of(total, total), DiscoveryProgress.Value.of(total, total));
     }
@@ -153,8 +184,9 @@ public class FullDiscoveryServiceTest {
 
         fullDiscoveryService.discover(discoveryJob(), progressCalls::add);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
-                .containsExactly(null, DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
+        assertThat(progressCalls).filteredOn(progress -> progress.getStep() == FULL_PROCESSING)
+                .extracting(DiscoveryProgress::getValue)
+                .containsExactly(DiscoveryProgress.Value.of(ARTIST_TASK_COUNT, ARTIST_TASK_COUNT));
         verify(artistDiscoveryService, never()).discover(any(), any(ArtistDiscoveryService.DiscoveryPlan.class), anyBoolean(), any());
     }
 
@@ -172,22 +204,39 @@ public class FullDiscoveryServiceTest {
         verify(taskRegistration).close();
     }
 
-    @Test
-    public void shouldStopPlanningBeforeNextArtistWhenCancelled() {
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2})
+    public void shouldStopPlanningWhenNumericProgressIsCancelled(int artistsPlanned) {
         Artist first = artist("artist1");
         Artist second = artist("artist2");
         when(artistRepository.findAll(any(Sort.class))).thenReturn(List.of(first, second));
-        when(artistDiscoveryService.plan(first, List.of())).thenAnswer(invocation -> {
-            doThrow(new DiscoveryInterruptedException()).when(jobSynchronizer).interruptDiscoveryIfCancelled();
-            return plan(first, ARTIST_TASK_COUNT);
-        });
+        if (artistsPlanned > 0) {
+            when(artistDiscoveryService.plan(first, List.of())).thenReturn(plan(first, ARTIST_TASK_COUNT));
+        }
+        if (artistsPlanned > 1) {
+            when(artistDiscoveryService.plan(second, List.of())).thenReturn(plan(second, ARTIST_TASK_COUNT));
+        }
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
 
-        assertThatThrownBy(() -> fullDiscoveryService.discover(discoveryJob(), progressCalls::add))
+        assertThatThrownBy(() -> fullDiscoveryService.discover(discoveryJob(), progress -> {
+            progressCalls.add(progress);
+            DiscoveryProgress.Value value = progress.getValue();
+            if (progress.getStep() == FULL_PLANNING && value != null && value.getItemsComplete() == artistsPlanned) {
+                doThrow(new DiscoveryInterruptedException()).when(jobSynchronizer).interruptDiscoveryIfCancelled();
+            }
+        }))
                 .isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getStep).containsExactly(FULL_PLANNING);
-        verify(artistDiscoveryService, never()).plan(eq(second), anyList());
+        List<DiscoveryProgress.Value> expectedValues = new ArrayList<>();
+        expectedValues.add(null);
+        for (int index = 0; index <= artistsPlanned; index++) {
+            expectedValues.add(DiscoveryProgress.Value.of(index, 2));
+        }
+        assertThat(progressCalls).extracting(DiscoveryProgress::getStep).containsOnly(FULL_PLANNING);
+        assertThat(progressCalls).extracting(DiscoveryProgress::getValue)
+                .containsExactlyElementsOf(expectedValues);
+        verify(artistDiscoveryService, times(artistsPlanned > 0 ? 1 : 0)).plan(eq(first), anyList());
+        verify(artistDiscoveryService, times(artistsPlanned > 1 ? 1 : 0)).plan(eq(second), anyList());
         verify(artistDiscoveryService, never()).discover(any(), any(ArtistDiscoveryService.DiscoveryPlan.class), anyBoolean(), any());
     }
 
@@ -208,7 +257,8 @@ public class FullDiscoveryServiceTest {
         assertThatThrownBy(() -> fullDiscoveryService.discover(job, progressCalls::add))
                 .isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(progressCalls).extracting(DiscoveryProgress::getValue).containsExactly(null,
+        assertThat(progressCalls).filteredOn(progress -> progress.getStep() == FULL_PROCESSING)
+                .extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(2L * ARTIST_TASK_COUNT - 2, 2L * ARTIST_TASK_COUNT));
         verify(artistDiscoveryService, never()).discover(eq(job), eq(secondPlan), anyBoolean(), any());
         verify(taskRegistration).close();

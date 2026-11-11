@@ -1820,18 +1820,17 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             completedTaskCounts.add(taskRepository.countByJobIdAndStatus(job.getId(), DiscoveryTask.Status.COMPLETE));
         });
 
-        assertThat(progressCalls).hasSize(total + 4);
+        assertThat(progressCalls).hasSize(total + 6);
         assertThat(completedTaskCounts).hasSameSizeAs(progressCalls);
-        assertThat(progressCalls.getFirst()).satisfies(progress -> {
-            assertThat(progress.getStep()).isEqualTo(DiscoveryProgress.Step.FULL_PLANNING);
-            assertThat(progress.getValue()).isNull();
-        });
-        for (int index = 1; index < progressCalls.size(); index++) {
+        assertThat(progressCalls).filteredOn(progress -> progress.getStep() == DiscoveryProgress.Step.FULL_PLANNING)
+                .extracting(DiscoveryProgress::getValue)
+                .containsExactly(null, DiscoveryProgress.Value.of(0, 1), DiscoveryProgress.Value.of(1, 1));
+        for (int index = 3; index < progressCalls.size(); index++) {
             DiscoveryProgress progress = progressCalls.get(index);
             assertThat(progress.getStep()).isEqualTo(DiscoveryProgress.Step.FULL_PROCESSING);
             assertThat(progress.getValue()).isEqualTo(DiscoveryProgress.Value.of(completedTaskCounts.get(index), total));
         }
-        assertThat(progressCalls.get(1).getValue()).isEqualTo(DiscoveryProgress.Value.of(0, total));
+        assertThat(progressCalls.get(3).getValue()).isEqualTo(DiscoveryProgress.Value.of(0, total));
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(total, total));
         assertThat(taskRepository.findAll()).hasSize(total)
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
@@ -1997,7 +1996,9 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, progressCalls::add);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
-        assertThat(progressCalls.get(1).getValue()).isEqualTo(DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));
+        assertThat(progressCalls).filteredOn(progress -> progress.getStep() == DiscoveryProgress.Step.FULL_PROCESSING)
+                .extracting(DiscoveryProgress::getValue)
+                .containsExactly(DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));
         DiscoveryJob followingJob = job(DiscoveryType.FULL);
 

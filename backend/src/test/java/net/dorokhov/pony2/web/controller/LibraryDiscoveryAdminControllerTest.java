@@ -261,10 +261,12 @@ public class LibraryDiscoveryAdminControllerTest {
         });
     }
 
-    @Test
-    public void shouldGetFullDiscoveryPlanningProgress() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void shouldGetFullDiscoveryPlanningProgress(boolean progressKnown) throws Exception {
+        DiscoveryProgress.Value value = progressKnown ? DiscoveryProgress.Value.of(1, 3) : null;
         DiscoveryJobProgress progress = new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
-                new DiscoveryProgress(DiscoveryProgress.Step.FULL_PLANNING, null));
+                new DiscoveryProgress(DiscoveryProgress.Step.FULL_PLANNING, value));
         mockProgress("/job1", progress);
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress/job1"))
@@ -277,7 +279,14 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(discoveryProgress.getStepDescriptor().getDiscoveryType()).isEqualTo(DiscoveryType.FULL);
             assertThat(discoveryProgress.getStepDescriptor().getStepNumber()).isZero();
             assertThat(discoveryProgress.getStepDescriptor().getTotalSteps()).isEqualTo(2);
-            assertThat(discoveryProgress.getValue()).isNull();
+            if (progressKnown) {
+                assertThat(discoveryProgress.getValue()).satisfies(progressValue -> {
+                    assertThat(progressValue.getItemsComplete()).isEqualTo(1);
+                    assertThat(progressValue.getItemsTotal()).isEqualTo(3);
+                });
+            } else {
+                assertThat(discoveryProgress.getValue()).isNull();
+            }
         });
     }
 
