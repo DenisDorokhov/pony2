@@ -233,7 +233,7 @@ public class LibraryDiscoveryAdminControllerTest {
     @Test
     public void shouldGetDiscoveryJobProgress() throws Exception {
         DiscoveryJobProgress progress = new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
-                new DiscoveryProgress(DiscoveryProgress.Step.FULL_DISCOVERY, DiscoveryProgress.Value.of(3, 10)));
+                new DiscoveryProgress(DiscoveryProgress.Step.FULL_PROCESSING, DiscoveryProgress.Value.of(3, 10)));
         mockProgress("/job1", progress);
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress/job1"))
@@ -247,10 +247,10 @@ public class LibraryDiscoveryAdminControllerTest {
                 assertThat(discoveryJobProgress.getDiscoveryJob().getId()).isEqualTo("job1");
                 assertThat(discoveryJobProgress.getDiscoveryProgress()).satisfies(discoveryProgress -> {
                     assertThat(discoveryProgress.getStepDescriptor()).satisfies(stepDescriptor -> {
-                        assertThat(stepDescriptor.getStep()).isSameAs(DiscoveryProgress.Step.FULL_DISCOVERY);
+                        assertThat(stepDescriptor.getStep()).isSameAs(DiscoveryProgress.Step.FULL_PROCESSING);
                         assertThat(stepDescriptor.getDiscoveryType()).isSameAs(DiscoveryType.FULL);
-                        assertThat(stepDescriptor.getStepNumber()).isEqualTo(0);
-                        assertThat(stepDescriptor.getTotalSteps()).isEqualTo(1);
+                        assertThat(stepDescriptor.getStepNumber()).isEqualTo(1);
+                        assertThat(stepDescriptor.getTotalSteps()).isEqualTo(2);
                     });
                     assertThat(discoveryProgress.getValue()).satisfies(value -> {
                         assertThat(value.getItemsComplete()).isEqualTo(3);
@@ -258,6 +258,26 @@ public class LibraryDiscoveryAdminControllerTest {
                     });
                 });
             });
+        });
+    }
+
+    @Test
+    public void shouldGetFullDiscoveryPlanningProgress() throws Exception {
+        DiscoveryJobProgress progress = new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
+                new DiscoveryProgress(DiscoveryProgress.Step.FULL_PLANNING, null));
+        mockProgress("/job1", progress);
+
+        String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress/job1"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        OptionalResponseDto<DiscoveryJobProgressDto> dto = objectMapper.readValue(response, new TypeReference<>() {});
+
+        assertThat(dto.getValue().getDiscoveryProgress()).satisfies(discoveryProgress -> {
+            assertThat(discoveryProgress.getStepDescriptor().getStep()).isEqualTo(DiscoveryProgress.Step.FULL_PLANNING);
+            assertThat(discoveryProgress.getStepDescriptor().getDiscoveryType()).isEqualTo(DiscoveryType.FULL);
+            assertThat(discoveryProgress.getStepDescriptor().getStepNumber()).isZero();
+            assertThat(discoveryProgress.getStepDescriptor().getTotalSteps()).isEqualTo(2);
+            assertThat(discoveryProgress.getValue()).isNull();
         });
     }
 
@@ -290,7 +310,7 @@ public class LibraryDiscoveryAdminControllerTest {
         assertThat(objectMapper.readTree(inactiveResponse).has("progress")).isFalse();
 
         mockProgress("", new DiscoveryJobProgress(discoveryJob(DiscoveryType.FULL).setId("job1"),
-                new DiscoveryProgress(DiscoveryProgress.Step.FULL_DISCOVERY, DiscoveryProgress.Value.of(3, 10))));
+                new DiscoveryProgress(DiscoveryProgress.Step.FULL_PROCESSING, DiscoveryProgress.Value.of(3, 10))));
 
         String activeResponse = mockMvc.perform(get("/api/admin/library/discoveryJobProgress"))
                 .andExpect(status().isOk())
@@ -327,7 +347,7 @@ public class LibraryDiscoveryAdminControllerTest {
     @Test
     public void shouldGetDiscoveryStepWithoutCounters() throws Exception {
         mockProgress("/job1", new DiscoveryJobProgress(discoveryJob(DiscoveryType.ARTIST).setId("job1"),
-                new DiscoveryProgress(DiscoveryProgress.Step.ARTIST_DISCOVERY, null)));
+                new DiscoveryProgress(DiscoveryProgress.Step.ARTIST_PROCESSING, null)));
 
         String response = mockMvc.perform(get("/api/admin/library/discoveryJobProgress/job1"))
                 .andExpect(status().isOk())
@@ -338,7 +358,7 @@ public class LibraryDiscoveryAdminControllerTest {
             assertThat(optionalResponse.isPresent()).isTrue();
             assertThat(optionalResponse.getValue()).satisfies(discoveryJobProgress ->
                     assertThat(discoveryJobProgress.getDiscoveryProgress()).satisfies(discoveryProgress -> {
-                        assertThat(discoveryProgress.getStepDescriptor().getStep()).isSameAs(DiscoveryProgress.Step.ARTIST_DISCOVERY);
+                        assertThat(discoveryProgress.getStepDescriptor().getStep()).isSameAs(DiscoveryProgress.Step.ARTIST_PROCESSING);
                         assertThat(discoveryProgress.getValue()).isNull();
                     }));
         });

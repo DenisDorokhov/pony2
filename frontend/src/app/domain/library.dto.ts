@@ -301,9 +301,13 @@ export interface DiscoveryProgressDto {
 export namespace DiscoveryProgressDto {
 
   export enum Step {
-    FULL_DISCOVERY = 'FULL_DISCOVERY',
-    ARTIST_DISCOVERY = 'ARTIST_DISCOVERY',
-    ALBUM_DISCOVERY = 'ALBUM_DISCOVERY',
+
+    FULL_PLANNING = 'FULL_PLANNING',
+    FULL_PROCESSING = 'FULL_PROCESSING', // Has value.
+
+    ARTIST_PROCESSING = 'ARTIST_PROCESSING', // Has value.
+
+    ALBUM_PROCESSING = 'ALBUM_PROCESSING', // Has value.
   }
 
   export interface Value {

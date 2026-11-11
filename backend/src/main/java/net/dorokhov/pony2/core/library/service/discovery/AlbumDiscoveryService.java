@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ALBUM_DISCOVERY;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ALBUM_PROCESSING;
 
 @Service
 public class AlbumDiscoveryService {
@@ -52,9 +52,9 @@ public class AlbumDiscoveryService {
 
     public void discover(DiscoveryJob discoveryJob, Album album, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer) {
         try (LibraryJobSynchronizer.DiscoveryTaskRegistration ignored = jobSynchronizer.registerDiscoveryTask()) {
-            notifyProgressObserver(new DiscoveryProgress(ALBUM_DISCOVERY, DiscoveryProgress.Value.of(0, ALBUM_TASK_COUNT)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ALBUM_PROCESSING, DiscoveryProgress.Value.of(0, ALBUM_TASK_COUNT)), observer);
             taskExecutor.execute(new MusicBrainzTaskExecution(discoveryJob, album, cacheEnabled));
-            notifyProgressObserver(new DiscoveryProgress(ALBUM_DISCOVERY, DiscoveryProgress.Value.of(ALBUM_TASK_COUNT, ALBUM_TASK_COUNT)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ALBUM_PROCESSING, DiscoveryProgress.Value.of(ALBUM_TASK_COUNT, ALBUM_TASK_COUNT)), observer);
         }
     }
 

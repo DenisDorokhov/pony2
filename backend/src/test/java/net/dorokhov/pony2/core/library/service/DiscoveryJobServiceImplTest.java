@@ -43,7 +43,7 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryJob.Status.*;
-import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.*;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.FULL_PROCESSING;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryType.*;
 import static net.dorokhov.pony2.core.library.PlatformTransactionManagerFixtures.transactionManager;
 import static net.dorokhov.pony2.test.DiscoveryJobFixtures.discoveryJobArtist;
@@ -139,7 +139,7 @@ public class DiscoveryJobServiceImplTest {
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(2);
-            observer.accept(new DiscoveryProgress(FULL_DISCOVERY, null));
+            observer.accept(new DiscoveryProgress(FULL_PROCESSING, null));
             return null;
         }).when(fullDiscoveryService).discover(any(), eq(true), any());
 
@@ -172,7 +172,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatProgressedAt(2, discoveryJobProgress -> {
             //noinspection ConstantConditions
-            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(FULL_DISCOVERY);
+            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(FULL_PROCESSING);
             assertThat(discoveryJobProgress.getDiscoveryProgress().getValue()).isNull();
         });
         observer.assertThatCompletingAt(3);
@@ -230,7 +230,7 @@ public class DiscoveryJobServiceImplTest {
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(3);
-            observer.accept(new DiscoveryProgress(ARTIST_DISCOVERY, null));
+            observer.accept(new DiscoveryProgress(DiscoveryProgress.Step.ARTIST_PROCESSING, null));
             return null;
         }).when(artistDiscoveryService).discover(any(), any(), eq(true), any());
 
@@ -256,7 +256,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatProgressedAt(2, discoveryJobProgress -> {
             //noinspection ConstantConditions
-            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(ARTIST_DISCOVERY);
+            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(DiscoveryProgress.Step.ARTIST_PROCESSING);
             assertThat(discoveryJobProgress.getDiscoveryProgress().getValue()).isNull();
         });
         observer.assertThatCompletingAt(3);
@@ -272,7 +272,7 @@ public class DiscoveryJobServiceImplTest {
         when(discoveryJobRepository.save(any())).then(saveDiscoveryJob());
         doAnswer(invocation -> {
             Consumer<DiscoveryProgress> observer = invocation.getArgument(3);
-            observer.accept(new DiscoveryProgress(ALBUM_DISCOVERY, null));
+            observer.accept(new DiscoveryProgress(DiscoveryProgress.Step.ALBUM_PROCESSING, null));
             return null;
         }).when(albumDiscoveryService).discover(any(), any(), eq(true), any());
 
@@ -297,7 +297,7 @@ public class DiscoveryJobServiceImplTest {
         observer.assertThatStartedAt(1);
         observer.assertThatProgressedAt(2, discoveryJobProgress -> {
             //noinspection ConstantConditions
-            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(ALBUM_DISCOVERY);
+            assertThat(discoveryJobProgress.getDiscoveryProgress().getStep()).isSameAs(DiscoveryProgress.Step.ALBUM_PROCESSING);
             assertThat(discoveryJobProgress.getDiscoveryProgress().getValue()).isNull();
         });
         observer.assertThatCompletingAt(3);

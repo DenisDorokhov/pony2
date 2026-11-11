@@ -167,7 +167,7 @@ class ArtistDiscoveryServiceIntegrationTest extends IntegrationTest {
         });
         assertThat(cacheRepository.count()).isEqualTo(cacheEnabled ? 5 : 0);
         assertThat(progress).allSatisfy(value -> assertThat(value.getStep())
-                .isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY));
+                .isEqualTo(DiscoveryProgress.Step.ARTIST_PROCESSING));
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, TASKS_WITH_ONE_ALBUM), DiscoveryProgress.Value.of(1, TASKS_WITH_ONE_ALBUM), DiscoveryProgress.Value.of(2, TASKS_WITH_ONE_ALBUM),
                 DiscoveryProgress.Value.of(3, TASKS_WITH_ONE_ALBUM), DiscoveryProgress.Value.of(4, TASKS_WITH_ONE_ALBUM), DiscoveryProgress.Value.of(5, TASKS_WITH_ONE_ALBUM), DiscoveryProgress.Value.of(6, TASKS_WITH_ONE_ALBUM), DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));

@@ -27,17 +27,17 @@ import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static com.google.common.base.Throwables.getRootCause;
 import static java.util.Objects.requireNonNull;
-import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_DISCOVERY;
+import static net.dorokhov.pony2.api.library.domain.DiscoveryProgress.Step.ARTIST_PROCESSING;
 import static net.dorokhov.pony2.core.library.service.discovery.AlbumDiscoveryService.ALBUM_TASK_COUNT;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
@@ -110,13 +110,12 @@ public class ArtistDiscoveryService {
     ) {
         List<Album> albums = requireNonNull(transactionTemplate.execute(status ->
                 albumRepository.findByArtistId(artist.getId()).stream().sorted().toList()));
-        discover(discoveryJob, artist, cacheEnabled, albums, EnumSet.copyOf(ARTIST_TASK_TYPES), album -> true, observer);
+        discover(discoveryJob, new DiscoveryPlan(artist, albums, EnumSet.copyOf(ARTIST_TASK_TYPES),
+                ARTIST_TASK_COUNT + (long) albums.size() * ALBUM_TASK_COUNT), cacheEnabled, observer);
     }
 
-    public void discoverIfUpdated(
-            DiscoveryJob discoveryJob, Artist artist, List<Album> albums,
-            boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer
-    ) {
+    public DiscoveryPlan plan(Artist artist, List<Album> albums) {
+        jobSynchronizer.interruptDiscoveryIfCancelled();
         EnumSet<DiscoveryTaskType> taskTypes = EnumSet.copyOf(ARTIST_TASK_TYPES);
         if (!shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_ARTIST_DATA)) {
             taskTypes.remove(DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
@@ -127,10 +126,22 @@ public class ArtistDiscoveryService {
                 taskTypes.remove(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES);
             }
         }
-        discover(discoveryJob, artist, cacheEnabled, albums, taskTypes, album -> {
+        List<Album> requiredAlbums = new ArrayList<>();
+        for (Album album : albums) {
             jobSynchronizer.interruptDiscoveryIfCancelled();
-            return shouldDiscoverAlbum(album);
-        }, observer);
+            if (shouldDiscoverAlbum(album)) {
+                requiredAlbums.add(album);
+            }
+        }
+        if (!taskTypes.contains(DiscoveryTaskType.SPOTIFY_ARTIST_DATA) && requiredAlbums.isEmpty() &&
+                !shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS)) {
+            taskTypes.remove(DiscoveryTaskType.SPOTIFY_TOP_TRACKS);
+        }
+        if (requiredAlbums.isEmpty() && !shouldDiscoverArtistTask(artist, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA)) {
+            taskTypes.remove(DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA);
+        }
+        return new DiscoveryPlan(artist, List.copyOf(requiredAlbums), taskTypes,
+                ARTIST_TASK_COUNT + (long) albums.size() * ALBUM_TASK_COUNT);
     }
 
     private boolean shouldDiscoverArtistTask(Artist artist, DiscoveryTaskType type) {
@@ -178,53 +189,52 @@ public class ArtistDiscoveryService {
                 .orElse(true);
     }
 
-    private void discover(
-            DiscoveryJob discoveryJob, Artist artist, boolean cacheEnabled, List<Album> albums,
-            EnumSet<DiscoveryTaskType> taskTypes, Predicate<Album> shouldDiscoverAlbum,
-            @Nullable Consumer<DiscoveryProgress> observer
+    void discover(
+            DiscoveryJob discoveryJob, DiscoveryPlan plan, boolean cacheEnabled, @Nullable Consumer<DiscoveryProgress> observer
     ) {
-        long tasksComplete = ARTIST_TASK_COUNT - taskTypes.size();
-        long tasksTotal = ARTIST_TASK_COUNT + (long) albums.size() * ALBUM_TASK_COUNT;
-        notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
+        Artist artist = plan.artist();
+        EnumSet<DiscoveryTaskType> taskTypes = plan.taskTypes();
+        long tasksComplete = plan.tasksSkipped();
+        long tasksTotal = plan.tasksTotal();
+        notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
         if (taskTypes.contains(DiscoveryTaskType.SPOTIFY_ARTIST_DATA)) {
             SpotifyArtistDataTaskExecution artistDataExecution = new SpotifyArtistDataTaskExecution(discoveryJob, artist, cacheEnabled);
             taskExecutor.execute(artistDataExecution);
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
-        boolean albumsDiscovered = false;
-        for (Album album : albums) {
-            if (shouldDiscoverAlbum.test(album)) {
-                albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
-                albumsDiscovered = true;
-            }
+        for (Album album : plan.albums()) {
+            jobSynchronizer.interruptDiscoveryIfCancelled();
+            albumDiscoveryService.discover(discoveryJob, album, cacheEnabled, null);
             tasksComplete += ALBUM_TASK_COUNT;
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(tasksComplete, tasksTotal)), observer);
         }
         if (taskTypes.contains(DiscoveryTaskType.SPOTIFY_TOP_TRACKS)) {
             if (taskTypes.contains(DiscoveryTaskType.SPOTIFY_ARTIST_DATA) ||
                     shouldDiscoverArtistTask(artist, DiscoveryTaskType.SPOTIFY_TOP_TRACKS)) {
                 taskExecutor.execute(new SpotifyTopTracksTaskExecution(discoveryJob, artist, cacheEnabled));
             }
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
         jobSynchronizer.interruptDiscoveryIfCancelled();
-        if (albumsDiscovered || shouldDiscoverArtistTask(artist, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA)) {
-            taskExecutor.execute(new MusicBrainzArtistDataTaskExecution(discoveryJob, artist, cacheEnabled));
+        if (taskTypes.contains(DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA)) {
+            if (!plan.albums().isEmpty() || shouldDiscoverArtistTask(artist, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA)) {
+                taskExecutor.execute(new MusicBrainzArtistDataTaskExecution(discoveryJob, artist, cacheEnabled));
+            }
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
-        notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         if (taskTypes.contains(DiscoveryTaskType.ARTIST_AVATAR_IMAGE)) {
             taskExecutor.execute(new ArtistImageTaskExecution(discoveryJob, artist, DiscoveryTaskType.ARTIST_AVATAR_IMAGE));
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
         if (taskTypes.contains(DiscoveryTaskType.ARTIST_BIO_IMAGE)) {
             taskExecutor.execute(new ArtistImageTaskExecution(discoveryJob, artist, DiscoveryTaskType.ARTIST_BIO_IMAGE));
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
         if (taskTypes.contains(DiscoveryTaskType.ARTIST_BIO_IMAGE_FACES)) {
             if (taskTypes.contains(DiscoveryTaskType.SPOTIFY_ARTIST_DATA) || artistBioImageFacesService.shouldDiscover(artist)) {
                 taskExecutor.execute(new ArtistBioImageFacesTaskExecution(discoveryJob, artist, cacheEnabled));
             }
-            notifyProgressObserver(new DiscoveryProgress(ARTIST_DISCOVERY, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
+            notifyProgressObserver(new DiscoveryProgress(ARTIST_PROCESSING, DiscoveryProgress.Value.of(++tasksComplete, tasksTotal)), observer);
         }
     }
 
@@ -435,6 +445,17 @@ public class ArtistDiscoveryService {
                 task.setRawResponses(List.of(Map.of("status", "error", "error", getRootCause(error).toString())));
             }
             logService.error(logger, "Could not discover image of type {} for artist '{}'.", type, artist.getName(), error);
+        }
+    }
+
+    public record DiscoveryPlan(Artist artist, List<Album> albums, EnumSet<DiscoveryTaskType> taskTypes, long tasksTotal) {
+
+        long tasksPending() {
+            return taskTypes.size() + (long) albums.size() * ALBUM_TASK_COUNT;
+        }
+
+        long tasksSkipped() {
+            return tasksTotal - tasksPending();
         }
     }
 

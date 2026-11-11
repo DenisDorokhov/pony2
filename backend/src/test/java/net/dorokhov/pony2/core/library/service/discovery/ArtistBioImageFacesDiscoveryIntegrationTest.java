@@ -148,7 +148,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         clearInvocations(model);
 
         DiscoveryJob next = job();
-        service.discoverIfUpdated(next, artist, List.of(), true, null);
+        service.discover(next, service.plan(artist, List.of()), true, null);
 
         assertThat(completed.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(completed.getResult()).isNotNull();
@@ -168,7 +168,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         clearInvocations(model, spotify);
 
         DiscoveryJob next = job();
-        service.discoverIfUpdated(next, artist, List.of(), false, null);
+        service.discover(next, service.plan(artist, List.of()), false, null);
 
         assertThat(taskRepository.findAll()).filteredOn(task -> task.getJob().getId().equals(next.getId()))
                 .singleElement().satisfies(task -> assertThat(task.getType()).isEqualTo(ARTIST_BIO_IMAGE_FACES));
@@ -187,7 +187,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(resultReader.readArtistBioImageFaces(artist.getId(), replacement.getExternalImage().getId())).isNull();
         clearInvocations(model);
 
-        service.discoverIfUpdated(job(), artist, List.of(), false, null);
+        service.discover(job(), service.plan(artist, List.of()), false, null);
 
         assertThat(facesTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(JsonConverter.fromJson(facesTask().getResult(), ArtistBioImageFacesService.Result.class).externalImageId())
@@ -204,7 +204,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(resultReader.readArtistBioImageFaces(artist.getId(), image.getExternalImage().getId())).isNull();
         when(model.call(any(Prompt.class))).thenReturn(response("{\"faces\": []}"));
 
-        service.discoverIfUpdated(job(), artist, List.of(), true, null);
+        service.discover(job(), service.plan(artist, List.of()), true, null);
 
         assertThat(facesTask().getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE);
         assertThat(resultReader.readArtistBioImageFaces(artist.getId(), image.getExternalImage().getId())).isEmpty();
@@ -234,7 +234,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(DiscoveryTaskSummaryDto.of(DiscoveryTaskSummary.of(task), null, null, null, null).isNoResult()).isTrue();
 
         DiscoveryJob next = job();
-        service.discoverIfUpdated(next, artist, List.of(), true, null);
+        service.discover(next, service.plan(artist, List.of()), true, null);
 
         assertThat(taskRepository.countByJobId(next.getId())).isZero();
         verify(model, never()).call(any(Prompt.class));
@@ -257,7 +257,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         taskRepository.save(task.setResult(JsonConverter.toJson(new ArtistBioImageFacesService.Result(null, null, List.of()))));
 
         DiscoveryJob backfill = job();
-        service.discoverIfUpdated(backfill, artist, List.of(), true, null);
+        service.discover(backfill, service.plan(artist, List.of()), true, null);
 
         assertThat(taskRepository.findAll()).filteredOn(candidate -> candidate.getJob().getId().equals(backfill.getId()))
                 .singleElement().satisfies(candidate -> {
@@ -266,7 +266,7 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
                     assertThat(DiscoveryTaskSummaryDto.of(DiscoveryTaskSummary.of(candidate), null, null, null, null).isNoResult()).isTrue();
                 });
         DiscoveryJob following = job();
-        service.discoverIfUpdated(following, artist, List.of(), true, null);
+        service.discover(following, service.plan(artist, List.of()), true, null);
         assertThat(taskRepository.countByJobId(following.getId())).isZero();
         verify(model, never()).call(any(Prompt.class));
     }

@@ -15,11 +15,12 @@ public final class DiscoveryProgress {
 
     public enum Step {
 
-        FULL_DISCOVERY(FULL, 0, 1),
+        FULL_PLANNING(FULL, 0, 2),
+        FULL_PROCESSING(FULL, 1, 2),
 
-        ARTIST_DISCOVERY(ARTIST, 0, 1),
+        ARTIST_PROCESSING(ARTIST, 0, 1),
 
-        ALBUM_DISCOVERY(ALBUM, 0, 1),
+        ALBUM_PROCESSING(ALBUM, 0, 1),
         ;
 
         private final DiscoveryType discoveryType;

@@ -10,23 +10,31 @@
       <td class="label">{{ 'discovery.statusLabel' | translate }}</td>
       <td class="value">
         @if (discoveryJobProgress) {
-          @switch (discoveryJobProgress.discoveryJob.discoveryType) {
-            @case (DiscoveryType.FULL) {
-              {{ 'discovery.discoveryJobProgress.fullDiscoveryLabel' | translate }}
+          @switch (discoveryJobProgress.discoveryProgress?.stepDescriptor?.step) {
+            @case (Step.FULL_PLANNING) {
+              {{ 'discovery.discoveryJobProgress.fullPlanningLabel' | translate }}
             }
-            @case (DiscoveryType.ARTIST) {
-              {{ 'discovery.discoveryJobProgress.artistDiscoveryLabel' | translate }}
+            @case (Step.FULL_PROCESSING) {
+              {{ 'discovery.discoveryJobProgress.fullProcessingLabel' | translate }}
             }
-            @case (DiscoveryType.ALBUM) {
-              {{ 'discovery.discoveryJobProgress.albumDiscoveryLabel' | translate }}
+            @case (Step.ARTIST_PROCESSING) {
+              {{ 'discovery.discoveryJobProgress.artistProcessingLabel' | translate }}
+            }
+            @case (Step.ALBUM_PROCESSING) {
+              {{ 'discovery.discoveryJobProgress.albumProcessingLabel' | translate }}
+            }
+            @default {
+              {{ 'discovery.discoveryJobProgress.startingLabel' | translate }}
             }
           }
           @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
-            {{ 'discovery.discoveryJobProgress.itemsProgressLabel' | translate:{
-              percentage: discoveryProgressValue.toFixed(0),
-              itemsComplete: discoveryJobProgress.discoveryProgress!.value!.itemsComplete,
-              itemsTotal: discoveryJobProgress.discoveryProgress!.value!.itemsTotal
-            } }}
+            {{
+              'discovery.discoveryJobProgress.itemsProgressLabel' | translate:{
+                percentage: discoveryProgressValue.toFixed(0),
+                itemsComplete: discoveryJobProgress.discoveryProgress!.value!.itemsComplete,
+                itemsTotal: discoveryJobProgress.discoveryProgress!.value!.itemsTotal
+              }
+            }}
           }
         } @else {
           {{ 'discovery.discoveryJobProgress.inactiveLabel' | translate }}
@@ -39,15 +47,15 @@
         <div class="progress">
           @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
             @switch (discoveryJobProgress!.discoveryProgress!.stepDescriptor.step) {
-              @case (Step.FULL_DISCOVERY) {
+              @case (Step.FULL_PROCESSING) {
                 <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
                      [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
               }
-              @case (Step.ARTIST_DISCOVERY) {
+              @case (Step.ARTIST_PROCESSING) {
                 <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
                      [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
               }
-              @case (Step.ALBUM_DISCOVERY) {
+              @case (Step.ALBUM_PROCESSING) {
                 <div role="progressbar" class="progress-bar" [style.width]="discoveryProgressValue + '%'"
                      [attr.aria-valuenow]="discoveryProgressValue" aria-valuemin="0" aria-valuemax="100"></div>
               }

@@ -189,7 +189,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             progress.add(value);
         });
 
-        assertThat(progress).allSatisfy(value -> assertThat(value.getStep()).isEqualTo(DiscoveryProgress.Step.ALBUM_DISCOVERY));
+        assertThat(progress).allSatisfy(value -> assertThat(value.getStep()).isEqualTo(DiscoveryProgress.Step.ALBUM_PROCESSING));
         assertThat(progress).extracting(DiscoveryProgress::getValue).containsExactly(
                 DiscoveryProgress.Value.of(0, ALBUM_TASK_COUNT), DiscoveryProgress.Value.of(ALBUM_TASK_COUNT, ALBUM_TASK_COUNT));
         DiscoveryTask task = onlyTask();
@@ -1612,7 +1612,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         int total = ARTIST_TASK_COUNT + 2 * ALBUM_TASK_COUNT;
         assertThat(progress).hasSize(total + 1);
         for (int index = 0; index <= total; index++) {
-            assertThat(progress.get(index).getStep()).isEqualTo(DiscoveryProgress.Step.ARTIST_DISCOVERY);
+            assertThat(progress.get(index).getStep()).isEqualTo(DiscoveryProgress.Step.ARTIST_PROCESSING);
             assertThat(progress.get(index).getValue()).isEqualTo(DiscoveryProgress.Value.of(index, total));
         }
         List<DiscoveryTask> tasks = taskRepository.findAll().stream().sorted(Comparator.comparing(DiscoveryTask::getCreationDate)).toList();
@@ -1733,7 +1733,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(refreshedTasks).extracting(DiscoveryTask::getType).containsExactlyInAnyOrderElementsOf(separateAlbumJob
                 ? List.of(DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA)
                 : List.of(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTaskType.SPOTIFY_TOP_TRACKS, DiscoveryTaskType.MUSICBRAINZ_ARTIST_DATA));
-        assertThat(progress).extracting(value -> requireNonNull(value.getValue()).getItemsComplete()).isSorted();
+        assertThat(progress).filteredOn(value -> value.getStep() == DiscoveryProgress.Step.FULL_PROCESSING)
+                .extracting(value -> requireNonNull(value.getValue()).getItemsComplete()).isSorted();
         if (failFirstMatching) {
             assertThat(refreshedTasks).filteredOn(task -> task.getType() == DiscoveryTaskType.SPOTIFY_TOP_TRACKS)
                     .singleElement().satisfies(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.FAILED));
@@ -1812,24 +1813,33 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         DiscoveryJob job = job(DiscoveryType.FULL);
         int total = ARTIST_TASK_COUNT + 2 * ALBUM_TASK_COUNT;
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
+        List<Long> completedTaskCounts = new ArrayList<>();
 
         fullDiscoveryService.discover(job, false, progress -> {
             progressCalls.add(progress);
-            assertThat(progress.getStep()).isEqualTo(DiscoveryProgress.Step.FULL_DISCOVERY);
-            assertThat(progress.getValue()).isEqualTo(DiscoveryProgress.Value.of(
-                    taskRepository.countByJobIdAndStatus(job.getId(), DiscoveryTask.Status.COMPLETE), total));
+            completedTaskCounts.add(taskRepository.countByJobIdAndStatus(job.getId(), DiscoveryTask.Status.COMPLETE));
         });
 
-        assertThat(progressCalls).hasSize(total + 3);
-        assertThat(progressCalls.getFirst().getValue()).isEqualTo(DiscoveryProgress.Value.of(0, total));
+        assertThat(progressCalls).hasSize(total + 4);
+        assertThat(completedTaskCounts).hasSameSizeAs(progressCalls);
+        assertThat(progressCalls.getFirst()).satisfies(progress -> {
+            assertThat(progress.getStep()).isEqualTo(DiscoveryProgress.Step.FULL_PLANNING);
+            assertThat(progress.getValue()).isNull();
+        });
+        for (int index = 1; index < progressCalls.size(); index++) {
+            DiscoveryProgress progress = progressCalls.get(index);
+            assertThat(progress.getStep()).isEqualTo(DiscoveryProgress.Step.FULL_PROCESSING);
+            assertThat(progress.getValue()).isEqualTo(DiscoveryProgress.Value.of(completedTaskCounts.get(index), total));
+        }
+        assertThat(progressCalls.get(1).getValue()).isEqualTo(DiscoveryProgress.Value.of(0, total));
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(total, total));
         assertThat(taskRepository.findAll()).hasSize(total)
                 .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
     }
 
     @ParameterizedTest
-    @CsvSource({"0,1", "4,2", "6,4"})
-    void shouldCancelFullDiscoveryWhenAllPartsAreAlreadyComplete(long completedTasksBeforeCancellation, int expectedProgressCalls) {
+    @EnumSource(value = DiscoveryProgress.Step.class, names = {"FULL_PLANNING", "FULL_PROCESSING"})
+    void shouldCancelFullDiscoveryWhenAllPartsAreAlreadyComplete(DiscoveryProgress.Step cancellationStep) {
         enableLlm();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         saveDiscoveryHistory(previousJob, ARTIST_TASK_COUNT, ALBUM_TASK_COUNT);
@@ -1838,13 +1848,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         assertThatThrownBy(() -> fullDiscoveryService.discover(nextJob, false, progress -> {
             progressCalls.add(progress);
-            if (requireNonNull(progress.getValue()).getItemsComplete() == completedTasksBeforeCancellation) {
+            if (progress.getStep() == cancellationStep) {
                 jobSynchronizer.cancelDiscovery();
             }
         })).isInstanceOf(DiscoveryInterruptedException.class);
 
-        assertThat(progressCalls).hasSize(expectedProgressCalls);
-        assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(completedTasksBeforeCancellation, TASKS_WITH_ONE_ALBUM));
+        assertThat(progressCalls).extracting(DiscoveryProgress::getStep).endsWith(cancellationStep);
         assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
         assertThat(artistTasks()).hasSize(ARTIST_TASK_COUNT);
         assertThat(albumTasks(album)).hasSize(1);
@@ -1875,7 +1884,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         assertThat(taskRepository.countByJobId(nextJob.getId())).isEqualTo(expectedNewTasks);
         assertThat(artistTasks()).hasSize(ARTIST_TASK_COUNT + (artistTasks >= 2 && albumTasks < ALBUM_TASK_COUNT ? 1 : 0));
         assertThat(albumTasks(album)).hasSize(Math.max(albumTasks, 0) + (albumTasks < 1 ? 1 : 0));
-        assertThat(progressCalls.getFirst().getValue()).isEqualTo(DiscoveryProgress.Value.of(0, TASKS_WITH_ONE_ALBUM));
+        assertThat(progressCalls.getFirst().getStep()).isEqualTo(DiscoveryProgress.Step.FULL_PLANNING);
+        assertThat(progressCalls.getFirst().getValue()).isNull();
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));
     }
 
@@ -1987,7 +1997,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         fullDiscoveryService.discover(nextJob, false, progressCalls::add);
 
         assertThat(taskRepository.countByJobId(nextJob.getId())).isZero();
-        assertThat(progressCalls.get(1).getValue()).isEqualTo(DiscoveryProgress.Value.of(ARTIST_TASK_COUNT - 2, TASKS_WITH_ONE_ALBUM));
+        assertThat(progressCalls.get(1).getValue()).isEqualTo(DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));
         assertThat(progressCalls.getLast().getValue()).isEqualTo(DiscoveryProgress.Value.of(TASKS_WITH_ONE_ALBUM, TASKS_WITH_ONE_ALBUM));
         DiscoveryJob followingJob = job(DiscoveryType.FULL);
 

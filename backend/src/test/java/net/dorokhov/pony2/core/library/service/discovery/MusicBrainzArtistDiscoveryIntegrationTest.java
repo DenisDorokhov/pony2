@@ -404,7 +404,7 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     private void runUpdated(boolean cacheEnabled) {
-        service.discoverIfUpdated(job(), artist, albumRepository.findByArtistId(artist.getId()), cacheEnabled, null);
+        service.discover(job(), service.plan(artist, albumRepository.findByArtistId(artist.getId())), cacheEnabled, null);
     }
 
     private void albumResult(Album target, String artistId, String artistName, List<String> country) {
