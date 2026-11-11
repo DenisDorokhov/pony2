@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.llm;
 
 import io.micrometer.observation.ObservationRegistry;
+import io.modelcontextprotocol.spec.McpTransportSessionNotFoundException;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.llm.service.FetchUrlTool;
 import net.dorokhov.pony2.core.llm.service.McpToolArgumentValidator;
@@ -84,6 +85,61 @@ class LlmConfigTest {
                 .description(name + " description")
                 .inputType(String.class)
                 .build();
+    }
+
+    @Test
+    void shouldRetryToolCallbacksAfterMcpSessionLoss() {
+        ToolCallbackProvider provider = mock(ToolCallbackProvider.class);
+        when(provider.getToolCallbacks())
+                .thenThrow(new McpTransportSessionNotFoundException("expired-session"))
+                .thenReturn(new ToolCallback[]{tool("browser_take_screenshot"), tool("browser_snapshot")});
+        when(toolCallbackProviders.orderedStream()).thenReturn(Stream.of(provider));
+        when(model.createChatModel(any())).thenReturn(model);
+        when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
+        when(model.call(any(Prompt.class))).thenReturn(
+                new ChatResponse(List.of(new Generation(new AssistantMessage("OK")))));
+        BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> factory = new LlmConfig().llmChatClientFactory(
+                model, ObservationRegistry.NOOP, fetchUrlTool,
+                new PlaywrightMcpToolRateLimiter(rateLimitedPlaywrightMcpClient),
+                new McpToolArgumentValidator(3), toolCallbackProviders, 60);
+        ChatClient client = factory.apply(builder -> {}, true);
+
+        verify(provider, never()).getToolCallbacks();
+        assertThat(client.prompt("Collect artist data").call().content()).isEqualTo("OK");
+
+        verify(provider, times(2)).getToolCallbacks();
+        verify(toolCallbackProviders).orderedStream();
+        verify(model).createChatModel(any());
+        ArgumentCaptor<Prompt> prompt = ArgumentCaptor.forClass(Prompt.class);
+        verify(model).call(prompt.capture());
+        assertThat(requireNonNull(((ToolCallingChatOptions) prompt.getValue().getOptions())).getToolCallbacks())
+                .extracting(callback -> callback.getToolDefinition().name())
+                .containsExactlyInAnyOrder("fetch_url", "browser_snapshot");
+    }
+
+    @Test
+    void shouldRethrowLastToolCallbacksFailureWhenRetriesAreExhausted() {
+        ToolCallbackProvider provider = mock(ToolCallbackProvider.class);
+        McpTransportSessionNotFoundException lastFailure = new McpTransportSessionNotFoundException("new-session");
+        when(provider.getToolCallbacks())
+                .thenThrow(new McpTransportSessionNotFoundException("expired-session"))
+                .thenThrow(lastFailure);
+        when(toolCallbackProviders.orderedStream()).thenReturn(Stream.of(provider));
+        when(model.createChatModel(any())).thenReturn(model);
+        when(model.getOptions()).thenReturn(OpenAiChatOptions.builder().build());
+        BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> factory = new LlmConfig().llmChatClientFactory(
+                model, ObservationRegistry.NOOP, fetchUrlTool,
+                new PlaywrightMcpToolRateLimiter(rateLimitedPlaywrightMcpClient),
+                new McpToolArgumentValidator(3), toolCallbackProviders, 60);
+        ChatClient client = factory.apply(builder -> {}, true);
+
+        verify(provider, never()).getToolCallbacks();
+        assertThatThrownBy(() -> client.prompt("Collect artist data").call().content()).isSameAs(lastFailure);
+
+        verify(provider, times(2)).getToolCallbacks();
+        verify(toolCallbackProviders).orderedStream();
+        verify(model).createChatModel(any());
+        verify(model, never()).call(any(Prompt.class));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package net.dorokhov.pony2.core.llm;
 
 import io.micrometer.observation.ObservationRegistry;
+import net.dorokhov.pony2.common.RetryExecutor;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import net.dorokhov.pony2.core.llm.service.FetchUrlTool;
 import net.dorokhov.pony2.core.llm.service.McpToolArgumentValidator;
@@ -57,7 +58,7 @@ public class LlmConfig {
     }
 
     private ToolCallbackProvider excludeTools(ToolCallbackProvider provider) {
-        return () -> Arrays.stream(provider.getToolCallbacks())
+        return () -> Arrays.stream(RetryExecutor.execute("mcp-tools-list", 1, provider::getToolCallbacks))
                 .filter(callback -> !EXCLUDED_TOOLS.contains(callback.getToolDefinition().name()))
                 .toArray(ToolCallback[]::new);
     }
