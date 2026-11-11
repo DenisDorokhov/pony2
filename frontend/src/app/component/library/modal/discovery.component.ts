@@ -58,7 +58,7 @@ export class DiscoveryComponent implements OnInit, OnDestroy {
         const value = discoveryStatus?.progress?.discoveryProgress?.value;
         if (discoveryStatus?.progress) {
           if (value && value.itemsTotal > 0) {
-            this.discoveryProgressValue = value.itemsComplete * 100 / value.itemsTotal;
+            this.discoveryProgressValue = Math.floor(value.itemsComplete * 100 / value.itemsTotal);
           } else {
             this.discoveryProgressValue = null;
           }

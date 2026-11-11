@@ -94,6 +94,13 @@ export class ScanningComponent implements OnInit, OnDestroy {
     this.scanJobsSubscription?.unsubscribe();
   }
 
+  get scanProgressPercentage(): number | null | undefined {
+    if (this.scanProgressValue === null || this.scanProgressValue === undefined) {
+      return this.scanProgressValue;
+    }
+    return Math.floor(this.scanProgressValue);
+  }
+
   private loadScanJobs(pageIndex = 0, pageSize = 5) {
     this.pageToLoad = {pageIndex, pageSize, totalPages: this.currentPage?.totalPages ?? 0};
     this.scanJobsSubscription?.unsubscribe();

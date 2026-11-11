@@ -30,7 +30,7 @@
           @if (discoveryProgressValue !== null && discoveryProgressValue !== undefined) {
             {{
               'discovery.discoveryJobProgress.itemsProgressLabel' | translate:{
-                percentage: discoveryProgressValue.toFixed(0),
+                percentage: discoveryProgressValue,
                 itemsComplete: discoveryJobProgress.discoveryProgress!.value!.itemsComplete,
                 itemsTotal: discoveryJobProgress.discoveryProgress!.value!.itemsTotal
               }
