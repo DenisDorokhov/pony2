@@ -121,30 +121,10 @@ public class LibraryServiceImpl implements LibraryService {
         if (!configService.get().discoveryEnabled()) {
             return Optional.empty();
         }
-        Map<String, Boolean> biographyAvailability = getArtistBiographyAvailability(
-                Map.of(artistId, resultReader.readArtistBiography(artistId, null)));
-        return Optional.of(buildArtistDiscoveryData(artistId, biographyAvailability.get(artistId)));
+        return Optional.of(buildArtistDiscoveryData(artistId));
     }
 
-    private Map<String, Boolean> getArtistBiographyAvailability(Map<String, ArtistBiographyData> biographies) {
-        List<String> spotifyArtistIds = biographies.values().stream()
-                .flatMap(biography -> biography.similarArtistSpotifyIds().stream())
-                .distinct()
-                .toList();
-        Map<String, List<String>> artistIdsBySpotifyId = spotifyArtistIds.isEmpty() ? Map.of()
-                : artistDiscoveryRepository.findAllBySpotifyArtistIdIn(spotifyArtistIds).stream()
-                        .collect(Collectors.groupingBy(ArtistDiscovery::getSpotifyArtistId,
-                                Collectors.mapping(discovery -> discovery.getArtist().getId(), Collectors.toList())));
-        return biographies.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-            ArtistBiographyData biography = entry.getValue();
-            return (biography.text() != null && !biography.text().isBlank()) || !biography.links().isEmpty() ||
-                    biography.similarArtistSpotifyIds().stream()
-                            .flatMap(spotifyArtistId -> artistIdsBySpotifyId.getOrDefault(spotifyArtistId, emptyList()).stream())
-                            .anyMatch(similarArtistId -> !entry.getKey().equals(similarArtistId));
-        }));
-    }
-
-    private ArtistDiscoveryData buildArtistDiscoveryData(String artistId, boolean biographyAvailable) {
+    private ArtistDiscoveryData buildArtistDiscoveryData(String artistId) {
         List<String> topSongIds = resultReader.readSpotifyTopTracks(artistId).stream()
                 .filter(Objects::nonNull)
                 .distinct()
@@ -157,12 +137,13 @@ public class LibraryServiceImpl implements LibraryService {
         }
         ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artistId).orElse(null);
         ExternalImage avatarExternalImage = discovery != null ? discovery.getAvatarExternalImage() : null;
+        String spotifyArtistId = discovery != null ? discovery.getSpotifyArtistId() : null;
         return new ArtistDiscoveryData(
                 discovery != null ? discovery.getCountryCode() : null,
                 topSongIds,
                 avatarExternalImage != null ? avatarExternalImage.getId() : null,
-                biographyAvailable,
-                discovery != null ? discovery.getSpotifyArtistId() : null);
+                spotifyArtistId != null,
+                spotifyArtistId);
     }
 
     @Override
@@ -171,9 +152,7 @@ public class LibraryServiceImpl implements LibraryService {
         if (artistIds.isEmpty() || !configService.get().discoveryEnabled()) {
             return Map.of();
         }
-        Map<String, Boolean> biographyAvailability = getArtistBiographyAvailability(resultReader.readArtistBiographies(artistIds));
-        return artistIds.stream().collect(Collectors.toMap(artistId -> artistId,
-                artistId -> buildArtistDiscoveryData(artistId, biographyAvailability.getOrDefault(artistId, false))));
+        return artistIds.stream().collect(Collectors.toMap(artistId -> artistId, this::buildArtistDiscoveryData));
     }
 
     @Override

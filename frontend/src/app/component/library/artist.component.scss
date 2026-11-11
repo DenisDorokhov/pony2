@@ -70,6 +70,7 @@
   .new-indicator {
     display: inline-block;
     vertical-align: middle;
+    transform: translateY(-1px);
     padding: 1px 2px;
     border: 1px solid var(--color-new-badge-border);
     border-radius: 2px;

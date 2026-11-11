@@ -17,7 +17,6 @@ import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
-import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.repository.GenreRepository;
 import net.dorokhov.pony2.core.library.repository.SongRepository;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -53,7 +52,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,51 +100,21 @@ public class LibraryServiceImplTest {
         verifyNoInteractions(discoveryTaskRepository, artistDiscoveryRepository, songRepository);
     }
 
-    @Test
-    void shouldReadBiographyFlagsInOneBatchForArtistDiscoveryData() {
-        List<String> artistIds = List.of("first", "second");
-        DiscoveryTaskRepository.ArtistResult result = mock(DiscoveryTaskRepository.ArtistResult.class);
-        when(result.getArtistId()).thenReturn("first");
-        when(result.getResult()).thenReturn("{\"biography\":\"Biography\"}");
-        when(discoveryTaskRepository.findLatestCompletedResultsByArtistIdsAndType(artistIds, DiscoveryTaskType.SPOTIFY_ARTIST_DATA))
-                .thenReturn(List.of(result));
-
-        Map<String, ArtistDiscoveryData> data = libraryService.getArtistDiscoveryData(artistIds);
-
-        assertThat(data.get("first").biographyAvailable()).isTrue();
-        assertThat(data.get("second").biographyAvailable()).isFalse();
-        verify(discoveryTaskRepository).findLatestCompletedResultsByArtistIdsAndType(artistIds, DiscoveryTaskType.SPOTIFY_ARTIST_DATA);
-        verify(discoveryTaskRepository, never()).findLatestCompletedResultByArtistIdAndType(anyString(), eq(DiscoveryTaskType.SPOTIFY_ARTIST_DATA), any());
-    }
-
     @ParameterizedTest
-    @CsvSource({"missing,false", "self,false", "local,true", "shared,true"})
-    void shouldMakeSimilarArtistsOnlyBiographyAvailableForOtherLocalArtists(String spotifyId, boolean available) {
-        String json = JsonConverter.toJson(Map.of("similarArtists", List.of(Map.of("id", spotifyId))));
-        when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
-                .thenReturn(Optional.of(json));
+    @NullSource
+    @ValueSource(strings = "spotify-artist")
+    void shouldDetermineBiographyAvailabilityFromSpotifyArtistId(String spotifyArtistId) {
+        when(artistDiscoveryRepository.findByArtistId("artist"))
+                .thenReturn(Optional.of(new ArtistDiscovery().setSpotifyArtistId(spotifyArtistId)));
         List<String> artistIds = List.of("artist", "missing");
-        DiscoveryTaskRepository.ArtistResult result = mock(DiscoveryTaskRepository.ArtistResult.class);
-        when(result.getArtistId()).thenReturn("artist");
-        when(result.getResult()).thenReturn(json);
-        when(discoveryTaskRepository.findLatestCompletedResultsByArtistIdsAndType(artistIds, DiscoveryTaskType.SPOTIFY_ARTIST_DATA))
-                .thenReturn(List.of(result));
-        ArtistDiscovery self = new ArtistDiscovery().setArtist(new Artist().setId("artist")).setSpotifyArtistId(spotifyId);
-        ArtistDiscovery other = new ArtistDiscovery().setArtist(new Artist().setId("other")).setSpotifyArtistId(spotifyId);
-        List<ArtistDiscovery> matches = switch (spotifyId) {
-            case "self" -> List.of(self);
-            case "local" -> List.of(other);
-            case "shared" -> List.of(self, other);
-            default -> List.of();
-        };
-        when(artistDiscoveryRepository.findAllBySpotifyArtistIdIn(List.of(spotifyId))).thenReturn(matches);
 
-        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().biographyAvailable()).isEqualTo(available);
+        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().biographyAvailable()).isEqualTo(spotifyArtistId != null);
         Map<String, ArtistDiscoveryData> data = libraryService.getArtistDiscoveryData(artistIds);
 
-        assertThat(data.get("artist").biographyAvailable()).isEqualTo(available);
+        assertThat(data.get("artist").biographyAvailable()).isEqualTo(spotifyArtistId != null);
         assertThat(data.get("missing").biographyAvailable()).isFalse();
-        verify(artistDiscoveryRepository, times(2)).findAllBySpotifyArtistIdIn(List.of(spotifyId));
+        verify(discoveryTaskRepository, never()).findLatestCompletedResultByArtistIdAndType(anyString(), eq(DiscoveryTaskType.SPOTIFY_ARTIST_DATA), any());
+        verify(discoveryTaskRepository, never()).findLatestCompletedResultsByArtistIdsAndType(any(), eq(DiscoveryTaskType.SPOTIFY_ARTIST_DATA));
     }
 
     @Test
@@ -282,8 +250,6 @@ public class LibraryServiceImplTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void shouldReturnExistingArtistTopSongsInOriginalOrder(boolean countryCodeAvailable) {
-        when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
-                .thenReturn(Optional.empty());
         when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType(eq("artist"), eq(DiscoveryTaskType.SPOTIFY_TOP_TRACKS), any(Limit.class)))
                 .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\"]"));
         when(songRepository.findExistingIds(List.of("second", "deleted", "first"))).thenReturn(List.of("first", "second"));
@@ -298,8 +264,6 @@ public class LibraryServiceImplTest {
 
     @Test
     void shouldReturnDistinctArtistTopSongsInOriginalOrder() {
-        when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
-                .thenReturn(Optional.empty());
         when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType(eq("artist"), eq(DiscoveryTaskType.SPOTIFY_TOP_TRACKS), any(Limit.class)))
                 .thenReturn(Optional.of("[\"second\",null,\"deleted\",\"first\",\"second\",\"first\"]"));
         when(songRepository.findExistingIds(any())).thenReturn(List.of("first", "second"));
@@ -311,8 +275,6 @@ public class LibraryServiceImplTest {
     @NullSource
     @ValueSource(strings = {"null", "[]", "[null]"})
     void shouldReturnEmptyTopSongsWhenDiscoveryResultIsMissingOrEmpty(String result) {
-        when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
-                .thenReturn(Optional.empty());
         when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType(eq("artist"), eq(DiscoveryTaskType.SPOTIFY_TOP_TRACKS), any(Limit.class)))
                 .thenReturn(Optional.ofNullable(result));
 
@@ -322,8 +284,6 @@ public class LibraryServiceImplTest {
 
     @Test
     void shouldReturnEmptyTopSongsWhenAllMatchesAreDeleted() {
-        when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType("artist", DiscoveryTaskType.SPOTIFY_ARTIST_DATA, Limit.of(1)))
-                .thenReturn(Optional.empty());
         when(discoveryTaskRepository.findLatestCompletedResultByArtistIdAndType(eq("artist"), eq(DiscoveryTaskType.SPOTIFY_TOP_TRACKS), any(Limit.class)))
                 .thenReturn(Optional.of("[\"deleted\"]"));
         when(songRepository.findExistingIds(List.of("deleted"))).thenReturn(List.of());

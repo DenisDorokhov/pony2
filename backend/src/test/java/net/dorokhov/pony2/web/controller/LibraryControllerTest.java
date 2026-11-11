@@ -358,7 +358,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 "/api/library/artistBiography/{artistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
 
-        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isEqualTo(linksAvailable);
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isFalse();
         assertThat(biography.getFaces()).isNull();
         assertThat(biography.getText()).isNull();
         assertThat(biography.getLinks()).hasSize(linksAvailable ? 1 : 0);
@@ -430,7 +430,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 "/api/library/artistBiography/{artistId}", HttpMethod.GET,
                 apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
 
-        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isTrue();
+        assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isFalse();
         assertThat(biography.getText()).isNull();
         assertThat(biography.getLinks()).isEmpty();
         assertThat(biography.getSimilarArtists()).extracting(dto -> dto.getArtist().getId())
@@ -438,17 +438,19 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"missing, second, false", "self, second, false", "second, second, true", "self, self, true"})
-    void shouldDetermineBiographyAvailabilityFromLocalSimilarArtists(
-            String similarSpotifyId, String localSpotifyId, boolean available) {
+    @CsvSource({"missing, second, self, false", "self, second, self, false", "second, second, self, true",
+            "self, self, self, true", "second, second, , true"})
+    void shouldDetermineBiographyAvailabilityFromSpotifyIdAndResolveLocalSimilarArtists(
+            String similarSpotifyId, String localSpotifyId, String spotifyArtistId, boolean similarArtistAvailable) {
         enableLlm();
-        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setSpotifyArtistId("self"));
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist1).setSpotifyArtistId(spotifyArtistId));
         artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist2).setSpotifyArtistId(localSpotifyId));
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.FULL).setStatus(DiscoveryJob.Status.COMPLETE));
         discoveryTaskRepository.save(new DiscoveryTask().setJob(job).setArtist(artist1)
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE)
                 .setResult(JsonConverter.toJson(Map.of("similarArtists", List.of(Map.of("id", similarSpotifyId))))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
+        boolean available = spotifyArtistId != null;
 
         ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
                 "/api/library/artistBiography/{artistId}", HttpMethod.GET,
@@ -457,7 +459,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(biography.getArtist().getDiscoveryData().isBiographyAvailable()).isEqualTo(available);
         assertThat(biography.getText()).isNull();
         assertThat(biography.getLinks()).isEmpty();
-        assertThat(biography.getSimilarArtists()).hasSize(available ? 1 : 0);
+        assertThat(biography.getSimilarArtists()).hasSize(similarArtistAvailable ? 1 : 0);
 
         ArtistSongsDto artistSongs = requireNonNull(apiTemplate.getRestTemplate().exchange(
                 "/api/library/artistSongs/{artistId}", HttpMethod.GET,
