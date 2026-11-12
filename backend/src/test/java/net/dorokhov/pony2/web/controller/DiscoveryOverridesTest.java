@@ -116,7 +116,7 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
     void shouldKeepDiscoveredValuesAndExposeOverridesSeparately(String countryCode) {
         artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify")
                 .setMusicBrainzArtistId("artist").setCountryCode(countryCode));
-        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setMusicBrainzAlbumId("group"));
+        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setMusicBrainzReleaseGroupId("group"));
         DiscoveryJob job = jobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM).setStatus(DiscoveryJob.Status.COMPLETE));
         MusicBrainzAlbumData data = new MusicBrainzAlbumData("group", "Album", List.of(), "2000-01-01",
                 "artist", List.of("DE"), null, null, null, List.of());
@@ -132,7 +132,7 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
         assertThat(artistResponse.get("musicBrainzArtistId").asString()).isEqualTo("artist");
         assertThat(albumResponse.get("releaseType").asString()).isEqualTo("LP");
         assertThat(albumResponse.get("overrideReleaseType").asString()).isEqualTo("EP");
-        assertThat(albumResponse.get("musicBrainzAlbumId").asString()).isEqualTo("group");
+        assertThat(albumResponse.get("musicBrainzReleaseGroupId").asString()).isEqualTo("group");
         JsonNode songs = artistSongs();
         assertThat(songs.get("artist").get("discoveryData").get("countryCode").asString()).isEqualTo(countryCode);
         assertThat(songs.get("artist").get("discoveryData").get("overrideCountryCode").asString()).isEqualTo("US");
@@ -142,7 +142,7 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
         assertThat(libraryService.getAlbumDiscoveryData(album.getId())).get()
                 .extracting(AlbumDiscoveryData::releaseType).isEqualTo(ReleaseType.LP);
         assertThat(libraryService.getAlbumDiscoveryData(album.getId())).get()
-                .extracting(AlbumDiscoveryData::musicBrainzAlbumId).isEqualTo("group");
+                .extracting(AlbumDiscoveryData::musicBrainzReleaseGroupId).isEqualTo("group");
 
         request(ARTIST_UPDATE_PATH, HttpMethod.PUT, Map.of("artistId", artist.getId()));
         request(ALBUM_UPDATE_PATH, HttpMethod.PUT, Map.of("albumId", album.getId()));
@@ -179,7 +179,7 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
         artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify")
                 .setMusicBrainzArtistId("artist").setCountryCode("DE").setOverrideCountryCode(CountryCode.US));
         albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
-                .setMusicBrainzAlbumId("group").setOverrideReleaseType(ReleaseType.EP));
+                .setMusicBrainzReleaseGroupId("group").setOverrideReleaseType(ReleaseType.EP));
 
         assertThat(request("/api/admin/discovery/data?deleteOverrides=false", HttpMethod.DELETE, null).getStatusCode())
                 .isEqualTo(HttpStatus.OK);
@@ -190,7 +190,7 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
         assertThat(artistData.hasNonNull("musicBrainzArtistId")).isFalse();
         assertThat(artistData.hasNonNull("countryCode")).isFalse();
         assertThat(artistData.get("overrideCountryCode").asString()).isEqualTo("US");
-        assertThat(albumData.hasNonNull("musicBrainzAlbumId")).isFalse();
+        assertThat(albumData.hasNonNull("musicBrainzReleaseGroupId")).isFalse();
         assertThat(albumData.get("releaseType").asString()).isEqualTo("UNKNOWN");
         assertThat(albumData.get("overrideReleaseType").asString()).isEqualTo("EP");
         JsonNode songs = artistSongs();

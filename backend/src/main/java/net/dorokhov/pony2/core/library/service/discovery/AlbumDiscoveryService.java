@@ -94,9 +94,9 @@ public class AlbumDiscoveryService {
         public void onResult(DiscoveryTask task, @Nullable MusicBrainzAlbumData result) {
             AlbumDiscovery discovery = albumDiscoveryRepository.findByAlbumId(album.getId())
                     .orElseGet(() -> new AlbumDiscovery().setAlbum(album));
-            String albumId = result != null ? result.releaseGroupId() : null;
-            if (!Objects.equals(discovery.getMusicBrainzAlbumId(), albumId)) {
-                albumDiscoveryRepository.save(discovery.setMusicBrainzAlbumId(albumId));
+            String releaseGroupId = result != null ? result.releaseGroupId() : null;
+            if (!Objects.equals(discovery.getMusicBrainzReleaseGroupId(), releaseGroupId)) {
+                albumDiscoveryRepository.save(discovery.setMusicBrainzReleaseGroupId(releaseGroupId));
             }
         }
 

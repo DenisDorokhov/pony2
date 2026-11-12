@@ -113,7 +113,7 @@ public class LibraryCleaner {
 
     @Transactional
     public void clearAlbumDiscovery(AlbumDiscovery discovery) {
-        albumDiscoveryRepository.save(discovery.setMusicBrainzAlbumId(null));
+        albumDiscoveryRepository.save(discovery.setMusicBrainzReleaseGroupId(null));
     }
 
     @Transactional

@@ -1,5 +1,6 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ 'discoveryEdit.albumHeader' | translate }}: {{ album.name | ponyUnknownAlbum }}</h4>
+  @let title = (album.name | ponyUnknownAlbum) + (album.year ? ' (' + album.year + ')' : '');
+  <h4 class="modal-title" [title]="title">{{ title }}</h4>
 </div>
 <div class="modal-body">
   <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
@@ -12,26 +13,21 @@
   @if (discovery) {
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <div class="mb-3">
-        <label for="musicBrainzAlbumId" class="form-label">{{ 'discoveryEdit.musicBrainzAlbumIdLabel' | translate }}</label>
-        <input id="musicBrainzAlbumId" type="text" class="form-control" [value]="discovery.musicBrainzAlbumId ?? ''" readonly>
-      </div>
-      <div class="mb-3">
         <label for="releaseType" class="form-label">{{ 'discoveryEdit.releaseTypeLabel' | translate }}</label>
-        <input id="releaseType" type="text" class="form-control" [value]="discovery.releaseType" readonly>
-      </div>
-      <div class="mb-3">
-        <label for="releaseDate" class="form-label">{{ 'discoveryEdit.releaseDateLabel' | translate }}</label>
-        <input id="releaseDate" type="text" class="form-control" [value]="(discovery.releaseDate | date:('shared.dateFormat' | translate)) ?? ''" readonly>
+        <input id="releaseType" type="text" class="form-control" [value]="discovery.releaseType" disabled>
       </div>
       <div class="mb-3">
         <pony-error-container #overrideContainer [error]="error" field="overrideReleaseType">
           <label for="overrideReleaseType" class="form-label">{{ 'discoveryEdit.overrideReleaseTypeLabel' | translate }}</label>
-          <select id="overrideReleaseType" class="form-select" formControlName="overrideReleaseType" [class.is-invalid]="overrideContainer.hasErrors">
-            <option [ngValue]="null">{{ 'discoveryEdit.noneLabel' | translate }}</option>
-            @for (releaseType of releaseTypes; track releaseType) {
-              <option [ngValue]="releaseType">{{ releaseType }}</option>
-            }
-          </select>
+          <div class="input-group" [class.is-invalid]="overrideContainer.hasErrors">
+            <select id="overrideReleaseType" class="form-select" formControlName="overrideReleaseType" [class.is-invalid]="overrideContainer.hasErrors">
+              <option [ngValue]="null">{{ 'discoveryEdit.noneLabel' | translate }}</option>
+              @for (releaseType of releaseTypes; track releaseType) {
+                <option [ngValue]="releaseType">{{ releaseType }}</option>
+              }
+            </select>
+            <button type="button" class="btn btn-outline-dark" (click)="form.controls.overrideReleaseType.setValue(null)">{{ 'discoveryEdit.resetButton' | translate }}</button>
+          </div>
         </pony-error-container>
       </div>
       <input type="submit" hidden>

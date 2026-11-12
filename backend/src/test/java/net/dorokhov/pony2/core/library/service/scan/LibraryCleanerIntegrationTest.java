@@ -136,7 +136,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     public void shouldDeleteAlbumWithDiscovery() {
         Artist artist = artistRepository.save(new Artist());
         Album album = albumRepository.save(new Album().setArtist(artist));
-        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setMusicBrainzAlbumId("group")
+        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setMusicBrainzReleaseGroupId("group")
                 .setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
         DiscoveryJob job = discoveryJobRepository.save(saveDiscoveryJob().setType(DiscoveryType.ALBUM).setAlbum(album));
         DiscoveryTask task = discoveryTaskRepository.saveAndFlush(

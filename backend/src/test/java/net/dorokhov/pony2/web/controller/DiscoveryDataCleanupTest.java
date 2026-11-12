@@ -85,7 +85,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
                             .setBioExternalImage(bio.getExternalImage()).setAvatarExternalImage(avatar.getExternalImage()));
                     Album album = albumRepository.save(new Album().setArtist(artist));
                     albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
-                            .setMusicBrainzAlbumId("album").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
+                            .setMusicBrainzReleaseGroupId("album").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -109,7 +109,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
                         discovery.getArtist().getId().equals(libraryArtist.getId()) ? null : CountryCode.US);
             });
             assertThat(albumDiscoveryRepository.findAll()).hasSize(101).allSatisfy(discovery -> {
-                assertThat(discovery.getMusicBrainzAlbumId()).isNull();
+                assertThat(discovery.getMusicBrainzReleaseGroupId()).isNull();
                 assertThat(discovery.getOverrideReleaseType()).isEqualTo(AlbumDiscoveryData.ReleaseType.EP);
             });
         }
@@ -215,7 +215,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         taskRepository.save(task(jobs.getLast()).setSong(song));
         indexRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify").setOverrideCountryCode(CountryCode.US));
         albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
-                .setMusicBrainzAlbumId("album").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.LP));
+                .setMusicBrainzReleaseGroupId("album").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.LP));
         cacheService.put(DiscoveryCacheRegion.SPOTIFY, "key", 1, "value");
     }
 

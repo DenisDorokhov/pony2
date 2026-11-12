@@ -8,17 +8,17 @@ import java.time.LocalDateTime;
 
 public final class AlbumDiscoveryDto {
 
-    private String musicBrainzAlbumId;
+    private String musicBrainzReleaseGroupId;
     private ReleaseType releaseType;
     private LocalDateTime releaseDate;
     private ReleaseType overrideReleaseType;
 
-    public @Nullable String getMusicBrainzAlbumId() {
-        return musicBrainzAlbumId;
+    public @Nullable String getMusicBrainzReleaseGroupId() {
+        return musicBrainzReleaseGroupId;
     }
 
-    public AlbumDiscoveryDto setMusicBrainzAlbumId(@Nullable String musicBrainzAlbumId) {
-        this.musicBrainzAlbumId = musicBrainzAlbumId;
+    public AlbumDiscoveryDto setMusicBrainzReleaseGroupId(@Nullable String musicBrainzReleaseGroupId) {
+        this.musicBrainzReleaseGroupId = musicBrainzReleaseGroupId;
         return this;
     }
 
@@ -51,7 +51,7 @@ public final class AlbumDiscoveryDto {
 
     public static AlbumDiscoveryDto of(@Nullable AlbumDiscoveryData data) {
         return new AlbumDiscoveryDto()
-                .setMusicBrainzAlbumId(data != null ? data.musicBrainzAlbumId() : null)
+                .setMusicBrainzReleaseGroupId(data != null ? data.musicBrainzReleaseGroupId() : null)
                 .setReleaseType(data != null ? data.releaseType() : ReleaseType.UNKNOWN)
                 .setReleaseDate(data != null ? data.releaseDate() : null)
                 .setOverrideReleaseType(data != null ? data.overrideReleaseType() : null);

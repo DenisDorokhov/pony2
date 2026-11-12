@@ -14,11 +14,10 @@ import {CountryService} from '../../../service/country.service';
 import {LoadingIndicatorComponent} from '../../common/loading-indicator.component';
 import {ErrorIndicatorComponent} from '../../common/error-indicator.component';
 import {ErrorContainerComponent} from '../../common/error-container.component';
-import {ImageLoaderComponent} from '../../common/image-loader.component';
 import {UnknownArtistPipe} from '../../../pipe/unknown-artist.pipe';
 
 @Component({
-  imports: [ReactiveFormsModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, ErrorContainerComponent, ImageLoaderComponent, UnknownArtistPipe],
+  imports: [ReactiveFormsModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, ErrorContainerComponent, UnknownArtistPipe],
   selector: 'pony-artist-edit',
   templateUrl: './artist-edit.component.html',
   styleUrls: ['./artist-edit.component.scss']
@@ -41,6 +40,7 @@ export class ArtistEditComponent implements OnInit {
   });
 
   discovery: ArtistDiscoveryDto | undefined;
+  discoveredCountryLabel = '';
   error: ErrorDto | undefined;
   loadingState = LoadingState.LOADING;
 
@@ -50,6 +50,8 @@ export class ArtistEditComponent implements OnInit {
       .subscribe({
         next: discovery => {
           this.discovery = discovery;
+          const country = this.countries.find(country => country.code === discovery.countryCode);
+          this.discoveredCountryLabel = country ? `${country.countryName} (${country.code})` : discovery.countryCode ?? '';
           this.form.patchValue({overrideCountryCode: discovery.overrideCountryCode ?? null});
           this.loadingState = LoadingState.LOADED;
         },

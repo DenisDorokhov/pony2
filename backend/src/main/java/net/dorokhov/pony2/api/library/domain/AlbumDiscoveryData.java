@@ -8,7 +8,7 @@ public record AlbumDiscoveryData(
         ReleaseType releaseType,
         @Nullable LocalDateTime releaseDate,
         @Nullable ReleaseType overrideReleaseType,
-        @Nullable String musicBrainzAlbumId
+        @Nullable String musicBrainzReleaseGroupId
 ) {
     public enum ReleaseType {
         LP, EP, SINGLE, LIVE, COMPILATION, UNKNOWN

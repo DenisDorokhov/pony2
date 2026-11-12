@@ -18,8 +18,8 @@ public class AlbumDiscovery extends BaseEntity<AlbumDiscovery> {
     @NotNull
     private Album album;
 
-    @Column(name = "music_brainz_album_id")
-    private String musicBrainzAlbumId;
+    @Column(name = "music_brainz_release_group_id")
+    private String musicBrainzReleaseGroupId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "override_release_type")
@@ -34,12 +34,12 @@ public class AlbumDiscovery extends BaseEntity<AlbumDiscovery> {
         return this;
     }
 
-    public @Nullable String getMusicBrainzAlbumId() {
-        return musicBrainzAlbumId;
+    public @Nullable String getMusicBrainzReleaseGroupId() {
+        return musicBrainzReleaseGroupId;
     }
 
-    public AlbumDiscovery setMusicBrainzAlbumId(@Nullable String musicBrainzAlbumId) {
-        this.musicBrainzAlbumId = musicBrainzAlbumId;
+    public AlbumDiscovery setMusicBrainzReleaseGroupId(@Nullable String musicBrainzReleaseGroupId) {
+        this.musicBrainzReleaseGroupId = musicBrainzReleaseGroupId;
         return this;
     }
 
@@ -59,7 +59,7 @@ public class AlbumDiscovery extends BaseEntity<AlbumDiscovery> {
                 .add("creationDate", creationDate)
                 .add("updateDate", updateDate)
                 .add("album", album != null ? album.getId() : "null")
-                .add("musicBrainzAlbumId", musicBrainzAlbumId)
+                .add("musicBrainzReleaseGroupId", musicBrainzReleaseGroupId)
                 .add("overrideReleaseType", overrideReleaseType)
                 .toString();
     }

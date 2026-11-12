@@ -1,5 +1,6 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ 'discoveryEdit.artistHeader' | translate }}: {{ artist.name | ponyUnknownArtist }}</h4>
+  @let title = artist.name | ponyUnknownArtist;
+  <h4 class="modal-title" [title]="title">{{ title }}</h4>
 </div>
 <div class="modal-body">
   <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
@@ -12,35 +13,22 @@
   @if (discovery) {
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <div class="mb-3">
-        <label for="spotifyArtistId" class="form-label">{{ 'discoveryEdit.spotifyArtistIdLabel' | translate }}</label>
-        <input id="spotifyArtistId" type="text" class="form-control" [value]="discovery.spotifyArtistId ?? ''" readonly>
-      </div>
-      <div class="mb-3">
-        <label for="musicBrainzArtistId" class="form-label">{{ 'discoveryEdit.musicBrainzArtistIdLabel' | translate }}</label>
-        <input id="musicBrainzArtistId" type="text" class="form-control" [value]="discovery.musicBrainzArtistId ?? ''" readonly>
-      </div>
-      <div class="mb-3">
         <label for="countryCode" class="form-label">{{ 'discoveryEdit.countryCodeLabel' | translate }}</label>
-        <input id="countryCode" type="text" class="form-control" [value]="discovery.countryCode ?? ''" readonly>
+        <input id="countryCode" type="text" class="form-control" [value]="discoveredCountryLabel" disabled>
       </div>
       <div class="mb-3">
         <pony-error-container #overrideContainer [error]="error" field="overrideCountryCode">
           <label for="overrideCountryCode" class="form-label">{{ 'discoveryEdit.overrideCountryCodeLabel' | translate }}</label>
-          <select id="overrideCountryCode" class="form-select" formControlName="overrideCountryCode" [class.is-invalid]="overrideContainer.hasErrors">
-            <option [ngValue]="null">{{ 'discoveryEdit.noneLabel' | translate }}</option>
-            @for (country of countries; track country.code) {
-              <option [ngValue]="country.code">{{ country.countryName }} ({{ country.code }})</option>
-            }
-          </select>
+          <div class="input-group" [class.is-invalid]="overrideContainer.hasErrors">
+            <select id="overrideCountryCode" class="form-select" formControlName="overrideCountryCode" [class.is-invalid]="overrideContainer.hasErrors">
+              <option [ngValue]="null">{{ 'discoveryEdit.noneLabel' | translate }}</option>
+              @for (country of countries; track country.code) {
+                <option [ngValue]="country.code">{{ country.countryName }} ({{ country.code }})</option>
+              }
+            </select>
+            <button type="button" class="btn btn-outline-dark" (click)="form.controls.overrideCountryCode.setValue(null)">{{ 'discoveryEdit.resetButton' | translate }}</button>
+          </div>
         </pony-error-container>
-      </div>
-      <div class="mb-3">
-        <div class="form-label">{{ 'discoveryEdit.avatarImageLabel' | translate }}</div>
-        <pony-image-loader [url]="discovery.avatarExternalImageId ? '/api/file/externalImage/' + discovery.avatarExternalImageId : undefined"></pony-image-loader>
-      </div>
-      <div class="mb-3">
-        <div class="form-label">{{ 'discoveryEdit.bioImageLabel' | translate }}</div>
-        <pony-image-loader [url]="discovery.bioExternalImageId ? '/api/file/externalImage/' + discovery.bioExternalImageId : undefined"></pony-image-loader>
       </div>
       <input type="submit" hidden>
     </form>

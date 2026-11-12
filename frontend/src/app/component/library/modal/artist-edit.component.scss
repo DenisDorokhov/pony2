@@ -1,3 +1,14 @@
+.modal-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-body {
+  padding-bottom: 0;
+}
+
 .blocking-overlay {
   position: absolute;
   top: 0;
@@ -8,9 +19,4 @@
 
 label, .form-label {
   font-weight: bold;
-}
-
-pony-image-loader {
-  width: 128px;
-  height: 128px;
 }

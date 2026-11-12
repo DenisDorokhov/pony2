@@ -28,11 +28,11 @@
                 <i class="bi bi-broadcast"></i>{{ 'library.artist.radio' | translate }}
               </button>
               @if (isAdmin && discoveryEnabled) {
-                <button ngbDropdownItem (click)="editArtist()">
-                  <i class="bi bi-pencil"></i>{{ 'library.artist.edit' | translate }}
-                </button>
                 <button ngbDropdownItem (click)="openArtistDiscoveryTasks()">
                   <i class="bi bi-stars"></i>{{ 'library.artist.discover' | translate }}
+                </button>
+                <button ngbDropdownItem (click)="editArtist()">
+                  <i class="bi bi-pencil"></i>{{ 'library.artist.edit' | translate }}
                 </button>
               }
             </ul>

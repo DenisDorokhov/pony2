@@ -29,7 +29,7 @@ export interface AlbumDiscoveryDataDto {
 }
 
 export interface AlbumDiscoveryDto {
-  musicBrainzAlbumId: string | undefined;
+  musicBrainzReleaseGroupId: string | undefined;
   releaseType: AlbumDiscoveryDataDto.ReleaseType;
   releaseDate: string | undefined;
   overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;

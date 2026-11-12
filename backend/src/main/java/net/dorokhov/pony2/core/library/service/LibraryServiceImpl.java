@@ -189,9 +189,9 @@ public class LibraryServiceImpl implements LibraryService {
         MusicBrainzAlbumData data = resultReader.readMusicBrainzAlbumData(albumId);
         AlbumDiscovery discovery = albumDiscoveryRepository.findByAlbumId(albumId).orElse(null);
         ReleaseType overrideReleaseType = discovery != null ? discovery.getOverrideReleaseType() : null;
-        String musicBrainzAlbumId = discovery != null ? discovery.getMusicBrainzAlbumId() : null;
+        String musicBrainzReleaseGroupId = discovery != null ? discovery.getMusicBrainzReleaseGroupId() : null;
         if (data == null) {
-            return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null, overrideReleaseType, musicBrainzAlbumId));
+            return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null, overrideReleaseType, musicBrainzReleaseGroupId));
         }
         ReleaseType releaseType;
         if (data.secondaryTypes().contains("Compilation")) {
@@ -206,7 +206,7 @@ public class LibraryServiceImpl implements LibraryService {
                 case null, default -> ReleaseType.UNKNOWN;
             };
         }
-        return Optional.of(new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate()), overrideReleaseType, musicBrainzAlbumId));
+        return Optional.of(new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate()), overrideReleaseType, musicBrainzReleaseGroupId));
     }
 
     @Override

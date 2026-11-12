@@ -214,14 +214,14 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldPersistAlbumIdAndKeepOverrideWhenDiscoveryIsRepeatedOrReturnsNoMatch() {
+    void shouldPersistReleaseGroupIdAndKeepOverrideWhenDiscoveryIsRepeatedOrReturnsNoMatch() {
         albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
-                .setMusicBrainzAlbumId("previous-group").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
+                .setMusicBrainzReleaseGroupId("previous-group").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
 
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
         assertThat(albumDiscoveryRepository.findByAlbumId(album.getId())).get().satisfies(discovery -> {
-            assertThat(discovery.getMusicBrainzAlbumId()).isEqualTo("group");
+            assertThat(discovery.getMusicBrainzReleaseGroupId()).isEqualTo("group");
             assertThat(discovery.getOverrideReleaseType()).isEqualTo(AlbumDiscoveryData.ReleaseType.EP);
         });
         search(List.of());
@@ -229,7 +229,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
 
         assertThat(albumDiscoveryRepository.findByAlbumId(album.getId())).get().satisfies(discovery -> {
-            assertThat(discovery.getMusicBrainzAlbumId()).isNull();
+            assertThat(discovery.getMusicBrainzReleaseGroupId()).isNull();
             assertThat(discovery.getOverrideReleaseType()).isEqualTo(AlbumDiscoveryData.ReleaseType.EP);
         });
     }

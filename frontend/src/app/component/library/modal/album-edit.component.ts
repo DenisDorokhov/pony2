@@ -1,7 +1,6 @@
 import {Component, DestroyRef, inject, Input, OnInit} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {DatePipe} from '@angular/common';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {TranslateModule} from '@ngx-translate/core';
 import {Album} from '../../../domain/library.model';
@@ -16,7 +15,7 @@ import {ErrorContainerComponent} from '../../common/error-container.component';
 import {UnknownAlbumPipe} from '../../../pipe/unknown-album.pipe';
 
 @Component({
-  imports: [ReactiveFormsModule, DatePipe, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, ErrorContainerComponent, UnknownAlbumPipe],
+  imports: [ReactiveFormsModule, TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, ErrorContainerComponent, UnknownAlbumPipe],
   selector: 'pony-album-edit',
   templateUrl: './album-edit.component.html',
   styleUrls: ['./album-edit.component.scss']

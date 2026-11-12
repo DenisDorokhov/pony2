@@ -146,7 +146,7 @@ CREATE TABLE album_discovery (
   update_date TIMESTAMP(9),
 
   album_id CHAR(36) NOT NULL,
-  music_brainz_album_id VARCHAR (255),
+  music_brainz_release_group_id VARCHAR (255),
   override_release_type VARCHAR (255),
 
   FOREIGN KEY (album_id) REFERENCES album (id),
@@ -154,7 +154,7 @@ CREATE TABLE album_discovery (
   UNIQUE (album_id)
 );
 
-CREATE INDEX index_album_discovery_music_brainz_album_id ON album_discovery (music_brainz_album_id);
+CREATE INDEX index_album_discovery_music_brainz_release_group_id ON album_discovery (music_brainz_release_group_id);
 
 CREATE INDEX index_song_creation_date ON song (creation_date);
 CREATE INDEX index_song_update_date_creation_date ON song (update_date, creation_date);
