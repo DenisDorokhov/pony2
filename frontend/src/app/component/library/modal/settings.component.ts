@@ -237,8 +237,9 @@ export class SettingsComponent implements OnInit{
     if (!window.confirm(this.translateService.instant('settings.cleanDiscoveryDataConfirmation'))) {
       return;
     }
+    const deleteOverrides = window.confirm(this.translateService.instant('settings.deleteDiscoveryOverridesConfirmation'));
     this.secondaryLoadingState = LoadingState.LOADING;
-    this.libraryService.cleanDiscoveryData().subscribe({
+    this.libraryService.cleanDiscoveryData(deleteOverrides).subscribe({
       next: () => {
         this.secondaryLoadingState = LoadingState.LOADED;
         this.libraryService.requestRefresh();

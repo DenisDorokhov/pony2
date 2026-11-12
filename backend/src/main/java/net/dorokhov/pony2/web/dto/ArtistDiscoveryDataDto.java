@@ -2,15 +2,16 @@ package net.dorokhov.pony2.web.dto;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
+import net.dorokhov.pony2.api.library.domain.CountryCode;
 
 import java.util.List;
 
 public final class ArtistDiscoveryDataDto {
 
     private String countryCode;
+    private CountryCode overrideCountryCode;
     private List<String> topSongIds;
     private String avatarExternalImageId;
-    private boolean biographyAvailable;
     private String spotifyArtistId;
 
     public @Nullable String getCountryCode() {
@@ -19,6 +20,15 @@ public final class ArtistDiscoveryDataDto {
 
     public ArtistDiscoveryDataDto setCountryCode(@Nullable String countryCode) {
         this.countryCode = countryCode;
+        return this;
+    }
+
+    public @Nullable CountryCode getOverrideCountryCode() {
+        return overrideCountryCode;
+    }
+
+    public ArtistDiscoveryDataDto setOverrideCountryCode(@Nullable CountryCode overrideCountryCode) {
+        this.overrideCountryCode = overrideCountryCode;
         return this;
     }
 
@@ -40,15 +50,6 @@ public final class ArtistDiscoveryDataDto {
         return this;
     }
 
-    public boolean isBiographyAvailable() {
-        return biographyAvailable;
-    }
-
-    public ArtistDiscoveryDataDto setBiographyAvailable(boolean biographyAvailable) {
-        this.biographyAvailable = biographyAvailable;
-        return this;
-    }
-
     public @Nullable String getSpotifyArtistId() {
         return spotifyArtistId;
     }
@@ -61,9 +62,9 @@ public final class ArtistDiscoveryDataDto {
     public static ArtistDiscoveryDataDto of(ArtistDiscoveryData data) {
         return new ArtistDiscoveryDataDto()
                 .setCountryCode(data.countryCode())
+                .setOverrideCountryCode(data.overrideCountryCode())
                 .setTopSongIds(data.topSongIds())
                 .setAvatarExternalImageId(data.avatarExternalImageId())
-                .setBiographyAvailable(data.biographyAvailable())
                 .setSpotifyArtistId(data.spotifyArtistId());
     }
 }

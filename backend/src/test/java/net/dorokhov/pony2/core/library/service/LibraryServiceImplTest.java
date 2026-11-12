@@ -14,6 +14,7 @@ import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.library.domain.Song;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
+import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistGenreRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
@@ -72,6 +73,8 @@ public class LibraryServiceImplTest {
     @Mock
     private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
+    private AlbumDiscoveryRepository albumDiscoveryRepository;
+    @Mock
     private SongRepository songRepository;
     @Mock
     private ArtworkStorage artworkStorage;
@@ -83,7 +86,7 @@ public class LibraryServiceImplTest {
     @BeforeEach
     void setUp() {
         libraryService = new LibraryServiceImpl(genreRepository, artistRepository, albumRepository, artistGenreRepository,
-                artistDiscoveryRepository, new DiscoveryTaskResultReader(discoveryTaskRepository), songRepository,
+                artistDiscoveryRepository, albumDiscoveryRepository, new DiscoveryTaskResultReader(discoveryTaskRepository), songRepository,
                 artworkStorage, randomFetcher, configService);
         lenient().when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost", "model", null));
     }
@@ -103,16 +106,16 @@ public class LibraryServiceImplTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = "spotify-artist")
-    void shouldDetermineBiographyAvailabilityFromSpotifyArtistId(String spotifyArtistId) {
+    void shouldExposeSpotifyArtistId(String spotifyArtistId) {
         when(artistDiscoveryRepository.findByArtistId("artist"))
                 .thenReturn(Optional.of(new ArtistDiscovery().setSpotifyArtistId(spotifyArtistId)));
         List<String> artistIds = List.of("artist", "missing");
 
-        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().biographyAvailable()).isEqualTo(spotifyArtistId != null);
+        assertThat(libraryService.getArtistDiscoveryData("artist").orElseThrow().spotifyArtistId()).isEqualTo(spotifyArtistId);
         Map<String, ArtistDiscoveryData> data = libraryService.getArtistDiscoveryData(artistIds);
 
-        assertThat(data.get("artist").biographyAvailable()).isEqualTo(spotifyArtistId != null);
-        assertThat(data.get("missing").biographyAvailable()).isFalse();
+        assertThat(data.get("artist").spotifyArtistId()).isEqualTo(spotifyArtistId);
+        assertThat(data.get("missing").spotifyArtistId()).isNull();
         verify(discoveryTaskRepository, never()).findLatestCompletedResultByArtistIdAndType(anyString(), eq(DiscoveryTaskType.SPOTIFY_ARTIST_DATA), any());
         verify(discoveryTaskRepository, never()).findLatestCompletedResultsByArtistIdsAndType(any(), eq(DiscoveryTaskType.SPOTIFY_ARTIST_DATA));
     }
@@ -194,7 +197,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .contains(new AlbumDiscoveryData(expected, LocalDateTime.of(1986, 10, 7, 0, 0)));
+                .contains(new AlbumDiscoveryData(expected, LocalDateTime.of(1986, 10, 7, 0, 0), null, null));
     }
 
     @ParameterizedTest
@@ -221,7 +224,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of(JsonConverter.toJson(data)));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
+                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null, null, null));
     }
 
     @Test
@@ -233,7 +236,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.of(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null));
+                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.LP, null, null, null));
     }
 
     @ParameterizedTest
@@ -244,7 +247,7 @@ public class LibraryServiceImplTest {
                 .thenReturn(Optional.ofNullable(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null));
+                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null, null, null));
     }
 
     @ParameterizedTest
@@ -259,7 +262,7 @@ public class LibraryServiceImplTest {
         }
 
         assertThat(libraryService.getArtistDiscoveryData("artist"))
-                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first"), null, false, null));
+                .contains(new ArtistDiscoveryData(countryCodeAvailable ? "DE" : null, List.of("second", "first"), null, null, null, null, null));
     }
 
     @Test

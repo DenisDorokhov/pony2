@@ -1,4 +1,5 @@
 import {PageDto} from './common.dto';
+import {CountryCode} from './country.model';
 import UserPlaylist = RestoredPlaylistsDto.UserPlaylist;
 
 export interface AlbumDto {
@@ -23,7 +24,20 @@ export interface AlbumSongsDto {
 
 export interface AlbumDiscoveryDataDto {
   releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
   releaseDate: string | undefined;
+}
+
+export interface AlbumDiscoveryDto {
+  musicBrainzAlbumId: string | undefined;
+  releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  releaseDate: string | undefined;
+  overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
+}
+
+export interface AlbumDiscoveryUpdateCommandDto {
+  albumId: string;
+  overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
 }
 
 export namespace AlbumDiscoveryDataDto {
@@ -59,9 +73,23 @@ export interface ArtistSongsDto {
 export interface ArtistDiscoveryDataDto {
   spotifyArtistId: string | undefined;
   countryCode: string | undefined;
+  overrideCountryCode: CountryCode | undefined;
   topSongIds: string[];
   avatarExternalImageId: string | undefined;
-  biographyAvailable: boolean;
+}
+
+export interface ArtistDiscoveryDto {
+  spotifyArtistId: string | undefined;
+  musicBrainzArtistId: string | undefined;
+  countryCode: string | undefined;
+  bioExternalImageId: string | undefined;
+  avatarExternalImageId: string | undefined;
+  overrideCountryCode: CountryCode | undefined;
+}
+
+export interface ArtistDiscoveryUpdateCommandDto {
+  artistId: string;
+  overrideCountryCode: CountryCode | undefined;
 }
 
 export interface ArtistBiographyDto {

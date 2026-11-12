@@ -38,6 +38,8 @@ public class LibraryCleanerTest {
     @Mock
     private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Mock
+    private AlbumDiscoveryRepository albumDiscoveryRepository;
+    @Mock
     private DiscoveryTaskRepository discoveryTaskRepository;
     @Mock
     private DiscoveryJobRepository discoveryJobRepository;
@@ -55,6 +57,7 @@ public class LibraryCleanerTest {
                 genreRepository,
                 artistGenreRepository,
                 artistDiscoveryRepository,
+                albumDiscoveryRepository,
                 discoveryTaskRepository,
                 discoveryJobRepository,
                 artworkStorage,
@@ -94,9 +97,11 @@ public class LibraryCleanerTest {
         when(songRepository.countByAlbumId("2")).thenReturn(1L);
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album1)).isTrue();
+        verify(albumDiscoveryRepository).deleteByAlbumId("1");
         verify(albumRepository).deleteById("1");
 
         assertThat(libraryCleaner.deleteAlbumIfUnused(album2)).isFalse();
+        verify(albumDiscoveryRepository, never()).deleteByAlbumId("2");
         verify(albumRepository, never()).deleteById("2");
     }
 

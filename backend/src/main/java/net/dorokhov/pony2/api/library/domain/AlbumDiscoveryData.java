@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 
 public record AlbumDiscoveryData(
         ReleaseType releaseType,
-        @Nullable LocalDateTime releaseDate
+        @Nullable LocalDateTime releaseDate,
+        @Nullable ReleaseType overrideReleaseType,
+        @Nullable String musicBrainzAlbumId
 ) {
     public enum ReleaseType {
         LP, EP, SINGLE, LIVE, COMPILATION, UNKNOWN

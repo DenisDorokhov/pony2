@@ -1,9 +1,11 @@
 package net.dorokhov.pony2.core.library.service.scan;
 
 import net.dorokhov.pony2.api.library.domain.Album;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artist;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.Artwork;
+import net.dorokhov.pony2.api.library.domain.ExternalImage;
 import net.dorokhov.pony2.api.library.domain.Genre;
 import net.dorokhov.pony2.core.library.repository.*;
 import net.dorokhov.pony2.core.library.service.artwork.ArtworkStorage;
@@ -26,6 +28,7 @@ public class LibraryCleaner {
     private final GenreRepository genreRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final DiscoveryJobRepository discoveryJobRepository;
     private final ArtworkStorage artworkStorage;
@@ -38,6 +41,7 @@ public class LibraryCleaner {
             GenreRepository genreRepository,
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryRepository artistDiscoveryRepository,
+            AlbumDiscoveryRepository albumDiscoveryRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             DiscoveryJobRepository discoveryJobRepository,
             ArtworkStorage artworkStorage,
@@ -49,6 +53,7 @@ public class LibraryCleaner {
         this.genreRepository = genreRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.discoveryJobRepository = discoveryJobRepository;
         this.artworkStorage = artworkStorage;
@@ -89,8 +94,32 @@ public class LibraryCleaner {
     }
 
     @Transactional
+    public void clearArtistDiscovery(ArtistDiscovery discovery) {
+        ExternalImage bioImage = discovery.getBioExternalImage();
+        ExternalImage avatarImage = discovery.getAvatarExternalImage();
+        artistDiscoveryRepository.saveAndFlush(discovery
+                .setSpotifyArtistId(null)
+                .setMusicBrainzArtistId(null)
+                .setCountryCode(null)
+                .setBioExternalImage(null)
+                .setAvatarExternalImage(null));
+        if (bioImage != null) {
+            externalImageStorage.delete(bioImage.getId());
+        }
+        if (avatarImage != null) {
+            externalImageStorage.delete(avatarImage.getId());
+        }
+    }
+
+    @Transactional
+    public void clearAlbumDiscovery(AlbumDiscovery discovery) {
+        albumDiscoveryRepository.save(discovery.setMusicBrainzAlbumId(null));
+    }
+
+    @Transactional
     public boolean deleteAlbumIfUnused(Album album) {
         if (songRepository.countByAlbumId(album.getId()) == 0) {
+            albumDiscoveryRepository.deleteByAlbumId(album.getId());
             discoveryTaskRepository.clearAlbumByAlbumId(album.getId());
             discoveryJobRepository.clearAlbumByAlbumId(album.getId());
             albumRepository.deleteById(album.getId());

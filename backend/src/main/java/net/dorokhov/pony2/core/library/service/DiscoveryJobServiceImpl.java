@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     private final DiscoveryJobRepository discoveryJobRepository;
     private final DiscoveryTaskRepository discoveryTaskRepository;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final LibraryCleaner libraryCleaner;
     private final DiscoveryCacheRepository discoveryCacheRepository;
     private final ArtistRepository artistRepository;
@@ -69,6 +71,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
             DiscoveryJobRepository discoveryJobRepository,
             DiscoveryTaskRepository discoveryTaskRepository,
             ArtistDiscoveryRepository artistDiscoveryRepository,
+            AlbumDiscoveryRepository albumDiscoveryRepository,
             LibraryCleaner libraryCleaner,
             DiscoveryCacheRepository discoveryCacheRepository,
             ArtistRepository artistRepository,
@@ -85,6 +88,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
         this.discoveryJobRepository = discoveryJobRepository;
         this.discoveryTaskRepository = discoveryTaskRepository;
         this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.libraryCleaner = libraryCleaner;
         this.discoveryCacheRepository = discoveryCacheRepository;
         this.artistRepository = artistRepository;
@@ -100,7 +104,7 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
     }
 
     @Override
-    public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
+    public void cleanDiscoveryData(boolean deleteOverrides) throws ConcurrentLibraryJobException {
         try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerMaintenanceJob()) {
             while (true) {
                 List<String> jobIds = requireNonNull(transactionTemplate.execute(status ->
@@ -115,14 +119,44 @@ public class DiscoveryJobServiceImpl implements DiscoveryJobService {
                     });
                 }
             }
+            int pageIndex = 0;
             while (true) {
-                Boolean deleted = transactionTemplate.execute(status -> {
-                    List<ArtistDiscovery> discoveries = artistDiscoveryRepository.findAll(PageRequest.of(0, 100)).getContent();
-                    discoveries.forEach(libraryCleaner::deleteArtistDiscovery);
+                PageRequest page = PageRequest.of(pageIndex, 100, Sort.by("id"));
+                Boolean processed = transactionTemplate.execute(status -> {
+                    List<ArtistDiscovery> discoveries = artistDiscoveryRepository.findAll(page).getContent();
+                    for (ArtistDiscovery discovery : discoveries) {
+                        if (deleteOverrides) {
+                            libraryCleaner.deleteArtistDiscovery(discovery);
+                        } else {
+                            libraryCleaner.clearArtistDiscovery(discovery);
+                        }
+                    }
                     return !discoveries.isEmpty();
                 });
-                if (!Boolean.TRUE.equals(deleted)) {
+                if (!Boolean.TRUE.equals(processed)) {
                     break;
+                }
+                if (!deleteOverrides) {
+                    pageIndex++;
+                }
+            }
+            pageIndex = 0;
+            while (true) {
+                PageRequest page = PageRequest.of(pageIndex, 100, Sort.by("id"));
+                Boolean processed = transactionTemplate.execute(status -> {
+                    List<AlbumDiscovery> discoveries = albumDiscoveryRepository.findAll(page).getContent();
+                    if (deleteOverrides) {
+                        albumDiscoveryRepository.deleteAll(discoveries);
+                    } else {
+                        discoveries.forEach(libraryCleaner::clearAlbumDiscovery);
+                    }
+                    return !discoveries.isEmpty();
+                });
+                if (!Boolean.TRUE.equals(processed)) {
+                    break;
+                }
+                if (!deleteOverrides) {
+                    pageIndex++;
                 }
             }
             transactionTemplate.executeWithoutResult(status -> discoveryCacheRepository.deleteAllInBatch());

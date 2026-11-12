@@ -28,13 +28,16 @@
                 <i class="bi bi-broadcast"></i>{{ 'library.artist.radio' | translate }}
               </button>
               @if (isAdmin && discoveryEnabled) {
+                <button ngbDropdownItem (click)="editArtist()">
+                  <i class="bi bi-pencil"></i>{{ 'library.artist.edit' | translate }}
+                </button>
                 <button ngbDropdownItem (click)="openArtistDiscoveryTasks()">
                   <i class="bi bi-stars"></i>{{ 'library.artist.discover' | translate }}
                 </button>
               }
             </ul>
           </div>
-          @if (discoveryEnabled && artistSongs.artist.discoveryData?.biographyAvailable) {
+          @if (discoveryEnabled && artistSongs.artist.discoveryData?.spotifyArtistId) {
             <button type="button" class="btn btn-sm btn-light artist-biography" aria-haspopup="dialog"
                     [attr.aria-label]="'artistBiography.header' | translate"
                     title="{{ 'artistBiography.header' | translate }}" (click)="openArtistBiography()">

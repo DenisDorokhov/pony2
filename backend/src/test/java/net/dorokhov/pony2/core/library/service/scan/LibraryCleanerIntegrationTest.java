@@ -34,6 +34,8 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     @Autowired
     private ArtistDiscoveryRepository artistDiscoveryRepository;
     @Autowired
+    private AlbumDiscoveryRepository albumDiscoveryRepository;
+    @Autowired
     private DiscoveryJobRepository discoveryJobRepository;
     @Autowired
     private DiscoveryTaskRepository discoveryTaskRepository;
@@ -134,6 +136,8 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
     public void shouldDeleteAlbumWithDiscovery() {
         Artist artist = artistRepository.save(new Artist());
         Album album = albumRepository.save(new Album().setArtist(artist));
+        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album).setMusicBrainzAlbumId("group")
+                .setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
         DiscoveryJob job = discoveryJobRepository.save(saveDiscoveryJob().setType(DiscoveryType.ALBUM).setAlbum(album));
         DiscoveryTask task = discoveryTaskRepository.saveAndFlush(
                 new DiscoveryTask().setAlbum(album).setJob(job)
@@ -143,6 +147,7 @@ public class LibraryCleanerIntegrationTest extends IntegrationTest {
         assertThat(libraryCleaner.deleteAlbumIfUnused(album)).isTrue();
 
         assertThat(albumRepository.findById(album.getId())).isEmpty();
+        assertThat(albumDiscoveryRepository.findByAlbumId(album.getId())).isEmpty();
         assertThat(discoveryJobRepository.findById(job.getId()).orElseThrow().getAlbum()).isNull();
         assertThat(discoveryTaskRepository.count()).isOne();
         assertThat(discoveryTaskRepository.findById(task.getId()).orElseThrow().getAlbum()).isNull();

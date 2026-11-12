@@ -5,9 +5,11 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.dorokhov.pony2.api.common.BaseEntity;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @Table(name = "artist_discovery")
+@DynamicUpdate  // Update only changed columns to support concurrent discovery updates.
 public class ArtistDiscovery extends BaseEntity<ArtistDiscovery> {
 
     @OneToOne(optional = false, fetch = FetchType.LAZY)
@@ -23,6 +25,10 @@ public class ArtistDiscovery extends BaseEntity<ArtistDiscovery> {
 
     @Column(name = "country_code")
     private String countryCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "override_country_code")
+    private CountryCode overrideCountryCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bio_external_image_id")
@@ -68,6 +74,15 @@ public class ArtistDiscovery extends BaseEntity<ArtistDiscovery> {
         return this;
     }
 
+    public @Nullable CountryCode getOverrideCountryCode() {
+        return overrideCountryCode;
+    }
+
+    public ArtistDiscovery setOverrideCountryCode(@Nullable CountryCode overrideCountryCode) {
+        this.overrideCountryCode = overrideCountryCode;
+        return this;
+    }
+
     public @Nullable ExternalImage getBioExternalImage() {
         return bioExternalImage;
     }
@@ -96,6 +111,7 @@ public class ArtistDiscovery extends BaseEntity<ArtistDiscovery> {
                 .add("spotifyArtistId", spotifyArtistId)
                 .add("musicBrainzArtistId", musicBrainzArtistId)
                 .add("countryCode", countryCode)
+                .add("overrideCountryCode", overrideCountryCode)
                 .add("bioExternalImage", bioExternalImage)
                 .add("avatarExternalImage", avatarExternalImage)
                 .toString();

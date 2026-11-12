@@ -99,6 +99,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
     @Autowired private BuildVersionProvider buildVersionProvider;
     @Autowired private ArtistRepository artistRepository;
     @Autowired private AlbumRepository albumRepository;
+    @Autowired private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired private GenreRepository genreRepository;
     @Autowired private SongRepository songRepository;
     @Autowired private DiscoveryJobRepository jobRepository;
@@ -210,6 +211,27 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         verify(musicBrainzClient).openSession(eq("pony2/" + buildVersionProvider.getBuildVersion().getVersion() + " (first@example.com)"), any(), eq(cacheEnabled));
         verify(model, never()).call(any(Prompt.class));
         verify(session, times(1)).searchReleaseGroups(anyString());
+    }
+
+    @Test
+    void shouldPersistAlbumIdAndKeepOverrideWhenDiscoveryIsRepeatedOrReturnsNoMatch() {
+        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
+                .setMusicBrainzAlbumId("previous-group").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(albumDiscoveryRepository.findByAlbumId(album.getId())).get().satisfies(discovery -> {
+            assertThat(discovery.getMusicBrainzAlbumId()).isEqualTo("group");
+            assertThat(discovery.getOverrideReleaseType()).isEqualTo(AlbumDiscoveryData.ReleaseType.EP);
+        });
+        search(List.of());
+
+        albumService.discover(job(DiscoveryType.ALBUM), album, false, null);
+
+        assertThat(albumDiscoveryRepository.findByAlbumId(album.getId())).get().satisfies(discovery -> {
+            assertThat(discovery.getMusicBrainzAlbumId()).isNull();
+            assertThat(discovery.getOverrideReleaseType()).isEqualTo(AlbumDiscoveryData.ReleaseType.EP);
+        });
     }
 
     @Test

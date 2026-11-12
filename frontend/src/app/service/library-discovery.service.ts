@@ -15,6 +15,10 @@ import {
 } from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {
+  AlbumDiscoveryDto,
+  AlbumDiscoveryUpdateCommandDto,
+  ArtistDiscoveryDto,
+  ArtistDiscoveryUpdateCommandDto,
   DiscoveryJobDetailsDto,
   DiscoveryJobDto,
   DiscoveryJobPageDto,
@@ -176,6 +180,30 @@ export class LibraryDiscoveryService {
 
   getAlbumDiscoveryTasks(albumId: string, result?: DiscoveryTaskResultFilter, type?: DiscoveryTaskType, pageIndex = 0, pageSize = 30): Observable<DiscoveryTaskPageDto> {
     return this.getDiscoveryTasksPage(`/api/admin/library/albums/${albumId}/discoveryTasks`, result, type, pageIndex, pageSize);
+  }
+
+  getArtistDiscovery(artistId: string): Observable<ArtistDiscoveryDto> {
+    return this.httpClient.get<ArtistDiscoveryDto>(`/api/admin/library/artists/${artistId}/discovery`).pipe(
+      catchError(ErrorDto.observableFromHttpErrorResponse)
+    );
+  }
+
+  updateArtistDiscovery(command: ArtistDiscoveryUpdateCommandDto): Observable<ArtistDiscoveryDto> {
+    return this.httpClient.put<ArtistDiscoveryDto>('/api/admin/library/artists/discovery', command).pipe(
+      catchError(ErrorDto.observableFromHttpErrorResponse)
+    );
+  }
+
+  getAlbumDiscovery(albumId: string): Observable<AlbumDiscoveryDto> {
+    return this.httpClient.get<AlbumDiscoveryDto>(`/api/admin/library/albums/${albumId}/discovery`).pipe(
+      catchError(ErrorDto.observableFromHttpErrorResponse)
+    );
+  }
+
+  updateAlbumDiscovery(command: AlbumDiscoveryUpdateCommandDto): Observable<AlbumDiscoveryDto> {
+    return this.httpClient.put<AlbumDiscoveryDto>('/api/admin/library/albums/discovery', command).pipe(
+      catchError(ErrorDto.observableFromHttpErrorResponse)
+    );
   }
 
   getDiscoveryTask(id: string): Observable<DiscoveryTaskDto> {

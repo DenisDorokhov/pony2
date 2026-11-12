@@ -201,7 +201,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
   private reloadCountryCounter() {
     this.countryCounter = {};
     for (const artist of this.artists) {
-      const countryCode = this.countryService.getFlagCode(artist.discoveryData?.countryCode);
+      const countryCode = this.countryService.getFlagCode(artist.discoveryData?.effectiveCountryCode);
       if (countryCode) {
         this.countryCounter[countryCode] = (this.countryCounter[countryCode] ?? 0) + 1;
       }
@@ -237,7 +237,7 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.translateService.instant('library.artist.countryNavigationLabel', {
           'countryName': unknownCountryName,
           'artistCount': this.artists.filter(artist =>
-            !this.countryService.getFlagCode(artist.discoveryData?.countryCode)).length
+            !this.countryService.getFlagCode(artist.discoveryData?.effectiveCountryCode)).length
         }),
         unknownCountryName
       ));
@@ -305,10 +305,10 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
         shouldShowNewIndicator(artist.creationDate, this.installationService.installationStatus));
     } else if (this.selectedNavigationItem.id === NAVIGATION_ID_UNKNOWN_COUNTRY) {
       this.filteredArtists = this.artists.filter(artist =>
-        !this.countryService.getFlagCode(artist.discoveryData?.countryCode));
+        !this.countryService.getFlagCode(artist.discoveryData?.effectiveCountryCode));
     } else if (this.selectedNavigationItem.countryCode) {
       this.filteredArtists = this.artists.filter(artist =>
-        this.countryService.getFlagCode(artist.discoveryData?.countryCode) === this.selectedNavigationItem.countryCode);
+        this.countryService.getFlagCode(artist.discoveryData?.effectiveCountryCode) === this.selectedNavigationItem.countryCode);
     } else {
       this.filteredArtists = this.artists.filter(artist =>
         artist.genres.findIndex(artistGenre =>

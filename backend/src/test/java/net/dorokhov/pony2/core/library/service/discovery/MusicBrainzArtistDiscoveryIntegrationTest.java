@@ -108,6 +108,18 @@ class MusicBrainzArtistDiscoveryIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void shouldKeepCountryOverrideWhenDiscoveryUpdatesOriginalCountry() {
+        artistDiscoveryRepository.save(new ArtistDiscovery().setArtist(artist).setCountryCode("DE").setOverrideCountryCode(CountryCode.US));
+        albumResult(album, "nick-cave", "Nick Cave", List.of("AU"), List.of());
+
+        runUpdated(false);
+
+        assertDiscovery("nick-cave", "AU");
+        assertThat(artistDiscoveryRepository.findByArtistId(artist.getId())).get()
+                .extracting(ArtistDiscovery::getOverrideCountryCode).isEqualTo(CountryCode.US);
+    }
+
+    @Test
     void shouldSelectLibraryArtistInsteadOfEarlierRelatedBandWithoutHttpRequests() {
         Album related = albumRepository.save(new Album().setArtist(artist).setName("Burnin' the Ice").setYear(1983));
         albumResult(related, "die-haut", "Die Haut", List.of("DE"));

@@ -17,6 +17,7 @@ import {
   SongDto
 } from './library.dto';
 import {formatFileSize} from '../utils/format.utils';
+import {CountryCode} from './country.model';
 
 const NAME_COLLATOR = new Intl.Collator(undefined, {sensitivity: 'accent'});
 
@@ -188,11 +189,17 @@ export class Album {
 export class AlbumDiscoveryData {
 
   releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | null;
   releaseDate: Date | undefined;
 
   constructor(dto: AlbumDiscoveryDataDto | undefined) {
     this.releaseType = dto?.releaseType ?? AlbumDiscoveryDataDto.ReleaseType.UNKNOWN;
+    this.overrideReleaseType = dto?.overrideReleaseType ?? null;
     this.releaseDate = dto?.releaseDate ? new Date(dto.releaseDate) : undefined;
+  }
+
+  get effectiveReleaseType(): AlbumDiscoveryDataDto.ReleaseType {
+    return this.overrideReleaseType ?? this.releaseType;
   }
 }
 
@@ -300,18 +307,22 @@ export class ArtistDiscoveryData {
 
   spotifyArtistId: string | undefined;
   countryCode: string | undefined;
+  overrideCountryCode: CountryCode | null;
   topSongIds: string[];
   avatarExternalImageId: string | undefined;
   avatarExternalImageUrl: string | undefined;
-  biographyAvailable: boolean;
 
   constructor(dto: ArtistDiscoveryDataDto) {
     this.spotifyArtistId = dto.spotifyArtistId;
     this.countryCode = dto.countryCode;
+    this.overrideCountryCode = dto.overrideCountryCode ?? null;
     this.topSongIds = dto.topSongIds ?? [];
     this.avatarExternalImageId = dto.avatarExternalImageId;
     this.avatarExternalImageUrl = this.avatarExternalImageId ? '/api/file/externalImage/' + this.avatarExternalImageId : undefined;
-    this.biographyAvailable = dto.biographyAvailable ?? false;
+  }
+
+  get effectiveCountryCode(): string | undefined {
+    return this.overrideCountryCode ?? this.countryCode;
   }
 }
 

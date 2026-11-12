@@ -28,6 +28,7 @@ import {
 import {ArtistLikesComponent} from './modal/artist-likes.component';
 import {ArtistBiographyComponent} from './modal/artist-biography.component';
 import {UnknownGenrePipe} from '../../pipe/unknown-genre.pipe';
+import {ArtistEditComponent} from './modal/artist-edit.component';
 
 @Component({
   imports: [TranslateModule, LoadingIndicatorComponent, ErrorIndicatorComponent, NoContentIndicatorComponent, MenuIconComponent, AlbumComponent, UnknownArtistPipe, UnknownGenrePipe, NgbDropdown, NgbDropdownButtonItem, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle],
@@ -159,7 +160,7 @@ export class AlbumListComponent implements OnInit, OnDestroy {
           this.albumCount = 0;
           this.songCount = 0;
           this.artistSongs = artistSongs;
-          this.countryFlagCode = this.countryService.getFlagCode(artistSongs.artist.discoveryData?.countryCode);
+          this.countryFlagCode = this.countryService.getFlagCode(artistSongs.artist.discoveryData?.effectiveCountryCode);
           this.countryName = this.countryService.getName(this.countryFlagCode);
           this.genreNames = this.artistSongs.artist.genres.map(genre => {
             if (genre.name) {
@@ -224,6 +225,11 @@ export class AlbumListComponent implements OnInit, OnDestroy {
   protected openArtistDiscoveryTasks() {
     const modalRef = this.modal.open(ArtistDiscoveryTasksComponent, {size: 'xl'});
     (modalRef.componentInstance as ArtistDiscoveryTasksComponent).artistId = this.artistSongs.artist.id;
+  }
+
+  protected editArtist() {
+    const modalRef = this.modal.open(ArtistEditComponent, {scrollable: true});
+    (modalRef.componentInstance as ArtistEditComponent).artist = this.artistSongs.artist;
   }
 
   openArtistBiography() {

@@ -1,12 +1,14 @@
 package net.dorokhov.pony2.web.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskFilter;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
 import net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion;
 import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.web.controller.exception.BadRequestException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import net.dorokhov.pony2.web.service.DiscoveryFacade;
@@ -187,8 +189,30 @@ public class LibraryAdminController implements ErrorHandlingController {
     }
 
     @DeleteMapping("/api/admin/discovery/data")
-    public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
-        discoveryFacade.cleanDiscoveryData();
+    public void cleanDiscoveryData(@RequestParam(defaultValue = "true") boolean deleteOverrides) throws ConcurrentLibraryJobException {
+        discoveryFacade.cleanDiscoveryData(deleteOverrides);
+    }
+
+    @GetMapping("/api/admin/library/artists/{artistId}/discovery")
+    public ArtistDiscoveryDto getArtistDiscovery(@PathVariable String artistId) throws ObjectNotFoundException, BadRequestException {
+        return discoveryFacade.getArtistDiscovery(artistId);
+    }
+
+    @PutMapping("/api/admin/library/artists/discovery")
+    public ArtistDiscoveryDto updateArtistDiscovery(@Valid @RequestBody ArtistDiscoveryUpdateCommandDto command)
+            throws ObjectNotFoundException, BadRequestException {
+        return discoveryFacade.updateArtistDiscovery(command);
+    }
+
+    @GetMapping("/api/admin/library/albums/{albumId}/discovery")
+    public AlbumDiscoveryDto getAlbumDiscovery(@PathVariable String albumId) throws ObjectNotFoundException, BadRequestException {
+        return discoveryFacade.getAlbumDiscovery(albumId);
+    }
+
+    @PutMapping("/api/admin/library/albums/discovery")
+    public AlbumDiscoveryDto updateAlbumDiscovery(@Valid @RequestBody AlbumDiscoveryUpdateCommandDto command)
+            throws ObjectNotFoundException, BadRequestException {
+        return discoveryFacade.updateAlbumDiscovery(command);
     }
 
     @GetMapping("/api/admin/llm/evaluation")

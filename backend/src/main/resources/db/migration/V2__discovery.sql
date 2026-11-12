@@ -123,6 +123,7 @@ CREATE TABLE artist_discovery (
   spotify_artist_id VARCHAR (255),
   music_brainz_artist_id VARCHAR (255),
   country_code VARCHAR (255),
+  override_country_code VARCHAR (255),
   bio_external_image_id CHAR(36),
   avatar_external_image_id CHAR(36),
 
@@ -136,6 +137,24 @@ CREATE TABLE artist_discovery (
 CREATE INDEX index_artist_discovery_spotify_artist_id ON artist_discovery (spotify_artist_id);
 CREATE INDEX index_artist_discovery_music_brainz_artist_id ON artist_discovery (music_brainz_artist_id);
 CREATE INDEX index_artist_discovery_country_code ON artist_discovery (country_code);
+
+CREATE TABLE album_discovery (
+
+  id CHAR(36) PRIMARY KEY,
+
+  creation_date TIMESTAMP(9) NOT NULL,
+  update_date TIMESTAMP(9),
+
+  album_id CHAR(36) NOT NULL,
+  music_brainz_album_id VARCHAR (255),
+  override_release_type VARCHAR (255),
+
+  FOREIGN KEY (album_id) REFERENCES album (id),
+
+  UNIQUE (album_id)
+);
+
+CREATE INDEX index_album_discovery_music_brainz_album_id ON album_discovery (music_brainz_album_id);
 
 CREATE INDEX index_song_creation_date ON song (creation_date);
 CREATE INDEX index_song_update_date_creation_date ON song (update_date, creation_date);

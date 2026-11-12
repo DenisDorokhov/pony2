@@ -7,6 +7,7 @@ import net.dorokhov.pony2.api.library.domain.ArtistDiscovery;
 import net.dorokhov.pony2.api.library.domain.ArtistDiscoveryData;
 import net.dorokhov.pony2.api.library.domain.ExternalImage;
 import net.dorokhov.pony2.web.dto.ArtistDiscoveryDataDto;
+import net.dorokhov.pony2.web.dto.ArtistDiscoveryDto;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
@@ -44,11 +45,16 @@ class ArtistDiscoveryRepositoryTest extends IntegrationTest {
         try {
             getTransactionTemplate().executeWithoutResult(status -> {
                 ArtistDiscovery loaded = indexRepository.findByArtistId(discovery.getArtist().getId()).orElseThrow();
-                ArtistDiscoveryDataDto dto = ArtistDiscoveryDataDto.of(new ArtistDiscoveryData(
-                        loaded.getCountryCode(), List.of(), loaded.getAvatarExternalImage().getId(), false, loaded.getSpotifyArtistId()));
+                ArtistDiscoveryData data = new ArtistDiscoveryData(
+                        loaded.getCountryCode(), List.of(), loaded.getAvatarExternalImage().getId(), loaded.getSpotifyArtistId(),
+                        null, loaded.getMusicBrainzArtistId(), loaded.getBioExternalImage().getId());
+                ArtistDiscoveryDataDto dto = ArtistDiscoveryDataDto.of(data);
+                ArtistDiscoveryDto discoveryDto = ArtistDiscoveryDto.of(data);
 
                 assertThat(loaded.getBioExternalImage().getId()).isEqualTo(bio.getId());
                 assertThat(dto.getAvatarExternalImageId()).isEqualTo(avatar.getId());
+                assertThat(discoveryDto.getBioExternalImageId()).isEqualTo(bio.getId());
+                assertThat(discoveryDto.getAvatarExternalImageId()).isEqualTo(avatar.getId());
                 assertThat(Hibernate.isInitialized(loaded.getBioExternalImage())).isFalse();
                 assertThat(Hibernate.isInitialized(loaded.getAvatarExternalImage())).isFalse();
                 assertThat(statistics.getPrepareStatementCount()).isOne();

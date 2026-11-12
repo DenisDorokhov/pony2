@@ -11,6 +11,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTaskSummary;
 import net.dorokhov.pony2.api.library.service.DiscoveryJobService;
 import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.library.service.exception.ConcurrentLibraryJobException;
+import net.dorokhov.pony2.web.controller.exception.BadRequestException;
 import net.dorokhov.pony2.web.dto.*;
 import net.dorokhov.pony2.web.service.exception.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
@@ -142,8 +143,54 @@ public class DiscoveryFacade {
                 task.song() != null ? SongDto.of(task.song(), true) : null);
     }
 
-    public void cleanDiscoveryData() throws ConcurrentLibraryJobException {
-        discoveryJobService.cleanDiscoveryData();
+    @Transactional(readOnly = true)
+    public ArtistDiscoveryDto getArtistDiscovery(String artistId) throws ObjectNotFoundException, BadRequestException {
+        requireDiscoveryEnabled();
+        if (libraryService.getArtistById(artistId).isEmpty()) {
+            throw new ObjectNotFoundException(Artist.class, artistId);
+        }
+        return ArtistDiscoveryDto.of(libraryService.getArtistDiscoveryData(artistId).orElse(null));
+    }
+
+    private void requireDiscoveryEnabled() throws BadRequestException {
+        if (!configService.get().discoveryEnabled()) {
+            throw new BadRequestException();
+        }
+    }
+
+    @Transactional
+    public ArtistDiscoveryDto updateArtistDiscovery(ArtistDiscoveryUpdateCommandDto command)
+            throws ObjectNotFoundException, BadRequestException {
+        requireDiscoveryEnabled();
+        String artistId = command.getArtistId();
+        Artist artist = libraryService.getArtistById(artistId)
+                .orElseThrow(() -> new ObjectNotFoundException(Artist.class, artistId));
+        libraryService.updateArtistDiscovery(artist, command.getOverrideCountryCode());
+        return ArtistDiscoveryDto.of(libraryService.getArtistDiscoveryData(artistId).orElse(null));
+    }
+
+    @Transactional(readOnly = true)
+    public AlbumDiscoveryDto getAlbumDiscovery(String albumId) throws ObjectNotFoundException, BadRequestException {
+        requireDiscoveryEnabled();
+        if (libraryService.getAlbumById(albumId).isEmpty()) {
+            throw new ObjectNotFoundException(Album.class, albumId);
+        }
+        return AlbumDiscoveryDto.of(libraryService.getAlbumDiscoveryData(albumId).orElse(null));
+    }
+
+    @Transactional
+    public AlbumDiscoveryDto updateAlbumDiscovery(AlbumDiscoveryUpdateCommandDto command)
+            throws ObjectNotFoundException, BadRequestException {
+        requireDiscoveryEnabled();
+        String albumId = command.getAlbumId();
+        Album album = libraryService.getAlbumById(albumId)
+                .orElseThrow(() -> new ObjectNotFoundException(Album.class, albumId));
+        libraryService.updateAlbumDiscovery(album, command.getOverrideReleaseType());
+        return AlbumDiscoveryDto.of(libraryService.getAlbumDiscoveryData(albumId).orElse(null));
+    }
+
+    public void cleanDiscoveryData(boolean deleteOverrides) throws ConcurrentLibraryJobException {
+        discoveryJobService.cleanDiscoveryData(deleteOverrides);
     }
 
     @Transactional

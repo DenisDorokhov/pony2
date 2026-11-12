@@ -1,5 +1,6 @@
 package net.dorokhov.pony2.api.library.service;
 
+import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.*;
 
 import java.util.List;
@@ -22,11 +23,15 @@ public interface LibraryService {
 
     Optional<ArtistDiscoveryData> getArtistDiscoveryData(String artistId);
 
+    void updateArtistDiscovery(Artist artist, @Nullable CountryCode overrideCountryCode);
+
     Map<String, ArtistDiscoveryData> getArtistDiscoveryData(List<String> artistIds);
 
     Optional<ArtistBiographyData> getArtistBiographyData(String artistId);
 
     Optional<AlbumDiscoveryData> getAlbumDiscoveryData(String albumId);
+
+    void updateAlbumDiscovery(Album album, @Nullable AlbumDiscoveryData.ReleaseType overrideReleaseType);
 
     List<Album> getAlbums(int size, int offset);
 

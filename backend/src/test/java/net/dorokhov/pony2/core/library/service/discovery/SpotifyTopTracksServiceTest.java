@@ -294,7 +294,7 @@ class SpotifyTopTracksServiceTest {
         List<Album> albums = new ArrayList<>(artist.getAlbums());
         albums.add(album);
         artist.setAlbums(albums);
-        when(libraryService.getAlbumDiscoveryData(id)).thenReturn(Optional.of(new AlbumDiscoveryData(type, releaseDate)));
+        when(libraryService.getAlbumDiscoveryData(id)).thenReturn(Optional.of(new AlbumDiscoveryData(type, releaseDate, null, null)));
     }
 
     @Test

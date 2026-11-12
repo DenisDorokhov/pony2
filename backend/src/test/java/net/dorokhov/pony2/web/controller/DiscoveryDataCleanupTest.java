@@ -51,6 +51,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
     @Autowired private DiscoveryJobRepository jobRepository;
     @Autowired private DiscoveryTaskRepository taskRepository;
     @Autowired private ArtistDiscoveryRepository indexRepository;
+    @Autowired private AlbumDiscoveryRepository albumDiscoveryRepository;
     @Autowired private DiscoveryCacheRepository cacheRepository;
     @Autowired private DiscoveryCacheService cacheService;
     @Autowired private ArtistRepository artistRepository;
@@ -63,8 +64,9 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
     @Autowired private ExternalImageRepository externalImageRepository;
     @Value("${pony.externalImage.path}") private File externalImageFolder;
 
-    @Test
-    void shouldCleanExternalImagesAcrossBatchesAndKeepLibraryArtwork() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldCleanExternalImagesAcrossBatchesAndKeepLibraryArtwork(boolean deleteOverrides) throws Exception {
         List<ExternalImageFile> externalImageFiles = new ArrayList<>();
         ArtworkFiles kept = saveArtwork("red.png");
         Artist libraryArtist = artistRepository.save(new Artist().setArtwork(kept.getArtwork()));
@@ -78,16 +80,39 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
                     externalImageFiles.add(bio);
                     externalImageFiles.add(avatar);
                     indexRepository.save(new ArtistDiscovery().setArtist(artist)
+                            .setSpotifyArtistId("spotify").setMusicBrainzArtistId("artist").setCountryCode("DE")
+                            .setOverrideCountryCode(CountryCode.US)
                             .setBioExternalImage(bio.getExternalImage()).setAvatarExternalImage(avatar.getExternalImage()));
+                    Album album = albumRepository.save(new Album().setArtist(artist));
+                    albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
+                            .setMusicBrainzAlbumId("album").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.EP));
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         });
 
-        discoveryJobService.cleanDiscoveryData();
+        discoveryJobService.cleanDiscoveryData(deleteOverrides);
 
-        assertThat(indexRepository.count()).isZero();
+        if (deleteOverrides) {
+            assertThat(indexRepository.count()).isZero();
+            assertThat(albumDiscoveryRepository.count()).isZero();
+        } else {
+            assertThat(indexRepository.count()).isEqualTo(102);
+            assertThat(indexRepository.findAll()).allSatisfy(discovery -> {
+                assertThat(discovery.getSpotifyArtistId()).isNull();
+                assertThat(discovery.getMusicBrainzArtistId()).isNull();
+                assertThat(discovery.getCountryCode()).isNull();
+                assertThat(discovery.getBioExternalImage()).isNull();
+                assertThat(discovery.getAvatarExternalImage()).isNull();
+                assertThat(discovery.getOverrideCountryCode()).isEqualTo(
+                        discovery.getArtist().getId().equals(libraryArtist.getId()) ? null : CountryCode.US);
+            });
+            assertThat(albumDiscoveryRepository.findAll()).hasSize(101).allSatisfy(discovery -> {
+                assertThat(discovery.getMusicBrainzAlbumId()).isNull();
+                assertThat(discovery.getOverrideReleaseType()).isEqualTo(AlbumDiscoveryData.ReleaseType.EP);
+            });
+        }
         assertThat(externalImageRepository.count()).isZero();
         assertThat(artworkRepository.count()).isOne();
         assertThat(artworkRepository.existsById(kept.getArtwork().getId())).isTrue();
@@ -113,12 +138,13 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         assertThat(taskRepository.count()).isZero();
         assertThat(jobRepository.count()).isZero();
         assertThat(indexRepository.count()).isZero();
+        assertThat(albumDiscoveryRepository.count()).isZero();
         assertThat(cacheRepository.count()).isZero();
         assertThat(artistRepository.count()).isOne();
         assertThat(albumRepository.count()).isOne();
         assertThat(genreRepository.count()).isOne();
         assertThat(songRepository.count()).isOne();
-        discoveryJobService.cleanDiscoveryData();
+        discoveryJobService.cleanDiscoveryData(true);
     }
 
     @ParameterizedTest
@@ -151,7 +177,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         getTransactionTemplate().executeWithoutResult(status -> {
             assertThat(jdbcTemplate.queryForObject("SELECT id FROM discovery_job WHERE id = ? FOR UPDATE",
                     String.class, ids.getLast())).isEqualTo(ids.getLast());
-            assertThatThrownBy(discoveryJobService::cleanDiscoveryData)
+            assertThatThrownBy(() -> discoveryJobService.cleanDiscoveryData(true))
                     .isInstanceOf(PessimisticLockingFailureException.class);
         });
 
@@ -164,7 +190,7 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         try (LibraryJobSynchronizer.LibraryJobRegistration ignored = jobSynchronizer.registerMaintenanceJob()) {
             assertThat(jobSynchronizer.hasRunningTasks()).isFalse();
         }
-        discoveryJobService.cleanDiscoveryData();
+        discoveryJobService.cleanDiscoveryData(true);
         assertThat(jobRepository.count()).isZero();
         assertThat(taskRepository.count()).isZero();
     }
@@ -187,7 +213,9 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         taskRepository.save(task(jobs.getFirst()).setAlbum(album));
         taskRepository.save(task(jobs.getLast()).setGenre(genre));
         taskRepository.save(task(jobs.getLast()).setSong(song));
-        indexRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify"));
+        indexRepository.save(new ArtistDiscovery().setArtist(artist).setSpotifyArtistId("spotify").setOverrideCountryCode(CountryCode.US));
+        albumDiscoveryRepository.save(new AlbumDiscovery().setAlbum(album)
+                .setMusicBrainzAlbumId("album").setOverrideReleaseType(AlbumDiscoveryData.ReleaseType.LP));
         cacheService.put(DiscoveryCacheRegion.SPOTIFY, "key", 1, "value");
     }
 

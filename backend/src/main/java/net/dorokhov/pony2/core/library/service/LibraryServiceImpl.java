@@ -31,6 +31,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final AlbumRepository albumRepository;
     private final ArtistGenreRepository artistGenreRepository;
     private final ArtistDiscoveryRepository artistDiscoveryRepository;
+    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final DiscoveryTaskResultReader resultReader;
     private final SongRepository songRepository;
     private final ArtworkStorage artworkStorage;
@@ -43,6 +44,7 @@ public class LibraryServiceImpl implements LibraryService {
             AlbumRepository albumRepository,
             ArtistGenreRepository artistGenreRepository,
             ArtistDiscoveryRepository artistDiscoveryRepository,
+            AlbumDiscoveryRepository albumDiscoveryRepository,
             DiscoveryTaskResultReader resultReader,
             SongRepository songRepository,
             ArtworkStorage artworkStorage,
@@ -54,6 +56,7 @@ public class LibraryServiceImpl implements LibraryService {
         this.albumRepository = albumRepository;
         this.artistGenreRepository = artistGenreRepository;
         this.artistDiscoveryRepository = artistDiscoveryRepository;
+        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.resultReader = resultReader;
         this.songRepository = songRepository;
         this.artworkStorage = artworkStorage;
@@ -137,13 +140,24 @@ public class LibraryServiceImpl implements LibraryService {
         }
         ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artistId).orElse(null);
         ExternalImage avatarExternalImage = discovery != null ? discovery.getAvatarExternalImage() : null;
+        ExternalImage bioExternalImage = discovery != null ? discovery.getBioExternalImage() : null;
         String spotifyArtistId = discovery != null ? discovery.getSpotifyArtistId() : null;
         return new ArtistDiscoveryData(
                 discovery != null ? discovery.getCountryCode() : null,
                 topSongIds,
                 avatarExternalImage != null ? avatarExternalImage.getId() : null,
-                spotifyArtistId != null,
-                spotifyArtistId);
+                spotifyArtistId,
+                discovery != null ? discovery.getOverrideCountryCode() : null,
+                discovery != null ? discovery.getMusicBrainzArtistId() : null,
+                bioExternalImage != null ? bioExternalImage.getId() : null);
+    }
+
+    @Override
+    @Transactional
+    public void updateArtistDiscovery(Artist artist, @Nullable CountryCode overrideCountryCode) {
+        ArtistDiscovery discovery = artistDiscoveryRepository.findByArtistId(artist.getId())
+                .orElseGet(() -> new ArtistDiscovery().setArtist(artist));
+        artistDiscoveryRepository.save(discovery.setOverrideCountryCode(overrideCountryCode));
     }
 
     @Override
@@ -173,8 +187,11 @@ public class LibraryServiceImpl implements LibraryService {
             return Optional.empty();
         }
         MusicBrainzAlbumData data = resultReader.readMusicBrainzAlbumData(albumId);
+        AlbumDiscovery discovery = albumDiscoveryRepository.findByAlbumId(albumId).orElse(null);
+        ReleaseType overrideReleaseType = discovery != null ? discovery.getOverrideReleaseType() : null;
+        String musicBrainzAlbumId = discovery != null ? discovery.getMusicBrainzAlbumId() : null;
         if (data == null) {
-            return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null));
+            return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null, overrideReleaseType, musicBrainzAlbumId));
         }
         ReleaseType releaseType;
         if (data.secondaryTypes().contains("Compilation")) {
@@ -189,7 +206,15 @@ public class LibraryServiceImpl implements LibraryService {
                 case null, default -> ReleaseType.UNKNOWN;
             };
         }
-        return Optional.of(new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate())));
+        return Optional.of(new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate()), overrideReleaseType, musicBrainzAlbumId));
+    }
+
+    @Override
+    @Transactional
+    public void updateAlbumDiscovery(Album album, @Nullable ReleaseType overrideReleaseType) {
+        AlbumDiscovery discovery = albumDiscoveryRepository.findByAlbumId(album.getId())
+                .orElseGet(() -> new AlbumDiscovery().setAlbum(album));
+        albumDiscoveryRepository.save(discovery.setOverrideReleaseType(overrideReleaseType));
     }
 
     @Override

@@ -464,8 +464,8 @@ export class LibraryService {
     return this.httpClient.post<void>('/api/admin/library/reGenerateArtworkThumbnails', null);
   }
 
-  cleanDiscoveryData(): Observable<void> {
-    return this.httpClient.delete<void>('/api/admin/discovery/data');
+  cleanDiscoveryData(deleteOverrides: boolean): Observable<void> {
+    return this.httpClient.delete<void>('/api/admin/discovery/data', {params: {deleteOverrides}});
   }
 
   clearDiscoveryCache(region?: string): Observable<void> {

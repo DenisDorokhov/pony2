@@ -2,12 +2,14 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.Album;
+import net.dorokhov.pony2.api.library.domain.AlbumDiscovery;
 import net.dorokhov.pony2.api.library.domain.DiscoveryJob;
 import net.dorokhov.pony2.api.library.domain.DiscoveryProgress;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTaskType;
 import net.dorokhov.pony2.api.library.domain.MusicBrainzAlbumData;
 import net.dorokhov.pony2.api.log.service.LogService;
+import net.dorokhov.pony2.core.library.repository.AlbumDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.musicbrainz.MusicBrainzAlbumDataService;
@@ -15,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
@@ -28,6 +31,7 @@ public class AlbumDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final LibraryJobSynchronizer jobSynchronizer;
     private final DiscoveryTaskRepository taskRepository;
+    private final AlbumDiscoveryRepository albumDiscoveryRepository;
     private final MusicBrainzAlbumDataService musicBrainzAlbumDataService;
     private final DiscoveryTaskExecutor taskExecutor;
     private final LogService logService;
@@ -35,12 +39,14 @@ public class AlbumDiscoveryService {
     public AlbumDiscoveryService(
             LibraryJobSynchronizer jobSynchronizer,
             DiscoveryTaskRepository taskRepository,
+            AlbumDiscoveryRepository albumDiscoveryRepository,
             MusicBrainzAlbumDataService musicBrainzAlbumDataService,
             DiscoveryTaskExecutor taskExecutor,
             LogService logService
     ) {
         this.jobSynchronizer = jobSynchronizer;
         this.taskRepository = taskRepository;
+        this.albumDiscoveryRepository = albumDiscoveryRepository;
         this.musicBrainzAlbumDataService = musicBrainzAlbumDataService;
         this.taskExecutor = taskExecutor;
         this.logService = logService;
@@ -82,6 +88,16 @@ public class AlbumDiscoveryService {
         @Override
         public @Nullable MusicBrainzAlbumData executeTask(DiscoveryTask task) {
             return musicBrainzAlbumDataService.discover(task, cacheEnabled);
+        }
+
+        @Override
+        public void onResult(DiscoveryTask task, @Nullable MusicBrainzAlbumData result) {
+            AlbumDiscovery discovery = albumDiscoveryRepository.findByAlbumId(album.getId())
+                    .orElseGet(() -> new AlbumDiscovery().setAlbum(album));
+            String albumId = result != null ? result.releaseGroupId() : null;
+            if (!Objects.equals(discovery.getMusicBrainzAlbumId(), albumId)) {
+                albumDiscoveryRepository.save(discovery.setMusicBrainzAlbumId(albumId));
+            }
         }
 
         @Override

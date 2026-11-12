@@ -1,0 +1,50 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'discoveryEdit.albumHeader' | translate }}: {{ album.name | ponyUnknownAlbum }}</h4>
+</div>
+<div class="modal-body">
+  <div class="blocking-overlay" [hidden]="loadingState !== LoadingState.LOADING && loadingState !== LoadingState.ERROR"></div>
+  @if (loadingState === LoadingState.LOADING && !discovery) {
+    <pony-loading-indicator></pony-loading-indicator>
+  }
+  @if (loadingState === LoadingState.ERROR && !discovery) {
+    <pony-error-indicator></pony-error-indicator>
+  }
+  @if (discovery) {
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="mb-3">
+        <label for="musicBrainzAlbumId" class="form-label">{{ 'discoveryEdit.musicBrainzAlbumIdLabel' | translate }}</label>
+        <input id="musicBrainzAlbumId" type="text" class="form-control" [value]="discovery.musicBrainzAlbumId ?? ''" readonly>
+      </div>
+      <div class="mb-3">
+        <label for="releaseType" class="form-label">{{ 'discoveryEdit.releaseTypeLabel' | translate }}</label>
+        <input id="releaseType" type="text" class="form-control" [value]="discovery.releaseType" readonly>
+      </div>
+      <div class="mb-3">
+        <label for="releaseDate" class="form-label">{{ 'discoveryEdit.releaseDateLabel' | translate }}</label>
+        <input id="releaseDate" type="text" class="form-control" [value]="(discovery.releaseDate | date:('shared.dateFormat' | translate)) ?? ''" readonly>
+      </div>
+      <div class="mb-3">
+        <pony-error-container #overrideContainer [error]="error" field="overrideReleaseType">
+          <label for="overrideReleaseType" class="form-label">{{ 'discoveryEdit.overrideReleaseTypeLabel' | translate }}</label>
+          <select id="overrideReleaseType" class="form-select" formControlName="overrideReleaseType" [class.is-invalid]="overrideContainer.hasErrors">
+            <option [ngValue]="null">{{ 'discoveryEdit.noneLabel' | translate }}</option>
+            @for (releaseType of releaseTypes; track releaseType) {
+              <option [ngValue]="releaseType">{{ releaseType }}</option>
+            }
+          </select>
+        </pony-error-container>
+      </div>
+      <input type="submit" hidden>
+    </form>
+  }
+</div>
+<div class="modal-footer">
+  @if (loadingState === LoadingState.LOADING && discovery) {
+    <pony-loading-indicator></pony-loading-indicator>
+  }
+  @if (loadingState === LoadingState.ERROR && discovery) {
+    <pony-error-indicator></pony-error-indicator>
+  }
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">{{ 'shared.cancelButton' | translate }}</button>
+  <button type="button" class="btn btn-primary" (click)="save()" [disabled]="!discovery || loadingState === LoadingState.LOADING">{{ 'shared.saveButton' | translate }}</button>
+</div>

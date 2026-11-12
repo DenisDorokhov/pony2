@@ -14,6 +14,11 @@
 
 - Write all code comments, including JavaDoc, in English only.
 
+# Jackson annotations
+
+- Do not add Jackson annotations without a concrete serialization or deserialization requirement that is not already covered by the existing global configuration and default behavior.
+- Do not force null fields into JSON when clients already support omitted fields.
+
 # External resources
 
 - Access external resources through the configured proxy; do not fall back to direct connections.

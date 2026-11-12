@@ -40,6 +40,7 @@ import {NotificationService} from '../../service/notification.service';
 import {AuthenticationService} from '../../service/authentication.service';
 import {UserDto} from '../../domain/user.dto';
 import {DropdownCloseOnScrollDirective} from '../common/dropdown-close-on-scroll.directive';
+import {AlbumEditComponent} from './modal/album-edit.component';
 
 interface Disc {
   discNumber: number | undefined;
@@ -133,6 +134,11 @@ export class AlbumComponent implements OnInit, OnDestroy, OnChanges {
   protected openAlbumDiscoveryTasks() {
     const modalRef = this.modal.open(AlbumDiscoveryTasksComponent, {size: 'xl'});
     (modalRef.componentInstance as AlbumDiscoveryTasksComponent).albumId = this.albumSongs.album.id;
+  }
+
+  protected editAlbum() {
+    const modalRef = this.modal.open(AlbumEditComponent, {scrollable: true});
+    (modalRef.componentInstance as AlbumEditComponent).album = this.albumSongs.album;
   }
 
   download() {

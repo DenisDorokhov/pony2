@@ -123,7 +123,7 @@ export class ArtistBiographyComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.libraryService.getArtistBiography(this.artistId).subscribe({
       next: biography => {
         this.biography = biography;
-        this.countryFlagCode = this.countryService.getFlagCode(biography.artist.discoveryData?.countryCode);
+        this.countryFlagCode = this.countryService.getFlagCode(biography.artist.discoveryData?.effectiveCountryCode);
         this.countryName = this.countryService.getName(this.countryFlagCode);
         this.paragraphs = formatArtistBiographyText(biography.text);
         this.links = biography.links.map(link => ({...link, ...ARTIST_BIOGRAPHY_LINKS[link.type]}));

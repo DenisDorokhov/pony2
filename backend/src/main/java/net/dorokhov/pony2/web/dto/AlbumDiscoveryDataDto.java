@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public final class AlbumDiscoveryDataDto {
 
     private ReleaseType releaseType;
+    private ReleaseType overrideReleaseType;
     private LocalDateTime releaseDate;
 
     public ReleaseType getReleaseType() {
@@ -17,6 +18,15 @@ public final class AlbumDiscoveryDataDto {
 
     public AlbumDiscoveryDataDto setReleaseType(ReleaseType releaseType) {
         this.releaseType = releaseType;
+        return this;
+    }
+
+    public @Nullable ReleaseType getOverrideReleaseType() {
+        return overrideReleaseType;
+    }
+
+    public AlbumDiscoveryDataDto setOverrideReleaseType(@Nullable ReleaseType overrideReleaseType) {
+        this.overrideReleaseType = overrideReleaseType;
         return this;
     }
 
@@ -32,6 +42,7 @@ public final class AlbumDiscoveryDataDto {
     public static AlbumDiscoveryDataDto of(AlbumDiscoveryData data) {
         return new AlbumDiscoveryDataDto()
                 .setReleaseType(data.releaseType())
+                .setOverrideReleaseType(data.overrideReleaseType())
                 .setReleaseDate(data.releaseDate());
     }
 }
