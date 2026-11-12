@@ -230,14 +230,15 @@ export class ArtistListComponent implements OnInit, AfterViewInit, OnDestroy {
         );
       })
       .sort((left, right) => left.title.localeCompare(right.title));
-    if (countryNavigationItems.length > 0) {
+    const unknownCountryArtistCount = this.artists.filter(artist =>
+      !this.countryService.getFlagCode(artist.discoveryData?.effectiveCountryCode)).length;
+    if (countryNavigationItems.length > 0 && unknownCountryArtistCount > 0) {
       const unknownCountryName = this.translateService.instant('library.artist.unknownCountryLabel');
       countryNavigationItems.push(new NavigationItem(
         NAVIGATION_ID_UNKNOWN_COUNTRY,
         this.translateService.instant('library.artist.countryNavigationLabel', {
           'countryName': unknownCountryName,
-          'artistCount': this.artists.filter(artist =>
-            !this.countryService.getFlagCode(artist.discoveryData?.effectiveCountryCode)).length
+          'artistCount': unknownCountryArtistCount
         }),
         unknownCountryName
       ));
