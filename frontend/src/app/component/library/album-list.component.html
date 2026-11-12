@@ -16,6 +16,18 @@
       <div class="panel-title">
         <div title="{{ artistSongs.artist.name | ponyUnknownArtist }}" class="artist-name">
           <span>{{ artistSongs.artist.name | ponyUnknownArtist }}</span>
+          @if (discoveryEnabled && artistSongs.artist.discoveryData?.spotifyArtistId) {
+            <button type="button" class="btn btn-sm btn-light artist-biography" aria-haspopup="dialog"
+                    [attr.aria-label]="'artistBiography.header' | translate"
+                    title="{{ 'artistBiography.header' | translate }}" (click)="openArtistBiography()">
+              <i class="bi bi-book no-padding" aria-hidden="true"></i>
+            </button>
+          }
+          @if (likedAndTopTrackCount > 0) {
+            <button class="btn btn-sm btn-light artist-likes" (click)="openArtistLikes()">
+              <i class="bi" [class.bi-star-fill]="likeCount > 0" [class.bi-fire]="likeCount === 0"></i>{{ likedAndTopTrackCount }}
+            </button>
+          }
           <div ngbDropdown container="body" class="artist-options h4" dropdownClass="pony-dropdown">
             <button ngbDropdownToggle type="button" class="menu">
               <pony-menu-icon />
@@ -37,18 +49,6 @@
               }
             </ul>
           </div>
-          @if (discoveryEnabled && artistSongs.artist.discoveryData?.spotifyArtistId) {
-            <button type="button" class="btn btn-sm btn-light artist-biography" aria-haspopup="dialog"
-                    [attr.aria-label]="'artistBiography.header' | translate"
-                    title="{{ 'artistBiography.header' | translate }}" (click)="openArtistBiography()">
-              <i class="bi bi-book no-padding" aria-hidden="true"></i>
-            </button>
-          }
-          @if (likedAndTopTrackCount > 0) {
-            <button class="btn btn-sm btn-light artist-likes" (click)="openArtistLikes()">
-              <i class="bi" [class.bi-star-fill]="likeCount > 0" [class.bi-fire]="likeCount === 0"></i>{{ likedAndTopTrackCount }}
-            </button>
-          }
         </div>
         <div class="counts" title="{{ countryName ? countryName + ', ' : '' }}{{
           'library.album.counterTitle' | translate:{
