@@ -12,11 +12,11 @@ public final class AlbumDiscoveryDataDto {
     private ReleaseType overrideReleaseType;
     private LocalDateTime releaseDate;
 
-    public ReleaseType getReleaseType() {
+    public @Nullable ReleaseType getReleaseType() {
         return releaseType;
     }
 
-    public AlbumDiscoveryDataDto setReleaseType(ReleaseType releaseType) {
+    public AlbumDiscoveryDataDto setReleaseType(@Nullable ReleaseType releaseType) {
         this.releaseType = releaseType;
         return this;
     }

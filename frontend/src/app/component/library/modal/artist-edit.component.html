@@ -14,7 +14,7 @@
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <div class="mb-3">
         <label for="countryCode" class="form-label">{{ 'discoveryEdit.countryCodeLabel' | translate }}</label>
-        <input id="countryCode" type="text" class="form-control" [value]="discoveredCountryLabel" disabled>
+        <input id="countryCode" type="text" class="form-control" [value]="discoveredCountryLabel || '-'" disabled>
       </div>
       <div class="mb-3">
         <pony-error-container #overrideContainer [error]="error" field="overrideCountryCode">

@@ -179,9 +179,9 @@ public class LibraryServiceImplTest {
             "Album||LP",
             "EP||EP",
             "Single||SINGLE",
-            "Broadcast||UNKNOWN",
-            "Other|Soundtrack|UNKNOWN",
-            "||UNKNOWN",
+            "Broadcast||",
+            "Other|Soundtrack|",
+            "||",
             "Album|Soundtrack|LP",
             "EP|Remix|EP",
             "Single|Live|LIVE",
@@ -242,12 +242,12 @@ public class LibraryServiceImplTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = "null")
-    void shouldReturnUnknownWhenAlbumDiscoveryDataIsMissing(String result) {
+    void shouldReturnNullReleaseTypeWhenAlbumDiscoveryDataIsMissing(String result) {
         when(discoveryTaskRepository.findLatestCompletedResultByAlbumIdAndType(eq("album"), eq(DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA), any(Limit.class)))
                 .thenReturn(Optional.ofNullable(result));
 
         assertThat(libraryService.getAlbumDiscoveryData("album"))
-                .contains(new AlbumDiscoveryData(AlbumDiscoveryData.ReleaseType.UNKNOWN, null, null, null));
+                .contains(new AlbumDiscoveryData(null, null, null, null));
     }
 
     @ParameterizedTest

@@ -5,7 +5,7 @@ import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
 
 public record AlbumDiscoveryData(
-        ReleaseType releaseType,
+        @Nullable ReleaseType releaseType,
         @Nullable LocalDateTime releaseDate,
         @Nullable ReleaseType overrideReleaseType,
         @Nullable String musicBrainzReleaseGroupId

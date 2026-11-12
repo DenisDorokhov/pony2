@@ -22,11 +22,11 @@ public final class AlbumDiscoveryDto {
         return this;
     }
 
-    public ReleaseType getReleaseType() {
+    public @Nullable ReleaseType getReleaseType() {
         return releaseType;
     }
 
-    public AlbumDiscoveryDto setReleaseType(ReleaseType releaseType) {
+    public AlbumDiscoveryDto setReleaseType(@Nullable ReleaseType releaseType) {
         this.releaseType = releaseType;
         return this;
     }
@@ -52,7 +52,7 @@ public final class AlbumDiscoveryDto {
     public static AlbumDiscoveryDto of(@Nullable AlbumDiscoveryData data) {
         return new AlbumDiscoveryDto()
                 .setMusicBrainzReleaseGroupId(data != null ? data.musicBrainzReleaseGroupId() : null)
-                .setReleaseType(data != null ? data.releaseType() : ReleaseType.UNKNOWN)
+                .setReleaseType(data != null ? data.releaseType() : null)
                 .setReleaseDate(data != null ? data.releaseDate() : null)
                 .setOverrideReleaseType(data != null ? data.overrideReleaseType() : null);
     }

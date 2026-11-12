@@ -23,14 +23,14 @@ export interface AlbumSongsDto {
 }
 
 export interface AlbumDiscoveryDataDto {
-  releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  releaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
   overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
   releaseDate: string | undefined;
 }
 
 export interface AlbumDiscoveryDto {
   musicBrainzReleaseGroupId: string | undefined;
-  releaseType: AlbumDiscoveryDataDto.ReleaseType;
+  releaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
   releaseDate: string | undefined;
   overrideReleaseType: AlbumDiscoveryDataDto.ReleaseType | undefined;
 }

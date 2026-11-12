@@ -35,7 +35,10 @@ task npmBuild(type: NpmTask) {
     inputs.files("angular.json", "tsconfig.json", "tsconfig.app.json")
     outputs.dir("build")
     dependsOn npmInstall
-    dependsOn npmLint
 }
 
 jar.dependsOn npmBuild
+
+tasks.named('check') {
+    dependsOn npmLint
+}

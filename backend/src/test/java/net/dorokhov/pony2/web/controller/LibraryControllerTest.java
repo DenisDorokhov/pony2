@@ -279,7 +279,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     }
 
     @Test
-    public void shouldIncludeUnknownDiscoveryDataInArtistSongsResponse() {
+    public void shouldIncludeEmptyDiscoveryDataInArtistSongsResponse() {
         enableLlm();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
@@ -302,7 +302,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(albumSongs.path("album").path("album").path("id").asString()).isEqualTo(album1_1.getId());
         assertThat(albumSongs.path("album").path("album").has("discoveryData")).isFalse();
         JsonNode albumDiscoveryData = albumSongs.path("album").path("discoveryData");
-        assertThat(albumDiscoveryData.path("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(albumDiscoveryData.has("releaseType")).isFalse();
         assertThat(albumDiscoveryData.has("releaseDate")).isFalse();
         assertThat(albumDiscoveryData.has("topSongIds")).isFalse();
     }
@@ -606,7 +606,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = "null")
-    public void shouldReturnUnknownWhenLatestCompletedDiscoveryResultIsEmpty(String result) {
+    public void shouldReturnNullReleaseTypeWhenLatestCompletedDiscoveryResultIsEmpty(String result) {
         enableLlm();
         DiscoveryJob job = discoveryJobRepository.save(new DiscoveryJob().setType(DiscoveryType.ALBUM).setStatus(DiscoveryJob.Status.COMPLETE));
         LocalDateTime date = LocalDateTime.of(2026, 10, 15, 12, 0);
@@ -621,7 +621,7 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(requireNonNull(response.getBody()).getAlbumSongs()).allSatisfy(albumSongs ->
-                assertThat(albumSongs.getAlbum().getDiscoveryData().getReleaseType()).isSameAs(AlbumDiscoveryData.ReleaseType.UNKNOWN));
+                assertThat(albumSongs.getAlbum().getDiscoveryData().getReleaseType()).isNull());
     }
 
     private DiscoveryTask saveAlbumDiscoveryTask(Album album, DiscoveryJob job, DiscoveryTaskType type, DiscoveryTask.Status status,

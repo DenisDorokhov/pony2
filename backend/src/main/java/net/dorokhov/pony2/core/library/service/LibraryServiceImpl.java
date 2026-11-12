@@ -191,7 +191,7 @@ public class LibraryServiceImpl implements LibraryService {
         ReleaseType overrideReleaseType = discovery != null ? discovery.getOverrideReleaseType() : null;
         String musicBrainzReleaseGroupId = discovery != null ? discovery.getMusicBrainzReleaseGroupId() : null;
         if (data == null) {
-            return Optional.of(new AlbumDiscoveryData(ReleaseType.UNKNOWN, null, overrideReleaseType, musicBrainzReleaseGroupId));
+            return Optional.of(new AlbumDiscoveryData(null, null, overrideReleaseType, musicBrainzReleaseGroupId));
         }
         ReleaseType releaseType;
         if (data.secondaryTypes().contains("Compilation")) {
@@ -203,7 +203,7 @@ public class LibraryServiceImpl implements LibraryService {
                 case "Album" -> ReleaseType.LP;
                 case "EP" -> ReleaseType.EP;
                 case "Single" -> ReleaseType.SINGLE;
-                case null, default -> ReleaseType.UNKNOWN;
+                case null, default -> null;
             };
         }
         return Optional.of(new AlbumDiscoveryData(releaseType, parseReleaseDate(data.firstReleaseDate()), overrideReleaseType, musicBrainzReleaseGroupId));

@@ -14,7 +14,7 @@
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <div class="mb-3">
         <label for="releaseType" class="form-label">{{ 'discoveryEdit.releaseTypeLabel' | translate }}</label>
-        <input id="releaseType" type="text" class="form-control" [value]="discovery.releaseType" disabled>
+        <input id="releaseType" type="text" class="form-control" [value]="discovery.releaseType ?? '-'" disabled>
       </div>
       <div class="mb-3">
         <pony-error-container #overrideContainer [error]="error" field="overrideReleaseType">

@@ -73,7 +73,7 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
 
         assertThat(artistData.hasNonNull("overrideCountryCode")).isFalse();
         assertThat(albumData.hasNonNull("overrideReleaseType")).isFalse();
-        assertThat(albumData.get("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(albumData.has("releaseType")).isFalse();
         assertThat(artistDiscoveryRepository.count()).isZero();
         assertThat(albumDiscoveryRepository.count()).isZero();
     }
@@ -97,13 +97,13 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().get("overrideReleaseType").asString()).isEqualTo(releaseType.name());
-        assertThat(response.getBody().get("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(response.getBody().has("releaseType")).isFalse();
         assertThat(albumDiscoveryRepository.findByAlbumId(album.getId())).get()
                 .extracting(AlbumDiscovery::getOverrideReleaseType).isEqualTo(releaseType);
         assertThat(libraryService.getAlbumDiscoveryData(album.getId())).get()
-                .extracting(AlbumDiscoveryData::releaseType).isEqualTo(ReleaseType.UNKNOWN);
+                .extracting(AlbumDiscoveryData::releaseType).isNull();
         JsonNode albumData = artistSongs().get("albumSongs").get(0).get("album").get("discoveryData");
-        assertThat(albumData.get("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(albumData.has("releaseType")).isFalse();
         assertThat(albumData.get("overrideReleaseType").asString()).isEqualTo(releaseType.name());
     }
 
@@ -191,13 +191,13 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
         assertThat(artistData.hasNonNull("countryCode")).isFalse();
         assertThat(artistData.get("overrideCountryCode").asString()).isEqualTo("US");
         assertThat(albumData.hasNonNull("musicBrainzReleaseGroupId")).isFalse();
-        assertThat(albumData.get("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(albumData.has("releaseType")).isFalse();
         assertThat(albumData.get("overrideReleaseType").asString()).isEqualTo("EP");
         JsonNode songs = artistSongs();
         assertThat(songs.get("artist").get("discoveryData").hasNonNull("countryCode")).isFalse();
         assertThat(songs.get("artist").get("discoveryData").get("overrideCountryCode").asString()).isEqualTo("US");
         JsonNode clearedAlbumData = songs.get("albumSongs").get(0).get("album").get("discoveryData");
-        assertThat(clearedAlbumData.get("releaseType").asString()).isEqualTo("UNKNOWN");
+        assertThat(clearedAlbumData.has("releaseType")).isFalse();
         assertThat(clearedAlbumData.get("overrideReleaseType").asString()).isEqualTo("EP");
 
         assertThat(request("/api/admin/discovery/data?deleteOverrides=true", HttpMethod.DELETE, null).getStatusCode())
