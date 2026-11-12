@@ -24,7 +24,6 @@
         *cdkVirtualFor="let song of queue; let i = index;"
         (cdkDragStarted)="onDragStarted($event)"
         (doubleClick)="playSongOnDoubleClick(i)"
-        (mousedown)="selectIndex(i)"
         (keydown)="onSongKeyDown($event, i)"
         (selectionRequested)="selectIndex($event)"
         (playOrPauseRequested)="onPlaybackClick(i)"

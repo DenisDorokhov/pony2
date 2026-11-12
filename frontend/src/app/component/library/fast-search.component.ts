@@ -254,7 +254,7 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   selectSong(song: Song, event?: MouseEvent) {
-    if (event?.altKey) {
+    if (event && (event.altKey || event.button !== 0)) {
       return;
     }
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
@@ -268,12 +268,11 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     this.libraryService.selectArtistAndMakeDefault(song.album.artist);
     this.libraryService.selectSong(song);
     this.libraryService.requestScrollToSong(song);
-    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[song.id]));
     this.close();
   }
 
   selectAlbum(album: Album, event?: MouseEvent) {
-    if (event?.altKey) {
+    if (event && (event.altKey || event.button !== 0)) {
       return;
     }
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
@@ -286,12 +285,11 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.libraryService.selectArtistAndMakeDefault(album.artist);
     this.libraryService.requestScrollToAlbum(album);
-    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[album.id]));
     this.close();
   }
 
   selectArtist(artist: Artist, event?: MouseEvent) {
-    if (event?.altKey) {
+    if (event && (event.altKey || event.button !== 0)) {
       return;
     }
     this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
@@ -304,7 +302,6 @@ export class FastSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.libraryService.selectArtistAndMakeDefault(artist);
     this.libraryService.requestScrollToArtist(artist);
-    this.selectNavigationItem(this.navigationItems.indexOf(this.idToNavigationItem[artist.id]));
     this.close();
   }
 }

@@ -161,6 +161,10 @@ export class SongComponent implements OnInit, AfterViewInit {
   }
 
   onMouseDown(event: MouseEvent) {
+    if (event.button !== 0 || event.altKey) {
+      return;
+    }
+    this.select(event);
     // Disable text selection on double click.
     if (event.detail > 1 && !event.altKey) {
       event.preventDefault();

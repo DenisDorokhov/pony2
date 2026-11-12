@@ -24,7 +24,7 @@
                   [class.active]="navigationItem.active"
                   [ngClass]="navigationItem.id"
                   [title]=navigationItem.title
-                  (mousedown)="activateNavigationItem(i)"
+                  (mousedown)="$event.button === 0 && activateNavigationItem(i)"
                   (click)="executeNavigationItem(navigationItem)">
             {{ navigationItem.menuEntry }}
           </button>

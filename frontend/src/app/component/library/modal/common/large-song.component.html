@@ -1,7 +1,7 @@
 <div class="columns-container"
      title="{{ song.artistName | ponyUnknownArtist }} - {{ song.name | ponyUnknownSong }} [{{ song.genreName | ponyUnknownGenre }}] [{{ song.formattedSize }}] [{{ song.bitRate }} kbit/s]{{ song.path ? '\n' + song.path : '' }}"
      [class.current]="isCurrentSong" [class.selected]="selected" (mousemove)="onMouseMove()" (mouseleave)="onMouseLeave()"
-     (dblclick)="onDoubleClick($event)" (mousedown)="preventDoubleClickDefault($event)">
+     (dblclick)="onDoubleClick($event)" (mousedown)="onMouseDown($event)">
   <div class="track-number">
     <div>
       <button class="playback" [hidden]="!isMouseOver || !playOrPauseRequested.observed" (click)="onPlaybackClick()">
@@ -25,7 +25,7 @@
     </div>
   </div>
   <button type="button" ponySelectableButton class="song-link"
-     (click)="onClick($event)">
+     (keydown.enter)="!$any($event).altKey && select()" (keyup.space)="!$any($event).altKey && select()">
     <span class="artwork">
       <pony-image-loader [url]="song.album.smallArtworkUrl"></pony-image-loader>
     </span>

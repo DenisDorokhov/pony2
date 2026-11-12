@@ -143,11 +143,7 @@ export class LargeSongComponent implements OnInit, OnDestroy {
     this.removalRequested.emit(this.index);
   }
 
-  onClick(event: MouseEvent) {
-    if (event.altKey) {
-      event.preventDefault();
-      return;
-    }
+  select() {
     this.selectionRequested.emit(this.index);
   }
 
@@ -163,11 +159,15 @@ export class LargeSongComponent implements OnInit, OnDestroy {
     }
   }
 
-  preventDoubleClickDefault(event: MouseEvent) {
+  onMouseDown(event: MouseEvent) {
     if (event.altKey) {
       event.stopPropagation();
       return;
     }
+    if (event.button !== 0) {
+      return;
+    }
+    this.select();
     // Disable text selection on double click.
     if (event.detail > 1) {
       event.preventDefault();
