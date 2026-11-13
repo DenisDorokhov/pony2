@@ -25,9 +25,9 @@
       }
       @if (albumSongs.album.discoveryData.effectiveReleaseType !== ReleaseType.UNKNOWN) {
         <span class="release-type" [class]="albumSongs.album.discoveryData.effectiveReleaseType.toLowerCase()">
-          <span class="release-type-badge"><span>{{
+          <span class="release-type-badge">{{
             albumSongs.album.discoveryData.effectiveReleaseType === ReleaseType.COMPILATION ? 'COMP' : albumSongs.album.discoveryData.effectiveReleaseType
-          }}</span></span>
+          }}</span>
         </span>
       }
       <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
