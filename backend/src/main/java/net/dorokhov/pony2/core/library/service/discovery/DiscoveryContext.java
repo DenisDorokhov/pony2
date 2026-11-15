@@ -35,10 +35,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-/** Request-local context accounting; metadata requests reuse the cancellable model HTTP call. */
-final class DiscoveryContext {
+public class DiscoveryContext {
 
-    static final String KEY = DiscoveryContext.class.getName();
+    public static final String KEY = DiscoveryContext.class.getName();
+
     private static final MediaType JSON = MediaType.get("application/json");
     private static final int MAX_FOCUSED_EXCHANGE_CHARS = 4000;
     private static final String SUMMARY_SCHEMA = """
@@ -68,7 +68,7 @@ final class DiscoveryContext {
         this.summarizer = summarizer;
     }
 
-    Response intercept(Interceptor.Chain chain) throws IOException {
+    public Response intercept(Interceptor.Chain chain) throws IOException {
         Request request = chain.request();
         if (!request.url().encodedPath().endsWith("/chat/completions") || request.body() == null) {
             return chain.proceed(request);
@@ -176,7 +176,7 @@ final class DiscoveryContext {
         return false;
     }
 
-    ChatClientRequest effectiveRequest(ChatClientRequest original) {
+    public ChatClientRequest effectiveRequest(ChatClientRequest original) {
         if (pinnedMessageCount < 0) {
             pinnedMessageCount = original.prompt().getInstructions().size();
         }
@@ -192,7 +192,7 @@ final class DiscoveryContext {
         return original.mutate().prompt(new Prompt(messages, original.prompt().getOptions())).build();
     }
 
-    ChatClientRequest compact(ChatClientRequest original, ChatClientRequest effective) {
+    public ChatClientRequest compact(ChatClientRequest original, ChatClientRequest effective) {
         List<Message> messages = effective.prompt().getInstructions();
         if (pinnedMessageCount < 0) {
             pinnedMessageCount = 0;
@@ -378,7 +378,7 @@ final class DiscoveryContext {
         return data;
     }
 
-    static void checkFinishReason(ChatResponse response) {
+    public static void checkFinishReason(ChatResponse response) {
         for (Generation generation : response.getResults()) {
             if ("length".equalsIgnoreCase(generation.getMetadata().getFinishReason())) {
                 throw new LlmContextLimitException("LLM generation reached its token limit before completing the response.");
@@ -386,7 +386,7 @@ final class DiscoveryContext {
         }
     }
 
-    void checkUsage(ChatResponse response) {
+    public void checkUsage(ChatResponse response) {
         Integer promptTokens = response.getMetadata().getUsage().getPromptTokens();
         Integer completionTokens = response.getMetadata().getUsage().getCompletionTokens();
         if (contextSize > 0 && promptTokens != null && completionTokens != null &&
@@ -396,14 +396,15 @@ final class DiscoveryContext {
         }
     }
 
-    void checkResponse(ChatResponse response) {
+    public void checkResponse(ChatResponse response) {
         if (contextLimitApplied) {
             checkFinishReason(response);
         }
         checkUsage(response);
     }
 
-    static final class CompactionRequired extends RuntimeException {
+    public static class CompactionRequired extends RuntimeException {
+
         private final int inputTokens;
 
         private CompactionRequired(int inputTokens) {
@@ -411,7 +412,7 @@ final class DiscoveryContext {
             this.inputTokens = inputTokens;
         }
 
-        int inputTokens() {
+        public int inputTokens() {
             return inputTokens;
         }
     }

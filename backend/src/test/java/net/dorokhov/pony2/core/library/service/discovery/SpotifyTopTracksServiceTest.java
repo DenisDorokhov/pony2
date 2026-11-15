@@ -138,7 +138,7 @@ class SpotifyTopTracksServiceTest {
             assertThat(toolsEnabled).isFalse();
             return client;
         },
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3);
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
                 logService, jobSynchronizer, 1, 1, Duration.ofMinutes(10));

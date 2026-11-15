@@ -148,7 +148,7 @@ class ArtistBioImageFacesServiceTest {
         DiscoveryChatClient client = new DiscoveryChatClient((customizer, toolsEnabled) -> ChatClient.builder(
                 OpenAiChatModel.builder().options(OpenAiChatOptions.builder().baseUrl(config.llmUrl())
                                 .model(config.llmModel()).apiKey(new NoopApiKey()).build())
-                        .httpClientBuilderCustomizer(customizer).build()).build(), jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
+                        .httpClientBuilderCustomizer(customizer).build()).build(), jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3);
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(client, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()), logService, jobSynchronizer,
                 retries, 0, Duration.ofSeconds(30));

@@ -110,7 +110,7 @@ class DiscoveryTaskLlmExecutorTest {
         });
         ChatClient client = ChatClient.builder(model).build();
         discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3);
         operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
                 logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
@@ -178,7 +178,7 @@ class DiscoveryTaskLlmExecutorTest {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> {
             toolsEnabledValues.add(toolsEnabled);
             return client;
-        }, jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
+        }, jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3);
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
                 logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
@@ -349,7 +349,7 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.call(anyString(), any())).thenReturn("Large browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
                 logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
@@ -413,7 +413,7 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
                 logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
@@ -686,7 +686,7 @@ class DiscoveryTaskLlmExecutorTest {
         ChatClient client = ChatClient.builder(model).defaultTools(tool)
                 .defaultAdvisors(ToolCallingAdvisor.builder().toolCallingManager(manager).build()).build();
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
+                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
                 logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {

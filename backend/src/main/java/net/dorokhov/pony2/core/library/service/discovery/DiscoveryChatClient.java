@@ -9,6 +9,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -33,6 +34,9 @@ public class DiscoveryChatClient {
     private final BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> chatClientFactory;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final DiscoveryAdvisor discoveryAdvisor;
+    private final double contextLimitRatio;
+    private final double compactionTriggerRatio;
+    private final double compactionTargetRatio;
 
     private final Object lock = new Object();
     private final Set<Cancellation> activeCalls = new LinkedHashSet<>();
@@ -42,11 +46,21 @@ public class DiscoveryChatClient {
     public DiscoveryChatClient(
             BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> chatClientFactory,
             LibraryJobSynchronizer jobSynchronizer,
-            DiscoveryAdvisor discoveryAdvisor
+            DiscoveryAdvisor discoveryAdvisor,
+            @Value("${pony.llm.contextLimitRatio:0.9}") double contextLimitRatio,
+            @Value("${pony.llm.compactionTriggerRatio:0.7}") double compactionTriggerRatio,
+            @Value("${pony.llm.compactionTargetRatio:0.3}") double compactionTargetRatio
     ) {
+        if (!(0 < compactionTargetRatio && compactionTargetRatio < compactionTriggerRatio &&
+                compactionTriggerRatio < contextLimitRatio && contextLimitRatio < 1)) {
+            throw new IllegalArgumentException("Context ratios must satisfy 0 < target < trigger < limit < 1.");
+        }
         this.chatClientFactory = chatClientFactory;
         this.jobSynchronizer = jobSynchronizer;
         this.discoveryAdvisor = discoveryAdvisor;
+        this.contextLimitRatio = contextLimitRatio;
+        this.compactionTriggerRatio = compactionTriggerRatio;
+        this.compactionTargetRatio = compactionTargetRatio;
     }
 
     @EventListener(ContextClosedEvent.class)
@@ -81,7 +95,8 @@ public class DiscoveryChatClient {
             AtomicReference<DiscoveryContext> contextReference = new AtomicReference<>();
             OpenAiHttpClientBuilderCustomizer customizer = builder -> builder.interceptor(cancellation::intercept)
                     .interceptor(chain -> contextReference.get().intercept(chain));
-            DiscoveryContext context = discoveryAdvisor.context(prompt -> summarize(prompt, customizer, cancellation));
+            DiscoveryContext context = new DiscoveryContext(contextLimitRatio, compactionTriggerRatio, compactionTargetRatio,
+                    prompt -> summarize(prompt, customizer, cancellation));
             contextReference.set(context);
             ChatClient client = chatClientFactory.apply(customizer, toolsEnabled);
             T result = request.apply(client.prompt().advisors(discoveryAdvisor)

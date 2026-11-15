@@ -394,7 +394,7 @@ class DiscoveryChatClientTest {
                         DefaultToolCallingManager.builder().maxCallsPerTool(toolCallLimit).build()).build());
             }
             return clientBuilder.build();
-        }, synchronizer, new DiscoveryAdvisor(synchronizer));
+        }, synchronizer, new DiscoveryAdvisor(synchronizer), 0.9, 0.7, 0.3);
     }
 
     @Test
