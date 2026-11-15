@@ -335,9 +335,45 @@ class DiscoveryContextTest {
         ChatClientRequest compacted = context.compact(original, original);
 
         List<?> excerpts = JsonConverter.fromJson(compacted.prompt().getInstructions().get(2).getText().split(":\n", 2)[1], List.class);
-        assertThat(excerpts).extracting(Object::toString).contains(
-                "Tool call first inspect:\nfirst query\n\nTool result first inspect:\nfirst result",
-                "Tool call second inspect:\nsecond query\n\nTool result second inspect:\nsecond result");
+        assertThat(excerpts).anySatisfy(excerpt -> assertThat(excerpt.toString())
+                .contains("inspect:\nfirst query\n\nResult:\nfirst result"));
+        assertThat(excerpts).anySatisfy(excerpt -> assertThat(excerpt.toString())
+                .contains("inspect:\nsecond query\n\nResult:\nsecond result"));
+    }
+
+    @Test
+    void shouldPreserveDecodedArgumentAndObservedIdentifiersWithoutRepeatingTransportIdentifiers() throws Exception {
+        String transportId = "transport-id-also-present-in-source";
+        String code = "() => {\n  const key = \"" + transportId + "\";\n  return 'Артист 🎵';\n}";
+        String observed = "Artist id music-id; album https://example.test/album/release; no matching release found";
+        List<Message> messages = new ArrayList<>(history());
+        messages.set(2, AssistantMessage.builder().toolCalls(List.of(new AssistantMessage.ToolCall(
+                transportId, "function", "inspect", JsonConverter.toJson(Map.of("function", code))))).build());
+        messages.set(3, ToolResponseMessage.builder().responses(List.of(
+                new ToolResponseMessage.ToolResponse(transportId, "inspect", observed))).build());
+        ChatClientRequest original = request(messages);
+
+        ChatClientRequest compacted = context.compact(original, original);
+
+        List<?> excerpts = JsonConverter.fromJson(compacted.prompt().getInstructions().get(2).getText().split(":\n", 2)[1], List.class);
+        assertThat(excerpts).anySatisfy(excerpt -> assertThat(excerpt.toString()).contains(code, observed, "function", "inspect")
+                .containsOnlyOnce(transportId));
+    }
+
+    @Test
+    void shouldKeepIdenticalObservationsDistinctAcrossCompactions() {
+        List<Message> messages = new ArrayList<>(history());
+        messages.set(3, tool("identical observation"));
+        messages.add(4, toolCall("same query on another page"));
+        messages.add(5, tool("identical observation"));
+        ChatClientRequest original = request(messages);
+
+        ChatClientRequest first = context.compact(original, original);
+        ChatClientRequest second = context.compact(original, first);
+
+        List<?> excerpts = JsonConverter.fromJson(second.prompt().getInstructions().get(2).getText().split(":\n", 2)[1], List.class);
+        String source = String.join("\n", excerpts.stream().map(Object::toString).toList());
+        assertThat(source.split("Result:\\nidentical observation", -1)).hasSize(3);
     }
 
     @Test

@@ -27,10 +27,11 @@ import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -53,6 +54,7 @@ public class DiscoveryContext {
 
     private int contextSize;
     private int compactionFragmentBudget;
+    private int nextExchangeIndex;
     private int compactedThrough;
     private int pinnedMessageCount = -1;
     private List<Message> compactedMessages;
@@ -246,8 +248,7 @@ public class DiscoveryContext {
         if (previousOptions != null) {
             summaryOptions.combineWith(previousOptions.mutate());
         }
-        List<String> fragments = historyFragments(messages.subList(historyStart, tailStart));
-        rememberFocusedExchanges(messages.subList(historyStart, tailStart));
+        List<String> fragments = historyFragments(toolExchanges(messages.subList(historyStart, tailStart)));
         List<Map<String, Object>> numbered = new ArrayList<>();
         for (int index = 0; index < fragments.size(); index++) {
             numbered.add(Map.of("index", index, "text", fragments.get(index)));
@@ -294,23 +295,56 @@ public class DiscoveryContext {
         return size <= MAX_FOCUSED_EXCHANGE_CHARS;
     }
 
-    private void rememberFocusedExchanges(List<Message> messages) {
-        Map<String, String> calls = new HashMap<>();
+    private List<String> toolExchanges(List<Message> messages) {
+        Map<String, AssistantMessage.ToolCall> calls = new LinkedHashMap<>();
+        List<String> exchanges = new ArrayList<>();
         for (Message message : messages) {
             if (message instanceof AssistantMessage assistant) {
                 for (AssistantMessage.ToolCall call : assistant.getToolCalls()) {
-                    calls.put(call.id(), "Tool call " + call.id() + " " + call.name() + ":\n" + call.arguments());
+                    AssistantMessage.ToolCall replaced = calls.put(call.id(), call);
+                    if (replaced != null) {
+                        exchanges.add("Tool call " + replaced.id() + " " + replaced.name() + ":\n" + replaced.arguments());
+                    }
                 }
             } else if (message instanceof ToolResponseMessage tool) {
                 for (ToolResponseMessage.ToolResponse response : tool.getResponses()) {
-                    String call = calls.get(response.id());
-                    String result = "Tool result " + response.id() + " " + response.name() + ":\n" + toolText(response.responseData());
-                    if (call != null && call.length() + result.length() <= MAX_FOCUSED_EXCHANGE_CHARS) {
-                        focusedExchanges.add(call + "\n\n" + result);
+                    AssistantMessage.ToolCall call = calls.remove(response.id());
+                    String result = toolText(response.responseData());
+                    String rawResult = "Tool result " + response.id() + " " + response.name() + ":\n" + result;
+                    if (call == null) {
+                        exchanges.add(rawResult);
+                        continue;
+                    }
+                    // A short ordinal keeps repeated observations distinct without repeating transport IDs.
+                    String exchange = "Tool " + nextExchangeIndex++ + " " + call.name() + ":\n" + sourceArguments(call.arguments())
+                            + "\n\nResult" + (Objects.equals(call.name(), response.name()) ? "" : " " + response.name()) + ":\n" + result;
+                    exchanges.add(exchange);
+                    String rawCall = "Tool call " + call.id() + " " + call.name() + ":\n" + call.arguments();
+                    if (rawCall.length() + rawResult.length() <= MAX_FOCUSED_EXCHANGE_CHARS) {
+                        focusedExchanges.add(exchange);
                     }
                 }
             }
         }
+        for (AssistantMessage.ToolCall call : calls.values()) {
+            exchanges.add("Tool call " + call.id() + " " + call.name() + ":\n" + call.arguments());
+        }
+        return exchanges;
+    }
+
+    private String sourceArguments(String data) {
+        try {
+            JsonNode arguments = JsonConverter.fromJson(data, JsonNode.class);
+            if (arguments.isObject() && arguments.size() == 1) {
+                Map.Entry<String, JsonNode> argument = arguments.properties().iterator().next();
+                if (argument.getValue().isTextual()) {
+                    return JsonConverter.toJson(argument.getKey()) + ":\n" + argument.getValue().asText();
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // Preserve non-JSON arguments without changing their contents.
+        }
+        return data;
     }
 
     private List<String> selectedHistory(ChatResponse response, List<String> fragments, int fragmentBudget) {
@@ -359,23 +393,13 @@ public class DiscoveryContext {
         return selected;
     }
 
-    private List<String> historyFragments(List<Message> messages) {
+    private List<String> historyFragments(List<String> exchanges) {
         List<String> history = new ArrayList<>();
         // Preserve omitted gaps when selecting from earlier excerpts again.
         for (String excerpt : retainedHistory) {
             history.add("Separate earlier source excerpt:\n" + excerpt);
         }
-        for (Message message : messages) {
-            if (message instanceof ToolResponseMessage tool) {
-                for (ToolResponseMessage.ToolResponse response : tool.getResponses()) {
-                    history.add("Tool result " + response.id() + " " + response.name() + ":\n" + toolText(response.responseData()));
-                }
-            } else if (message instanceof AssistantMessage assistant && !assistant.getToolCalls().isEmpty()) {
-                for (AssistantMessage.ToolCall call : assistant.getToolCalls()) {
-                    history.add("Tool call " + call.id() + " " + call.name() + ":\n" + call.arguments());
-                }
-            }
-        }
+        history.addAll(exchanges);
         String source = String.join("\n\n", history);
         List<String> fragments = new ArrayList<>();
         for (int start = 0; start < source.length();) {
