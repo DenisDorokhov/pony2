@@ -14,6 +14,7 @@ import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
+import net.dorokhov.pony2.core.library.service.exception.LlmContextLimitException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -778,6 +779,36 @@ class DiscoveryTaskLlmExecutorTest {
 
         verify(model).call(any(Prompt.class));
         assertThat(cache).hasSize(1);
+    }
+
+    @Test
+    void shouldRestartTheCurrentStageTwiceOnContextExhaustionWithoutCachingTruncatedData() {
+        when(model.call(any(Prompt.class))).thenThrow(new LlmContextLimitException("Context exhausted"),
+                new LlmContextLimitException("Context exhausted")).thenReturn(response("{\"answer\":\"complete\"}"));
+        DiscoveryTask task = task();
+
+        assertThat(operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isEqualTo("{\"answer\":\"complete\"}");
+
+        ArgumentCaptor<Prompt> captured = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(3)).call(captured.capture());
+        assertThat(captured.getAllValues()).extracting(Prompt::getInstructions).containsOnly(captured.getAllValues().getFirst().getInstructions());
+        assertThat(task.getRawResponses()).containsExactly(null, null, JsonConverter.fromJson("{\"answer\":\"complete\"}"));
+        assertThat(task.getRawRequests()).hasSize(3);
+        assertThat(cache).hasSize(1);
+    }
+
+    @Test
+    void shouldStopAfterTwoContextRetriesAndLeaveTheCacheEmpty() {
+        when(model.call(any(Prompt.class))).thenThrow(new LlmContextLimitException("Context exhausted"));
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isInstanceOf(LlmContextLimitException.class);
+
+        verify(model, times(3)).call(any(Prompt.class));
+        assertThat(task.getRawResponses()).containsExactly(null, null, null);
+        assertThat(cache).isEmpty();
     }
 
     @Test

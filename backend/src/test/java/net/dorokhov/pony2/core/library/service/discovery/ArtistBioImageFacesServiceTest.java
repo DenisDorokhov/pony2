@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import com.google.common.hash.Hashing;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpExchange;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
@@ -41,6 +42,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -89,8 +91,17 @@ class ArtistBioImageFacesServiceTest {
     void setUp() throws Exception {
         registration = jobSynchronizer.registerDiscoveryJob();
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/props", exchange -> contextResponse(exchange, Map.of("default_generation_settings", Map.of("n_ctx", 10000))));
+        server.createContext("/apply-template", exchange -> contextResponse(exchange, Map.of("prompt", "test template")));
+        server.createContext("/tokenize", exchange -> contextResponse(exchange, Map.of("tokens", List.of(1))));
         server.createContext("/v1/chat/completions", exchange -> {
-            requests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
+            String request = new String(exchange.getRequestBody().readAllBytes(), UTF_8);
+            Map<String, Object> parsed = JsonConverter.mapFromJson(request, String.class, Object.class);
+            if (Integer.valueOf(1).equals(parsed.get("max_tokens"))) {
+                contextResponse(exchange, Map.of("usage", Map.of("prompt_tokens", 1500)));
+                return;
+            }
+            requests.add(request);
             String response = responses.isEmpty() ? "{\"faces\": [[100, 200, 300, 500], [600, 100, 900, 600]]}" : responses.removeFirst();
             byte[] body = JsonConverter.toJson(Map.of("id", "faces-test", "object", "chat.completion", "created", 0,
                     "model", "face-test", "choices", List.of(Map.of("index", 0, "finish_reason", "stop",
@@ -121,6 +132,16 @@ class ArtistBioImageFacesServiceTest {
                 .thenReturn(Optional.of(new ArtistDiscovery().setArtist(artist).setBioExternalImage(image)));
         lenient().when(imageStorage.getImageFile("image")).thenAnswer(invocation -> Optional.of(new ExternalImageFile(image, file.toFile())));
         service = service(0);
+    }
+
+    private void contextResponse(HttpExchange exchange, Object response) throws IOException {
+        try (exchange) {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = JsonConverter.toJson(response).getBytes(UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+        }
     }
 
     private ArtistBioImageFacesService service(int retries) throws Exception {

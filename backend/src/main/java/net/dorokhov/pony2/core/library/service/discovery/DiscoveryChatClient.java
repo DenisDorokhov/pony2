@@ -6,6 +6,8 @@ import okhttp3.Call;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
@@ -22,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 @Component
 public class DiscoveryChatClient {
@@ -74,8 +78,14 @@ public class DiscoveryChatClient {
         }
         try (LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(cancellation::cancel)) {
             cancellation.check();
-            ChatClient client = chatClientFactory.apply(builder -> builder.interceptor(cancellation::intercept), toolsEnabled);
-            T result = request.apply(client.prompt().advisors(discoveryAdvisor));
+            AtomicReference<DiscoveryContext> contextReference = new AtomicReference<>();
+            OpenAiHttpClientBuilderCustomizer customizer = builder -> builder.interceptor(cancellation::intercept)
+                    .interceptor(chain -> contextReference.get().intercept(chain));
+            DiscoveryContext context = discoveryAdvisor.context(prompt -> summarize(prompt, customizer, cancellation));
+            contextReference.set(context);
+            ChatClient client = chatClientFactory.apply(customizer, toolsEnabled);
+            T result = request.apply(client.prompt().advisors(discoveryAdvisor)
+                    .advisors(spec -> spec.param(DiscoveryContext.KEY, context)));
             cancellation.check();
             return result;
         } catch (Throwable t) {
@@ -87,6 +97,14 @@ public class DiscoveryChatClient {
                 activeCalls.remove(cancellation);
             }
         }
+    }
+
+    private ChatResponse summarize(Prompt prompt, OpenAiHttpClientBuilderCustomizer customizer, Cancellation cancellation) {
+        cancellation.check();
+        ChatResponse response = chatClientFactory.apply(customizer, false).prompt().messages(prompt.getInstructions())
+                .options(requireNonNull(prompt.getOptions()).mutate()).call().chatResponse();
+        cancellation.check();
+        return requireNonNull(response, "LLM returned no compaction response.");
     }
 
     private static final class Cancellation {

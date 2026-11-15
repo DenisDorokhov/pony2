@@ -18,6 +18,7 @@ import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
+import net.dorokhov.pony2.core.library.service.exception.LlmContextLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -30,6 +31,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 
@@ -59,6 +61,7 @@ public class DiscoveryTaskLlmExecutor {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final int retriesOnFollowUpException;
     private final int restartsOnHallucination;
+    private int retriesOnContextLimit = 2;
     private final Duration timeout;
 
     public DiscoveryTaskLlmExecutor(
@@ -81,6 +84,14 @@ public class DiscoveryTaskLlmExecutor {
         this.timeout = timeout;
     }
 
+    @Autowired
+    void setRetriesOnContextLimit(@Value("${pony.discovery.llm.retriesOnContextLimit:2}") int retriesOnContextLimit) {
+        if (retriesOnContextLimit < 0) {
+            throw new IllegalArgumentException("Context retry count must not be negative.");
+        }
+        this.retriesOnContextLimit = retriesOnContextLimit;
+    }
+
     /**
      * Makes a synchronous model call, or reuses its cached response. The caller supplies conversation history
      * and the response class used to generate a strict JSON schema.
@@ -100,9 +111,17 @@ public class DiscoveryTaskLlmExecutor {
         jobSynchronizer.interruptDiscoveryIfStopped();
         String responseSchema = responseSchema(responseClass);
         int restarts = 0;
+        int contextRetries = 0;
         while (true) {
             try {
                 return callWithFollowUps(task, request, responseClass, responseSchema, cacheSettings, responseHandler);
+            } catch (LlmContextLimitException e) {
+                if (contextRetries >= retriesOnContextLimit) {
+                    throw e;
+                }
+                contextRetries++;
+                logService.warn(logger, "Context limit reached for discovery task {}. Restarting current stage: {}/{}.",
+                        task.getType(), contextRetries, retriesOnContextLimit, e);
             } catch (LlmHallucinationException e) {
                 if (restarts >= restartsOnHallucination) {
                     logService.error(logger, "Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}.",
@@ -178,7 +197,12 @@ public class DiscoveryTaskLlmExecutor {
                 logger.debug("Requesting LLM response for discovery task '{}' of type {}.\n\nRequest:\n\n{}",
                         task.getId(), task.getType(), JsonConverter.toPrettyJson(rawRequest));
             }
-            response = callModel(task, prompt, responseClass, responseSchema);
+            try {
+                response = callModel(task, prompt, responseClass, responseSchema);
+            } catch (LlmContextLimitException e) {
+                exchangeRecorder.completeExchange(task, null);
+                throw e;
+            }
         }
         jobSynchronizer.interruptDiscoveryIfStopped();
 

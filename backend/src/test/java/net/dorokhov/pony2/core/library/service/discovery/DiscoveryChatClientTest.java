@@ -7,8 +7,10 @@ import io.micrometer.observation.ObservationRegistry;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.core.ShutdownService;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
+import net.dorokhov.pony2.core.library.service.exception.LlmContextLimitException;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
 import okhttp3.Interceptor;
 import okhttp3.Response;
@@ -24,6 +26,10 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
+import org.springframework.ai.model.tool.ToolCallLimitExceededException;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
@@ -35,6 +41,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,10 +66,13 @@ class DiscoveryChatClientTest {
 
     private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer(new ShutdownService());
     private final AtomicInteger requests = new AtomicInteger();
+    private final AtomicInteger promptTokens = new AtomicInteger(1);
+    private final List<String> modelRequests = new CopyOnWriteArrayList<>();
     private final ExecutorService serverExecutor = Executors.newCachedThreadPool();
     private final CountDownLatch responseBodyRead = new CountDownLatch(1);
     private Runnable beforeClientCreation = () -> {};
     private Runnable beforeRetry = () -> {};
+    private int toolCallLimit;
     private LibraryJobSynchronizer.LibraryJobRegistration discovery;
     private HttpServer server;
 
@@ -339,13 +349,28 @@ class DiscoveryChatClientTest {
         assertThat(requests).hasValue(0);
     }
 
+    @Test
+    void shouldRejectAStopResponseAtTheContextLimit() throws IOException {
+        DiscoveryChatClient client = createClient(exchange -> contextResponse(exchange,
+                new String(RESPONSE, UTF_8).replace("\"choices\"", "\"usage\":{\"prompt_tokens\":800,"
+                        + "\"completion_tokens\":100,\"total_tokens\":900},\"choices\"")));
+
+        assertThatThrownBy(() -> call(client)).isInstanceOf(LlmContextLimitException.class)
+                .hasMessageContaining("response reached the context limit");
+        assertThat(requests).hasValue(1);
+    }
+
     private DiscoveryChatClient createClient(HttpHandler handler, Object... tools) throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.setExecutor(serverExecutor);
+        server.createContext("/props", exchange -> contextResponse(exchange, "{\"default_generation_settings\":{\"n_ctx\":1000}}"));
+        server.createContext("/apply-template", exchange -> contextResponse(exchange, "{\"prompt\":\"test template\"}"));
+        server.createContext("/tokenize", exchange -> contextResponse(exchange,
+                JsonConverter.toJson(java.util.Map.of("tokens", java.util.Collections.nCopies(promptTokens.get(), 1)))));
         server.createContext("/v1/chat/completions", exchange -> {
             try (exchange) {
                 requests.incrementAndGet();
-                exchange.getRequestBody().readAllBytes();
+                modelRequests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
                 handler.handle(exchange);
             }
         });
@@ -364,13 +389,112 @@ class DiscoveryChatClientTest {
             if (toolsEnabled) {
                 clientBuilder.defaultTools(tools);
             }
+            if (toolCallLimit > 0) {
+                clientBuilder.defaultAdvisors(ToolCallingAdvisor.builder().toolCallingManager(
+                        DefaultToolCallingManager.builder().maxCallsPerTool(toolCallLimit).build()).build());
+            }
             return clientBuilder.build();
         }, synchronizer, new DiscoveryAdvisor(synchronizer));
+    }
+
+    @Test
+    void shouldCompactInsideTheRealToolLoopAndKeepTheSummaryInFollowingRequests() throws Exception {
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return count == 1 ? "old evidence" : "fresh evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                promptTokens.set(250);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson("{\"keep\":[0]}") + "}", "stop"));
+            } else if (requests.get() < 5) {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            } else {
+                respond(exchange);
+            }
+        }, tool);
+
+        assertThat(call(client)).isEqualTo("OK");
+
+        assertThat(requests).hasValue(5);
+        assertThat(toolCalls).hasValue(3);
+        assertThat(modelRequests).allSatisfy(body -> assertThat(JsonConverter.mapFromJson(body, String.class, Object.class))
+                .containsEntry("model", "test"));
+        assertThat(modelRequests.get(2)).contains("old evidence").doesNotContain("fresh evidence 2");
+        assertThat(JsonConverter.mapFromJson(modelRequests.get(2), String.class, Object.class)).doesNotContainKey("tools");
+        assertThat(JsonConverter.mapFromJson(modelRequests.get(2), String.class, Object.class))
+                .containsEntry("reasoning_effort", "none");
+        assertThat(JsonConverter.mapFromJson(modelRequests.get(3), String.class, Object.class))
+                .doesNotContainEntry("reasoning_effort", "none");
+        assertThat(modelRequests.get(3)).contains("old evidence", "fresh evidence 2");
+        assertThat(modelRequests.get(4)).contains("old evidence", "fresh evidence 3");
+    }
+
+    @Test
+    void shouldPreserveToolCallLimitsAcrossCompaction() throws Exception {
+        toolCallLimit = 2;
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return "evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                promptTokens.set(250);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson("{\"keep\":[0]}") + "}", "stop"));
+            } else {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            }
+        }, tool);
+
+        ChatResponse response = client.call(prompt -> prompt.user("test").call().chatResponse());
+
+        assertThat(response.getResult().getMetadata().getFinishReason()).isEqualTo(ToolCallLimitExceededException.FINISH_REASON);
+        assertThat(toolCalls).hasValue(2);
+        assertThat(requests).hasValue(4);
+    }
+
+    private String completion(String message, String finishReason) {
+        return """
+                {"id":"test","object":"chat.completion","created":1,"model":"test",
+                 "choices":[{"index":0,"message":%s,"finish_reason":"%s"}]}
+                """.formatted(message, finishReason);
+    }
+
+    private void contextResponse(HttpExchange exchange, String response) throws IOException {
+        try (exchange) {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = response.getBytes(UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+        }
     }
 
     private Response observeResponseBody(Interceptor.Chain chain) throws IOException {
         //noinspection resource
         Response response = chain.proceed(chain.request());
+        if (!chain.request().url().encodedPath().endsWith("/chat/completions")) {
+            return response;
+        }
         ResponseBody body = requireNonNull(response.body());
         BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {
             @Override

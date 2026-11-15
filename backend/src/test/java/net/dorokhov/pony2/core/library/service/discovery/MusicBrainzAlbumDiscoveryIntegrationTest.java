@@ -669,6 +669,19 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         ConcurrentLinkedQueue<String> requests = new ConcurrentLinkedQueue<>();
         ConcurrentLinkedQueue<String> requestTimeouts = new ConcurrentLinkedQueue<>();
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        for (Map.Entry<String, String> endpoint : Map.of(
+                "/props", "{\"default_generation_settings\":{\"n_ctx\":10000}}",
+                "/apply-template", "{\"prompt\":\"test template\"}",
+                "/tokenize", "{\"tokens\":[1]}").entrySet()) {
+            server.createContext(endpoint.getKey(), exchange -> {
+                try (exchange) {
+                    exchange.getRequestBody().readAllBytes();
+                    byte[] body = endpoint.getValue().getBytes(UTF_8);
+                    exchange.sendResponseHeaders(200, body.length);
+                    exchange.getResponseBody().write(body);
+                }
+            });
+        }
         server.createContext("/v1/chat/completions", exchange -> {
             try (exchange) {
                 requests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
