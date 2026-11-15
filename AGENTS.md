@@ -19,11 +19,13 @@
 - Do not add Jackson annotations without a concrete serialization or deserialization requirement that is not already covered by the existing global configuration and default behavior.
 - Do not force null fields into JSON when clients already support omitted fields.
 
-# External resources
+# External HTTP access in backend code
 
-- Access external resources through the configured proxy; do not fall back to direct connections.
-- For backend HTTP access to external resources, use `ProxiedHttpClientFactory`, which reads `pony.proxy.url`.
+- These rules apply only to backend application code written or modified in this repository.
+- Access external HTTP resources through `ProxiedHttpClientFactory`, which reads `pony.proxy.url`. Do not fall back to direct connections.
 - Do not instantiate `OkHttpClient` or `OkHttpClient.Builder` directly outside `ProxiedHttpClientFactory` in production code.
+- These rules do not apply to the agent's development tools, including Git, GitHub access, shell commands, and web browsing.
+- For development tools, use their own network configuration. Do not apply `pony.proxy.url` or other application proxy settings to them.
 
 # Artifacts outside the project
 
