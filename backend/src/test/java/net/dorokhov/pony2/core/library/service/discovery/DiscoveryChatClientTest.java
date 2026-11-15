@@ -443,6 +443,59 @@ class DiscoveryChatClientTest {
         assertThat(modelRequests.get(4)).contains("old evidence", "fresh evidence 3");
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldCancelTheCompactionRequestWithoutContinuingTheToolLoop(boolean responseStarted) throws Exception {
+        CountDownLatch received = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return "evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                blockResponse(exchange, responseStarted, received, release);
+            } else {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            }
+        }, tool);
+        LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
+            Future<String> result = worker.submit(() -> {
+                try (task) {
+                    return call(client);
+                } finally {
+                    discovery.close();
+                }
+            });
+            try {
+                assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredScan = synchronizer.registerScanJob(Duration.ofSeconds(2))) {
+                    assertCancelled(result);
+                    assertThat(requests).hasValue(3);
+                    assertThat(toolCalls).hasValue(2);
+                    assertThat(synchronizer.hasRunningTasks()).isFalse();
+                    assertThat(JsonConverter.mapFromJson(modelRequests.getLast(), String.class, Object.class))
+                            .doesNotContainKey("tools").containsEntry("reasoning_effort", "none");
+                }
+            } finally {
+                release.countDown();
+                synchronizer.cancelDiscovery();
+            }
+        } finally {
+            task.close();
+        }
+    }
+
     @Test
     void shouldPreserveToolCallLimitsAcrossCompaction() throws Exception {
         toolCallLimit = 2;

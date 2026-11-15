@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,7 +47,7 @@ class DiscoveryContextTest {
     private final AtomicInteger tokenCount = new AtomicInteger(100);
     private final List<Request> requests = new ArrayList<>();
     private final AtomicReference<Prompt> summaryInput = new AtomicReference<>();
-    private final DiscoveryContext context = new DiscoveryContext(0.9, 0.7, 0.3, prompt -> {
+    private final TestContext context = new TestContext(0.9, 0.7, 0.3, prompt -> {
         summaryInput.set(prompt);
         return response("{\"keep\":[0]}", "STOP");
     });
@@ -135,7 +136,7 @@ class DiscoveryContextTest {
             assertThat(body(requests.getLast()).path("max_tokens").asInt()).isEqualTo(200);
         }
         assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
-                .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
     }
 
     private String withToolHistory() {
@@ -180,12 +181,12 @@ class DiscoveryContextTest {
     private void trigger() throws Exception {
         tokenCount.set(700);
         assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
-                .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
     }
 
     @Test
     void shouldSelectFromAnOversizedLatestToolResultAndKeepItsEvidenceAcrossCompactions() throws Exception {
-        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3, prompt -> {
+        TestContext selecting = new TestContext(0.9, 0.7, 0.3, prompt -> {
             String input = prompt.getUserMessage().getText().split("Numbered source fragments:\\n", 2)[1];
             JsonNode fragments = JsonConverter.fromJson(input, JsonNode.class);
             List<Integer> keep = new ArrayList<>();
@@ -236,7 +237,7 @@ class DiscoveryContextTest {
 
     @Test
     void shouldCompactAnOversizedFirstToolExchangeWithoutLeavingAnUnansweredToolCall() {
-        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3,
+        TestContext selecting = new TestContext(0.9, 0.7, 0.3,
                 prompt -> response("{\"keep\":[0]}", "STOP"));
         setField(selecting, "contextSize", 100_000);
         List<Message> messages = List.of(new SystemMessage("rules"), new UserMessage("task"),
@@ -273,7 +274,7 @@ class DiscoveryContextTest {
     @Test
     void shouldKeepSeparateSourceRangesDistinctWhenCompactingAgain() throws Exception {
         AtomicInteger selections = new AtomicInteger();
-        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3, prompt -> {
+        TestContext selecting = new TestContext(0.9, 0.7, 0.3, prompt -> {
             summaryInput.set(prompt);
             return response(selections.incrementAndGet() == 1 ? "{\"keep\":[0,2]}" : "{\"keep\":[0]}", "STOP");
         });
@@ -398,7 +399,7 @@ class DiscoveryContextTest {
             assertThat(JsonConverter.toJson(effective.prompt().getInstructions())).contains("Exact artist id", "fresh page");
             if (budget > 1) {
                 assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
-                        .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                        .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
             } else {
                 assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
                         .isInstanceOf(LlmContextLimitException.class).hasMessageContaining("target context");
@@ -409,11 +410,11 @@ class DiscoveryContextTest {
 
     @Test
     void shouldRejectASelectorThatIgnoresTheFragmentBudget() throws Exception {
-        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3,
+        TestContext selecting = new TestContext(0.9, 0.7, 0.3,
                 prompt -> response("{\"keep\":[0,1]}", "STOP"));
         tokenCount.set(700);
         assertThatThrownBy(() -> selecting.intercept(chain(withToolHistory())))
-                .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
         List<Message> messages = new ArrayList<>(history());
         messages.set(3, tool("large page ".repeat(500)));
         ChatClientRequest original = request(messages);
@@ -435,10 +436,10 @@ class DiscoveryContextTest {
     @ValueSource(strings = {"{\"status\":\"NOT_FOUND\"}", "not a summary object", "{\"keep\":[]}",
             "{\"keep\":[-1]}", "{\"keep\":[999]}", "{\"keep\":[\"0\"]}"})
     void shouldRejectAnAnswerThatDoesNotContainAContextHandoff(String answer) throws Exception {
-        DiscoveryContext invalid = new DiscoveryContext(0.9, 0.7, 0.3, prompt -> response(answer, "STOP"));
+        TestContext invalid = new TestContext(0.9, 0.7, 0.3, prompt -> response(answer, "STOP"));
         tokenCount.set(700);
         assertThatThrownBy(() -> invalid.intercept(chain(withToolHistory())))
-                .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
         ChatClientRequest original = request(history());
 
         assertThatThrownBy(() -> invalid.compact(original, original)).isInstanceOf(LlmContextLimitException.class);
@@ -459,11 +460,11 @@ class DiscoveryContextTest {
 
     @Test
     void shouldInsertOnlySelectedSourceDataEvenIfSelectorAddsAnInventedConclusion() throws Exception {
-        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3,
+        TestContext selecting = new TestContext(0.9, 0.7, 0.3,
                 prompt -> response("{\"keep\":[0],\"summary\":\"Invented NOT_FOUND conclusion\"}", "STOP"));
         tokenCount.set(700);
         assertThatThrownBy(() -> selecting.intercept(chain(withToolHistory())))
-                .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
         ChatClientRequest original = request(history());
 
         ChatClientRequest compacted = selecting.compact(original, original);
@@ -475,7 +476,7 @@ class DiscoveryContextTest {
     @Test
     void shouldRejoinAdjacentSourceFragmentsWithoutChangingCompleteUnicodeText() throws Exception {
         String completeText = "Original biography: " + "😀абв\n".repeat(600) + "complete ending";
-        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3, prompt -> {
+        TestContext selecting = new TestContext(0.9, 0.7, 0.3, prompt -> {
             String input = prompt.getUserMessage().getText().split("Numbered source fragments:\\n", 2)[1];
             JsonNode fragments = JsonConverter.fromJson(input, JsonNode.class);
             List<Integer> indices = new ArrayList<>();
@@ -491,7 +492,7 @@ class DiscoveryContextTest {
         });
         tokenCount.set(700);
         assertThatThrownBy(() -> selecting.intercept(chain(withToolHistory())))
-                .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+                .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
         List<Message> messages = new ArrayList<>(history());
         messages.set(3, tool(completeText));
         setField(selecting, "contextSize", 100_000);
@@ -556,7 +557,7 @@ class DiscoveryContextTest {
     @ParameterizedTest
     @ValueSource(strings = {"LENGTH", "length"})
     void shouldRejectATruncatedResponseEvenWhenItContainsValidJson(String reason) {
-        assertThatThrownBy(() -> DiscoveryContext.checkFinishReason(response("{}", reason)))
+        assertThatThrownBy(() -> DiscoveryContextInterceptor.checkFinishReason(response("{}", reason)))
                 .isInstanceOf(LlmContextLimitException.class);
     }
 
@@ -590,4 +591,48 @@ class DiscoveryContextTest {
         return new ChatResponse(List.of(new Generation(new AssistantMessage(text),
                 ChatGenerationMetadata.builder().finishReason(reason).build())));
     }
+    private static final class TestContext extends DiscoveryContext {
+
+        private final DiscoveryContextInterceptor interceptor = new DiscoveryContextInterceptor(this);
+        private final DiscoveryContextCompactor compactor = new DiscoveryContextCompactor();
+        private final DiscoveryAdvisor advisor = new DiscoveryAdvisor(mock(net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer.class));
+        private final Function<Prompt, ChatResponse> selector;
+
+        private TestContext(double limitRatio, double triggerRatio, double targetRatio, Function<Prompt, ChatResponse> selector) {
+            super(limitRatio, triggerRatio, targetRatio);
+            this.selector = selector;
+        }
+
+        private Response intercept(Interceptor.Chain chain) throws IOException {
+            return interceptor.intercept(chain);
+        }
+
+        private ChatClientRequest effectiveRequest(ChatClientRequest original) {
+            return advisor.effectiveRequest(original, this);
+        }
+
+        private ChatClientRequest compact(ChatClientRequest original, ChatClientRequest effective) {
+            DiscoveryContextCompactor.Compaction compaction = compactor.prepare(this, effective);
+            ChatResponse response;
+            setSummarizing(true);
+            try {
+                response = selector.apply(compaction.prompt());
+            } finally {
+                setSummarizing(false);
+            }
+            DiscoveryContextInterceptor.checkFinishReason(response);
+            interceptor.checkUsage(response);
+            compactor.complete(this, original.prompt().getInstructions().size(), compaction, response);
+            return effectiveRequest(original);
+        }
+
+        private void checkUsage(ChatResponse response) {
+            interceptor.checkUsage(response);
+        }
+
+        private void checkResponse(ChatResponse response) {
+            interceptor.checkResponse(response);
+        }
+    }
+
 }

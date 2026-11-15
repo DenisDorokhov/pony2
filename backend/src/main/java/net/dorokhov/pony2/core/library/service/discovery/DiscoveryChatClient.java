@@ -6,6 +6,7 @@ import okhttp3.Call;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
@@ -31,12 +32,15 @@ import static java.util.Objects.requireNonNull;
 @Component
 public class DiscoveryChatClient {
 
+    static final String INVOCATION_KEY = DiscoveryChatClient.class.getName();
+
     private final BiFunction<OpenAiHttpClientBuilderCustomizer, Boolean, ChatClient> chatClientFactory;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final DiscoveryAdvisor discoveryAdvisor;
     private final double contextLimitRatio;
     private final double compactionTriggerRatio;
     private final double compactionTargetRatio;
+    private final DiscoveryContextCompactor contextCompactor = new DiscoveryContextCompactor();
 
     private final Object lock = new Object();
     private final Set<Cancellation> activeCalls = new LinkedHashSet<>();
@@ -92,15 +96,10 @@ public class DiscoveryChatClient {
         }
         try (LibraryJobSynchronizer.CancellationSubscription ignored = jobSynchronizer.onCancel(cancellation::cancel)) {
             cancellation.check();
-            AtomicReference<DiscoveryContext> contextReference = new AtomicReference<>();
-            OpenAiHttpClientBuilderCustomizer customizer = builder -> builder.interceptor(cancellation::intercept)
-                    .interceptor(chain -> contextReference.get().intercept(chain));
-            DiscoveryContext context = new DiscoveryContext(contextLimitRatio, compactionTriggerRatio, compactionTargetRatio,
-                    prompt -> summarize(prompt, customizer, cancellation));
-            contextReference.set(context);
-            ChatClient client = chatClientFactory.apply(customizer, toolsEnabled);
+            Invocation invocation = new Invocation(cancellation);
+            ChatClient client = chatClientFactory.apply(invocation.customizer, toolsEnabled);
             T result = request.apply(client.prompt().advisors(discoveryAdvisor)
-                    .advisors(spec -> spec.param(DiscoveryContext.KEY, context)));
+                    .advisors(spec -> spec.param(INVOCATION_KEY, invocation)));
             cancellation.check();
             return result;
         } catch (Throwable t) {
@@ -120,6 +119,41 @@ public class DiscoveryChatClient {
                 .options(requireNonNull(prompt.getOptions()).mutate()).call().chatResponse();
         cancellation.check();
         return requireNonNull(response, "LLM returned no compaction response.");
+    }
+
+    final class Invocation {
+
+        private final DiscoveryContext context = new DiscoveryContext(contextLimitRatio, compactionTriggerRatio, compactionTargetRatio);
+        private final DiscoveryContextInterceptor interceptor = new DiscoveryContextInterceptor(context);
+        private final Cancellation cancellation;
+        private final OpenAiHttpClientBuilderCustomizer customizer;
+
+        private Invocation(Cancellation cancellation) {
+            this.cancellation = cancellation;
+            customizer = builder -> builder.interceptor(cancellation::intercept).interceptor(interceptor);
+        }
+
+        DiscoveryContext context() {
+            return context;
+        }
+
+        void compact(ChatClientRequest original, ChatClientRequest effective) {
+            DiscoveryContextCompactor.Compaction compaction = contextCompactor.prepare(context, effective);
+            ChatResponse response;
+            context.setSummarizing(true);
+            try {
+                response = summarize(compaction.prompt(), customizer, cancellation);
+            } finally {
+                context.setSummarizing(false);
+            }
+            DiscoveryContextInterceptor.checkFinishReason(response);
+            interceptor.checkUsage(response);
+            contextCompactor.complete(context, original.prompt().getInstructions().size(), compaction, response);
+        }
+
+        void checkResponse(ChatResponse response) {
+            interceptor.checkResponse(response);
+        }
     }
 
     private static final class Cancellation {

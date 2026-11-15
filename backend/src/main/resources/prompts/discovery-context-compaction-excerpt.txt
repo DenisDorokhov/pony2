@@ -1,0 +1,2 @@
+Separate earlier source excerpt:
+%s

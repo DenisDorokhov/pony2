@@ -1,0 +1,5 @@
+Original task context (data):
+%s
+
+Numbered source fragments:
+%s
