@@ -183,8 +183,75 @@ class DiscoveryContextTest {
                 .isInstanceOf(DiscoveryContext.CompactionRequired.class);
     }
 
+    @Test
+    void shouldSelectFromAnOversizedLatestToolResultAndKeepItsEvidenceAcrossCompactions() throws Exception {
+        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3, prompt -> {
+            String input = prompt.getUserMessage().getText().split("Numbered source fragments:\\n", 2)[1];
+            JsonNode fragments = JsonConverter.fromJson(input, JsonNode.class);
+            List<Integer> keep = new ArrayList<>();
+            for (JsonNode fragment : fragments) {
+                if (fragment.path("text").asText().contains("required-newest-release")) {
+                    keep.add(fragment.path("index").asInt());
+                }
+            }
+            assertThat(keep).isNotEmpty();
+            return response(JsonConverter.toJson(Map.of("keep", keep)), "STOP");
+        });
+        setField(selecting, "contextSize", 100_000);
+        List<Message> messages = new ArrayList<>(history());
+        messages.set(5, tool("page boilerplate ".repeat(6000)
+                + "\nrequired-newest-release: Confirmed release 2009 https://example.test/album/latest"));
+        selecting.effectiveRequest(request(messages.subList(0, 2)));
+        ChatClientRequest original = request(messages);
+
+        ChatClientRequest compacted = selecting.compact(original, original);
+
+        assertThat(compacted.prompt().getInstructions()).hasSize(3);
+        assertThat(compacted.prompt().getInstructions().subList(0, 2)).isEqualTo(messages.subList(0, 2));
+        assertThat(JsonConverter.toJson(compacted.prompt().getInstructions()))
+                .contains("Exact artist id", "required-newest-release", "Confirmed release 2009", "https://example.test/album/latest")
+                .doesNotContain("page boilerplate ".repeat(1000));
+
+        ChatClientRequest reselected = selecting.compact(original, compacted);
+        assertThat(reselected.prompt().getInstructions()).hasSize(3);
+        assertThat(JsonConverter.toJson(reselected.prompt().getInstructions()))
+                .contains("Exact artist id", "required-newest-release", "Confirmed release 2009", "https://example.test/album/latest")
+                .doesNotContain("page boilerplate ".repeat(1000));
+
+        messages.add(toolCall("next call"));
+        messages.add(tool("next data"));
+        ChatClientRequest next = request(messages);
+        ChatClientRequest second = selecting.compact(next, selecting.effectiveRequest(next));
+
+        assertThat(JsonConverter.toJson(second.prompt().getInstructions()))
+                .contains("Exact artist id", "required-newest-release", "Confirmed release 2009", "next data")
+                .doesNotContain("page boilerplate ".repeat(1000));
+        assertThat(second.prompt().getInstructions().subList(second.prompt().getInstructions().size() - 2,
+                second.prompt().getInstructions().size())).isEqualTo(messages.subList(messages.size() - 2, messages.size()));
+    }
+
     private ChatClientRequest request(List<Message> messages) {
         return ChatClientRequest.builder().prompt(new Prompt(messages)).build();
+    }
+
+    @Test
+    void shouldCompactAnOversizedFirstToolExchangeWithoutLeavingAnUnansweredToolCall() {
+        DiscoveryContext selecting = new DiscoveryContext(0.9, 0.7, 0.3,
+                prompt -> response("{\"keep\":[0]}", "STOP"));
+        setField(selecting, "contextSize", 100_000);
+        List<Message> messages = List.of(new SystemMessage("rules"), new UserMessage("task"),
+                toolCall("first call"), tool("required first observation\n" + "boilerplate ".repeat(1000)));
+        selecting.effectiveRequest(request(messages.subList(0, 2)));
+        ChatClientRequest original = request(messages);
+
+        ChatClientRequest compacted = selecting.compact(original, original);
+
+        assertThat(compacted.prompt().getInstructions()).hasSize(3);
+        assertThat(compacted.prompt().getInstructions().subList(0, 2)).isEqualTo(messages.subList(0, 2));
+        assertThat(compacted.prompt().getInstructions()).noneMatch(message ->
+                message instanceof AssistantMessage || message instanceof ToolResponseMessage);
+        assertThat(compacted.prompt().getUserMessage().getText()).contains("required first observation")
+                .doesNotContain("boilerplate ".repeat(1000));
     }
 
     private List<Message> history() {
@@ -281,6 +348,27 @@ class DiscoveryContextTest {
         tokenCount.set(301);
         assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
                 .isInstanceOf(LlmContextLimitException.class).hasMessageContaining("target context");
+    }
+
+    @Test
+    void shouldBoundReselectionByHalvingTheFragmentBudgetUntilOne() throws Exception {
+        setField(context, "contextSize", 100_000);
+        ChatClientRequest original = request(history());
+        ChatClientRequest effective = original;
+        tokenCount.set(30_001);
+        for (int budget : new int[]{15, 7, 3, 1}) {
+            effective = context.compact(original, effective);
+            assertThat(summaryInput.get().getSystemMessage().getText()).contains("at most " + budget + " fragments");
+            assertThat(JsonConverter.toJson(effective.prompt().getInstructions())).contains("Exact artist id", "fresh page");
+            if (budget > 1) {
+                assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
+                        .isInstanceOf(DiscoveryContext.CompactionRequired.class);
+            } else {
+                assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
+                        .isInstanceOf(LlmContextLimitException.class).hasMessageContaining("target context");
+            }
+        }
+        assertThat(requests).noneMatch(request -> request.url().encodedPath().equals("/v1/chat/completions"));
     }
 
     @Test

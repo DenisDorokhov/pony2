@@ -32,14 +32,18 @@ public class DiscoveryAdvisor implements BaseAdvisor {
         DiscoveryContext context = (DiscoveryContext) original.context().get(DiscoveryContext.KEY);
         ChatClientRequest effective = context != null ? context.effectiveRequest(original) : original;
         ChatClientResponse response;
-        try {
-            response = chain.nextCall(effective);
-        } catch (DiscoveryContext.CompactionRequired required) {
-            jobSynchronizer.interruptDiscoveryIfStopped();
-            logger.info("Compacting discovery context at {} input tokens.", required.inputTokens());
-            ChatClientRequest compacted = requireNonNull(context).compact(original, effective);
-            jobSynchronizer.interruptDiscoveryIfStopped();
-            response = chain.copy(this).nextCall(compacted);
+        CallAdvisorChain currentChain = chain;
+        while (true) {
+            try {
+                response = currentChain.nextCall(effective);
+                break;
+            } catch (DiscoveryContext.CompactionRequired required) {
+                jobSynchronizer.interruptDiscoveryIfStopped();
+                logger.info("Compacting discovery context at {} input tokens.", required.inputTokens());
+                effective = requireNonNull(context).compact(original, effective);
+                jobSynchronizer.interruptDiscoveryIfStopped();
+                currentChain = chain.copy(this);
+            }
         }
         ChatClientResponse checked = after(response, chain);
         if (context != null && checked.chatResponse() != null) {

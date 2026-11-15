@@ -34,6 +34,7 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -73,6 +74,7 @@ class DiscoveryChatClientTest {
     private Runnable beforeClientCreation = () -> {};
     private Runnable beforeRetry = () -> {};
     private int toolCallLimit;
+    private int contextSize = 1000;
     private LibraryJobSynchronizer.LibraryJobRegistration discovery;
     private HttpServer server;
 
@@ -363,7 +365,8 @@ class DiscoveryChatClientTest {
     private DiscoveryChatClient createClient(HttpHandler handler, Object... tools) throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.setExecutor(serverExecutor);
-        server.createContext("/props", exchange -> contextResponse(exchange, "{\"default_generation_settings\":{\"n_ctx\":1000}}"));
+        server.createContext("/props", exchange -> contextResponse(exchange,
+                "{\"default_generation_settings\":{\"n_ctx\":" + contextSize + "}}"));
         server.createContext("/apply-template", exchange -> contextResponse(exchange, "{\"prompt\":\"test template\"}"));
         server.createContext("/tokenize", exchange -> contextResponse(exchange,
                 JsonConverter.toJson(java.util.Map.of("tokens", java.util.Collections.nCopies(promptTokens.get(), 1)))));
@@ -471,6 +474,52 @@ class DiscoveryChatClientTest {
         assertThat(response.getResult().getMetadata().getFinishReason()).isEqualTo(ToolCallLimitExceededException.FINISH_REASON);
         assertThat(toolCalls).hasValue(2);
         assertThat(requests).hasValue(4);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReselectAnOversizedSummaryWithoutRepeatingToolsOrResettingTheirLimits(boolean cannotFit) throws Exception {
+        contextSize = 20_000;
+        toolCallLimit = 2;
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 14_000 : 100);
+            return count == 1 ? "old evidence" : "fresh observation " + "boilerplate ".repeat(1000);
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3 || requests.get() == 4) {
+                promptTokens.set(requests.get() == 3 || cannotFit ? 6001 : 5500);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson("{\"keep\":[0]}") + "}", "stop"));
+            } else {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            }
+        }, tool);
+
+        if (cannotFit) {
+            assertThatThrownBy(() -> call(client)).isInstanceOf(LlmContextLimitException.class)
+                    .hasMessageContaining("target context");
+            assertThat(requests).hasValue(4);
+        } else {
+            ChatResponse result = client.call(prompt -> prompt.user("test").call().chatResponse());
+            assertThat(result.getResult().getMetadata().getFinishReason()).isEqualTo(ToolCallLimitExceededException.FINISH_REASON);
+            assertThat(requests).hasValue(5);
+            assertThat(modelRequests.getLast()).contains("old evidence", "fresh observation")
+                    .doesNotContain("boilerplate ".repeat(1000), "\"role\":\"tool\"");
+        }
+        assertThat(toolCalls).hasValue(2);
+        assertThat(JsonConverter.fromJson(modelRequests.get(2), JsonNode.class).path("response_format")
+                .path("json_schema").path("schema").path("properties").path("keep").path("maxItems").asInt()).isEqualTo(3);
+        assertThat(JsonConverter.fromJson(modelRequests.get(3), JsonNode.class).path("response_format")
+                .path("json_schema").path("schema").path("properties").path("keep").path("maxItems").asInt()).isEqualTo(1);
     }
 
     private String completion(String message, String finishReason) {
