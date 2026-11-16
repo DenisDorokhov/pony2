@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
@@ -205,6 +206,48 @@ class DiscoveryChatClientTest {
         discovery = synchronizer.registerDiscoveryJob();
         assertThat(call(client)).isEqualTo("OK");
         assertThat(requests).hasValue(3);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"/props,false", "/props,true", "/apply-template,false", "/apply-template,true",
+            "/tokenize,false", "/tokenize,true"})
+    void shouldCancelNativeContextAccountingAndAllowTheNextDiscovery(String path, boolean responseStarted) throws Exception {
+        CountDownLatch received = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicInteger blockedRequests = new AtomicInteger();
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        server.removeContext(path);
+        server.createContext(path, exchange -> {
+            blockedRequests.incrementAndGet();
+            try (exchange) {
+                blockResponse(exchange, responseStarted, received, release);
+            }
+        });
+        try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
+            Future<String> result = worker.submit(() -> call(client));
+            try {
+                assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
+                synchronizer.cancelDiscovery();
+                assertCancelled(result);
+                assertThat(blockedRequests).hasValue(1);
+                assertThat(requests).hasValue(0);
+            } finally {
+                release.countDown();
+                synchronizer.cancelDiscovery();
+            }
+        }
+        server.removeContext(path);
+        String nativeResponse = switch (path) {
+            case "/props" -> "{\"default_generation_settings\":{\"n_ctx\":1000}}";
+            case "/apply-template" -> "{\"prompt\":\"test template\"}";
+            case "/tokenize" -> "{\"tokens\":[1]}";
+            default -> throw new IllegalArgumentException(path);
+        };
+        server.createContext(path, exchange -> contextResponse(exchange, nativeResponse));
+        discovery.close();
+        discovery = synchronizer.registerDiscoveryJob();
+        assertThat(call(client)).isEqualTo("OK");
+        assertThat(requests).hasValue(1);
     }
 
     @ParameterizedTest
@@ -527,6 +570,47 @@ class DiscoveryChatClientTest {
         assertThat(response.getResult().getMetadata().getFinishReason()).isEqualTo(ToolCallLimitExceededException.FINISH_REASON);
         assertThat(toolCalls).hasValue(2);
         assertThat(requests).hasValue(4);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{\"keep\":[]}", "{\"keep\":[99999]}"})
+    void shouldIsolateTheNextCallAfterARejectedCompaction(String selection) throws Exception {
+        toolCallLimit = 2;
+        AtomicInteger toolCalls = new AtomicInteger();
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return "evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson(selection) + "}", "stop"));
+            } else if (requests.get() < 3) {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            } else {
+                respond(exchange);
+            }
+        }, tool);
+
+        assertThatThrownBy(() -> call(client)).isInstanceOf(LlmContextLimitException.class);
+        assertThat(requests).hasValue(3);
+        assertThat(toolCalls).hasValue(2);
+
+        promptTokens.set(100);
+        assertThat(call(client)).isEqualTo("OK");
+        assertThat(requests).hasValue(4);
+        assertThat(toolCalls).hasValue(2);
+        assertThat(modelRequests.getLast()).doesNotContain("evidence", "Summary of earlier", "\"role\":\"tool\"");
+        assertThat(JsonConverter.fromJson(modelRequests.getLast(), JsonNode.class).path("max_tokens").asInt())
+                .isEqualTo(800);
     }
 
     @ParameterizedTest
