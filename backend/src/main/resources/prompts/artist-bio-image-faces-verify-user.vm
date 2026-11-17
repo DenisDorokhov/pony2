@@ -1,0 +1,1 @@
+Invalid face detection response: ${validationError} Return the complete corrected JSON object. Return an empty faces array only if no faces are visible.

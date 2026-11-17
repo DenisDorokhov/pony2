@@ -22,10 +22,22 @@ public class DiscoveryContextInterceptor implements Interceptor {
 
     private static final MediaType JSON = MediaType.get("application/json");
 
-    private final DiscoveryContext context;
+    private final DiscoveryContextBudget budget;
+    private final boolean compactionEnabled;
 
-    public DiscoveryContextInterceptor(DiscoveryContext context) {
-        this.context = context;
+    private boolean contextLimitApplied;
+
+    public DiscoveryContextInterceptor(DiscoveryContextBudget budget) {
+        this(budget, true);
+    }
+
+    private DiscoveryContextInterceptor(DiscoveryContextBudget budget, boolean compactionEnabled) {
+        this.budget = budget;
+        this.compactionEnabled = compactionEnabled;
+    }
+
+    public static DiscoveryContextInterceptor forSelection(DiscoveryContextBudget budget) {
+        return new DiscoveryContextInterceptor(budget, false);
     }
 
     @Override
@@ -38,34 +50,25 @@ public class DiscoveryContextInterceptor implements Interceptor {
         request.body().writeTo(buffer);
         ObjectNode body = (ObjectNode) JsonConverter.fromJson(buffer.readUtf8(), JsonNode.class);
         String model = body.path("model").asText();
-        if (context.getContextSize() == 0) {
+        if (budget.getContextSize() == 0) {
             HttpUrl propertiesUrl = endpoint(request, "/props").newBuilder().addQueryParameter("model", model).build();
-            context.setContextSize(exchange(chain, request.newBuilder().url(propertiesUrl).get().build())
+            budget.setContextSize(exchange(chain, request.newBuilder().url(propertiesUrl).get().build())
                     .path("default_generation_settings").path("n_ctx").asInt());
-            if (context.getContextSize() <= 0) {
+            if (budget.getContextSize() <= 0) {
                 throw new LlmContextLimitException("LLM server did not report a positive per-request context size for model '" + model + "'.");
             }
         }
         int inputTokens = inputTokens(chain, request, body, model);
-        int remaining = (int) (context.getContextSize() * context.getLimitRatio()) - inputTokens;
+        int remaining = budget.getLimitTokens() - inputTokens;
         if (remaining <= 0) {
-            throw new LlmContextLimitException("LLM prompt reached the context limit: " + inputTokens + "/" + context.getContextSize() + " tokens.");
+            throw new LlmContextLimitException("LLM prompt reached the context limit: " + inputTokens + "/" + budget.getContextSize() + " tokens.");
         }
-        if (context.isVerifyCompactionTarget() && !context.isSummarizing()) {
-            context.setVerifyCompactionTarget(false);
-            if (inputTokens > (int) (context.getContextSize() * context.getTargetRatio())) {
-                if (context.getCompactionFragmentBudget() > 1) {
-                    context.setCompactionFragmentBudget(context.getCompactionFragmentBudget() / 2);
-                    throw new CompactionRequired(inputTokens);
-                }
-                throw new LlmContextLimitException("Compacted prompt exceeds the target context size: " + inputTokens + " tokens.");
-            }
-        } else if (!context.isSummarizing() && inputTokens >= (int) (context.getContextSize() * context.getTriggerRatio()) && hasToolHistory(body)) {
-            throw new CompactionRequired(inputTokens);
+        if (compactionEnabled) {
+            checkCompaction(inputTokens, body);
         }
         int existingLimit = body.hasNonNull("max_completion_tokens") ? body.path("max_completion_tokens").asInt()
                 : body.path("max_tokens").asInt();
-        context.setContextLimitApplied(existingLimit <= 0 || existingLimit >= remaining);
+        contextLimitApplied = existingLimit <= 0 || existingLimit >= remaining;
         if (existingLimit > 0) {
             remaining = Math.min(remaining, existingLimit);
         }
@@ -107,6 +110,29 @@ public class DiscoveryContextInterceptor implements Interceptor {
         return tokens.size();
     }
 
+    private void checkCompaction(int inputTokens, ObjectNode body) {
+        if (budget.isCompactionTargetCheckPending()) {
+            budget.markCompactionTargetChecked();
+            if (inputTokens > budget.getTargetTokens()) {
+                if (budget.reduceCompactionFragmentBudget()) {
+                    throw new CompactionRequired(inputTokens);
+                }
+                throw new LlmContextLimitException("Compacted prompt exceeds the target context size: " + inputTokens + " tokens.");
+            }
+        } else if (inputTokens >= budget.getTriggerTokens() && hasToolHistory(body)) {
+            throw new CompactionRequired(inputTokens);
+        }
+    }
+
+    private boolean hasToolHistory(ObjectNode body) {
+        for (JsonNode message : body.path("messages")) {
+            if ("tool".equals(message.path("role").asText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private HttpUrl endpoint(Request request, String suffix) {
         String path = request.url().encodedPath();
         String prefix = path.substring(0, path.length() - "/chat/completions".length());
@@ -132,15 +158,6 @@ public class DiscoveryContextInterceptor implements Interceptor {
                 .post(RequestBody.create(JsonConverter.toJson(body), JSON)).build();
     }
 
-    private boolean hasToolHistory(ObjectNode body) {
-        for (JsonNode message : body.path("messages")) {
-            if ("tool".equals(message.path("role").asText())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static void checkFinishReason(ChatResponse response) {
         for (Generation generation : response.getResults()) {
             if ("length".equalsIgnoreCase(generation.getMetadata().getFinishReason())) {
@@ -152,15 +169,15 @@ public class DiscoveryContextInterceptor implements Interceptor {
     public void checkUsage(ChatResponse response) {
         Integer promptTokens = response.getMetadata().getUsage().getPromptTokens();
         Integer completionTokens = response.getMetadata().getUsage().getCompletionTokens();
-        if (context.getContextSize() > 0 && promptTokens != null && completionTokens != null &&
-                (long) promptTokens + completionTokens >= (int) (context.getContextSize() * context.getLimitRatio())) {
+        if (budget.getContextSize() > 0 && promptTokens != null && completionTokens != null &&
+                (long) promptTokens + completionTokens >= budget.getLimitTokens()) {
             throw new LlmContextLimitException("LLM response reached the context limit: "
-                    + ((long) promptTokens + completionTokens) + "/" + context.getContextSize() + " tokens.");
+                    + ((long) promptTokens + completionTokens) + "/" + budget.getContextSize() + " tokens.");
         }
     }
 
     public void checkResponse(ChatResponse response) {
-        if (context.isContextLimitApplied()) {
+        if (contextLimitApplied) {
             checkFinishReason(response);
         }
         checkUsage(response);

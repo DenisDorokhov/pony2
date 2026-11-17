@@ -141,14 +141,21 @@ class SpotifyTopTracksServiceTest {
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3);
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 1, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 1, 1, 2, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         service = new SpotifyTopTracksService(executor, artistRepository, new DiscoveryTaskResultReader(taskRepository), libraryService, logService,
                 jobSynchronizer, transactionManager(),
-                new ClassPathResource("prompts/spotify-top-tracks-albums.txt"),
-                new ClassPathResource("prompts/spotify-top-tracks.txt"),
-                new ClassPathResource("prompts/spotify-top-tracks-verification.txt"),
-                new ClassPathResource("prompts/spotify-top-tracks-fallback.txt"),
-                new ClassPathResource("prompts/spotify-top-tracks-fallback-verification.txt"));
+                new ClassPathResource("prompts/spotify-top-tracks-albums-system.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-albums-user.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-match-system.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-match-user.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-albums-verify-user.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-match-verify-user.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-fallback-system.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-fallback-user.vm"),
+                new ClassPathResource("prompts/spotify-top-tracks-fallback-verify-user.vm"));
         responses.addAll(List.of(ALBUM_RESPONSE, TRACK_RESPONSE));
     }
 

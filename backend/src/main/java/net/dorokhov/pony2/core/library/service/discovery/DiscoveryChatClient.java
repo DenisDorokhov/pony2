@@ -7,6 +7,7 @@ import okhttp3.Interceptor;
 import okhttp3.Response;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
@@ -113,18 +114,10 @@ public class DiscoveryChatClient {
         }
     }
 
-    private ChatResponse summarize(Prompt prompt, OpenAiHttpClientBuilderCustomizer customizer, Cancellation cancellation) {
-        cancellation.check();
-        ChatResponse response = chatClientFactory.apply(customizer, false).prompt().messages(prompt.getInstructions())
-                .options(requireNonNull(prompt.getOptions()).mutate()).call().chatResponse();
-        cancellation.check();
-        return requireNonNull(response, "LLM returned no compaction response.");
-    }
-
-    final class Invocation {
+    public final class Invocation {
 
         private final DiscoveryContext context = new DiscoveryContext(contextLimitRatio, compactionTriggerRatio, compactionTargetRatio);
-        private final DiscoveryContextInterceptor interceptor = new DiscoveryContextInterceptor(context);
+        private final DiscoveryContextInterceptor interceptor = new DiscoveryContextInterceptor(context.getBudget());
         private final Cancellation cancellation;
         private final OpenAiHttpClientBuilderCustomizer customizer;
 
@@ -133,25 +126,35 @@ public class DiscoveryChatClient {
             customizer = builder -> builder.interceptor(cancellation::intercept).interceptor(interceptor);
         }
 
-        DiscoveryContext context() {
-            return context;
+        public ChatClientRequest effectiveRequest(ChatClientRequest original) {
+            List<Message> messages = context.effectiveMessages(original.prompt().getInstructions());
+            if (!context.hasCompactedHistory()) {
+                return original;
+            }
+            return original.mutate().prompt(new Prompt(messages, original.prompt().getOptions())).build();
         }
 
-        void compact(ChatClientRequest original, ChatClientRequest effective) {
+        public void compact(ChatClientRequest original, ChatClientRequest effective) {
             DiscoveryContextCompactor.Compaction compaction = contextCompactor.prepare(context, effective);
-            ChatResponse response;
-            context.setSummarizing(true);
-            try {
-                response = summarize(compaction.prompt(), customizer, cancellation);
-            } finally {
-                context.setSummarizing(false);
-            }
-            DiscoveryContextInterceptor.checkFinishReason(response);
-            interceptor.checkUsage(response);
+            ChatResponse response = selectFragments(compaction.prompt());
             contextCompactor.complete(context, original.prompt().getInstructions().size(), compaction, response);
         }
 
-        void checkResponse(ChatResponse response) {
+        private ChatResponse selectFragments(Prompt prompt) {
+            cancellation.check();
+            DiscoveryContextInterceptor selectionInterceptor = DiscoveryContextInterceptor.forSelection(context.getBudget());
+            ChatClient client = chatClientFactory.apply(builder -> builder
+                    .interceptor(cancellation::intercept).interceptor(selectionInterceptor), false);
+            ChatResponse response = client.prompt().messages(prompt.getInstructions())
+                    .options(requireNonNull(prompt.getOptions()).mutate()).call().chatResponse();
+            cancellation.check();
+            requireNonNull(response, "LLM returned no compaction response.");
+            DiscoveryContextInterceptor.checkFinishReason(response);
+            selectionInterceptor.checkUsage(response);
+            return response;
+        }
+
+        public void checkResponse(ChatResponse response) {
             interceptor.checkResponse(response);
         }
     }

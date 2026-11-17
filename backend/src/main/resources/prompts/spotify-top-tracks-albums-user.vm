@@ -1,0 +1,2 @@
+Spotify albums (ID to title): ${spotifyAlbums}
+Albums from the database: ${databaseAlbums}

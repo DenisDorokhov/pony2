@@ -40,7 +40,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 class DiscoveryContextTest {
 
@@ -198,7 +197,7 @@ class DiscoveryContextTest {
             assertThat(keep).isNotEmpty();
             return response(JsonConverter.toJson(Map.of("keep", keep)), "STOP");
         });
-        setField(selecting, "contextSize", 100_000);
+        selecting.getBudget().setContextSize(100_000);
         List<Message> messages = new ArrayList<>(history());
         messages.set(5, tool("page boilerplate ".repeat(6000)
                 + "\nrequired-newest-release: Confirmed release 2009 https://example.test/album/latest"));
@@ -239,7 +238,7 @@ class DiscoveryContextTest {
     void shouldCompactAnOversizedFirstToolExchangeWithoutLeavingAnUnansweredToolCall() {
         TestContext selecting = new TestContext(0.9, 0.7, 0.3,
                 prompt -> response("{\"keep\":[0]}", "STOP"));
-        setField(selecting, "contextSize", 100_000);
+        selecting.getBudget().setContextSize(100_000);
         List<Message> messages = List.of(new SystemMessage("rules"), new UserMessage("task"),
                 toolCall("first call"), tool("required first observation\n" + "boilerplate ".repeat(1000)));
         selecting.effectiveRequest(request(messages.subList(0, 2)));
@@ -278,7 +277,7 @@ class DiscoveryContextTest {
             summaryInput.set(prompt);
             return response(selections.incrementAndGet() == 1 ? "{\"keep\":[0,2]}" : "{\"keep\":[0]}", "STOP");
         });
-        setField(selecting, "contextSize", 100_000);
+        selecting.getBudget().setContextSize(100_000);
         List<Message> messages = new ArrayList<>(history());
         messages.set(3, tool("x".repeat(5500)));
         ChatClientRequest original = request(messages);
@@ -388,8 +387,36 @@ class DiscoveryContextTest {
     }
 
     @Test
+    void shouldKeepTargetVerificationPendingWhileAccountingForSelectionRequests() throws Exception {
+        trigger();
+        ChatClientRequest original = request(history());
+        context.compact(original, original);
+        DiscoveryContextInterceptor selectionInterceptor = DiscoveryContextInterceptor.forSelection(context.getBudget());
+
+        try (Response ignored = selectionInterceptor.intercept(chain(withToolHistory()))) {
+            assertThat(body(requests.getLast()).path("max_tokens").asInt()).isEqualTo(200);
+        }
+
+        tokenCount.set(301);
+        assertThatThrownBy(() -> context.intercept(chain(withToolHistory())))
+                .isInstanceOf(LlmContextLimitException.class).hasMessageContaining("target context");
+    }
+
+    @Test
+    void shouldRejectSelectionRequestsAtTheContextLimitWithoutGenerating() throws Exception {
+        tokenCount.set(900);
+        DiscoveryContextInterceptor selectionInterceptor = DiscoveryContextInterceptor.forSelection(context.getBudget());
+
+        assertThatThrownBy(() -> selectionInterceptor.intercept(chain(withToolHistory())))
+                .isInstanceOf(LlmContextLimitException.class).hasMessageContaining("prompt reached the context limit");
+
+        assertThat(requests).hasSize(3);
+        assertThat(requests).noneMatch(request -> request.url().encodedPath().endsWith("/chat/completions"));
+    }
+
+    @Test
     void shouldBoundReselectionByHalvingTheFragmentBudgetUntilOne() throws Exception {
-        setField(context, "contextSize", 100_000);
+        context.getBudget().setContextSize(100_000);
         ChatClientRequest original = request(history());
         ChatClientRequest effective = original;
         tokenCount.set(30_001);
@@ -495,7 +522,7 @@ class DiscoveryContextTest {
                 .isInstanceOf(DiscoveryContextInterceptor.CompactionRequired.class);
         List<Message> messages = new ArrayList<>(history());
         messages.set(3, tool(completeText));
-        setField(selecting, "contextSize", 100_000);
+        selecting.getBudget().setContextSize(100_000);
         ChatClientRequest original = request(messages);
 
         ChatClientRequest compacted = selecting.compact(original, original);
@@ -593,9 +620,8 @@ class DiscoveryContextTest {
     }
     private static final class TestContext extends DiscoveryContext {
 
-        private final DiscoveryContextInterceptor interceptor = new DiscoveryContextInterceptor(this);
+        private final DiscoveryContextInterceptor interceptor = new DiscoveryContextInterceptor(getBudget());
         private final DiscoveryContextCompactor compactor = new DiscoveryContextCompactor();
-        private final DiscoveryAdvisor advisor = new DiscoveryAdvisor(mock(net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer.class));
         private final Function<Prompt, ChatResponse> selector;
 
         private TestContext(double limitRatio, double triggerRatio, double targetRatio, Function<Prompt, ChatResponse> selector) {
@@ -608,18 +634,13 @@ class DiscoveryContextTest {
         }
 
         private ChatClientRequest effectiveRequest(ChatClientRequest original) {
-            return advisor.effectiveRequest(original, this);
+            List<Message> messages = effectiveMessages(original.prompt().getInstructions());
+            return original.mutate().prompt(new Prompt(messages, original.prompt().getOptions())).build();
         }
 
         private ChatClientRequest compact(ChatClientRequest original, ChatClientRequest effective) {
             DiscoveryContextCompactor.Compaction compaction = compactor.prepare(this, effective);
-            ChatResponse response;
-            setSummarizing(true);
-            try {
-                response = selector.apply(compaction.prompt());
-            } finally {
-                setSummarizing(false);
-            }
+            ChatResponse response = selector.apply(compaction.prompt());
             DiscoveryContextInterceptor.checkFinishReason(response);
             interceptor.checkUsage(response);
             compactor.complete(this, original.prompt().getInstructions().size(), compaction, response);

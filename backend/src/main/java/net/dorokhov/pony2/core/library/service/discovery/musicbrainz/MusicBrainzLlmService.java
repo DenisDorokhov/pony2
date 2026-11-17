@@ -6,6 +6,7 @@ import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
+import net.dorokhov.pony2.common.LlmPromptTemplate;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import org.slf4j.Logger;
@@ -24,13 +25,13 @@ import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
@@ -49,56 +50,60 @@ public class MusicBrainzLlmService {
     private final LogService logService;
     private final TransactionTemplate transactionTemplate;
 
-    private final String releaseGroupPrompt;
-    private final String artistPrompt;
-    private final String verificationPrompt;
-    private final String normalizationPrompt;
-    private final String normalizationVerificationPrompt;
-    private final String artistSearchPrompt;
-    private final String artistSearchVerificationPrompt;
-    private final String alternativeArtistInstructions;
+    private final LlmPromptTemplate releaseGroupSystemPrompt;
+    private final LlmPromptTemplate releaseGroupUserPrompt;
+    private final LlmPromptTemplate artistSystemPrompt;
+    private final LlmPromptTemplate artistUserPrompt;
+    private final LlmPromptTemplate normalizationSystemPrompt;
+    private final LlmPromptTemplate normalizationUserPrompt;
+    private final LlmPromptTemplate normalizationVerificationUserPrompt;
+    private final LlmPromptTemplate artistSearchSystemPrompt;
+    private final LlmPromptTemplate artistSearchUserPrompt;
+    private final LlmPromptTemplate artistSearchVerificationUserPrompt;
+    private final LlmPromptTemplate releaseGroupVerificationUserPrompt;
+    private final LlmPromptTemplate artistVerificationUserPrompt;
 
     public MusicBrainzLlmService(
             ConfigService configService,
             DiscoveryTaskLlmExecutor llmExecutor,
             LogService logService,
             PlatformTransactionManager transactionManager,
-            @Value("classpath:prompts/musicbrainz-release-group.txt")
-            Resource releaseGroupPrompt,
-            @Value("classpath:prompts/musicbrainz-artist.txt")
-            Resource artistPrompt,
-            @Value("classpath:prompts/musicbrainz-verification.txt")
-            Resource verificationPrompt,
-            @Value("classpath:prompts/musicbrainz-album-normalization.txt")
-            Resource normalizationPrompt,
-            @Value("classpath:prompts/musicbrainz-album-normalization-verification.txt")
-            Resource normalizationVerificationPrompt,
-            @Value("classpath:prompts/musicbrainz-artist-search.txt")
-            Resource artistSearchPrompt,
-            @Value("classpath:prompts/musicbrainz-artist-search-verification.txt")
-            Resource artistSearchVerificationPrompt,
-            @Value("classpath:prompts/musicbrainz-alternative-artist-instructions.txt")
-            Resource alternativeArtistInstructions
+            @Value("classpath:prompts/musicbrainz-album-data-release-group-system.vm") Resource releaseGroupSystemPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-release-group-user.vm") Resource releaseGroupUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-artist-system.vm") Resource artistSystemPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-artist-user.vm") Resource artistUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-normalization-system.vm") Resource normalizationSystemPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-normalization-user.vm") Resource normalizationUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-normalization-verify-user.vm") Resource normalizationVerificationUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-artist-search-system.vm") Resource artistSearchSystemPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-artist-search-user.vm") Resource artistSearchUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-artist-search-verify-user.vm") Resource artistSearchVerificationUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-release-group-verify-user.vm") Resource releaseGroupVerificationUserPrompt,
+            @Value("classpath:prompts/musicbrainz-album-data-artist-verify-user.vm") Resource artistVerificationUserPrompt
     ) throws IOException {
         this.configService = configService;
         this.llmExecutor = llmExecutor;
         this.logService = logService;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        this.releaseGroupPrompt = releaseGroupPrompt.getContentAsString(UTF_8);
-        this.artistPrompt = artistPrompt.getContentAsString(UTF_8);
-        this.verificationPrompt = verificationPrompt.getContentAsString(UTF_8);
-        this.normalizationPrompt = normalizationPrompt.getContentAsString(UTF_8);
-        this.normalizationVerificationPrompt = normalizationVerificationPrompt.getContentAsString(UTF_8);
-        this.artistSearchPrompt = artistSearchPrompt.getContentAsString(UTF_8);
-        this.artistSearchVerificationPrompt = artistSearchVerificationPrompt.getContentAsString(UTF_8);
-        this.alternativeArtistInstructions = "\n" + alternativeArtistInstructions.getContentAsString(UTF_8).strip();
+        this.releaseGroupSystemPrompt = new LlmPromptTemplate(releaseGroupSystemPrompt);
+        this.releaseGroupUserPrompt = new LlmPromptTemplate(releaseGroupUserPrompt);
+        this.artistSystemPrompt = new LlmPromptTemplate(artistSystemPrompt);
+        this.artistUserPrompt = new LlmPromptTemplate(artistUserPrompt);
+        this.normalizationSystemPrompt = new LlmPromptTemplate(normalizationSystemPrompt);
+        this.normalizationUserPrompt = new LlmPromptTemplate(normalizationUserPrompt);
+        this.normalizationVerificationUserPrompt = new LlmPromptTemplate(normalizationVerificationUserPrompt);
+        this.artistSearchSystemPrompt = new LlmPromptTemplate(artistSearchSystemPrompt);
+        this.artistSearchUserPrompt = new LlmPromptTemplate(artistSearchUserPrompt);
+        this.artistSearchVerificationUserPrompt = new LlmPromptTemplate(artistSearchVerificationUserPrompt);
+        this.releaseGroupVerificationUserPrompt = new LlmPromptTemplate(releaseGroupVerificationUserPrompt);
+        this.artistVerificationUserPrompt = new LlmPromptTemplate(artistVerificationUserPrompt);
     }
 
     NormalizationResponse normalizeTitle(DiscoveryTask task, AlbumInput input, boolean cacheEnabled) {
         String title = input.title();
         PreparationRequest request = new PreparationRequest(new PreparationRawRequest(
-                normalizationPrompt,
-                JsonConverter.toJson(Map.of("albumTitle", title)),
+                normalizationSystemPrompt.render(),
+                normalizationUserPrompt.render("albumJson", JsonConverter.toJson(Map.of("albumTitle", title))),
                 configService.get().llmModel(),
                 "none"
         ));
@@ -143,12 +148,13 @@ public class MusicBrainzLlmService {
         transactionTemplate.executeWithoutResult(status ->
                 logService.warn(logger, "Invalid MusicBrainz response from the LLM for album '{}' -> '{}' during {}.",
                         input.artistName(), input.title(), stageDescription, error));
-        String prompt = switch (stage) {
-            case ALBUM_TITLE_NORMALIZATION -> normalizationVerificationPrompt;
-            case ARTIST_SEARCH -> artistSearchVerificationPrompt;
-            default -> verificationPrompt;
+        LlmPromptTemplate prompt = switch (stage) {
+            case ALBUM_TITLE_NORMALIZATION -> normalizationVerificationUserPrompt;
+            case ARTIST_SEARCH -> artistSearchVerificationUserPrompt;
+            case RELEASE_GROUP_SELECTION -> releaseGroupVerificationUserPrompt;
+            case ARTIST_SELECTION -> artistVerificationUserPrompt;
         };
-        return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
+        return new LlmFollowUpException(prompt.render("validationError", JsonConverter.toJson(error.getMessage())), error);
     }
 
     List<String> selectSearchArtists(DiscoveryTask task, AlbumInput input, List<TrackInput> tracks, boolean cacheEnabled) {
@@ -164,8 +170,9 @@ public class MusicBrainzLlmService {
             return List.of();
         }
         PreparationRequest request = new PreparationRequest(new PreparationRawRequest(
-                artistSearchPrompt,
-                JsonConverter.toJson(Map.of("album", input, "tracks", tracks, "alternativeArtistNames", alternatives)),
+                artistSearchSystemPrompt.render(),
+                artistSearchUserPrompt.render("searchContextJson",
+                        JsonConverter.toJson(Map.of("album", input, "tracks", tracks, "alternativeArtistNames", alternatives))),
                 configService.get().llmModel(),
                 "none"
         ));
@@ -199,31 +206,40 @@ public class MusicBrainzLlmService {
             DiscoveryTask task, AlbumInput input, MusicBrainzClient.ReleaseGroupSearchResult searchResult,
             List<TrackInput> tracks, List<String> searchArtistNames, boolean cacheEnabled
     ) {
-        String trackContext = trackContext(tracks);
-        String prompt = releaseGroupPrompt;
-        if (!searchArtistNames.isEmpty()) {
-            prompt += alternativeArtistInstructions;
-            trackContext += "\nAlternative artist search names: " + JsonConverter.toJson(searchArtistNames);
-        }
-        Request request = new Request(
-                new RawRequest(prompt, context(input, searchResult.rawResponse(), false) + trackContext, configService.get().llmModel()),
-                new CacheKey(prompt, context(input, searchResult.rawResponse(), true) + trackContext));
+        String prompt = releaseGroupSystemPrompt.render("hasAlternativeArtists", !searchArtistNames.isEmpty());
+        Map<String, Object> variables = selectionVariables(input, searchArtistNames);
+        addTrackContext(variables, tracks);
+        Request request = selectionRequest(releaseGroupUserPrompt, prompt, searchResult.rawResponse(), variables);
         Set<String> candidates = searchResult.groups().stream().map(MusicBrainzDto.ReleaseGroup::id).collect(Collectors.toSet());
         return selectId(task, input, request, candidates, "MUSICBRAINZ_ALBUM_DATA_RELEASE_GROUP",
                 LlmStage.RELEASE_GROUP_SELECTION, cacheEnabled);
     }
 
-    private String trackContext(List<TrackInput> tracks) {
-        return "\nLibrary album track count: " + tracks.size() + "\nLibrary album tracks: " + JsonConverter.toJson(tracks);
+    private Map<String, Object> selectionVariables(AlbumInput input, List<String> searchArtistNames) {
+        return new LinkedHashMap<>(Map.of(
+                "albumJson", JsonConverter.toJson(input),
+                "hasAlternativeArtists", !searchArtistNames.isEmpty(),
+                "alternativeArtistNamesJson", JsonConverter.toJson(searchArtistNames)));
     }
 
-    private String context(AlbumInput input, String response, boolean forCache) {
+    private void addTrackContext(Map<String, Object> variables, List<TrackInput> tracks) {
+        variables.put("trackCount", tracks.size());
+        variables.put("tracksJson", JsonConverter.toJson(tracks));
+    }
+
+    private Request selectionRequest(LlmPromptTemplate userPrompt, String systemPrompt, String response, Map<String, Object> variables) {
+        variables.put("responseJson", responseJson(response, false));
+        RawRequest rawRequest = new RawRequest(systemPrompt, userPrompt.render(variables), configService.get().llmModel());
+        variables.put("responseJson", responseJson(response, true));
+        return new Request(rawRequest, new CacheKey(systemPrompt, userPrompt.render(variables)));
+    }
+
+    private String responseJson(String response, boolean forCache) {
         Map<String, Object> data = JsonConverter.mapFromJson(response, String.class, Object.class);
         if (forCache) {
             data.remove("created");
         }
-        return "Album from the library: " + JsonConverter.toJson(input)
-                + "\nMusicBrainz search response: " + JsonConverter.toJson(data);
+        return JsonConverter.toJson(data);
     }
 
     private @Nullable String selectId(
@@ -252,15 +268,13 @@ public class MusicBrainzLlmService {
         MusicBrainzDto.ReleaseGroup group = selection.group();
         List<String> searchArtistNames = selection.searchArtistNames();
         List<String> ids = group.artistCredit().stream().map(credit -> credit.artist().id()).distinct().toList();
-        String selectedGroup = "\nSelected release group ID: " + JsonConverter.toJson(group.id());
-        String prompt = artistPrompt;
+        String prompt = artistSystemPrompt.render("hasAlternativeArtists", !searchArtistNames.isEmpty());
+        Map<String, Object> variables = selectionVariables(input, searchArtistNames);
+        variables.put("selectedGroupIdJson", JsonConverter.toJson(group.id()));
         if (!searchArtistNames.isEmpty()) {
-            prompt += alternativeArtistInstructions;
-            selectedGroup += "\nAlternative artist search names: " + JsonConverter.toJson(searchArtistNames) + trackContext(tracks);
+            addTrackContext(variables, tracks);
         }
-        Request request = new Request(
-                new RawRequest(prompt, context(input, selection.response(), false) + selectedGroup, configService.get().llmModel()),
-                new CacheKey(prompt, context(input, selection.response(), true) + selectedGroup));
+        Request request = selectionRequest(artistUserPrompt, prompt, selection.response(), variables);
         return selectId(task, input, request, Set.copyOf(ids), "MUSICBRAINZ_ALBUM_DATA_ARTIST",
                 LlmStage.ARTIST_SELECTION, cacheEnabled);
     }

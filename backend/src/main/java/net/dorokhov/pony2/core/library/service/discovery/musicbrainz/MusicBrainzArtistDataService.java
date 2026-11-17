@@ -5,6 +5,7 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
+import net.dorokhov.pony2.common.LlmPromptTemplate;
 import net.dorokhov.pony2.core.library.repository.AlbumRepository;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.MUSICBRAINZ;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA;
@@ -45,21 +45,24 @@ public class MusicBrainzArtistDataService {
     private final ConfigService configService;
     private final TransactionTemplate transactionTemplate;
     private final String prompt;
-    private final String verificationPrompt;
+    private final LlmPromptTemplate verificationUserPrompt;
+    private final LlmPromptTemplate userPrompt;
 
     public MusicBrainzArtistDataService(
             AlbumRepository albumRepository, ArtistRepository artistRepository, DiscoveryTaskRepository taskRepository,
             DiscoveryTaskLlmExecutor llmExecutor, ConfigService configService, PlatformTransactionManager transactionManager,
-            @Value("classpath:prompts/musicbrainz-artist-data.txt") Resource prompt,
-            @Value("classpath:prompts/musicbrainz-verification.txt") Resource verificationPrompt
+            @Value("classpath:prompts/musicbrainz-artist-data-system.vm") Resource prompt,
+            @Value("classpath:prompts/musicbrainz-artist-data-verify-user.vm") Resource verificationUserPrompt,
+            @Value("classpath:prompts/musicbrainz-artist-data-user.vm") Resource userPrompt
     ) throws IOException {
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.taskRepository = taskRepository;
         this.llmExecutor = llmExecutor;
         this.configService = configService;
-        this.prompt = prompt.getContentAsString(UTF_8);
-        this.verificationPrompt = verificationPrompt.getContentAsString(UTF_8);
+        this.prompt = new LlmPromptTemplate(prompt).render();
+        this.verificationUserPrompt = new LlmPromptTemplate(verificationUserPrompt);
+        this.userPrompt = new LlmPromptTemplate(userPrompt);
         transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
@@ -77,7 +80,7 @@ public class MusicBrainzArtistDataService {
                         candidate.country().isEmpty() ? null : candidate.country().getFirst());
             }
         }
-        Request request = new Request(prompt, JsonConverter.toJson(input), configService.get().llmModel());
+        Request request = new Request(prompt, userPrompt.render("artistContextJson", JsonConverter.toJson(input)), configService.get().llmModel());
         DiscoveryTaskLlmExecutor.CacheSettings cacheSettings = cacheEnabled
                 ? new DiscoveryTaskLlmExecutor.CacheSettings(MUSICBRAINZ, "MUSICBRAINZ_ARTIST_DATA", 1) : null;
         String selectedId = llmExecutor.call(task, request, IdResponse.class, cacheSettings, response -> {
@@ -88,7 +91,7 @@ public class MusicBrainzArtistDataService {
                         "Choose one of the supplied candidate IDs or null.");
                 return data.id();
             } catch (JacksonException | IllegalStateException e) {
-                throw new LlmFollowUpException(verificationPrompt.formatted(JsonConverter.toJson(e.getMessage())), e);
+                throw new LlmFollowUpException(verificationUserPrompt.render("validationError", JsonConverter.toJson(e.getMessage())), e);
             }
         });
         return input.candidates().stream().filter(candidate -> candidate.artistId().equals(selectedId)).findFirst()

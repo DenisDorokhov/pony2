@@ -14,6 +14,15 @@
 
 - Write all code comments, including JavaDoc, in English only.
 
+# LLM prompt templates
+
+- Use Apache Velocity (`.vm`) for LLM prompt templates.
+- Render every application-authored system or user message from a complete template, including JSON-only payloads and verification or follow-up messages.
+- Keep independently sent messages in separate files. Name system message templates `*-system.vm` and user message templates `*-user.vm`, including verification and follow-up messages.
+- Prefix task-specific template filenames with the `DiscoveryTaskType` name in kebab-case, followed by a short step name when needed. Use `common-` for executor and compaction steps shared by task types.
+- Give each logical LLM step its own message templates, even when their text currently duplicates another step. Do not share templates across different steps solely to eliminate duplication.
+- Keep optional text inside conditional branches of the containing message template. Prefer self-contained prompt text over extracting shared fragments solely to eliminate duplication.
+
 # Jackson annotations
 
 - Do not add Jackson annotations without a concrete serialization or deserialization requirement that is not already covered by the existing global configuration and default behavior.
@@ -22,8 +31,9 @@
 # External HTTP access in backend code
 
 - These rules apply only to backend application code written or modified in this repository.
-- Access external HTTP resources through `ProxiedHttpClientFactory`, which reads `pony.proxy.url`. Do not fall back to direct connections.
-- Do not instantiate `OkHttpClient` or `OkHttpClient.Builder` directly outside `ProxiedHttpClientFactory` in production code.
+- Use direct connections for LLM API requests through the LLM SDK transport. Do not apply `pony.proxy.url` or route LLM requests through `ProxiedHttpClientFactory`. This includes chat completions and llama.cpp `/props`, `/apply-template`, and `/tokenize` requests.
+- Access all other external HTTP resources through `ProxiedHttpClientFactory`, which reads `pony.proxy.url`. Do not fall back to direct connections for these resources.
+- For non-LLM HTTP access, do not instantiate `OkHttpClient` or `OkHttpClient.Builder` directly outside `ProxiedHttpClientFactory` in production code.
 - These rules do not apply to the agent's development tools, including Git, GitHub access, shell commands, and web browsing.
 - For development tools, use their own network configuration. Do not apply `pony.proxy.url` or other application proxy settings to them.
 

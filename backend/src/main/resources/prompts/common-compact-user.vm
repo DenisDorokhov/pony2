@@ -1,5 +1,5 @@
 Original task context (data):
-%s
+${taskContextJson}
 
 Numbered source fragments:
-%s
+${fragmentsJson}

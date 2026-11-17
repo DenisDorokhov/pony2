@@ -1,0 +1,3 @@
+Spotify top tracks in original order: ${topTracks}
+Album matches (Spotify ID to database ID): ${albumMatches}
+Database tracks grouped by album: ${albumTracks}

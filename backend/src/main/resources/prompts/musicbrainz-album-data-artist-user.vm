@@ -1,0 +1,6 @@
+Album from the library: ${albumJson}
+MusicBrainz search response: ${responseJson}
+Selected release group ID: ${selectedGroupIdJson}#if($hasAlternativeArtists)
+Alternative artist search names: ${alternativeArtistNamesJson}
+Library album track count: ${trackCount}
+Library album tracks: ${tracksJson}#end

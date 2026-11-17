@@ -9,6 +9,7 @@ import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
+import net.dorokhov.pony2.common.LlmPromptTemplate;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
@@ -55,6 +56,7 @@ public class ArtistBioImageFacesService {
     private final ConfigService configService;
     private final TransactionTemplate transactionTemplate;
     private final String prompt;
+    private final LlmPromptTemplate verificationUserPrompt;
 
     public ArtistBioImageFacesService(
             DiscoveryTaskLlmExecutor llmExecutor,
@@ -64,7 +66,8 @@ public class ArtistBioImageFacesService {
             ImageSizeReader imageSizeReader,
             ConfigService configService,
             PlatformTransactionManager transactionManager,
-            @Value("classpath:prompts/artist-bio-image-faces.txt") Resource promptResource
+            @Value("classpath:prompts/artist-bio-image-faces-user.vm") Resource promptResource,
+            @Value("classpath:prompts/artist-bio-image-faces-verify-user.vm") Resource verificationUserPrompt
     ) throws IOException {
         this.llmExecutor = llmExecutor;
         this.artistDiscoveryRepository = artistDiscoveryRepository;
@@ -73,7 +76,8 @@ public class ArtistBioImageFacesService {
         this.imageSizeReader = imageSizeReader;
         this.configService = configService;
         transactionTemplate = new TransactionTemplate(transactionManager);
-        prompt = promptResource.getContentAsString(UTF_8);
+        prompt = new LlmPromptTemplate(promptResource).render();
+        this.verificationUserPrompt = new LlmPromptTemplate(verificationUserPrompt);
     }
 
     public boolean shouldDiscover(Artist artist) {
@@ -174,8 +178,7 @@ public class ArtistBioImageFacesService {
             }
             return List.copyOf(faces);
         } catch (JacksonException | IllegalArgumentException e) {
-            throw new LlmFollowUpException("Invalid face detection response: " + e.getMessage()
-                    + " Return the complete corrected JSON object. Return an empty faces array only if no faces are visible.", e);
+            throw new LlmFollowUpException(verificationUserPrompt.render("validationError", String.valueOf(e.getMessage())), e);
         }
     }
 

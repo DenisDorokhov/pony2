@@ -15,6 +15,7 @@ import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
+import net.dorokhov.pony2.common.LlmPromptTemplate;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
@@ -31,13 +32,11 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -54,17 +53,6 @@ public class DiscoveryTaskLlmExecutor {
     private static final String FINISH_REASON_TOOL_CALL_LIMIT_EXCEEDED = "toolCallLimitExceeded";
     private static final String FINISH_REASON_CONTENT_FILTER = "CONTENT_FILTER";
     private static final String METADATA_REFUSAL = "refusal";
-    private static final String COLLECTION_PROMPT = readPrompt("discovery-data-collection.txt");
-    private static final String FORMATTING_PROMPT = readPrompt("discovery-result-formatting.txt");
-
-    private static String readPrompt(String name) {
-        try {
-            return new ClassPathResource("prompts/" + name).getContentAsString(UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -75,8 +63,11 @@ public class DiscoveryTaskLlmExecutor {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final int retriesOnFollowUpException;
     private final int restartsOnHallucination;
-    private int retriesOnContextLimit = 2;
+    private final int retriesOnContextLimit;
     private final Duration timeout;
+    private final LlmPromptTemplate collectionUserPrompt;
+    private final LlmPromptTemplate formattingSystemPrompt;
+    private final LlmPromptTemplate formattingUserPrompt;
 
     public DiscoveryTaskLlmExecutor(
             DiscoveryChatClient chatClient,
@@ -86,8 +77,15 @@ public class DiscoveryTaskLlmExecutor {
             LibraryJobSynchronizer jobSynchronizer,
             @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException,
             @Value("${pony.discovery.llm.restartsOnHallucination:3}") int restartsOnHallucination,
-            @Value("${pony.llm.timeout:10m}") Duration timeout
-    ) {
+            @Value("${pony.discovery.llm.retriesOnContextLimit:2}") int retriesOnContextLimit,
+            @Value("${pony.llm.timeout:10m}") Duration timeout,
+            @Value("classpath:prompts/common-collect-user.vm") Resource collectionUserPrompt,
+            @Value("classpath:prompts/common-format-system.vm") Resource formattingSystemPrompt,
+            @Value("classpath:prompts/common-format-user.vm") Resource formattingUserPrompt
+    ) throws IOException {
+        if (retriesOnContextLimit < 0) {
+            throw new IllegalArgumentException("Context retry count must not be negative.");
+        }
         this.chatClient = chatClient;
         this.cacheService = cacheService;
         this.exchangeRecorder = exchangeRecorder;
@@ -95,15 +93,11 @@ public class DiscoveryTaskLlmExecutor {
         this.jobSynchronizer = jobSynchronizer;
         this.retriesOnFollowUpException = retriesOnFollowUpException;
         this.restartsOnHallucination = restartsOnHallucination;
-        this.timeout = timeout;
-    }
-
-    @Autowired
-    void setRetriesOnContextLimit(@Value("${pony.discovery.llm.retriesOnContextLimit:2}") int retriesOnContextLimit) {
-        if (retriesOnContextLimit < 0) {
-            throw new IllegalArgumentException("Context retry count must not be negative.");
-        }
         this.retriesOnContextLimit = retriesOnContextLimit;
+        this.timeout = timeout;
+        this.collectionUserPrompt = new LlmPromptTemplate(collectionUserPrompt);
+        this.formattingSystemPrompt = new LlmPromptTemplate(formattingSystemPrompt);
+        this.formattingUserPrompt = new LlmPromptTemplate(formattingUserPrompt);
     }
 
     /**
@@ -245,7 +239,7 @@ public class DiscoveryTaskLlmExecutor {
             collectionOptions.toolChoice("none");
         }
         List<Message> collectionMessages = new ArrayList<>(prompt.getInstructions());
-        collectionMessages.add(new UserMessage(COLLECTION_PROMPT.formatted(responseSchema)));
+        collectionMessages.add(new UserMessage(collectionUserPrompt.render("responseSchema", responseSchema)));
         String collectedResponse = responseContent(chatClient.call(toolsEnabled, spec -> spec.messages(collectionMessages)
                 .options(collectionOptions.clone()).call().chatResponse()));
         jobSynchronizer.interruptDiscoveryIfStopped();
@@ -263,8 +257,8 @@ public class DiscoveryTaskLlmExecutor {
             return collectedResponse;
         }
         List<Message> formattingMessages = List.of(
-                new SystemMessage(FORMATTING_PROMPT.formatted(responseSchema)),
-                new UserMessage(collectedResponse));
+                new SystemMessage(formattingSystemPrompt.render("responseSchema", responseSchema)),
+                new UserMessage(formattingUserPrompt.render("collectedResponse", collectedResponse)));
         return responseContent(chatClient.call(spec -> spec.messages(formattingMessages)
                 .options(collectionOptions.clone().toolChoice("none")
                         .responseFormat(ResponseFormat.builder().jsonSchema(responseSchema).strict(true).build()))

@@ -15,6 +15,7 @@ import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.domain.LogMessage;
 import net.dorokhov.pony2.api.user.domain.User;
 import net.dorokhov.pony2.common.JsonConverter;
+import net.dorokhov.pony2.common.LlmPromptTemplate;
 import net.dorokhov.pony2.core.ProxiedHttpClientFactory;
 import net.dorokhov.pony2.core.installation.service.BuildVersionProvider;
 import net.dorokhov.pony2.core.library.repository.*;
@@ -43,6 +44,7 @@ import org.springframework.ai.openai.OpenAiChatModel.ResponseFormat;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -1047,7 +1049,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
         ArgumentCaptor<Prompt> captor = ArgumentCaptor.forClass(Prompt.class);
         verify(model, times(cacheEnabled ? 1 : 2)).call(captor.capture());
-        String systemPrompt = new ClassPathResource("prompts/musicbrainz-album-normalization.txt").getContentAsString(UTF_8);
+        String systemPrompt = new LlmPromptTemplate(new ClassPathResource("prompts/musicbrainz-album-data-normalization-system.vm")).render();
         for (int index = 0; index < captor.getAllValues().size(); index++) {
             Prompt prompt = captor.getAllValues().get(index);
             OpenAiChatOptions options = (OpenAiChatOptions) prompt.getOptions();
@@ -1308,14 +1310,17 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             String title = (String) JsonConverter.fromJson(prompt.getInstructions().get(1).getText(), Map.class).get("albumTitle");
             return response(JsonConverter.toJson(Map.of("searchTitle", title, "searchFragments", List.of(), "alternativeTitles", List.of())));
         });
-        String originalPrompt = new ClassPathResource("prompts/musicbrainz-album-normalization.txt").getContentAsString(UTF_8);
+        LlmPromptTemplate originalPrompt = (LlmPromptTemplate) requireNonNull(ReflectionTestUtils.getField(musicBrainzLlmService, "normalizationSystemPrompt"));
+        String source = new ClassPathResource("prompts/musicbrainz-album-data-normalization-system.vm").getContentAsString(UTF_8);
+        LlmPromptTemplate changedPrompt = new LlmPromptTemplate(new ByteArrayResource((source + "\n").getBytes(UTF_8)));
+        assertThat(changedPrompt.render()).isEqualTo(originalPrompt.render() + "\n");
         try {
             albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
             albumService.discover(job(DiscoveryType.ALBUM), album, true, null);
             verify(model, times(1)).call(any(Prompt.class));
             String originalKey = cacheRepository.findAll().getFirst().getKey();
             switch (change) {
-                case "prompt" -> ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationPrompt", originalPrompt + "\n");
+                case "prompt" -> ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationSystemPrompt", changedPrompt);
                 case "title" -> albumRepository.save(album.setName("Different title"));
                 default -> throw new IllegalArgumentException(change);
             }
@@ -1329,7 +1334,7 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
             assertThat(taskRepository.findAll()).hasSize(3)
                     .allSatisfy(task -> assertThat(task.getStatus()).isEqualTo(DiscoveryTask.Status.COMPLETE));
         } finally {
-            ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationPrompt", originalPrompt);
+            ReflectionTestUtils.setField(musicBrainzLlmService, "normalizationSystemPrompt", originalPrompt);
         }
     }
 

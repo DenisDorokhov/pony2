@@ -12,6 +12,7 @@ import net.dorokhov.pony2.api.library.service.DiscoveryCacheService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
+import net.dorokhov.pony2.common.LlmPromptTemplate;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
@@ -122,7 +123,7 @@ class SpotifyArtistDataServiceTest {
         });
         response = spotifyArtistResponse(found());
         configuredClient = ChatClient.builder(model).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
+        service = createService(configuredClient);
     }
 
     @AfterEach
@@ -134,7 +135,7 @@ class SpotifyArtistDataServiceTest {
     @Test
     void shouldReuseConfiguredClientAndCacheResponse() throws IOException {
         configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate"), tool("fetch_url")).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
+        service = createService(configuredClient);
         Artist artist = artist();
 
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
@@ -219,13 +220,18 @@ class SpotifyArtistDataServiceTest {
         Artist original = artist();
         service.discover(task(original), true);
         service.discover(task(artist("Artist", new Album().setName("Album"), new Album().setName("Second"))), true);
-        String changedPrompt = new ClassPathResource("prompts/spotify-artist-identity.txt").getContentAsString(UTF_8)
-                + "\nExtra instruction";
-        SpotifyArtistDataService changedService = createService(configuredClient, new ByteArrayResource(changedPrompt.getBytes(UTF_8)));
+        SpotifyArtistDataService changedService = createService(configuredClient,
+                changedPrompt("spotify-artist-data-identity-system", "\nExtra instruction"),
+                new ClassPathResource("prompts/spotify-artist-data-biography-system.vm"));
         changedService.discover(task(original), true);
 
         assertThat(cache).hasSize(7);
         assertThat(modelCalls).isEqualTo(7);
+    }
+
+    private Resource changedPrompt(String name, String addition) throws IOException {
+        String source = new ClassPathResource("prompts/" + name + ".vm").getContentAsString(UTF_8);
+        return new ByteArrayResource((source + addition).getBytes(UTF_8));
     }
 
     @Test
@@ -290,11 +296,11 @@ class SpotifyArtistDataServiceTest {
     void shouldInvalidateOnlyTheChangedStagePrompt() throws IOException {
         Artist artist = artist();
         assertThat(service.discover(task(artist), true)).isEqualTo(found());
-        String changedBiographyPrompt = new ClassPathResource("prompts/spotify-artist-biography.txt").getContentAsString(UTF_8)
-                + "\nExtra biography instruction";
+        String changedBiographyPrompt = new LlmPromptTemplate(new ClassPathResource("prompts/spotify-artist-data-biography-system.vm"))
+                .render() + "\nExtra biography instruction";
         SpotifyArtistDataService changedService = createService(configuredClient,
-                new ClassPathResource("prompts/spotify-artist-identity.txt"),
-                new ByteArrayResource(changedBiographyPrompt.getBytes(UTF_8)));
+                new ClassPathResource("prompts/spotify-artist-data-identity-system.vm"),
+                changedPrompt("spotify-artist-data-biography-system", "\nExtra biography instruction"));
 
         assertThat(changedService.discover(task(artist), true)).isEqualTo(found());
 
@@ -502,7 +508,7 @@ class SpotifyArtistDataServiceTest {
     void shouldRequestVerificationAndWarnAboutInvalidResponse(String invalidResponseTemplate, boolean requiresFormatting,
                                                               String recordedInvalidResponse) throws IOException {
         configuredClient = ChatClient.builder(model).defaultTools(tool("browser_navigate")).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
+        service = createService(configuredClient);
         String invalidResponse = invalidResponseTemplate != null ? invalidResponseTemplate.formatted(response) : null;
         queuedResponses.add(invalidResponse);
         Artist artist = artist();
@@ -723,7 +729,7 @@ class SpotifyArtistDataServiceTest {
     void shouldNotExecuteToolsWhenShutdownStartsDuringLlmCall() throws IOException {
         ToolCallback callback = tool("browser_navigate");
         configuredClient = ChatClient.builder(model).defaultTools(callback).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
+        service = createService(configuredClient);
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             shutdownService.onApplicationEvent();
             return toolCallResponse();
@@ -748,7 +754,7 @@ class SpotifyArtistDataServiceTest {
             return "Spotify page loaded";
         });
         configuredClient = ChatClient.builder(model).defaultTools(callback).build();
-        service = createService(configuredClient, new ClassPathResource("prompts/spotify-artist-identity.txt"));
+        service = createService(configuredClient);
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             modelCalls++;
             return modelCalls <= toolCallsBeforeShutdown ? toolCallResponse()
@@ -811,24 +817,37 @@ class SpotifyArtistDataServiceTest {
         verifyNoInteractions(cacheService);
     }
 
-    private SpotifyArtistDataService createService(ChatClient client, Resource promptResource) throws IOException {
-        return createService(client, promptResource, new ClassPathResource("prompts/spotify-artist-biography.txt"));
+    private SpotifyArtistDataService createService(ChatClient client) throws IOException {
+        return createService(client, new ClassPathResource("prompts/spotify-artist-data-identity-system.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-biography-system.vm"));
     }
 
-    private SpotifyArtistDataService createService(ChatClient client, Resource promptResource, Resource biographyPromptResource) throws IOException {
+    private SpotifyArtistDataService createService(ChatClient client, Resource identitySystemPrompt, Resource biographySystemPrompt) throws IOException {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer), 0.9, 0.7, 0.3);
         DiscoveryTaskLlmExecutor operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(discoveryTaskRepository, transactionManager()),
-                logService, jobSynchronizer, 1, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 1, 1, 2, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         return new SpotifyArtistDataService(operation,
                 validator, artistRepository, logService,
-                jobSynchronizer, transactionManager(), promptResource,
-                new ClassPathResource("prompts/spotify-artist-stage-verification.txt"),
-                new ClassPathResource("prompts/spotify-artist-popular-tracks.txt"),
-                biographyPromptResource,
-                new ClassPathResource("prompts/spotify-artist-about-media.txt"),
-                new ClassPathResource("prompts/spotify-artist-similar-artists.txt"));
+                jobSynchronizer, transactionManager(), identitySystemPrompt,
+                new ClassPathResource("prompts/spotify-artist-data-identity-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-popular-tracks-system.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-popular-tracks-user.vm"),
+                biographySystemPrompt,
+                new ClassPathResource("prompts/spotify-artist-data-biography-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-about-media-system.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-about-media-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-similar-artists-system.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-similar-artists-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-identity-verify-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-popular-tracks-verify-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-biography-verify-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-about-media-verify-user.vm"),
+                new ClassPathResource("prompts/spotify-artist-data-similar-artists-verify-user.vm"));
     }
 
     private String stageResponse(Prompt prompt, String suppliedResponse) {

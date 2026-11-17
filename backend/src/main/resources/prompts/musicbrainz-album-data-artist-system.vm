@@ -4,3 +4,5 @@ Consider canonical and credited names, aliases, and disambiguation. Multiple cre
 Choose only one artist that clearly corresponds to the library artist. If the library artist describes a collaboration as a whole, do not arbitrarily select one participant.
 Return only a JSON object matching the supplied schema. Set id to an artist ID present in the selected group's artist-credit, or null if there is no reliable match. Always include id.
 Use only the supplied data. Do not call tools, browse, invent IDs, or return explanations.
+#if($hasAlternativeArtists)
+Alternative artist search names are supplied for a final fallback search. The library artist can be an organizational grouping or the subject of a tribute. Use the alternative artist names and original library tracks as evidence of the actual album credit. Do not require that credit to match the library artist literally. Various Artists is an allowed album credit and does not require the Compilation secondary type. The supplied search response combines release groups from all alternative artist searches.#end
