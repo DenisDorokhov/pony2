@@ -125,6 +125,10 @@
         color: #fff;
 
         .release-type-badge {
+          display: inline-block;
+          overflow: hidden;
+          // Center the 16px badge on the unchanged 14.625px SVG at the text baseline.
+          vertical-align: calc((14.625px - 16px) / 2);
           border-color: rgb(255 255 255 / 25%);
         }
 

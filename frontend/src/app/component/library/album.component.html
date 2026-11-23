@@ -23,6 +23,7 @@
           <span class="new-indicator">{{ 'shared.newLabel' | translate }}</span>
         </span>
       }
+      <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
       @if (albumSongs.album.discoveryData.effectiveReleaseType !== ReleaseType.UNKNOWN) {
         <span class="release-type" [class]="albumSongs.album.discoveryData.effectiveReleaseType.toLowerCase()">
           <span class="release-type-badge">{{
@@ -30,7 +31,6 @@
           }}</span>
         </span>
       }
-      <small [hidden]="!albumSongs.album.year">{{ albumSongs.album.year }}</small>
       <div ngbDropdown ponyDropdownCloseOnScroll class="options" container="body">
         <button ngbDropdownToggle class="menu">
           <pony-menu-icon />
