@@ -10,6 +10,8 @@ import {PlaybackState} from '../../service/audio-player.service';
 import {shouldShowNewIndicator} from '../../utils/indicator.utils';
 import {InstallationService} from '../../service/installation.service';
 import {SelectableButtonDirective} from '../common/selectable-button.directive';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {ArtworkComponent} from './modal/artwork.component';
 
 @Component({
   imports: [SelectableButtonDirective, TranslateModule, ImageLoaderComponent, UnknownArtistPipe],
@@ -27,6 +29,7 @@ export class ArtistComponent implements OnInit, OnDestroy {
   private readonly playbackService = inject(PlaybackService);
   private readonly translateService = inject(TranslateService);
   private readonly installationService = inject(InstallationService);
+  private readonly modal = inject(NgbModal);
 
   static readonly HEIGHT = 69;
 
@@ -98,5 +101,19 @@ export class ArtistComponent implements OnInit, OnDestroy {
       return;
     }
     this.libraryService.selectArtistAndMakeDefault(this.artist);
+  }
+
+  openArtwork(event: MouseEvent) {
+    if (event.altKey) {
+      event.preventDefault();
+      return;
+    }
+    const artworkUrl = this.artist.discoveryData?.avatarExternalImageUrl || this.artist.largeArtworkUrl;
+    if (this.selected && artworkUrl) {
+      event.stopPropagation();
+      const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
+      const artworkComponent: ArtworkComponent = modalRef.componentInstance;
+      artworkComponent.url = artworkUrl;
+    }
   }
 }

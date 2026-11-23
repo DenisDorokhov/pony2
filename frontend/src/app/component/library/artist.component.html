@@ -1,7 +1,7 @@
 <button type="button" ponySelectableButton class="list-group-item" title="{{ artist.name | ponyUnknownArtist }}"
    (click)="select($event)">
   <pony-image-loader [url]="artist.discoveryData?.avatarExternalImageUrl || artist.smallArtworkUrl"
-                     [rounded]="artist.discoveryData !== undefined"></pony-image-loader>
+                     [rounded]="artist.discoveryData !== undefined" (click)="openArtwork($event)"></pony-image-loader>
   <span class="artist-title">
     <span class="artist-name">{{ artist.name | ponyUnknownArtist }}</span>
     @if (showNewIndicator) {

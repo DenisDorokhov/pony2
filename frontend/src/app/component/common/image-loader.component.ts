@@ -13,7 +13,8 @@ enum ImageLoaderComponentState {
   templateUrl: './image-loader.component.html',
   styleUrls: ['./image-loader.component.scss'],
   host: {
-    '[class.is-rounded]': 'rounded'
+    '[class.is-rounded]': 'rounded',
+    '[class.is-fitted]': 'fit'
   }
 })
 export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
@@ -67,6 +68,9 @@ export class ImageLoaderComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   rounded = false;
+
+  @Input()
+  fit = false;
 
   ngAfterViewInit(): void {
     this.scroller = this.findScroller();
