@@ -22,8 +22,9 @@
 # External HTTP access in backend code
 
 - These rules apply only to backend application code written or modified in this repository.
-- Access external HTTP resources through `ProxiedHttpClientFactory`, which reads `pony.proxy.url`. Do not fall back to direct connections.
-- Do not instantiate `OkHttpClient` or `OkHttpClient.Builder` directly outside `ProxiedHttpClientFactory` in production code.
+- Use direct connections for LLM API requests through the LLM SDK transport. Do not apply `pony.proxy.url` or route LLM requests through `ProxiedHttpClientFactory`.
+- Access all other external HTTP resources through `ProxiedHttpClientFactory`, which reads `pony.proxy.url`. Do not fall back to direct connections for these resources.
+- For non-LLM HTTP access, do not instantiate `OkHttpClient` or `OkHttpClient.Builder` directly outside `ProxiedHttpClientFactory` in production code.
 - These rules do not apply to the agent's development tools, including Git, GitHub access, shell commands, and web browsing.
 - For development tools, use their own network configuration. Do not apply `pony.proxy.url` or other application proxy settings to them.
 
