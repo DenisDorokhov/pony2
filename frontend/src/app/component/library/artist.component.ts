@@ -109,7 +109,7 @@ export class ArtistComponent implements OnInit, OnDestroy {
       return;
     }
     const artworkUrl = this.artist.discoveryData?.avatarExternalImageUrl || this.artist.largeArtworkUrl;
-    if (this.selected && artworkUrl) {
+    if (artworkUrl) {
       event.stopPropagation();
       const modalRef = this.modal.open(ArtworkComponent, {size: '400px'});
       const artworkComponent: ArtworkComponent = modalRef.componentInstance;
