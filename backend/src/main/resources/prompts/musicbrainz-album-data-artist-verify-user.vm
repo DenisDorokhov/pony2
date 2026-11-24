@@ -1,2 +1,2 @@
-Your previous response was invalid: %s
+Your previous response was invalid: ${validationError}
 Review the supplied MusicBrainz data and return only a JSON object matching the supplied schema. Set id to an allowed candidate ID, or null if no reliable match exists. Always include id. Do not return explanations or call tools.

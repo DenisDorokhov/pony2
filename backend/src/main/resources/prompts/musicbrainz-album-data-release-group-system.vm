@@ -13,3 +13,5 @@ If multiple candidates equally match the album title, artist, and library year w
 Apply this tie-break only after evaluating all candidates. Do not select the first search result merely because it appears first, override conflicting evidence, or treat unrelated same-title releases as equivalent.
 Return only a JSON object matching the supplied schema. Set id to the selected release group ID, including when the tie-break applies, or null if no candidate can be confidently matched. Always include id.
 Use only the supplied data. Do not call tools, browse, invent IDs, or return explanations.
+#if($hasAlternativeArtists)
+Alternative artist search names are supplied for a final fallback search. The library artist can be an organizational grouping or the subject of a tribute. Use the alternative artist names and original library tracks as evidence of the actual album credit. Do not require that credit to match the library artist literally. Various Artists is an allowed album credit and does not require the Compilation secondary type. The supplied search response combines release groups from all alternative artist searches.#end

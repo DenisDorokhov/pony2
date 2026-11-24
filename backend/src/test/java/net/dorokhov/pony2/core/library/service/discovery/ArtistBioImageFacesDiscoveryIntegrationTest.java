@@ -79,7 +79,8 @@ class ArtistBioImageFacesDiscoveryIntegrationTest extends IntegrationTest {
         ConfigService configuration = mock(ConfigService.class);
         when(configuration.get()).thenReturn(new ConfigSet(null, List.of(), true, "http://localhost/v1", "vision-model", null));
         ArtistBioImageFacesService faces = new ArtistBioImageFacesService(llmExecutor, artistDiscoveryRepository, taskRepository,
-                imageStorage, imageSizeReader, configuration, transactionManager, new ClassPathResource("prompts/artist-bio-image-faces.txt"));
+                imageStorage, imageSizeReader, configuration, transactionManager, new ClassPathResource("prompts/artist-bio-image-faces-user.vm"),
+                new ClassPathResource("prompts/artist-bio-image-faces-verify-user.vm"));
         service = new ArtistDiscoveryService(artistDiscoveryRepository, albumRepository, taskRepository, resultReader,
                 spotify, topTracks, albumDiscoveryService, musicBrainzArtistDataService, imageStorage, faces, logService, taskExecutor, jobSynchronizer, transactionManager);
         when(spotify.discover(any(), anyBoolean())).thenReturn(spotifyData());

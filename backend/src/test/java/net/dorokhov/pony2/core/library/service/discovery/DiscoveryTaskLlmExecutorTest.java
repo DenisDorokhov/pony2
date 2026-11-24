@@ -49,8 +49,10 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -112,7 +114,10 @@ class DiscoveryTaskLlmExecutorTest {
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
     }
 
     @AfterEach
@@ -170,7 +175,7 @@ class DiscoveryTaskLlmExecutorTest {
 
     @ParameterizedTest
     @EnumSource(DiscoveryTaskType.class)
-    void shouldPreserveTaskToolsPolicyAcrossRestartsAndFollowUps(DiscoveryTaskType type) {
+    void shouldPreserveTaskToolsPolicyAcrossRestartsAndFollowUps(DiscoveryTaskType type) throws IOException {
         List<Boolean> toolsEnabledValues = new ArrayList<>();
         ChatClient client = ChatClient.builder(model).build();
         //noinspection ExtractMethodRecommender
@@ -180,7 +185,10 @@ class DiscoveryTaskLlmExecutorTest {
         }, jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         List<ChatResponse> responses = new ArrayList<>(type.isToolsEnabled()
                 ? List.of(response("<tool_call>"), response("Collected data"), response("Rejected answer"),
                         response("Rechecked data"), response("Accepted answer"))
@@ -340,7 +348,7 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @Test
-    void shouldCollectWithToolsAndFormatOnlyTheCollectedAnswer() {
+    void shouldCollectWithToolsAndFormatOnlyTheCollectedAnswer() throws IOException {
         ToolCallback tool = mock(ToolCallback.class);
         when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
                 .name("browser_navigate").description("Open Spotify").inputSchema("{\"type\":\"object\"}").build());
@@ -350,7 +358,10 @@ class DiscoveryTaskLlmExecutorTest {
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -404,7 +415,7 @@ class DiscoveryTaskLlmExecutorTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"<tool_call>", "Collected data\n<tool_call>\n<function=browser_close>\n</function>\n</tool_call>"})
-    void shouldRestartCallChainOnToolCallHallucination(String hallucinatedResponse) {
+    void shouldRestartCallChainOnToolCallHallucination(String hallucinatedResponse) throws IOException {
         ToolCallback tool = mock(ToolCallback.class);
         when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
                 .name("browser_navigate").description("Open Spotify").inputSchema("{\"type\":\"object\"}").build());
@@ -414,7 +425,10 @@ class DiscoveryTaskLlmExecutorTest {
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -674,7 +688,7 @@ class DiscoveryTaskLlmExecutorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void shouldFailWhenToolCallingAdvisorStopsAtLimit(boolean totalLimit) {
+    void shouldFailWhenToolCallingAdvisorStopsAtLimit(boolean totalLimit) throws IOException {
         ToolCallback tool = mock(ToolCallback.class);
         when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
                 .name("browser_navigate").description("Open Spotify").inputSchema("{\"type\":\"object\"}").build());
@@ -687,7 +701,10 @@ class DiscoveryTaskLlmExecutorTest {
         operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
                 jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10));
+                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             prompts.add(invocation.getArgument(0));
             return new ChatResponse(List.of(new Generation(AssistantMessage.builder()

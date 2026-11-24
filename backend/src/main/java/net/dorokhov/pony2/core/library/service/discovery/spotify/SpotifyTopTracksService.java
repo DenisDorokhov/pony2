@@ -11,6 +11,7 @@ import net.dorokhov.pony2.api.library.service.LibraryService;
 import net.dorokhov.pony2.api.log.service.LogService;
 import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.common.LlmJsonConverter;
+import net.dorokhov.pony2.common.TextTemplate;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.discovery.DiscoveryTaskLlmExecutor;
@@ -40,7 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static net.dorokhov.pony2.api.library.domain.DiscoveryCacheRegion.SPOTIFY;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
@@ -59,11 +59,15 @@ public class SpotifyTopTracksService {
     private final LogService logService;
     private final LibraryJobSynchronizer jobSynchronizer;
     private final TransactionTemplate transactionTemplate;
-    private final String albumsPrompt;
-    private final String tracksPrompt;
-    private final String verificationPrompt;
-    private final String fallbackPrompt;
-    private final String fallbackVerificationPrompt;
+    private final TextTemplate albumsSystemPrompt;
+    private final TextTemplate albumsUserPrompt;
+    private final TextTemplate tracksSystemPrompt;
+    private final TextTemplate tracksUserPrompt;
+    private final TextTemplate albumsVerificationUserPrompt;
+    private final TextTemplate tracksVerificationUserPrompt;
+    private final TextTemplate fallbackSystemPrompt;
+    private final TextTemplate fallbackUserPrompt;
+    private final TextTemplate fallbackVerificationUserPrompt;
 
     public SpotifyTopTracksService(
             DiscoveryTaskLlmExecutor llmOperation,
@@ -73,16 +77,24 @@ public class SpotifyTopTracksService {
             LogService logService,
             LibraryJobSynchronizer jobSynchronizer,
             PlatformTransactionManager transactionManager,
-            @Value("classpath:prompts/spotify-top-tracks-albums.txt")
-            Resource albumsPromptResource,
-            @Value("classpath:prompts/spotify-top-tracks.txt")
-            Resource tracksPromptResource,
-            @Value("classpath:prompts/spotify-top-tracks-verification.txt")
-            Resource verificationPromptResource,
-            @Value("classpath:prompts/spotify-top-tracks-fallback.txt")
-            Resource fallbackPromptResource,
-            @Value("classpath:prompts/spotify-top-tracks-fallback-verification.txt")
-            Resource fallbackVerificationPromptResource
+            @Value("classpath:prompts/spotify-top-tracks-albums-system.vm")
+            Resource albumsSystemPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-albums-user.vm")
+            Resource albumsUserPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-match-system.vm")
+            Resource tracksSystemPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-match-user.vm")
+            Resource tracksUserPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-albums-verify-user.vm")
+            Resource albumsVerificationUserPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-match-verify-user.vm")
+            Resource tracksVerificationUserPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-fallback-system.vm")
+            Resource fallbackSystemPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-fallback-user.vm")
+            Resource fallbackUserPrompt,
+            @Value("classpath:prompts/spotify-top-tracks-fallback-verify-user.vm")
+            Resource fallbackVerificationUserPrompt
     ) throws IOException {
         this.llmOperation = llmOperation;
         this.artistRepository = artistRepository;
@@ -91,11 +103,15 @@ public class SpotifyTopTracksService {
         this.logService = logService;
         this.jobSynchronizer = jobSynchronizer;
         transactionTemplate = new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(PROPAGATION_REQUIRES_NEW));
-        albumsPrompt = albumsPromptResource.getContentAsString(UTF_8);
-        tracksPrompt = tracksPromptResource.getContentAsString(UTF_8);
-        verificationPrompt = verificationPromptResource.getContentAsString(UTF_8);
-        fallbackPrompt = fallbackPromptResource.getContentAsString(UTF_8);
-        fallbackVerificationPrompt = fallbackVerificationPromptResource.getContentAsString(UTF_8);
+        this.albumsSystemPrompt = new TextTemplate(albumsSystemPrompt);
+        this.albumsUserPrompt = new TextTemplate(albumsUserPrompt);
+        this.tracksSystemPrompt = new TextTemplate(tracksSystemPrompt);
+        this.tracksUserPrompt = new TextTemplate(tracksUserPrompt);
+        this.albumsVerificationUserPrompt = new TextTemplate(albumsVerificationUserPrompt);
+        this.tracksVerificationUserPrompt = new TextTemplate(tracksVerificationUserPrompt);
+        this.fallbackSystemPrompt = new TextTemplate(fallbackSystemPrompt);
+        this.fallbackUserPrompt = new TextTemplate(fallbackUserPrompt);
+        this.fallbackVerificationUserPrompt = new TextTemplate(fallbackVerificationUserPrompt);
     }
 
     public @Nullable List<String> discover(DiscoveryTask task, boolean cacheEnabled) {
@@ -129,16 +145,15 @@ public class SpotifyTopTracksService {
         List<AlbumData> albums = readAlbums(artistId);
         Map<String, String> spotifyAlbums = new LinkedHashMap<>();
         topTracks.forEach(track -> spotifyAlbums.putIfAbsent(track.albumId(), track.albumTitle()));
-        Request request = new Request(albumsPrompt,
-                "Spotify albums (ID to title): " + JsonConverter.toJson(spotifyAlbums)
-                        + "\nAlbums from the database: " + JsonConverter.toJson(albums));
+        Request request = new Request(albumsSystemPrompt.render(), albumsUserPrompt.render(Map.of(
+                "spotifyAlbums", JsonConverter.toJson(spotifyAlbums), "databaseAlbums", JsonConverter.toJson(albums))));
         return llmOperation.call(task, request, AlbumMatchesResponse.class,
                 cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_TOP_TRACKS_ALBUMS", CACHE_VERSION) : null,
                 response -> {
                     try {
                         return parseAlbumMatches(response, spotifyAlbums, albums);
                     } catch (JacksonException | IllegalStateException e) {
-                        throw invalidResponse(artistId, e, verificationPrompt);
+                        throw invalidResponse(artistId, e, albumsVerificationUserPrompt);
                     }
                 });
     }
@@ -160,10 +175,9 @@ public class SpotifyTopTracksService {
             return new ArrayList<>(Collections.nCopies(topTracks.size(), null));
         }
         List<AlbumTracks> albumTracks = readMatchedAlbumTracks(artistId, albumMatches);
-        Request request = new Request(tracksPrompt,
-                "Spotify top tracks in original order: " + JsonConverter.toJson(topTracks)
-                        + "\nAlbum matches (Spotify ID to database ID): " + JsonConverter.toJson(albumMatches)
-                        + "\nDatabase tracks grouped by album: " + JsonConverter.toJson(albumTracks));
+        Request request = new Request(tracksSystemPrompt.render(), tracksUserPrompt.render(Map.of(
+                "topTracks", JsonConverter.toJson(topTracks), "albumMatches", JsonConverter.toJson(albumMatches),
+                "albumTracks", JsonConverter.toJson(albumTracks))));
         List<String> matchedAlbumIds = topTracks.stream().map(track -> albumMatches.get(track.albumId())).toList();
         return llmOperation.call(task, request, TrackMatchesResponse.class,
                 cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_TOP_TRACKS", CACHE_VERSION) : null,
@@ -171,7 +185,7 @@ public class SpotifyTopTracksService {
                     try {
                         return parseTrackMatches(response, matchedAlbumIds, albumTracks);
                     } catch (JacksonException | IllegalStateException e) {
-                        throw invalidResponse(artistId, e, verificationPrompt);
+                        throw invalidResponse(artistId, e, tracksVerificationUserPrompt);
                     }
                 });
     }
@@ -201,16 +215,15 @@ public class SpotifyTopTracksService {
                     unmatchedTracks.add(topTracks.get(i));
                 }
             }
-            Request request = new Request(fallbackPrompt,
-                    "Unmatched Spotify top tracks in original order: " + JsonConverter.toJson(unmatchedTracks)
-                            + "\nDatabase album with tracks: " + JsonConverter.toJson(album));
+            Request request = new Request(fallbackSystemPrompt.render(), fallbackUserPrompt.render(Map.of(
+                    "unmatchedTracks", JsonConverter.toJson(unmatchedTracks), "album", JsonConverter.toJson(album))));
             List<String> fallbackMatches = llmOperation.call(task, request, TrackMatchesResponse.class,
                     cacheEnabled ? new DiscoveryTaskLlmExecutor.CacheSettings(SPOTIFY, "SPOTIFY_TOP_TRACKS_FALLBACK", CACHE_VERSION) : null,
                     response -> {
                         try {
                             return parseTrackMatches(response, Collections.nCopies(unmatchedTracks.size(), album.id()), List.of(album));
                         } catch (JacksonException | IllegalStateException e) {
-                            throw invalidResponse(artistId, e, fallbackVerificationPrompt);
+                            throw invalidResponse(artistId, e, fallbackVerificationUserPrompt);
                         }
                     });
             for (int i = 0; i < positions.size(); i++) {
@@ -306,11 +319,11 @@ public class SpotifyTopTracksService {
         return result;
     }
 
-    private LlmFollowUpException invalidResponse(String artistId, RuntimeException error, String prompt) {
+    private LlmFollowUpException invalidResponse(String artistId, RuntimeException error, TextTemplate verificationPrompt) {
         transactionTemplate.executeWithoutResult(status ->
                 logService.warn(logger, "Invalid Spotify top tracks response from the LLM for artist '{}'.",
                         artistRepository.findById(artistId).orElseThrow().getName(), error));
-        return new LlmFollowUpException(prompt.formatted(JsonConverter.toJson(error.getMessage())), error);
+        return new LlmFollowUpException(verificationPrompt.render(Map.of("validationError", JsonConverter.toJson(error.getMessage()))), error);
     }
 
     private record AlbumData(String id, @Nullable String title, @Nullable Integer year) {}

@@ -130,9 +130,13 @@ class ArtistBioImageFacesServiceTest {
                         .httpClientBuilderCustomizer(customizer).build()).build(), jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(client, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()), logService, jobSynchronizer,
-                retries, 0, Duration.ofSeconds(30));
+                retries, 0, Duration.ofSeconds(30),
+                new ClassPathResource("prompts/common-collect-user.vm"),
+                new ClassPathResource("prompts/common-format-system.vm"),
+                new ClassPathResource("prompts/common-format-user.vm"));
         return new ArtistBioImageFacesService(executor, artistDiscoveryRepository, taskRepository, imageStorage,
-                new ImageSizeReader(), configService, transactionManager(), new ClassPathResource("prompts/artist-bio-image-faces.txt"));
+                new ImageSizeReader(), configService, transactionManager(), new ClassPathResource("prompts/artist-bio-image-faces-user.vm"),
+                new ClassPathResource("prompts/artist-bio-image-faces-verify-user.vm"));
     }
 
     @AfterEach
@@ -175,7 +179,7 @@ class ArtistBioImageFacesServiceTest {
 
         ArtistBioImageFacesService.Result result = service.discover(task, true);
 
-        String prompt = new ClassPathResource("prompts/artist-bio-image-faces.txt").getContentAsString(UTF_8);
+        String prompt = new ClassPathResource("prompts/artist-bio-image-faces-user.vm").getContentAsString(UTF_8);
         String imageHash = Hashing.sha256().hashBytes(Files.readAllBytes(file)).toString();
         Map<?, ?> rawRequest = (Map<?, ?>) task.getRawRequests().getFirst();
         Object responseSchema = rawRequest.get("responseSchema");

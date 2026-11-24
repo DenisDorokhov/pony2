@@ -39,6 +39,7 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-mcp-client'
     implementation 'org.springframework.ai:spring-ai-openai'
 
+    implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
     implementation 'com.github.victools:jsonschema-generator:5.0.0'
     implementation 'com.github.victools:jsonschema-module-jackson:5.0.0'
     implementation 'org.hibernate.search:hibernate-search-mapper-orm:8.4.0.Final'

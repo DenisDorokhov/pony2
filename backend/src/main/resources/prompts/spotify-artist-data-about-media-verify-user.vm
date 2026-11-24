@@ -1,4 +1,4 @@
-Your previous response failed parsing or validation: %s
+Your previous response failed parsing or validation: ${validationError}
 Recheck only the current stage using the Playwright MCP browser tools on Spotify.
 Correct all errors in this stage, including its IDs, all URLs and complete texts,
 not just the reported issue. Do not collect data belonging to other stages.

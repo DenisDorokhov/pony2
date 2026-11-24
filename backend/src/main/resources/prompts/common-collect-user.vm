@@ -1,0 +1,3 @@
+Collect all data needed to answer the request using the following JSON schema. Include all collected values in your final answer.
+
+${responseSchema}

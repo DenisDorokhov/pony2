@@ -1,0 +1,6 @@
+Artist name: ${artistName}
+Albums from the database:
+#foreach($album in $albums)##
+- ${album.title}#if($album.hasYear) (year: ${album.year})#end#if($foreach.hasNext)
+#end##
+#end
