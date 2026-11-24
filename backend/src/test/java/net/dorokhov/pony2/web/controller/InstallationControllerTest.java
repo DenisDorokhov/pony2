@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class InstallationControllerTest extends IntegrationTest {
 
     @Autowired
-    private RestTemplate restTemplate;
+    private RestClient restClient;
 
     @Autowired
     private InstallationSecretService installationSecretService;
@@ -41,7 +41,10 @@ public class InstallationControllerTest extends IntegrationTest {
 
     @Test
     public void shouldReturnNoInstallation() {
-        ResponseEntity<InstallationStatusDto> response = restTemplate.getForEntity("/api/installation/status", InstallationStatusDto.class);
+        ResponseEntity<InstallationStatusDto> response = restClient.get()
+                .uri("/api/installation/status")
+                .retrieve()
+                .toEntity(InstallationStatusDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(installationStatus -> 
                 assertThat(installationStatus.isInstalled()).isFalse());
@@ -58,7 +61,11 @@ public class InstallationControllerTest extends IntegrationTest {
                 .setAdminPassword("somePassword")
                 .setRepeatAdminPassword("somePassword");
 
-        ResponseEntity<InstallationDto> installationResponse = restTemplate.postForEntity("/api/installation", command, InstallationDto.class);
+        ResponseEntity<InstallationDto> installationResponse = restClient.post()
+                .uri("/api/installation")
+                .body(command)
+                .retrieve()
+                .toEntity(InstallationDto.class);
 
         assertThat(installationResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(installationResponse.getBody()).satisfies(installationDto -> 
@@ -81,7 +88,10 @@ public class InstallationControllerTest extends IntegrationTest {
             assertThat(installation.getVersion()).isNotNull();
         });
 
-        ResponseEntity<InstallationStatusDto> statusResponse = restTemplate.getForEntity("/api/installation/status", InstallationStatusDto.class);
+        ResponseEntity<InstallationStatusDto> statusResponse = restClient.get()
+                .uri("/api/installation/status")
+                .retrieve()
+                .toEntity(InstallationStatusDto.class);
 
         assertThat(statusResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(statusResponse.getBody()).satisfies(installationStatus ->
@@ -99,7 +109,11 @@ public class InstallationControllerTest extends IntegrationTest {
                 .setAdminPassword(" ")
                 .setRepeatAdminPassword("notMatchingPassword");
 
-        ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
+        ResponseEntity<ErrorDto> response = restClient.post()
+                .uri("/api/installation")
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -128,9 +142,17 @@ public class InstallationControllerTest extends IntegrationTest {
                 .setAdminEmail("foo@bar.com")
                 .setAdminPassword("somePassword")
                 .setRepeatAdminPassword("somePassword");
-        restTemplate.postForEntity("/api/installation", command, Void.class);
+        restClient.post()
+                .uri("/api/installation")
+                .body(command)
+                .retrieve()
+                .toEntity(Void.class);
 
-        ResponseEntity<ErrorDto> response = restTemplate.postForEntity("/api/installation", command, ErrorDto.class);
+        ResponseEntity<ErrorDto> response = restClient.post()
+                .uri("/api/installation")
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(errorDto -> 

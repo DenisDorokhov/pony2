@@ -20,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.PessimisticLockingFailureException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -131,8 +129,11 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
         populate();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(PATH, HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().delete()
+                .uri(PATH)
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(taskRepository.count()).isZero();
@@ -156,8 +157,11 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
                 ? jobSynchronizer.registerDiscoveryJob() : jobSynchronizer.registerScanJob(Duration.ZERO)) {
             boolean previouslyCancelled = jobSynchronizer.isDiscoveryCancelled();
 
-            ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(PATH, HttpMethod.DELETE,
-                    apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+            ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().delete()
+                    .uri(PATH)
+                    .header("Authorization", "Bearer " + authentication.getAccessToken())
+                    .retrieve()
+                    .toEntity(ErrorDto.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody()).isNotNull();
@@ -197,7 +201,10 @@ class DiscoveryDataCleanupTest extends InstallingIntegrationTest {
 
     @Test
     void shouldRejectAnonymousCleanup() {
-        assertThat(apiTemplate.getRestTemplate().exchange(PATH, HttpMethod.DELETE, HttpEntity.EMPTY, String.class)
+        assertThat(apiTemplate.getRestClient().delete()
+                .uri(PATH)
+                .retrieve()
+                .toEntity(String.class)
                 .getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 

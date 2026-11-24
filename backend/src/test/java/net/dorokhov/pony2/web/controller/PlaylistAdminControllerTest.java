@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
@@ -178,9 +177,11 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<BackupDto> backupResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/playlists/backup", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), BackupDto.class);
+        ResponseEntity<BackupDto> backupResponse = apiTemplate.getRestClient().get()
+                .uri("/api/admin/playlists/backup")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(BackupDto.class);
 
         assertThat(backupResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(backupResponse.getBody()).satisfies(dto -> {
@@ -200,9 +201,13 @@ public class PlaylistAdminControllerTest extends InstallingIntegrationTest {
                 MultiValueMap<String, Object> request = new LinkedMultiValueMap<>();
                 request.add("file", new FileSystemResource(file));
 
-                ResponseEntity<RestoredPlaylistsDto> restoreResponse = apiTemplate.getRestTemplate().exchange(
-                        "/api/admin/playlists/restore", HttpMethod.POST,
-                        apiTemplate.createHeaderRequest(request, authentication.getAccessToken(), new HttpHeaders()), RestoredPlaylistsDto.class);
+                ResponseEntity<RestoredPlaylistsDto> restoreResponse = apiTemplate.getRestClient().post()
+                        .uri("/api/admin/playlists/restore")
+                        .headers(headers -> headers.addAll(new HttpHeaders()))
+                        .header("Authorization", "Bearer " + authentication.getAccessToken())
+                        .body(request)
+                        .retrieve()
+                        .toEntity(RestoredPlaylistsDto.class);
 
                 assertThat(restoreResponse.getStatusCode()).isSameAs(HttpStatus.OK);
                 assertThat(restoreResponse.getBody()).satisfies(restoredPlaylists -> {

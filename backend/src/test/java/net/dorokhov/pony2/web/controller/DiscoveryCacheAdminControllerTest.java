@@ -7,7 +7,6 @@ import net.dorokhov.pony2.core.library.repository.DiscoveryCacheRepository;
 import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -31,9 +30,11 @@ public class DiscoveryCacheAdminControllerTest extends InstallingIntegrationTest
         discoveryCacheService.put(SPOTIFY, "someKey", 1, "someValue");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/discovery/cache", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().delete()
+                .uri("/api/admin/discovery/cache")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(discoveryCacheRepository.count()).isZero();
@@ -45,9 +46,11 @@ public class DiscoveryCacheAdminControllerTest extends InstallingIntegrationTest
         discoveryCacheService.put(SPOTIFY, "someKey", 1, "someValue");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/discovery/cache?region={region}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), Void.class, SPOTIFY.name());
+        ResponseEntity<Void> response = apiTemplate.getRestClient().delete()
+                .uri("/api/admin/discovery/cache?region={region}", SPOTIFY.name())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(discoveryCacheRepository.count()).isZero();

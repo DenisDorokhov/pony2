@@ -6,7 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import static net.dorokhov.pony2.InstallingIntegrationTest.ADMIN_EMAIL;
 import static net.dorokhov.pony2.InstallingIntegrationTest.ADMIN_PASSWORD;
@@ -14,14 +14,14 @@ import static net.dorokhov.pony2.InstallingIntegrationTest.ADMIN_PASSWORD;
 @Component
 public class ApiTemplate {
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public ApiTemplate(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public ApiTemplate(RestClient restClient) {
+        this.restClient = restClient;
     }
 
-    public RestTemplate getRestTemplate() {
-        return restTemplate;
+    public RestClient getRestClient() {
+        return restClient;
     }
 
     public AuthenticationDto authenticateAdmin() {
@@ -32,8 +32,12 @@ public class ApiTemplate {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("email", email);
         params.add("password", password);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, (HttpHeaders) null);
-        return restTemplate.postForEntity("/api/authentication", entity, AuthenticationDto.class).getBody();
+        return restClient.post()
+                .uri("/api/authentication")
+                .body(params)
+                .retrieve()
+                .toEntity(AuthenticationDto.class)
+                .getBody();
     }
 
     public HttpEntity<Void> createHeaderRequest(String token) {

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -160,9 +159,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistDto[].class);
+        ResponseEntity<PlaylistDto[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlists -> {
@@ -207,9 +208,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/playlists/{playlistId}", savedPlaylist.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -312,9 +315,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/playlists/{playlistId}", savedPlaylist.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -322,9 +327,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailGettingNotExistingNormalPlaylist() {
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/playlists/{playlistId}", "foobar")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -352,9 +359,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/normal/{playlistId}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/playlists/normal/{playlistId}", savedPlaylist.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(playlistRepository.existsById(savedPlaylist.getId())).isFalse();
 
@@ -421,9 +430,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/normal/{playlistId}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/playlists/normal/{playlistId}", savedPlaylist.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(playlistRepository.existsById(savedPlaylist.getId())).isTrue();
 
@@ -433,9 +444,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailDeletingNotExistingNormalPlaylist() {
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/normal/{playlistId}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/playlists/normal/{playlistId}", "foobar")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -447,9 +460,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 .setName("playlist1")
                 .setSongIds(List.of(song1_1_1.getId(), song1_1_2.getId(), song1_2_1.getId()));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/normal", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/normal")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -491,9 +507,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
 
         PlaylistCreationCommandDto command = new PlaylistCreationCommandDto();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/normal", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/normal")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -535,9 +554,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSongId(song1_2_1.getId())
                 ));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -595,9 +617,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 .setId(savedPlaylist.getId())
                 .setOverrideName("playlist2");
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -630,9 +655,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                 .setId(likePlaylist.getId())
                 .setOverrideName("overriddenName");
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -668,9 +696,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                         new PlaylistUpdateCommandDto.SongId()
                 ));
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -687,9 +718,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                         new PlaylistUpdateCommandDto.SongId()
                 ));
 
-        response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -705,9 +739,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                         new PlaylistUpdateCommandDto.SongId()
                 ));
 
-        response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -750,9 +787,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSongId(song1_1_2.getId())
                 ));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -770,9 +810,12 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSongId(song1_1_2.getId())
                 ));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/playlists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -792,9 +835,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_1_1)
                 )));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId(), song1_1_2.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/{playlistId}/songs/{songId}", savedPlaylist.getId(), song1_1_2.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -839,12 +884,16 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_1_1)
                 )));
 
-        apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId(), song1_1_2.getId());
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, savedPlaylist.getId(), song1_1_2.getId());
+        apiTemplate.getRestClient().post()
+                .uri("/api/playlists/{playlistId}/songs/{songId}", savedPlaylist.getId(), song1_1_2.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/{playlistId}/songs/{songId}", savedPlaylist.getId(), song1_1_2.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -895,9 +944,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class, savedPlaylist.getId(), song1_1_2.getId());
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/{playlistId}/songs/{songId}", savedPlaylist.getId(), song1_1_2.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -905,9 +956,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailAddingSongToNotExistingPlaylist() {
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/{playlistId}/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class, "foobar", song1_1_2.getId());
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/{playlistId}/songs/{songId}", "foobar", song1_1_2.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -934,9 +987,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
                                 .setSong(song1_2_1)
                 )));
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/playlists/like")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -975,9 +1030,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldLikeSong() {
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/like/songs/{songId}", song1_1_1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -999,9 +1056,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
             });
         });
 
-        response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_2.getId());
+        response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/like/songs/{songId}", song1_1_2.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -1034,12 +1093,16 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFilterOutDuplicatesWhenLikingSong() {
 
-        apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
+        apiTemplate.getRestClient().post()
+                .uri("/api/playlists/like/songs/{songId}", song1_1_1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/like/songs/{songId}", song1_1_1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {
@@ -1065,9 +1128,11 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailLikingNotExistingSong() {
 
-        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, "foobar");
+        ResponseEntity<PlaylistSongsDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/like/songs/{songId}", "foobar")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -1077,14 +1142,18 @@ public class PlaylistControllerTest extends InstallingIntegrationTest {
 
         ResponseEntity<PlaylistSongsDto> response;
 
-        response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
+        response = apiTemplate.getRestClient().post()
+                .uri("/api/playlists/like/songs/{songId}", song1_1_1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
 
-        response = apiTemplate.getRestTemplate().exchange(
-                "/api/playlists/like/songs/{songId}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaylistSongsDto.class, song1_1_1.getId());
+        response = apiTemplate.getRestClient().delete()
+                .uri("/api/playlists/like/songs/{songId}", song1_1_1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaylistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(playlistSongs -> {

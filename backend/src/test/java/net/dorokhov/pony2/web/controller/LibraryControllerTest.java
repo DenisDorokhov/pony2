@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -204,10 +203,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/songs/fetchByIds", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(List.of(song1_1_1.getId(), song2_1_1.getId(), 1000L), authentication.getAccessToken()),
-                SongDetailsDto[].class);
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestClient().post()
+                .uri("/api/library/songs/fetchByIds")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(List.of(song1_1_1.getId(), song2_1_1.getId(), 1000L))
+                .retrieve()
+                .toEntity(SongDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(list -> {
@@ -230,9 +231,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ArtistDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDetailsDto[].class);
+        ResponseEntity<ArtistDetailsDto[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artists -> {
@@ -247,9 +250,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(artistSongs -> {
@@ -283,9 +288,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         enableLlm();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class, artist1.getId());
+        ResponseEntity<String> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(String.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         JsonNode artistSongs = JsonConverter.fromJson(requireNonNull(response.getBody()), JsonNode.class);
@@ -324,9 +331,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                         "faces", List.of(new ImageFace(.1, .2, .3, .4))))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ArtistBiographyDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId());
+        ResponseEntity<ArtistBiographyDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         ArtistBiographyDto biography = requireNonNull(response.getBody());
@@ -354,9 +363,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 .setResult(JsonConverter.toJson(Map.of("externalImageId", "old-image", "faces", List.of(new ImageFace(.1, .2, .3, .4))))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class).getBody());
 
         assertThat(biography.getArtist().getDiscoveryData().getSpotifyArtistId()).isNull();
         assertThat(biography.getFaces()).isNull();
@@ -367,9 +378,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     @Test
     void shouldGetBiographyWithoutDiscoveryDataWhenDisabled() {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
-        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class).getBody());
 
         assertThat(biography.getArtist().getArtist().getId()).isEqualTo(artist1.getId());
         assertThat(biography.getArtist().getDiscoveryData()).isNull();
@@ -398,9 +411,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                         Map.of("id", "second"), Map.of("id", "self"))))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class).getBody());
 
         assertThat(biography.getSimilarArtists()).extracting(dto -> dto.getArtist().getId())
                 .containsExactly(artist2.getId(), sharedA.getId(), sharedZ.getId());
@@ -426,9 +441,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                         IntStream.range(0, 40).mapToObj(index -> Map.of("id", "spotify-" + index)).toList()))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class).getBody());
 
         assertThat(biography.getArtist().getDiscoveryData().getSpotifyArtistId()).isNull();
         assertThat(biography.getText()).isNull();
@@ -451,29 +468,37 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 .setResult(JsonConverter.toJson(Map.of("similarArtists", List.of(Map.of("id", similarSpotifyId))))));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class).getBody());
 
         assertThat(biography.getArtist().getDiscoveryData().getSpotifyArtistId()).isEqualTo(spotifyArtistId);
         assertThat(biography.getText()).isNull();
         assertThat(biography.getLinks()).isEmpty();
         assertThat(biography.getSimilarArtists()).hasSize(similarArtistAvailable ? 1 : 0);
 
-        ArtistSongsDto artistSongs = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId()).getBody());
+        ArtistSongsDto artistSongs = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistSongsDto.class).getBody());
         assertThat(artistSongs.getArtist().getDiscoveryData().getSpotifyArtistId()).isEqualTo(spotifyArtistId);
 
-        ArtistDetailsDto[] artists = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDetailsDto[].class).getBody());
+        ArtistDetailsDto[] artists = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistDetailsDto[].class).getBody());
         assertThat(artists).filteredOn(artist -> artist.getArtist().getId().equals(artist1.getId()))
                 .singleElement().satisfies(artist -> assertThat(artist.getDiscoveryData().getSpotifyArtistId()).isEqualTo(spotifyArtistId));
 
-        SearchResultDto search = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/search?query=foo", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SearchResultDto.class).getBody());
+        SearchResultDto search = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/search?query=foo")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(SearchResultDto.class).getBody());
         assertThat(search.getArtists()).filteredOn(artist -> artist.getArtist().getId().equals(artist1.getId()))
                 .singleElement().satisfies(artist -> assertThat(artist.getDiscoveryData().getSpotifyArtistId()).isEqualTo(spotifyArtistId));
     }
@@ -488,9 +513,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 .setType(DiscoveryTaskType.SPOTIFY_ARTIST_DATA).setStatus(DiscoveryTask.Status.COMPLETE).setResult(result));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistBiographyDto.class, artist1.getId()).getBody());
+        ArtistBiographyDto biography = requireNonNull(apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistBiographyDto.class).getBody());
 
         assertThat(biography.getArtist().getDiscoveryData().getSpotifyArtistId()).isNull();
         assertThat(biography.getSimilarArtists()).isEmpty();
@@ -500,9 +527,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
     void shouldFailGettingBiographyOfUnknownArtist() {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistBiography/missing", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistBiography/missing")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
@@ -542,9 +571,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 .setResult(JsonConverter.toJson(new String[]{song1_1_2.getId(), null, "missing", song1_2_1.getId(), song1_1_1.getId()})));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         ArtistSongsDto artistSongs = requireNonNull(response.getBody());
@@ -557,9 +588,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         assertThat(artistSongs.getAlbumSongs()).extracting(album -> album.getAlbum().getDiscoveryData().getReleaseDate())
                 .containsExactly(LocalDateTime.of(1986, 10, 1, 0, 0), LocalDateTime.of(1987, 1, 1, 0, 0));
 
-        ResponseEntity<ArtistDetailsDto[]> artistsResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artists", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistDetailsDto[].class);
+        ResponseEntity<ArtistDetailsDto[]> artistsResponse = apiTemplate.getRestClient().get()
+                .uri("/api/library/artists")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistDetailsDto[].class);
         assertThat(artistsResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(requireNonNull(artistsResponse.getBody())).filteredOn(artist -> artist.getArtist().getId().equals(artist1.getId()))
                 .singleElement().satisfies(artist -> {
@@ -568,9 +601,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                             .containsExactly(song1_1_2.getId(), song1_2_1.getId(), song1_1_1.getId());
                 });
 
-        ResponseEntity<SongDetailsDto[]> songsResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/library/songs/fetchByIds", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(List.of(song1_1_1.getId()), authentication.getAccessToken()), SongDetailsDto[].class);
+        ResponseEntity<SongDetailsDto[]> songsResponse = apiTemplate.getRestClient().post()
+                .uri("/api/library/songs/fetchByIds")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(List.of(song1_1_1.getId()))
+                .retrieve()
+                .toEntity(SongDetailsDto[].class);
         assertThat(songsResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(requireNonNull(songsResponse.getBody())).singleElement().satisfies(song -> {
             checkArtistDto(song.getAlbumDetails().getArtist(), artist1);
@@ -582,9 +618,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         configService.update(new ConfigSetUpdateCommand().setLibraryFolders(configService.get().libraryFolders()));
 
-        ResponseEntity<String> disabledResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class, artist1.getId());
+        ResponseEntity<String> disabledResponse = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(String.class);
         assertThat(disabledResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         JsonNode disabledArtistSongs = JsonConverter.fromJson(requireNonNull(disabledResponse.getBody()), JsonNode.class);
         assertThat(disabledArtistSongs.path("artist").has("discoveryData")).isFalse();
@@ -593,9 +631,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         }
 
         enableLlm();
-        ResponseEntity<ArtistSongsDto> enabledResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+        ResponseEntity<ArtistSongsDto> enabledResponse = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistSongsDto.class);
         assertThat(enabledResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(requireNonNull(enabledResponse.getBody()).getArtist().getDiscoveryData().getCountryCode()).isEqualTo("DE");
         assertThat(requireNonNull(enabledResponse.getBody()).getAlbumSongs())
@@ -615,9 +655,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         saveAlbumDiscoveryTask(album1_1, job, DiscoveryTaskType.MUSICBRAINZ_ALBUM_DATA, DiscoveryTask.Status.COMPLETE, date, result);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/{artistId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ArtistSongsDto.class, artist1.getId());
+        ResponseEntity<ArtistSongsDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/{artistId}", artist1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ArtistSongsDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(requireNonNull(response.getBody()).getAlbumSongs()).allSatisfy(albumSongs ->
@@ -639,9 +681,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/artistSongs/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/artistSongs/1000")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -656,9 +700,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<GenreDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/genres", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), GenreDto[].class);
+        ResponseEntity<GenreDto[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/genres")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(GenreDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(genres -> {
@@ -679,9 +725,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
                 .setCountryCode("DE").setAvatarExternalImage(avatar));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<String> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/search?query=foo", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), String.class);
+        ResponseEntity<String> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/search?query=foo")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode artists = JsonConverter.fromJson(requireNonNull(response.getBody()), JsonNode.class).path("artists");
@@ -703,9 +751,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<SearchResultDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/search?query=foo", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), SearchResultDto.class);
+        ResponseEntity<SearchResultDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/search?query=foo")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(SearchResultDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(searchResult -> {
@@ -772,9 +822,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         RandomSongsRequestDto request = new RandomSongsRequestDto()
                 .setCount(3);
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/fetchRandomSongs", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), SongDetailsDto[].class);
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestClient().post()
+                .uri("/api/library/fetchRandomSongs")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(request)
+                .retrieve()
+                .toEntity(SongDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -788,9 +841,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         RandomSongsRequestDto request = new RandomSongsRequestDto()
                 .setCount(1000);
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/fetchRandomSongs", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/library/fetchRandomSongs")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(request)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
     }
@@ -803,9 +859,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         RandomSongsRequestDto request = new RandomSongsRequestDto()
                 .setCount(3)
                 .setGenreIds(List.of(genre1.getId()));
-        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/fetchRandomSongs", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), SongDetailsDto[].class);
+        ResponseEntity<SongDetailsDto[]> response = apiTemplate.getRestClient().post()
+                .uri("/api/library/fetchRandomSongs")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(request)
+                .retrieve()
+                .toEntity(SongDetailsDto[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(songs ->
@@ -820,9 +879,12 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         RandomSongsRequestDto request = new RandomSongsRequestDto()
                 .setCount(1000)
                 .setGenreIds(List.of(genre1.getId()));
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/fetchRandomSongs", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(request, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/library/fetchRandomSongs")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(request)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
     }
@@ -834,10 +896,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
         await().until(() -> scanJobService.getById(scanJob.getId()).orElseThrow().getStatus() == ScanJob.Status.COMPLETE);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<OptionalResponseDto<ScanStatisticsDto>> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/scanStatistics", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
-                new ParameterizedTypeReference<>() {});
+        ResponseEntity<OptionalResponseDto<ScanStatisticsDto>> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/scanStatistics")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {});
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(optionalResponse -> {
@@ -861,10 +924,11 @@ public class LibraryControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<OptionalResponseDto<ScanStatisticsDto>> response = apiTemplate.getRestTemplate().exchange(
-                "/api/library/scanStatistics", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()),
-                new ParameterizedTypeReference<>() {});
+        ResponseEntity<OptionalResponseDto<ScanStatisticsDto>> response = apiTemplate.getRestClient().get()
+                .uri("/api/library/scanStatistics")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {});
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(optionalResponse -> {

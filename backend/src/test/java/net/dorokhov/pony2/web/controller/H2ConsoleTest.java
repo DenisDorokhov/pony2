@@ -26,7 +26,10 @@ class H2ConsoleTest extends IntegrationTest {
     void shouldServeH2ConsoleOutsideDevProfile() {
         assertThat(environment.getActiveProfiles()).doesNotContain("dev");
 
-        ResponseEntity<String> response = apiTemplate.getRestTemplate().getForEntity("/h2-console/", String.class);
+        ResponseEntity<String> response = apiTemplate.getRestClient().get()
+                .uri("/h2-console/")
+                .retrieve()
+                .toEntity(String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("H2 Console");

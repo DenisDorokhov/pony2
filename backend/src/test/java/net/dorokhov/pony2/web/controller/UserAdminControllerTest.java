@@ -10,7 +10,6 @@ import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -31,9 +30,11 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserPageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserPageDto.class);
+        ResponseEntity<UserPageDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/users")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(UserPageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userPage -> {
@@ -55,9 +56,11 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
         User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/{userId}", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class, user.getId());
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/users/{userId}", user.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> checkUser(userDto, user));
@@ -68,9 +71,11 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/1000", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/users/1000")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -91,9 +96,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(UserDto.Role.USER);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), UserDto.class);
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/admin/users")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> {
@@ -115,9 +123,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(null);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/admin/users")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -140,9 +151,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(UserDto.Role.ADMIN);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/admin/users")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -166,9 +180,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(UserDto.Role.ADMIN);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/{userId}", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), UserDto.class, user.getId());
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/admin/users/{userId}", user.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> {
@@ -192,9 +209,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(null);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/{userId}", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class, user.getId());
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/admin/users/{userId}", user.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -218,9 +238,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(UserDto.Role.USER);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/1000", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/admin/users/1000")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -248,9 +271,12 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRole(UserDto.Role.ADMIN);
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/{userId}", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class, user.getId());
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/admin/users/{userId}", user.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -271,9 +297,11 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
                 .setRoles(Set.of(User.Role.USER)));
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/{userId}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class, user.getId());
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/admin/users/{userId}", user.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(userDto -> checkUser(userDto, user));
@@ -284,9 +312,11 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/1000", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/admin/users/1000")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
@@ -302,9 +332,11 @@ public class UserAdminControllerTest extends InstallingIntegrationTest {
         User user = userService.getAll(PageRequest.of(0, 1)).getContent().getFirst();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/users/{userId}", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class, user.getId());
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/admin/users/{userId}", user.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error ->

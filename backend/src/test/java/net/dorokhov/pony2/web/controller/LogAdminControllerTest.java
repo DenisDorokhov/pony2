@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -45,9 +44,11 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         LogMessage logMessage = logService.info(logger, "someMessage").orElseThrow();
 
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/log")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> checkLog(logMessage, log));
@@ -67,9 +68,11 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
         LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?minLevel=INFO", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/log?minLevel=INFO")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(logs -> {
@@ -87,9 +90,11 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         LogMessage warn = logService.warn(logger, "warnMessage").orElseThrow();
         LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?minLevel=WARN", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/log?minLevel=WARN")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(logs -> {
@@ -106,9 +111,11 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
         logService.warn(logger, "warnMessage");
         LogMessage error = logService.error(logger, "errorMessage").orElseThrow();
 
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?minLevel=ERROR", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/log?minLevel=ERROR")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(logs -> checkLog(error, logs));
@@ -119,9 +126,11 @@ public class LogAdminControllerTest extends InstallingIntegrationTest {
 
         logService.info(logger, "someMessage");
 
-        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/log?pageIndex=1", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), LogMessagePageDto.class);
+        ResponseEntity<LogMessagePageDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/log?pageIndex=1")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(LogMessagePageDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(log -> {

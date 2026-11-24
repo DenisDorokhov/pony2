@@ -7,7 +7,6 @@ import net.dorokhov.pony2.web.dto.AuthenticationDto;
 import net.dorokhov.pony2.web.dto.FrontendLogCommandDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -26,9 +25,12 @@ public class FrontendControllerTest extends InstallingIntegrationTest {
                 .setLevel(FrontendLogCommandDto.Level.TRACE)
                 .setMessage("test");
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/frontend/log", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(ImmutableList.of(logCommand), authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().post()
+                .uri("/api/frontend/log")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(ImmutableList.of(logCommand))
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -41,9 +43,12 @@ public class FrontendControllerTest extends InstallingIntegrationTest {
                 .setLevel(FrontendLogCommandDto.Level.DEBUG)
                 .setMessage("test");
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/frontend/log", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(ImmutableList.of(logCommand), authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().post()
+                .uri("/api/frontend/log")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(ImmutableList.of(logCommand))
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -56,9 +61,12 @@ public class FrontendControllerTest extends InstallingIntegrationTest {
                 .setLevel(FrontendLogCommandDto.Level.INFO)
                 .setMessage("test");
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/frontend/log", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(ImmutableList.of(logCommand), authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().post()
+                .uri("/api/frontend/log")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(ImmutableList.of(logCommand))
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -71,9 +79,12 @@ public class FrontendControllerTest extends InstallingIntegrationTest {
                 .setLevel(FrontendLogCommandDto.Level.WARN)
                 .setMessage("test");
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/frontend/log", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(ImmutableList.of(logCommand), authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().post()
+                .uri("/api/frontend/log")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(ImmutableList.of(logCommand))
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -86,9 +97,12 @@ public class FrontendControllerTest extends InstallingIntegrationTest {
                 .setLevel(FrontendLogCommandDto.Level.ERROR)
                 .setMessage("test");
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange(
-                "/api/frontend/log", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(ImmutableList.of(logCommand), authentication.getAccessToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().post()
+                .uri("/api/frontend/log")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(ImmutableList.of(logCommand))
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }

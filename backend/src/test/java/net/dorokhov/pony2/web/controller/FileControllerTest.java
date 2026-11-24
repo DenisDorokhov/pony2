@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -90,8 +89,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
         byte[] expectedContents = Files.readAllBytes(songFile.toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/{id}", HttpMethod.GET, 
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, song.getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/audio/{id}", song.getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
@@ -103,22 +105,28 @@ public class FileControllerTest extends InstallingIntegrationTest {
         String externalImageId = externalImageFile.getExternalImage().getId();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/file/externalImage/{externalImageId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, externalImageId);
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/externalImage/{externalImageId}", externalImageId)
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(Files.readAllBytes(IMAGE_RESOURCE.getFile().toPath()));
         assertThat(response.getHeaders().getContentType().toString()).isEqualTo("image/png");
 
         Files.delete(externalImageFile.getFile().toPath());
-        assertThat(apiTemplate.getRestTemplate().exchange(
-                "/api/file/externalImage/{externalImageId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, externalImageId)
+        assertThat(apiTemplate.getRestClient().get()
+                .uri("/api/file/externalImage/{externalImageId}", externalImageId)
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class)
                 .getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(apiTemplate.getRestTemplate().exchange(
-                "/api/file/externalImage/{externalImageId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, "missing")
+        assertThat(apiTemplate.getRestClient().get()
+                .uri("/api/file/externalImage/{externalImageId}", "missing")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class)
                 .getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
@@ -131,10 +139,12 @@ public class FileControllerTest extends InstallingIntegrationTest {
         httpHeaders.add("Range", "bytes=1024-2047");
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/file/audio/{id}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(null, authentication.getStaticToken(), httpHeaders), 
-                byte[].class, song.getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/audio/{id}", song.getId())
+                .headers(headers -> headers.addAll(httpHeaders))
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.PARTIAL_CONTENT);
         assertThat(response.getBody()).isEqualTo(expectedContents);
@@ -145,8 +155,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/audio/1000")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -158,8 +171,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/audio/{id}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class, song.getId());
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/audio/{id}", song.getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -170,8 +186,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
         byte[] expectedContents = Files.readAllBytes(artworkFiles.getLargeFile().toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/large/{artworkId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, artworkFiles.getArtwork().getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/large/{artworkId}", artworkFiles.getArtwork().getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
@@ -182,8 +201,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/large/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/large/1000")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -194,8 +216,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
         byte[] expectedContents = Files.readAllBytes(artworkFiles.getSmallFile().toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/small/{artworkId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, artworkFiles.getArtwork().getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/small/{artworkId}", artworkFiles.getArtwork().getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedContents);
@@ -206,8 +231,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/artwork/small/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/small/1000")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -218,8 +246,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
         byte[] expectedContents = Files.readAllBytes(songFile.toPath());
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/{songId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, song.getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/export/song/{songId}", song.getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getHeaders().get("Content-Disposition")).isNotNull();
@@ -232,8 +263,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/export/song/1000")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -245,8 +279,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/export/song/{songId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class, song.getId());
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/export/song/{songId}", song.getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -256,8 +293,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange("/api/file/export/album/{albumId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, album.getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/export/album/{albumId}", album.getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getHeaders().get("Content-Disposition")).isNotNull();
@@ -270,8 +310,11 @@ public class FileControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<Void> response = apiTemplate.getRestTemplate().exchange("/api/file/export/album/1000", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), Void.class);
+        ResponseEntity<Void> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/export/album/1000")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(Void.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }

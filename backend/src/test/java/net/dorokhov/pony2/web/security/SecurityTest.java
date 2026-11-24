@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -60,7 +59,12 @@ public class SecurityTest extends InstallingIntegrationTest {
                 "password", "invalidPassword"
         ));
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().postForEntity("/api/authentication", entity, ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/authentication")
+                .headers(headers -> headers.addAll(entity.getHeaders()))
+                .body(entity.getBody())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->
@@ -72,9 +76,11 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/authentication", HttpMethod.DELETE, 
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/authentication")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> 
@@ -84,9 +90,11 @@ public class SecurityTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailAuthenticationWithInvalidAccessToken() {
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/authentication", HttpMethod.DELETE,
-                apiTemplate.createHeaderRequest("invalidToken"), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().delete()
+                .uri("/api/authentication")
+                .header("Authorization", "Bearer " + "invalidToken")
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->
@@ -96,7 +104,10 @@ public class SecurityTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailAuthenticationWithNoToken() {
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().getForEntity("/api/someResource", ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/someResource")
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error -> 
@@ -109,9 +120,11 @@ public class SecurityTest extends InstallingIntegrationTest {
         User user = createUser();
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/someResource", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/someResource")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).satisfies(error ->
@@ -124,9 +137,11 @@ public class SecurityTest extends InstallingIntegrationTest {
         User user = createUser();
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.GET, 
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/user")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -136,9 +151,11 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<InstallationDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/installation", HttpMethod.GET, 
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), InstallationDto.class);
+        ResponseEntity<InstallationDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/installation")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(InstallationDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -150,9 +167,11 @@ public class SecurityTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
         artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/file/artwork/small/{artworkId}", HttpMethod.GET, 
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), byte[].class, artworkFiles.getArtwork().getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/small/{artworkId}", artworkFiles.getArtwork().getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -163,9 +182,11 @@ public class SecurityTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/file/artwork/small/{artworkId}", HttpMethod.GET, 
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), byte[].class, artworkFiles.getArtwork().getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/small/{artworkId}", artworkFiles.getArtwork().getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -177,9 +198,11 @@ public class SecurityTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticate(user.getEmail(), "foobar");
         artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/file/artwork/small/{artworkId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, artworkFiles.getArtwork().getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/small/{artworkId}", artworkFiles.getArtwork().getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -190,9 +213,11 @@ public class SecurityTest extends InstallingIntegrationTest {
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
         artworkFiles = artworkStorage.getOrSave(new FileArtworkStorageCommand(IMAGE_RESOURCE.getURI(), IMAGE_RESOURCE.getFile()));
 
-        ResponseEntity<byte[]> response = apiTemplate.getRestTemplate().exchange(
-                "/api/file/artwork/small/{artworkId}", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), byte[].class, artworkFiles.getArtwork().getId());
+        ResponseEntity<byte[]> response = apiTemplate.getRestClient().get()
+                .uri("/api/file/artwork/small/{artworkId}", artworkFiles.getArtwork().getId())
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(byte[].class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
     }
@@ -202,9 +227,11 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/someResource", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/someResource")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).satisfies(error ->
@@ -216,9 +243,11 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getStaticToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/user")
+                .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).satisfies(error ->
@@ -230,9 +259,11 @@ public class SecurityTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.GET,
-                apiTemplate.createCookieRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/user")
+                .header("Cookie", "pony2.staticToken=" + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->
@@ -253,7 +284,12 @@ public class SecurityTest extends InstallingIntegrationTest {
                 "password", ADMIN_PASSWORD
         ));
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().postForEntity("/api/authentication", entity, ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/authentication")
+                .headers(headers -> headers.addAll(entity.getHeaders()))
+                .body(entity.getBody())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).satisfies(error ->

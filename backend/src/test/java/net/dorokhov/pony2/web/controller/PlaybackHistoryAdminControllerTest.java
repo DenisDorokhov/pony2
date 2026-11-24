@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
@@ -158,9 +157,11 @@ public class PlaybackHistoryAdminControllerTest extends InstallingIntegrationTes
                 .setUser(user)
         );
 
-        ResponseEntity<BackupDto> backupResponse = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/history/backup", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), BackupDto.class);
+        ResponseEntity<BackupDto> backupResponse = apiTemplate.getRestClient().get()
+                .uri("/api/admin/history/backup")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(BackupDto.class);
 
         assertThat(backupResponse.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(backupResponse.getBody()).satisfies(dto -> {
@@ -175,9 +176,13 @@ public class PlaybackHistoryAdminControllerTest extends InstallingIntegrationTes
                 MultiValueMap<String, Object> request = new LinkedMultiValueMap<>();
                 request.add("file", new FileSystemResource(file));
 
-                ResponseEntity<RestoredHistoryDto> restoreResponse = apiTemplate.getRestTemplate().exchange(
-                        "/api/admin/history/restore", HttpMethod.POST,
-                        apiTemplate.createHeaderRequest(request, authentication.getAccessToken(), new HttpHeaders()), RestoredHistoryDto.class);
+                ResponseEntity<RestoredHistoryDto> restoreResponse = apiTemplate.getRestClient().post()
+                        .uri("/api/admin/history/restore")
+                        .headers(headers -> headers.addAll(new HttpHeaders()))
+                        .header("Authorization", "Bearer " + authentication.getAccessToken())
+                        .body(request)
+                        .retrieve()
+                        .toEntity(RestoredHistoryDto.class);
 
                 assertThat(restoreResponse.getStatusCode()).isSameAs(HttpStatus.OK);
                 assertThat(restoreResponse.getBody()).satisfies(restoredHistory -> {

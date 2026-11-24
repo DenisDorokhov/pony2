@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
 import java.util.HashMap;
@@ -87,7 +88,13 @@ class DiscoveryOverridesTest extends InstallingIntegrationTest {
     }
 
     private ResponseEntity<JsonNode> request(String path, HttpMethod method, Object body) {
-        return apiTemplate.getRestTemplate().exchange(path, method, apiTemplate.createHeaderRequest(body, accessToken), JsonNode.class);
+        RestClient.RequestBodySpec request = apiTemplate.getRestClient().method(method)
+                .uri(path)
+                .header("Authorization", "Bearer " + accessToken);
+        if (body != null) {
+            request.body(body);
+        }
+        return request.retrieve().toEntity(JsonNode.class);
     }
 
     @ParameterizedTest

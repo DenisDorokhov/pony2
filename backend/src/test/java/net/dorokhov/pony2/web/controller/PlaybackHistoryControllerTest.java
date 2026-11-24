@@ -10,7 +10,6 @@ import net.dorokhov.pony2.web.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -146,9 +145,11 @@ public class PlaybackHistoryControllerTest extends InstallingIntegrationTest {
                 .setSong(song1_2_1)
                 .setUser(user));
 
-        ResponseEntity<PlaybackHistoryDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/history", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaybackHistoryDto.class);
+        ResponseEntity<PlaybackHistoryDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/history")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaybackHistoryDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(history -> {
@@ -222,9 +223,11 @@ public class PlaybackHistoryControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldAddSongToHistory() {
 
-        ResponseEntity<PlaybackHistorySongDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/history/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaybackHistorySongDto.class, song1_1_1.getId());
+        ResponseEntity<PlaybackHistorySongDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/history/{songId}", song1_1_1.getId())
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaybackHistorySongDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(song -> {
@@ -239,9 +242,11 @@ public class PlaybackHistoryControllerTest extends InstallingIntegrationTest {
     @Test
     public void shouldFailAddingNotExistingSongToHistory() {
 
-        ResponseEntity<PlaybackHistorySongDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/history/{songId}", HttpMethod.POST,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), PlaybackHistorySongDto.class, "foobar");
+        ResponseEntity<PlaybackHistorySongDto> response = apiTemplate.getRestClient().post()
+                .uri("/api/history/{songId}", "foobar")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(PlaybackHistorySongDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }

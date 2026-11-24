@@ -19,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClient;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.JsonNode;
@@ -217,14 +218,26 @@ public class LlmEvaluationExportTest extends InstallingIntegrationTest {
         assertThat(download(apiTemplate.createCookieRequest(userAuthentication.getStaticToken())).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(download(apiTemplate.createHeaderRequest(userAuthentication.getAccessToken())).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         AuthenticationDto adminAuthentication = apiTemplate.authenticateAdmin();
-        assertThat(apiTemplate.getRestTemplate().exchange("/api/admin/config", HttpMethod.GET,
-                apiTemplate.createCookieRequest(adminAuthentication.getStaticToken()), String.class).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(apiTemplate.getRestTemplate().exchange(PATH, HttpMethod.POST,
-                apiTemplate.createCookieRequest(adminAuthentication.getStaticToken()), String.class).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(apiTemplate.getRestClient().get()
+                .uri("/api/admin/config")
+                .header("Cookie", "pony2.staticToken=" + adminAuthentication.getStaticToken())
+                .retrieve()
+                .toEntity(String.class).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(apiTemplate.getRestClient().post()
+                .uri(PATH)
+                .header("Cookie", "pony2.staticToken=" + adminAuthentication.getStaticToken())
+                .retrieve()
+                .toEntity(String.class).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     private ResponseEntity<String> download(HttpEntity<?> request) {
-        return apiTemplate.getRestTemplate().exchange(PATH, HttpMethod.GET, request, String.class);
+        RestClient.RequestBodySpec spec = apiTemplate.getRestClient().method(HttpMethod.GET)
+                .uri(PATH)
+                .headers(headers -> headers.addAll(request.getHeaders()));
+        if (request.getBody() != null) {
+            spec.body(request.getBody());
+        }
+        return spec.retrieve().toEntity(String.class);
     }
 
     private void insertArtist(int number, String name) {

@@ -13,7 +13,6 @@ import net.dorokhov.pony2.web.dto.ErrorDto.Code;
 import net.dorokhov.pony2.web.dto.UserDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -34,9 +33,11 @@ public class UserControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), UserDto.class);
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/user")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> 
@@ -55,9 +56,12 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<UserDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), UserDto.class);
+        ResponseEntity<UserDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/user")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(UserDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(user -> {
@@ -83,9 +87,12 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/user")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -109,9 +116,12 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/user")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {
@@ -139,9 +149,12 @@ public class UserControllerTest extends InstallingIntegrationTest {
                 ;
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/user", HttpMethod.PUT,
-                apiTemplate.createHeaderRequest(command, authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().put()
+                .uri("/api/user")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .body(command)
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).satisfies(error -> {

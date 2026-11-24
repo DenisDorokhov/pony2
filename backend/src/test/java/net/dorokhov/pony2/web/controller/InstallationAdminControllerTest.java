@@ -9,7 +9,6 @@ import net.dorokhov.pony2.web.dto.ErrorDto;
 import net.dorokhov.pony2.web.dto.InstallationDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -28,9 +27,11 @@ public class InstallationAdminControllerTest extends InstallingIntegrationTest {
 
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<InstallationDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/installation", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), InstallationDto.class);
+        ResponseEntity<InstallationDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/installation")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(InstallationDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.OK);
         assertThat(response.getBody()).satisfies(installationDto -> {
@@ -47,9 +48,11 @@ public class InstallationAdminControllerTest extends InstallingIntegrationTest {
         installationRepository.deleteAll();
         AuthenticationDto authentication = apiTemplate.authenticateAdmin();
 
-        ResponseEntity<ErrorDto> response = apiTemplate.getRestTemplate().exchange(
-                "/api/admin/installation", HttpMethod.GET,
-                apiTemplate.createHeaderRequest(authentication.getAccessToken()), ErrorDto.class);
+        ResponseEntity<ErrorDto> response = apiTemplate.getRestClient().get()
+                .uri("/api/admin/installation")
+                .header("Authorization", "Bearer " + authentication.getAccessToken())
+                .retrieve()
+                .toEntity(ErrorDto.class);
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).satisfies(error -> {
