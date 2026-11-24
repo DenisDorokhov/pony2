@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -32,7 +31,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(properties = "pony.home=${user.dir}/build/llm-evaluation-test")
 public class LlmEvaluationExportTest extends InstallingIntegrationTest {
 
     private static final String PATH = "/api/admin/llm/evaluation";

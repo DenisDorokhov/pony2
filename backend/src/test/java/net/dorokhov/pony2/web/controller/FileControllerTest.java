@@ -159,7 +159,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
                 .uri("/api/file/audio/1000")
                 .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
                 .retrieve()
-                .toEntity(Void.class);
+                .toBodilessEntity();
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -175,7 +175,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
                 .uri("/api/file/audio/{id}", song.getId())
                 .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
                 .retrieve()
-                .toEntity(Void.class);
+                .toBodilessEntity();
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -205,7 +205,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
                 .uri("/api/file/artwork/large/1000")
                 .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
                 .retrieve()
-                .toEntity(Void.class);
+                .toBodilessEntity();
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
@@ -235,7 +235,7 @@ public class FileControllerTest extends InstallingIntegrationTest {
                 .uri("/api/file/artwork/small/1000")
                 .header("Cookie", "pony2.staticToken=" + authentication.getStaticToken())
                 .retrieve()
-                .toEntity(Void.class);
+                .toBodilessEntity();
 
         assertThat(response.getStatusCode()).isSameAs(HttpStatus.NOT_FOUND);
     }
