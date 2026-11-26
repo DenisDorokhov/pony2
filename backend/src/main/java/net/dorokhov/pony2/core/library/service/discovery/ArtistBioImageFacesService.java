@@ -216,7 +216,6 @@ public class ArtistBioImageFacesService {
                     OpenAiChatOptions.builder()
                             .model(rawRequest.model())
                             .seed(42)
-                            .maxTokens(1024)
                             .extraBody(Map.of("chat_template_kwargs", Map.of("enable_thinking", false)))
                             .build());
         }

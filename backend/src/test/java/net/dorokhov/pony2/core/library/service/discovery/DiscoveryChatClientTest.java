@@ -7,9 +7,12 @@ import io.micrometer.observation.ObservationRegistry;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.core.ShutdownService;
+import net.dorokhov.pony2.common.JsonConverter;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
+import net.dorokhov.pony2.core.llm.service.exception.LlmContextLimitException;
 import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
+import net.dorokhov.pony2.core.llm.service.LlmContextServiceImpl;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -22,12 +25,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
+import org.springframework.ai.model.tool.ToolCallLimitExceededException;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import tools.jackson.databind.JsonNode;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -35,6 +50,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,10 +75,14 @@ class DiscoveryChatClientTest {
 
     private final LibraryJobSynchronizer synchronizer = new LibraryJobSynchronizer(new ShutdownService());
     private final AtomicInteger requests = new AtomicInteger();
+    private final AtomicInteger promptTokens = new AtomicInteger(1);
+    private final List<String> modelRequests = new CopyOnWriteArrayList<>();
     private final ExecutorService serverExecutor = Executors.newCachedThreadPool();
     private final CountDownLatch responseBodyRead = new CountDownLatch(1);
     private Runnable beforeClientCreation = () -> {};
     private Runnable beforeRetry = () -> {};
+    private int toolCallLimit;
+    private int contextSize = 1000;
     private LibraryJobSynchronizer.LibraryJobRegistration discovery;
     private HttpServer server;
 
@@ -84,16 +104,17 @@ class DiscoveryChatClientTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void shouldPropagateInterruptionDuringRequest(boolean failure) throws IOException {
+    void shouldPropagateInterruptionDuringClientCreation(boolean failure) throws IOException {
         DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        beforeClientCreation = () -> {
+            Thread.currentThread().interrupt();
+            if (failure) {
+                throw new IllegalStateException("Client creation failed.");
+            }
+        };
         try {
-            assertThatThrownBy(() -> client.call(request -> {
-                Thread.currentThread().interrupt();
-                if (failure) {
-                    throw new IllegalStateException("Request failed.");
-                }
-                return "OK";
-            })).isInstanceOf(DiscoveryInterruptedException.class);
+            assertThatThrownBy(() -> call(client)).isInstanceOf(DiscoveryInterruptedException.class);
+            assertThat(requests).hasValue(0);
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
             assertThat(synchronizer.isDiscoveryCancelled()).isFalse();
         } finally {
@@ -196,22 +217,61 @@ class DiscoveryChatClientTest {
     }
 
     @ParameterizedTest
+    @CsvSource({"/props,false", "/props,true", "/apply-template,false", "/apply-template,true",
+            "/tokenize,false", "/tokenize,true"})
+    void shouldCancelNativeContextAccountingAndAllowTheNextDiscovery(String path, boolean responseStarted) throws Exception {
+        CountDownLatch received = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicInteger blockedRequests = new AtomicInteger();
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+        server.removeContext(path);
+        server.createContext(path, exchange -> {
+            blockedRequests.incrementAndGet();
+            try (exchange) {
+                blockResponse(exchange, responseStarted, received, release);
+            }
+        });
+        try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
+            Future<String> result = worker.submit(() -> call(client));
+            try {
+                assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
+                synchronizer.cancelDiscovery();
+                assertCancelled(result);
+                assertThat(blockedRequests).hasValue(1);
+                assertThat(requests).hasValue(0);
+            } finally {
+                release.countDown();
+                synchronizer.cancelDiscovery();
+            }
+        }
+        server.removeContext(path);
+        String nativeResponse = switch (path) {
+            case "/props" -> "{\"default_generation_settings\":{\"n_ctx\":1000}}";
+            case "/apply-template" -> "{\"prompt\":\"test template\"}";
+            case "/tokenize" -> "{\"tokens\":[1]}";
+            default -> throw new IllegalArgumentException(path);
+        };
+        server.createContext(path, exchange -> contextResponse(exchange, nativeResponse));
+        discovery.close();
+        discovery = synchronizer.registerDiscoveryJob();
+        assertThat(call(client)).isEqualTo("OK");
+        assertThat(requests).hasValue(1);
+    }
+
+    @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void shouldCancelParallelCallsOnShutdownBeforeHeadersOrDuringResponseBody(boolean responseStarted) throws Exception {
         CountDownLatch received = new CountDownLatch(2);
         CountDownLatch release = new CountDownLatch(1);
         DiscoveryChatClient client = createClient(exchange -> blockResponse(exchange, responseStarted, received, release));
-        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
-            context.registerBean(DiscoveryChatClient.class, () -> client);
-            context.refresh();
-            try (ExecutorService workers = Executors.newFixedThreadPool(2)) {
+        try (ExecutorService workers = Executors.newFixedThreadPool(2)) {
                 List<Future<String>> results = List.of(workers.submit(() -> call(client)), workers.submit(() -> call(client)));
                 try {
                     assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
                     if (responseStarted) {
                         assertThat(responseBodyRead.await(5, TimeUnit.SECONDS)).isTrue();
                     }
-                    context.close();
+                    client.onApplicationShutdown();
                     for (Future<String> result : results) {
                         assertCancelled(result);
                     }
@@ -221,7 +281,6 @@ class DiscoveryChatClientTest {
                     release.countDown();
                     client.onApplicationShutdown();
                 }
-            }
         }
     }
 
@@ -339,13 +398,29 @@ class DiscoveryChatClientTest {
         assertThat(requests).hasValue(0);
     }
 
+    @Test
+    void shouldRejectAStopResponseAtTheContextLimit() throws IOException {
+        DiscoveryChatClient client = createClient(exchange -> contextResponse(exchange,
+                new String(RESPONSE, UTF_8).replace("\"choices\"", "\"usage\":{\"prompt_tokens\":800,"
+                        + "\"completion_tokens\":100,\"total_tokens\":900},\"choices\"")));
+
+        assertThatThrownBy(() -> call(client)).isInstanceOf(LlmContextLimitException.class)
+                .hasMessageContaining("response reached the context limit");
+        assertThat(requests).hasValue(1);
+    }
+
     private DiscoveryChatClient createClient(HttpHandler handler, Object... tools) throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.setExecutor(serverExecutor);
+        server.createContext("/props", exchange -> contextResponse(exchange,
+                "{\"default_generation_settings\":{\"n_ctx\":" + contextSize + "}}"));
+        server.createContext("/apply-template", exchange -> contextResponse(exchange, "{\"prompt\":\"test template\"}"));
+        server.createContext("/tokenize", exchange -> contextResponse(exchange,
+                JsonConverter.toJson(java.util.Map.of("tokens", java.util.Collections.nCopies(promptTokens.get(), 1)))));
         server.createContext("/v1/chat/completions", exchange -> {
             try (exchange) {
                 requests.incrementAndGet();
-                exchange.getRequestBody().readAllBytes();
+                modelRequests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
                 handler.handle(exchange);
             }
         });
@@ -354,23 +429,431 @@ class DiscoveryChatClientTest {
         when(configService.get()).thenReturn(new ConfigSet(null, List.of(), true,
                 "http://127.0.0.1:" + server.getAddress().getPort() + "/v1", "test", null));
         ChatModelImpl model = new ChatModelImpl(configService, ObservationRegistry.NOOP, Duration.ofMinutes(10),
-                null, null, null, null, null, null);
+                null, null, null, null, null, null) {
+            @Override
+            public ChatModel createChatModel(OpenAiHttpClientBuilderCustomizer customizer) {
+                beforeClientCreation.run();
+                return super.createChatModel(builder -> {
+                    customizer.customize(builder);
+                    builder.interceptor(DiscoveryChatClientTest.this::observeResponseBody);
+                });
+            }
+        };
         return new DiscoveryChatClient((customizer, toolsEnabled) -> {
-            beforeClientCreation.run();
-            ChatClient.Builder clientBuilder = ChatClient.builder(model.createChatModel(builder -> {
-                customizer.customize(builder);
-                builder.interceptor(this::observeResponseBody);
-            }));
+            ToolCallingAdvisor.Builder<?> toolAdvisor = ToolCallingAdvisor.builder();
+            if (toolCallLimit > 0) {
+                toolAdvisor.toolCallingManager(DefaultToolCallingManager.builder().maxCallsPerTool(toolCallLimit).build());
+            }
+            ChatClient.Builder clientBuilder = ChatClient.builder(model.createChatModel(customizer),
+                    ObservationRegistry.NOOP, null, null, toolAdvisor);
             if (toolsEnabled) {
                 clientBuilder.defaultTools(tools);
             }
             return clientBuilder.build();
-        }, synchronizer, new DiscoveryAdvisor(synchronizer));
+        }, model, new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                synchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7);
+    }
+
+    @Test
+    void shouldSendASingleCallerMessageWithoutDuplicatingItFromSpringMemory() throws IOException {
+        DiscoveryChatClient client = createClient(DiscoveryChatClientTest::respond);
+
+        assertThat(call(client)).isEqualTo("OK");
+
+        assertThat(requests).hasValue(1);
+        JsonNode messages = JsonConverter.fromJson(modelRequests.getFirst(), JsonNode.class).path("messages");
+        assertThat(messages).singleElement().satisfies(message -> {
+            assertThat(message.path("role").asText()).isEqualTo("user");
+            assertThat(message.path("content").asText()).isEqualTo("test");
+        });
+    }
+
+    @Test
+    void shouldPreserveEveryCallerMessageAndLoadEachToolRoundOnceThroughSpringMemory() throws Exception {
+        String evidence = "{\"id\":\"A12\",\"url\":\"https://source.test/artist/A12?si=a%2Fb\",\"name\":\"Артист 🎵\"}";
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenReturn(evidence);
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() <= 2) {
+                contextResponse(exchange, completion(toolCall("lookup-" + requests.get()), "tool_calls"));
+            } else {
+                respond(exchange);
+            }
+        }, tool);
+        List<Message> caller = List.of(new SystemMessage("Original rules"),
+                new UserMessage("{\"artist\":\"Артист 🎵\",\"url\":\"https://source.test/artist/A12?si=a%2Fb\"}"),
+                new UserMessage("{\"responseSchema\":{\"type\":\"object\",\"required\":[\"id\",\"url\"]}}"));
+
+        ChatResponse response = client.call(true, caller, OpenAiChatOptions.builder());
+
+        assertThat(response.getResult().getOutput().getText()).isEqualTo("OK");
+        assertThat(requests).hasValue(3);
+        verify(tool, times(2)).call(anyString(), any());
+        for (int round = 0; round < modelRequests.size(); round++) {
+            JsonNode messages = JsonConverter.fromJson(modelRequests.get(round), JsonNode.class).path("messages");
+            assertCallerPrefix(messages, caller);
+            assertThat(messages).hasSize(caller.size() + round * 2);
+        }
+        JsonNode finalMessages = JsonConverter.fromJson(modelRequests.getLast(), JsonNode.class).path("messages");
+        assertThat(finalMessages).filteredOn(message -> "tool".equals(message.path("role").asText()))
+                .extracting(message -> message.path("tool_call_id").asText()).containsExactly("lookup-1", "lookup-2");
+        assertThat(finalMessages).filteredOn(message -> "tool".equals(message.path("role").asText()))
+                .allSatisfy(message -> assertThat(message.path("content").asText()).isEqualTo(evidence));
+    }
+
+    private void assertCallerPrefix(JsonNode messages, List<Message> caller) {
+        for (int index = 0; index < caller.size(); index++) {
+            assertThat(messages.get(index).path("role").asText()).isEqualTo(caller.get(index).getMessageType().getValue());
+            assertThat(messages.get(index).path("content").asText()).isEqualTo(caller.get(index).getText());
+        }
+    }
+
+    @Test
+    void shouldReloadSpringMemoryAfterTwoCompactionsWithoutRecordingToolResultsAgain() throws Exception {
+        AtomicInteger executions = new AtomicInteger();
+        AtomicInteger summaries = new AtomicInteger();
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = executions.incrementAndGet();
+            promptTokens.set(count <= 2 ? 700 : 100);
+            return "raw-payload-" + count + " https://source.test/entity/ID" + count + "?si=a%2Fb";
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            String body = modelRequests.getLast();
+            if (body.contains("CONVERSATION TO SUMMARIZE")) {
+                int count = summaries.incrementAndGet();
+                promptTokens.set(100);
+                String retained = count == 1 ? "retained-ID1 https://source.test/entity/ID1?si=a%2Fb"
+                        : "retained-ID1 https://source.test/entity/ID1?si=a%2Fb; retained-ID2 https://source.test/entity/ID2?si=a%2Fb";
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson(retained) + "}", "stop"));
+            } else if (executions.get() < 3) {
+                contextResponse(exchange, completion(toolCall("lookup-" + (executions.get() + 1)), "tool_calls"));
+            } else {
+                respond(exchange);
+            }
+        }, tool);
+        List<Message> caller = List.of(new SystemMessage("Original rules"), new UserMessage("Artist input"),
+                new UserMessage("{\"required\":[\"id\",\"url\"]}"));
+
+        ChatResponse response = client.call(true, caller, OpenAiChatOptions.builder());
+        assertThat(response.getResult().getOutput().getText()).isEqualTo("OK");
+
+        assertThat(executions).hasValue(3);
+        assertThat(summaries).hasValue(2);
+        assertThat(requests).hasValue(6);
+        String firstSummary = JsonConverter.fromJson(modelRequests.get(1), JsonNode.class)
+                .path("messages").get(1).path("content").asText();
+        String secondSummary = JsonConverter.fromJson(modelRequests.get(3), JsonNode.class)
+                .path("messages").get(1).path("content").asText();
+        assertThat(firstSummary).containsOnlyOnce("raw-payload-1");
+        assertThat(secondSummary).contains("=== PRIOR SUMMARY ===", "retained-ID1")
+                .containsOnlyOnce("raw-payload-2").doesNotContain("raw-payload-1");
+        for (int index : List.of(2, 4)) {
+            JsonNode messages = JsonConverter.fromJson(modelRequests.get(index), JsonNode.class).path("messages");
+            assertCallerPrefix(messages, caller);
+            assertThat(messages).hasSize(6).noneMatch(message -> "tool".equals(message.path("role").asText()));
+            assertThat(messages.get(5).path("role").asText()).isEqualTo("user");
+        }
+        JsonNode finalMessages = JsonConverter.fromJson(modelRequests.getLast(), JsonNode.class).path("messages");
+        assertCallerPrefix(finalMessages, caller);
+        assertThat(finalMessages).filteredOn(message -> "tool".equals(message.path("role").asText()))
+                .extracting(message -> message.path("tool_call_id").asText()).containsExactly("lookup-3");
+        assertThat(modelRequests.getLast()).doesNotContain("raw-payload-1", "raw-payload-2")
+                .contains("retained-ID1", "retained-ID2", "raw-payload-3");
+    }
+
+    @Test
+    void shouldResumeAfterCompactingTheEntireLastRoundInsteadOfEchoingAnAssistantPrefill() throws Exception {
+        AtomicInteger executions = new AtomicInteger();
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = executions.incrementAndGet();
+            promptTokens.set(count == 1 ? 700 : 100);
+            return count == 1 ? "source ".repeat(1000) : "fresh source";
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            String request = modelRequests.getLast();
+            if (requests.get() == 1) {
+                contextResponse(exchange, completion(toolCall("first"), "tool_calls"));
+            } else if (request.contains("CONVERSATION TO SUMMARIZE")) {
+                promptTokens.set(100);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":\"retained source\"}", "stop"));
+            } else {
+                JsonNode messages = JsonConverter.fromJson(request, JsonNode.class).path("messages");
+                JsonNode last = messages.get(messages.size() - 1);
+                if ("assistant".equals(last.path("role").asText())) {
+                    contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                            + JsonConverter.toJson(last.path("content").asText()) + "}", "stop"));
+                } else if (executions.get() == 1) {
+                    contextResponse(exchange, completion(toolCall("second"), "tool_calls"));
+                } else {
+                    respond(exchange);
+                }
+            }
+        }, tool);
+
+        assertThat(call(client)).isEqualTo("OK");
+        assertThat(executions).hasValue(2);
+        assertThat(requests).hasValue(4);
+        JsonNode resumed = JsonConverter.fromJson(modelRequests.get(2), JsonNode.class).path("messages");
+        assertThat(resumed.get(resumed.size() - 2).path("role").asText()).isEqualTo("assistant");
+        assertThat(resumed.get(resumed.size() - 2).path("content").asText()).isEqualTo("retained source");
+        assertThat(resumed.get(resumed.size() - 1).path("role").asText()).isEqualTo("user");
+    }
+
+    private String toolCall(String id) {
+        return """
+                {"role":"assistant","content":null,"tool_calls":[{"id":"%s","type":"function",
+                 "function":{"name":"lookup","arguments":"{}"}}]}
+                """.formatted(id);
+    }
+
+    @Test
+    void shouldCompactInsideTheRealToolLoopAndKeepTheSummaryInFollowingRequests() throws Exception {
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return count == 1 ? "old evidence" : "fresh evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                promptTokens.set(250);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson("old evidence; fresh evidence 2") + "}", "stop"));
+            } else if (requests.get() < 5) {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            } else {
+                respond(exchange);
+            }
+        }, tool);
+
+        assertThat(call(client)).isEqualTo("OK");
+
+        assertThat(requests).hasValue(5);
+        assertThat(toolCalls).hasValue(3);
+        assertThat(modelRequests).allSatisfy(body -> assertThat(JsonConverter.mapFromJson(body, String.class, Object.class))
+                .containsEntry("model", "test"));
+        assertThat(modelRequests.get(2)).contains("old evidence", "UPCOMING CONTEXT", "fresh evidence 2");
+        assertThat(JsonConverter.mapFromJson(modelRequests.get(2), String.class, Object.class)).doesNotContainKey("tools");
+        assertThat(JsonConverter.mapFromJson(modelRequests.get(2), String.class, Object.class))
+                .containsEntry("reasoning_effort", "none");
+        assertThat(JsonConverter.mapFromJson(modelRequests.get(3), String.class, Object.class))
+                .doesNotContainEntry("reasoning_effort", "none");
+        assertThat(modelRequests.get(3)).contains("old evidence", "fresh evidence 2");
+        JsonNode resumedMessages = JsonConverter.fromJson(modelRequests.get(3), JsonNode.class).path("messages");
+        assertThat(resumedMessages).noneMatch(message -> "tool".equals(message.path("role").asText()));
+        assertThat(modelRequests.get(4)).contains("old evidence", "fresh evidence 3");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldCancelTheCompactionRequestWithoutContinuingTheToolLoop(boolean responseStarted) throws Exception {
+        CountDownLatch received = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return "evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                blockResponse(exchange, responseStarted, received, release);
+            } else {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            }
+        }, tool);
+        LibraryJobSynchronizer.DiscoveryTaskRegistration task = synchronizer.registerDiscoveryTask();
+        try (ExecutorService worker = Executors.newSingleThreadExecutor()) {
+            Future<String> result = worker.submit(() -> {
+                try (task) {
+                    return call(client);
+                } finally {
+                    discovery.close();
+                }
+            });
+            try {
+                assertThat(received.await(5, TimeUnit.SECONDS)).isTrue();
+                try (LibraryJobSynchronizer.LibraryJobRegistration ignoredScan = synchronizer.registerScanJob(Duration.ofSeconds(2))) {
+                    assertCancelled(result);
+                    assertThat(requests).hasValue(3);
+                    assertThat(toolCalls).hasValue(2);
+                    assertThat(synchronizer.hasRunningTasks()).isFalse();
+                    assertThat(JsonConverter.mapFromJson(modelRequests.getLast(), String.class, Object.class))
+                            .doesNotContainKey("tools").containsEntry("reasoning_effort", "none");
+                }
+            } finally {
+                release.countDown();
+                synchronizer.cancelDiscovery();
+            }
+        } finally {
+            task.close();
+        }
+    }
+
+    @Test
+    void shouldPreserveToolCallLimitsAcrossCompaction() throws Exception {
+        toolCallLimit = 2;
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return "evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                promptTokens.set(250);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson("old evidence; fresh observation") + "}", "stop"));
+            } else {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            }
+        }, tool);
+
+        ChatResponse response = client.call(true, List.of(new UserMessage("test")), OpenAiChatOptions.builder());
+
+        assertThat(response.getResult().getMetadata().getFinishReason()).isEqualTo(ToolCallLimitExceededException.FINISH_REASON);
+        assertThat(toolCalls).hasValue(2);
+        assertThat(requests).hasValue(4);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   "})
+    void shouldIsolateTheNextCallAfterARejectedCompaction(String summary) throws Exception {
+        toolCallLimit = 2;
+        AtomicInteger toolCalls = new AtomicInteger();
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 700 : 100);
+            return "evidence " + count;
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (requests.get() == 3) {
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson(summary) + "}", "stop"));
+            } else if (requests.get() < 3) {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            } else {
+                respond(exchange);
+            }
+        }, tool);
+
+        assertThatThrownBy(() -> call(client)).isInstanceOf(LlmContextLimitException.class);
+        assertThat(requests).hasValue(3);
+        assertThat(toolCalls).hasValue(2);
+
+        promptTokens.set(100);
+        assertThat(call(client)).isEqualTo("OK");
+        assertThat(requests).hasValue(4);
+        assertThat(toolCalls).hasValue(2);
+        assertThat(modelRequests.getLast()).doesNotContain("evidence", "Summary of earlier", "\"role\":\"tool\"");
+        assertThat(JsonConverter.fromJson(modelRequests.getLast(), JsonNode.class).path("max_tokens").asInt())
+                .isEqualTo(800);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {6001, 14000})
+    void shouldContinueAfterCompactionWithinTheContextBudget(int compactedTokens) throws Exception {
+        contextSize = 20_000;
+        toolCallLimit = 2;
+        ToolCallback tool = mock(ToolCallback.class);
+        when(tool.getToolDefinition()).thenReturn(ToolDefinition.builder()
+                .name("lookup").description("Look up test data").inputSchema("{\"type\":\"object\"}").build());
+        when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
+        AtomicInteger toolCalls = new AtomicInteger();
+        when(tool.call(anyString(), any())).thenAnswer(invocation -> {
+            int count = toolCalls.incrementAndGet();
+            promptTokens.set(count == 2 ? 14_000 : 100);
+            return count == 1 ? "old evidence" : "fresh observation " + "boilerplate ".repeat(1000);
+        });
+        DiscoveryChatClient client = createClient(exchange -> {
+            if (modelRequests.getLast().contains("CONVERSATION TO SUMMARIZE")) {
+                promptTokens.set(compactedTokens);
+                contextResponse(exchange, completion("{\"role\":\"assistant\",\"content\":"
+                        + JsonConverter.toJson("old evidence; fresh observation") + "}", "stop"));
+            } else if (requests.get() == 4) {
+                respond(exchange);
+            } else {
+                contextResponse(exchange, completion("""
+                        {"role":"assistant","content":null,"tool_calls":[{"id":"lookup-%d","type":"function",
+                         "function":{"name":"lookup","arguments":"{}"}}]}
+                        """.formatted(requests.get()), "tool_calls"));
+            }
+        }, tool);
+
+        assertThat(call(client)).isEqualTo("OK");
+        assertThat(requests).hasValue(4);
+        assertThat(toolCalls).hasValue(2);
+        // The summary cap still obeys the remaining native context budget.
+        assertThat(JsonConverter.fromJson(modelRequests.get(2), JsonNode.class).path("max_tokens").asInt()).isEqualTo(4000);
+        assertThat(JsonConverter.fromJson(modelRequests.getLast(), JsonNode.class).path("max_tokens").asInt())
+                .isEqualTo(18_000 - compactedTokens);
+    }
+
+    private String completion(String message, String finishReason) {
+        return """
+                {"id":"test","object":"chat.completion","created":1,"model":"test",
+                 "choices":[{"index":0,"message":%s,"finish_reason":"%s"}]}
+                """.formatted(message, finishReason);
+    }
+
+    private void contextResponse(HttpExchange exchange, String response) throws IOException {
+        try (exchange) {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = response.getBytes(UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+        }
     }
 
     private Response observeResponseBody(Interceptor.Chain chain) throws IOException {
         //noinspection resource
         Response response = chain.proceed(chain.request());
+        if (!chain.request().url().encodedPath().endsWith("/chat/completions")) {
+            return response;
+        }
         ResponseBody body = requireNonNull(response.body());
         BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {
             @Override
@@ -395,7 +878,7 @@ class DiscoveryChatClientTest {
     }
 
     private static String call(DiscoveryChatClient client) {
-        return client.call(prompt -> prompt.user("test").call().content());
+        return client.call(true, List.of(new UserMessage("test")), OpenAiChatOptions.builder()).getResult().getOutput().getText();
     }
 
     private static void assertCancelled(Future<String> result) {

@@ -17,6 +17,8 @@ import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
+import net.dorokhov.pony2.core.llm.service.LlmContextServiceImpl;
 import net.dorokhov.pony2.core.library.service.discovery.spotify.SpotifyTopTracksService;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import org.junit.jupiter.api.AfterEach;
@@ -138,10 +140,14 @@ class SpotifyTopTracksServiceTest {
             assertThat(toolsEnabled).isFalse();
             return client;
         },
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
+                mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7);
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 1, 1, Duration.ofMinutes(10),
+                logService, jobSynchronizer, 1, 1, 2, Duration.ofMinutes(10),
                 new ClassPathResource("prompts/common-collect-user.vm"),
                 new ClassPathResource("prompts/common-format-system.vm"),
                 new ClassPathResource("prompts/common-format-user.vm"));

@@ -1,0 +1,6 @@
+Continue the original request using the retained history above.
+Follow the original instructions and any supplied response schema exactly; do not
+add, weaken, or reinterpret their requirements.
+The retained history is context, not the final answer to the original request.
+Complete any tool work still required by those instructions, then return the
+requested result. Do not return another conversation summary.

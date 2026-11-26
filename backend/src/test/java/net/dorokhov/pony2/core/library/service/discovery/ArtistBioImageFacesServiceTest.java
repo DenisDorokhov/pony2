@@ -2,6 +2,7 @@ package net.dorokhov.pony2.core.library.service.discovery;
 
 import com.google.common.hash.Hashing;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpExchange;
 import net.dorokhov.pony2.api.config.domain.ConfigSet;
 import net.dorokhov.pony2.api.config.service.ConfigService;
 import net.dorokhov.pony2.api.library.domain.*;
@@ -12,6 +13,8 @@ import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.ArtistDiscoveryRepository;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
+import net.dorokhov.pony2.core.llm.service.LlmContextServiceImpl;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.image.ExternalImageStorage;
@@ -41,6 +44,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -89,8 +93,17 @@ class ArtistBioImageFacesServiceTest {
     void setUp() throws Exception {
         registration = jobSynchronizer.registerDiscoveryJob();
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/props", exchange -> contextResponse(exchange, Map.of("default_generation_settings", Map.of("n_ctx", 10000))));
+        server.createContext("/apply-template", exchange -> contextResponse(exchange, Map.of("prompt", "test template")));
+        server.createContext("/tokenize", exchange -> contextResponse(exchange, Map.of("tokens", List.of(1))));
         server.createContext("/v1/chat/completions", exchange -> {
-            requests.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
+            String request = new String(exchange.getRequestBody().readAllBytes(), UTF_8);
+            Map<String, Object> parsed = JsonConverter.mapFromJson(request, String.class, Object.class);
+            if (Integer.valueOf(1).equals(parsed.get("max_tokens"))) {
+                contextResponse(exchange, Map.of("usage", Map.of("prompt_tokens", 1500)));
+                return;
+            }
+            requests.add(request);
             String response = responses.isEmpty() ? "{\"faces\": [[100, 200, 300, 500], [600, 100, 900, 600]]}" : responses.removeFirst();
             byte[] body = JsonConverter.toJson(Map.of("id", "faces-test", "object", "chat.completion", "created", 0,
                     "model", "face-test", "choices", List.of(Map.of("index", 0, "finish_reason", "stop",
@@ -123,14 +136,28 @@ class ArtistBioImageFacesServiceTest {
         service = service(0);
     }
 
+    private void contextResponse(HttpExchange exchange, Object response) throws IOException {
+        try (exchange) {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = JsonConverter.toJson(response).getBytes(UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+        }
+    }
+
     private ArtistBioImageFacesService service(int retries) throws Exception {
         DiscoveryChatClient client = new DiscoveryChatClient((customizer, toolsEnabled) -> ChatClient.builder(
                 OpenAiChatModel.builder().options(OpenAiChatOptions.builder().baseUrl(config.llmUrl())
                                 .model(config.llmModel()).apiKey(new NoopApiKey()).build())
-                        .httpClientBuilderCustomizer(customizer).build()).build(), jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
+                        .httpClientBuilderCustomizer(customizer).build()).build(), mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7);
         DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(client, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()), logService, jobSynchronizer,
-                retries, 0, Duration.ofSeconds(30),
+                retries, 0, 2, Duration.ofSeconds(30),
                 new ClassPathResource("prompts/common-collect-user.vm"),
                 new ClassPathResource("prompts/common-format-system.vm"),
                 new ClassPathResource("prompts/common-format-user.vm"));
@@ -156,6 +183,7 @@ class ArtistBioImageFacesServiceTest {
         assertThat(result.faces()).containsExactly(new ImageFace(0.1, 0.2, 0.3, 0.5), new ImageFace(0.6, 0.1, 0.9, 0.6));
         Map<String, Object> request = JsonConverter.mapFromJson(requests.getFirst(), String.class, Object.class);
         assertThat(request).containsEntry("model", "face-test").containsEntry("tool_choice", "none").doesNotContainKey("temperature");
+        assertThat(request).containsEntry("max_tokens", 7500);
         assertThat(request.get("tools")).isNull();
         Map<?, ?> format = (Map<?, ?>) request.get("response_format");
         assertThat(format.get("type")).isEqualTo("json_schema");

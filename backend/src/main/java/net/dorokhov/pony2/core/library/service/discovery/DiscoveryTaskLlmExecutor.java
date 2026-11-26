@@ -19,6 +19,7 @@ import net.dorokhov.pony2.common.TextTemplate;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
+import net.dorokhov.pony2.core.llm.service.exception.LlmContextLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -62,6 +63,7 @@ public class DiscoveryTaskLlmExecutor {
     private final LibraryJobSynchronizer jobSynchronizer;
     private final int retriesOnFollowUpException;
     private final int restartsOnHallucination;
+    private final int retriesOnContextLimit;
     private final Duration timeout;
     private final TextTemplate collectionUserPrompt;
     private final TextTemplate formattingSystemPrompt;
@@ -75,6 +77,7 @@ public class DiscoveryTaskLlmExecutor {
             LibraryJobSynchronizer jobSynchronizer,
             @Value("${pony.discovery.llm.retriesOnFollowUpException:3}") int retriesOnFollowUpException,
             @Value("${pony.discovery.llm.restartsOnHallucination:3}") int restartsOnHallucination,
+            @Value("${pony.discovery.llm.retriesOnContextLimit:2}") int retriesOnContextLimit,
             @Value("${pony.llm.timeout:10m}") Duration timeout,
             @Value("classpath:prompts/common-collect-user.vm")
             Resource collectionUserPrompt,
@@ -83,6 +86,9 @@ public class DiscoveryTaskLlmExecutor {
             @Value("classpath:prompts/common-format-user.vm")
             Resource formattingUserPrompt
     ) throws IOException {
+        if (retriesOnContextLimit < 0) {
+            throw new IllegalArgumentException("Context retry count must not be negative.");
+        }
         this.chatClient = chatClient;
         this.cacheService = cacheService;
         this.exchangeRecorder = exchangeRecorder;
@@ -90,6 +96,7 @@ public class DiscoveryTaskLlmExecutor {
         this.jobSynchronizer = jobSynchronizer;
         this.retriesOnFollowUpException = retriesOnFollowUpException;
         this.restartsOnHallucination = restartsOnHallucination;
+        this.retriesOnContextLimit = retriesOnContextLimit;
         this.timeout = timeout;
         this.collectionUserPrompt = new TextTemplate(collectionUserPrompt);
         this.formattingSystemPrompt = new TextTemplate(formattingSystemPrompt);
@@ -97,16 +104,16 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     /**
-     * Makes a synchronous model call, or reuses its cached response. The caller supplies conversation history
-     * and the response class used to generate a strict JSON schema.
-     * Requests with tools collect data first, then format the collected answer with tools disabled only
-     * if it cannot be deserialized into the response class.
-     * Requests without tools return a structured response in a single call.
-     * LlmHallucinationException restarts the call chain with the original request up to the configured limit.
-     * The response handler may throw LlmFollowUpException to append a prompt and retry up to the configured limit.
-     * Raw requests are saved before each exchange, and received responses are appended before processing.
-     * Only an accepted response enters the cache, under the original request's key. Null cache settings disable caching.
-     * Calls for the same task must be sequential; task status and the final result belong to its lifecycle.
+     * Gets an answer from the cache or sends the request to the model, then passes the answer to the response handler.
+     * Uses responseClass to build the JSON schema that tells the model which fields to return.
+     * With tools enabled, collects data first and makes a separate formatting request only if the answer
+     * cannot be read as responseClass. Without tools, asks for the required JSON in one request.
+     * If the handler throws LlmFollowUpException, sends the previous answer and correction instructions to the model.
+     * LlmContextLimitException and LlmHallucinationException restart from the original request.
+     * Each kind of retry has its own configured maximum.
+     * Saves requests and received responses on the task. Caches an answer only after the handler accepts it.
+     * Passing null for cacheSettings disables caching. Calls for the same task must run one at a time.
+     * The caller updates the task status and saves the final result.
      */
     public <R> R call(
             DiscoveryTask task, Request request, Class<?> responseClass,
@@ -115,9 +122,17 @@ public class DiscoveryTaskLlmExecutor {
         jobSynchronizer.interruptDiscoveryIfStopped();
         String responseSchema = responseSchema(responseClass);
         int restarts = 0;
+        int contextRetries = 0;
         while (true) {
             try {
                 return callWithFollowUps(task, request, responseClass, responseSchema, cacheSettings, responseHandler);
+            } catch (LlmContextLimitException e) {
+                if (contextRetries >= retriesOnContextLimit) {
+                    throw e;
+                }
+                contextRetries++;
+                logService.warn(logger, "Context limit reached for discovery task {}. Restarting current stage: {}/{}.",
+                        task.getType(), contextRetries, retriesOnContextLimit, e);
             } catch (LlmHallucinationException e) {
                 if (restarts >= restartsOnHallucination) {
                     logService.error(logger, "Model hallucination detected for discovery task {}. Restart limit exhausted: {}/{}.",
@@ -193,7 +208,12 @@ public class DiscoveryTaskLlmExecutor {
                 logger.debug("Requesting LLM response for discovery task '{}' of type {}.\n\nRequest:\n\n{}",
                         task.getId(), task.getType(), JsonConverter.toPrettyJson(rawRequest));
             }
-            response = callModel(task, prompt, responseClass, responseSchema);
+            try {
+                response = callModel(task, prompt, responseClass, responseSchema);
+            } catch (LlmContextLimitException e) {
+                exchangeRecorder.completeExchange(task, null);
+                throw e;
+            }
         }
         jobSynchronizer.interruptDiscoveryIfStopped();
 
@@ -223,8 +243,7 @@ public class DiscoveryTaskLlmExecutor {
         }
         List<Message> collectionMessages = new ArrayList<>(prompt.getInstructions());
         collectionMessages.add(new UserMessage(collectionUserPrompt.render(Map.of("responseSchema", responseSchema))));
-        String collectedResponse = responseContent(chatClient.call(toolsEnabled, spec -> spec.messages(collectionMessages)
-                .options(collectionOptions.clone()).call().chatResponse()));
+        String collectedResponse = responseContent(chatClient.call(toolsEnabled, collectionMessages, collectionOptions.clone()));
         jobSynchronizer.interruptDiscoveryIfStopped();
         if (collectedResponse == null || collectedResponse.isBlank()) {
             return collectedResponse;
@@ -242,10 +261,9 @@ public class DiscoveryTaskLlmExecutor {
         List<Message> formattingMessages = List.of(
                 new SystemMessage(formattingSystemPrompt.render(Map.of("responseSchema", responseSchema))),
                 new UserMessage(formattingUserPrompt.render(Map.of("collectedResponse", collectedResponse))));
-        return responseContent(chatClient.call(spec -> spec.messages(formattingMessages)
-                .options(collectionOptions.clone().toolChoice("none")
-                        .responseFormat(ResponseFormat.builder().jsonSchema(responseSchema).strict(true).build()))
-                .call().chatResponse()));
+        return responseContent(chatClient.call(true, formattingMessages,
+                collectionOptions.clone().toolChoice("none")
+                        .responseFormat(ResponseFormat.builder().jsonSchema(responseSchema).strict(true).build())));
     }
 
     private boolean canParseResponse(String response, Class<?> responseClass) {
@@ -305,7 +323,8 @@ public class DiscoveryTaskLlmExecutor {
     }
 
     /**
-     * An executable model request with separate representations for history and cache identity.
+     * Provides the messages and model options to send, the data to save on the task,
+     * and the inputs used to calculate the cache key.
      */
     public interface Request {
         Prompt toPrompt();
@@ -313,7 +332,8 @@ public class DiscoveryTaskLlmExecutor {
         Object rawRequest();
 
         /**
-         * Returns explicitly selected inputs used to derive the cache key, excluding the LLM model and endpoint.
+         * Returns the inputs that identify a cached answer.
+         * These inputs must leave out the model name and server address so changing them does not invalidate the cache.
          */
         Object cacheKey();
     }

@@ -13,6 +13,8 @@
 # Comments
 
 - Write all code comments, including JavaDoc, in English only.
+- Use multiline JavaDoc blocks for class and method documentation. Put `/**`, the description lines prefixed with ` *`, and ` */` on separate lines; do not use single-line JavaDoc comments.
+- Write meaningful JavaDoc that explains purpose, behavior, and relevant constraints rather than merely restating the class or method name.
 
 # Jackson annotations
 

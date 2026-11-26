@@ -1,0 +1,24 @@
+Retain source evidence from the covered tool history for continuing the original request.
+The original instructions, input and response schema remain preserved. Do not restate,
+interpret, strengthen or relax them, and do not make task decisions or plans.
+
+Return plain text source excerpts, without a JSON wrapper or your own commentary.
+Use tool responses as observations. Tool-call arguments are source context, not observed
+results: retain an original query, URL, identifier or selector when it is needed to bind
+a result to its entity. Do not turn JavaScript implementation into observed facts.
+
+Keep each selected observation with its actual request/source/section and complete record.
+A name alone must not replace the identifier that binds an image, URL or result to an
+entity. Copy the original binding; never reconstruct or combine fields from different
+records. Retain conflicting observations separately with their respective source context.
+Keep the observations in their original order. Keep the last observed page/tab URL and
+title as a complete original source passage; do not infer a current browser state.
+
+Copy names, identifiers, full URLs, image variants, query parameters, escaping and required
+complete text/lists exactly. Do not normalize, translate, paraphrase, repair or truncate
+values. Do not create comparisons, matching criteria, conclusions, completeness claims,
+pending checks or recommendations. A literal negative search result needs its original
+query and source; it is not a new general absence claim.
+
+Omit repeated snapshots and irrelevant markup or implementation details only when doing
+so preserves the observation and its source binding. Return only the retained evidence.

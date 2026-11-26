@@ -1,5 +1,7 @@
 package net.dorokhov.pony2.core.library.service.discovery;
 
+import io.micrometer.observation.ObservationRegistry;
+
 import com.google.common.hash.Hashing;
 import jakarta.annotation.Nullable;
 import net.dorokhov.pony2.api.library.domain.DiscoveryTask;
@@ -11,9 +13,12 @@ import net.dorokhov.pony2.common.LlmJsonConverter;
 import net.dorokhov.pony2.core.ShutdownService;
 import net.dorokhov.pony2.core.library.repository.DiscoveryTaskRepository;
 import net.dorokhov.pony2.core.library.service.LibraryJobSynchronizer;
+import net.dorokhov.pony2.core.llm.service.ChatModelImpl;
+import net.dorokhov.pony2.core.llm.service.LlmContextServiceImpl;
 import net.dorokhov.pony2.core.library.service.exception.DiscoveryInterruptedException;
 import net.dorokhov.pony2.core.library.service.exception.LlmFollowUpException;
 import net.dorokhov.pony2.core.library.service.exception.LlmHallucinationException;
+import net.dorokhov.pony2.core.llm.service.exception.LlmContextLimitException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,10 +116,18 @@ class DiscoveryTaskLlmExecutorTest {
         });
         ChatClient client = ChatClient.builder(model).build();
         discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
-        operation = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
+                mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7);
+        operation = createExecutor(discoveryClient);
+    }
+
+    private DiscoveryTaskLlmExecutor createExecutor(DiscoveryChatClient client) throws IOException {
+        return new DiscoveryTaskLlmExecutor(client, cacheService,
                 new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
+                logService, jobSynchronizer, 3, 1, 2, Duration.ofMinutes(10),
                 new ClassPathResource("prompts/common-collect-user.vm"),
                 new ClassPathResource("prompts/common-format-system.vm"),
                 new ClassPathResource("prompts/common-format-user.vm"));
@@ -182,13 +195,12 @@ class DiscoveryTaskLlmExecutorTest {
         DiscoveryChatClient discoveryClient = new DiscoveryChatClient((customizer, toolsEnabled) -> {
             toolsEnabledValues.add(toolsEnabled);
             return client;
-        }, jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer));
-        DiscoveryTaskLlmExecutor executor = new DiscoveryTaskLlmExecutor(discoveryClient, cacheService,
-                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
-                new ClassPathResource("prompts/common-collect-user.vm"),
-                new ClassPathResource("prompts/common-format-system.vm"),
-                new ClassPathResource("prompts/common-format-user.vm"));
+        }, mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7);
+        DiscoveryTaskLlmExecutor executor = createExecutor(discoveryClient);
         List<ChatResponse> responses = new ArrayList<>(type.isToolsEnabled()
                 ? List.of(response("<tool_call>"), response("Collected data"), response("Rejected answer"),
                         response("Rechecked data"), response("Accepted answer"))
@@ -355,13 +367,12 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
         when(tool.call(anyString(), any())).thenReturn("Large browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
-        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
-                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
-                new ClassPathResource("prompts/common-collect-user.vm"),
-                new ClassPathResource("prompts/common-format-system.vm"),
-                new ClassPathResource("prompts/common-format-user.vm"));
+        operation = createExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
+                mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -422,13 +433,12 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.getToolMetadata()).thenReturn(ToolMetadata.builder().build());
         when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
         ChatClient client = ChatClient.builder(model).defaultTools(tool).build();
-        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
-                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
-                new ClassPathResource("prompts/common-collect-user.vm"),
-                new ClassPathResource("prompts/common-format-system.vm"),
-                new ClassPathResource("prompts/common-format-user.vm"));
+        operation = createExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
+                mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             Prompt prompt = invocation.getArgument(0);
             prompts.add(prompt);
@@ -696,15 +706,14 @@ class DiscoveryTaskLlmExecutorTest {
         when(tool.call(anyString(), any())).thenReturn("Browser snapshot");
         DefaultToolCallingManager manager = DefaultToolCallingManager.builder()
                 .maxCallsPerTool(totalLimit ? 2 : 1).maxTotalToolCalls(totalLimit ? 1 : 2).build();
-        ChatClient client = ChatClient.builder(model).defaultTools(tool)
-                .defaultAdvisors(ToolCallingAdvisor.builder().toolCallingManager(manager).build()).build();
-        operation = new DiscoveryTaskLlmExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
-                jobSynchronizer, new DiscoveryAdvisor(jobSynchronizer)), cacheService,
-                new DiscoveryTaskExchangeRecorder(taskRepository, transactionManager()),
-                logService, jobSynchronizer, 3, 1, Duration.ofMinutes(10),
-                new ClassPathResource("prompts/common-collect-user.vm"),
-                new ClassPathResource("prompts/common-format-system.vm"),
-                new ClassPathResource("prompts/common-format-user.vm"));
+        ChatClient client = ChatClient.builder(model, ObservationRegistry.NOOP, null, null,
+                        ToolCallingAdvisor.builder().toolCallingManager(manager)).defaultTools(tool).build();
+        operation = createExecutor(new DiscoveryChatClient((customizer, toolsEnabled) -> client,
+                mock(ChatModelImpl.class), new LlmContextServiceImpl(), new DiscoveryContextBudgetManager(),
+                jobSynchronizer,
+                new DiscoveryCompactionSummarizer(new ClassPathResource("prompts/common-compaction-system.vm"),
+                        new ClassPathResource("prompts/common-compaction-resume-user.vm")),
+                0.9, 0.7));
         when(model.call(any(Prompt.class))).thenAnswer(invocation -> {
             prompts.add(invocation.getArgument(0));
             return new ChatResponse(List.of(new Generation(AssistantMessage.builder()
@@ -779,15 +788,13 @@ class DiscoveryTaskLlmExecutorTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "STOP,", "STOP, ''", "STOP, ' '",
-            "LENGTH,", "LENGTH, ''", "LENGTH, ' '"
-    })
-    void shouldAcceptResponseWithoutRefusal(String finishReason, @Nullable String refusal) {
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void shouldAcceptResponseWithoutRefusal(@Nullable String refusal) {
         String content = "{\"answer\":\"Accepted data\"}";
         ChatResponse acceptedResponse = new ChatResponse(List.of(new Generation(AssistantMessage.builder()
                 .content(content).properties(refusal != null ? Map.of("refusal", refusal) : Map.of()).build(),
-                ChatGenerationMetadata.builder().finishReason(finishReason).build())));
+                ChatGenerationMetadata.builder().finishReason("STOP").build())));
         when(model.call(any(Prompt.class))).thenReturn(acceptedResponse);
 
         assertThat(operation.call(task(), searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
@@ -795,6 +802,57 @@ class DiscoveryTaskLlmExecutorTest {
 
         verify(model).call(any(Prompt.class));
         assertThat(cache).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void shouldRejectTruncatedResponseWithoutRefusal(@Nullable String refusal) {
+        String content = "{\"answer\":\"Truncated data\"}";
+        ChatResponse truncatedResponse = new ChatResponse(List.of(new Generation(AssistantMessage.builder()
+                .content(content).properties(refusal != null ? Map.of("refusal", refusal) : Map.of()).build(),
+                ChatGenerationMetadata.builder().finishReason("LENGTH").build())));
+        when(model.call(any(Prompt.class))).thenReturn(truncatedResponse);
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, answer -> {
+            throw new AssertionError("A truncated completion must not reach the response handler.");
+        })).isInstanceOf(LlmContextLimitException.class);
+
+        verify(model, times(3)).call(any(Prompt.class));
+        assertThat(task.getRawResponses()).containsExactly(null, null, null);
+        assertThat(cache).isEmpty();
+        verify(cacheService, never()).put(any(), anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void shouldRestartTheCurrentStageTwiceOnContextExhaustionWithoutCachingTruncatedData() {
+        when(model.call(any(Prompt.class))).thenThrow(new LlmContextLimitException("Context exhausted"),
+                new LlmContextLimitException("Context exhausted")).thenReturn(response("{\"answer\":\"complete\"}"));
+        DiscoveryTask task = task();
+
+        assertThat(operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isEqualTo("{\"answer\":\"complete\"}");
+
+        ArgumentCaptor<Prompt> captured = ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(3)).call(captured.capture());
+        assertThat(captured.getAllValues()).extracting(Prompt::getInstructions).containsOnly(captured.getAllValues().getFirst().getInstructions());
+        assertThat(task.getRawResponses()).containsExactly(null, null, JsonConverter.fromJson("{\"answer\":\"complete\"}"));
+        assertThat(task.getRawRequests()).hasSize(3);
+        assertThat(cache).hasSize(1);
+    }
+
+    @Test
+    void shouldStopAfterTwoContextRetriesAndLeaveTheCacheEmpty() {
+        when(model.call(any(Prompt.class))).thenThrow(new LlmContextLimitException("Context exhausted"));
+        DiscoveryTask task = task();
+
+        assertThatThrownBy(() -> operation.call(task, searchRequest(), AnswerResponse.class, CACHE_SETTINGS, Function.identity()))
+                .isInstanceOf(LlmContextLimitException.class);
+
+        verify(model, times(3)).call(any(Prompt.class));
+        assertThat(task.getRawResponses()).containsExactly(null, null, null);
+        assertThat(cache).isEmpty();
     }
 
     @Test
