@@ -1903,8 +1903,8 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
-            "INTERRUPTED,-1,1,6", "INTERRUPTED,0,0,7", "INTERRUPTED,1,0,6",
-            "INTERRUPTED,2,-1,6", "INTERRUPTED,2,0,6", "INTERRUPTED,2,1,4",
+            "INTERRUPTED,0,1,6", "INTERRUPTED,0,0,7", "INTERRUPTED,1,0,6",
+            "INTERRUPTED,2,0,6", "INTERRUPTED,2,1,4",
             "INTERRUPTED,3,1,3", "INTERRUPTED,4,1,2", "INTERRUPTED,5,1,1", "INTERRUPTED,6,1,0",
             "MODERATE,1,1,5", "MODERATE,5,0,3", "COMPLETE,6,1,0"
     })
@@ -1914,6 +1914,12 @@ class MusicBrainzAlbumDiscoveryIntegrationTest extends IntegrationTest {
         notFoundResponses();
         DiscoveryJob previousJob = jobRepository.save(job(DiscoveryType.FULL).setStatus(previousStatus));
         saveDiscoveryHistory(previousJob, artistTasks, albumTasks);
+        LocalDateTime historyDate = LocalDateTime.of(2020, 1, 2, 0, 0);
+        LocalDateTime inputDate = historyDate.minusDays(1);
+        jdbcTemplate.update("UPDATE artist SET creation_date = ? WHERE id = ?", inputDate, artist.getId());
+        jdbcTemplate.update("UPDATE album SET creation_date = ? WHERE id = ?", inputDate, album.getId());
+        jdbcTemplate.update("UPDATE discovery_job SET creation_date = ? WHERE id = ?", historyDate, previousJob.getId());
+        jdbcTemplate.update("UPDATE discovery_task SET creation_date = ? WHERE discovery_job_id = ?", historyDate, previousJob.getId());
         search(List.of());
         DiscoveryJob nextJob = job(DiscoveryType.FULL);
         List<DiscoveryProgress> progressCalls = new ArrayList<>();
